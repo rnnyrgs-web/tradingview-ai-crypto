@@ -1,0 +1,64 @@
+//@version=6
+indicator("AI Crypto 15m Webhook Feed", overlay=true)
+
+// Put this script on a 15-minute chart.
+// Create an alert using: "Any alert() function call"
+// Frequency: Once Per Bar Close
+// Webhook URL: https://YOUR-DOMAIN.com/webhook/tradingview
+
+fastEmaLen = input.int(9, "Fast EMA")
+slowEmaLen = input.int(20, "Slow EMA")
+rsiLen     = input.int(14, "RSI")
+volLen     = input.int(20, "Volume SMA")
+atrLen     = input.int(14, "ATR")
+
+emaFast = ta.ema(close, fastEmaLen)
+emaSlow = ta.ema(close, slowEmaLen)
+rsiVal  = ta.rsi(close, rsiLen)
+volSma  = ta.sma(volume, volLen)
+atrVal  = ta.atr(atrLen)
+vwapVal = ta.vwap(hlc3)
+
+prevHigh = high[1]
+prevLow  = low[1]
+
+bullCross = ta.crossover(emaFast, emaSlow)
+bearCross = ta.crossunder(emaFast, emaSlow)
+aboveVwap = close > vwapVal
+belowVwap = close < vwapVal
+highVol   = volume > volSma * 1.5
+breakHigh = close > prevHigh
+breakLow  = close < prevLow
+
+payload =
+     '{"source":"tradingview"' +
+     ',"symbol":"' + syminfo.tickerid + '"' +
+     ',"timeframe":"' + timeframe.period + '"' +
+     ',"time":' + str.tostring(time) +
+     ',"open":' + str.tostring(open) +
+     ',"high":' + str.tostring(high) +
+     ',"low":' + str.tostring(low) +
+     ',"close":' + str.tostring(close) +
+     ',"volume":' + str.tostring(volume) +
+     ',"ema9":' + str.tostring(emaFast) +
+     ',"ema20":' + str.tostring(emaSlow) +
+     ',"rsi14":' + str.tostring(rsiVal) +
+     ',"vwap":' + str.tostring(vwapVal) +
+     ',"atr14":' + str.tostring(atrVal) +
+     ',"volume_sma20":' + str.tostring(volSma) +
+     ',"bull_cross":' + str.tostring(bullCross) +
+     ',"bear_cross":' + str.tostring(bearCross) +
+     ',"above_vwap":' + str.tostring(aboveVwap) +
+     ',"below_vwap":' + str.tostring(belowVwap) +
+     ',"high_volume":' + str.tostring(highVol) +
+     ',"break_prev_high":' + str.tostring(breakHigh) +
+     ',"break_prev_low":' + str.tostring(breakLow) +
+     '}'
+
+// Send once every closed bar. On a 15-minute chart this is every 15 minutes.
+if barstate.isconfirmed
+    alert(payload, alert.freq_once_per_bar_close)
+
+plot(emaFast, "EMA 9")
+plot(emaSlow, "EMA 20")
+plot(vwapVal, "VWAP")
