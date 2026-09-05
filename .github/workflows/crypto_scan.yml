@@ -8,10 +8,19 @@ on:
 jobs:
   scan:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
     steps:
-      - name: Trigger crypto scanner
-        env:
-          SCAN_SECRET: ${{ secrets.SCAN_SECRET }}
+      - name: Run V2 market scan
         run: |
-          curl --fail --show-error --silent --max-time 120 \
-            "https://tradingview-ai-crypto.onrender.com/scan?secret=${SCAN_SECRET}"
+          curl --fail --show-error --silent \
+            --max-time 300 \
+            -H "X-Scan-Secret: ${{ secrets.SCAN_SECRET }}" \
+            "https://tradingview-ai-crypto.onrender.com/scan"
+
+      - name: Evaluate previous signals
+        run: |
+          curl --fail --show-error --silent \
+            --max-time 300 \
+            -H "X-Scan-Secret: ${{ secrets.SCAN_SECRET }}" \
+            "https://tradingview-ai-crypto.onrender.com/evaluate"
