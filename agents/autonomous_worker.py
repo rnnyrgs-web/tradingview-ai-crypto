@@ -54,6 +54,7 @@ Hard rules:
 - Never manufacture backtest evidence, prices, workflow results, or live readiness.
 - Do not weaken validation/risk/security gates for more signals.
 - Make the smallest coherent change that completes the task.
+- Use tool calls efficiently: inspect only the smallest necessary set of files, avoid rereading unchanged files, and prefer completing the bounded task over optional exploration.
 - Add or update tests when appropriate.
 - Run pytest before finishing.
 - If the task cannot be completed safely with available evidence/files, make no change and explain why.
