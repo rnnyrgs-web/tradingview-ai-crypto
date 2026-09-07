@@ -58,7 +58,8 @@ Merged orchestration history:
 - Lead state PR #4 -> `015b32d7dda03012d2ca6e81e52b77e481da0f3b`.
 - Validation-trigger PR #5 -> `7724b2502a3f49df92323fe0d9bfb939591fdb39`.
 - PR #11 `Remove autonomous PR-create permission dependency` -> `312cd5d8f009dd6d6a3db31d0a0a9e34083d5465`.
-- Testing/Security bounded-budget fix -> `f1b154a68c30a9cca2c926795c5bc8dd2d1fd998` on `main`.
+- Testing/Security bounded-budget fix -> `f1b154a68c30a9cca2c926795c5bc8dd2d1fd998`.
+- PR #14 exact-SHA security dispatch fix -> `ad70344a610c65dae5d59b302b33c69ed12edb58`.
 
 Repository configuration:
 - GitHub Actions secret `OPENAI_API_KEY` configured.
@@ -71,29 +72,29 @@ Current branch-based autonomous architecture:
 - Specialists can only write their role allowlists; `AI_STATE.md`, `agents/`, `.github/workflows/`, `requirements.txt`, and `Dockerfile` are protected.
 - Full repository pytest, generated-cache cleanup, and protected-path checks are mandatory before a candidate branch is published.
 - Testing/Security receives a role-specific 32-step budget; all other specialists remain at 20. The orchestrator hard-clamps every configured budget to 1..32.
-- Security and Reliability must validate the exact candidate SHA before Lead review.
+- Candidate publication explicitly dispatches Security and Reliability on the candidate branch; Lead requires exact matching `headSha` success before review.
 - Autonomous Lead Integrator is triggered by completed specialist workflows and has an hourly fallback.
 - Lead only considers candidates whose merge-base is exactly current `main`.
-- Lead requires exact-SHA Security and Reliability success, rejects protected or >80 KB diffs, then requires independent Security AI and Lead AI approvals.
+- Lead rejects protected or >80 KB diffs, then requires independent Security AI and Lead AI approvals.
 - With `AUTONOMOUS_MERGE_ENABLED` false, approved candidates remain unmerged and are recorded as review issues.
 - If autonomous merge is later explicitly enabled, Lead may integrate at most one exact-current-main candidate per cycle, reruns pytest, updates canonical `AI_STATE.md`, pushes main, and deletes that candidate branch.
-- GitHub Actions PR-create permission is no longer required for normal autonomous operation.
 
 Dry-run history:
 - Run #1 `34081978561`: import-path + instruction-continuation defects; failed closed.
 - Run #2 `34083255188`: ran old main immediately before PR #2 merge; not a valid retest.
 - Run #3 `34083647208`: four specialists produced real bounded changes and passed full tests, but generated Python cache files falsely tripped protected paths; Strategy Registry exhausted the old 12-step cap. PR #3 fixed both issues.
 - Run #4 `34084417186`: all five specialists executed bounded work, passed full pytest, cleanup and protected-path enforcement, and pushed isolated branches; GitHub's Actions PR-create policy blocked PR creation. PR #11 removed that dependency.
-- Run #5 `34084791870`: four NO_TASK roles completed safely; Testing/Security failed closed at the old 20-step budget. The hard-capped role-specific budget fix is now merged on `main`.
+- Run #5 `34084791870`: four NO_TASK roles completed safely; Testing/Security failed closed at the old 20-step budget. The hard-capped role-specific budget fix is merged.
 - Validation cycle `34085259371` published exact candidate `auto/testing-security/34085259371-1` at SHA `62663adcf4100aa8a7774d2f620638483ca2f586`.
-- Lead run `34085368879` correctly selected that exact current-base candidate but failed closed after waiting because no Security and Reliability workflow appeared for the candidate SHA. Root cause: candidate branch pushes performed with the workflow `GITHUB_TOKEN` do not trigger downstream `push` workflows.
+- Lead run `34085368879` selected that candidate but failed closed because GITHUB_TOKEN branch pushes did not trigger Security and Reliability. PR #14 fixed this by explicit workflow dispatch.
+- Post-PR #14 specialist run `34130259522` started on main `ad70344a...` but the planner received OpenAI API HTTP 429 before producing a plan. The run failed closed and no specialist changes were produced.
 
-Current fix development is isolated on `lead/fix-exact-sha-security-dispatch` and is NOT merged:
-- `security.yml` gains `workflow_dispatch` while preserving push, pull_request, schedule, read-only contents permission, unit tests, dependency audit, Bandit and committed-secret scan.
-- `autonomous_agents.yml` gains only `actions: write` in addition to existing `contents: write`, allowing the specialist workflow to explicitly dispatch `security.yml` after an exact candidate branch push.
-- Candidate publication explicitly runs `gh workflow run security.yml --ref <candidate-branch>`. This is necessary because GitHub suppresses ordinary downstream push workflow creation for GITHUB_TOKEN-authored pushes.
-- Lead still independently requires a completed successful Security and Reliability run whose `headSha` exactly equals the selected candidate SHA.
-- No write allowlist, protected-path gate, full-test gate, exact-SHA check, diff-size gate, dual-AI-review gate, or merge gate is weakened.
+Current fix development is isolated on `lead/fix-openai-rate-limit-retry` and is NOT merged:
+- OpenAI Responses API calls now retry only bounded transient failures (`408`, `409`, `429`, `500`, `502`, `503`, `504`) and network/timeout errors.
+- Retry count is hard-capped at 6 total attempts with bounded backoff 5/10/20/40/60 seconds; server `Retry-After` is honored but capped at 120 seconds.
+- Non-retryable HTTP errors still fail immediately; exhausting retries fails closed.
+- Tests cover normal backoff, hard cap, Retry-After honoring, malformed Retry-After fallback, and existing safety invariants.
+- No write/test/protected-path/exact-SHA/diff-size/dual-review/merge gate is weakened.
 - Autonomous merge remains OFF.
 
 A temporary `push` trigger remains on Autonomous Specialist Agents only to enable immediate same-session validation without asking the user for a browser click. It must be removed after the complete branch-based end-to-end cycle is proven green, restoring stable triggers to `workflow_dispatch` + hourly schedule.
@@ -112,13 +113,14 @@ Autonomous Lead Integrator target: immediately after each specialist workflow pl
 Autonomous merge remains disabled until branch-based end-to-end validation is green.
 
 ## EXACT NEXT STEP
-1. Open and review a PR from `lead/fix-exact-sha-security-dispatch` to `main`.
-2. Require Security and Reliability on the fix PR to pass unit tests, dependency audit, Bandit and committed-secret scan.
-3. Merge only after green CI. The temporary main-push trigger should start a fresh specialist cycle automatically.
-4. Require planner + five specialists to finish safely. NO_TASK roles may no-op; TASK roles must pass full pytest, cache cleanup and protected-path enforcement before candidate publication.
-5. Verify candidate publication explicitly dispatches Security and Reliability on the exact candidate branch and that its `headSha` equals the candidate SHA and concludes success.
-6. Verify the workflow_run-triggered Lead selects that exact-current-main candidate, passes bounded/protected diff checks, receives Security AI + Lead AI approval, records a dry-run review issue, and leaves the candidate unmerged because `AUTONOMOUS_MERGE_ENABLED` is false.
-7. Fix any remaining failure and repeat automatically until the full cycle is green.
-8. After green validation, remove the temporary main-push trigger, update canonical `AI_STATE.md` to READY, run Security CI and merge the cleanup.
-9. Only then declare the six-agent autonomous collaboration system ready. Do not enable autonomous merging without an explicit user decision.
-10. Separately inspect completed Cloud Crypto Research run `34079774231` artifacts before claiming PONS-specific results or new OOS eligibility counts.
+1. Open and review a PR from `lead/fix-openai-rate-limit-retry` to `main`.
+2. Require Security and Reliability to pass unit tests, dependency audit, Bandit and committed-secret scan.
+3. Merge only after green CI; temporary main-push trigger starts a fresh specialist validation cycle.
+4. Require the planner to survive transient 429/5xx/network failures within the hard retry cap or fail closed if the API remains unavailable.
+5. Require planner + five specialists to finish safely. NO_TASK roles may no-op; TASK roles must pass full pytest, cache cleanup and protected-path enforcement before candidate publication.
+6. Verify candidate publication explicitly dispatches Security and Reliability on the exact candidate branch and exact candidate SHA and concludes success.
+7. Verify Lead selects that exact-current-main candidate, passes bounded/protected diff checks, receives Security AI + Lead AI approval, records a dry-run review issue, and leaves the candidate unmerged because `AUTONOMOUS_MERGE_ENABLED` is false.
+8. Fix any remaining failure and repeat automatically until full cycle is green.
+9. After green validation, remove the temporary main-push trigger, update canonical `AI_STATE.md` to READY, run Security CI and merge cleanup.
+10. Only then declare the six-agent autonomous collaboration system ready. Do not enable autonomous merging without explicit user decision.
+11. Separately inspect completed Cloud Crypto Research run `34079774231` artifacts before claiming PONS-specific results or new OOS eligibility counts.
