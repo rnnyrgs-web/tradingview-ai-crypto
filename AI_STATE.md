@@ -36,6 +36,7 @@ Security regression coverage, Bandit static analysis and dependency auditing rem
 ## PREDICTION LEDGER / CONFIDENCE CALIBRATION
 Every ranked 24h and 7d forecast is now recorded before its outcome in an append-only Supabase prediction ledger, including timestamp, deadline, direction, entry, score, regime, strategy identity, action and the calibration snapshot available at forecast time. Evaluation resolves each due forecast from the first hourly close at or after its fixed deadline and stores directional return plus correctness, preventing hindsight relabeling.
 Calibration is separated by horizon and 10-point score bin, prefers regime-specific evidence once populated, and requires at least 30 comparable resolved forecasts. A 95% Wilson lower confidence bound must be at least 50% before calibration permits an otherwise fully approved live action. Missing, sparse or weak calibration always forces WAIT. Calibration can only restrict a signal; it cannot approve a strategy or bypass research, robustness, registry, risk or dual-signature gates.
+Supabase migration `add_prediction_ledger_calibration` completed successfully with RLS, no anon/authenticated access, service-role append/read access, and outcome-only update privileges. Render deploy `dep-dafh5nnavr4c73c546b0` reached `live` on commit `329afbb223d62d28fedec9ae66112f15f67c6655`. Production workflow `34156343156` completed successfully and inserted the first 40 forecasts (20 per horizon); all were WAIT, none were prematurely resolved, `/health` was healthy with zero recent errors, and `/calibration` rejected an unauthenticated request with HTTP 401.
 
 ## IMMUTABLE EVIDENCE / MULTI-APPROVAL PROMOTION
 Research JSON is now wrapped in a canonical SHA-256 envelope. Any later modification to its payload fails integrity verification, and promotion manifests must reference at least three distinct valid SHA-256 research-artifact identities.
@@ -118,7 +119,7 @@ The owner explicitly enabled verified-only autonomous merging on 2026-09-07. `AU
 Insufficient or unreliable evidence always means WAIT / NO TRADE / RESEARCH_ONLY.
 
 ## EXACT NEXT STEP
-1. Verify the prediction-ledger migration, first production forecast inserts, due-outcome evaluator and protected `/calibration` endpoint on Render; confirm sparse calibration forces WAIT and no historical row is relabeled.
+1. After the fixed deadlines pass, verify the first 24h and 7d ledger outcomes use only candles at or after `due_at`; confirm calibration remains restrictive until each comparable bin has at least 30 resolved forecasts and its 95% Wilson lower bound is at least 50%.
 2. Verify the hardened release deploys successfully and the next production scan passes `tools/validate_scan_response.py`, produces no unvalidated `TRADE` / BUY / SELL decision, and exposes a healthy sanitized `/health` operational snapshot.
 3. Keep `live_promotions.json` empty and signing keys unused until a strategy has completed repeated backtests, untouched OOS, robustness/stability, strategy-registry review and production-risk review; never sign from a single OOS pass or AI label.
 4. Verify the next cloud research run produces SHA-256-sealed envelopes, deterministic robustness output and a sealed repeated-run aggregation artifact; never interpret `READY_FOR_STRATEGY_REGISTRY_REVIEW` as live approval.
