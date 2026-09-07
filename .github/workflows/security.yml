@@ -1,6 +1,7 @@
 name: Security and Reliability
 
 on:
+  workflow_dispatch:
   push:
   pull_request:
   schedule:
