@@ -1,0 +1,44 @@
+name: Security and Reliability
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "23 4 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install application and security tooling
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pip-audit bandit
+      - name: Unit tests
+        run: pytest -q
+      - name: Dependency vulnerability audit
+        run: pip-audit -r requirements.txt
+      - name: Static security scan
+        run: bandit -q -r . -x ./tests
+      - name: Reject obvious committed secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git grep -nE '(sk-[A-Za-z0-9_-]{20,}|SUPABASE_SECRET_KEY\s*=\s*["'"'][^"'"']+|SCAN_SECRET\s*=\s*["'"'][^"'"']+)' -- '*.py' '*.yml' '*.yaml' '*.json' '*.md'; then
+            echo 'Potential hard-coded secret found.'
+            exit 1
+          fi
