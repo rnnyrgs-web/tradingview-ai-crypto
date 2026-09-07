@@ -127,7 +127,11 @@ def build_universe():
             qv = f(t.get("vol24h")) * max(last, 0)
         if last <= 0 or qv < MIN_QUOTE_VOLUME:
             continue
-        spread_bps = ((ask - bid) / last * 10000.0) if bid > 0 and ask > 0 else 999
+        # A crossed book is stale/inconsistent data, not a negative spread.
+        # Do not admit it to ranking or execution assumptions.
+        if bid <= 0 or ask <= 0 or ask < bid:
+            continue
+        spread_bps = (ask - bid) / last * 10000.0
         if spread_bps > MAX_SPREAD_BPS:
             continue
         change24 = pct_change(open24, last) if open24 > 0 else 0.0
