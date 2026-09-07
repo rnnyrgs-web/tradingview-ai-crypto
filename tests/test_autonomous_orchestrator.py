@@ -1,4 +1,10 @@
-from agents.autonomous_orchestrator import bounded_tool_steps, extract_json, normalize_relpath, path_allowed
+from agents.autonomous_orchestrator import (
+    _retry_delay,
+    bounded_tool_steps,
+    extract_json,
+    normalize_relpath,
+    path_allowed,
+)
 from agents.autonomous_worker import _completion_text
 
 
@@ -67,3 +73,20 @@ def test_tool_step_budget_is_always_hard_bounded():
     assert bounded_tool_steps("999") == 32
     assert bounded_tool_steps("0") == 1
     assert bounded_tool_steps("invalid") == 12
+
+
+def test_retry_delay_uses_bounded_backoff_without_retry_after():
+    assert _retry_delay(None, 0) == 5.0
+    assert _retry_delay(None, 4) == 60.0
+    assert _retry_delay(None, 999) == 60.0
+
+
+class _HeadersOnlyResponse:
+    def __init__(self, retry_after: str):
+        self.headers = {"retry-after": retry_after}
+
+
+def test_retry_delay_honors_and_caps_retry_after():
+    assert _retry_delay(_HeadersOnlyResponse("17"), 0) == 17.0
+    assert _retry_delay(_HeadersOnlyResponse("999"), 0) == 120.0
+    assert _retry_delay(_HeadersOnlyResponse("invalid"), 1) == 10.0
