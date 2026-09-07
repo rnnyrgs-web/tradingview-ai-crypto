@@ -52,6 +52,25 @@ def _segment_metrics(returns):
     }
 
 
+def _validate_aligned_history(history, benchmark_history):
+    """Reject malformed or partial cross-asset inputs before relative-strength tests."""
+    asset_timestamps = [row.get("ts") for row in history]
+    benchmark_timestamps = [row.get("ts") for row in benchmark_history]
+    if (any(ts is None for ts in asset_timestamps)
+            or any(ts is None for ts in benchmark_timestamps)
+            or asset_timestamps != sorted(asset_timestamps)
+            or benchmark_timestamps != sorted(benchmark_timestamps)
+            or len(set(asset_timestamps)) != len(asset_timestamps)
+            or len(set(benchmark_timestamps)) != len(benchmark_timestamps)):
+        raise RuntimeError("History timestamps must be present, ordered, and unique")
+
+    benchmark_by_ts = {row["ts"]: row.get("close") for row in benchmark_history}
+    missing = [ts for ts in asset_timestamps if ts not in benchmark_by_ts]
+    if missing or any(value is None for value in benchmark_by_ts.values()):
+        raise RuntimeError("Benchmark history is incomplete for asset timestamps")
+    return benchmark_by_ts
+
+
 def _true_range(candles, i):
     if i <= 0:
         return candles[i]["high"] - candles[i]["low"]
@@ -275,7 +294,7 @@ def evaluate_strategy_registry(symbol, bar="15m", bars=5000):
         raise RuntimeError("Need at least 1000 candles for strategy-family research")
 
     benchmark_history = history if symbol == "BTC-USDT" else get_history("BTC-USDT", bar, bars)
-    benchmark = {x["ts"]: x["close"] for x in benchmark_history}
+    benchmark = _validate_aligned_history(history, benchmark_history)
 
     n = len(history)
     train = history[:int(n * 0.6)]
