@@ -3,6 +3,7 @@
 Current order-book slippage is never backfilled as historical fact. It is used
 only to inform explicitly conservative round-trip cost stress applied to the
 same untouched holdout trade path selected by training-only walk-forward logic.
+The report is research evidence only and never changes promotion authority.
 """
 
 from backtest import (
