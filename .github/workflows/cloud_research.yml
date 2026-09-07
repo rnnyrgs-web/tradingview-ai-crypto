@@ -4,6 +4,13 @@ on:
   schedule:
     - cron: "7 * * * *"
   workflow_dispatch:
+  push:
+    paths:
+      - "strategy_families.py"
+      - "research_runner.py"
+      - "backtest.py"
+      - "market_data.py"
+      - ".github/workflows/cloud_research.yml"
 
 permissions:
   contents: read
