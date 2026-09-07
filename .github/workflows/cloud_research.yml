@@ -10,6 +10,7 @@ on:
       - "research_runner.py"
       - "backtest.py"
       - "market_data.py"
+      - "research_artifact_audit.py"
       - ".github/workflows/cloud_research.yml"
 
 permissions:
@@ -17,14 +18,50 @@ permissions:
   actions: read
 
 concurrency:
-  group: cloud-crypto-research
+  group: cloud-crypto-research-${{ github.event_name }}-${{ github.ref_name }}
   cancel-in-progress: false
 
 jobs:
+  fast-evidence:
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        symbol: [BTC-USDT, ETH-USDT, SOL-USDT, XRP-USDT, LINK-USDT]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      RESEARCH_SYMBOLS: ${{ matrix.symbol }}
+      RESEARCH_UNIVERSE_SIZE: "1"
+      RESEARCH_FORCE_SYMBOLS: ""
+      RESEARCH_SHARD_INDEX: "0"
+      RESEARCH_SHARD_COUNT: "1"
+      RESEARCH_TIMEFRAMES: "15m,1H"
+      RESEARCH_BARS: "5000"
+      RESEARCH_THRESHOLD: "2.25"
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run liquid-major fast evidence
+        run: python research_runner.py
+      - name: Upload fast evidence only
+        uses: actions/upload-artifact@v4
+        with:
+          name: fast-evidence-${{ matrix.symbol }}
+          path: research_output/backtest_results.json
+          retention-days: 7
+
   research:
     strategy:
       fail-fast: false
-      max-parallel: 8
+      max-parallel: 16
       matrix:
         shard:
           - {name: universe-00, shard_index: "0", shard_count: "16", universe_size: "80", symbols: "", timeframes: "15m,1H"}
@@ -81,6 +118,32 @@ jobs:
         with:
           name: promotion-evidence-${{ matrix.shard.name }}
           path: research_output/strategy_registry.json
+          retention-days: 30
+
+  adversarial-artifact-audit:
+    needs: research
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download current research artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cloud-backtest-results-*
+          path: audit_input
+      - name: Independently audit sealed research invariants
+        run: python research_artifact_audit.py --input audit_input --output research_output/adversarial_audit.json
+      - name: Upload adversarial audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: adversarial-research-audit
+          path: research_output/adversarial_audit.json
           retention-days: 30
 
   aggregate-repeated-runs:
