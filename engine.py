@@ -63,6 +63,7 @@ def compact(c):
         "change_24h_pct":round(c["change_24h_pct"],3),
         "spread_bps":round(c["spread_bps"],3),
         "quote_volume_24h":round(c["quote_volume_24h"],2),
+        "market_consensus":c.get("market_consensus", {"reliable":False,"reason":"missing"}),
         "derivatives":c["derivatives"],
         "horizons":{
             h:{
@@ -178,12 +179,15 @@ def run_scan():
 
         plan=risk_plan(c["horizons"][horizon]["features"],direction,horizon)
         validation=validate_live_strategy(symbol,horizon,strategy_family)
-        if evidence < MIN_EVIDENCE_SCORE or plan["rr"] < MIN_RR or not validation.approved:
+        consensus = c.get("market_consensus", {})
+        if evidence < MIN_EVIDENCE_SCORE or plan["rr"] < MIN_RR or not validation.approved or not consensus.get("reliable"):
             action="WAIT"
 
         reasoning=str(s.get("reasoning","")).strip()
         if not validation.approved:
             reasoning=(f"{reasoning} [{validation.status}: {validation.reason}]" if reasoning else f"{validation.status}: {validation.reason}")
+        if not consensus.get("reliable"):
+            reasoning=(f"{reasoning} [MARKET_CONSENSUS_UNRELIABLE: {consensus.get('reason', 'missing')}]" if reasoning else "MARKET_CONSENSUS_UNRELIABLE")
 
         row={
             "scan_id":scan_id,"symbol":symbol,"timeframe":horizon,"direction":direction,"action":action,
