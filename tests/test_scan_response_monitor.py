@@ -1,3 +1,5 @@
+import pytest
+
 from tools.validate_scan_response import validate_scan_payload
 
 
@@ -24,11 +26,21 @@ def test_healthy_fail_closed_scan_passes_monitor():
     assert validate_scan_payload(_healthy_payload()) == []
 
 
-def test_hidden_scan_errors_fail_monitor():
+@pytest.mark.parametrize(
+    ("field", "value", "expected_error"),
+    [
+        ("ok", False, "scan did not report ok=true"),
+        ("universe_count", 0, "empty market universe"),
+        ("deep_scanned", 0, "no markets completed deep scan"),
+        ("ai_error", "timeout", "AI review failed"),
+        ("opportunity_error", "database unavailable", "opportunity persistence failed"),
+    ],
+)
+def test_scan_response_failures_are_rejected(field, value, expected_error):
     payload = _healthy_payload()
-    payload["ai_error"] = "timeout"
-    payload["opportunity_error"] = "database unavailable"
-    assert validate_scan_payload(payload) == ["AI review failed", "opportunity persistence failed"]
+    payload[field] = value
+
+    assert expected_error in validate_scan_payload(payload)
 
 
 def test_unvalidated_trade_fails_monitor():

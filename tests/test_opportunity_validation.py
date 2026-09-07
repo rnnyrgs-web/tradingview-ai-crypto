@@ -1,3 +1,5 @@
+import pytest
+
 import opportunity_engine as oe
 
 
@@ -7,7 +9,8 @@ def _risk_plan(features, direction, horizon):
     return {"entry": 100.0, "stop": 110.0, "t1": 81.0, "t2": 70.0, "rr": 1.9}
 
 
-def test_ai_trade_is_downgraded_without_full_research_validation(monkeypatch):
+@pytest.mark.parametrize("unvalidated_action", ["TRADE", "BUY", "SELL"])
+def test_unvalidated_trade_actions_are_downgraded(monkeypatch, unvalidated_action):
     persisted = []
     monkeypatch.setattr(oe, "replace_opportunities", lambda scan_id, horizon, rows: persisted.extend(rows))
     candidates = [{
@@ -21,7 +24,7 @@ def test_ai_trade_is_downgraded_without_full_research_validation(monkeypatch):
         "horizon": "24h",
         "direction": "LONG",
         "strategy_family": "trend",
-        "action": "TRADE",
+        "action": unvalidated_action,
         "evidence_score": 90,
         "reasoning": "Looks strong",
     }]
@@ -29,6 +32,7 @@ def test_ai_trade_is_downgraded_without_full_research_validation(monkeypatch):
     result = oe.build_opportunities("scan", candidates, ai_signals, "BULL_TREND", _risk_plan)
 
     assert result["24h"][0]["action"] == "WAIT"
+    assert persisted[0]["action"] == "WAIT"
     assert "RESEARCH_ONLY" in result["24h"][0]["reasoning"]
 
 
