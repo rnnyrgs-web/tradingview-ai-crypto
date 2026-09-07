@@ -1,7 +1,9 @@
+import logging
 import re
-import xml.etree.ElementTree as ET
+from defusedxml import ElementTree as ET
 import httpx
 
+log = logging.getLogger(__name__)
 http = httpx.Client(timeout=12.0, follow_redirects=True)
 
 NEWS_FEEDS = [
@@ -15,6 +17,7 @@ def latest_news(limit=40):
         try:
             r=http.get(url)
             if r.status_code!=200:
+                log.warning("News feed returned %s for %s", r.status_code, url)
                 continue
             root=ET.fromstring(r.content)
             for item in root.findall(".//item"):
@@ -23,8 +26,8 @@ def latest_news(limit=40):
                 pub=(item.findtext("pubDate") or "").strip()
                 if title:
                     items.append({"title":title,"url":link,"published":pub})
-        except Exception:
-            continue
+        except Exception as exc:
+            log.warning("News feed failed for %s: %s", url, type(exc).__name__)
     seen=set()
     unique=[]
     for x in items:
