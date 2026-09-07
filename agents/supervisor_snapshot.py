@@ -19,6 +19,17 @@ def _section(text: str, heading: str) -> str:
     return tail if next_pos < 0 else tail[:next_pos]
 
 
+def _safety_section(state: str) -> str:
+    """Preserve safety context even when the canonical state uses a compact heading."""
+    explicit = _section(state, "SAFETY INVARIANTS")
+    if explicit:
+        return explicit
+    live_safety = _section(state, "LIVE SIGNAL SAFETY — ENFORCED")
+    if not live_safety:
+        return ""
+    return "## SAFETY INVARIANTS\n" + live_safety
+
+
 def load_backlog() -> dict:
     payload = json.loads(BACKLOG_PATH.read_text(encoding="utf-8"))
     if not isinstance(payload, dict) or not isinstance(payload.get("items"), list):
@@ -43,7 +54,7 @@ def build_snapshot() -> dict:
     }
     return {
         "event": event,
-        "safety_invariants": _section(state, "SAFETY INVARIANTS")[-6000:],
+        "safety_invariants": _safety_section(state)[-6000:],
         "exact_next_step": _section(state, "EXACT NEXT STEP")[-6000:],
         "priority_backlog": [
             {
