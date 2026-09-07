@@ -17,14 +17,14 @@ permissions:
   actions: read
 
 concurrency:
-  group: cloud-crypto-research
+  group: cloud-crypto-research-${{ github.event_name }}-${{ github.ref_name }}
   cancel-in-progress: false
 
 jobs:
   research:
     strategy:
       fail-fast: false
-      max-parallel: 8
+      max-parallel: 16
       matrix:
         shard:
           - {name: universe-00, shard_index: "0", shard_count: "16", universe_size: "80", symbols: "", timeframes: "15m,1H"}
