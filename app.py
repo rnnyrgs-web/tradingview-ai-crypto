@@ -1,5 +1,7 @@
+import asyncio
 import hmac
 import logging
+from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Header, Request
 
@@ -12,8 +14,23 @@ from market_data import build_universe
 from dashboard import login_page, handle_login, dashboard_page, signal_detail_page
 from operational_monitor import health_snapshot, record_error
 from calibration import calibration_summary
+from continuous_ai_agent import continuous_ai_loop, status_snapshot as continuous_ai_status
 
-app=FastAPI(title="Crypto Signal Engine V3")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    task = asyncio.create_task(continuous_ai_loop())
+    try:
+        yield
+    finally:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
+
+app=FastAPI(title="Crypto Signal Engine V3", lifespan=lifespan)
 log = logging.getLogger(__name__)
 
 
@@ -46,6 +63,7 @@ def health():
         "deep_scan_size":DEEP_SCAN_SIZE,
         "horizons":list(HORIZONS.keys()),
         "operations":health_snapshot(),
+        "continuous_ai":continuous_ai_status(),
     }
 
 @app.get("/dashboard/login")
