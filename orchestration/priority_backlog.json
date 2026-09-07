@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "policy": {
+    "max_change_tasks_per_cycle": 1,
+    "parallel_audits": true,
+    "live_promotion_from_backlog": false,
+    "insufficient_evidence": "WAIT_RESEARCH_ONLY"
+  },
+  "items": [
+    {
+      "id": "ACC-001",
+      "priority": 1,
+      "status": "READY",
+      "owner": "market-microstructure",
+      "title": "Execution-realism and market-state evidence",
+      "goal": "Extend research with timestamp-safe spread, slippage, funding history, basis, open-interest changes, liquidation context and execution-cost evidence without fabricating unavailable data.",
+      "acceptance": [
+        "new evidence is timestamp-safe and fail-closed",
+        "backtests model realistic costs and do not assume perfect fills",
+        "research-only features cannot authorize live trades",
+        "deterministic regression tests pass"
+      ]
+    },
+    {
+      "id": "ACC-002",
+      "priority": 2,
+      "status": "READY",
+      "owner": "quant-cross-asset",
+      "title": "Cross-sectional relative-strength prediction",
+      "goal": "Research rank-based prediction across the liquid universe so the system can compare assets against peers and BTC rather than relying only on isolated absolute-direction forecasts.",
+      "acceptance": [
+        "rank features use only information available at decision time",
+        "chronological train/validation/untouched OOS remains enforced",
+        "realistic trading costs are included",
+        "no live promotion occurs from research output"
+      ]
+    },
+    {
+      "id": "ACC-003",
+      "priority": 3,
+      "status": "READY",
+      "owner": "quant-breakout-volatility",
+      "title": "Regime-specialist research models",
+      "goal": "Separate strategy evidence by bull trend, bear trend, range, high-volatility stress and compression regimes, with explicit minimum-sample and stability requirements.",
+      "acceptance": [
+        "regime labels are computed without lookahead",
+        "each promoted research claim has adequate regime sample size",
+        "performance is reported by regime and untouched OOS",
+        "weak or missing regime evidence remains RESEARCH_ONLY"
+      ]
+    },
+    {
+      "id": "ACC-004",
+      "priority": 4,
+      "status": "READY",
+      "owner": "strategy-registry",
+      "title": "Calibrated ensemble champion/challenger weighting",
+      "goal": "Combine independently validated strategies using longitudinal OOS/calibration evidence, penalizing correlation, deterioration and unstable parameter dependence rather than selecting raw historical return winners.",
+      "acceptance": [
+        "ensemble weighting is based on validated historical evidence only",
+        "correlated strategies do not receive naive additive confidence",
+        "deteriorating strategies can be demoted automatically",
+        "registry cannot bypass promotion signatures"
+      ]
+    },
+    {
+      "id": "ACC-005",
+      "priority": 5,
+      "status": "READY",
+      "owner": "data-market",
+      "title": "Broader high-quality market data coverage",
+      "goal": "Increase reliable exchange and market-state coverage while preserving freshness, timestamp normalization, liquidity filters and explicit unavailable states.",
+      "acceptance": [
+        "every source has provenance and freshness metadata",
+        "stale or contradictory data fails closed",
+        "batching/caching bounds latency and API cost",
+        "PONS and broad liquid-universe handling remain safe"
+      ]
+    },
+    {
+      "id": "ACC-006",
+      "priority": 6,
+      "status": "READY",
+      "owner": "production-signals",
+      "title": "Continuous forecast scoring and deterioration detection",
+      "goal": "Use the append-only prediction ledger to identify strategy, feature, regime and asset deterioration after outcomes become due, without hindsight relabeling.",
+      "acceptance": [
+        "outcomes use first eligible data at or after fixed due_at",
+        "scoring cannot change historical prediction labels",
+        "weak calibration can only restrict signals",
+        "deterioration evidence is surfaced to registry/risk review"
+      ]
+    },
+    {
+      "id": "ACC-007",
+      "priority": 7,
+      "status": "READY",
+      "owner": "testing-security",
+      "title": "Expanded adversarial strategy destruction tests",
+      "goal": "Systematically stress promising strategies across exchanges, periods, parameter perturbations, fees, slippage, bootstraps, malformed data and regime shifts before any promotion review.",
+      "acceptance": [
+        "tests explicitly target overfitting and leakage",
+        "failure paths produce WAIT or RESEARCH_ONLY",
+        "robustness evidence remains deterministic and sealed",
+        "promotion gates stay unchanged or become stricter"
+      ]
+    }
+  ]
+}

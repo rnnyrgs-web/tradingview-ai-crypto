@@ -2,143 +2,82 @@
 Last updated: 2026-09-07
 
 ## PURPOSE
-Authoritative continuation state for `rnnyrgs-web/tradingview-ai-crypto`. Read this file in full before development. Every development cycle must update this file so a new ChatGPT can continue from the exact repository state.
+Authoritative continuation state for `rnnyrgs-web/tradingview-ai-crypto`. Read this file in full before development. Never infer project state from ChatGPT memory. Every completed development/integration cycle must update this file on `main` so a new agent can continue from the exact repository state.
 
-## PRODUCTION / RESEARCH BASELINE
-Production is GitHub -> Render -> Python/FastAPI V3 -> Supabase. Production scans run approximately every 15 minutes and build separate 24h and 7d Top-20 opportunity rankings. WAIT is allowed.
-Cloud research uses OKX public historical APIs and GitHub Actions. Research/backtesting runs hourly 24/7. Six strategy families remain trend, breakout, momentum, mean reversion, volatility expansion and relative strength vs BTC. No-lookahead and fail-closed rules remain mandatory.
-Chronological validation remains 60% train / 20% validation / 20% untouched holdout. Failed candidates remain `RESEARCH_ONLY`; one OOS pass is never enough for live weighting.
+## CURRENT ARCHITECTURE
+Production is GitHub -> Render -> Python/FastAPI V3 -> Supabase. Production scans run approximately every 15 minutes and produce separate 24h and 7d Top-20 opportunity rankings. Cloud research/backtesting runs hourly 24/7. The dynamic intraday research universe targets Top-80 liquid OKX markets on 15m + 1H, with PONS forcibly included as `PONS-USDT-SWAP`; major swing research remains 4H + 1D.
+
+There are 15 autonomous development roles: Lead Integrator plus 14 specialists: quant-trend, quant-mean-reversion, quant-breakout-volatility, quant-cross-asset, data-market, data-integrity, market-microstructure, onchain-tokenomics, news-macro, strategy-registry, portfolio-risk, production-signals, testing-security and infra-cost. The specialist cycle uses exactly one `CHANGE` role plus thirteen read-only `AUDIT` roles to avoid stale competing branches. The Lead runs after specialist workflows plus a minute-47 fallback.
 
 ## USER-MANDATED LIVE SIGNAL RULE — ENFORCED
-The user requires every BUY/SELL signal to be fully research validated and backtested before production display. No AI review, evidence score, ranking score, or single OOS pass may authorize a live trade by itself.
-The fail-closed production rule is:
+No AI opinion, ranking score, evidence score or single OOS result may authorize live BUY/SELL. The mandatory chain is:
 RESEARCH -> BACKTEST -> VALIDATION -> UNTOUCHED OOS -> ROBUSTNESS/STABILITY -> STRATEGY-REGISTRY APPROVAL -> PRODUCTION-RISK APPROVAL -> LIVE BUY/SELL.
-Anything missing any stage must remain `WAIT / RESEARCH_ONLY`.
+Missing or unreliable evidence always means `WAIT / NO TRADE / RESEARCH_ONLY`.
 
-PR #19 `Fail closed all unvalidated production trade signals` passed Security and Reliability run `34142270947`, including unit tests, dependency vulnerability audit, static security scan and committed-secret rejection. It merged to `main` as `1a0004c31f1f8be570c72cfe0380a99994797316` and Render auto-deploy `dep-dafe5tvavr4c73c187n0` reached `live` successfully.
+PR #19 merged as `1a0004c31f1f8be570c72cfe0380a99994797316` and established exact-fingerprint live validation. `production_validation.py` uses the canonical `live_promotions.json`, currently intentionally empty. `strategy_identity.py` binds symbol, horizon, normalized family, required timeframes, strategy version, modeled cost and implementation SHA-256. `engine.py` and `opportunity_engine.py` both downgrade unapproved actions to WAIT. Promotion requires at least three distinct sealed research artifacts and independent Strategy Registry + Production Risk HMAC-SHA256 attestations. Signing keys remain intentionally unused until all evidence is genuinely complete.
 
-Live enforcement now includes:
-- `production_validation.py` with an explicit exact-fingerprint live-validation registry;
-- registry intentionally empty because no strategy has yet completed the full live-promotion process;
-- `strategy_identity.py` deterministically binds symbol, production horizon, normalized family, required timeframes, strategy version, modeled trading cost and a SHA-256 of the backtest/feature/strategy implementation into one fingerprint;
-- `engine.py` downgrades AI `TRADE` to `WAIT` unless the exact symbol+horizon+strategy-family key is explicitly live validated;
-- `opportunity_engine.py` applies the same gate to 24h/7d dashboard opportunities;
-- missing/unknown research identity fails closed;
-- regression tests verify unpromoted AI TRADE output cannot become production TRADE.
-Until a strategy completes the full promotion process, the correct production result is no BUY/SELL signal rather than an unvalidated trade. Existing database rows from scans before commit `1a0004c3...` can remain historically visible until replaced/refreshed; new production decisions are gated.
+## VALIDATION / CALIBRATION / ROBUSTNESS
+Chronological validation remains 60% train / 20% validation / 20% untouched holdout. Research candidates receive deterministic OOS robustness: 500 seeded bootstrap/Monte Carlo resamples, ±10% threshold perturbations, multi-regime holdout testing, realistic cost assumptions and the original chronological gate. Only all-pass candidates become `ROBUST_OOS`, still research-only.
 
-## ERROR MONITORING / SECURITY HARDENING
-Production scans now expose their exact deterministic strategy fingerprint inside research-validation evidence. Changing the backtest, feature or strategy-family implementation changes the fingerprint automatically and invalidates any prior approval.
-The 15-minute scan workflow validates the returned JSON rather than trusting HTTP 200 alone. It fails visibly on `ok != true`, empty universe/deep scan, AI failure, opportunity persistence failure, excessive symbol failures, a missing fingerprint, or any unvalidated `TRADE`. Failed response diagnostics are retained for seven days.
-`operational_monitor.py` keeps a sanitized in-process record of the last scan and recent component error types. `/health` exposes this summary without exception messages, credentials or upstream response bodies. Protected API endpoints now log full exceptions server-side while returning generic public errors.
-Security regression coverage, Bandit static analysis and dependency auditing remain enforced. This hardening passed 45 unit tests locally, Bandit, pip-audit with no known vulnerabilities, workflow YAML parsing and diff checks before publication.
+Research artifacts are SHA-256 sealed. `research_aggregation.py` rejects tampering/non-robust runs and requires three distinct sealed runs before `READY_FOR_STRATEGY_REGISTRY_REVIEW`; that status is never live approval.
 
-## PREDICTION LEDGER / CONFIDENCE CALIBRATION
-Every ranked 24h and 7d forecast is now recorded before its outcome in an append-only Supabase prediction ledger, including timestamp, deadline, direction, entry, score, regime, strategy identity, action and the calibration snapshot available at forecast time. Evaluation resolves each due forecast from the first hourly close at or after its fixed deadline and stores directional return plus correctness, preventing hindsight relabeling.
-Calibration is separated by horizon and 10-point score bin, prefers regime-specific evidence once populated, and requires at least 30 comparable resolved forecasts. A 95% Wilson lower confidence bound must be at least 50% before calibration permits an otherwise fully approved live action. Missing, sparse or weak calibration always forces WAIT. Calibration can only restrict a signal; it cannot approve a strategy or bypass research, robustness, registry, risk or dual-signature gates.
-Supabase migration `add_prediction_ledger_calibration` completed successfully with RLS, no anon/authenticated access, service-role append/read access, and outcome-only update privileges. Render deploy `dep-dafh5nnavr4c73c546b0` reached `live` on commit `329afbb223d62d28fedec9ae66112f15f67c6655`. Production workflow `34156343156` completed successfully and inserted the first 40 forecasts (20 per horizon); all were WAIT, none were prematurely resolved, `/health` was healthy with zero recent errors, and `/calibration` rejected an unauthenticated request with HTTP 401.
+The append-only Supabase prediction ledger records every ranked 24h/7d forecast before outcome with fixed `due_at`, direction, entry, score, regime, strategy identity, action and calibration snapshot. Outcomes use the first hourly close at or after the deadline. Calibration is horizon + score-bin specific, prefers regime-specific samples once populated, requires >=30 comparable resolved forecasts, and requires a 95% Wilson lower bound >=50%. Calibration can only restrict; it cannot approve or bypass research/registry/risk/promotion gates.
 
-## CROSS-EXCHANGE / DERIVATIVES INTELLIGENCE — LIVE
-Production now has a fail-closed price-consensus gate using fresh OKX and Binance spot observations. Fewer than two valid sources, stale data, or a price range above the configured tolerance forces `WAIT` in both saved signals and ranked opportunities. One Binance batch request covers the universe to keep scan cost and latency bounded.
-Derivatives context now collects exchange-specific OKX and Binance funding/open interest, derives median funding, dispersion and crowding only from available observations, and marks the feed reliable only with two funding sources. Optional OKX liquidation records are represented as raw contract pressure units rather than falsely labeled USD notional; absence remains explicitly unavailable. These features provide adversarial context but cannot authorize a trade or bypass any production gate.
-Deterministic tests cover fresh consensus, exchange disagreement, staleness, insufficient sources, multi-source funding and liquidation parsing. PR #29 exact candidate SHA `d7c218a0cd40a6073208ba02710bc7ea42d64c7a` passed Security and Reliability run `34160160727`, then merged as `65f7af34b2e2bbe21929555b3e33d6583fffe581`. Render deploy `dep-dafi1vc9v7es73c4naig` reached `live`; the new instance started successfully and `/health` returned HTTP 200. The first post-deploy authenticated production scan still needs workflow verification.
-Two post-deploy scans returned HTTP 200 with one isolated symbol error each and no application error logs. CPU remained below 9% of its limit and memory near 14%. This confirms basic operation, but HTTP status alone is not accepted as proof that the protected JSON scan validator passed.
+The first strict OOS pass set from run `34077019168` was: ETH-USDT 1H trend; SOL-USDT 15m mean reversion; DOGE-USDT 1H volatility expansion; ADA-USDT 1H breakout; ADA-USDT 1H volatility expansion. None are live-weighted.
 
-## CROSS-EXCHANGE ORDER-BOOK INTELLIGENCE — LIVE / RESEARCH-ONLY
-Production samples top-of-book depth from OKX and Binance for AI finalists, computes 10/25 bps bid/ask depth, spread and bounded imbalance, and rejects empty, thin, crossed or excessively wide books. Collection is parallelized with six workers and limited to finalists to bound scan latency and API usage.
-The combined feature explicitly carries `research_only=true`, requires two reliable exchanges before its aggregate is reliable, exposes cross-exchange direction disagreement, and has no path that can promote `WAIT` to `TRADE`. Deterministic tests cover imbalance/depth calculation, thin and crossed books, the two-source requirement and research-only invariant. PR #31 exact candidate SHA `e37f92a6440a48b4b388dc1e587aa07f0505ace0` passed Security and Reliability run `34161341780`, merged as `8aefc5004ca7f9bcfbf3aa07240a97629ccae6e5`, and Render deploy `dep-dafiapcs728c73908keg` reached `live`. The new instance started successfully, `/health` returned HTTP 200 and no application error logs appeared during deployment. First full post-deploy scan latency and payload validation remain pending.
+## MARKET / EXECUTION INTELLIGENCE
+Production uses fail-closed fresh OKX + Binance spot price consensus. Fewer than two valid sources, stale observations or excessive disagreement forces WAIT. Derivatives context includes exchange-specific funding/open interest, median funding, dispersion/crowding and optional liquidation pressure represented in raw contract units when USD notional is not defensible.
 
-## IMMUTABLE EVIDENCE / MULTI-APPROVAL PROMOTION
-Research JSON is now wrapped in a canonical SHA-256 envelope. Any later modification to its payload fails integrity verification, and promotion manifests must reference at least three distinct valid SHA-256 research-artifact identities.
-`live_promotions.json` is the canonical promotion manifest and is intentionally empty. `production_validation.py` no longer accepts a manually inserted fingerprint set. A live promotion must match the exact current strategy identity, mark every required stage true, and contain valid independent HMAC-SHA256 attestations from both Strategy Registry and Production Risk.
-The two signing keys must be distinct secret environment variables with at least 32 characters: `STRATEGY_REGISTRY_SIGNING_KEY` and `PRODUCTION_RISK_SIGNING_KEY`. They are intentionally not configured/populated merely to make signals appear. Missing keys, missing stages, fewer than three research artifacts, modified identity/code, malformed data, or either bad signature all fail closed to `RESEARCH_ONLY`.
-`tools/sign_promotion.py` applies exactly one role's attestation at a time. Promotion signing remains forbidden until the underlying evidence genuinely completes every stage. This layer passed 51 unit tests, Bandit and pip-audit with no known vulnerabilities before publication.
+PR #31 merged as `8aefc5004ca7f9bcfbf3aa07240a97629ccae6e5` and added research-only cross-exchange order-book intelligence for AI finalists: 10/25 bps depth, spread, bounded imbalance, thin/crossed/wide-book rejection, two-source reliability and explicit disagreement. It has no path that promotes WAIT to TRADE.
 
-## DETERMINISTIC ROBUSTNESS / REPEATED-RUN EVIDENCE
-Every strategy-family candidate now receives deterministic OOS robustness evidence before it can enter promotion review:
-- 500 seeded bootstrap/Monte Carlo resamples requiring at least 80% positive outcomes, positive fifth-percentile aggregate return and <=25% 95th-percentile drawdown;
-- independent ±10% entry-threshold perturbations, each requiring at least six trades and positive average return;
-- multi-regime holdout testing across TREND, HIGH_VOL and RANGE, requiring at least two sufficiently represented regimes and positive average return in each;
-- the original chronological train/validation/untouched-holdout quality gate must also pass.
-Only candidates passing all checks receive `ROBUST_OOS`; they remain research-only.
-Cloud research now uploads compact SHA-256-sealed evidence for 30 days. `research_aggregation.py` verifies envelopes, rejects tampering and non-robust results, and requires three distinct sealed runs before outputting `READY_FOR_STRATEGY_REGISTRY_REVIEW`. Aggregation explicitly sets `live_approved=false` and cannot bypass the dual-signature promotion manifest.
+Operational monitoring exposes sanitized health only. The 15-minute workflow validates returned JSON and fails on `ok != true`, empty/degraded scans, AI/opportunity errors, excessive symbol failures, missing fingerprint or any unvalidated TRADE. Security regression, Bandit, dependency audit and committed-secret checks remain enforced.
 
-## RESEARCH UNIVERSE
-Dynamic intraday research targets Top-80 liquid OKX spot markets on 15m + 1H across deterministic shards, with PONS forcibly included as `PONS-USDT-SWAP`. Existing major swing research remains on 4H + 1D.
-Expanded research run `34079774231` completed successfully and all 16 universe shard artifacts plus `swing-a` exist. Artifact contents still need inspection before making PONS-specific execution or new OOS-eligibility claims.
+## 24/7 AI / ORCHESTRATION
+A token-free Render `continuous_coordinator.py` watchdog checks production health and this canonical handoff every minute. Render service `srv-dafgtead0e5s73cc7ekg` is live and has no scan/write/promotion/trade authority.
 
-## FIRST STRICT OOS PASS SET
-Research run `34077019168` produced exactly five strict OOS passes:
-- ETH-USDT 1H trend
-- SOL-USDT 15m mean reversion
-- DOGE-USDT 1H volatility expansion
-- ADA-USDT 1H breakout
-- ADA-USDT 1H volatility expansion
-None are live-weighted. These passes alone do not satisfy the full live-validation requirement.
+The owner requested a real AI agent active 24/7. PR #35 merged as `0b199acdca36c666091940d8b5c6a591ff03adc0`, adding `continuous_ai_agent.py` inside the production FastAPI process. It performs a bounded AI research/operations assessment every five minutes by default and exposes the compact result through `/health.continuous_ai`. It has explicit `trade_authority=false`, `write_authority=false`, and `promotion_authority=false`.
 
-## 15-AGENT AUTONOMOUS ARCHITECTURE
-PR #17 `Expand autonomous development to 15 cost-aware agents` merged as `b20d75f05a81ae8fe1814f515d3d4f99a58abd7d`; state sync PR #18 merged as `fd4863015992c646dec3f855a43f0b0542c8252a`.
+The first live cycle exposed a model-output `JSONDecodeError`. PR #36 merged as `433421d244259e749827e8fba63e13cee4bbc7a5`, hardened parsing while keeping malformed output fail-closed, and passed Security and Reliability run `34164097754`. Main state sync commit `641d4688fc959ecc466e6c1a853767b4392728ba` deployed live. A successful post-fix cycle still needs direct verification.
 
-The active architecture is 15 total roles: 1 Lead Integrator + 14 specialists:
-1. quant-trend
-2. quant-mean-reversion
-3. quant-breakout-volatility
-4. quant-cross-asset
-5. data-market
-6. data-integrity
-7. market-microstructure
-8. onchain-tokenomics
-9. news-macro
-10. strategy-registry
-11. portfolio-risk
-12. production-signals
-13. testing-security
-14. infra-cost
-plus the Lead Integrator.
+## EVENT-DRIVEN SUPERVISOR / ACCURACY ROADMAP — PR #37 CANDIDATE
+The owner requested both maximum signal accuracy and faster continuous AI orchestration. PR #37 `Add event-driven AI supervisor and accuracy backlog` is the current candidate from base `641d4688fc959ecc466e6c1a853767b4392728ba`.
 
-### FIRST VALIDATED 15-AGENT HOURLY CYCLE
-Scheduled Autonomous Specialist Agents run `34138477323` on SHA `fd4863015992c646dec3f855a43f0b0542c8252a` completed successfully.
-Planner output explicitly contained all 14 specialist roles and assigned `NO_TASK` to all 14, with `Active specialist roles: []`. GitHub created only the planner runner; the specialist matrix job was skipped with zero steps. This validates that NO_TASK roles consume no worker model call or runner setup.
-The workflow-run-triggered Autonomous Lead Integrator run `34138519231` completed successfully immediately afterward; fallback Lead run `34140804765` also completed successfully.
-Because there was no candidate branch in this zero-worker validation cycle, candidate-SHA Security dispatch/review was not applicable.
-This is the first green 15-agent cost-control cycle.
+Candidate changes:
+- `.github/workflows/autonomous_agents.yml` wakes not only on the hourly fallback but also immediately after completed `Crypto 15m Scan` and `Cloud Crypto Research` workflows.
+- `agents/supervisor_snapshot.py` builds a compact machine-readable context containing trigger metadata, current safety invariants, exact next steps and prioritized research backlog, reducing repeated model context.
+- `orchestration/priority_backlog.json` is the protected accuracy work queue. Autonomous specialists cannot modify orchestration state. The queue cannot authorize live promotion.
+- The workflow still allows exactly one `CHANGE` worker per cycle and thirteen parallel read-only audits, with `max-parallel: 14`.
+- deterministic tests cover queue ordering, fail-closed policy, compact snapshot and event-driven workflow triggers.
 
-### FIRST FULL 14-SPECIALIST WORK CYCLE
-Scheduled run `34151954385` completed successfully with the planner plus all 14 specialist jobs in approximately three minutes. Ten roles published candidate branches from the same main SHA. This exposed an efficiency defect: after one candidate changes main, the remaining same-base candidates become stale and cannot pass the exact-base Lead gate.
-The orchestration now requires exactly one `CHANGE` role and thirteen read-only `AUDIT` roles per hourly cycle. All 14 specialists still work, but audit agents have no write tool, do not run fourteen redundant full test suites, and cannot publish branches. The sole change candidate still receives the complete test/security/Lead integration pipeline. This preserves continuous coverage while eliminating predictable stale-candidate waste.
+The protected accuracy backlog is:
+1. `ACC-001` market-microstructure — realistic execution + richer market-state evidence: spread/slippage, funding history, basis, OI change, liquidation context, realistic fill/cost assumptions.
+2. `ACC-002` quant-cross-asset — cross-sectional relative-strength/rank prediction across the liquid universe.
+3. `ACC-003` quant-breakout-volatility — regime-specialist models for bull, bear, range, high-volatility stress and compression with no-lookahead labels/minimum samples.
+4. `ACC-004` strategy-registry — calibrated champion/challenger ensemble weighting with correlation/deterioration penalties and automatic demotion.
+5. `ACC-005` data-market — broader high-quality market/exchange coverage with provenance, freshness, contradiction checks, batching and safe PONS handling.
+6. `ACC-006` production-signals — continuous forecast scoring and strategy/feature/regime/asset deterioration detection from the immutable prediction ledger.
+7. `ACC-007` testing-security — expanded adversarial strategy-destruction tests across exchanges, periods, fees, slippage, parameters, malformed data and regime shifts.
 
-## COST / 24-7 BEHAVIOR
-The owner explicitly requested all 15 roles work every hour, 24/7, with cost-aware routing and verified-only autonomous integration.
-- A separate always-on `continuous_coordinator.py` watchdog checks production health and this canonical handoff every minute. Normal operation uses zero AI tokens, exposes only sanitized status, has no market-scan/write/promotion/trade authority, and fails unhealthy after repeated observation failures.
-- Continuous coordinator Render service `srv-dafgtead0e5s73cc7ekg` deployed commit `03e91acc6a3242cd99747de2910e161af251b2c0` as `dep-dafgteid0e5s73cc7ffg` and reached `live`. Its first observed `/health` response reported `production_ok=true`, `state_ok=true`, zero consecutive failures, `ai_calls_normal_operation=0`, and `trade_authority=false`.
-- The owner additionally requested at least one real AI agent remain active 24/7 rather than only hourly scheduled AI workers. PR #35 added `continuous_ai_agent.py` to the production FastAPI process and merged as `0b199acdca36c666091940d8b5c6a591ff03adc0`. It runs an always-on background loop with a bounded AI assessment every five minutes by default, reuses the production OpenAI configuration, reviews deterministic `operational_monitor` evidence plus canonical `AI_STATE.md`, and publishes only a compact assessment/next-action snapshot through `/health`.
-- The first live PR #35 instance exposed a `JSONDecodeError` because the model response was not bare JSON. PR #36 hardened parsing to accept a valid JSON object when wrapped in code fences or brief prose while still rejecting malformed output; it also added sanitized success-cycle logging. Exact branch Security and Reliability run `34164097754` passed unit tests, dependency audit, static security scan and committed-secret rejection. PR #36 merged as `433421d244259e749827e8fba63e13cee4bbc7a5`. Post-deploy successful-cycle verification is still required.
-- The continuous AI observer has explicit `trade_authority=false`, `write_authority=false`, and `promotion_authority=false`. It cannot scan markets, alter code, publish branches, sign promotions, or authorize BUY/SELL. Any implementation action still flows through the normal specialist -> Security -> Lead integration gates. The separate coordinator remains token-free.
-- Autonomous specialist planner: minute 17 every hour, 24/7.
-- Cloud research/backtesting/algo testing: hourly 24/7.
-- Production market scans: approximately every 15 minutes.
-- Autonomous Lead Integrator: after each specialist workflow plus minute 47 fallback.
-- The planner must assign one bounded TASK to all 14 specialist roles each hourly cycle: exactly one mode=`CHANGE` and thirteen mode=`AUDIT`; safe work may finish `NO_CHANGE` rather than manufacture edits.
-- Specialist parallelism is 14 so the full roster can work inside the hourly window.
-- Deterministic Python remains preferred for calculation/backtesting/filtering; AI is for bounded planning/implementation/review.
-- Planner and routine specialists use `gpt-5.6-luna`; testing-security, strategy-registry, portfolio-risk and production-signals use `gpt-5.6-sol`; the Lead Integrator and both independent integration reviews use `gpt-5.6-sol`.
-- Official OpenAI model IDs and pricing were verified on 2026-09-07 before routing was implemented. Model pricing can change and should be rechecked before later routing changes.
+These items are research/development priorities only. Each must still pass its own tests, untouched OOS/robustness where applicable, exact-SHA Security, independent reviews and the normal promotion chain before affecting BUY/SELL.
+
+## COST / SPEED POLICY
+Use deterministic Python for calculation, backtesting, filtering and evidence checks. Use AI for bounded planning, research hypothesis generation, implementation/review and orchestration. Routine planner/specialists use `gpt-5.6-luna`; testing-security, strategy-registry, portfolio-risk and production-signals use `gpt-5.6-sol`; Lead and independent integration reviews use `gpt-5.6-sol`. Recheck official model/pricing information before future routing changes.
+
+Prefer event-driven wakeups over idle polling when a meaningful repository/research/production event already exists. Preserve concurrency locks so overlapping events do not create competing write candidates. Increase useful parallelism through read-only audits/research shards, not multiple simultaneous writes to `main`.
 
 ## SAFETY INVARIANTS
-Specialists work on isolated `auto/<role>/<run>` branches. `AI_STATE.md`, `agents/`, `.github/workflows/`, `requirements.txt`, and `Dockerfile` remain protected from specialist writes.
-Candidate branches must pass full pytest, generated-cache cleanup and protected-path checks before publication.
-Candidate publication explicitly dispatches Security and Reliability. Lead requires exact candidate SHA success, rejects protected or >80 KB diffs, and requires independent Security AI + Lead AI approval.
-The owner explicitly enabled verified-only autonomous merging on 2026-09-07. `AUTONOMOUS_MERGE_ENABLED` is now true in the Lead workflow, but a candidate still cannot merge without full repository tests, exact-candidate-SHA Security and Reliability success, bounded/protected-path checks, independent Security AI approval, independent Lead AI approval, a final post-squash pytest pass, and a canonical `AI_STATE.md` update in the same commit.
-Insufficient or unreliable evidence always means WAIT / NO TRADE / RESEARCH_ONLY.
+Specialists work on isolated `auto/<role>/<run>` branches. Protected orchestration/state paths are `AI_STATE.md`, `agents/`, `orchestration/`, `.github/workflows/`, `requirements.txt` and `Dockerfile`; specialists must never modify them. Candidate code must pass full pytest, generated-cache cleanup and protected-path checks before publication. Candidate publication dispatches Security and Reliability. Lead requires exact candidate SHA success, rejects oversized/protected diffs, requires independent Security AI + Lead AI approval, final post-squash pytest and canonical AI_STATE update before pushing `main`.
+
+Verified-only autonomous merging is enabled, but these gates remain mandatory. Research, news, on-chain, order-book, continuous-AI and backlog evidence can never bypass live strategy approval.
 
 ## EXACT NEXT STEP
-1. Verify the post-PR #36 Render deployment and confirm the continuous AI observer completes a successful live cycle: `/health.continuous_ai` must report `configured=true`, `cycle_count>=1`, no current parser error, the five-minute bounded cadence, and trade/write/promotion authority all false; Render logs should show the sanitized `continuous AI observer cycle completed` line.
-2. Verify the first full post-deploy production scan keeps latency/errors healthy, returns order-book evidence as research-only, and contains no unvalidated trade.
-3. Verify an authenticated production workflow scan completes with two-source consensus where available, fails closed where not, passes `tools/validate_scan_response.py`, and contains no unvalidated trade.
-4. After the fixed deadlines pass, verify the first 24h and 7d ledger outcomes use only candles at or after `due_at`; confirm calibration remains restrictive until each comparable bin has at least 30 resolved forecasts and its 95% Wilson lower bound is at least 50%.
-5. Keep `live_promotions.json` empty and signing keys unused until a strategy has completed repeated backtests, untouched OOS, robustness/stability, strategy-registry review and production-risk review; never sign from a single OOS pass or AI label.
-6. Verify the next cloud research run produces SHA-256-sealed envelopes, deterministic robustness output and a sealed repeated-run aggregation artifact; never interpret `READY_FOR_STRATEGY_REGISTRY_REVIEW` as live approval.
-7. Inspect research run `34079774231` artifact contents before any PONS-specific result claim or promotion.
-8. Verify the first one-CHANGE/thirteen-AUDIT cycle runs all 14 roles, publishes no audit branches, creates at most one current-base candidate, and reduces redundant runner/test cost without weakening exact-SHA Security dispatch.
-9. Verify the first automatic integration includes all required gates and updates this file in the same commit; fail closed on any missing check or stale candidate base.
-10. Update this file again after every completed development/integration cycle.
+1. Verify the post-PR #36 production AI observer live cycle: `/health.continuous_ai` must show `configured=true`, `cycle_count>=1`, no current parser error, five-minute bounded cadence, and trade/write/promotion authority false; Render logs should show `continuous AI observer cycle completed`.
+2. Complete PR #37 Security and Reliability on its exact final SHA. If green, merge it manually because it changes protected orchestration/workflow/state files, then verify the first `workflow_run`-triggered specialist cycle wakes after a scan or cloud-research completion and still produces exactly one CHANGE + thirteen AUDIT roles.
+3. After PR #37 is live, begin the protected accuracy queue with `ACC-001`; complete items sequentially by evidence while all non-owner specialists audit in parallel. Never mark an item complete merely because code was written—require tests and relevant OOS/robustness evidence.
+4. Verify the first full post-order-book production scan keeps latency/errors healthy, order-book evidence stays research-only and no unvalidated trade appears.
+5. Verify an authenticated production workflow scan has two-source consensus where available, fails closed where not, passes `tools/validate_scan_response.py` and contains no unvalidated trade.
+6. After forecast deadlines pass, verify first 24h/7d outcomes use only data at/after `due_at` and calibration remains restrictive until >=30 comparable resolutions and Wilson lower bound >=50%.
+7. Keep `live_promotions.json` empty and signing keys unused until strategies complete repeated backtests, untouched OOS, robustness/stability, registry review and production-risk review.
+8. Verify the next cloud research run emits valid sealed robustness/repeated-run evidence; `READY_FOR_STRATEGY_REGISTRY_REVIEW` remains research-only.
+9. Inspect research run `34079774231` artifacts before any PONS-specific result claim or promotion.
+10. Update this file after every completed development/integration cycle.
