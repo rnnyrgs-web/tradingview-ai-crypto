@@ -8,7 +8,7 @@ import urllib.parse
 from fastapi import Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from config import SCAN_SECRET
+from config import DASHBOARD_SECRET
 from db import fetch_ranked_opportunities, fetch_signal_by_id
 
 SESSION_COOKIE = "crypto_dashboard_session"
@@ -21,12 +21,12 @@ def _b64(data: bytes) -> str:
 
 def _session_token(expires: int) -> str:
     msg = str(expires).encode("ascii")
-    sig = hmac.new(SCAN_SECRET.encode("utf-8"), msg, hashlib.sha256).digest()
+    sig = hmac.new(DASHBOARD_SECRET.encode("utf-8"), msg, hashlib.sha256).digest()
     return f"{expires}.{_b64(sig)}"
 
 
 def _valid_session(token: str) -> bool:
-    if not SCAN_SECRET or not token or "." not in token:
+    if not DASHBOARD_SECRET or not token or "." not in token:
         return False
     try:
         exp_s, supplied_sig = token.split(".", 1)
@@ -102,28 +102,33 @@ def _risk_visual(row):
 
 
 def login_page(error=""):
+    if not DASHBOARD_SECRET:
+        error = "Dashboard authentication is not configured yet. Set DASHBOARD_SECRET privately in Render before using this page."
     err = f'<div class="error">{html.escape(error)}</div>' if error else ""
+    disabled = " disabled" if not DASHBOARD_SECRET else ""
     return HTMLResponse(f"""<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Crypto Signal Dashboard</title><style>
 body{{font-family:Arial,sans-serif;background:#0b0f14;color:#edf2f7;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}}
 .box{{width:min(440px,90vw);background:#121821;border:1px solid #263240;border-radius:16px;padding:28px}}
 input,button{{box-sizing:border-box;width:100%;padding:13px;border-radius:10px;border:1px solid #344254;font-size:16px}}
-input{{background:#0b0f14;color:white;margin:12px 0}}button{{background:#edf2f7;color:#0b0f14;font-weight:bold;cursor:pointer}}
+input{{background:#0b0f14;color:white;margin:12px 0}}button{{background:#edf2f7;color:#0b0f14;font-weight:bold;cursor:pointer}}button:disabled{{opacity:.45;cursor:not-allowed}}
 small{{color:#93a4b8}}.error{{background:#4a1c1c;padding:10px;border-radius:8px;margin:10px 0}}
 </style></head><body><div class="box"><h2>Crypto Signal Dashboard</h2>
 <p>Private dashboard for ranked 24h and 7d signal candidates.</p>{err}
-<form method="post" action="/dashboard/login"><input name="secret" type="password" autocomplete="current-password" placeholder="Private dashboard secret" required><button>Unlock dashboard</button></form>
-<p><small>The secret is submitted only to your Render service over HTTPS and is replaced by a signed HttpOnly session cookie. Do not paste it into chat.</small></p>
+<form method="post" action="/dashboard/login"><input name="secret" type="password" autocomplete="current-password" placeholder="Private dashboard password" required{disabled}><button{disabled}>Unlock dashboard</button></form>
+<p><small>The dashboard uses a separate password from the scanner/API secret. The password is submitted only to your Render service over HTTPS and replaced by a signed HttpOnly session cookie. Do not paste it into chat.</small></p>
 </div></body></html>""")
 
 
 async def handle_login(request: Request):
+    if not DASHBOARD_SECRET:
+        return login_page()
     raw = (await request.body()).decode("utf-8", errors="replace")
     form = urllib.parse.parse_qs(raw, keep_blank_values=True)
     supplied = (form.get("secret") or [""])[0]
-    if not SCAN_SECRET or not hmac.compare_digest(supplied, SCAN_SECRET):
-        return login_page("Incorrect secret.")
+    if not hmac.compare_digest(supplied, DASHBOARD_SECRET):
+        return login_page("Incorrect password.")
     expires = int(time.time()) + SESSION_TTL_SECONDS
     response = RedirectResponse("/dashboard?horizon=24h", status_code=303)
     response.set_cookie(
