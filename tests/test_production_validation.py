@@ -14,12 +14,11 @@ def test_live_validation_rejects_unpromoted_strategy():
 
 
 def test_live_validation_requires_exact_promoted_key(monkeypatch):
-    identity = pv.build_strategy_identity("ETH-USDT", "24h", "trend")
-    monkeypatch.setattr(
-        pv,
-        "LIVE_VALIDATED_STRATEGIES",
-        frozenset({identity["fingerprint"]}),
-    )
+    approved_fingerprint = pv.build_strategy_identity("ETH-USDT", "24h", "trend")["fingerprint"]
+    monkeypatch.setattr(pv, "find_verified_promotion", lambda identity: (
+        identity["fingerprint"] == approved_fingerprint,
+        "verified" if identity["fingerprint"] == approved_fingerprint else "not verified",
+    ))
     assert pv.validate_live_strategy("eth-usdt", "24h", "TREND").approved is True
     assert pv.validate_live_strategy("ETH-USDT", "7d", "trend").approved is False
     assert pv.validate_live_strategy("ETH-USDT", "24h", "breakout").approved is False

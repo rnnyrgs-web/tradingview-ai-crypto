@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from backtest import run_backtest, walk_forward
 from market_data import build_universe
 from strategy_families import evaluate_strategy_registry
+from research_artifact import seal_research_payload
 
 
 def csv_env(name, default=""):
@@ -116,17 +117,19 @@ def main():
     }
 
     os.makedirs("research_output", exist_ok=True)
+    sealed_payload = seal_research_payload(payload)
     with open("research_output/backtest_results.json", "w", encoding="utf-8") as f:
-        json.dump(payload, f, indent=2)
+        json.dump(sealed_payload, f, indent=2)
 
     with open("research_output/strategy_registry.json", "w", encoding="utf-8") as f:
-        json.dump({
+        registry_payload = {
             "generated_at": payload["generated_at"],
             "policy": payload["strategy_policy"],
             "universe": universe_meta,
             "eligible_strategy_count": len(eligible),
             "eligible_strategies": eligible,
-        }, f, indent=2)
+        }
+        json.dump(seal_research_payload(registry_payload), f, indent=2)
 
     failures = sum(1 for x in results if not x.get("ok"))
     print(
