@@ -1,19 +1,64 @@
 import json
 import os
 import time
+import zlib
 from datetime import datetime, timezone
 
 from backtest import run_backtest, walk_forward
+from market_data import build_universe
 from strategy_families import evaluate_strategy_registry
 
 
-def csv_env(name, default):
+def csv_env(name, default=""):
     raw = os.getenv(name, default)
     return [x.strip() for x in raw.split(",") if x.strip()]
 
 
+def stable_shard(symbol, shard_count):
+    count = max(1, int(shard_count))
+    return zlib.crc32(symbol.encode("utf-8")) % count
+
+
+def resolve_research_symbols():
+    explicit = csv_env("RESEARCH_SYMBOLS")
+    if explicit:
+        return explicit, {
+            "mode": "explicit",
+            "universe_size_target": len(explicit),
+            "universe_size_resolved": len(explicit),
+            "forced_symbols": [],
+            "shard_index": 0,
+            "shard_count": 1,
+        }
+
+    target = max(1, min(int(os.getenv("RESEARCH_UNIVERSE_SIZE", "80")), 100))
+    shard_count = max(1, int(os.getenv("RESEARCH_SHARD_COUNT", "1")))
+    shard_index = int(os.getenv("RESEARCH_SHARD_INDEX", "0"))
+    if shard_index < 0 or shard_index >= shard_count:
+        raise ValueError("RESEARCH_SHARD_INDEX must be within RESEARCH_SHARD_COUNT")
+
+    ranked = [row["symbol"] for row in build_universe()[:target]]
+    forced = csv_env("RESEARCH_FORCE_SYMBOLS", "PONS-USDT-SWAP")
+    for symbol in forced:
+        if symbol not in ranked:
+            ranked.append(symbol)
+
+    selected = [
+        symbol for symbol in ranked
+        if stable_shard(symbol, shard_count) == shard_index
+    ]
+    return selected, {
+        "mode": "dynamic_liquid_universe",
+        "universe_size_target": target,
+        "universe_size_resolved": len(ranked),
+        "forced_symbols": forced,
+        "shard_index": shard_index,
+        "shard_count": shard_count,
+    }
+
+
 def main():
-    symbols = csv_env("RESEARCH_SYMBOLS", "BTC-USDT,ETH-USDT,SOL-USDT,XRP-USDT,LINK-USDT")
+    symbols, universe_meta = resolve_research_symbols()
     timeframes = csv_env("RESEARCH_TIMEFRAMES", "15m,1H")
     bars = int(os.getenv("RESEARCH_BARS", "5000"))
     threshold = float(os.getenv("RESEARCH_THRESHOLD", "2.25"))
@@ -63,6 +108,7 @@ def main():
         "timeframes": timeframes,
         "bars_requested": bars,
         "threshold": threshold,
+        "universe": universe_meta,
         "strategy_policy": "research-only unless strict validation+holdout OOS quality gate passes",
         "eligible_strategy_count": len(eligible),
         "eligible_strategies": eligible,
@@ -77,13 +123,17 @@ def main():
         json.dump({
             "generated_at": payload["generated_at"],
             "policy": payload["strategy_policy"],
+            "universe": universe_meta,
             "eligible_strategy_count": len(eligible),
             "eligible_strategies": eligible,
         }, f, indent=2)
 
     failures = sum(1 for x in results if not x.get("ok"))
-    print(f"Completed {len(results)} research jobs with {failures} failures and {len(eligible)} OOS-eligible strategies.")
-    if failures == len(results):
+    print(
+        f"Completed {len(results)} research jobs with {failures} failures and "
+        f"{len(eligible)} OOS-eligible strategies. Universe={universe_meta}."
+    )
+    if results and failures == len(results):
         raise SystemExit(1)
 
 
