@@ -6,6 +6,7 @@ import fnmatch
 import io
 import json
 import os
+import time
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +25,8 @@ PROTECTED_PATTERNS = (
 MAX_FILE_READ_BYTES = 80_000
 MAX_FILE_WRITE_BYTES = 120_000
 ABSOLUTE_MAX_TOOL_STEPS = 32
+OPENAI_MAX_ATTEMPTS = 6
+OPENAI_BACKOFF_SECONDS = (5, 10, 20, 40, 60)
 
 
 def bounded_tool_steps(raw: str | None, default: int = 12) -> int:
@@ -144,9 +147,7 @@ def tool_specs() -> list[dict[str, Any]]:
             "description": "Run pytest in-process with optional pytest arguments.",
             "parameters": {
                 "type": "object",
-                "properties": {
-                    "args": {"type": "array", "items": {"type": "string"}, "maxItems": 12}
-                },
+                "properties": {"args": {"type": "array", "items": {"type": "string"}, "maxItems": 12}},
                 "additionalProperties": False,
             },
         },
@@ -181,11 +182,35 @@ def api_headers() -> dict[str, str]:
     return {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
 
 
+def _retry_delay(response: httpx.Response | None, attempt: int) -> float:
+    if response is not None:
+        raw = response.headers.get("retry-after", "").strip()
+        try:
+            delay = float(raw)
+            if delay > 0:
+                return min(delay, 120.0)
+        except ValueError:
+            pass
+    return float(OPENAI_BACKOFF_SECONDS[min(attempt, len(OPENAI_BACKOFF_SECONDS) - 1)])
+
+
 def post_response(payload: dict[str, Any]) -> dict[str, Any]:
+    retryable_statuses = {408, 409, 429, 500, 502, 503, 504}
     with httpx.Client(timeout=180.0) as client:
-        response = client.post("https://api.openai.com/v1/responses", headers=api_headers(), json=payload)
-        response.raise_for_status()
-        return response.json()
+        for attempt in range(OPENAI_MAX_ATTEMPTS):
+            response: httpx.Response | None = None
+            try:
+                response = client.post("https://api.openai.com/v1/responses", headers=api_headers(), json=payload)
+                if response.status_code not in retryable_statuses:
+                    response.raise_for_status()
+                    return response.json()
+                if attempt == OPENAI_MAX_ATTEMPTS - 1:
+                    response.raise_for_status()
+            except (httpx.TimeoutException, httpx.NetworkError):
+                if attempt == OPENAI_MAX_ATTEMPTS - 1:
+                    raise
+            time.sleep(_retry_delay(response, attempt))
+    raise RuntimeError("OpenAI response retry loop exited unexpectedly")
 
 
 def response_text(payload: dict[str, Any]) -> str:
@@ -268,16 +293,7 @@ def review_diff(reviewer: str, diff_path: Path, output: Path) -> int:
     diff = diff_path.read_text(encoding="utf-8")
     if len(diff.encode("utf-8")) > 80_000:
         raise RuntimeError("diff too large")
-    if any(
-        marker in diff
-        for marker in (
-            "diff --git a/AI_STATE.md ",
-            "diff --git a/agents/",
-            "diff --git a/.github/workflows/",
-            "diff --git a/requirements.txt ",
-            "diff --git a/Dockerfile ",
-        )
-    ):
+    if any(marker in diff for marker in ("diff --git a/AI_STATE.md ", "diff --git a/agents/", "diff --git a/.github/workflows/", "diff --git a/requirements.txt ", "diff --git a/Dockerfile ")):
         raise RuntimeError("protected orchestration/state path in diff")
 
     focus = (
