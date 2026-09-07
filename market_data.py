@@ -1,3 +1,4 @@
+import logging
 import time
 from datetime import datetime, timezone, timedelta
 import httpx
@@ -5,6 +6,7 @@ import httpx
 from config import OKX_BASE, MIN_QUOTE_VOLUME, MAX_SPREAD_BPS, STABLE_BASES, UNIVERSE_SIZE
 from utils import f, pct_change
 
+log = logging.getLogger(__name__)
 http = httpx.Client(timeout=25.0, follow_redirects=True)
 
 
@@ -80,7 +82,6 @@ def get_history(symbol, bar="15m", bars=1000, max_bars=50000):
         if len(rows) < page_size:
             break
 
-        # Stay conservative with public API rate limits.
         time.sleep(0.12)
 
     by_ts = {int(r[0]): r for r in collected}
@@ -96,15 +97,15 @@ def get_derivatives(base):
         if fr:
             out["funding_rate"] = f(fr[0].get("fundingRate"), None)
             out["swap_available"] = True
-    except Exception:
-        pass
+    except Exception as exc:
+        log.info("Funding unavailable for %s: %s", inst, type(exc).__name__)
     try:
         oi = okx_get("/api/v5/public/open-interest", {"instType": "SWAP", "instId": inst})
         if oi:
             out["open_interest"] = f(oi[0].get("oiCcy") or oi[0].get("oi"), None)
             out["swap_available"] = True
-    except Exception:
-        pass
+    except Exception as exc:
+        log.info("Open interest unavailable for %s: %s", inst, type(exc).__name__)
     return out
 
 
