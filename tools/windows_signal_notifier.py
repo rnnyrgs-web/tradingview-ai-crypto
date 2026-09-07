@@ -19,11 +19,19 @@ INTERVAL_MAP = {
 }
 
 
+def _validated_base_url():
+    parsed = urllib.parse.urlparse(BASE_URL)
+    if parsed.scheme != "https" or not parsed.netloc or parsed.username or parsed.password:
+        raise RuntimeError("SIGNAL_SERVER_URL must be a credential-free HTTPS URL")
+    return BASE_URL
+
+
 def get_json(path):
     if not SCAN_SECRET:
         raise RuntimeError("SCAN_SECRET environment variable is required")
-    req = urllib.request.Request(f"{BASE_URL}{path}", headers={"X-Scan-Secret": SCAN_SECRET})
-    with urllib.request.urlopen(req, timeout=20) as r:
+    url = f"{_validated_base_url()}{path}"
+    req = urllib.request.Request(url, headers={"X-Scan-Secret": SCAN_SECRET})
+    with urllib.request.urlopen(req, timeout=20) as r:  # nosec B310 - HTTPS scheme is validated above
         return json.loads(r.read().decode("utf-8"))
 
 
