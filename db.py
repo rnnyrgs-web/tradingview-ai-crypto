@@ -66,6 +66,52 @@ def fetch_actionable_after(after_id=0, limit=20):
         raise RuntimeError(f"Supabase signal feed failed: {r.status_code} {r.text}")
     return r.json()
 
+def fetch_ranked_opportunities(horizon="24h", hours=None, limit=20):
+    """Return the latest candidate per symbol, then rank TRADE ahead of WAIT.
+
+    This intentionally does not fabricate twenty trades. If the live engine has fewer
+    than twenty actionable setups, WAIT candidates remain visibly labeled as WAIT.
+    """
+    if not configured():
+        return []
+    if horizon not in {"24h", "7d"}:
+        raise ValueError("horizon must be 24h or 7d")
+    lookback = int(hours if hours is not None else (72 if horizon == "24h" else 24 * 14))
+    cutoff=iso(now_utc()-timedelta(hours=max(1,lookback)))
+    params={
+        "select":"id,created_at,symbol,timeframe,direction,action,entry_price,stop_loss,target_1,target_2,risk_reward,evidence_score,market_regime,status,strategy_version,reasoning",
+        "created_at":f"gte.{cutoff}",
+        "timeframe":f"eq.{horizon}",
+        "order":"created_at.desc",
+        "limit":"500",
+    }
+    r=http.get(f"{SUPABASE_URL}/rest/v1/trading_signals",headers=headers(),params=params)
+    if r.status_code>=300:
+        raise RuntimeError(f"Supabase opportunities fetch failed: {r.status_code} {r.text}")
+    latest={}
+    for row in r.json():
+        symbol=str(row.get("symbol") or "")
+        if symbol and symbol not in latest:
+            latest[symbol]=row
+    rows=list(latest.values())
+    rows.sort(key=lambda x:(
+        1 if str(x.get("action") or "").upper()=="TRADE" else 0,
+        float(x.get("evidence_score") or 0),
+        float(x.get("risk_reward") or 0),
+        int(x.get("id") or 0),
+    ), reverse=True)
+    return rows[:max(1,min(int(limit),50))]
+
+def fetch_signal_by_id(signal_id):
+    if not configured():
+        return None
+    params={"select":"*","id":f"eq.{int(signal_id)}","limit":"1"}
+    r=http.get(f"{SUPABASE_URL}/rest/v1/trading_signals",headers=headers(),params=params)
+    if r.status_code>=300:
+        raise RuntimeError(f"Supabase signal fetch failed: {r.status_code} {r.text}")
+    rows=r.json()
+    return rows[0] if rows else None
+
 def patch_signal(signal_id, fields):
     if not fields:
         return
