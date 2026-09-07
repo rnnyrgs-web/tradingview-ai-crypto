@@ -4,6 +4,7 @@ import time
 from datetime import datetime, timezone
 
 from backtest import run_backtest, walk_forward
+from strategy_families import evaluate_strategy_registry
 
 
 def csv_env(name, default):
@@ -31,6 +32,7 @@ def main():
             try:
                 item["backtest"] = run_backtest(symbol, bar=bar, bars=bars, threshold=threshold)
                 item["walk_forward"] = walk_forward(symbol, bar=bar, bars=bars)
+                item["strategy_registry"] = evaluate_strategy_registry(symbol, bar=bar, bars=bars)
                 item["ok"] = True
             except Exception as exc:
                 item["ok"] = False
@@ -38,6 +40,19 @@ def main():
             item["elapsed_seconds"] = round(time.time() - t0, 2)
             results.append(item)
             print(json.dumps(item, default=str), flush=True)
+
+    eligible = []
+    for item in results:
+        registry = (item.get("strategy_registry") or {}).get("registry", [])
+        for strategy in registry:
+            if strategy.get("quality_gate", {}).get("passed"):
+                eligible.append({
+                    "symbol": item["symbol"],
+                    "bar": item["bar"],
+                    "strategy_family": strategy["strategy_family"],
+                    "validation": strategy["validation"],
+                    "holdout_test": strategy["holdout_test"],
+                })
 
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -48,6 +63,9 @@ def main():
         "timeframes": timeframes,
         "bars_requested": bars,
         "threshold": threshold,
+        "strategy_policy": "research-only unless strict validation+holdout OOS quality gate passes",
+        "eligible_strategy_count": len(eligible),
+        "eligible_strategies": eligible,
         "results": results,
     }
 
@@ -55,8 +73,16 @@ def main():
     with open("research_output/backtest_results.json", "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2)
 
+    with open("research_output/strategy_registry.json", "w", encoding="utf-8") as f:
+        json.dump({
+            "generated_at": payload["generated_at"],
+            "policy": payload["strategy_policy"],
+            "eligible_strategy_count": len(eligible),
+            "eligible_strategies": eligible,
+        }, f, indent=2)
+
     failures = sum(1 for x in results if not x.get("ok"))
-    print(f"Completed {len(results)} research jobs with {failures} failures.")
+    print(f"Completed {len(results)} research jobs with {failures} failures and {len(eligible)} OOS-eligible strategies.")
     if failures == len(results):
         raise SystemExit(1)
 
