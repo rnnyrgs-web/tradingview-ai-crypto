@@ -67,7 +67,7 @@ def fetch_actionable_after(after_id=0, limit=20):
     return r.json()
 
 def fetch_ranked_opportunities(horizon="24h", hours=None, limit=20):
-    """Return the latest candidate per symbol, then rank TRADE ahead of WAIT.
+    """Return the latest fresh candidate per symbol, then rank TRADE ahead of WAIT.
 
     This intentionally does not fabricate twenty trades. If the live engine has fewer
     than twenty actionable setups, WAIT candidates remain visibly labeled as WAIT.
@@ -76,7 +76,7 @@ def fetch_ranked_opportunities(horizon="24h", hours=None, limit=20):
         return []
     if horizon not in {"24h", "7d"}:
         raise ValueError("horizon must be 24h or 7d")
-    lookback = int(hours if hours is not None else (72 if horizon == "24h" else 24 * 14))
+    lookback = int(hours if hours is not None else (48 if horizon == "24h" else 96))
     cutoff=iso(now_utc()-timedelta(hours=max(1,lookback)))
     params={
         "select":"id,created_at,symbol,timeframe,direction,action,entry_price,stop_loss,target_1,target_2,risk_reward,evidence_score,market_regime,status,strategy_version,reasoning",
