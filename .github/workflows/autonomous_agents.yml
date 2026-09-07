@@ -48,8 +48,6 @@ jobs:
           } > /tmp/github-context.txt
       - id: plan
         name: Generate fail-closed specialist plan
-        env:
-          AGENT_EXTERNAL_CONTEXT: ${{ github.workspace }}/.unused
         run: |
           export AGENT_EXTERNAL_CONTEXT="$(cat /tmp/github-context.txt)"
           python agents/autonomous_orchestrator.py plan --output /tmp/agent-plan.json
@@ -105,9 +103,9 @@ jobs:
         run: pytest -q
       - name: Reject protected-path modifications
         run: |
-          CHANGED="$(git diff --name-only)"
+          CHANGED="$(git status --porcelain | sed -E 's/^.. //')"
           echo "$CHANGED"
-          if echo "$CHANGED" | grep -Eq '^(AI_STATE\.md|agents/|\.github/workflows/|requirements\.txt|Dockerfile)$'; then
+          if echo "$CHANGED" | grep -Eq '^(AI_STATE\.md$|agents/|\.github/workflows/|requirements\.txt$|Dockerfile$)'; then
             echo "Protected path changed; refusing autonomous PR."
             exit 1
           fi
@@ -116,11 +114,12 @@ jobs:
           ROLE: ${{ matrix.role }}
           BRANCH: ${{ steps.branch.outputs.branch }}
         run: |
-          if git diff --quiet; then
+          if [ -z "$(git status --porcelain)" ]; then
             echo "No changes for $ROLE this cycle."
             exit 0
           fi
           git add -A
+          git diff --cached --check
           git commit -m "autonomous($ROLE): bounded improvement"
           git push origin "$BRANCH"
           gh pr create \
