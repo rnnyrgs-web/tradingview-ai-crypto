@@ -14,11 +14,28 @@ def test_live_validation_rejects_unpromoted_strategy():
 
 
 def test_live_validation_requires_exact_promoted_key(monkeypatch):
+    identity = pv.build_strategy_identity("ETH-USDT", "24h", "trend")
     monkeypatch.setattr(
         pv,
         "LIVE_VALIDATED_STRATEGIES",
-        frozenset({("ETH-USDT", "24h", "trend")}),
+        frozenset({identity["fingerprint"]}),
     )
     assert pv.validate_live_strategy("eth-usdt", "24h", "TREND").approved is True
     assert pv.validate_live_strategy("ETH-USDT", "7d", "trend").approved is False
     assert pv.validate_live_strategy("ETH-USDT", "24h", "breakout").approved is False
+
+
+def test_identity_is_exact_and_exposed_in_decision():
+    decision = pv.validate_live_strategy("eth-usdt", "24h", "TREND")
+    identity = decision.identity
+    assert identity["symbol"] == "ETH-USDT"
+    assert identity["production_horizon"] == "24h"
+    assert identity["timeframes"] == ["1H", "4H"]
+    assert len(identity["research_code_sha256"]) == 64
+    assert len(identity["fingerprint"]) == 64
+
+
+def test_unknown_horizon_fails_closed():
+    decision = pv.validate_live_strategy("ETH-USDT", "2d", "trend")
+    assert decision.approved is False
+    assert decision.identity["timeframes"] == []

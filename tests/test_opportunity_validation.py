@@ -38,7 +38,12 @@ def test_exact_promoted_strategy_can_preserve_trade(monkeypatch):
     monkeypatch.setattr(
         oe,
         "validate_live_strategy",
-        lambda symbol, horizon, family: type("D", (), {"approved": True, "status": "LIVE_VALIDATED", "reason": "approved"})(),
+        lambda symbol, horizon, family: type("D", (), {
+            "approved": True,
+            "status": "LIVE_VALIDATED",
+            "reason": "approved",
+            "identity": {"fingerprint": "a" * 64},
+        })(),
     )
     candidates = [{
         "symbol": "ETH-USDT",

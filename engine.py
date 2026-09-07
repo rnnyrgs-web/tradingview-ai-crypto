@@ -1,4 +1,5 @@
 import json, re, uuid
+import logging
 from openai import OpenAI
 
 from config import *
@@ -10,8 +11,10 @@ from news_engine import latest_news, for_base
 from db import insert_signal
 from opportunity_engine import build_opportunities
 from production_validation import validate_live_strategy
+from operational_monitor import record_scan
 
 client = OpenAI(api_key=OPENAI_API_KEY)
+log = logging.getLogger(__name__)
 
 def horizon_score(symbol, horizon):
     cfg=HORIZONS[horizon]
@@ -194,6 +197,7 @@ def run_scan():
                     "status":validation.status,
                     "reason":validation.reason,
                     "strategy_family":strategy_family,
+                    "strategy_identity":validation.identity,
                 },
                 "headline_context":[n["title"] for n in for_base(c["base"],news)[:5]]
             }
@@ -201,10 +205,15 @@ def run_scan():
         insert_signal(row)
         saved.append(row)
 
-    return {
-        "ok":True,"version":STRATEGY_VERSION,"scan_id":scan_id,
+    result = {
+        "ok":not ai_error and not opportunity_error and bool(deep),"version":STRATEGY_VERSION,"scan_id":scan_id,
         "universe_count":len(universe),"deep_scanned":len(deep),"market_regime":regime,
-        "signals_saved":len(saved),"signals":saved,"scan_errors":errors[:20],"ai_error":ai_error,
+        "signals_saved":len(saved),"signals":saved,"scan_error_count":len(errors),
+        "scan_errors":errors[:20],"ai_error":ai_error,
         "opportunities_saved":{"24h":len(opportunities.get("24h",[])),"7d":len(opportunities.get("7d",[]))},
         "opportunity_error":opportunity_error
     }
+    record_scan(result)
+    if errors:
+        log.warning("Scan completed with %s symbol errors", len(errors))
+    return result
