@@ -5,6 +5,7 @@ STRATEGY_VERSION = "v3.0"
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-5")
 SCAN_SECRET = os.getenv("SCAN_SECRET", "")
+DASHBOARD_SECRET = os.getenv("DASHBOARD_SECRET", "")
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
 SUPABASE_SECRET_KEY = os.getenv("SUPABASE_SECRET_KEY", "")
