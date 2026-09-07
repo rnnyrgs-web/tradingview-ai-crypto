@@ -10,7 +10,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 concurrency:
   group: autonomous-specialist-agents
@@ -46,8 +45,8 @@ jobs:
             echo "Recent workflow runs:"
             gh run list --repo "$GITHUB_REPOSITORY" --limit 15 || true
             echo
-            echo "Open pull requests:"
-            gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 30 || true
+            echo "Recent autonomous branches:"
+            git ls-remote --heads origin 'refs/heads/auto/*' | tail -30 || true
           } > /tmp/github-context.txt
       - id: plan
         name: Generate fail-closed specialist plan
@@ -117,10 +116,10 @@ jobs:
           CHANGED="$(git status --porcelain | sed -E 's/^.. //')"
           echo "$CHANGED"
           if echo "$CHANGED" | grep -Eq '^(AI_STATE\.md$|agents/|\.github/workflows/|requirements\.txt$|Dockerfile$)'; then
-            echo "Protected path changed; refusing autonomous PR."
+            echo "Protected path changed; refusing autonomous candidate."
             exit 1
           fi
-      - name: Commit and open PR only when there are changes
+      - name: Commit and publish candidate branch when there are changes
         env:
           ROLE: ${{ matrix.role }}
           BRANCH: ${{ steps.branch.outputs.branch }}
@@ -133,9 +132,4 @@ jobs:
           git diff --cached --check
           git commit -m "autonomous($ROLE): bounded improvement"
           git push origin "$BRANCH"
-          gh pr create \
-            --repo "$GITHUB_REPOSITORY" \
-            --base main \
-            --head "$BRANCH" \
-            --title "autonomous($ROLE): bounded improvement" \
-            --body "Automated specialist proposal from role **$ROLE**.\n\nThis PR is intentionally unmerged. It must pass Security and Reliability CI plus independent Lead/Security autonomous review before any merge. AI_STATE.md and orchestration safeguards are protected from specialist writes."
+          echo "Published candidate branch $BRANCH. Security and Reliability runs automatically on the exact pushed SHA."

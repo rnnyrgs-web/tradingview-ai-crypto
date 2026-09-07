@@ -39,22 +39,22 @@ def _response_text(payload: dict[str, Any]) -> str:
     return "\n".join(out)
 
 
-def generate_state_update(current_state: str, pr_context: str) -> str:
+def generate_state_update(current_state: str, integration_context: str) -> str:
     prompt = f"""
 You are the Lead Integrator maintaining canonical AI_STATE.md for a crypto quantitative trading/signalling system.
 
 CURRENT AI_STATE.md:\n{current_state}
 
-JUST-MERGED PR CONTEXT:\n{pr_context}
+JUST-INTEGRATED VERIFIED CANDIDATE CONTEXT:\n{integration_context}
 
 Return the COMPLETE replacement AI_STATE.md only, no code fences.
 Rules:
 - Preserve all still-true authoritative facts.
-- Record the merged PR/commit and exactly what was verified.
+- Record the integrated candidate branch/commit and exactly what was verified.
 - Never claim a workflow, backtest, artifact, deployment, or strategy result that is not explicitly present in the supplied evidence.
 - Keep pending/unknown items explicitly pending/unknown.
 - Maintain fail-closed rules and the prohibition on live weighting from one OOS pass.
-- Add/update the autonomous development architecture facts: specialist proposals come from isolated branches; Security CI plus independent lead/security AI review gates are required; specialist agents cannot edit AI_STATE.md or orchestration safeguards.
+- Add/update the autonomous development architecture facts: specialist proposals come from isolated candidate branches; Security CI on the exact candidate SHA plus independent Lead/Security AI review gates are required; specialist agents cannot edit AI_STATE.md or orchestration safeguards.
 - End with a concrete EXACT NEXT STEP based only on current evidence.
 """
     with httpx.Client(timeout=120.0) as client:
@@ -76,15 +76,15 @@ Rules:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--pr-context", required=True)
+    parser.add_argument("--pr-context", required=True, dest="integration_context")
     args = parser.parse_args()
 
     state_path = ROOT / "AI_STATE.md"
-    context_path = Path(args.pr_context)
+    context_path = Path(args.integration_context)
     current = state_path.read_text(encoding="utf-8")
     context = context_path.read_text(encoding="utf-8")
     if len(context) > 90_000:
-        raise RuntimeError("PR context too large for autonomous state update")
+        raise RuntimeError("integration context too large for autonomous state update")
     updated = generate_state_update(current, context)
     state_path.write_text(updated, encoding="utf-8")
     print("AI_STATE.md prepared by Lead Integrator state updater")
