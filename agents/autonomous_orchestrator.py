@@ -27,6 +27,7 @@ MAX_FILE_WRITE_BYTES = 120_000
 ABSOLUTE_MAX_TOOL_STEPS = 32
 OPENAI_MAX_ATTEMPTS = 6
 OPENAI_BACKOFF_SECONDS = (5, 10, 20, 40, 60)
+MAX_ACTIVE_TASKS_PER_CYCLE = 4
 
 
 def bounded_tool_steps(raw: str | None, default: int = 12) -> int:
@@ -239,10 +240,31 @@ def extract_json(text: str) -> dict[str, Any]:
     return json.loads(stripped)
 
 
+def validate_plan(plan: dict[str, Any], roles: dict[str, Any]) -> None:
+    tasks = plan.get("tasks")
+    if not isinstance(tasks, dict) or set(tasks) != set(roles):
+        raise RuntimeError("planner returned invalid role set")
+    active = 0
+    for role, task in tasks.items():
+        if not isinstance(task, dict) or task.get("status") not in {"TASK", "NO_TASK"}:
+            raise RuntimeError(f"planner returned invalid task for {role}")
+        if not isinstance(task.get("task"), str):
+            raise RuntimeError(f"planner omitted task text for {role}")
+        if task["status"] == "TASK":
+            active += 1
+    if active > MAX_ACTIVE_TASKS_PER_CYCLE:
+        raise RuntimeError(
+            f"planner exceeded cost cap: {active} active tasks > {MAX_ACTIVE_TASKS_PER_CYCLE}"
+        )
+
+
 def plan_tasks(output: Path) -> int:
     state = read_file("AI_STATE.md")
     external = os.getenv("AGENT_EXTERNAL_CONTEXT", "")[-30_000:]
     roles = load_roles()
+    task_shape = ",\n    ".join(
+        f'"{role}": {{"status": "TASK|NO_TASK", "task": "..."}}' for role in roles
+    )
     prompt = f"""
 You are the Lead Integrator planning one fail-closed autonomous development cycle for a crypto quantitative trading/signalling system.
 
@@ -252,20 +274,18 @@ RECENT GITHUB CONTEXT:\n{external}
 
 SPECIALIST ROLES:\n{json.dumps(roles, indent=2)}
 
-Return JSON only with this shape:
+Return JSON only with this exact role set:
 {{
   "cycle_goal": "...",
   "tasks": {{
-    "quant-research": {{"status": "TASK|NO_TASK", "task": "..."}},
-    "data-market": {{"status": "TASK|NO_TASK", "task": "..."}},
-    "strategy-registry": {{"status": "TASK|NO_TASK", "task": "..."}},
-    "production-risk": {{"status": "TASK|NO_TASK", "task": "..."}},
-    "testing-security": {{"status": "TASK|NO_TASK", "task": "..."}}
+    {task_shape}
   }}
 }}
 Rules:
 - Use AI_STATE.md as authoritative.
 - Assign at most one bounded task per role.
+- HARD COST CAP: assign TASK to at most {MAX_ACTIVE_TASKS_PER_CYCLE} specialists in one cycle; every other role must be NO_TASK.
+- Prefer the smallest set of specialists that can make measurable progress; do not spend API calls merely to keep agents busy.
 - Respect each role's allowed paths exactly.
 - Do not assign edits to AI_STATE.md, agents/, workflows, requirements.txt or Dockerfile.
 - Never promote research to live use from one OOS pass.
@@ -275,14 +295,7 @@ Rules:
 """
     payload = post_response({"model": model_name(), "input": prompt})
     plan = extract_json(response_text(payload))
-    tasks = plan.get("tasks")
-    if not isinstance(tasks, dict) or set(tasks) != set(roles):
-        raise RuntimeError("planner returned invalid role set")
-    for role, task in tasks.items():
-        if not isinstance(task, dict) or task.get("status") not in {"TASK", "NO_TASK"}:
-            raise RuntimeError(f"planner returned invalid task for {role}")
-        if not isinstance(task.get("task"), str):
-            raise RuntimeError(f"planner omitted task text for {role}")
+    validate_plan(plan, roles)
     output.write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")
     return 0
 
