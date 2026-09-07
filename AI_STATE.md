@@ -9,20 +9,22 @@ Production is GitHub -> Render -> Python/FastAPI V3 -> Supabase. Production scan
 Cloud research uses OKX public historical APIs and GitHub Actions. Research/backtesting runs hourly 24/7. Six strategy families remain trend, breakout, momentum, mean reversion, volatility expansion and relative strength vs BTC. No-lookahead and fail-closed rules remain mandatory.
 Chronological validation remains 60% train / 20% validation / 20% untouched holdout. Failed candidates remain `RESEARCH_ONLY`; one OOS pass is never enough for live weighting.
 
-## USER-MANDATED LIVE SIGNAL RULE
+## USER-MANDATED LIVE SIGNAL RULE — ENFORCED
 The user requires every BUY/SELL signal to be fully research validated and backtested before production display. No AI review, evidence score, ranking score, or single OOS pass may authorize a live trade by itself.
 The fail-closed production rule is:
 RESEARCH -> BACKTEST -> VALIDATION -> UNTOUCHED OOS -> ROBUSTNESS/STABILITY -> STRATEGY-REGISTRY APPROVAL -> PRODUCTION-RISK APPROVAL -> LIVE BUY/SELL.
 Anything missing any stage must remain `WAIT / RESEARCH_ONLY`.
 
-Branch `lead/validated-signals-cost-safe` implements the first hard production enforcement layer:
-- new `production_validation.py` with an explicit exact-key live-validation registry;
-- registry is intentionally empty because no strategy has yet completed the full live-promotion process;
+PR #19 `Fail closed all unvalidated production trade signals` passed Security and Reliability run `34142270947`, including unit tests, dependency vulnerability audit, static security scan and committed-secret rejection. It merged to `main` as `1a0004c31f1f8be570c72cfe0380a99994797316` and Render auto-deploy `dep-dafe5tvavr4c73c187n0` reached `live` successfully.
+
+Live enforcement now includes:
+- `production_validation.py` with an explicit exact-key live-validation registry;
+- registry intentionally empty because no strategy has yet completed the full live-promotion process;
 - `engine.py` downgrades AI `TRADE` to `WAIT` unless the exact symbol+horizon+strategy-family key is explicitly live validated;
 - `opportunity_engine.py` applies the same gate to 24h/7d dashboard opportunities;
 - missing/unknown research identity fails closed;
-- tests verify unpromoted AI TRADE output cannot become a production TRADE.
-Until a strategy completes the full promotion process, the correct production result is no BUY/SELL signal rather than an unvalidated trade.
+- regression tests verify unpromoted AI TRADE output cannot become production TRADE.
+Until a strategy completes the full promotion process, the correct production result is no BUY/SELL signal rather than an unvalidated trade. Existing database rows from scans before commit `1a0004c3...` can remain historically visible until replaced/refreshed; new production decisions are gated.
 
 ## RESEARCH UNIVERSE
 Dynamic intraday research targets Top-80 liquid OKX spot markets on 15m + 1H across deterministic shards, with PONS forcibly included as `PONS-USDT-SWAP`. Existing major swing research remains on 4H + 1D.
@@ -35,7 +37,7 @@ Research run `34077019168` produced exactly five strict OOS passes:
 - DOGE-USDT 1H volatility expansion
 - ADA-USDT 1H breakout
 - ADA-USDT 1H volatility expansion
-None are live-weighted. These passes alone do not satisfy the new full live-validation requirement.
+None are live-weighted. These passes alone do not satisfy the full live-validation requirement.
 
 ## 15-AGENT AUTONOMOUS ARCHITECTURE
 PR #17 `Expand autonomous development to 15 cost-aware agents` merged as `b20d75f05a81ae8fe1814f515d3d4f99a58abd7d`; state sync PR #18 merged as `fd4863015992c646dec3f855a43f0b0542c8252a`.
@@ -58,7 +60,7 @@ The active architecture is 15 total roles: 1 Lead Integrator + 14 specialists:
 plus the Lead Integrator.
 
 ### FIRST VALIDATED 15-AGENT HOURLY CYCLE
-Scheduled Autonomous Specialist Agents run `34138477323` on current-main SHA `fd4863015992c646dec3f855a43f0b0542c8252a` completed successfully.
+Scheduled Autonomous Specialist Agents run `34138477323` on SHA `fd4863015992c646dec3f855a43f0b0542c8252a` completed successfully.
 Planner output explicitly contained all 14 specialist roles and assigned `NO_TASK` to all 14, with `Active specialist roles: []`. GitHub created only the planner runner; the specialist matrix job was skipped with zero steps. This validates that NO_TASK roles consume no worker model call or runner setup.
 The workflow-run-triggered Autonomous Lead Integrator run `34138519231` completed successfully immediately afterward; fallback Lead run `34140804765` also completed successfully.
 Because there was no candidate branch in this zero-worker validation cycle, candidate-SHA Security dispatch/review was not applicable.
@@ -84,12 +86,10 @@ Candidate publication explicitly dispatches Security and Reliability. Lead requi
 Insufficient or unreliable evidence always means WAIT / NO TRADE / RESEARCH_ONLY.
 
 ## EXACT NEXT STEP
-1. Complete and validate branch `lead/validated-signals-cost-safe` with full pytest and Security and Reliability.
-2. Fix any failure before merge.
-3. Merge only after all checks are green; Render auto-deploy should then deploy the strict validation gate.
-4. Verify production is healthy and dashboard BUY/SELL cannot appear without exact live-validation approval.
-5. Keep `LIVE_VALIDATED_STRATEGIES` empty until a strategy has completed repeated backtests, untouched OOS, robustness/stability, strategy-registry review and production-risk review; never populate it from a single OOS pass or AI label.
-6. Build the deterministic research-to-production identity bridge so future promoted strategies are tied to the exact backtested family/rules, not merely an AI-provided label.
-7. Inspect research run `34079774231` artifact contents before any PONS-specific result claim or promotion.
-8. After the strict signal gate is live, optimize the 24/7 agent system further for low cost, including safe role-based model routing only after verifying supported model IDs/pricing and preserving Sol-class reasoning for high-risk integration/security work.
-9. Update this file again after every completed development/integration cycle.
+1. Verify the next production scan on commit `1a0004c31f1f8be570c72cfe0380a99994797316` produces no unvalidated `TRADE` / BUY / SELL decision; unvalidated candidates must be WAIT / RESEARCH_ONLY.
+2. Keep `LIVE_VALIDATED_STRATEGIES` empty until a strategy has completed repeated backtests, untouched OOS, robustness/stability, strategy-registry review and production-risk review; never populate it from a single OOS pass or AI label.
+3. Build the deterministic research-to-production identity bridge so future promoted strategies are tied to the exact backtested family/rules, not merely an AI-provided label.
+4. Inspect research run `34079774231` artifact contents before any PONS-specific result claim or promotion.
+5. Optimize the 24/7 agent system further for low cost, including safe role-based model routing only after verifying supported model IDs/pricing and preserving strongest reasoning for high-risk integration/security work.
+6. Keep autonomous merging OFF unless the user explicitly chooses to enable it.
+7. Update this file again after every completed development/integration cycle.
