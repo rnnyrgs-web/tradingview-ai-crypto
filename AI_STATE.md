@@ -109,8 +109,10 @@ The orchestration now requires exactly one `CHANGE` role and thirteen read-only 
 
 ## COST / 24-7 BEHAVIOR
 The owner explicitly requested all 15 roles work every hour, 24/7, with cost-aware routing and verified-only autonomous integration.
-- A separate always-on `continuous_coordinator.py` watchdog checks production health and this canonical handoff every minute. Normal operation uses zero AI tokens, exposes only sanitized status, has no market-scan/write/promotion/trade authority, and fails unhealthy after repeated observation failures. The 14 specialists remain event/hourly workers so idle model cost is not incurred.
+- A separate always-on `continuous_coordinator.py` watchdog checks production health and this canonical handoff every minute. Normal operation uses zero AI tokens, exposes only sanitized status, has no market-scan/write/promotion/trade authority, and fails unhealthy after repeated observation failures.
 - Continuous coordinator Render service `srv-dafgtead0e5s73cc7ekg` deployed commit `03e91acc6a3242cd99747de2910e161af251b2c0` as `dep-dafgteid0e5s73cc7ffg` and reached `live`. Its first observed `/health` response reported `production_ok=true`, `state_ok=true`, zero consecutive failures, `ai_calls_normal_operation=0`, and `trade_authority=false`.
+- The owner additionally requested at least one real AI agent remain active 24/7 rather than only hourly scheduled AI workers. PR #35 adds `continuous_ai_agent.py` to the production FastAPI process. It runs an always-on background loop with a bounded AI assessment every five minutes by default, reuses the production OpenAI configuration, reviews deterministic `operational_monitor` evidence plus canonical `AI_STATE.md`, and publishes only a compact assessment/next-action snapshot through `/health`.
+- The continuous AI observer has explicit `trade_authority=false`, `write_authority=false`, and `promotion_authority=false`. It cannot scan markets, alter code, publish branches, sign promotions, or authorize BUY/SELL. Any implementation action still flows through the normal specialist -> Security -> Lead integration gates. The separate coordinator remains token-free.
 - Autonomous specialist planner: minute 17 every hour, 24/7.
 - Cloud research/backtesting/algo testing: hourly 24/7.
 - Production market scans: approximately every 15 minutes.
@@ -129,12 +131,13 @@ The owner explicitly enabled verified-only autonomous merging on 2026-09-07. `AU
 Insufficient or unreliable evidence always means WAIT / NO TRADE / RESEARCH_ONLY.
 
 ## EXACT NEXT STEP
-1. Verify the first full post-deploy production scan keeps latency/errors healthy, returns order-book evidence as research-only, and contains no unvalidated trade.
-2. Verify an authenticated production workflow scan completes with two-source consensus where available, fails closed where not, passes `tools/validate_scan_response.py`, and contains no unvalidated trade.
-3. After the fixed deadlines pass, verify the first 24h and 7d ledger outcomes use only candles at or after `due_at`; confirm calibration remains restrictive until each comparable bin has at least 30 resolved forecasts and its 95% Wilson lower bound is at least 50%.
-4. Keep `live_promotions.json` empty and signing keys unused until a strategy has completed repeated backtests, untouched OOS, robustness/stability, strategy-registry review and production-risk review; never sign from a single OOS pass or AI label.
-5. Verify the next cloud research run produces SHA-256-sealed envelopes, deterministic robustness output and a sealed repeated-run aggregation artifact; never interpret `READY_FOR_STRATEGY_REGISTRY_REVIEW` as live approval.
-6. Inspect research run `34079774231` artifact contents before any PONS-specific result claim or promotion.
-7. Verify the first one-CHANGE/thirteen-AUDIT cycle runs all 14 roles, publishes no audit branches, creates at most one current-base candidate, and reduces redundant runner/test cost without weakening exact-SHA Security dispatch.
-8. Verify the first automatic integration includes all required gates and updates this file in the same commit; fail closed on any missing check or stale candidate base.
-9. Update this file again after every completed development/integration cycle.
+1. After PR #35 merges and Render deploys it, verify `/health.continuous_ai` reports configured=true, cycle_count increases across observations, the bounded cadence is active, and trade/write/promotion authority all remain false.
+2. Verify the first full post-deploy production scan keeps latency/errors healthy, returns order-book evidence as research-only, and contains no unvalidated trade.
+3. Verify an authenticated production workflow scan completes with two-source consensus where available, fails closed where not, passes `tools/validate_scan_response.py`, and contains no unvalidated trade.
+4. After the fixed deadlines pass, verify the first 24h and 7d ledger outcomes use only candles at or after `due_at`; confirm calibration remains restrictive until each comparable bin has at least 30 resolved forecasts and its 95% Wilson lower bound is at least 50%.
+5. Keep `live_promotions.json` empty and signing keys unused until a strategy has completed repeated backtests, untouched OOS, robustness/stability, strategy-registry review and production-risk review; never sign from a single OOS pass or AI label.
+6. Verify the next cloud research run produces SHA-256-sealed envelopes, deterministic robustness output and a sealed repeated-run aggregation artifact; never interpret `READY_FOR_STRATEGY_REGISTRY_REVIEW` as live approval.
+7. Inspect research run `34079774231` artifact contents before any PONS-specific result claim or promotion.
+8. Verify the first one-CHANGE/thirteen-AUDIT cycle runs all 14 roles, publishes no audit branches, creates at most one current-base candidate, and reduces redundant runner/test cost without weakening exact-SHA Security dispatch.
+9. Verify the first automatic integration includes all required gates and updates this file in the same commit; fail closed on any missing check or stale candidate base.
+10. Update this file again after every completed development/integration cycle.
