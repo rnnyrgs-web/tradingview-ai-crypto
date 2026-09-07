@@ -3,7 +3,13 @@ import time
 from datetime import datetime, timezone, timedelta
 import httpx
 
-from config import OKX_BASE, MIN_QUOTE_VOLUME, MAX_SPREAD_BPS, STABLE_BASES, UNIVERSE_SIZE
+from config import (
+    BINANCE_FUTURES_BASE, BINANCE_SPOT_BASE, MARKET_DATA_MAX_AGE_SECONDS,
+    MAX_SPREAD_BPS, MIN_QUOTE_VOLUME, OKX_BASE,
+    PRICE_CONSENSUS_MAX_DEVIATION_BPS, PRICE_CONSENSUS_MIN_SOURCES,
+    STABLE_BASES, UNIVERSE_SIZE,
+)
+from market_intelligence import derivatives_summary, price_consensus
 from utils import f, pct_change
 
 log = logging.getLogger(__name__)
@@ -21,6 +27,22 @@ def okx_get(path, params=None):
 
 def get_spot_tickers():
     return okx_get("/api/v5/market/tickers", {"instType": "SPOT"})
+
+
+def _binance_get(base_url, path, params=None):
+    r = http.get(f"{base_url}{path}", params=params or {})
+    r.raise_for_status()
+    return r.json()
+
+
+def get_binance_spot_prices():
+    """One batch request keeps cross-exchange validation cheap for the universe."""
+    rows = _binance_get(BINANCE_SPOT_BASE, "/api/v3/ticker/price")
+    observed_ms = int(time.time() * 1000)
+    return {
+        str(row.get("symbol")): {"price": f(row.get("price")), "observed_ms": observed_ms}
+        for row in rows if isinstance(row, dict)
+    }
 
 
 def normalize_candles(rows):
@@ -91,25 +113,60 @@ def get_history(symbol, bar="15m", bars=1000, max_bars=50000):
 
 def get_derivatives(base):
     inst = f"{base}-USDT-SWAP"
-    out = {"swap_available": False, "funding_rate": None, "open_interest": None}
+    exchange_rows = []
+    okx_row = {"exchange": "okx", "funding_rate": None, "open_interest_base": None}
     try:
         fr = okx_get("/api/v5/public/funding-rate", {"instId": inst})
         if fr:
-            out["funding_rate"] = f(fr[0].get("fundingRate"), None)
-            out["swap_available"] = True
+            okx_row["funding_rate"] = f(fr[0].get("fundingRate"), None)
     except Exception as exc:
         log.info("Funding unavailable for %s: %s", inst, type(exc).__name__)
     try:
         oi = okx_get("/api/v5/public/open-interest", {"instType": "SWAP", "instId": inst})
         if oi:
-            out["open_interest"] = f(oi[0].get("oiCcy") or oi[0].get("oi"), None)
-            out["swap_available"] = True
+            okx_row["open_interest_base"] = f(oi[0].get("oiCcy"), None)
     except Exception as exc:
         log.info("Open interest unavailable for %s: %s", inst, type(exc).__name__)
+    if okx_row["funding_rate"] is not None or okx_row["open_interest_base"] is not None:
+        exchange_rows.append(okx_row)
+
+    binance_row = {"exchange": "binance", "funding_rate": None, "open_interest_base": None}
+    symbol = f"{base}USDT"
+    try:
+        premium = _binance_get(BINANCE_FUTURES_BASE, "/fapi/v1/premiumIndex", {"symbol": symbol})
+        binance_row["funding_rate"] = f(premium.get("lastFundingRate"), None)
+    except Exception as exc:
+        log.info("Binance funding unavailable for %s: %s", symbol, type(exc).__name__)
+    try:
+        oi = _binance_get(BINANCE_FUTURES_BASE, "/fapi/v1/openInterest", {"symbol": symbol})
+        binance_row["open_interest_base"] = f(oi.get("openInterest"), None)
+    except Exception as exc:
+        log.info("Binance open interest unavailable for %s: %s", symbol, type(exc).__name__)
+    if binance_row["funding_rate"] is not None or binance_row["open_interest_base"] is not None:
+        exchange_rows.append(binance_row)
+
+    liquidation_rows = []
+    try:
+        raw = okx_get("/api/v5/public/liquidation-orders", {"instType": "SWAP", "instId": inst})
+        for group in raw:
+            for detail in group.get("details", []):
+                liquidation_rows.append({
+                    "side": detail.get("side"), "price": detail.get("bkPx"), "size": detail.get("sz")
+                })
+    except Exception as exc:
+        log.info("Liquidations unavailable for %s: %s", inst, type(exc).__name__)
+    out = derivatives_summary(exchange_rows, liquidation_rows)
+    out["swap_available"] = bool(exchange_rows)
     return out
 
 
 def build_universe():
+    try:
+        binance_prices = get_binance_spot_prices()
+    except Exception as exc:
+        log.warning("Cross-exchange price batch unavailable: %s", type(exc).__name__)
+        binance_prices = {}
+    observed_ms = int(time.time() * 1000)
     rows = []
     for t in get_spot_tickers():
         inst = str(t.get("instId", ""))
@@ -136,10 +193,22 @@ def build_universe():
             + abs(change24) * 0.25
             - min(spread_bps, 50) * 0.03
         )
+        quotes = [{"exchange": "okx", "price": last, "observed_ms": int(f(t.get("ts"), observed_ms))}]
+        external = binance_prices.get(f"{base}USDT")
+        if external:
+            quotes.append({"exchange": "binance", **external})
+        consensus = price_consensus(
+            quotes,
+            min_sources=PRICE_CONSENSUS_MIN_SOURCES,
+            max_deviation_bps=PRICE_CONSENSUS_MAX_DEVIATION_BPS,
+            max_age_seconds=MARKET_DATA_MAX_AGE_SECONDS,
+            now_ms=observed_ms,
+        )
         rows.append({
             "symbol": inst, "base": base, "last": last,
             "quote_volume_24h": qv, "change_24h_pct": change24,
-            "spread_bps": spread_bps, "activity_score": activity
+            "spread_bps": spread_bps, "activity_score": activity,
+            "market_consensus": consensus,
         })
     rows.sort(key=lambda x: x["activity_score"], reverse=True)
     return rows[:UNIVERSE_SIZE]
