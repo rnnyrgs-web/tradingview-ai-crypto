@@ -21,6 +21,42 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  fast-evidence:
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        symbol: [BTC-USDT, ETH-USDT, SOL-USDT, XRP-USDT, LINK-USDT]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      RESEARCH_SYMBOLS: ${{ matrix.symbol }}
+      RESEARCH_UNIVERSE_SIZE: "1"
+      RESEARCH_FORCE_SYMBOLS: ""
+      RESEARCH_SHARD_INDEX: "0"
+      RESEARCH_SHARD_COUNT: "1"
+      RESEARCH_TIMEFRAMES: "15m,1H"
+      RESEARCH_BARS: "5000"
+      RESEARCH_THRESHOLD: "2.25"
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run liquid-major fast evidence
+        run: python research_runner.py
+      - name: Upload fast evidence only
+        uses: actions/upload-artifact@v4
+        with:
+          name: fast-evidence-${{ matrix.symbol }}
+          path: research_output/backtest_results.json
+          retention-days: 7
+
   research:
     strategy:
       fail-fast: false
