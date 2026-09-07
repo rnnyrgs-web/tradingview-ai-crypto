@@ -1,4 +1,5 @@
 from agents.autonomous_orchestrator import extract_json, normalize_relpath, path_allowed
+from agents.autonomous_worker import _completion_text
 
 
 def test_role_path_allowlists_are_fail_closed():
@@ -42,3 +43,18 @@ def test_normalize_relpath_rejects_empty_and_parent_paths():
 def test_extract_json_accepts_plain_and_fenced_json():
     assert extract_json('{"approve": true}') == {"approve": True}
     assert extract_json('```json\n{"approve": false}\n```') == {"approve": False}
+
+
+def test_worker_completion_marker_is_required():
+    payload = {"output_text": "done"}
+    try:
+        _completion_text(payload)
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError("worker accepted completion without CHANGE_STATUS")
+
+
+def test_worker_accepts_explicit_ready_or_no_change_markers():
+    assert "READY_FOR_PR" in _completion_text({"output_text": "CHANGE_STATUS: READY_FOR_PR"})
+    assert "NO_CHANGE" in _completion_text({"output_text": "CHANGE_STATUS: NO_CHANGE"})

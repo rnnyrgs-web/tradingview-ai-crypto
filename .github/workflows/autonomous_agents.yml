@@ -72,6 +72,7 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       OPENAI_AGENT_MODEL: ${{ vars.OPENAI_AGENT_MODEL }}
       GH_TOKEN: ${{ github.token }}
+      PYTHONPATH: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -98,7 +99,7 @@ jobs:
           git checkout -b "$BRANCH"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
       - name: Execute specialist task
-        run: python agents/autonomous_orchestrator.py work --role '${{ matrix.role }}' --plan /tmp/agent-plan.json
+        run: python agents/autonomous_worker.py --role '${{ matrix.role }}' --plan /tmp/agent-plan.json
       - name: Enforce full repository tests
         run: pytest -q
       - name: Reject protected-path modifications
