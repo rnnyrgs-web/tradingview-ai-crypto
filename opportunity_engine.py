@@ -1,5 +1,9 @@
+import logging
+
 from config import STRATEGY_VERSION
 from db import replace_opportunities
+
+log = logging.getLogger(__name__)
 
 
 def _entry_zone(plan):
@@ -34,7 +38,11 @@ def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
             direction = "LONG" if q >= 0 else "SHORT"
             try:
                 plan = risk_plan_fn(hv["features"], direction, horizon)
-            except Exception:
+            except Exception as exc:
+                log.warning(
+                    "Opportunity rejected because risk plan failed: symbol=%s horizon=%s error=%s",
+                    c.get("symbol"), horizon, type(exc).__name__,
+                )
                 continue
             entry_low, entry_high = _entry_zone(plan)
             reviewed = ai_map.get((c["symbol"], horizon), {})
