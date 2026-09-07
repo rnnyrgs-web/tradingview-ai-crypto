@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import fnmatch
+import io
 import json
 import os
-import subprocess
 from pathlib import Path
 from typing import Any
 
 import httpx
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 ROLES_PATH = ROOT / "agents" / "roles.json"
@@ -86,36 +88,19 @@ def write_file(role: str, path: str, content: str) -> str:
     return "OK"
 
 
-def git_diff() -> str:
-    proc = subprocess.run(
-        ["git", "diff", "--", "."],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        timeout=20,
-        check=False,
-    )
-    text = proc.stdout or proc.stderr
-    return text[-60_000:]
-
-
 def run_pytest(target: str = "") -> str:
-    args = ["python", "-m", "pytest", "-q"]
+    args = ["-q"]
     if target:
         normalized = normalize_relpath(target)
         if not normalized.startswith("tests/"):
             return "ERROR: pytest target must be under tests/"
         args.append(normalized)
-    proc = subprocess.run(
-        args,
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        timeout=180,
-        check=False,
-    )
-    output = (proc.stdout or "") + (proc.stderr or "")
-    return f"exit_code={proc.returncode}\n{output[-30_000:]}"
+    stdout = io.StringIO()
+    stderr = io.StringIO()
+    with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+        exit_code = int(pytest.main(args))
+    output = stdout.getvalue() + stderr.getvalue()
+    return f"exit_code={exit_code}\n{output[-30_000:]}"
 
 
 def api_headers() -> dict[str, str]:
@@ -176,16 +161,8 @@ def post_response(body: dict[str, Any]) -> dict[str, Any]:
 
 def planning_context() -> str:
     state = read_file("AI_STATE.md")
-    log = subprocess.run(
-        ["git", "log", "-8", "--oneline", "--decorate"],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
-        timeout=15,
-        check=False,
-    ).stdout
     external = os.getenv("AGENT_EXTERNAL_CONTEXT", "").strip()
-    return f"AI_STATE.md:\n{state}\n\nRecent commits:\n{log}\n\nExternal GitHub context:\n{external}"
+    return f"AI_STATE.md:\n{state}\n\nExternal GitHub context:\n{external}"
 
 
 def make_plan(output_path: Path) -> None:
@@ -257,12 +234,6 @@ def tool_specs() -> list[dict[str, Any]]:
         },
         {
             "type": "function",
-            "name": "git_diff",
-            "description": "Inspect the current uncommitted git diff.",
-            "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
-        },
-        {
-            "type": "function",
             "name": "run_pytest",
             "description": "Run pytest globally or on one tests/ path.",
             "parameters": {
@@ -281,8 +252,6 @@ def call_tool(role: str, name: str, args: dict[str, Any]) -> str:
         return read_file(str(args["path"]))
     if name == "write_file":
         return write_file(role, str(args["path"]), str(args["content"]))
-    if name == "git_diff":
-        return git_diff()
     if name == "run_pytest":
         return run_pytest(str(args.get("target", "")))
     return "ERROR: unknown tool"
