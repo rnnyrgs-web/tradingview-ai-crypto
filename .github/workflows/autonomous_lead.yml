@@ -1,0 +1,141 @@
+name: Autonomous Lead Integrator
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "47 * * * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: autonomous-lead-integrator
+  cancel-in-progress: false
+
+jobs:
+  review-and-integrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_AGENT_MODEL: ${{ vars.OPENAI_AGENT_MODEL }}
+      AUTONOMOUS_MERGE_ENABLED: ${{ vars.AUTONOMOUS_MERGE_ENABLED }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 30
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install lead runtime
+        run: pip install httpx
+      - name: Fail closed unless agent credentials are configured
+        run: |
+          test -n "$OPENAI_API_KEY" || { echo "OPENAI_API_KEY missing"; exit 1; }
+          test -n "$OPENAI_AGENT_MODEL" || { echo "OPENAI_AGENT_MODEL missing"; exit 1; }
+      - name: Select oldest autonomous specialist PR
+        id: select
+        run: |
+          PR="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 100 --json number,headRefName,createdAt --jq '[.[] | select(.headRefName | startswith("auto/"))] | sort_by(.createdAt) | .[0].number // empty')"
+          echo "pr=$PR" >> "$GITHUB_OUTPUT"
+          if [ -z "$PR" ]; then
+            echo "No autonomous specialist PR is waiting."
+          else
+            echo "Selected PR #$PR"
+          fi
+      - name: Stop when queue is empty
+        if: steps.select.outputs.pr == ''
+        run: echo "Queue empty; nothing to integrate."
+      - name: Require all current PR checks to pass
+        if: steps.select.outputs.pr != ''
+        id: checks
+        env:
+          PR: ${{ steps.select.outputs.pr }}
+        run: |
+          gh pr checks "$PR" --repo "$GITHUB_REPOSITORY" --json name,bucket,state > /tmp/checks.json || true
+          cat /tmp/checks.json
+          COUNT="$(jq 'length' /tmp/checks.json)"
+          if [ "$COUNT" -eq 0 ]; then
+            echo "No checks found; fail closed."
+            exit 1
+          fi
+          BAD="$(jq '[.[] | select(.bucket != "pass")] | length' /tmp/checks.json)"
+          if [ "$BAD" -ne 0 ]; then
+            echo "At least one check is not passing; fail closed."
+            exit 1
+          fi
+      - name: Fetch and bound proposed diff
+        if: steps.select.outputs.pr != ''
+        env:
+          PR: ${{ steps.select.outputs.pr }}
+        run: |
+          gh pr diff "$PR" --repo "$GITHUB_REPOSITORY" > /tmp/pr.diff
+          BYTES="$(wc -c < /tmp/pr.diff)"
+          echo "Diff bytes: $BYTES"
+          test "$BYTES" -gt 0
+          test "$BYTES" -le 80000 || { echo "Diff too large; fail closed."; exit 1; }
+          if grep -Eq '^diff --git a/(AI_STATE\.md|agents/|\.github/workflows/|requirements\.txt|Dockerfile)' /tmp/pr.diff; then
+            echo "Protected path changed; refusing autonomous integration."
+            exit 1
+          fi
+      - name: Independent security review
+        if: steps.select.outputs.pr != ''
+        run: python agents/autonomous_orchestrator.py review --reviewer security --diff /tmp/pr.diff --output /tmp/security-review.json
+      - name: Independent lead review
+        if: steps.select.outputs.pr != ''
+        run: python agents/autonomous_orchestrator.py review --reviewer lead --diff /tmp/pr.diff --output /tmp/lead-review.json
+      - name: Require both AI reviewers to approve
+        if: steps.select.outputs.pr != ''
+        run: |
+          jq -e '.approve == true' /tmp/security-review.json
+          jq -e '.approve == true' /tmp/lead-review.json
+          echo "Security review:" && cat /tmp/security-review.json
+          echo "Lead review:" && cat /tmp/lead-review.json
+      - name: Record reviews on PR
+        if: steps.select.outputs.pr != ''
+        env:
+          PR: ${{ steps.select.outputs.pr }}
+        run: |
+          BODY="$(printf 'Autonomous Security review:\n```json\n%s\n```\n\nAutonomous Lead review:\n```json\n%s\n```' "$(cat /tmp/security-review.json)" "$(cat /tmp/lead-review.json)")"
+          gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body "$BODY"
+      - name: Stop before merge unless explicitly enabled
+        if: steps.select.outputs.pr != '' && env.AUTONOMOUS_MERGE_ENABLED != 'true'
+        run: |
+          echo "Reviews passed, but AUTONOMOUS_MERGE_ENABLED is not true."
+          echo "Fail-safe mode: PR remains open for human/Work Lead approval."
+      - name: Capture merge context
+        if: steps.select.outputs.pr != '' && env.AUTONOMOUS_MERGE_ENABLED == 'true'
+        env:
+          PR: ${{ steps.select.outputs.pr }}
+        run: |
+          gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json number,title,body,headRefName,baseRefName,commits,files > /tmp/pr-context.json
+          printf '\nDIFF:\n' >> /tmp/pr-context.json
+          cat /tmp/pr.diff >> /tmp/pr-context.json
+      - name: Merge one verified PR only
+        if: steps.select.outputs.pr != '' && env.AUTONOMOUS_MERGE_ENABLED == 'true'
+        env:
+          PR: ${{ steps.select.outputs.pr }}
+        run: gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" --squash --delete-branch
+      - name: Update canonical main and AI_STATE.md
+        if: steps.select.outputs.pr != '' && env.AUTONOMOUS_MERGE_ENABLED == 'true'
+        env:
+          PR: ${{ steps.select.outputs.pr }}
+        run: |
+          git config user.name "autonomous-lead-integrator"
+          git config user.email "actions@users.noreply.github.com"
+          git fetch origin main
+          git checkout main
+          git reset --hard origin/main
+          python agents/lead_state.py --pr-context /tmp/pr-context.json
+          git diff --check
+          if git diff --quiet -- AI_STATE.md; then
+            echo "Lead state updater produced no AI_STATE.md change; fail closed."
+            exit 1
+          fi
+          git add AI_STATE.md
+          git commit -m "state: record autonomous integration of PR #$PR"
+          git pull --rebase origin main
+          git push origin main
