@@ -4,6 +4,19 @@ from types import SimpleNamespace
 from shadow_readiness import assess_shadow_readiness, canary_review_decision
 
 
+def strategy_identity(symbol="BTC-USDT", horizon="24h", family="trend"):
+    return {
+        "symbol": symbol,
+        "production_horizon": horizon,
+        "strategy_family": family,
+        "timeframes": ["1H", "4H"],
+        "strategy_version": "v-test",
+        "backtest_cost_bps": 12.0,
+        "research_code_sha256": "code-sha",
+        "fingerprint": "fingerprint-1",
+    }
+
+
 def row(day, ret, correct=None, symbol="BTC-USDT", horizon="24h", family="trend"):
     due = datetime(2026, 1, 1, tzinfo=timezone.utc) + timedelta(days=day)
     return {
@@ -13,24 +26,12 @@ def row(day, ret, correct=None, symbol="BTC-USDT", horizon="24h", family="trend"
         "resolved_at": (due + timedelta(hours=1)).isoformat(),
         "directional_return_pct": ret,
         "correct": (ret > 0) if correct is None else correct,
-        "strategy_identity": {
-            "symbol": symbol,
-            "horizon": horizon,
-            "strategy_family": family,
-            "strategy_version": "v-test",
-            "implementation_sha256": "abc",
-        },
+        "strategy_identity": strategy_identity(symbol, horizon, family),
     }
 
 
 def identity():
-    return {
-        "symbol": "BTC-USDT",
-        "horizon": "24h",
-        "strategy_family": "trend",
-        "strategy_version": "v-test",
-        "implementation_sha256": "abc",
-    }
+    return strategy_identity()
 
 
 def test_overlapping_forecasts_do_not_inflate_independent_evidence():
@@ -39,6 +40,14 @@ def test_overlapping_forecasts_do_not_inflate_independent_evidence():
     assert result["raw_resolved_forecasts"] == 3
     assert result["independent_periods"] == 2
     assert result["eligible_for_tiny_canary_review"] is False
+
+
+def test_exact_strategy_fingerprint_is_required():
+    rows = [row(0, 1.0)]
+    target = identity()
+    target["fingerprint"] = "different"
+    result = assess_shadow_readiness(rows, target_identity=target, horizon="24h")
+    assert result["raw_resolved_forecasts"] == 0
 
 
 def test_positive_forward_evidence_can_reach_tiny_canary_review_only():
