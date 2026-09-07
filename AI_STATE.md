@@ -30,6 +30,8 @@ Production uses fail-closed fresh OKX + Binance spot price consensus. Fewer than
 
 PR #31 merged as `8aefc5004ca7f9bcfbf3aa07240a97629ccae6e5` and added research-only cross-exchange order-book intelligence for AI finalists: 10/25 bps depth, spread, bounded imbalance, thin/crossed/wide-book rejection, two-source reliability and explicit disagreement. It has no path that promotes WAIT to TRADE.
 
+ACC-001 execution-realism work has begun. PR #38 `Add execution-cost stress testing to research backtests` passed exact-SHA Security and Reliability run `34164900477` (unit tests, dependency audit, static security and committed-secret rejection) and merged as `18a12236270cc753dfa703b21b51e647edebdd0b`. `backtest.py` now stress-tests the same research trade path under deterministic 1.0x/1.5x/2.0x/3.0x round-trip cost assumptions and reports both full-backtest and untouched-holdout cost stress. Historical candle data does not contain executable bid/ask history, so no historical spread is fabricated. This is an initial ACC-001 stage only; richer timestamp-safe funding/basis/OI/liquidation history and fill/slippage evidence still need research and validation before ACC-001 can be considered complete.
+
 Operational monitoring exposes sanitized health only. The 15-minute workflow validates returned JSON and fails on `ok != true`, empty/degraded scans, AI/opportunity errors, excessive symbol failures, missing fingerprint or any unvalidated TRADE. Security regression, Bandit, dependency audit and committed-secret checks remain enforced.
 
 ## 24/7 AI / ORCHESTRATION
@@ -39,18 +41,18 @@ The owner requested a real AI agent active 24/7. PR #35 merged as `0b199acdca36c
 
 The first live cycle exposed a model-output `JSONDecodeError`. PR #36 merged as `433421d244259e749827e8fba63e13cee4bbc7a5`, hardened parsing while keeping malformed output fail-closed, and passed Security and Reliability run `34164097754`. Main state sync commit `641d4688fc959ecc466e6c1a853767b4392728ba` deployed live. A successful post-fix cycle still needs direct verification.
 
-## EVENT-DRIVEN SUPERVISOR / ACCURACY ROADMAP — PR #37 CANDIDATE
-The owner requested both maximum signal accuracy and faster continuous AI orchestration. PR #37 `Add event-driven AI supervisor and accuracy backlog` is the current candidate from base `641d4688fc959ecc466e6c1a853767b4392728ba`.
+## EVENT-DRIVEN SUPERVISOR / ACCURACY ROADMAP — LIVE
+PR #37 `Add event-driven AI supervisor and accuracy backlog` passed exact-final-SHA Security and Reliability run `34164722593` and merged as `6314dbe518bf2c1989b87507a656b73955735c90`.
 
-Candidate changes:
-- `.github/workflows/autonomous_agents.yml` wakes not only on the hourly fallback but also immediately after completed `Crypto 15m Scan` and `Cloud Crypto Research` workflows.
-- `agents/supervisor_snapshot.py` builds a compact machine-readable context containing trigger metadata, current safety invariants, exact next steps and prioritized research backlog, reducing repeated model context.
-- `orchestration/priority_backlog.json` is the protected accuracy work queue. Autonomous specialists cannot modify orchestration state. The queue cannot authorize live promotion.
-- The workflow still allows exactly one `CHANGE` worker per cycle and thirteen parallel read-only audits, with `max-parallel: 14`.
-- deterministic tests cover queue ordering, fail-closed policy, compact snapshot and event-driven workflow triggers.
+The autonomous control plane now:
+- wakes on completed `Crypto 15m Scan` and `Cloud Crypto Research` workflows as well as the minute-17 hourly fallback;
+- uses `agents/supervisor_snapshot.py` to provide a compact machine-readable context with trigger metadata, safety invariants, exact next steps and prioritized backlog;
+- stores signal-accuracy work in protected `orchestration/priority_backlog.json`, which autonomous specialists cannot edit and which cannot authorize live promotion;
+- still permits exactly one `CHANGE` worker and thirteen parallel read-only `AUDIT` workers with `max-parallel: 14`;
+- protects `AI_STATE.md`, `agents/`, `orchestration/`, `.github/workflows/`, `requirements.txt` and `Dockerfile` from autonomous specialist writes.
 
 The protected accuracy backlog is:
-1. `ACC-001` market-microstructure — realistic execution + richer market-state evidence: spread/slippage, funding history, basis, OI change, liquidation context, realistic fill/cost assumptions.
+1. `ACC-001` market-microstructure — realistic execution + richer market-state evidence. IN PROGRESS: deterministic execution-cost stress is merged; historical funding/basis/OI/liquidation and defensible fill/slippage evidence remain.
 2. `ACC-002` quant-cross-asset — cross-sectional relative-strength/rank prediction across the liquid universe.
 3. `ACC-003` quant-breakout-volatility — regime-specialist models for bull, bear, range, high-volatility stress and compression with no-lookahead labels/minimum samples.
 4. `ACC-004` strategy-registry — calibrated champion/challenger ensemble weighting with correlation/deterioration penalties and automatic demotion.
@@ -72,12 +74,12 @@ Verified-only autonomous merging is enabled, but these gates remain mandatory. R
 
 ## EXACT NEXT STEP
 1. Verify the post-PR #36 production AI observer live cycle: `/health.continuous_ai` must show `configured=true`, `cycle_count>=1`, no current parser error, five-minute bounded cadence, and trade/write/promotion authority false; Render logs should show `continuous AI observer cycle completed`.
-2. Complete PR #37 Security and Reliability on its exact final SHA. If green, merge it manually because it changes protected orchestration/workflow/state files, then verify the first `workflow_run`-triggered specialist cycle wakes after a scan or cloud-research completion and still produces exactly one CHANGE + thirteen AUDIT roles.
-3. After PR #37 is live, begin the protected accuracy queue with `ACC-001`; complete items sequentially by evidence while all non-owner specialists audit in parallel. Never mark an item complete merely because code was written—require tests and relevant OOS/robustness evidence.
-4. Verify the first full post-order-book production scan keeps latency/errors healthy, order-book evidence stays research-only and no unvalidated trade appears.
-5. Verify an authenticated production workflow scan has two-source consensus where available, fails closed where not, passes `tools/validate_scan_response.py` and contains no unvalidated trade.
-6. After forecast deadlines pass, verify first 24h/7d outcomes use only data at/after `due_at` and calibration remains restrictive until >=30 comparable resolutions and Wilson lower bound >=50%.
-7. Keep `live_promotions.json` empty and signing keys unused until strategies complete repeated backtests, untouched OOS, robustness/stability, registry review and production-risk review.
-8. Verify the next cloud research run emits valid sealed robustness/repeated-run evidence; `READY_FOR_STRATEGY_REGISTRY_REVIEW` remains research-only.
-9. Inspect research run `34079774231` artifacts before any PONS-specific result claim or promotion.
+2. Verify the first post-PR #37 `workflow_run`-triggered Autonomous Specialist Agents cycle after a production scan or cloud-research completion; it must use the compact supervisor context and still produce exactly one CHANGE + thirteen AUDIT roles without overlapping write candidates.
+3. Continue `ACC-001` with the next bounded evidence layer: investigate and implement timestamp-safe historical funding/basis/open-interest change data where genuinely available, plus defensible execution/fill/slippage stress. Do not fabricate unavailable historical order-book data. Require tests and relevant OOS/robustness evidence before calling ACC-001 complete.
+4. Then execute `ACC-002` through `ACC-007` sequentially by evidence while non-owner specialists audit in parallel. Never mark an item complete merely because code was written.
+5. Verify the first full post-order-book production scan keeps latency/errors healthy, order-book evidence stays research-only and no unvalidated trade appears.
+6. Verify an authenticated production workflow scan has two-source consensus where available, fails closed where not, passes `tools/validate_scan_response.py` and contains no unvalidated trade.
+7. After forecast deadlines pass, verify first 24h/7d outcomes use only data at/after `due_at` and calibration remains restrictive until >=30 comparable resolutions and Wilson lower bound >=50%.
+8. Keep `live_promotions.json` empty and signing keys unused until strategies complete repeated backtests, untouched OOS, robustness/stability, registry review and production-risk review.
+9. Verify the next cloud research run emits valid sealed robustness/repeated-run evidence; `READY_FOR_STRATEGY_REGISTRY_REVIEW` remains research-only. Inspect run `34079774231` artifacts before any PONS-specific result claim or promotion.
 10. Update this file after every completed development/integration cycle.
