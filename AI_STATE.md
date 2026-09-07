@@ -12,102 +12,73 @@ Goal: cloud-first continuous quantitative research; local PC is not the research
 
 ## PRODUCTION STATUS
 V3 is LIVE on Render. Docker V3 module-copy failure was fixed by commit `b9c499f3358d22a8d722ebff61d1649879c270f9` using `COPY *.py ./`.
-Latest checked Render deploy for commit `e5e14e743f9062d046a4f04831ed41d9acb6311d` finished LIVE at 2026-09-07T02:00:34Z.
-Previously verified: `/scan` 200, `/evaluate` 200, V3 rows reached Supabase, evaluator worked, and 12h evaluation columns exist.
+Latest production code deploy verified LIVE before this state-only update: commit `5998251e0da997f038dd0a54fda1d621d3a8a846`, deploy `dep-daf236v9l3cc73brkh60`.
+
+## CONTINUOUS TOP-20 OPPORTUNITY ENGINE
+Implemented and verified.
+
+Core commits:
+- `fcda8911dea87f2b47ccef2c9e91bce06dd6c13f` — continuous 24h/7d Top-20 opportunity ranking engine
+- `0a003d5e93da9f1419946d33eb852ffd9fe55c22` — persist/read rankings in Supabase
+- `8ec7f8366517f5888ba7458d6f92d7901c3d2aea` — generate rankings on every production scan
+- `fa9881ea67e75f99f4eeb38e6c9797dd0911f9c9` — log rejected risk-plan candidates instead of silently swallowing them
+- `5998251e0da997f038dd0a54fda1d621d3a8a846` — retry production scans during Render deployments
+
+Behavior:
+- every production scan constructs separate 24h and 7d rankings
+- ranks up to 20 current candidates using deterministic multi-timeframe quant evidence plus liquidity/activity and spread penalties
+- direction comes from quant evidence sign
+- entry, stop, T1/T2 and entry display zone are generated from the current risk model
+- an item is labeled TRADE only if the adversarial AI review explicitly marked that exact symbol+horizon as TRADE and direction agrees; otherwise it remains WAIT
+- system does not fabricate 20 trades; WAIT is valid
+- evidence score is not a calibrated probability
+- fresh rankings are persisted in `public.crypto_opportunities` and dashboard reads latest fresh scan
+
+Supabase table `public.crypto_opportunities` exists with RLS enabled and service-role-only server access. It stores scan_id, horizon, rank, symbol, direction, action, entry/zone, stop, targets, R:R, quant score, evidence score, regime, reasoning and strategy version.
+
+END-TO-END VERIFICATION:
+- Security CI run `34076472577` on latest production commit completed SUCCESS.
+- Latest Render production deploy for commit `5998251e0da997f038dd0a54fda1d621d3a8a846` finished LIVE.
+- Production scan run `34076472531` successfully completed its market-scan step after deployment.
+- Supabase verified fresh scan `bd056a38-77dd-4a71-a343-0ad25a06550a` persisted exactly 20 rows for 24h (ranks 1-20) and 20 rows for 7d (ranks 1-20).
+- That verification snapshot had 1 AI-approved TRADE in the 24h ranking and 0 AI-approved TRADEs in the 7d ranking; all others correctly remained WAIT.
+- The same workflow's evaluator step was still running at the last state check; this does not block the verified Top-20 ranking path.
+
+## DASHBOARD / TRADINGVIEW VISUALS
+Private dashboard exists in `dashboard.py` with separate dashboard authentication secret, signed HttpOnly Secure SameSite=Strict session cookie, 24h/7d tabs, BUY/SELL/WAIT, entry area, stop, targets, R:R, evidence, regime, reasoning, risk-level visual and TradingView link.
+Entry zone currently displays ±10% of modeled stop distance around strategy entry; this display zone is not yet independently optimized by backtesting.
+
+Windows notifier `tools/windows_signal_notifier.py` polls the authenticated actionable signal feed, prevents historical alert floods, plays a Windows alarm, opens the matching TradingView chart and displays a topmost signal popup. Local activation/autostart on the user's Windows PC is still pending.
+
+IMPORTANT TRADINGVIEW LIMITATION: standard Pine cannot securely pull arbitrary private server signal values. A Pine visual helper exists, but fully automatic placement of current private server entry/stop/target values directly onto TradingView still requires either deterministic signal reproduction in Pine or secure local browser/UI automation.
 
 ## CONTINUOUS CLOUD BACKTESTING
 Deep OKX history pagination: `b6ace184c8592366466c8b8fd761765d22cee590`.
 Backtest deep-history optimization/max drawdown: `fa776367b8c1a8be827a4a71c85b3ee0fac77aa7`.
 Cloud runner: `8ff79cf4820c06fb8ba7682f169178e5b407767c`.
-Initial workflow: `0b36932096c24093e30a3c45e38a421d1cf7813a`.
 24/7 hourly scheduling: `c498557691d8632893a384d8adc0be33e27d9417`.
-
-### V4-style cloud sharding
-Commit `8546068a07936494beeab29e942c9210723e3b5a` (`Shard continuous cloud research in parallel`).
-`.github/workflows/cloud_research.yml` now runs an hourly matrix with up to 4 parallel shards:
-- majors-a: BTC/ETH/SOL, 15m + 1H
-- majors-b: XRP/LINK/BNB, 15m + 1H
-- majors-c: DOGE/ADA/TRX, 15m + 1H
-- swing-a: BTC/ETH/SOL/XRP/LINK, 4H + 1D
-Defaults remain 5000 candles, 30-minute per-job timeout, 7-day artifacts, read-only workflow permissions, and no overlapping top-level research runs.
-This is symbol/timeframe sharding. Multiple independent strategy-family implementations are NOT complete yet.
-
+V4 cloud sharding commit: `8546068a07936494beeab29e942c9210723e3b5a`.
 Current history cap is 50,000 candles per call as a cost/rate-limit guardrail, not an architectural limit.
-First proof run `34073785214` succeeded; early performance was research-only and insufficient for live weighting.
+Multiple independent strategy-family implementations are NOT complete yet.
 
-## SIGNAL VISIBILITY / WINDOWS TRADINGVIEW ALERT BRIDGE
-Signals remain stored in Supabase table `public.trading_signals`.
+## SECURITY / RELIABILITY
+Security is core architecture because signals may influence real money. Never promise zero bugs/hacks/profit. Fail closed: invalid/uncertain data => no signal / WAIT.
 
-Authenticated actionable feed added:
-- `db.py` `fetch_actionable_after()` commit `ac9dd9d1d11eb24882bd7132c902784c38b6ae3c`
-- `app.py` GET `/signals` commit `66967e2a52d4c21525e9a96e325066407e847667`
-- only `action=TRADE` rows are returned through this feed
-- endpoint requires existing scan authentication; never expose the secret in URLs
-
-Safe startup cursor added:
-- `db.py` latest-id support commit `87585af689383ff29a15a883728d03de4eb4c7cc`
-- `app.py` GET `/signals/cursor` commit `e944c248efc9f0d8a92b391fc4dd7bed6c698312`
-This prevents a newly started notifier from alarming on old historical TRADE rows.
-
-Windows notifier:
-- file `tools/windows_signal_notifier.py`
-- initial commit `1debb68a067e90addd3e2db0f87c4df978c09ff5`
-- historical-flood protection `54affb739cd825ebfc0a96932ad3ac01690663df`
-- HTTPS server URL validation `296c563fa01edea8bd8ce2f3e6aaf3914be54af4`
-Behavior when a NEW actionable signal appears:
-1. polls the authenticated `/signals` feed (default 15s)
-2. plays a two-tone Windows alarm
-3. opens a NEW TradingView tab on the corresponding OKX symbol and mapped timeframe
-4. displays a top-most Windows popup with direction, entry, stop, targets, evidence score, and regime
-
-IMPORTANT LIMITATION: the bridge currently opens the correct live TradingView chart and shows the signal details in the Windows popup. It does NOT yet draw external entry/stop/target lines or arrows directly onto the TradingView chart. Standard Pine cannot pull arbitrary private server signal values. Direct chart drawing will require either a deterministic Pine overlay that reproduces eligible signal logic or a secure local UI/browser automation bridge that places TradingView drawings.
-
-The notifier is intended to run on the user's Windows PC and is not copied into the Render Docker image (`Dockerfile` copies root `*.py` only). It requires the existing auth secret from a PRIVATE Windows environment variable. Never ask the user to paste that secret in chat.
-
-## SECURITY / RELIABILITY HARDENING
-User requires security and reliability as core architecture because signals may influence real money. Never promise zero bugs/hacks/profit. Fail closed: invalid/uncertain data => no signal / WAIT.
-
-Security CI initially exposed useful defects and was fixed rather than bypassed.
-Current workflow `.github/workflows/security.yml`:
-- pushes, PRs, daily schedule
-- minimal `contents: read`
-- PYTHONPATH fixed in commit `6f328b3a6091f2fce7783d9478f8badecbf86204`
+Current automated checks:
 - pytest
 - pip-audit
 - Bandit
-- committed-secret pattern scanner
-- timeout/concurrency controls
-
-Data/signal safety:
-- `safety.py` commit `0691ec5443b55188eb4d988ae27db3fe768d4b9b`
-- rejects NaN/infinite/non-positive OHLC, invalid volume, duplicate/non-monotonic/invalid timestamps, future candles, stale short-TF data, invalid risk prices
-- expanded tests commit `f7d126c861e8e3518b730926265f87d072cb88f6`
-
-Bandit-driven hardening:
-- added `defusedxml>=0.7,<1` in requirements: `c812702596d2b670674598af14fafa83c657a128`
-- RSS parsing switched to defusedxml and logs failures: `6eca078da28707985ea55126dc23ebb6f11f2b93`
-- derivatives failures are logged instead of silently swallowed: `9f8f0f2022572cafbbc1d61026ddb35b2b9d2c0c`
-- notifier restricts server URL to credential-free HTTPS before urlopen: `296c563fa01edea8bd8ce2f3e6aaf3914be54af4`
-- committed-secret scanner shell quoting fixed with a Python scanner: `e5e14e743f9062d046a4f04831ed41d9acb6311d`
-
-LATEST SECURITY CI VERIFICATION:
-Run `34074805711` completed SUCCESS.
-- unit tests: SUCCESS
-- dependency vulnerability audit: SUCCESS
-- static security scan: SUCCESS
-- committed-secret detector: SUCCESS
-Therefore the current hardening changes passed the configured automated checks. This does not mean bug-free or hacker-proof.
-
-Security rules:
-- no secrets in source/repo/AI_STATE
+- committed-secret detector
+- read-only GitHub Actions permissions where possible
+- timeouts/concurrency controls
+- strict candle/risk validation
+- defused XML parsing
+- authenticated sensitive endpoints
 - secrets only in secret/env stores
-- Supabase service key server-side only
-- sensitive endpoints authenticated
-- least privilege
 - exchange research integrations public/read-only; no withdrawal permission
-- fail closed on data/API integrity problems
-- prior query-string SCAN_SECRET exposure still means secret rotation is recommended
-- repository is public
+
+Latest security verification: run `34076472577` SUCCESS on commit `5998251e0da997f038dd0a54fda1d621d3a8a846`.
+Prior query-string SCAN_SECRET exposure still means secret rotation is recommended. Repository is public.
 
 ## QUANT / ALGO TARGET ARCHITECTURE
 To pursue an exceptionally strong crypto quant system, build evidence in layers instead of relying on one AI score:
@@ -127,13 +98,12 @@ To pursue an exceptionally strong crypto quant system, build evidence in layers 
 
 NO TRADE / WAIT is valid. Capital survival and robust risk-adjusted expectancy outrank signal frequency.
 
-## SUPABASE
-Project ref `dxgksvzibucwuzmppoqy`. Main table `public.trading_signals`; RLS enabled. Never store service keys here.
-
 ## AUTOMATION
 Production scan/evaluate workflow runs approximately every 15 minutes using `X-Scan-Secret`. Cloud research runs hourly 24/7 with parallel sharding.
+Production scan workflow now retries transient 5xx/network failures during Render deployments.
 
 ## EXACT NEXT STEP
-1. Activate/test the Windows notifier on the user's PC without ever revealing the secret in chat. It needs a private local environment variable and should be configured to start automatically with Windows once verified.
-2. Then add direct TradingView visual signal marking using the safest feasible bridge (prefer deterministic overlay when possible; local automation only if necessary).
-3. Continue V4 quant research by implementing distinct strategy families and research-quality gates/registry so only robust out-of-sample strategies become eligible for the live ensemble.
+1. Implement distinct strategy families (trend, breakout, momentum, mean reversion, volatility expansion, relative strength) in the cloud research matrix.
+2. Add strict OOS quality gates/strategy registry so only robust validated strategies can influence live ranking/ensemble weights.
+3. Backtest and optimize entry-zone construction instead of using the current display-only ±10% risk-distance zone.
+4. Activate/test the Windows notifier and TradingView visual bridge locally without exposing secrets.
