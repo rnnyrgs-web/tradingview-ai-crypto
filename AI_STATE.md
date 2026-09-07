@@ -2,125 +2,99 @@
 Last updated: 2026-09-07
 
 ## PURPOSE
-Authoritative continuation state for `rnnyrgs-web/tradingview-ai-crypto`. Read this file in full before any development work. Every development change must update this file in the same development cycle so a brand-new ChatGPT can continue from the exact current state.
+Authoritative continuation state for `rnnyrgs-web/tradingview-ai-crypto`. Read this file in full before development. Every development cycle must update this file so a new ChatGPT can continue from the exact repository state.
 
-## ARCHITECTURE
-Production: GitHub -> Render -> Python/FastAPI V3 -> Supabase.
-Research: OKX public historical APIs -> GitHub Actions cloud runners -> research artifacts/results.
-Desktop alerts: authenticated Render signal feed -> Windows notifier -> alarm + topmost popup + TradingView chart.
-Goal: cloud-first continuous quantitative research; the local PC is not the research compute/storage bottleneck.
+## PRODUCTION / RESEARCH BASELINE
+Production is GitHub -> Render -> Python/FastAPI V3 -> Supabase. V3 is live; latest production code previously verified live was `5998251e0da997f038dd0a54fda1d621d3a8a846`.
+Production scans build separate 24h and 7d Top-20 opportunity rankings and allow WAIT. Live production still does not consume research-family weights.
+Cloud research uses OKX public historical APIs and GitHub Actions. Research/backtesting runs hourly 24/7. Six strategy families remain trend, breakout, momentum, mean reversion, volatility expansion and relative strength vs BTC. No-lookahead and fail-closed rules remain mandatory.
+Chronological validation remains 60% train / 20% validation / 20% untouched holdout. Failed candidates remain `RESEARCH_ONLY`; one OOS pass is never enough for live weighting.
 
-## PRODUCTION STATUS
-V3 is LIVE on Render.
-Latest production code previously verified LIVE: `5998251e0da997f038dd0a54fda1d621d3a8a846`.
-Continuous production scans build separate 24h and 7d Top-20 opportunity rankings, persist them to Supabase, and allow WAIT rather than fabricating trades. Live production does NOT yet consume research-family weights.
+## RESEARCH UNIVERSE
+Dynamic intraday research targets Top-80 liquid OKX spot markets on 15m + 1H across deterministic shards, with PONS forcibly included as `PONS-USDT-SWAP`. Existing major swing research remains on 4H + 1D.
+Expanded research run `34079774231` completed successfully and all 16 universe shard artifacts plus `swing-a` exist. Artifact contents still need inspection before making PONS-specific execution or new OOS-eligibility claims.
 
-## DASHBOARD / ALERTS
-Private dashboard exists with 24h/7d tabs, BUY/SELL/WAIT, entry area, stop, targets, R:R, evidence, regime, reasoning, risk visualization and TradingView link.
-Windows notifier exists in `tools/windows_signal_notifier.py`; local activation/autostart is still pending.
-Current displayed entry zone is ±10% of modeled stop distance and has not yet been independently optimized by backtesting.
-
-## CLOUD RESEARCH CORE
-Deep OKX history pagination and cloud backtesting are implemented. Research runs hourly 24/7 on GitHub Actions.
-Six deterministic strategy families are researched independently: trend, breakout, momentum, mean reversion, volatility expansion, and relative strength vs BTC.
-Execution is no-lookahead: signals use data through candle i, entry is next-bar open, ATR stop/1.9R target, configured round-trip cost, conservative stop-first same-candle ambiguity, and non-overlapping holds.
-Chronological split remains 60% train / 20% validation / 20% untouched holdout.
-Failed candidates remain `RESEARCH_ONLY`; passed candidates become `ELIGIBLE_OOS`. Passing once is NOT sufficient for live weighting.
-
-## FIRST COMPLETED STRATEGY-FAMILY OOS RUN
-Cloud research run `34077019168` completed successfully on all four original shards.
-Exactly 5 candidates passed the strict OOS gate:
-- ETH-USDT 1H — trend
-- SOL-USDT 15m — mean reversion
-- DOGE-USDT 1H — volatility expansion
-- ADA-USDT 1H — breakout
-- ADA-USDT 1H — volatility expansion
+## FIRST STRICT OOS PASS SET
+Research run `34077019168` produced exactly five strict OOS passes:
+- ETH-USDT 1H trend
+- SOL-USDT 15m mean reversion
+- DOGE-USDT 1H volatility expansion
+- ADA-USDT 1H breakout
+- ADA-USDT 1H volatility expansion
 None are live-weighted.
 
-## EXPANDED RESEARCH UNIVERSE
-User requirement: algo research/backtesting must cover far more than the original ~10 majors and must include PONS.
-Implemented commits:
-- `4c7f5129835c659a8e69d3d45a7d2a495160999e` — dynamic liquid-universe selection, deterministic sharding and forced special symbols in `research_runner.py`.
-- `6ec0b77abf16bfff4e9a191e55555c78cf654c81` — hourly dynamic Top-80 OKX spot universe on 15m + 1H across 16 deterministic shards with max 8 parallel jobs; existing BTC/ETH/SOL/XRP/LINK 4H+1D swing shard retained.
-- `9db28766d045ff0acf4b90fbc7c1effc89cd1eab` — tests for deterministic sharding, explicit-symbol override and forced PONS inclusion.
-Dynamic research selection uses existing `build_universe()` liquidity/activity/spread filters and takes configured Top 80; runner cap is 100. Explicit `RESEARCH_SYMBOLS` overrides dynamic selection for special jobs.
-PONS is forcibly added as `PONS-USDT-SWAP`. Because PONS is very new, insufficient history must fail closed.
-Security and Reliability run `34079782584` for commit `9db28766d045ff0acf4b90fbc7c1effc89cd1eab` completed successfully.
-Expanded Cloud Crypto Research run `34079774231` is `completed/success`. All 16 universe shard artifacts (`universe-00` through `universe-15`) plus `swing-a` exist. Artifact contents still require inspection before claiming PONS execution details or new OOS eligibility counts.
+## AUTONOMOUS ORCHESTRATION VALIDATION
+Core merged orchestration history includes:
+- `38b6119f3694a099d6800f9e8ef4df7cd34b00cf`
+- `8cdaceef7a24a131b8203893dd03702aada57e03`
+- `2653dd2a1db3afb33bfaec9b7e3f5249350ad610`
+- `312cd5d8f009dd6d6a3db31d0a0a9e34083d5465`
+- `f1b154a68c30a9cca2c926795c5bc8dd2d1fd998`
+- `ad70344a610c65dae5d59b302b33c69ed12edb58`
+- `19b6655f1bff02a3d1b228355f7be3d684ebe92c` — bounded OpenAI retry handling.
 
-## AUTONOMOUS MULTI-AGENT DEVELOPMENT — FINAL ORCHESTRATION VALIDATION
-User requirement: six AI development roles should work continuously without interfering with each other and use GitHub as the shared synchronization layer.
+After API credit was restored, specialist validation run `34130653382` attempt 2 completed successfully: Lead planning passed and all five original specialists completed successfully with full repository tests, cache cleanup and protected-path enforcement.
+Autonomous Lead Integrator run `34133251327` then completed successfully. This proves the six-role baseline orchestration is functioning end-to-end in dry-run review mode.
+`AUTONOMOUS_MERGE_ENABLED` remains false. Automatic production integration must stay disabled unless explicitly enabled by the user after further validation.
 
-Merged orchestration history:
-- PR #1 -> `38b6119f3694a099d6800f9e8ef4df7cd34b00cf`.
-- PR #2 -> `8cdaceef7a24a131b8203893dd03702aada57e03`.
-- PR #3 -> `2653dd2a1db3afb33bfaec9b7e3f5249350ad610`.
-- Lead state PR #4 -> `015b32d7dda03012d2ca6e81e52b77e481da0f3b`.
-- Validation-trigger PR #5 -> `7724b2502a3f49df92323fe0d9bfb939591fdb39`.
-- PR #11 `Remove autonomous PR-create permission dependency` -> `312cd5d8f009dd6d6a3db31d0a0a9e34083d5465`.
-- Testing/Security bounded-budget fix -> `f1b154a68c30a9cca2c926795c5bc8dd2d1fd998`.
-- PR #14 exact-SHA security dispatch fix -> `ad70344a610c65dae5d59b302b33c69ed12edb58`.
+## 15-AGENT EXPANSION — CURRENT DEVELOPMENT
+User explicitly requested expansion to an approximately 15-agent autonomous development team while keeping API/cloud spend tightly controlled.
+Current development branch: `lead/expand-15-agent-cost-aware`.
+Target roster is 15 total roles: 1 Lead Integrator + 14 specialists:
+1. quant-trend
+2. quant-mean-reversion
+3. quant-breakout-volatility
+4. quant-cross-asset
+5. data-market
+6. data-integrity
+7. market-microstructure
+8. onchain-tokenomics
+9. news-macro
+10. strategy-registry
+11. portfolio-risk
+12. production-signals
+13. testing-security
+14. infra-cost
+plus the Lead Integrator.
 
-Repository configuration:
-- GitHub Actions secret `OPENAI_API_KEY` configured.
-- GitHub Actions variable `OPENAI_AGENT_MODEL=gpt-5.6` configured.
-- `AUTONOMOUS_MERGE_ENABLED` remains unset/false.
+Implemented on the branch:
+- `agents/roles.json` expanded from 5 to 14 specialist roles with bounded write allowlists and missions.
+- `agents/autonomous_orchestrator.py` now creates the planner schema dynamically from `roles.json`; no hardcoded five-role planner schema remains.
+- Hard API-cost control added: `MAX_ACTIVE_TASKS_PER_CYCLE = 4`. Planner output is rejected if more than four specialists are assigned `TASK` in one hourly cycle.
+- Planner instructions explicitly prefer the smallest useful specialist set and NO_TASK over speculative work.
+- `.github/workflows/autonomous_agents.yml` now creates its matrix only from active TASK roles, so NO_TASK specialists do not consume worker API calls or GitHub runner installation time.
+- Specialist parallelism is hard-capped at 4.
+- Stable triggers restored to `workflow_dispatch` + hourly schedule at minute 17; temporary main-push validation trigger removed because the baseline end-to-end validation is green.
+- Testing/Security retains a 32-step ceiling; other active specialists remain at 20; global hard clamp stays 1..32.
+- Tests updated to assert exactly 14 specialist roles, protected-path isolation, exact planner role set, and rejection above the four-active-specialist cost cap.
 
-Current branch-based autonomous architecture:
-- Lead planner runs each specialist cycle.
-- Five specialists run in parallel on isolated `auto/<role>/<run>` branches.
-- Specialists can only write their role allowlists; `AI_STATE.md`, `agents/`, `.github/workflows/`, `requirements.txt`, and `Dockerfile` are protected.
-- Full repository pytest, generated-cache cleanup, and protected-path checks are mandatory before a candidate branch is published.
-- Testing/Security receives a role-specific 32-step budget; all other specialists remain at 20. The orchestrator hard-clamps every configured budget to 1..32.
-- Candidate publication explicitly dispatches Security and Reliability on the candidate branch; Lead requires exact matching `headSha` success before review.
-- Autonomous Lead Integrator is triggered by completed specialist workflows and has an hourly fallback.
-- Lead only considers candidates whose merge-base is exactly current `main`.
-- Lead rejects protected or >80 KB diffs, then requires independent Security AI and Lead AI approvals.
-- With `AUTONOMOUS_MERGE_ENABLED` false, approved candidates remain unmerged and are recorded as review issues.
-- If autonomous merge is later explicitly enabled, Lead may integrate at most one exact-current-main candidate per cycle, reruns pytest, updates canonical `AI_STATE.md`, pushes main, and deletes that candidate branch.
+## SAFETY INVARIANTS
+Specialists work on isolated `auto/<role>/<run>` branches. `AI_STATE.md`, `agents/`, `.github/workflows/`, `requirements.txt`, and `Dockerfile` remain protected from specialist writes.
+Candidate branches must pass full pytest, generated-cache cleanup and protected-path checks before publication.
+Candidate publication explicitly dispatches Security and Reliability. Lead requires exact candidate SHA success, rejects protected or >80 KB diffs, and requires independent Security AI + Lead AI approval.
+With autonomous merge disabled, approved candidates remain unmerged/review-only.
+Insufficient or unreliable evidence always means WAIT / NO TRADE / RESEARCH_ONLY.
 
-Dry-run history:
-- Run #1 `34081978561`: import-path + instruction-continuation defects; failed closed.
-- Run #2 `34083255188`: ran old main immediately before PR #2 merge; not a valid retest.
-- Run #3 `34083647208`: four specialists produced real bounded changes and passed full tests, but generated Python cache files falsely tripped protected paths; Strategy Registry exhausted the old 12-step cap. PR #3 fixed both issues.
-- Run #4 `34084417186`: all five specialists executed bounded work, passed full pytest, cleanup and protected-path enforcement, and pushed isolated branches; GitHub's Actions PR-create policy blocked PR creation. PR #11 removed that dependency.
-- Run #5 `34084791870`: four NO_TASK roles completed safely; Testing/Security failed closed at the old 20-step budget. The hard-capped role-specific budget fix is merged.
-- Validation cycle `34085259371` published exact candidate `auto/testing-security/34085259371-1` at SHA `62663adcf4100aa8a7774d2f620638483ca2f586`.
-- Lead run `34085368879` selected that candidate but failed closed because GITHUB_TOKEN branch pushes did not trigger Security and Reliability. PR #14 fixed this by explicit workflow dispatch.
-- Post-PR #14 specialist run `34130259522` started on main `ad70344a...` but the planner received OpenAI API HTTP 429 before producing a plan. The run failed closed and no specialist changes were produced.
-
-Current fix development is isolated on `lead/fix-openai-rate-limit-retry` and is NOT merged:
-- OpenAI Responses API calls now retry only bounded transient failures (`408`, `409`, `429`, `500`, `502`, `503`, `504`) and network/timeout errors.
-- Retry count is hard-capped at 6 total attempts with bounded backoff 5/10/20/40/60 seconds; server `Retry-After` is honored but capped at 120 seconds.
-- Non-retryable HTTP errors still fail immediately; exhausting retries fails closed.
-- Tests cover normal backoff, hard cap, Retry-After honoring, malformed Retry-After fallback, and existing safety invariants.
-- No write/test/protected-path/exact-SHA/diff-size/dual-review/merge gate is weakened.
-- Autonomous merge remains OFF.
-
-A temporary `push` trigger remains on Autonomous Specialist Agents only to enable immediate same-session validation without asking the user for a browser click. It must be removed after the complete branch-based end-to-end cycle is proven green, restoring stable triggers to `workflow_dispatch` + hourly schedule.
-
-## TARGET QUANT ARCHITECTURE
-Continue building evidence in layers: clean multi-exchange data; spot/perpetual microstructure; options where useful; on-chain/tokenomics; timestamped news/macro catalysts; independently validated strategy families; realistic execution costs; rigorous rolling validation and overfit controls; portfolio risk; fail-closed strategy registry; continuous live-vs-backtest monitoring. AI is an adversarial research/review layer, not an oracle.
-NO TRADE / WAIT is valid. Capital survival and robust risk-adjusted expectancy outrank signal frequency.
+## COST PRINCIPLES
+Use deterministic Python for calculation/backtesting/filtering; use AI only for planning, bounded implementation and independent review.
+No-task specialists incur no worker model call. Maximum four active specialist workers per hourly cycle. Parallelism is capped at four. Prefer measurable work over keeping agents busy.
+Do not weaken safety, OOS validation or testing to save cost.
+A platform-side spend cap should also remain configured by the user; repository controls are an additional layer, not a substitute for the provider billing limit.
 
 ## AUTOMATION
 Production market scans: approximately every 15 minutes.
-Cloud research/backtesting/algo testing: hourly, 24/7.
-Expanded intraday research target: dynamic Top 80 liquid OKX spot markets + forced PONS-USDT-SWAP on 15m and 1H.
-Existing major swing research remains on 4H and 1D.
-Stable Autonomous Specialist Agents target schedule: minute 17 each hour.
-Autonomous Lead Integrator target: immediately after each specialist workflow plus minute 47 each hour fallback.
-Autonomous merge remains disabled until branch-based end-to-end validation is green.
+Cloud research/backtesting/algo testing: hourly 24/7.
+Autonomous specialist planner: minute 17 every hour.
+Autonomous Lead Integrator: after each specialist workflow plus minute 47 fallback.
 
 ## EXACT NEXT STEP
-1. Open and review a PR from `lead/fix-openai-rate-limit-retry` to `main`.
+1. Open PR `lead/expand-15-agent-cost-aware` -> `main`.
 2. Require Security and Reliability to pass unit tests, dependency audit, Bandit and committed-secret scan.
-3. Merge only after green CI; temporary main-push trigger starts a fresh specialist validation cycle.
-4. Require the planner to survive transient 429/5xx/network failures within the hard retry cap or fail closed if the API remains unavailable.
-5. Require planner + five specialists to finish safely. NO_TASK roles may no-op; TASK roles must pass full pytest, cache cleanup and protected-path enforcement before candidate publication.
-6. Verify candidate publication explicitly dispatches Security and Reliability on the exact candidate branch and exact candidate SHA and concludes success.
-7. Verify Lead selects that exact-current-main candidate, passes bounded/protected diff checks, receives Security AI + Lead AI approval, records a dry-run review issue, and leaves the candidate unmerged because `AUTONOMOUS_MERGE_ENABLED` is false.
-8. Fix any remaining failure and repeat automatically until full cycle is green.
-9. After green validation, remove the temporary main-push trigger, update canonical `AI_STATE.md` to READY, run Security CI and merge cleanup.
-10. Only then declare the six-agent autonomous collaboration system ready. Do not enable autonomous merging without explicit user decision.
-11. Separately inspect completed Cloud Crypto Research run `34079774231` artifacts before claiming PONS-specific results or new OOS eligibility counts.
+3. Review the PR diff for role boundaries, dynamic matrix correctness and cost-cap enforcement.
+4. Merge only after green CI.
+5. Trigger or wait for the first hourly 15-agent cycle on the merged main branch.
+6. Verify planner sees all 14 specialists but assigns at most four TASK roles; verify only those active roles receive worker jobs.
+7. Verify candidate security dispatch and Lead dry-run review still work on exact candidate SHAs.
+8. Update this file again with first-cycle results and any required fixes.
+9. Keep autonomous merging OFF unless the user explicitly chooses to enable it.
+10. Separately inspect research run `34079774231` artifact contents before any PONS-specific result claims.

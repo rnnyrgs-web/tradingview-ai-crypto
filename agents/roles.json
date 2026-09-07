@@ -1,56 +1,72 @@
 {
-  "quant-research": {
-    "branch_prefix": "auto/quant-research/",
-    "allowed_paths": [
-      "strategy_families.py",
-      "backtest.py",
-      "research_runner.py",
-      "tests/test_strategy_families.py",
-      "tests/test_research_runner.py",
-      "tests/test_quant_*.py"
-    ],
-    "mission": "Improve strategy discovery and validation without weakening no-lookahead, untouched OOS, realistic execution, or fail-closed research rules."
+  "quant-trend": {
+    "branch_prefix": "auto/quant-trend/",
+    "allowed_paths": ["strategy_families.py", "tests/test_strategy_families.py", "tests/test_quant_trend*.py"],
+    "mission": "Research and improve trend-following strategy logic with strict no-lookahead, realistic costs, untouched OOS validation, and fail-closed promotion rules."
+  },
+  "quant-mean-reversion": {
+    "branch_prefix": "auto/quant-mean-reversion/",
+    "allowed_paths": ["strategy_families.py", "backtest.py", "tests/test_strategy_families.py", "tests/test_quant_mean_reversion*.py"],
+    "mission": "Research and improve mean-reversion strategy logic while resisting overfitting and preserving untouched OOS and realistic execution assumptions."
+  },
+  "quant-breakout-volatility": {
+    "branch_prefix": "auto/quant-breakout-volatility/",
+    "allowed_paths": ["strategy_families.py", "backtest.py", "tests/test_strategy_families.py", "tests/test_quant_breakout*.py", "tests/test_quant_volatility*.py"],
+    "mission": "Research breakout and volatility-expansion strategies with regime robustness, no-lookahead execution, and realistic fees/spread/slippage."
+  },
+  "quant-cross-asset": {
+    "branch_prefix": "auto/quant-cross-asset/",
+    "allowed_paths": ["strategy_families.py", "research_runner.py", "tests/test_research_runner.py", "tests/test_quant_cross_asset*.py"],
+    "mission": "Research relative-strength, cross-asset and multi-timeframe signals without leaking future data or weakening OOS standards."
   },
   "data-market": {
     "branch_prefix": "auto/data-market/",
-    "allowed_paths": [
-      "market_data.py",
-      "tests/test_market_data.py",
-      "tests/test_data_*.py"
-    ],
-    "mission": "Improve market-universe coverage, exchange data quality, historical/live integrity, liquidity filters, timestamps, and safe handling of missing or stale data."
+    "allowed_paths": ["market_data.py", "tests/test_market_data.py", "tests/test_data_market*.py"],
+    "mission": "Improve exchange coverage, liquid-universe selection, historical/live market data access and symbol availability including safe PONS handling."
+  },
+  "data-integrity": {
+    "branch_prefix": "auto/data-integrity/",
+    "allowed_paths": ["market_data.py", "tests/test_market_data.py", "tests/test_data_integrity*.py"],
+    "mission": "Detect and fail closed on stale, missing, malformed, duplicated or timestamp-inconsistent market data."
+  },
+  "market-microstructure": {
+    "branch_prefix": "auto/market-microstructure/",
+    "allowed_paths": ["market_data.py", "backtest.py", "tests/test_market_microstructure*.py", "tests/test_backtest*.py"],
+    "mission": "Improve spread, slippage, liquidity, funding, basis and execution-cost modeling using evidence available in the repository."
+  },
+  "onchain-tokenomics": {
+    "branch_prefix": "auto/onchain-tokenomics/",
+    "allowed_paths": ["onchain_data.py", "tokenomics.py", "tests/test_onchain*.py", "tests/test_tokenomics*.py"],
+    "mission": "Build fail-closed on-chain and tokenomics intelligence that can support research without fabricating unavailable data or bypassing validation."
+  },
+  "news-macro": {
+    "branch_prefix": "auto/news-macro/",
+    "allowed_paths": ["news_macro.py", "tests/test_news_macro*.py"],
+    "mission": "Build timestamp-safe news and macro catalyst features for research, with explicit freshness and provenance checks and no future-information leakage."
   },
   "strategy-registry": {
     "branch_prefix": "auto/strategy-registry/",
-    "allowed_paths": [
-      "strategy_registry.py",
-      "tests/test_strategy_registry.py",
-      "tests/test_registry_*.py"
-    ],
+    "allowed_paths": ["strategy_registry.py", "tests/test_strategy_registry.py", "tests/test_registry_*.py"],
     "mission": "Build longitudinal champion/challenger selection, robust promotion/demotion, drift monitoring, and fail-closed approval gates."
   },
-  "production-risk": {
-    "branch_prefix": "auto/production-risk/",
-    "allowed_paths": [
-      "engine.py",
-      "evaluator.py",
-      "opportunity_engine.py",
-      "safety.py",
-      "dashboard.py",
-      "tests/test_safety.py",
-      "tests/test_dashboard.py",
-      "tests/test_production_*.py",
-      "tests/test_risk_*.py"
-    ],
-    "mission": "Improve live opportunity ranking and portfolio safety while preserving WAIT/NO TRADE behavior and preventing unapproved research from reaching production."
+  "portfolio-risk": {
+    "branch_prefix": "auto/portfolio-risk/",
+    "allowed_paths": ["safety.py", "evaluator.py", "tests/test_safety.py", "tests/test_risk_*.py"],
+    "mission": "Improve position sizing, concentration, correlation exposure, volatility targeting, portfolio heat, drawdown protection and kill switches."
+  },
+  "production-signals": {
+    "branch_prefix": "auto/production-signals/",
+    "allowed_paths": ["engine.py", "opportunity_engine.py", "dashboard.py", "tests/test_dashboard.py", "tests/test_production_*.py"],
+    "mission": "Improve live Top-20 BUY/SELL/WAIT ranking, entry/stop/target construction and dashboard consistency while keeping unapproved research out of production."
   },
   "testing-security": {
     "branch_prefix": "auto/testing-security/",
-    "allowed_paths": [
-      "tests/test_*.py",
-      "SECURITY.md",
-      "docs/security_*.md"
-    ],
-    "mission": "Adversarially test the system for security, data leakage, lookahead bias, malformed inputs, CI regressions, and failures that should produce safe WAIT/RESEARCH_ONLY outcomes."
+    "allowed_paths": ["tests/test_*.py", "SECURITY.md", "docs/security_*.md"],
+    "mission": "Adversarially test security, lookahead, malformed inputs, dependency/CI regressions and failures that must produce safe WAIT or RESEARCH_ONLY outcomes."
+  },
+  "infra-cost": {
+    "branch_prefix": "auto/infra-cost/",
+    "allowed_paths": ["docs/cost_*.md", "docs/cloud_*.md", "tests/test_cost_*.py", "tests/test_cloud_*.py"],
+    "mission": "Reduce cloud and API waste, improve reliability and observability, and document measurable cost controls without weakening safety or changing protected orchestration files."
   }
 }

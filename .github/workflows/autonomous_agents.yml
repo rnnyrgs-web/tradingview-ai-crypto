@@ -2,9 +2,6 @@ name: Autonomous Specialist Agents
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
   schedule:
     - cron: "17 * * * *"
 
@@ -22,6 +19,7 @@ jobs:
     timeout-minutes: 10
     outputs:
       plan_b64: ${{ steps.plan.outputs.plan_b64 }}
+      active_roles: ${{ steps.plan.outputs.active_roles }}
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       OPENAI_AGENT_MODEL: ${{ vars.OPENAI_AGENT_MODEL }}
@@ -55,20 +53,24 @@ jobs:
           export AGENT_EXTERNAL_CONTEXT="$(cat /tmp/github-context.txt)"
           python agents/autonomous_orchestrator.py plan --output /tmp/agent-plan.json
           echo "plan_b64=$(base64 -w0 /tmp/agent-plan.json)" >> "$GITHUB_OUTPUT"
+          ACTIVE_ROLES="$(python - <<'PY'
+          import json
+          p = json.load(open('/tmp/agent-plan.json', encoding='utf-8'))
+          print(json.dumps([r for r, t in p['tasks'].items() if t['status'] == 'TASK'], separators=(',', ':')))
+          PY
+          )"
+          echo "active_roles=$ACTIVE_ROLES" >> "$GITHUB_OUTPUT"
+          echo "Active specialist roles: $ACTIVE_ROLES"
           cat /tmp/agent-plan.json
 
   specialists:
     needs: plan
+    if: ${{ needs.plan.outputs.active_roles != '[]' }}
     strategy:
       fail-fast: false
-      max-parallel: 5
+      max-parallel: 4
       matrix:
-        role:
-          - quant-research
-          - data-market
-          - strategy-registry
-          - production-risk
-          - testing-security
+        role: ${{ fromJSON(needs.plan.outputs.active_roles) }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
