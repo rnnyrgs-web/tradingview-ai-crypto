@@ -46,6 +46,7 @@ jobs:
               re.compile(r"sk-[A-Za-z0-9_-]{20,}"),
               re.compile(r'''SUPABASE_SECRET_KEY\s*=\s*["'][^"']+["']'''),
               re.compile(r'''SCAN_SECRET\s*=\s*["'][^"']+["']'''),
+              re.compile(r'''DASHBOARD_SECRET\s*=\s*["'][^"']+["']'''),
           ]
           allowed = {".py", ".yml", ".yaml", ".json", ".md"}
           hits = []
