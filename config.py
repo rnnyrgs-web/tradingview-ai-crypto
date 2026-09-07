@@ -11,6 +11,12 @@ SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
 SUPABASE_SECRET_KEY = os.getenv("SUPABASE_SECRET_KEY", "")
 
 OKX_BASE = "https://www.okx.com"
+BINANCE_SPOT_BASE = "https://api.binance.com"
+BINANCE_FUTURES_BASE = "https://fapi.binance.com"
+
+PRICE_CONSENSUS_MIN_SOURCES = int(os.getenv("PRICE_CONSENSUS_MIN_SOURCES", "2"))
+PRICE_CONSENSUS_MAX_DEVIATION_BPS = float(os.getenv("PRICE_CONSENSUS_MAX_DEVIATION_BPS", "50"))
+MARKET_DATA_MAX_AGE_SECONDS = int(os.getenv("MARKET_DATA_MAX_AGE_SECONDS", "120"))
 
 UNIVERSE_SIZE = int(os.getenv("UNIVERSE_SIZE", "180"))
 DEEP_SCAN_SIZE = int(os.getenv("DEEP_SCAN_SIZE", "40"))

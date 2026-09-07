@@ -57,7 +57,8 @@ def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
             action = str(reviewed.get("action", "WAIT")).upper()
             strategy_family = str(reviewed.get("strategy_family", ""))
             validation = validate_live_strategy(c["symbol"], horizon, strategy_family)
-            if reviewed_direction != direction or action != "TRADE" or not validation.approved:
+            consensus = c.get("market_consensus", {})
+            if reviewed_direction != direction or action != "TRADE" or not validation.approved or not consensus.get("reliable"):
                 action = "WAIT"
             evidence = float(reviewed.get("evidence_score") or min(99.0, abs(q) / 5.5 * 100.0))
             calibration = calibration_assessment(evidence, horizon, resolved_predictions, regime)
@@ -71,6 +72,8 @@ def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
                 base_reason = f"{base_reason} [{validation.status}: {validation.reason}]"
             elif not calibration["allows_live_action"]:
                 base_reason = f"{base_reason} [CALIBRATION_PENDING_OR_WEAK: live action blocked]"
+            if not consensus.get("reliable"):
+                base_reason = f"{base_reason} [MARKET_CONSENSUS_UNRELIABLE: {consensus.get('reason', 'missing')}]"
             ranked.append({
                 "scan_id": scan_id,
                 "horizon": horizon,

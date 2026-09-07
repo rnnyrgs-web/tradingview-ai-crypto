@@ -126,14 +126,14 @@ blindly covering thousands of illiquid tokens.
   explicitly add those data feeds.
 - It does not replace exchange-side risk controls.
 
-## 8. Recommended next upgrade
+## 8. Current market-intelligence safeguards
 
-The strongest next version is to have the server maintain rolling 5m/15m/1h market
-state and add exchange APIs for:
-- funding
-- open interest
-- liquidation data
-- cross-exchange price confirmation
-- relative-strength ranking
+Production scans now cross-check every eligible OKX spot price against an independent
+Binance batch quote. Fewer than two fresh sources or excessive price disagreement
+forces `WAIT`. Derivatives context combines OKX and Binance funding/open interest,
+labels crowding only from available observations, and treats missing data as unknown.
+OKX liquidation pressure is optional and never fabricated when unavailable.
 
-Then the AI evaluates all of that together instead of only the TradingView bar payload.
+These inputs are evidence, not authorization. Live action remains blocked unless the
+exact strategy also passes the complete research, untouched-OOS, robustness,
+registry, production-risk and calibration gates.
