@@ -76,7 +76,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       PYTHONPATH: ${{ github.workspace }}
       PYTHONDONTWRITEBYTECODE: "1"
-      AGENT_MAX_STEPS: "20"
+      AGENT_MAX_STEPS: ${{ matrix.role == 'testing-security' && '32' || '20' }}
     steps:
       - uses: actions/checkout@v4
         with:
