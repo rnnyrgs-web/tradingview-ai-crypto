@@ -73,6 +73,8 @@ jobs:
       OPENAI_AGENT_MODEL: ${{ vars.OPENAI_AGENT_MODEL }}
       GH_TOKEN: ${{ github.token }}
       PYTHONPATH: ${{ github.workspace }}
+      PYTHONDONTWRITEBYTECODE: "1"
+      AGENT_MAX_STEPS: "20"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -102,6 +104,11 @@ jobs:
         run: python agents/autonomous_worker.py --role '${{ matrix.role }}' --plan /tmp/agent-plan.json
       - name: Enforce full repository tests
         run: pytest -q
+      - name: Remove generated Python caches
+        run: |
+          find . -type d -name '__pycache__' -prune -exec rm -rf {} +
+          rm -rf .pytest_cache
+          find . -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
       - name: Reject protected-path modifications
         run: |
           CHANGED="$(git status --porcelain | sed -E 's/^.. //')"
