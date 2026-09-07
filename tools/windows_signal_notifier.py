@@ -19,13 +19,20 @@ INTERVAL_MAP = {
 }
 
 
-def fetch_signals(after_id):
+def get_json(path):
     if not SCAN_SECRET:
         raise RuntimeError("SCAN_SECRET environment variable is required")
-    url = f"{BASE_URL}/signals?after_id={int(after_id)}&limit=20"
-    req = urllib.request.Request(url, headers={"X-Scan-Secret": SCAN_SECRET})
+    req = urllib.request.Request(f"{BASE_URL}{path}", headers={"X-Scan-Secret": SCAN_SECRET})
     with urllib.request.urlopen(req, timeout=20) as r:
         return json.loads(r.read().decode("utf-8"))
+
+
+def fetch_signals(after_id):
+    return get_json(f"/signals?after_id={int(after_id)}&limit=20")
+
+
+def fetch_cursor():
+    return int(get_json("/signals/cursor").get("latest_id", 0))
 
 
 def tradingview_url(signal):
@@ -52,7 +59,9 @@ def alert(signal):
 
 
 def main():
-    last_id = int(os.getenv("SIGNAL_START_AFTER_ID", "0"))
+    configured_start = os.getenv("SIGNAL_START_AFTER_ID")
+    last_id = int(configured_start) if configured_start else fetch_cursor()
+    print(f"Signal notifier armed after id {last_id}; historical signals will not alert.", flush=True)
     while True:
         try:
             payload = fetch_signals(last_id)
