@@ -9,6 +9,8 @@ Production is GitHub -> Render -> Python/FastAPI V3 -> Supabase. Production scan
 
 There are 15 autonomous development roles: Lead Integrator plus 14 specialists: quant-trend, quant-mean-reversion, quant-breakout-volatility, quant-cross-asset, data-market, data-integrity, market-microstructure, onchain-tokenomics, news-macro, strategy-registry, portfolio-risk, production-signals, testing-security and infra-cost. The specialist cycle uses exactly one `CHANGE` role plus thirteen read-only `AUDIT` roles to avoid stale competing branches. The Lead runs after specialist workflows plus a minute-47 fallback.
 
+Specialist proposals originate from isolated `auto/<role>/<run>` candidate branches. Specialist agents cannot edit `AI_STATE.md`, orchestration safeguards or other protected paths. A candidate cannot be autonomously integrated unless Security and Reliability CI passes on the exact candidate SHA, independent Security AI and Lead AI reviews approve it, protected-path and diff checks pass, and the Lead completes final integration validation and updates this canonical state.
+
 ## USER-MANDATED LIVE SIGNAL RULE — ENFORCED
 No AI opinion, ranking score, evidence score or single OOS result may authorize live BUY/SELL. The mandatory chain is:
 RESEARCH -> BACKTEST -> VALIDATION -> UNTOUCHED OOS -> ROBUSTNESS/STABILITY -> STRATEGY-REGISTRY APPROVAL -> PRODUCTION-RISK APPROVAL -> LIVE BUY/SELL.
@@ -23,14 +25,20 @@ Research artifacts are SHA-256 sealed. `research_aggregation.py` rejects tamperi
 
 The append-only Supabase prediction ledger records every ranked 24h/7d forecast before outcome with fixed `due_at`, direction, entry, score, regime, strategy identity, action and calibration snapshot. Outcomes use the first hourly close at or after the deadline. Calibration is horizon + score-bin specific, prefers regime-specific samples once populated, requires >=30 comparable resolved forecasts, and requires a 95% Wilson lower bound >=50%. Calibration can only restrict; it cannot approve or bypass research/registry/risk/promotion gates.
 
-The first strict OOS pass set from run `34077019168` was: ETH-USDT 1H trend; SOL-USDT 15m mean reversion; DOGE-USDT 1H volatility expansion; ADA-USDT 1H breakout; ADA-USDT 1H volatility expansion. None are live-weighted.
+The first strict OOS pass set from run `34077019168` was: ETH-USDT 1H trend; SOL-USDT 15m mean reversion; DOGE-USDT 1H volatility expansion; ADA-USDT 1H breakout; ADA-USDT 1H volatility expansion. None are live-weighted. One OOS pass remains insufficient for live weighting or promotion.
 
 ## MARKET / EXECUTION INTELLIGENCE
 Production uses fail-closed fresh OKX + Binance spot price consensus. Fewer than two valid sources, stale observations or excessive disagreement forces WAIT. Derivatives context includes exchange-specific funding/open interest, median funding, dispersion/crowding and optional liquidation pressure represented in raw contract units when USD notional is not defensible.
 
 PR #31 merged as `8aefc5004ca7f9bcfbf3aa07240a97629ccae6e5` and added research-only cross-exchange order-book intelligence for AI finalists: 10/25 bps depth, spread, bounded imbalance, thin/crossed/wide-book rejection, two-source reliability and explicit disagreement. It has no path that promotes WAIT to TRADE.
 
-ACC-001 execution-realism work has begun. PR #38 `Add execution-cost stress testing to research backtests` passed exact-SHA Security and Reliability run `34164900477` (unit tests, dependency audit, static security and committed-secret rejection) and merged as `18a12236270cc753dfa703b21b51e647edebdd0b`. `backtest.py` now stress-tests the same research trade path under deterministic 1.0x/1.5x/2.0x/3.0x round-trip cost assumptions and reports both full-backtest and untouched-holdout cost stress. Historical candle data does not contain executable bid/ask history, so no historical spread is fabricated. This is an initial ACC-001 stage only; richer timestamp-safe funding/basis/OI/liquidation history and fill/slippage evidence still need research and validation before ACC-001 can be considered complete.
+ACC-001 execution-realism work is in progress. PR #38 `Add execution-cost stress testing to research backtests` passed exact-SHA Security and Reliability run `34164900477` and merged as `18a12236270cc753dfa703b21b51e647edebdd0b`. `backtest.py` stress-tests the same research trade path under deterministic 1.0x/1.5x/2.0x/3.0x round-trip cost assumptions and reports both full-backtest and untouched-holdout cost stress. Historical candle data does not contain executable bid/ask history, so no historical spread is fabricated.
+
+A subsequent bounded market-microstructure candidate from branch `auto/market-microstructure/34164957501-1`, candidate head `aa26b262e1846ec8f6b19f89ef246c1455f05e5b`, was integrated. The supplied evidence does not identify a separate resulting main integration SHA. Security CI passed on the exact candidate SHA. Independent Security AI and Lead AI reviews both approved it as low risk.
+
+That candidate added a fail-closed strict timestamp-ordering gate before positional future-bar scoring in research backtests and walk-forward validation. Missing, invalid, duplicate or non-increasing timestamps now cause refusal rather than sorting, filling or fabricating chronology. The execution-cost scenarios continue to reuse the same timestamp-safe trade path and change only assumed returns. The supplied tests cover unavailable/non-chronological timestamps and verify that moving from 12 bps to 36 bps preserves trade count while reducing each selected trade return by the expected 24 bps. The change is bounded to research backtesting and does not alter live-trading behavior or weaken any promotion gate.
+
+These changes remain initial ACC-001 stages only. Richer timestamp-safe historical funding, basis and open-interest-change data, plus defensible liquidation and fill/slippage evidence, still require investigation, implementation and validation before ACC-001 can be considered complete. Unavailable historical order-book or execution data must never be fabricated.
 
 Operational monitoring exposes sanitized health only. The 15-minute workflow validates returned JSON and fails on `ok != true`, empty/degraded scans, AI/opportunity errors, excessive symbol failures, missing fingerprint or any unvalidated TRADE. Security regression, Bandit, dependency audit and committed-secret checks remain enforced.
 
@@ -48,11 +56,13 @@ The autonomous control plane now:
 - wakes on completed `Crypto 15m Scan` and `Cloud Crypto Research` workflows as well as the minute-17 hourly fallback;
 - uses `agents/supervisor_snapshot.py` to provide a compact machine-readable context with trigger metadata, safety invariants, exact next steps and prioritized backlog;
 - stores signal-accuracy work in protected `orchestration/priority_backlog.json`, which autonomous specialists cannot edit and which cannot authorize live promotion;
+- accepts specialist proposals only from isolated candidate branches;
 - still permits exactly one `CHANGE` worker and thirteen parallel read-only `AUDIT` workers with `max-parallel: 14`;
-- protects `AI_STATE.md`, `agents/`, `orchestration/`, `.github/workflows/`, `requirements.txt` and `Dockerfile` from autonomous specialist writes.
+- protects `AI_STATE.md`, `agents/`, `orchestration/`, `.github/workflows/`, `requirements.txt` and `Dockerfile` from autonomous specialist writes;
+- requires Security CI on the exact candidate SHA plus independent Security AI and Lead AI approval before verified autonomous integration.
 
 The protected accuracy backlog is:
-1. `ACC-001` market-microstructure — realistic execution + richer market-state evidence. IN PROGRESS: deterministic execution-cost stress is merged; historical funding/basis/OI/liquidation and defensible fill/slippage evidence remain.
+1. `ACC-001` market-microstructure — realistic execution + richer market-state evidence. IN PROGRESS: deterministic execution-cost stress and fail-closed timestamp chronology validation are integrated; historical funding/basis/OI-change/liquidation and defensible fill/slippage evidence remain.
 2. `ACC-002` quant-cross-asset — cross-sectional relative-strength/rank prediction across the liquid universe.
 3. `ACC-003` quant-breakout-volatility — regime-specialist models for bull, bear, range, high-volatility stress and compression with no-lookahead labels/minimum samples.
 4. `ACC-004` strategy-registry — calibrated champion/challenger ensemble weighting with correlation/deterioration penalties and automatic demotion.
@@ -68,18 +78,29 @@ Use deterministic Python for calculation, backtesting, filtering and evidence ch
 Prefer event-driven wakeups over idle polling when a meaningful repository/research/production event already exists. Preserve concurrency locks so overlapping events do not create competing write candidates. Increase useful parallelism through read-only audits/research shards, not multiple simultaneous writes to `main`.
 
 ## SAFETY INVARIANTS
-Specialists work on isolated `auto/<role>/<run>` branches. Protected orchestration/state paths are `AI_STATE.md`, `agents/`, `orchestration/`, `.github/workflows/`, `requirements.txt` and `Dockerfile`; specialists must never modify them. Candidate code must pass full pytest, generated-cache cleanup and protected-path checks before publication. Candidate publication dispatches Security and Reliability. Lead requires exact candidate SHA success, rejects oversized/protected diffs, requires independent Security AI + Lead AI approval, final post-squash pytest and canonical AI_STATE update before pushing `main`.
+Specialists work on isolated `auto/<role>/<run>` branches. Specialist agents may propose changes only through those candidate branches and cannot directly write to `main`.
 
-Verified-only autonomous merging is enabled, but these gates remain mandatory. Research, news, on-chain, order-book, continuous-AI and backlog evidence can never bypass live strategy approval.
+Protected orchestration/state paths are `AI_STATE.md`, `agents/`, `orchestration/`, `.github/workflows/`, `requirements.txt` and `Dockerfile`; specialists must never modify them or weaken orchestration safeguards. Candidate code must pass full pytest, generated-cache cleanup and protected-path checks before publication. Candidate publication dispatches Security and Reliability.
+
+Lead integration requires:
+- Security CI success on the exact candidate SHA;
+- independent Security AI approval;
+- independent Lead AI approval;
+- rejection of oversized or protected-path diffs;
+- final post-squash pytest;
+- canonical `AI_STATE.md` update before pushing `main`.
+
+Verified-only autonomous merging is enabled, but all of these gates remain mandatory. Research, news, on-chain, order-book, continuous-AI and backlog evidence can never bypass live strategy approval. Missing, malformed, stale, contradictory or chronologically invalid evidence must fail closed.
 
 ## EXACT NEXT STEP
 1. Verify the post-PR #36 production AI observer live cycle: `/health.continuous_ai` must show `configured=true`, `cycle_count>=1`, no current parser error, five-minute bounded cadence, and trade/write/promotion authority false; Render logs should show `continuous AI observer cycle completed`.
-2. Verify the first post-PR #37 `workflow_run`-triggered Autonomous Specialist Agents cycle after a production scan or cloud-research completion; it must use the compact supervisor context and still produce exactly one CHANGE + thirteen AUDIT roles without overlapping write candidates.
-3. Continue `ACC-001` with the next bounded evidence layer: investigate and implement timestamp-safe historical funding/basis/open-interest change data where genuinely available, plus defensible execution/fill/slippage stress. Do not fabricate unavailable historical order-book data. Require tests and relevant OOS/robustness evidence before calling ACC-001 complete.
-4. Then execute `ACC-002` through `ACC-007` sequentially by evidence while non-owner specialists audit in parallel. Never mark an item complete merely because code was written.
-5. Verify the first full post-order-book production scan keeps latency/errors healthy, order-book evidence stays research-only and no unvalidated trade appears.
-6. Verify an authenticated production workflow scan has two-source consensus where available, fails closed where not, passes `tools/validate_scan_response.py` and contains no unvalidated trade.
-7. After forecast deadlines pass, verify first 24h/7d outcomes use only data at/after `due_at` and calibration remains restrictive until >=30 comparable resolutions and Wilson lower bound >=50%.
-8. Keep `live_promotions.json` empty and signing keys unused until strategies complete repeated backtests, untouched OOS, robustness/stability, registry review and production-risk review.
-9. Verify the next cloud research run emits valid sealed robustness/repeated-run evidence; `READY_FOR_STRATEGY_REGISTRY_REVIEW` remains research-only. Inspect run `34079774231` artifacts before any PONS-specific result claim or promotion.
-10. Update this file after every completed development/integration cycle.
+2. Verify the first post-PR #37 `workflow_run`-triggered Autonomous Specialist Agents cycle after a production scan or cloud-research completion. It must use the compact supervisor context and produce exactly one CHANGE plus thirteen AUDIT roles without overlapping write candidates.
+3. Continue `ACC-001` with the next bounded evidence layer: investigate timestamp-safe historical funding, basis and open-interest-change data where genuinely available, followed by defensible liquidation and fill/slippage stress. Do not fabricate unavailable historical order-book, spread or execution data. Require tests and relevant untouched-OOS/robustness evidence before calling ACC-001 complete.
+4. Confirm future research backtests fail closed on missing, duplicate or non-increasing timestamps and that cost scenarios preserve the selected trade path. Do not infer any new strategy result from the timestamp-validation integration alone.
+5. Then execute `ACC-002` through `ACC-007` sequentially by evidence while non-owner specialists audit in parallel. Never mark an item complete merely because code was written.
+6. Verify the first full post-order-book production scan keeps latency/errors healthy, order-book evidence stays research-only and no unvalidated trade appears.
+7. Verify an authenticated production workflow scan has two-source consensus where available, fails closed where not, passes `tools/validate_scan_response.py` and contains no unvalidated trade.
+8. After forecast deadlines pass, verify first 24h/7d outcomes use only data at or after `due_at` and calibration remains restrictive until >=30 comparable resolutions and the 95% Wilson lower bound is >=50%.
+9. Keep `live_promotions.json` empty and signing keys unused until strategies complete repeated backtests, untouched OOS, robustness/stability, registry review and production-risk review.
+10. Verify the next cloud research run emits valid sealed robustness/repeated-run evidence; `READY_FOR_STRATEGY_REGISTRY_REVIEW` remains research-only. Inspect run `34079774231` artifacts before any PONS-specific result claim or promotion.
+11. Update this file after every completed development/integration cycle.

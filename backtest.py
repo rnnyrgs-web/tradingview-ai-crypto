@@ -34,6 +34,25 @@ def execution_cost_scenarios(base_cost_bps=BACKTEST_COST_BPS):
     return tuple(dict.fromkeys(round(base * multiplier, 4) for multiplier in (1.0, 1.5, 2.0, 3.0)))
 
 
+def _validate_timestamps(hist):
+    """Require ordered candle timestamps before using positional future bars.
+
+    Cost stress intentionally reuses the exact same trade path. If timestamps
+    are missing or out of order, ``i + 1`` is not defensibly the next bar and
+    applying execution costs would create misleading evidence. Refuse the
+    backtest rather than sorting/filling unavailable historical data.
+    """
+    previous = None
+    for row in hist:
+        try:
+            timestamp = int(row["ts"])
+        except (KeyError, TypeError, ValueError):
+            raise ValueError("Timestamp data unavailable; execution-cost stress refused") from None
+        if previous is not None and timestamp <= previous:
+            raise ValueError("Candle timestamps are not strictly increasing; backtest refused")
+        previous = timestamp
+
+
 def summarize_returns(returns):
     wins = [x for x in returns if x > 0]
     losses = [x for x in returns if x <= 0]
@@ -56,6 +75,7 @@ def _features_at(hist, i):
 
 
 def _score_history(hist, bar, threshold, cost_bps=BACKTEST_COST_BPS):
+    _validate_timestamps(hist)
     max_hold = {"15m": 16, "1H": 24, "4H": 42, "1D": 30}.get(bar, 16)
     rs = []
     i = 100
@@ -117,7 +137,8 @@ def run_backtest(symbol, bar="15m", bars=2500, threshold=2.25):
         "execution_cost_stress": stress,
         "execution_cost_note": (
             "Candle history lacks executable historical bid/ask quotes; no spread is fabricated. "
-            "Results are stress-tested under deterministic higher round-trip costs instead."
+            "Results are stress-tested under deterministic higher round-trip costs instead. "
+            "Missing or non-chronological candle timestamps fail closed."
         ),
         "warning": "Research backtest only. Use walk-forward/holdout results before trusting live signals."
     }
@@ -128,6 +149,7 @@ def walk_forward(symbol, bar="15m", bars=3000):
     if len(hist) < 1000:
         raise RuntimeError("Need at least 1000 candles for walk-forward")
 
+    _validate_timestamps(hist)
     n = len(hist)
     train = hist[:int(n * 0.6)]
     valid = hist[int(n * 0.6):int(n * 0.8)]
@@ -173,6 +195,7 @@ def walk_forward(symbol, bar="15m", bars=3000):
         "holdout_execution_cost_stress": holdout_cost_stress,
         "note": (
             "Threshold selected on training only; holdout remains untouched until final scoring. "
-            "Cost stress changes only the assumed round-trip execution cost, not trade selection."
+            "Cost stress changes only the assumed round-trip execution cost, not trade selection. "
+            "Missing or non-chronological candle timestamps fail closed."
         )
     }
