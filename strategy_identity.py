@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parent
 IDENTITY_SOURCE_FILES = (
     "backtest.py",
     "features.py",
+    "robustness.py",
     "strategy_families.py",
 )
 FAMILY_ALIASES = {"relative_strength_btc": "relative_strength"}

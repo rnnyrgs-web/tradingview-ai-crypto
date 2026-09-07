@@ -39,6 +39,15 @@ Research JSON is now wrapped in a canonical SHA-256 envelope. Any later modifica
 The two signing keys must be distinct secret environment variables with at least 32 characters: `STRATEGY_REGISTRY_SIGNING_KEY` and `PRODUCTION_RISK_SIGNING_KEY`. They are intentionally not configured/populated merely to make signals appear. Missing keys, missing stages, fewer than three research artifacts, modified identity/code, malformed data, or either bad signature all fail closed to `RESEARCH_ONLY`.
 `tools/sign_promotion.py` applies exactly one role's attestation at a time. Promotion signing remains forbidden until the underlying evidence genuinely completes every stage. This layer passed 51 unit tests, Bandit and pip-audit with no known vulnerabilities before publication.
 
+## DETERMINISTIC ROBUSTNESS / REPEATED-RUN EVIDENCE
+Every strategy-family candidate now receives deterministic OOS robustness evidence before it can enter promotion review:
+- 500 seeded bootstrap/Monte Carlo resamples requiring at least 80% positive outcomes, positive fifth-percentile aggregate return and <=25% 95th-percentile drawdown;
+- independent ±10% entry-threshold perturbations, each requiring at least six trades and positive average return;
+- multi-regime holdout testing across TREND, HIGH_VOL and RANGE, requiring at least two sufficiently represented regimes and positive average return in each;
+- the original chronological train/validation/untouched-holdout quality gate must also pass.
+Only candidates passing all checks receive `ROBUST_OOS`; they remain research-only.
+Cloud research now uploads compact SHA-256-sealed evidence for 30 days. `research_aggregation.py` verifies envelopes, rejects tampering and non-robust results, and requires three distinct sealed runs before outputting `READY_FOR_STRATEGY_REGISTRY_REVIEW`. Aggregation explicitly sets `live_approved=false` and cannot bypass the dual-signature promotion manifest.
+
 ## RESEARCH UNIVERSE
 Dynamic intraday research targets Top-80 liquid OKX spot markets on 15m + 1H across deterministic shards, with PONS forcibly included as `PONS-USDT-SWAP`. Existing major swing research remains on 4H + 1D.
 Expanded research run `34079774231` completed successfully and all 16 universe shard artifacts plus `swing-a` exist. Artifact contents still need inspection before making PONS-specific execution or new OOS-eligibility claims.
@@ -79,13 +88,17 @@ The workflow-run-triggered Autonomous Lead Integrator run `34138519231` complete
 Because there was no candidate branch in this zero-worker validation cycle, candidate-SHA Security dispatch/review was not applicable.
 This is the first green 15-agent cost-control cycle.
 
+### FIRST FULL 14-SPECIALIST WORK CYCLE
+Scheduled run `34151954385` completed successfully with the planner plus all 14 specialist jobs in approximately three minutes. Ten roles published candidate branches from the same main SHA. This exposed an efficiency defect: after one candidate changes main, the remaining same-base candidates become stale and cannot pass the exact-base Lead gate.
+The orchestration now requires exactly one `CHANGE` role and thirteen read-only `AUDIT` roles per hourly cycle. All 14 specialists still work, but audit agents have no write tool, do not run fourteen redundant full test suites, and cannot publish branches. The sole change candidate still receives the complete test/security/Lead integration pipeline. This preserves continuous coverage while eliminating predictable stale-candidate waste.
+
 ## COST / 24-7 BEHAVIOR
 The owner explicitly requested all 15 roles work every hour, 24/7, with cost-aware routing and verified-only autonomous integration.
 - Autonomous specialist planner: minute 17 every hour, 24/7.
 - Cloud research/backtesting/algo testing: hourly 24/7.
 - Production market scans: approximately every 15 minutes.
 - Autonomous Lead Integrator: after each specialist workflow plus minute 47 fallback.
-- The planner must assign one bounded TASK to all 14 specialist roles each hourly cycle; safe inspections may finish `NO_CHANGE` rather than manufacture edits.
+- The planner must assign one bounded TASK to all 14 specialist roles each hourly cycle: exactly one mode=`CHANGE` and thirteen mode=`AUDIT`; safe work may finish `NO_CHANGE` rather than manufacture edits.
 - Specialist parallelism is 14 so the full roster can work inside the hourly window.
 - Deterministic Python remains preferred for calculation/backtesting/filtering; AI is for bounded planning/implementation/review.
 - Planner and routine specialists use `gpt-5.6-luna`; testing-security, strategy-registry, portfolio-risk and production-signals use `gpt-5.6-sol`; the Lead Integrator and both independent integration reviews use `gpt-5.6-sol`.
@@ -101,8 +114,8 @@ Insufficient or unreliable evidence always means WAIT / NO TRADE / RESEARCH_ONLY
 ## EXACT NEXT STEP
 1. Verify the hardened release deploys successfully and the next production scan passes `tools/validate_scan_response.py`, produces no unvalidated `TRADE` / BUY / SELL decision, and exposes a healthy sanitized `/health` operational snapshot.
 2. Keep `live_promotions.json` empty and signing keys unused until a strategy has completed repeated backtests, untouched OOS, robustness/stability, strategy-registry review and production-risk review; never sign from a single OOS pass or AI label.
-3. Verify the next cloud research run produces SHA-256-sealed envelopes and preserves the exact evidence digest through artifact upload; then build repeated-run evidence aggregation and deterministic robustness/stability results needed by the promotion manifest.
+3. Verify the next cloud research run produces SHA-256-sealed envelopes, deterministic robustness output and a sealed repeated-run aggregation artifact; never interpret `READY_FOR_STRATEGY_REGISTRY_REVIEW` as live approval.
 4. Inspect research run `34079774231` artifact contents before any PONS-specific result claim or promotion.
-5. Monitor the first full 14-specialist hourly cycle for completion, API spend, rate limits, useful vs `NO_CHANGE` output, candidate queue behavior and exact-SHA Security dispatches; reduce task/token budgets rather than weakening safety if cost is excessive.
+5. Verify the first one-CHANGE/thirteen-AUDIT cycle runs all 14 roles, publishes no audit branches, creates at most one current-base candidate, and reduces redundant runner/test cost without weakening exact-SHA Security dispatch.
 6. Verify the first automatic integration includes all required gates and updates this file in the same commit; fail closed on any missing check or stale candidate base.
 7. Update this file again after every completed development/integration cycle.

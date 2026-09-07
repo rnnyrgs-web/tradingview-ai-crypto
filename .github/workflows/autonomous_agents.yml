@@ -96,6 +96,15 @@ jobs:
           pip install pytest
       - name: Restore plan
         run: echo '${{ needs.plan.outputs.plan_b64 }}' | base64 -d > /tmp/agent-plan.json
+      - id: mode
+        name: Resolve role mode
+        env:
+          ROLE: ${{ matrix.role }}
+        run: |
+          MODE="$(jq -r --arg role "$ROLE" '.tasks[$role].mode' /tmp/agent-plan.json)"
+          test "$MODE" = "CHANGE" -o "$MODE" = "AUDIT"
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "Role $ROLE mode: $MODE"
       - name: Create isolated cycle branch
         id: branch
         run: |
@@ -108,13 +117,16 @@ jobs:
       - name: Execute specialist task
         run: python agents/autonomous_worker.py --role '${{ matrix.role }}' --plan /tmp/agent-plan.json
       - name: Enforce full repository tests
+        if: steps.mode.outputs.mode == 'CHANGE'
         run: pytest -q
       - name: Remove generated Python caches
+        if: steps.mode.outputs.mode == 'CHANGE'
         run: |
           find . -type d -name '__pycache__' -prune -exec rm -rf {} +
           rm -rf .pytest_cache
           find . -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
       - name: Reject protected-path modifications
+        if: steps.mode.outputs.mode == 'CHANGE'
         run: |
           CHANGED="$(git status --porcelain | sed -E 's/^.. //')"
           echo "$CHANGED"
@@ -123,6 +135,7 @@ jobs:
             exit 1
           fi
       - name: Commit and publish candidate branch when there are changes
+        if: steps.mode.outputs.mode == 'CHANGE'
         env:
           ROLE: ${{ matrix.role }}
           BRANCH: ${{ steps.branch.outputs.branch }}

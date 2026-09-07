@@ -14,6 +14,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: cloud-crypto-research
@@ -75,3 +76,45 @@ jobs:
             research_output/backtest_results.json
             research_output/strategy_registry.json
           retention-days: 7
+      - name: Upload compact sealed promotion evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: promotion-evidence-${{ matrix.shard.name }}
+          path: research_output/strategy_registry.json
+          retention-days: 30
+
+  aggregate-repeated-runs:
+    needs: research
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download current sealed evidence
+        uses: actions/download-artifact@v4
+        with:
+          pattern: promotion-evidence-*
+          path: evidence/current
+      - name: Download two prior successful evidence sets when available
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run list --workflow cloud_research.yml --status success --limit 2 --json databaseId --jq '.[].databaseId' > /tmp/prior-runs.txt
+          while read -r RUN_ID; do
+            [ -n "$RUN_ID" ] || continue
+            mkdir -p "evidence/$RUN_ID"
+            gh run download "$RUN_ID" --pattern 'promotion-evidence-*' --dir "evidence/$RUN_ID" || true
+          done < /tmp/prior-runs.txt
+      - name: Aggregate distinct verified runs
+        run: python research_aggregation.py --input evidence --output research_output/repeated_run_evidence.json --minimum-runs 3
+      - name: Upload sealed repeated-run evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: repeated-run-evidence
+          path: research_output/repeated_run_evidence.json
+          retention-days: 30
