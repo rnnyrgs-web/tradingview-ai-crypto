@@ -1,10 +1,11 @@
 import json, re, uuid
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from openai import OpenAI
 
 from config import *
 from utils import clamp
-from market_data import build_universe, get_candles, get_derivatives
+from market_data import build_universe, get_candles, get_derivatives, get_order_book_intelligence
 from features import timeframe_features
 from safety import validate_candles, validate_risk, SafetyError
 from news_engine import latest_news, for_base
@@ -65,6 +66,7 @@ def compact(c):
         "quote_volume_24h":round(c["quote_volume_24h"],2),
         "market_consensus":c.get("market_consensus", {"reliable":False,"reason":"missing"}),
         "derivatives":c["derivatives"],
+        "order_book":c.get("order_book", {"research_only":True,"reliable":False,"reason":"not_sampled"}),
         "horizons":{
             h:{
                 "score":round(v["score"],3),
@@ -146,6 +148,15 @@ def run_scan():
 
     deep.sort(key=lambda x:x["rank_score"],reverse=True)
     finalists=deep[:AI_CANDIDATES]
+    with ThreadPoolExecutor(max_workers=min(6, len(finalists) or 1)) as pool:
+        pending = {pool.submit(get_order_book_intelligence, item["base"]): item for item in finalists}
+        for future in as_completed(pending):
+            item = pending[future]
+            try:
+                item["order_book"] = future.result()
+            except Exception as exc:
+                log.info("Order-book intelligence unavailable for %s: %s", item["symbol"], type(exc).__name__)
+                item["order_book"] = {"research_only":True,"reliable":False,"reason":"collection_error"}
     regime=detect_regime(finalists)
     news=latest_news()
 
