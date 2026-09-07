@@ -37,10 +37,33 @@ jobs:
       - name: Static security scan
         run: bandit -q -r . -x ./tests
       - name: Reject obvious committed secrets
-        shell: bash
         run: |
-          set -euo pipefail
-          if git grep -nE '(sk-[A-Za-z0-9_-]{20,}|SUPABASE_SECRET_KEY\s*=\s*["'"'][^"'"']+|SCAN_SECRET\s*=\s*["'"'][^"'"']+)' -- '*.py' '*.yml' '*.yaml' '*.json' '*.md'; then
-            echo 'Potential hard-coded secret found.'
-            exit 1
-          fi
+          python - <<'PY'
+          import re
+          from pathlib import Path
+
+          patterns = [
+              re.compile(r"sk-[A-Za-z0-9_-]{20,}"),
+              re.compile(r'''SUPABASE_SECRET_KEY\s*=\s*["'][^"']+["']'''),
+              re.compile(r'''SCAN_SECRET\s*=\s*["'][^"']+["']'''),
+          ]
+          allowed = {".py", ".yml", ".yaml", ".json", ".md"}
+          hits = []
+          for path in Path(".").rglob("*"):
+              if not path.is_file() or ".git" in path.parts or path.suffix not in allowed:
+                  continue
+              if path.as_posix() == ".github/workflows/security.yml":
+                  continue
+              try:
+                  text = path.read_text(encoding="utf-8")
+              except (UnicodeDecodeError, OSError):
+                  continue
+              for line_no, line in enumerate(text.splitlines(), 1):
+                  if any(pattern.search(line) for pattern in patterns):
+                      hits.append(f"{path}:{line_no}")
+          if hits:
+              print("Potential hard-coded secret pattern found:")
+              print("\n".join(hits))
+              raise SystemExit(1)
+          print("No obvious committed secrets detected.")
+          PY
