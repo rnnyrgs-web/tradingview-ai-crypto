@@ -23,17 +23,34 @@ jobs:
   research:
     strategy:
       fail-fast: false
-      max-parallel: 4
+      max-parallel: 8
       matrix:
         shard:
-          - {name: majors-a, symbols: "BTC-USDT,ETH-USDT,SOL-USDT", timeframes: "15m,1H"}
-          - {name: majors-b, symbols: "XRP-USDT,LINK-USDT,BNB-USDT", timeframes: "15m,1H"}
-          - {name: majors-c, symbols: "DOGE-USDT,ADA-USDT,TRX-USDT", timeframes: "15m,1H"}
-          - {name: swing-a, symbols: "BTC-USDT,ETH-USDT,SOL-USDT,XRP-USDT,LINK-USDT", timeframes: "4H,1D"}
+          - {name: universe-00, shard_index: "0", shard_count: "16", universe_size: "80", symbols: "", timeframes: "15m,1H"}
+          - {name: universe-01, shard_index: "1", shard_count: "16", universe_size: "80", symbols: "", timeframes: "15m,1H"}
+          - {name: universe-02, shard_index: "2", shard_count: "16", universe_size: "80", symbols: "", timeframes: "15m,1H"}
+          - {name: universe-03, shard_index: "3", shard_count: "16", universe_size: "80", symbols: "", timeframes: "15m,1H"}
+          - {name: universe-04, shard_index: "4", shard_count: "16", universe_size: "80", symbols: "", timeframes: "15m,1H"}
+          - {name: universe-05, shard_index: "5", shard_count: "16", universe_size: "80", symbols: "", timeframes: "15m,1H"}
+          - {name: universe-06, shard_index: "6", shard_count: "16", universe_size: "80", symbols: "", timeframes: "15m,1H"}
+          - {name: universe-07, shard_index: "7", shard_count: "16", universe_size: "80", symbols: "", timeframes: "15m,1H"}
+          - {name: universe-08, shard_index: "8", shard_count: "16", universe_size: "80", symbols: "", timeframes: "15m,1H"}
+          - {name: universe-09, shard_index: "9", shard_count: "16", universe_size: "80", symbols: "", timeframes: "15m,1H"}
+          - {name: universe-10, shard_index: "10", shard_count: "16", universe_size: "80", symbols: "", timeframes: "15m,1H"}
+          - {name: universe-11, shard_index: "11", shard_count: "16", universe_size: "80", symbols: "", timeframes: "15m,1H"}
+          - {name: universe-12, shard_index: "12", shard_count: "16", universe_size: "80", symbols: "", timeframes: "15m,1H"}
+          - {name: universe-13, shard_index: "13", shard_count: "16", universe_size: "80", symbols: "", timeframes: "15m,1H"}
+          - {name: universe-14, shard_index: "14", shard_count: "16", universe_size: "80", symbols: "", timeframes: "15m,1H"}
+          - {name: universe-15, shard_index: "15", shard_count: "16", universe_size: "80", symbols: "", timeframes: "15m,1H"}
+          - {name: swing-a, shard_index: "0", shard_count: "1", universe_size: "5", symbols: "BTC-USDT,ETH-USDT,SOL-USDT,XRP-USDT,LINK-USDT", timeframes: "4H,1D"}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
       RESEARCH_SYMBOLS: ${{ matrix.shard.symbols }}
+      RESEARCH_UNIVERSE_SIZE: ${{ matrix.shard.universe_size }}
+      RESEARCH_FORCE_SYMBOLS: "PONS-USDT-SWAP"
+      RESEARCH_SHARD_INDEX: ${{ matrix.shard.shard_index }}
+      RESEARCH_SHARD_COUNT: ${{ matrix.shard.shard_count }}
       RESEARCH_TIMEFRAMES: ${{ matrix.shard.timeframes }}
       RESEARCH_BARS: "5000"
       RESEARCH_THRESHOLD: "2.25"
