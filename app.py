@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException, Header, Request
 
 from config import *
-from db import configured, fetch_actionable_after, fetch_latest_signal_id, fetch_resolved_predictions
+from db import configured, fetch_actionable_after, fetch_latest_signal_id, fetch_resolved_predictions, fetch_ranked_opportunities
 from engine import run_scan
 from evaluator import run_evaluation
 from backtest import run_backtest, walk_forward
@@ -12,6 +12,8 @@ from market_data import build_universe
 from dashboard import login_page, handle_login, dashboard_page, signal_detail_page
 from operational_monitor import health_snapshot, record_error
 from calibration import calibration_summary
+from daily_advisor import build_daily_advice
+from news_engine import latest_news
 
 app=FastAPI(title="Crypto Signal Engine V3")
 log = logging.getLogger(__name__)
@@ -34,7 +36,7 @@ def root():
         "service":"Crypto Signal Engine V3",
         "version":STRATEGY_VERSION,
         "dashboard":"/dashboard",
-        "endpoints":["/health","/scan","/evaluate","/calibration","/backtest","/walkforward","/universe","/signals","/signals/cursor"]
+        "endpoints":["/health","/scan","/evaluate","/calibration","/daily-advisor","/backtest","/walkforward","/universe","/signals","/signals/cursor"]
     }
 
 @app.get("/health")
@@ -116,6 +118,18 @@ def calibration(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(def
         return calibration_summary(fetch_resolved_predictions())
     except Exception as e:
         internal_error("calibration", e, "Calibration unavailable")
+
+@app.get("/daily-advisor")
+def daily_advisor(limit:int=20,secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
+    verify_secret(secret,x_scan_secret)
+    try:
+        opportunities={
+            "24h":fetch_ranked_opportunities("24h",limit=20),
+            "7d":fetch_ranked_opportunities("7d",limit=20),
+        }
+        return build_daily_advice(opportunities,latest_news(limit=80),max_items=limit)
+    except Exception as e:
+        internal_error("daily_advisor", e, "Daily crypto advisor unavailable")
 
 @app.get("/backtest")
 def backtest(symbol:str="BTC-USDT",bar:str="15m",bars:int=2500,
