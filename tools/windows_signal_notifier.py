@@ -50,6 +50,10 @@ def tradingview_url(signal):
     return f"https://www.tradingview.com/chart/?{params}"
 
 
+def visual_url(signal):
+    return f"{_validated_base_url()}/dashboard/signal/{int(signal['id'])}"
+
+
 def alert(signal):
     text = (
         f"{signal['direction']} {signal['symbol']} ({signal['timeframe']})\n"
@@ -62,6 +66,8 @@ def alert(signal):
     )
     winsound.Beep(1200, 500)
     winsound.Beep(1500, 500)
+    # Open the system's exact visual plan plus the matching live TradingView chart.
+    webbrowser.open_new_tab(visual_url(signal))
     webbrowser.open_new_tab(tradingview_url(signal))
     ctypes.windll.user32.MessageBoxW(0, text, "CRYPTO SIGNAL", 0x00001000)
 
