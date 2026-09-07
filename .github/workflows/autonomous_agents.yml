@@ -2,6 +2,9 @@ name: Autonomous Specialist Agents
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Crypto 15m Scan", "Cloud Crypto Research"]
+    types: [completed]
   schedule:
     - cron: "17 * * * *"
 
@@ -38,9 +41,20 @@ jobs:
         run: |
           test -n "$OPENAI_API_KEY" || { echo "OPENAI_API_KEY missing"; exit 1; }
           test -n "$OPENAI_AGENT_MODEL" || { echo "OPENAI_AGENT_MODEL missing"; exit 1; }
-      - name: Collect GitHub context
+      - name: Collect compact supervisor and GitHub context
         run: |
           {
+            echo "SUPERVISOR SNAPSHOT:"
+            python agents/supervisor_snapshot.py
+            echo
+            echo "Trigger event: $GITHUB_EVENT_NAME"
+            if [ "$GITHUB_EVENT_NAME" = "workflow_run" ]; then
+              echo "Upstream workflow: ${{ github.event.workflow_run.name }}"
+              echo "Upstream conclusion: ${{ github.event.workflow_run.conclusion }}"
+              echo "Upstream run id: ${{ github.event.workflow_run.id }}"
+              echo "Upstream head SHA: ${{ github.event.workflow_run.head_sha }}"
+            fi
+            echo
             echo "Recent workflow runs:"
             gh run list --repo "$GITHUB_REPOSITORY" --limit 15 || true
             echo
@@ -130,7 +144,7 @@ jobs:
         run: |
           CHANGED="$(git status --porcelain | sed -E 's/^.. //')"
           echo "$CHANGED"
-          if echo "$CHANGED" | grep -Eq '^(AI_STATE\.md$|agents/|\.github/workflows/|requirements\.txt$|Dockerfile$)'; then
+          if echo "$CHANGED" | grep -Eq '^(AI_STATE\.md$|agents/|orchestration/|\.github/workflows/|requirements\.txt$|Dockerfile$)'; then
             echo "Protected path changed; refusing autonomous candidate."
             exit 1
           fi
