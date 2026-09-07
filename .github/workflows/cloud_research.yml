@@ -1,0 +1,59 @@
+name: Cloud Crypto Research
+
+on:
+  workflow_dispatch:
+    inputs:
+      symbols:
+        description: "Comma-separated OKX symbols"
+        required: false
+        default: "BTC-USDT,ETH-USDT,SOL-USDT,XRP-USDT,LINK-USDT"
+      timeframes:
+        description: "Comma-separated OKX bars"
+        required: false
+        default: "15m,1H"
+      bars:
+        description: "Historical candles per test"
+        required: false
+        default: "5000"
+      threshold:
+        description: "Signal score threshold"
+        required: false
+        default: "2.25"
+  push:
+    paths:
+      - "research_runner.py"
+      - "backtest.py"
+      - "market_data.py"
+      - ".github/workflows/cloud_research.yml"
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      RESEARCH_SYMBOLS: ${{ inputs.symbols || 'BTC-USDT,ETH-USDT,SOL-USDT' }}
+      RESEARCH_TIMEFRAMES: ${{ inputs.timeframes || '15m,1H' }}
+      RESEARCH_BARS: ${{ inputs.bars || '3000' }}
+      RESEARCH_THRESHOLD: ${{ inputs.threshold || '2.25' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run cloud backtests
+        run: python research_runner.py
+
+      - name: Upload research results
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloud-backtest-results
+          path: research_output/backtest_results.json
+          retention-days: 30
