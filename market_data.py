@@ -112,6 +112,98 @@ def get_history(symbol, bar="15m", bars=1000, max_bars=50000):
     return normalize_candles(rows)
 
 
+def _normalized_history_points(rows, timestamp_key, value_key):
+    """Return strictly chronological, deduplicated public-history observations.
+
+    Invalid rows are rejected rather than repaired or interpolated. This keeps
+    derivatives history usable as research evidence without inventing missing
+    timestamps or values.
+    """
+    by_ts = {}
+    for row in rows or []:
+        if not isinstance(row, dict):
+            continue
+        try:
+            ts = int(row[timestamp_key])
+            value = float(row[value_key])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if ts <= 0:
+            continue
+        by_ts[ts] = value
+    return [{"ts": ts, "value": by_ts[ts]} for ts in sorted(by_ts)]
+
+
+def _history_change_pct(points):
+    if len(points) < 2:
+        return None
+    first = points[0]["value"]
+    last = points[-1]["value"]
+    if first == 0:
+        return None
+    return (last / first - 1.0) * 100.0
+
+
+def get_derivatives_history(base, limit=90):
+    """Timestamp-safe public derivatives history for research only.
+
+    Funding history is collected independently from OKX and Binance. Binance
+    public USDⓈ-M open-interest statistics provide recent hourly OI history.
+    Missing endpoints remain explicitly unavailable; no interpolation, inferred
+    basis, or historical order-book reconstruction is performed here.
+    """
+    base = str(base).upper().strip()
+    inst = f"{base}-USDT-SWAP"
+    symbol = f"{base}USDT"
+    wanted = max(2, min(int(limit), 400))
+    funding = {}
+    errors = []
+
+    try:
+        rows = okx_get("/api/v5/public/funding-rate-history", {
+            "instId": inst, "limit": str(wanted)
+        })
+        realized = [row for row in rows if row.get("realizedRate") not in (None, "")]
+        funding["okx"] = _normalized_history_points(
+            realized or rows, "fundingTime", "realizedRate" if realized else "fundingRate"
+        )
+    except Exception as exc:
+        errors.append({"source": "okx_funding", "error_type": type(exc).__name__})
+        funding["okx"] = []
+
+    try:
+        rows = _binance_get(BINANCE_FUTURES_BASE, "/fapi/v1/fundingRate", {
+            "symbol": symbol, "limit": str(min(wanted, 1000))
+        })
+        funding["binance"] = _normalized_history_points(rows, "fundingTime", "fundingRate")
+    except Exception as exc:
+        errors.append({"source": "binance_funding", "error_type": type(exc).__name__})
+        funding["binance"] = []
+
+    oi_points = []
+    try:
+        rows = _binance_get(BINANCE_FUTURES_BASE, "/futures/data/openInterestHist", {
+            "symbol": symbol, "period": "1h", "limit": str(min(wanted, 500))
+        })
+        oi_points = _normalized_history_points(rows, "timestamp", "sumOpenInterestValue")
+    except Exception as exc:
+        errors.append({"source": "binance_open_interest_history", "error_type": type(exc).__name__})
+
+    funding_sources = sum(1 for points in funding.values() if len(points) >= 2)
+    return {
+        "research_only": True,
+        "base": base,
+        "funding_history": funding,
+        "funding_source_count": funding_sources,
+        "funding_reliable": funding_sources >= 2,
+        "open_interest_history": {"binance": oi_points},
+        "open_interest_change_pct": _history_change_pct(oi_points),
+        "basis_history": {"available": False, "reason": "timestamp_safe_source_not_yet_integrated"},
+        "liquidation_history": {"available": False, "reason": "historical_notional_not_defensible_from_current_public_feed"},
+        "errors": errors,
+    }
+
+
 def get_derivatives(base):
     inst = f"{base}-USDT-SWAP"
     exchange_rows = []
