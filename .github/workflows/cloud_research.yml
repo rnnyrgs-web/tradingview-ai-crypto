@@ -1,6 +1,8 @@
 name: Cloud Crypto Research
 
 on:
+  schedule:
+    - cron: "7 * * * *"
   workflow_dispatch:
     inputs:
       symbols:
@@ -26,14 +28,18 @@ on:
       - "market_data.py"
       - ".github/workflows/cloud_research.yml"
 
+concurrency:
+  group: cloud-crypto-research
+  cancel-in-progress: false
+
 jobs:
   research:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      RESEARCH_SYMBOLS: ${{ inputs.symbols || 'BTC-USDT,ETH-USDT,SOL-USDT' }}
+      RESEARCH_SYMBOLS: ${{ inputs.symbols || 'BTC-USDT,ETH-USDT,SOL-USDT,XRP-USDT,LINK-USDT' }}
       RESEARCH_TIMEFRAMES: ${{ inputs.timeframes || '15m,1H' }}
-      RESEARCH_BARS: ${{ inputs.bars || '3000' }}
+      RESEARCH_BARS: ${{ inputs.bars || '5000' }}
       RESEARCH_THRESHOLD: ${{ inputs.threshold || '2.25' }}
 
     steps:
@@ -56,4 +62,4 @@ jobs:
         with:
           name: cloud-backtest-results
           path: research_output/backtest_results.json
-          retention-days: 30
+          retention-days: 7
