@@ -27,7 +27,7 @@ MAX_FILE_WRITE_BYTES = 120_000
 ABSOLUTE_MAX_TOOL_STEPS = 32
 OPENAI_MAX_ATTEMPTS = 6
 OPENAI_BACKOFF_SECONDS = (5, 10, 20, 40, 60)
-MAX_ACTIVE_TASKS_PER_CYCLE = 4
+MAX_ACTIVE_TASKS_PER_CYCLE = 14
 
 
 def bounded_tool_steps(raw: str | None, default: int = 12) -> int:
@@ -252,9 +252,9 @@ def validate_plan(plan: dict[str, Any], roles: dict[str, Any]) -> None:
             raise RuntimeError(f"planner omitted task text for {role}")
         if task["status"] == "TASK":
             active += 1
-    if active > MAX_ACTIVE_TASKS_PER_CYCLE:
+    if active != len(roles):
         raise RuntimeError(
-            f"planner exceeded cost cap: {active} active tasks > {MAX_ACTIVE_TASKS_PER_CYCLE}"
+            f"planner must activate every specialist: {active} active tasks != {len(roles)} roles"
         )
 
 
@@ -284,13 +284,13 @@ Return JSON only with this exact role set:
 Rules:
 - Use AI_STATE.md as authoritative.
 - Assign at most one bounded task per role.
-- HARD COST CAP: assign TASK to at most {MAX_ACTIVE_TASKS_PER_CYCLE} specialists in one cycle; every other role must be NO_TASK.
-- Prefer the smallest set of specialists that can make measurable progress; do not spend API calls merely to keep agents busy.
+- Assign one small, useful TASK to every specialist in every hourly cycle so all {MAX_ACTIVE_TASKS_PER_CYCLE} specialists inspect or improve their owned area.
+- Keep each task tightly bounded and evidence-driven. An inspection may finish with NO_CHANGE; never invent a code change merely to appear busy.
 - Respect each role's allowed paths exactly.
 - Do not assign edits to AI_STATE.md, agents/, workflows, requirements.txt or Dockerfile.
 - Never promote research to live use from one OOS pass.
 - Preserve no-lookahead and fail-closed behavior.
-- Prefer NO_TASK over speculative or unnecessary work.
+- Use TASK for every role. The worker must report NO_CHANGE when no safe, useful repository change is justified.
 - Tasks must be small enough for one specialist cycle and testable with repository evidence.
 """
     payload = post_response({"model": model_name(), "input": prompt})

@@ -67,22 +67,22 @@ Because there was no candidate branch in this zero-worker validation cycle, cand
 This is the first green 15-agent cost-control cycle.
 
 ## COST / 24-7 BEHAVIOR
-The army is continuously scheduled, not continuously spending tokens.
+The owner explicitly requested all 15 roles work every hour, 24/7, with cost-aware routing and verified-only autonomous integration.
 - Autonomous specialist planner: minute 17 every hour, 24/7.
 - Cloud research/backtesting/algo testing: hourly 24/7.
 - Production market scans: approximately every 15 minutes.
 - Autonomous Lead Integrator: after each specialist workflow plus minute 47 fallback.
-- `MAX_ACTIVE_TASKS_PER_CYCLE = 4`; planner rejects >4 TASK roles.
-- Only TASK roles receive worker jobs; NO_TASK roles receive no worker model call/runner setup.
-- Specialist parallelism is capped at 4.
+- The planner must assign one bounded TASK to all 14 specialist roles each hourly cycle; safe inspections may finish `NO_CHANGE` rather than manufacture edits.
+- Specialist parallelism is 14 so the full roster can work inside the hourly window.
 - Deterministic Python remains preferred for calculation/backtesting/filtering; AI is for bounded planning/implementation/review.
-Current workflows still use the single configured `OPENAI_AGENT_MODEL=gpt-5.6`; lower-cost role-based model routing has not yet been implemented and must not be claimed as active.
+- Planner and routine specialists use `gpt-5.6-luna`; testing-security, strategy-registry, portfolio-risk and production-signals use `gpt-5.6-sol`; the Lead Integrator and both independent integration reviews use `gpt-5.6-sol`.
+- Official OpenAI model IDs and pricing were verified on 2026-09-07 before routing was implemented. Model pricing can change and should be rechecked before later routing changes.
 
 ## SAFETY INVARIANTS
 Specialists work on isolated `auto/<role>/<run>` branches. `AI_STATE.md`, `agents/`, `.github/workflows/`, `requirements.txt`, and `Dockerfile` remain protected from specialist writes.
 Candidate branches must pass full pytest, generated-cache cleanup and protected-path checks before publication.
 Candidate publication explicitly dispatches Security and Reliability. Lead requires exact candidate SHA success, rejects protected or >80 KB diffs, and requires independent Security AI + Lead AI approval.
-`AUTONOMOUS_MERGE_ENABLED` remains OFF. Approved autonomous candidates remain review-only unless the user explicitly enables autonomous merging.
+The owner explicitly enabled verified-only autonomous merging on 2026-09-07. `AUTONOMOUS_MERGE_ENABLED` is now true in the Lead workflow, but a candidate still cannot merge without full repository tests, exact-candidate-SHA Security and Reliability success, bounded/protected-path checks, independent Security AI approval, independent Lead AI approval, a final post-squash pytest pass, and a canonical `AI_STATE.md` update in the same commit.
 Insufficient or unreliable evidence always means WAIT / NO TRADE / RESEARCH_ONLY.
 
 ## EXACT NEXT STEP
@@ -90,6 +90,6 @@ Insufficient or unreliable evidence always means WAIT / NO TRADE / RESEARCH_ONLY
 2. Keep `LIVE_VALIDATED_STRATEGIES` empty until a strategy has completed repeated backtests, untouched OOS, robustness/stability, strategy-registry review and production-risk review; never populate it from a single OOS pass or AI label.
 3. Build the deterministic research-to-production identity bridge so future promoted strategies are tied to the exact backtested family/rules, not merely an AI-provided label.
 4. Inspect research run `34079774231` artifact contents before any PONS-specific result claim or promotion.
-5. Optimize the 24/7 agent system further for low cost, including safe role-based model routing only after verifying supported model IDs/pricing and preserving strongest reasoning for high-risk integration/security work.
-6. Keep autonomous merging OFF unless the user explicitly chooses to enable it.
+5. Monitor the first full 14-specialist hourly cycle for completion, API spend, rate limits, useful vs `NO_CHANGE` output, candidate queue behavior and exact-SHA Security dispatches; reduce task/token budgets rather than weakening safety if cost is excessive.
+6. Verify the first automatic integration includes all required gates and updates this file in the same commit; fail closed on any missing check or stale candidate base.
 7. Update this file again after every completed development/integration cycle.
