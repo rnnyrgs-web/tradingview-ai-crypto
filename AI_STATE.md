@@ -37,10 +37,11 @@ After API credit was restored, specialist validation run `34130653382` attempt 2
 Autonomous Lead Integrator run `34133251327` then completed successfully. This proves the six-role baseline orchestration is functioning end-to-end in dry-run review mode.
 `AUTONOMOUS_MERGE_ENABLED` remains false. Automatic production integration must stay disabled unless explicitly enabled by the user after further validation.
 
-## 15-AGENT EXPANSION — CURRENT DEVELOPMENT
-User explicitly requested expansion to an approximately 15-agent autonomous development team while keeping API/cloud spend tightly controlled.
-Current development branch: `lead/expand-15-agent-cost-aware`.
-Target roster is 15 total roles: 1 Lead Integrator + 14 specialists:
+## 15-AGENT EXPANSION — MERGED
+User requested expansion to an approximately 15-agent autonomous development team while keeping API/cloud spend tightly controlled.
+PR #17 `Expand autonomous development to 15 cost-aware agents` passed Security and Reliability run `34133887403`, including unit tests, dependency audit, static security scan and committed-secret rejection, then merged to `main` as `b20d75f05a81ae8fe1814f515d3d4f99a58abd7d`.
+
+The active architecture is now 15 total roles: 1 Lead Integrator + 14 specialists:
 1. quant-trend
 2. quant-mean-reversion
 3. quant-breakout-volatility
@@ -57,16 +58,16 @@ Target roster is 15 total roles: 1 Lead Integrator + 14 specialists:
 14. infra-cost
 plus the Lead Integrator.
 
-Implemented on the branch:
-- `agents/roles.json` expanded from 5 to 14 specialist roles with bounded write allowlists and missions.
-- `agents/autonomous_orchestrator.py` now creates the planner schema dynamically from `roles.json`; no hardcoded five-role planner schema remains.
-- Hard API-cost control added: `MAX_ACTIVE_TASKS_PER_CYCLE = 4`. Planner output is rejected if more than four specialists are assigned `TASK` in one hourly cycle.
-- Planner instructions explicitly prefer the smallest useful specialist set and NO_TASK over speculative work.
-- `.github/workflows/autonomous_agents.yml` now creates its matrix only from active TASK roles, so NO_TASK specialists do not consume worker API calls or GitHub runner installation time.
+Merged behavior:
+- `agents/roles.json` contains 14 bounded specialist roles.
+- `agents/autonomous_orchestrator.py` builds planner role schema dynamically from `roles.json`; no hardcoded five-role planner schema remains.
+- Hard API-cost control: `MAX_ACTIVE_TASKS_PER_CYCLE = 4`. Planner output is rejected if more than four specialists are assigned TASK in one hourly cycle.
+- Planner is instructed to prefer the smallest useful specialist set and NO_TASK over speculative work.
+- `.github/workflows/autonomous_agents.yml` creates its matrix only from active TASK roles, so NO_TASK specialists do not consume worker API calls or runner installation time.
 - Specialist parallelism is hard-capped at 4.
-- Stable triggers restored to `workflow_dispatch` + hourly schedule at minute 17; temporary main-push validation trigger removed because the baseline end-to-end validation is green.
+- Stable triggers are `workflow_dispatch` + hourly schedule at minute 17; the temporary main-push validation trigger has been removed.
 - Testing/Security retains a 32-step ceiling; other active specialists remain at 20; global hard clamp stays 1..32.
-- Tests updated to assert exactly 14 specialist roles, protected-path isolation, exact planner role set, and rejection above the four-active-specialist cost cap.
+- Tests assert exactly 14 specialist roles, protected-path isolation, exact planner role set and rejection above the four-active-specialist cost cap.
 
 ## SAFETY INVARIANTS
 Specialists work on isolated `auto/<role>/<run>` branches. `AI_STATE.md`, `agents/`, `.github/workflows/`, `requirements.txt`, and `Dockerfile` remain protected from specialist writes.
@@ -88,13 +89,12 @@ Autonomous specialist planner: minute 17 every hour.
 Autonomous Lead Integrator: after each specialist workflow plus minute 47 fallback.
 
 ## EXACT NEXT STEP
-1. Open PR `lead/expand-15-agent-cost-aware` -> `main`.
-2. Require Security and Reliability to pass unit tests, dependency audit, Bandit and committed-secret scan.
-3. Review the PR diff for role boundaries, dynamic matrix correctness and cost-cap enforcement.
-4. Merge only after green CI.
-5. Trigger or wait for the first hourly 15-agent cycle on the merged main branch.
-6. Verify planner sees all 14 specialists but assigns at most four TASK roles; verify only those active roles receive worker jobs.
-7. Verify candidate security dispatch and Lead dry-run review still work on exact candidate SHAs.
-8. Update this file again with first-cycle results and any required fixes.
-9. Keep autonomous merging OFF unless the user explicitly chooses to enable it.
-10. Separately inspect research run `34079774231` artifact contents before any PONS-specific result claims.
+1. Wait for or manually trigger the first hourly specialist cycle on main commit `b20d75f05a81ae8fe1814f515d3d4f99a58abd7d`.
+2. Verify planner sees all 14 specialists and assigns no more than four TASK roles.
+3. Verify only TASK roles receive worker jobs; NO_TASK roles must consume no worker API calls or runner setup.
+4. If any candidate branch is published, verify explicit Security and Reliability dispatch on the exact candidate SHA and successful conclusion.
+5. Verify Autonomous Lead Integrator reviews an exact-current-main candidate, passes bounded/protected diff checks, receives Security AI + Lead AI approval, records dry-run review, and leaves the candidate unmerged because autonomous merge is OFF.
+6. Fix any failure and repeat until the 15-agent cycle is green.
+7. Update this file again with the first validated 15-agent cycle result.
+8. Keep autonomous merging OFF unless the user explicitly chooses to enable it.
+9. Separately inspect research run `34079774231` artifact contents before any PONS-specific result claims.
