@@ -39,6 +39,23 @@ def fetch_recent(hours=800, limit=1000):
         raise RuntimeError(f"Supabase select failed: {r.status_code} {r.text}")
     return r.json()
 
+def fetch_actionable_after(after_id=0, limit=20):
+    if not configured():
+        return []
+    after_id=max(0,int(after_id))
+    limit=max(1,min(int(limit),100))
+    params={
+        "select":"id,created_at,symbol,timeframe,direction,action,entry_price,stop_loss,target_1,target_2,risk_reward,evidence_score,market_regime,status,strategy_version",
+        "id":f"gt.{after_id}",
+        "action":"eq.TRADE",
+        "order":"id.asc",
+        "limit":str(limit),
+    }
+    r=http.get(f"{SUPABASE_URL}/rest/v1/trading_signals",headers=headers(),params=params)
+    if r.status_code>=300:
+        raise RuntimeError(f"Supabase signal feed failed: {r.status_code} {r.text}")
+    return r.json()
+
 def patch_signal(signal_id, fields):
     if not fields:
         return
