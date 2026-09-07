@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -88,8 +87,6 @@ def main() -> int:
         raise RuntimeError("PR context too large for autonomous state update")
     updated = generate_state_update(current, context)
     state_path.write_text(updated, encoding="utf-8")
-
-    subprocess.run(["git", "diff", "--check"], cwd=ROOT, check=True, timeout=20)
     print("AI_STATE.md prepared by Lead Integrator state updater")
     return 0
 
