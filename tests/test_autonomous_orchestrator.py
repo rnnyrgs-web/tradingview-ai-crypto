@@ -1,5 +1,6 @@
 from agents.autonomous_orchestrator import (
     MAX_ACTIVE_TASKS_PER_CYCLE,
+    MAX_CHANGE_TASKS_PER_CYCLE,
     _retry_delay,
     bounded_tool_steps,
     extract_json,
@@ -52,11 +53,12 @@ def test_protected_paths_are_never_specialist_writable():
 def test_planner_requires_every_specialist_to_be_active():
     roles = load_roles()
     assert MAX_ACTIVE_TASKS_PER_CYCLE == len(roles) == 14
-    tasks = {role: {"status": "TASK", "task": "bounded task"} for role in roles}
+    tasks = {role: {"status": "TASK", "mode": "AUDIT", "task": "bounded audit"} for role in roles}
+    tasks[next(iter(roles))] = {"status": "TASK", "mode": "CHANGE", "task": "bounded change"}
     validate_plan({"tasks": tasks}, roles)
 
     inactive_role = next(iter(roles))
-    tasks[inactive_role] = {"status": "NO_TASK", "task": ""}
+    tasks[inactive_role] = {"status": "NO_TASK", "mode": "CHANGE", "task": ""}
     try:
         validate_plan({"tasks": tasks}, roles)
     except RuntimeError as exc:
@@ -65,9 +67,24 @@ def test_planner_requires_every_specialist_to_be_active():
         raise AssertionError("planner accepted an inactive specialist")
 
 
+def test_planner_allows_exactly_one_change_to_avoid_stale_candidates():
+    roles = load_roles()
+    assert MAX_CHANGE_TASKS_PER_CYCLE == 1
+    tasks = {role: {"status": "TASK", "mode": "AUDIT", "task": "audit"} for role in roles}
+    tasks[next(iter(roles))]["mode"] = "CHANGE"
+    validate_plan({"tasks": tasks}, roles)
+    tasks[list(roles)[1]]["mode"] = "CHANGE"
+    try:
+        validate_plan({"tasks": tasks}, roles)
+    except RuntimeError as exc:
+        assert "exactly one CHANGE" in str(exc)
+    else:
+        raise AssertionError("planner accepted multiple stale-branch-producing changes")
+
+
 def test_planner_requires_exact_role_set():
     roles = load_roles()
-    tasks = {role: {"status": "NO_TASK", "task": ""} for role in roles}
+    tasks = {role: {"status": "TASK", "mode": "AUDIT", "task": "audit"} for role in roles}
     tasks.pop(next(iter(tasks)))
     try:
         validate_plan({"tasks": tasks}, roles)

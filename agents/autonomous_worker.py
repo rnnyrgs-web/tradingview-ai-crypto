@@ -40,16 +40,20 @@ def execute_task(role: str, plan_path: Path) -> int:
         print("NO_TASK")
         return 0
 
+    mode = task.get("mode", "AUDIT")
+    can_change = mode == "CHANGE"
     instructions = f"""
 You are the {role} autonomous specialist in a crypto quantitative trading system.
 Mission: {roles[role]['mission']}
 Assigned task: {task['task']}
+Task mode: {mode}
 
 Hard rules:
 - Execute the assigned task now; never ask what task to perform.
 - Read AI_STATE.md before deciding anything, but never edit it.
 - Stay inside the allowed paths for your role: {roles[role]['allowed_paths']}.
 - Never edit agents/, .github/workflows/, requirements.txt, Dockerfile, or AI_STATE.md.
+- {'Implement the smallest safe change in allowed paths.' if can_change else 'This is a read-only audit. Do not write or modify any file; report evidence and finish NO_CHANGE.'}
 - Preserve no-lookahead and fail-closed behavior.
 - Never manufacture backtest evidence, prices, workflow results, or live readiness.
 - Do not weaken validation/risk/security gates for more signals.
@@ -70,7 +74,7 @@ Hard rules:
                 "Begin by reading AI_STATE.md, inspect only the files needed, use tools to implement the bounded change, "
                 "run relevant tests, and finish with the required CHANGE_STATUS marker."
             ),
-            "tools": tool_specs(),
+            "tools": [tool for tool in tool_specs() if can_change or tool["name"] != "write_file"],
         }
     )
 
@@ -101,7 +105,7 @@ Hard rules:
                 "instructions": instructions,
                 "previous_response_id": current["id"],
                 "input": outputs,
-                "tools": tool_specs(),
+                "tools": [tool for tool in tool_specs() if can_change or tool["name"] != "write_file"],
             }
         )
 

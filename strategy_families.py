@@ -3,6 +3,7 @@ from math import isfinite
 from features import atr, ema, rsi, slope_pct, zscore_last
 from market_data import get_history
 from config import BACKTEST_COST_BPS
+from robustness import evaluate_robustness
 
 
 STRATEGY_FAMILIES = (
@@ -63,35 +64,35 @@ def _true_range(candles, i):
     )
 
 
-def _signal_trend(candles, i, _benchmark):
+def _signal_trend(candles, i, _benchmark, scale=1.0):
     if i < 60:
         return None
     closes = [x["close"] for x in candles[i - 59:i + 1]]
     e20 = ema(closes, 20)
     e50 = ema(closes, 50)
     slope = slope_pct(closes, 12)
-    if closes[-1] > e20 > e50 and slope > 0.04:
+    if closes[-1] > e20 > e50 and slope > 0.04 * scale:
         return "LONG"
-    if closes[-1] < e20 < e50 and slope < -0.04:
+    if closes[-1] < e20 < e50 and slope < -0.04 * scale:
         return "SHORT"
     return None
 
 
-def _signal_breakout(candles, i, _benchmark):
+def _signal_breakout(candles, i, _benchmark, scale=1.0):
     if i < 35:
         return None
     prior = candles[i - 20:i]
     close = candles[i]["close"]
     vols = [x["volume"] for x in candles[i - 29:i + 1]]
     vol_z = zscore_last(vols, 30)
-    if close > max(x["high"] for x in prior) and vol_z > 0.35:
+    if close > max(x["high"] for x in prior) and vol_z > 0.35 * scale:
         return "LONG"
-    if close < min(x["low"] for x in prior) and vol_z > 0.35:
+    if close < min(x["low"] for x in prior) and vol_z > 0.35 * scale:
         return "SHORT"
     return None
 
 
-def _signal_momentum(candles, i, _benchmark):
+def _signal_momentum(candles, i, _benchmark, scale=1.0):
     if i < 35:
         return None
     closes = [x["close"] for x in candles[i - 34:i + 1]]
@@ -99,14 +100,15 @@ def _signal_momentum(candles, i, _benchmark):
     a = atr(candles[max(0, i - 30):i + 1], 14)
     move = closes[-1] - closes[-7]
     normalized = move / max(a, closes[-1] * 0.001)
-    if rrsi >= 58 and normalized >= 1.1:
+    rsi_edge = 58 + 8 * (scale - 1.0)
+    if rrsi >= rsi_edge and normalized >= 1.1 * scale:
         return "LONG"
-    if rrsi <= 42 and normalized <= -1.1:
+    if rrsi <= 100 - rsi_edge and normalized <= -1.1 * scale:
         return "SHORT"
     return None
 
 
-def _signal_mean_reversion(candles, i, _benchmark):
+def _signal_mean_reversion(candles, i, _benchmark, scale=1.0):
     if i < 40:
         return None
     window = candles[i - 39:i + 1]
@@ -117,26 +119,27 @@ def _signal_mean_reversion(candles, i, _benchmark):
     last = closes[-1]
     if a <= 0:
         return None
-    if last < e20 - 1.25 * a and rrsi <= 35:
+    rsi_edge = 35 - 10 * (scale - 1.0)
+    if last < e20 - 1.25 * scale * a and rrsi <= rsi_edge:
         return "LONG"
-    if last > e20 + 1.25 * a and rrsi >= 65:
+    if last > e20 + 1.25 * scale * a and rrsi >= 100 - rsi_edge:
         return "SHORT"
     return None
 
 
-def _signal_volatility_expansion(candles, i, _benchmark):
+def _signal_volatility_expansion(candles, i, _benchmark, scale=1.0):
     if i < 35:
         return None
     prior_tr = [_true_range(candles, j) for j in range(i - 20, i)]
     current_tr = _true_range(candles, i)
     baseline = _mean(prior_tr)
-    if baseline <= 0 or current_tr < 1.55 * baseline:
+    if baseline <= 0 or current_tr < 1.55 * scale * baseline:
         return None
     bar = candles[i]
     span = max(bar["high"] - bar["low"], bar["close"] * 0.0005)
     location = (bar["close"] - bar["low"]) / span
     vols = [x["volume"] for x in candles[i - 29:i + 1]]
-    if zscore_last(vols, 30) < 0.45:
+    if zscore_last(vols, 30) < 0.45 * scale:
         return None
     if location >= 0.72 and bar["close"] > bar["open"]:
         return "LONG"
@@ -145,7 +148,7 @@ def _signal_volatility_expansion(candles, i, _benchmark):
     return None
 
 
-def _signal_relative_strength(candles, i, benchmark):
+def _signal_relative_strength(candles, i, benchmark, scale=1.0):
     if i < 30 or not benchmark:
         return None
     now_ts = candles[i]["ts"]
@@ -162,9 +165,9 @@ def _signal_relative_strength(candles, i, benchmark):
     bench_ret = b_now / b_past - 1.0
     excess = asset_ret - bench_ret
     local_slope = slope_pct([x["close"] for x in candles[i - 19:i + 1]], 12)
-    if excess >= 0.025 and local_slope > 0:
+    if excess >= 0.025 * scale and local_slope > 0:
         return "LONG"
-    if excess <= -0.025 and local_slope < 0:
+    if excess <= -0.025 * scale and local_slope < 0:
         return "SHORT"
     return None
 
@@ -179,7 +182,20 @@ SIGNAL_FUNCTIONS = {
 }
 
 
-def _simulate(candles, bar, family, benchmark=None):
+def _regime(candles, i):
+    context = candles[max(0, i - 59):i + 1]
+    closes = [row["close"] for row in context]
+    last = closes[-1]
+    a = atr(context, 14)
+    gap = abs(ema(closes, 20) / ema(closes, 50) - 1.0) if len(closes) >= 50 else 0.0
+    if gap >= 0.012:
+        return "TREND"
+    if a / last >= 0.018:
+        return "HIGH_VOL"
+    return "RANGE"
+
+
+def _simulate(candles, bar, family, benchmark=None, parameter_scale=1.0, detailed=False):
     signal_fn = SIGNAL_FUNCTIONS[family]
     max_hold = {"15m": 16, "1H": 24, "4H": 42, "1D": 30}.get(bar, 16)
     benchmark = benchmark or {}
@@ -187,7 +203,7 @@ def _simulate(candles, bar, family, benchmark=None):
     i = 70
 
     while i < len(candles) - max_hold - 2:
-        direction = signal_fn(candles, i, benchmark)
+        direction = signal_fn(candles, i, benchmark, parameter_scale)
         if not direction:
             i += 1
             continue
@@ -217,7 +233,8 @@ def _simulate(candles, bar, family, benchmark=None):
 
         raw = (exit_price / entry - 1.0) * 100.0
         directional = raw if direction == "LONG" else -raw
-        returns.append(directional - BACKTEST_COST_BPS / 100.0)
+        result = directional - BACKTEST_COST_BPS / 100.0
+        returns.append({"return_pct": result, "regime": _regime(candles, i)}) if detailed else returns.append(result)
         i += max_hold
 
     return returns
@@ -284,17 +301,36 @@ def evaluate_strategy_registry(symbol, bar="15m", bars=5000):
 
     registry = []
     for family in STRATEGY_FAMILIES:
-        train_metrics = _segment_metrics(_simulate(train, bar, family, benchmark))
-        validation_metrics = _segment_metrics(_simulate(validation, bar, family, benchmark))
-        holdout_metrics = _segment_metrics(_simulate(holdout, bar, family, benchmark))
+        train_returns = _simulate(train, bar, family, benchmark)
+        validation_returns = _simulate(validation, bar, family, benchmark)
+        holdout_records = _simulate(holdout, bar, family, benchmark, detailed=True)
+        holdout_returns = [row["return_pct"] for row in holdout_records]
+        train_metrics = _segment_metrics(train_returns)
+        validation_metrics = _segment_metrics(validation_returns)
+        holdout_metrics = _segment_metrics(holdout_returns)
         gate = _quality_gate(train_metrics, validation_metrics, holdout_metrics)
+        robustness = evaluate_robustness(
+            validation_returns + holdout_returns,
+            {
+                "threshold_90pct": _simulate(holdout, bar, family, benchmark, parameter_scale=0.9),
+                "threshold_110pct": _simulate(holdout, bar, family, benchmark, parameter_scale=1.1),
+            },
+            {
+                regime: [row["return_pct"] for row in holdout_records if row["regime"] == regime]
+                for regime in ("TREND", "HIGH_VOL", "RANGE")
+            },
+            f"{symbol}|{bar}|{family}",
+        )
+        eligible = gate["passed"] and robustness["passed"]
         registry.append({
             "strategy_family": family,
-            "status": "ELIGIBLE_OOS" if gate["passed"] else "RESEARCH_ONLY",
+            "status": "ROBUST_OOS" if eligible else "RESEARCH_ONLY",
             "train": train_metrics,
             "validation": validation_metrics,
             "holdout_test": holdout_metrics,
             "quality_gate": gate,
+            "robustness": robustness,
+            "eligible_for_promotion_review": eligible,
         })
 
     return {

@@ -91,13 +91,14 @@ def main():
     for item in results:
         registry = (item.get("strategy_registry") or {}).get("registry", [])
         for strategy in registry:
-            if strategy.get("quality_gate", {}).get("passed"):
+            if strategy.get("eligible_for_promotion_review") is True:
                 eligible.append({
                     "symbol": item["symbol"],
                     "bar": item["bar"],
                     "strategy_family": strategy["strategy_family"],
                     "validation": strategy["validation"],
                     "holdout_test": strategy["holdout_test"],
+                    "robustness": strategy["robustness"],
                 })
 
     payload = {

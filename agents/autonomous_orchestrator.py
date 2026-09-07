@@ -28,6 +28,7 @@ ABSOLUTE_MAX_TOOL_STEPS = 32
 OPENAI_MAX_ATTEMPTS = 6
 OPENAI_BACKOFF_SECONDS = (5, 10, 20, 40, 60)
 MAX_ACTIVE_TASKS_PER_CYCLE = 14
+MAX_CHANGE_TASKS_PER_CYCLE = 1
 
 
 def bounded_tool_steps(raw: str | None, default: int = 12) -> int:
@@ -245,16 +246,25 @@ def validate_plan(plan: dict[str, Any], roles: dict[str, Any]) -> None:
     if not isinstance(tasks, dict) or set(tasks) != set(roles):
         raise RuntimeError("planner returned invalid role set")
     active = 0
+    changes = 0
     for role, task in tasks.items():
         if not isinstance(task, dict) or task.get("status") not in {"TASK", "NO_TASK"}:
             raise RuntimeError(f"planner returned invalid task for {role}")
+        if task.get("mode") not in {"CHANGE", "AUDIT"}:
+            raise RuntimeError(f"planner returned invalid mode for {role}")
         if not isinstance(task.get("task"), str):
             raise RuntimeError(f"planner omitted task text for {role}")
         if task["status"] == "TASK":
             active += 1
+        if task["mode"] == "CHANGE":
+            changes += 1
     if active != len(roles):
         raise RuntimeError(
             f"planner must activate every specialist: {active} active tasks != {len(roles)} roles"
+        )
+    if changes != MAX_CHANGE_TASKS_PER_CYCLE:
+        raise RuntimeError(
+            f"planner must assign exactly one CHANGE task: {changes} != {MAX_CHANGE_TASKS_PER_CYCLE}"
         )
 
 
@@ -263,7 +273,7 @@ def plan_tasks(output: Path) -> int:
     external = os.getenv("AGENT_EXTERNAL_CONTEXT", "")[-30_000:]
     roles = load_roles()
     task_shape = ",\n    ".join(
-        f'"{role}": {{"status": "TASK|NO_TASK", "task": "..."}}' for role in roles
+        f'"{role}": {{"status": "TASK", "mode": "CHANGE|AUDIT", "task": "..."}}' for role in roles
     )
     prompt = f"""
 You are the Lead Integrator planning one fail-closed autonomous development cycle for a crypto quantitative trading/signalling system.
@@ -285,12 +295,13 @@ Rules:
 - Use AI_STATE.md as authoritative.
 - Assign at most one bounded task per role.
 - Assign one small, useful TASK to every specialist in every hourly cycle so all {MAX_ACTIVE_TASKS_PER_CYCLE} specialists inspect or improve their owned area.
+- Assign exactly {MAX_CHANGE_TASKS_PER_CYCLE} role mode=CHANGE. Every other role must be mode=AUDIT and read-only. Choose the single change with the highest evidence-backed priority from AI_STATE.md.
 - Keep each task tightly bounded and evidence-driven. An inspection may finish with NO_CHANGE; never invent a code change merely to appear busy.
 - Respect each role's allowed paths exactly.
 - Do not assign edits to AI_STATE.md, agents/, workflows, requirements.txt or Dockerfile.
 - Never promote research to live use from one OOS pass.
 - Preserve no-lookahead and fail-closed behavior.
-- Use TASK for every role. The worker must report NO_CHANGE when no safe, useful repository change is justified.
+- Use TASK for every role. AUDIT roles report findings but cannot write. The CHANGE worker must report NO_CHANGE when no safe, useful repository change is justified.
 - Tasks must be small enough for one specialist cycle and testable with repository evidence.
 """
     payload = post_response({"model": model_name(), "input": prompt})
