@@ -94,6 +94,7 @@ The orchestration now requires exactly one `CHANGE` role and thirteen read-only 
 
 ## COST / 24-7 BEHAVIOR
 The owner explicitly requested all 15 roles work every hour, 24/7, with cost-aware routing and verified-only autonomous integration.
+- A separate always-on `continuous_coordinator.py` watchdog checks production health and this canonical handoff every minute. Normal operation uses zero AI tokens, exposes only sanitized status, has no market-scan/write/promotion/trade authority, and fails unhealthy after repeated observation failures. The 14 specialists remain event/hourly workers so idle model cost is not incurred.
 - Autonomous specialist planner: minute 17 every hour, 24/7.
 - Cloud research/backtesting/algo testing: hourly 24/7.
 - Production market scans: approximately every 15 minutes.
@@ -112,10 +113,11 @@ The owner explicitly enabled verified-only autonomous merging on 2026-09-07. `AU
 Insufficient or unreliable evidence always means WAIT / NO TRADE / RESEARCH_ONLY.
 
 ## EXACT NEXT STEP
-1. Verify the hardened release deploys successfully and the next production scan passes `tools/validate_scan_response.py`, produces no unvalidated `TRADE` / BUY / SELL decision, and exposes a healthy sanitized `/health` operational snapshot.
-2. Keep `live_promotions.json` empty and signing keys unused until a strategy has completed repeated backtests, untouched OOS, robustness/stability, strategy-registry review and production-risk review; never sign from a single OOS pass or AI label.
-3. Verify the next cloud research run produces SHA-256-sealed envelopes, deterministic robustness output and a sealed repeated-run aggregation artifact; never interpret `READY_FOR_STRATEGY_REGISTRY_REVIEW` as live approval.
-4. Inspect research run `34079774231` artifact contents before any PONS-specific result claim or promotion.
-5. Verify the first one-CHANGE/thirteen-AUDIT cycle runs all 14 roles, publishes no audit branches, creates at most one current-base candidate, and reduces redundant runner/test cost without weakening exact-SHA Security dispatch.
-6. Verify the first automatic integration includes all required gates and updates this file in the same commit; fail closed on any missing check or stale candidate base.
-7. Update this file again after every completed development/integration cycle.
+1. Verify the always-on coordinator service remains healthy through at least one production deploy/restart and detects a controlled unavailable-health response without gaining write or trade authority.
+2. Verify the hardened release deploys successfully and the next production scan passes `tools/validate_scan_response.py`, produces no unvalidated `TRADE` / BUY / SELL decision, and exposes a healthy sanitized `/health` operational snapshot.
+3. Keep `live_promotions.json` empty and signing keys unused until a strategy has completed repeated backtests, untouched OOS, robustness/stability, strategy-registry review and production-risk review; never sign from a single OOS pass or AI label.
+4. Verify the next cloud research run produces SHA-256-sealed envelopes, deterministic robustness output and a sealed repeated-run aggregation artifact; never interpret `READY_FOR_STRATEGY_REGISTRY_REVIEW` as live approval.
+5. Inspect research run `34079774231` artifact contents before any PONS-specific result claim or promotion.
+6. Verify the first one-CHANGE/thirteen-AUDIT cycle runs all 14 roles, publishes no audit branches, creates at most one current-base candidate, and reduces redundant runner/test cost without weakening exact-SHA Security dispatch.
+7. Verify the first automatic integration includes all required gates and updates this file in the same commit; fail closed on any missing check or stale candidate base.
+8. Update this file again after every completed development/integration cycle.
