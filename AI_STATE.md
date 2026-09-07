@@ -35,8 +35,17 @@ Integrated evidence:
   - `research_runner.py` now emits `execution_oos_robustness` in sealed cloud-research artifacts. This evidence is research-only and does not alter Strategy Registry eligibility, promotion gates or live authority.
   - Deterministic tests prove two-source/complete-fill requirements, conservative-only stress expansion, unchanged holdout path/threshold, and fail-closed behavior when no training threshold exists.
 - While validating PR #43, Security exposed a pre-existing supervisor test regression caused by compacting the AI_STATE safety heading. Lead fixed `agents/supervisor_snapshot.py` directly on main as `e0a6d234d103e5415ba2342ab09d43d180357b02`; it now preserves safety context under both explicit and compact safety headings without weakening safeguards.
+- Original Cloud Crypto Research run `34168479313` was cancelled before jobs/artifacts were produced, so it provides no ACC-001 evidence.
+- PR #44 `Accelerate cloud research without weakening gates` passed exact-head Security and Reliability run `34170047571` on `7107d85f6a81ca21e2cc7e2371837094a10552b7` and merged as `442b93e864682326195a3ae6c799fc231d43cbcd`.
+  - Cloud research concurrency is isolated by event/ref so stale feature-branch runs cannot block main research.
+  - Broad-universe matrix parallelism increases from 8 to 16 when GitHub capacity is available.
+  - Dedicated BTC/ETH/SOL/XRP/LINK fast-evidence workers run 15m + 1H in parallel while Top-80 + forced PONS research continues.
+  - Expensive bootstrap/perturbation robustness is skipped only for candidates that already fail deterministic train/validation/untouched-OOS quality gates.
+  - A separate adversarial artifact audit independently checks sealed integrity, fail-closed promotion, same-holdout execution policy and that live snapshot slippage is never represented as historical.
+  - No OOS, robustness, promotion or live-authority gate was weakened.
+- Merge `442b93e...` triggered Cloud Crypto Research run `34170631618`; this is the replacement run that must produce the first usable real `execution_oos_robustness` artifacts. It was queued when this state was written.
 
-Cloud Crypto Research run `34168479313` was automatically triggered by merge `dbefac4...` and is the first live research cycle expected to emit the new untouched-OOS execution robustness evidence. ACC-001 must NOT be called complete until that run (or a later valid run) finishes and its artifacts are inspected for real holdout/stress outcomes.
+ACC-001 must NOT be called complete until run `34170631618` (or a later valid replacement) finishes and its artifacts are inspected for real holdout/stress outcomes.
 
 ## 24/7 AI / ORCHESTRATION
 Token-free Render coordinator checks production health/state every minute with no trade/write/promotion authority.
@@ -46,7 +55,7 @@ Token-free Render coordinator checks production health/state every minute with n
 Event-driven supervisor from PR #37 wakes on completed production scan/cloud research plus hourly fallback, provides compact supervisor context and allows exactly one CHANGE + thirteen AUDIT workers with max-parallel 14. The one-writer/thirteen-auditor path has been verified end-to-end.
 
 ## ACCURACY BACKLOG
-1. `ACC-001` market-microstructure — IN PROGRESS; execution evidence and untouched-OOS stress machinery are integrated; first real cloud artifact/result verification pending.
+1. `ACC-001` market-microstructure — IN PROGRESS; execution evidence and untouched-OOS stress machinery are integrated; replacement accelerated cloud artifact/result verification pending.
 2. `ACC-002` quant-cross-asset — cross-sectional relative-strength/rank prediction across liquid universe.
 3. `ACC-003` quant-breakout-volatility — no-lookahead regime-specialist models for bull/bear/range/high-volatility/compression.
 4. `ACC-004` strategy-registry — calibrated champion/challenger ensemble weighting with correlation/deterioration penalties and automatic demotion.
@@ -54,14 +63,21 @@ Event-driven supervisor from PR #37 wakes on completed production scan/cloud res
 6. `ACC-006` production-signals — continuous forecast scoring and deterioration detection from immutable prediction ledger.
 7. `ACC-007` testing-security — expanded adversarial strategy-destruction tests across exchanges, periods, fees, slippage, parameters, malformed data and regimes.
 
+## REAL-MONEY READINESS ACCELERATION
+Master tracking issue #45 covers the safe acceleration program.
+- PR #44 is integrated: event/ref-isolated cloud concurrency, higher parallelism, liquid-major fast lane, deterministic early rejection and independent artifact audit.
+- PR #46 `Add forward shadow and canary readiness gates` is open and remains unmerged pending exact-head verification/rebase after ACC-001 evidence work. It is designed to add read-only forward evidence, de-correlated prediction samples, Wilson/expectancy/drawdown checks and tiny-canary/scale review gates with `trade_authority=false` and `canary_execution_enabled=false`.
+- Future acceleration work remains subordinate to the mandatory research-to-live chain; speed must come from parallelism, caching, early rejection, prioritization, event-driven agents and deterministic automation, never weaker evidence.
+
 ## COST / SPEED POLICY
 Use deterministic Python for calculation/backtesting/filtering/evidence checks. Use AI for bounded planning, hypothesis generation, implementation/review and orchestration. Routine planner/specialists use `gpt-5.6-luna`; testing-security, strategy-registry, portfolio-risk and production-signals use `gpt-5.6-sol`; Lead and independent integration reviews use `gpt-5.6-sol`. Prefer event-driven wakeups over idle polling and read-only parallel audits over competing writes.
 
 ## EXACT NEXT STEP
-1. Inspect Cloud Crypto Research run `34168479313` after completion. Verify `execution_oos_robustness` exists in real artifacts, uses the same untouched holdout path, current snapshot anchor is never presented as historical, and record which strategies/timeframes retain positive expectancy/sum under maximum conservative execution stress. Do not infer results before artifacts exist.
-2. If the first run has infrastructure/data failures, fix only the bounded cause and rerun. If evidence is valid, decide whether ACC-001 has enough execution robustness evidence to close; do not mark complete merely because code exists.
+1. Inspect Cloud Crypto Research run `34170631618` after completion. Verify `execution_oos_robustness` exists in real artifacts, uses the same untouched holdout path, current snapshot anchor is never presented as historical, and record which strategies/timeframes retain positive expectancy/sum under maximum conservative execution stress. Also verify the new independent artifact-audit job passes. Do not infer results before artifacts exist.
+2. If the replacement run has infrastructure/data failures, fix only the bounded cause and rerun. If evidence is valid, decide whether ACC-001 has enough execution robustness evidence to close; do not mark complete merely because code exists.
 3. Obtain direct production observer state evidence: `/health.continuous_ai` must show `configured=true`, `cycle_count>=1`, `last_error_type=null`, five-minute cadence, bounded timeout and trade/write/promotion authority false.
-4. Verify a post-PR #42/#43 production scan remains healthy, execution/liquidation evidence stays research-only, and no unvalidated TRADE appears.
-5. Only after ACC-001 evidence is genuinely complete move to `ACC-002` cross-sectional ranking, then ACC-003 through ACC-007 sequentially while non-owner specialists audit in parallel.
-6. Keep `live_promotions.json` empty and signing keys unused until repeated backtests, untouched OOS, robustness/stability, Strategy Registry review and Production Risk review genuinely complete.
-7. Update this file after every completed development/integration cycle.
+4. Verify a post-PR #42/#43/#44 production scan remains healthy, execution/liquidation evidence stays research-only, and no unvalidated TRADE appears.
+5. After ACC-001 evidence is genuinely complete, refresh PR #46 on current main, require exact-head Security and Reliability success, then integrate only if its shadow/canary layer remains read-only/fail-closed.
+6. Only then move to `ACC-002` cross-sectional ranking, then ACC-003 through ACC-007 sequentially while non-owner specialists audit in parallel.
+7. Keep `live_promotions.json` empty and signing keys unused until repeated backtests, untouched OOS, robustness/stability, Strategy Registry review and Production Risk review genuinely complete.
+8. Update this file after every completed development/integration cycle.
