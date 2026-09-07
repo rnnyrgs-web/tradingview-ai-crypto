@@ -39,6 +39,16 @@ def fetch_recent(hours=800, limit=1000):
         raise RuntimeError(f"Supabase select failed: {r.status_code} {r.text}")
     return r.json()
 
+def fetch_latest_signal_id():
+    if not configured():
+        return 0
+    params={"select":"id","order":"id.desc","limit":"1"}
+    r=http.get(f"{SUPABASE_URL}/rest/v1/trading_signals",headers=headers(),params=params)
+    if r.status_code>=300:
+        raise RuntimeError(f"Supabase cursor fetch failed: {r.status_code} {r.text}")
+    rows=r.json()
+    return int(rows[0]["id"]) if rows else 0
+
 def fetch_actionable_after(after_id=0, limit=20):
     if not configured():
         return []
