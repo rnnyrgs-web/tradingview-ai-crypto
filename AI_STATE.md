@@ -61,16 +61,27 @@ Expanded Cloud Crypto Research run `34079774231` was still `in_progress` at the 
 ## AUTONOMOUS MULTI-AGENT DEVELOPMENT — PROPOSED V1
 User requirement: six AI development roles should work continuously without interfering with each other and use GitHub as the shared synchronization layer.
 
-Development is isolated on branch `agent/autonomous-orchestration-v1`; it is NOT yet merged to main or active.
+Development is isolated on branch `agent/autonomous-orchestration-v1`; PR #1 is open and NOT merged to main or active.
 Implemented on that branch:
 - `agents/roles.json` defines five specialist missions, branch prefixes and strict file allowlists.
-- `agents/autonomous_orchestrator.py` implements a Lead planner plus bounded specialist tool loop using the OpenAI Responses API. Specialists can list/read files, write only allowlisted files, inspect diffs and run pytest. Tool steps are capped and failures are fail-closed.
+- `agents/autonomous_orchestrator.py` implements a Lead planner plus bounded specialist tool loop using the OpenAI Responses API. Specialists can list/read files, write only allowlisted files and run pytest. Tool steps are capped and failures are fail-closed.
 - Protected specialist-write paths include `AI_STATE.md`, `agents/`, `.github/workflows/`, `requirements.txt` and `Dockerfile`, preventing agents from rewriting orchestration safeguards or canonical state.
 - `.github/workflows/autonomous_agents.yml` schedules hourly Lead planning and up to five parallel specialist jobs. Each cycle uses a unique `auto/<role>/<run>` branch, runs full pytest, checks protected paths, then opens an unmerged PR only when there are changes.
 - `.github/workflows/autonomous_lead.yml` schedules hourly review of the oldest autonomous PR, requires existing PR checks to pass, rejects oversized/protected-path diffs, and runs independent security + lead AI diff reviews.
 - Autonomous merge is additionally gated by repository variable `AUTONOMOUS_MERGE_ENABLED=true`; without it, reviewed PRs remain open.
 - `agents/lead_state.py` prepares a complete canonical `AI_STATE.md` update after a verified autonomous integration; it fails closed if the generated state is malformed or omits `## EXACT NEXT STEP`.
 - `tests/test_autonomous_orchestrator.py` covers role allowlists, protected paths, traversal rejection and JSON parsing.
+
+PR #1 Security and Reliability run `34081196120` initially produced:
+- unit tests: PASS, 23 passed
+- dependency audit: PASS, no known vulnerabilities
+- Bandit static scan: FAIL on 9 low-severity/high-confidence subprocess findings in the new orchestration files
+- secret scan: skipped because Bandit stopped the job
+
+The subprocess surface was then removed instead of suppressed:
+- commit `3cc699332dc0cfdce25ca7494c83a73e7a2a4cf7` removes subprocess/git-shell execution from `agents/autonomous_orchestrator.py`; pytest now runs through `pytest.main()` and planning uses AI_STATE + GitHub context rather than local git subprocesses.
+- commit `6b6fb726cdb6f05cfa27c4b93ed135fd4ec8b8ca` removes subprocess from `agents/lead_state.py`; workflow-level `git diff --check` remains the validation gate.
+A fresh Security and Reliability run after these fixes must pass fully before PR #1 may be merged.
 
 Required activation inputs after merge:
 - GitHub Actions secret `OPENAI_API_KEY`.
@@ -90,8 +101,8 @@ Existing major swing research remains on 4H and 1D.
 Proposed autonomous development cadence after activation: Lead planning hourly, up to five specialist jobs in parallel, separate PRs, Security CI, dual AI review, then at most one verified PR integrated per Lead cycle.
 
 ## EXACT NEXT STEP
-1. Open and verify the `agent/autonomous-orchestration-v1` PR; require Security and Reliability CI to pass before any merge.
-2. Keep autonomous merge disabled initially. After merge, configure `OPENAI_API_KEY` and `OPENAI_AGENT_MODEL`, manually dispatch one dry-run cycle, and inspect the generated plan/branches/PRs for correct isolation and fail-closed behavior.
+1. Verify the fresh Security and Reliability CI on PR #1 after subprocess removal; require unit tests, dependency audit, Bandit and secret scan all to pass before merge.
+2. Keep autonomous merge disabled initially. After PR #1 is safely merged, configure `OPENAI_API_KEY` and `OPENAI_AGENT_MODEL`, manually dispatch one dry-run cycle, and inspect generated plan/branches/PRs for correct isolation and fail-closed behavior.
 3. Separately re-check expanded Cloud Crypto Research run `34079774231`; once completed, inspect artifacts for Top-80 shard coverage, actual PONS-USDT-SWAP attempt, safe insufficient-history behavior and all newly eligible candidates.
 4. Only after successful dry-run agent cycles should `AUTONOMOUS_MERGE_ENABLED=true` be considered. Even then, Security CI + independent security/lead AI reviews + protected-path gates remain mandatory.
 5. Continue robustness work: deeper histories, rolling walk-forward windows, nearby-parameter stability, bootstrap/Monte Carlo confidence checks and longitudinal registry history before any research-family live weighting.
