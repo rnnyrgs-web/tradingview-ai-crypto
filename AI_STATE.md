@@ -75,11 +75,14 @@ Verified dry-run #1 root causes:
 1. `pytest -q` collection failed with six import errors (`agents`, `dashboard`, `features`, `research_runner`, `safety`, `strategy_families`) because the autonomous specialist workflow lacked the repository-root `PYTHONPATH` used by the existing Security and Reliability workflow.
 2. After the specialist read `AI_STATE.md`, it answered `What task would you like me to perform?` instead of continuing. The worker used `previous_response_id` after a tool call without re-supplying the specialist instructions, so the continuation lost the assigned-task instructions.
 
-Fix development is isolated on branch `lead/fix-autonomous-dry-run-1` and is NOT yet merged:
-- `conftest.py` ensures the repository root is available during pytest collection.
-- `agents/autonomous_worker.py` executes specialist tasks with the assigned task repeated explicitly, re-supplies instructions on every Responses API continuation call, and fails closed unless the final response contains `CHANGE_STATUS: READY_FOR_PR` or `CHANGE_STATUS: NO_CHANGE`.
+Fix PR #2 (`lead/fix-autonomous-dry-run-1` -> `main`) contains:
+- `conftest.py` to ensure the repository root is available during pytest collection.
+- `agents/autonomous_worker.py` to repeat the assigned task explicitly, re-supply instructions on every Responses API continuation call, and fail closed unless the final response contains `CHANGE_STATUS: READY_FOR_PR` or `CHANGE_STATUS: NO_CHANGE`.
 - `.github/workflows/autonomous_agents.yml` sets `PYTHONPATH: ${{ github.workspace }}` for specialist jobs and calls `agents/autonomous_worker.py`.
 - `tests/test_autonomous_orchestrator.py` adds fail-closed completion-marker tests.
+
+Security and Reliability run `34083176744` on the fix branch completed successfully: unit tests PASS, dependency audit PASS, Bandit PASS, committed-secret scan PASS.
+No subprocess surface was reintroduced by the fix. `AUTONOMOUS_MERGE_ENABLED` remains disabled.
 
 ## TARGET QUANT ARCHITECTURE
 Continue building evidence in layers: clean multi-exchange data; spot/perpetual microstructure; options where useful; on-chain/tokenomics; timestamped news/macro catalysts; independently validated strategy families; realistic execution costs; rigorous rolling validation and overfit controls; portfolio risk; fail-closed strategy registry; continuous live-vs-backtest monitoring. AI is an adversarial research/review layer, not an oracle.
@@ -94,10 +97,10 @@ Autonomous development target cadence: Lead planning hourly, up to five speciali
 Autonomous merge remains disabled until successful dry-run validation proves planner execution, specialist task completion, branch isolation, full tests, PR creation, protected-path enforcement and dual-review behavior.
 
 ## EXACT NEXT STEP
-1. Open a PR from `lead/fix-autonomous-dry-run-1` to `main` and require Security and Reliability CI to pass fully: unit tests, dependency audit, Bandit and secret scan.
-2. Review that PR for import-path safety, no weakening of protected-path controls, no subprocess reintroduction, and correct persistence of specialist instructions across Responses API tool-call continuations.
-3. Merge only after CI passes.
-4. Manually dispatch autonomous dry run #2 with `AUTONOMOUS_MERGE_ENABLED` still unset/false. Verify Lead plan, five isolated specialist branches, actual bounded changes or explicit NO_CHANGE, full tests, protected-path checks, and PR creation.
+1. If fix PR #2 is still open, merge it only if its latest Security and Reliability CI is green. If it is already merged, do not repeat the merge.
+2. With `AUTONOMOUS_MERGE_ENABLED` still unset/false, manually dispatch autonomous dry run #2.
+3. Verify Lead planning, five isolated specialist branches, actual bounded specialist changes or explicit NO_CHANGE, full repository tests, protected-path checks, and autonomous PR creation.
+4. Keep autonomous merge disabled until at least one complete dry-run cycle reaches valid specialist PRs and the Lead/Security review path is verified.
 5. Separately re-check Cloud Crypto Research run `34079774231`; when complete, inspect Top-80 shard coverage, actual PONS-USDT-SWAP attempt, insufficient-history fail-closed behavior and newly eligible candidates.
 6. Only after successful dry-run cycles consider `AUTONOMOUS_MERGE_ENABLED=true`. Security CI + independent Security/Lead AI review + protected-path gates remain mandatory.
 7. Continue deeper histories, rolling walk-forward validation, nearby-parameter stability, bootstrap/Monte Carlo checks and longitudinal registry history before any research-family live weighting.
