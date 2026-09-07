@@ -7,16 +7,19 @@ from utils import f, pct_change
 
 http = httpx.Client(timeout=25.0, follow_redirects=True)
 
+
 def okx_get(path, params=None):
     r = http.get(f"{OKX_BASE}{path}", params=params or {})
     r.raise_for_status()
     obj = r.json()
-    if str(obj.get("code","0")) != "0":
+    if str(obj.get("code", "0")) != "0":
         raise RuntimeError(f"OKX error {obj.get('code')}: {obj.get('msg')}")
     return obj.get("data", [])
 
+
 def get_spot_tickers():
-    return okx_get("/api/v5/market/tickers", {"instType":"SPOT"})
+    return okx_get("/api/v5/market/tickers", {"instType": "SPOT"})
+
 
 def normalize_candles(rows):
     out = []
@@ -37,44 +40,66 @@ def normalize_candles(rows):
         })
     return out
 
+
 def get_candles(symbol, bar="15m", limit=120):
     rows = okx_get("/api/v5/market/candles", {
         "instId": symbol, "bar": bar, "limit": str(min(limit, 300))
     })
     return normalize_candles(rows)
 
-def get_history(symbol, bar="15m", bars=1000):
-    wanted = max(100, min(bars, 5000))
+
+def get_history(symbol, bar="15m", bars=1000, max_bars=50000):
+    """Fetch deep history directly from OKX with pagination.
+
+    This is intentionally online/on-demand so backtesting is not limited by the
+    user's local disk or CPU. The cap is a safety/cost/rate-limit guardrail, not
+    a data-model limitation and can be raised for cloud research jobs.
+    """
+    wanted = max(100, min(int(bars), int(max_bars)))
     collected = []
     after = None
+    seen_oldest = None
+
     while len(collected) < wanted:
-        params = {"instId":symbol, "bar":bar, "limit":str(min(100,wanted-len(collected)))}
+        page_size = min(100, wanted - len(collected))
+        params = {"instId": symbol, "bar": bar, "limit": str(page_size)}
         if after:
             params["after"] = after
+
         rows = okx_get("/api/v5/market/history-candles", params)
         if not rows:
             break
+
         collected.extend(rows)
-        after = str(min(int(r[0]) for r in rows))
-        if len(rows) < int(params["limit"]):
+        oldest = min(int(r[0]) for r in rows)
+        if seen_oldest is not None and oldest >= seen_oldest:
             break
-        time.sleep(0.04)
+        seen_oldest = oldest
+        after = str(oldest)
+
+        if len(rows) < page_size:
+            break
+
+        # Stay conservative with public API rate limits.
+        time.sleep(0.12)
+
     by_ts = {int(r[0]): r for r in collected}
     rows = [by_ts[k] for k in sorted(by_ts.keys(), reverse=True)][:wanted]
     return normalize_candles(rows)
 
+
 def get_derivatives(base):
     inst = f"{base}-USDT-SWAP"
-    out = {"swap_available":False, "funding_rate":None, "open_interest":None}
+    out = {"swap_available": False, "funding_rate": None, "open_interest": None}
     try:
-        fr = okx_get("/api/v5/public/funding-rate", {"instId":inst})
+        fr = okx_get("/api/v5/public/funding-rate", {"instId": inst})
         if fr:
             out["funding_rate"] = f(fr[0].get("fundingRate"), None)
             out["swap_available"] = True
     except Exception:
         pass
     try:
-        oi = okx_get("/api/v5/public/open-interest", {"instType":"SWAP","instId":inst})
+        oi = okx_get("/api/v5/public/open-interest", {"instType": "SWAP", "instId": inst})
         if oi:
             out["open_interest"] = f(oi[0].get("oiCcy") or oi[0].get("oi"), None)
             out["swap_available"] = True
@@ -82,10 +107,11 @@ def get_derivatives(base):
         pass
     return out
 
+
 def build_universe():
     rows = []
     for t in get_spot_tickers():
-        inst = str(t.get("instId",""))
+        inst = str(t.get("instId", ""))
         if not inst.endswith("-USDT"):
             continue
         base = inst.split("-")[0]
@@ -97,22 +123,22 @@ def build_universe():
         ask = f(t.get("askPx"))
         qv = f(t.get("volCcy24h"))
         if qv <= 0:
-            qv = f(t.get("vol24h")) * max(last,0)
+            qv = f(t.get("vol24h")) * max(last, 0)
         if last <= 0 or qv < MIN_QUOTE_VOLUME:
             continue
-        spread_bps = ((ask-bid)/last*10000.0) if bid>0 and ask>0 else 999
+        spread_bps = ((ask - bid) / last * 10000.0) if bid > 0 and ask > 0 else 999
         if spread_bps > MAX_SPREAD_BPS:
             continue
-        change24 = pct_change(open24,last) if open24 > 0 else 0.0
+        change24 = pct_change(open24, last) if open24 > 0 else 0.0
         activity = (
-            __import__("math").log10(max(qv,1))*0.65
-            + abs(change24)*0.25
-            - min(spread_bps,50)*0.03
+            __import__("math").log10(max(qv, 1)) * 0.65
+            + abs(change24) * 0.25
+            - min(spread_bps, 50) * 0.03
         )
         rows.append({
-            "symbol":inst, "base":base, "last":last,
-            "quote_volume_24h":qv, "change_24h_pct":change24,
-            "spread_bps":spread_bps, "activity_score":activity
+            "symbol": inst, "base": base, "last": last,
+            "quote_volume_24h": qv, "change_24h_pct": change24,
+            "spread_bps": spread_bps, "activity_score": activity
         })
-    rows.sort(key=lambda x:x["activity_score"], reverse=True)
+    rows.sort(key=lambda x: x["activity_score"], reverse=True)
     return rows[:UNIVERSE_SIZE]
