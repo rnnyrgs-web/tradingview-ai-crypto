@@ -23,6 +23,22 @@ def get_spot_tickers():
     return okx_get("/api/v5/market/tickers", {"instType": "SPOT"})
 
 
+def _validate_candle_timestamps(candles):
+    """Fail closed unless normalized candle timestamps are strictly increasing."""
+    for index in range(1, len(candles)):
+        previous = candles[index - 1]["ts"]
+        current = candles[index]["ts"]
+        if current == previous:
+            raise ValueError(
+                f"Duplicate candle timestamp at normalized index {index}: {current}"
+            )
+        if current < previous:
+            raise ValueError(
+                "Non-monotonic candle timestamps at normalized index "
+                f"{index}: {current} follows {previous}"
+            )
+
+
 def normalize_candles(rows):
     out = []
     for row in reversed(rows):
@@ -40,6 +56,7 @@ def normalize_candles(rows):
             "volume": f(row[5]),
             "quote_volume": f(row[7]) if len(row) > 7 else 0.0,
         })
+    _validate_candle_timestamps(out)
     return out
 
 
@@ -84,9 +101,7 @@ def get_history(symbol, bar="15m", bars=1000, max_bars=50000):
 
         time.sleep(0.12)
 
-    by_ts = {int(r[0]): r for r in collected}
-    rows = [by_ts[k] for k in sorted(by_ts.keys(), reverse=True)][:wanted]
-    return normalize_candles(rows)
+    return normalize_candles(collected[:wanted])
 
 
 def get_derivatives(base):
