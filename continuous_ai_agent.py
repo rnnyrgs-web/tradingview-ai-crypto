@@ -12,6 +12,7 @@ import asyncio
 import json
 import logging
 import os
+import re
 from datetime import datetime, timezone
 from threading import Lock
 
@@ -56,13 +57,20 @@ def _now() -> str:
 
 
 def _extract_json(text: str) -> dict:
+    """Parse one JSON object while still failing closed on malformed output."""
     stripped = text.strip()
     if stripped.startswith("```"):
         lines = stripped.splitlines()[1:]
         if lines and lines[-1].strip() == "```":
             lines = lines[:-1]
         stripped = "\n".join(lines).strip()
-    payload = json.loads(stripped)
+    try:
+        payload = json.loads(stripped)
+    except json.JSONDecodeError:
+        match = re.search(r"\{.*\}", stripped, flags=re.S)
+        if not match:
+            raise
+        payload = json.loads(match.group(0))
     if not isinstance(payload, dict):
         raise ValueError("assessment must be an object")
     return payload
@@ -130,6 +138,11 @@ def apply_result(result: dict) -> None:
         _status["last_summary"] = assessment["summary"]
         _status["last_next_action"] = assessment["next_action"]
         _status["last_error_type"] = None
+    log.info(
+        "continuous AI observer cycle completed: status=%s priority=%s",
+        assessment["status"],
+        assessment["priority"],
+    )
 
 
 def status_snapshot() -> dict:

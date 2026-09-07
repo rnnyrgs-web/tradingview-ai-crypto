@@ -1,3 +1,5 @@
+import json
+
 import continuous_ai_agent as agent
 
 
@@ -26,6 +28,23 @@ def test_validate_assessment_rejects_trade_state():
         pass
     else:
         raise AssertionError("trade-like AI status must fail closed")
+
+
+def test_extract_json_accepts_fenced_and_wrapped_object():
+    fenced = '```json\n{"status":"HEALTHY","priority":"LOW"}\n```'
+    assert agent._extract_json(fenced)["status"] == "HEALTHY"
+
+    wrapped = 'Assessment follows:\n{"status":"INVESTIGATE","priority":"MEDIUM"}\nEnd.'
+    assert agent._extract_json(wrapped)["priority"] == "MEDIUM"
+
+
+def test_extract_json_still_rejects_malformed_output():
+    try:
+        agent._extract_json("not json and no object")
+    except json.JSONDecodeError:
+        pass
+    else:
+        raise AssertionError("malformed output must fail closed")
 
 
 def test_missing_ai_configuration_does_not_call_network(monkeypatch):
