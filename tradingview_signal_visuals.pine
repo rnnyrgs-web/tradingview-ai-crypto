@@ -1,0 +1,37 @@
+//@version=6
+indicator("AI Crypto Signal Visuals", overlay=true, max_labels_count=50, max_lines_count=50, max_boxes_count=20)
+
+showSignal = input.bool(true, "Show signal")
+direction = input.string("LONG", "Direction", options=["LONG","SHORT"])
+entryLow = input.float(0.0, "Entry area low", step=0.00000001)
+entryHigh = input.float(0.0, "Entry area high", step=0.00000001)
+stopPrice = input.float(0.0, "Stop loss", step=0.00000001)
+target1 = input.float(0.0, "Target 1", step=0.00000001)
+target2 = input.float(0.0, "Target 2", step=0.00000001)
+
+valid = showSignal and entryLow > 0 and entryHigh > 0 and stopPrice > 0 and target1 > 0 and target2 > 0
+zoneLow = math.min(entryLow, entryHigh)
+zoneHigh = math.max(entryLow, entryHigh)
+
+entryMid = (zoneLow + zoneHigh) / 2.0
+
+plot(valid ? stopPrice : na, "Stop", color=color.red, linewidth=2, style=plot.style_linebr)
+plot(valid ? target1 : na, "Target 1", color=color.lime, linewidth=2, style=plot.style_linebr)
+plot(valid ? target2 : na, "Target 2", color=color.green, linewidth=2, style=plot.style_linebr)
+plot(valid ? zoneLow : na, "Entry low", color=color.yellow, linewidth=1, style=plot.style_linebr)
+plot(valid ? zoneHigh : na, "Entry high", color=color.yellow, linewidth=1, style=plot.style_linebr)
+
+p1 = plot(valid ? zoneLow : na, display=display.none)
+p2 = plot(valid ? zoneHigh : na, display=display.none)
+fill(p1, p2, color=color.new(color.yellow, 82), title="Entry area")
+
+var label sig = na
+if barstate.islast
+    if not na(sig)
+        label.delete(sig)
+    if valid
+        txt = direction + "\nENTRY " + str.tostring(entryMid, format.mintick) + "\nSTOP " + str.tostring(stopPrice, format.mintick) + "\nT1 " + str.tostring(target1, format.mintick) + "\nT2 " + str.tostring(target2, format.mintick)
+        sig := label.new(bar_index, entryMid, txt, style=direction == "LONG" ? label.style_label_up : label.style_label_down, textcolor=color.white, color=direction == "LONG" ? color.new(color.green, 0) : color.new(color.red, 0), size=size.normal)
+
+alertcondition(valid and direction == "LONG", title="LONG signal visual active", message="LONG signal visual is active")
+alertcondition(valid and direction == "SHORT", title="SHORT signal visual active", message="SHORT signal visual is active")
