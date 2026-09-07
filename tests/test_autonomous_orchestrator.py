@@ -1,5 +1,11 @@
+import re
+from pathlib import Path
+
 from agents.autonomous_orchestrator import bounded_tool_steps, extract_json, normalize_relpath, path_allowed
 from agents.autonomous_worker import _completion_text
+
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_role_path_allowlists_are_fail_closed():
@@ -20,9 +26,25 @@ def test_protected_paths_are_never_specialist_writable():
     ):
         assert not path_allowed(role, "AI_STATE.md")
         assert not path_allowed(role, "agents/autonomous_orchestrator.py")
+        assert not path_allowed(role, "agents/roles.json")
+        assert not path_allowed(role, ".github/workflows/autonomous_lead.yml")
         assert not path_allowed(role, ".github/workflows/security.yml")
         assert not path_allowed(role, "requirements.txt")
         assert not path_allowed(role, "Dockerfile")
+
+
+def test_testing_security_larger_budget_is_role_scoped_and_absolutely_capped():
+    workflow = (ROOT / ".github/workflows/autonomous_agents.yml").read_text(encoding="utf-8")
+    budget_lines = [line.strip() for line in workflow.splitlines() if "AGENT_MAX_STEPS:" in line]
+
+    assert len(budget_lines) == 1
+    assert re.fullmatch(
+        r"AGENT_MAX_STEPS:\s*\$\{\{\s*matrix\.role\s*==\s*'testing-security'\s*&&\s*'32'\s*\|\|\s*'20'\s*\}\}",
+        budget_lines[0],
+    )
+    assert bounded_tool_steps("32") == 32
+    assert bounded_tool_steps("33") == 32
+    assert bounded_tool_steps(str(10**100)) == 32
 
 
 def test_path_traversal_is_rejected():
