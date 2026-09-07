@@ -1,37 +1,31 @@
 # AI DEVELOPMENT STATE
-Last updated: 2026-09-06
+Last updated: 2026-09-07
 
 ## PURPOSE
-This is the authoritative continuation state for the crypto trading/signal software project.
+Authoritative continuation state for `rnnyrgs-web/tradingview-ai-crypto`.
 
-When the user says "ok1" in a new ChatGPT conversation:
+When the user says `ok1` in a new chat:
 1. Read this file first.
-2. Inspect the repository when necessary.
+2. Verify relevant repository/deploy/database state as needed.
 3. Continue from EXACT NEXT STEP.
 4. Do not restart completed work.
 5. Keep instructions short and one step at a time.
-6. Never expose or request API keys, passwords, tokens, or secrets in chat.
+6. Never expose/request API keys, passwords, tokens, or secret values.
 
-## PROJECT
-GitHub:
-rnnyrgs-web/tradingview-ai-crypto
+## ARCHITECTURE
+GitHub -> Render -> Python/FastAPI V3 signal engine -> Supabase.
 
-Render service:
-tradingview-ai-crypto
+Research/backtesting path now also includes:
+OKX public historical APIs -> GitHub Actions cloud runner -> backtest artifact/results.
 
-Architecture:
-GitHub -> Render -> Python/FastAPI signal engine -> Supabase
+Goal: heavy research runs in cloud, not on the user's local PC. Local CPU/disk are not the limiting factor. Limits are instead exchange history depth, API rate limits, cloud-runner limits/cost, and data quality.
 
 ## CURRENT VERSION
 V3 multi-horizon crypto signal engine.
 
-V3 commit:
-1e2e5df
+Core V3 commit: `1e2e5df`.
 
-Commit message:
-Upgrade to V3 multi-horizon signal engine
-
-V3 repository includes:
+V3 modules include:
 - app.py
 - backtest.py
 - config.py
@@ -43,21 +37,117 @@ V3 repository includes:
 - news_engine.py
 - safety.py
 - utils.py
+- research_runner.py
 - tests/
 - README_V3.md
-- requirements.txt
-- GitHub Actions workflow
+- GitHub Actions workflows
 
-## V3 GOALS
-Broad crypto-market scanning.
+## PRODUCTION STATUS
+V3 is LIVE on Render.
 
-Multi-horizon signals:
-- intraday
-- 24h
-- 7d
-- longer swing horizons
+Docker startup bug was fixed by commit:
+`b9c499f3358d22a8d722ebff61d1649879c270f9`
+`Fix Docker image to include V3 modules`
 
-System should combine:
+Root cause was Dockerfile copying only `app.py`; V3 sibling modules such as `config.py` were missing from the image.
+
+Fix:
+`COPY *.py ./`
+
+Verified after fix:
+- Render deploy status LIVE
+- `/scan` -> 200
+- `/evaluate` -> 200
+- GitHub Actions scan/evaluate rerun -> success
+- Supabase received V3.0 signals
+- evaluator updated records successfully
+- `price_12h` exists
+- `return_12h` exists
+
+## CLOUD BACKTESTING — COMPLETED FOUNDATION
+User explicitly wants online/cloud backtesting instead of relying on local CPU strength.
+
+Implemented:
+
+### Deep online history
+Commit:
+`b6ace184c8592366466c8b8fd761765d22cee590`
+`Enable deep paginated cloud history fetches`
+
+`market_data.get_history()` now:
+- fetches historical candles directly from OKX public API
+- paginates on demand
+- supports up to 50,000 requested candles per call by current safety guardrail
+- does not require local historical storage
+- uses rate-limit-friendly pacing
+
+The 50,000 cap is a safety guardrail, not an architectural limit. Raise only when justified.
+
+### Backtest performance improvements
+Commit:
+`fa776367b8c1a8be827a4a71c85b3ee0fac77aa7`
+`Optimize cloud backtests for deeper history`
+
+Improvements:
+- rolling ~140-candle feature context avoids O(n^2) slicing over very deep histories
+- max drawdown metric added
+- realistic round-trip cost remains included
+- conservative same-candle stop-first ambiguity remains
+- walk-forward train/validation/holdout remains
+
+### Cloud runner
+Commit:
+`8ff79cf4820c06fb8ba7682f169178e5b407767c`
+`Add cloud research backtest runner`
+
+Added `research_runner.py`.
+It accepts environment-configured:
+- symbols
+- timeframes
+- bars
+- threshold
+
+It runs standard backtest + walk-forward tests and writes JSON results.
+
+### GitHub Actions cloud research workflow
+Commit:
+`0b36932096c24093e30a3c45e38a421d1cf7813a`
+`Add GitHub Actions cloud backtesting workflow`
+
+Added `.github/workflows/cloud_research.yml`.
+
+It:
+- runs on GitHub-hosted cloud compute
+- downloads market history online from OKX
+- does not use the user's local CPU
+- supports manual workflow inputs
+- uploads `cloud-backtest-results` artifact
+- keeps result artifact 30 days
+- has a 30-minute safety timeout
+
+First automatic cloud research run:
+- Workflow run ID: `34073785214`
+- status: SUCCESS
+- artifact ID: `10001378353`
+- tested BTC, ETH, SOL
+- tested 15m and 1H
+- requested 3000 candles per test
+- all 6 research jobs completed
+
+Important first-run findings:
+- BTC 15m: negative
+- BTC 1H: positive in basic test and positive holdout
+- ETH 15m: negative
+- ETH 1H: basic test slightly negative; holdout positive but sample is small
+- SOL 15m: negative
+- SOL 1H: positive basic test and positive holdout
+
+These are NOT yet sufficient evidence for live weighting. Sample sizes and time coverage are still too small; this first run mainly proves the cloud research pipeline works.
+
+Latest Render deploy after cloud-backtest changes is LIVE.
+
+## DATA / SIGNAL PRINCIPLES
+System combines:
 - quantitative algorithms
 - technical features
 - market regime
@@ -67,172 +157,58 @@ System should combine:
 - AI adversarial review
 - objective outcome tracking
 
-AI should review evidence, not simply invent trades.
-
-NO TRADE / WAIT is a valid result.
-
-Long-run capital survival and risk-adjusted profitability are more important than forcing trades.
-
-## DATA / MARKET ENGINE
-V2/V3 foundation uses OKX market data.
-
-Broad dynamic USDT spot universe.
-
-Features developed include:
-- EMA 9
-- EMA 20
-- EMA 50
-- RSI
-- ATR
-- volume z-score
-- slope
-- range position
-- momentum
-- market regime
-
-Derivatives foundation includes:
-- funding
-- open interest where available
-
-News foundation uses crypto RSS/news sources.
+AI reviews evidence; it should not invent trades.
+NO TRADE / WAIT is valid.
+Long-run capital survival and risk-adjusted profitability are more important than forced activity.
 
 ## SUPABASE
-Supabase is configured server-side.
-
-Project ref:
-dxgksvzibucwuzmppoqy
-
-Main table:
-public.trading_signals
-
-RLS is enabled.
-
-Service-role database permissions were previously fixed.
-
-Signals have successfully been written to Supabase.
-
-Schema includes core signal information plus evaluation fields for multiple horizons.
-
-IMPORTANT:
-Verify that these columns exist before relying on 12h evaluation:
-- price_12h
-- return_12h
-
-Never put the Supabase secret/service key in this file.
+Project ref: `dxgksvzibucwuzmppoqy`
+Main table: `public.trading_signals`
+RLS enabled.
+Service-role permissions previously fixed.
+Never put Supabase secret/service key in this file.
 
 ## AUTOMATION
-GitHub Actions workflow exists for automated crypto scanning.
+Existing GitHub Actions scan workflow calls:
+- `/scan`
+- `/evaluate`
+approximately every 15 minutes.
 
-Previous working setup:
-- /scan
-- /evaluate
-
-Scheduled approximately every 15 minutes.
-
-Authentication uses X-Scan-Secret header.
-
-Do not put SCAN_SECRET in URLs.
-
-Old query-string usage exposed the prior secret in logs, so secret rotation is recommended.
+Authentication uses `X-Scan-Secret` header.
+Never put SCAN_SECRET in URLs.
+Prior query-string secret exposure means rotation is still recommended.
 
 ## SECURITY
 Repository is public.
 
-Therefore:
+Rules:
 - no secrets in source code
-- secrets only in secure environment variables
+- secrets only in secure environment variables / secret stores
 - Supabase service key server-side only
-- scan endpoint authenticated
+- authenticated sensitive endpoints
+- least privilege
 - fail closed where appropriate
 
-Future hardening should include:
-- secret rotation
+Future hardening:
+- rotate exposed old scan secret
 - dependency scanning
 - code scanning
-- pinned/tested dependencies
+- pin/test dependencies
 - rate limiting
-- CI tests
-- logging/monitoring
+- better monitoring/alerts
 - backups
-- least privilege
 - staging/prod separation where useful
 
-Never claim the system is completely hacker-proof.
+Never claim hacker-proof security.
 
-## PREVIOUS WORKING STATE
-Before V3 deployment, Render showed successful:
+## SERIOUS BACKTESTING ROADMAP
+Next phase is not merely running more of the same test. Build a robust research engine that can search and reject strategies across larger datasets.
 
-GET /scan -> 200
-GET /evaluate -> 200
-GET /health -> 200
-
-Therefore the prior deployed engine was operational.
-
-## CURRENT PROBLEM
-
-V3 commit 1e2e5df was pushed successfully to GitHub.
-
-Render automatically attempted to deploy:
-
-"Upgrade to V3 multi-horizon signal engine"
-
-That deployment FAILED.
-
-Render reports:
-
-"Exited with status 1 while running your code."
-
-Traceback visibly reached:
-
-File "/app/app.py", line 4, in <module>
-
-Line 4 of app.py is:
-
-from config import *
-
-config.py top section was visually checked and looked syntactically normal.
-
-requirements.txt currently contains:
-
-fastapi>=0.115,<1
-uvicorn[standard]>=0.30,<1
-httpx>=0.27,<1
-openai>=1.40,<2
-
-The actual final Python exception was not visible in the Render deployment UI.
-
-Do NOT randomly modify dependencies without identifying the failure.
-
-## CURRENT DEBUGGING PATH
-
-We were about to inspect V3 module imports, beginning with:
-
-market_data.py
-
-Goal:
-Find whether a V3 module imports a dependency missing from requirements.txt or otherwise causes startup import failure.
-
-Also inspect:
-- engine.py
-- evaluator.py
-- features.py
-- news_engine.py
-- safety.py
-- db.py
-- backtest.py
-
-as necessary.
-
-## AFTER V3 IS STABLE
-
-Next major development phase:
-
-SERIOUS HISTORICAL RESEARCH / BACKTESTING.
-
-Requirements include:
+Required next capabilities:
 - many liquid crypto symbols
 - multiple timeframes
-- historical data caching
+- deeper historical coverage
+- cloud-parallel job matrix/sharding
 - trend strategies
 - breakout strategies
 - momentum strategies
@@ -240,55 +216,22 @@ Requirements include:
 - volatility expansion
 - relative strength
 - regime-conditioned strategies
-- realistic fees
-- spread/slippage
+- realistic fees/spread/slippage
 - no lookahead
 - next-bar execution
 - rolling walk-forward testing
 - untouched out-of-sample testing
 - parameter stability testing
 - bootstrap / Monte Carlo robustness
-- minimum sample sizes
+- minimum sample thresholds
 - portfolio simulation
-- drawdown analysis
-- expectancy
-- profit factor
-- regime analysis
+- expectancy/profit factor/drawdown
+- per-regime/per-symbol/per-month analysis
+- reject overfit strategies
 
 Only strategies with convincing out-of-sample evidence should influence live signal weighting.
 
-## IMPORTANT DEVELOPMENT PRINCIPLE
-Storing outcomes does NOT mean the system automatically learns.
-
-Actual learning requires validated updating of models/weights based on sufficient out-of-sample evidence.
-
-More data/features are not automatically better.
-
-Every major feature should demonstrate incremental out-of-sample value.
-
-## USER WORKFLOW
-User wants:
-- extremely short instructions
-- one next action at a time
-- screenshot-driven development
-- minimal scrolling
-- no repeating completed steps
-
-Ctrl + Space currently:
-takes a reduced-size screenshot and automatically sends it to the active ChatGPT conversation.
-
-Do NOT modify the working Ctrl+Space AutoHotkey screenshot script unless necessary.
+Storing outcomes is NOT automatic learning. Actual learning requires validated model/weight updates based on sufficient out-of-sample evidence.
 
 ## EXACT NEXT STEP
-
-Inspect market_data.py imports/code in GitHub to continue diagnosing why V3 exits during Render startup.
-
-Once the actual startup error is identified:
-1. make the smallest correct fix
-2. commit to GitHub
-3. allow Render auto-deploy
-4. verify /health
-5. verify /scan
-6. verify /evaluate
-7. verify Supabase writes
-8. then continue V3 development/backtesting.
+Build V4 cloud research matrix/sharding so GitHub Actions can test many symbols, strategy families, timeframes, and historical depths in parallel without depending on local hardware. Persist compact research summaries/results for longitudinal comparison, while keeping raw candle storage optional/on-demand to control cost.
