@@ -21,16 +21,45 @@ def max_drawdown_pct(returns):
     return max_dd
 
 
+def execution_cost_scenarios(base_cost_bps=BACKTEST_COST_BPS):
+    """Deterministic conservative cost stress grid.
+
+    Historical candle data does not contain executable bid/ask history, so the
+    backtester must not invent a historical spread. Instead we stress every
+    strategy under progressively worse round-trip cost assumptions. A strategy
+    that only survives the configured base cost is visibly fragile and remains
+    research evidence, never promotion evidence by itself.
+    """
+    base = max(float(base_cost_bps), 0.0)
+    return tuple(dict.fromkeys(round(base * multiplier, 4) for multiplier in (1.0, 1.5, 2.0, 3.0)))
+
+
+def summarize_returns(returns):
+    wins = [x for x in returns if x > 0]
+    losses = [x for x in returns if x <= 0]
+    gross_profit = sum(wins)
+    gross_loss = abs(sum(losses))
+    return {
+        "trades": len(returns),
+        "win_rate_pct": round(len(wins) / len(returns) * 100, 2) if returns else 0,
+        "avg_trade_pct": round(mean(returns), 4),
+        "profit_factor": round(gross_profit / gross_loss, 3) if gross_loss > 0 else None,
+        "sum_net_returns_pct": round(sum(returns), 3),
+        "max_drawdown_pct": round(max_drawdown_pct(returns), 3),
+    }
+
+
 def _features_at(hist, i):
     # All current features use at most ~100 candles. Keeping a small rolling
     # context prevents deep cloud backtests from becoming O(n^2).
     return timeframe_features(hist[max(0, i - 140):i + 1])
 
 
-def _score_history(hist, bar, threshold):
+def _score_history(hist, bar, threshold, cost_bps=BACKTEST_COST_BPS):
     max_hold = {"15m": 16, "1H": 24, "4H": 42, "1D": 30}.get(bar, 16)
     rs = []
     i = 100
+    round_trip_cost_pct = max(float(cost_bps), 0.0) / 100.0
 
     while i < len(hist) - max_hold - 2:
         ft = _features_at(hist, i)
@@ -39,6 +68,8 @@ def _score_history(hist, bar, threshold):
             continue
 
         direction = "LONG" if ft["score"] > 0 else "SHORT"
+        # Entry remains next-bar open so the decision uses only information
+        # available through candle i. No current/future bar close is used.
         entry = hist[i + 1]["open"]
         risk = max(ft["atr"] * 1.55, entry * 0.0035)
         target = entry + risk * 1.9 if direction == "LONG" else entry - risk * 1.9
@@ -57,7 +88,7 @@ def _score_history(hist, bar, threshold):
                 exit_price = target
                 break
 
-        rs.append(directional_return(entry, exit_price, direction) - BACKTEST_COST_BPS / 100.0)
+        rs.append(directional_return(entry, exit_price, direction) - round_trip_cost_pct)
         i += max_hold
 
     return rs
@@ -68,11 +99,12 @@ def run_backtest(symbol, bar="15m", bars=2500, threshold=2.25):
     if len(hist) < 300:
         raise RuntimeError("Not enough historical candles")
 
-    trades = _score_history(hist, bar, threshold)
-    wins = [x for x in trades if x > 0]
-    losses = [x for x in trades if x <= 0]
-    gp = sum(wins)
-    gl = abs(sum(losses))
+    trades = _score_history(hist, bar, threshold, BACKTEST_COST_BPS)
+    summary = summarize_returns(trades)
+    stress = {}
+    for cost_bps in execution_cost_scenarios():
+        stressed = _score_history(hist, bar, threshold, cost_bps)
+        stress[str(cost_bps)] = {"cost_bps_round_trip": cost_bps, **summarize_returns(stressed)}
 
     return {
         "ok": True,
@@ -80,13 +112,13 @@ def run_backtest(symbol, bar="15m", bars=2500, threshold=2.25):
         "bar": bar,
         "candles": len(hist),
         "threshold": threshold,
-        "trades": len(trades),
-        "win_rate_pct": round(len(wins) / len(trades) * 100, 2) if trades else 0,
-        "avg_trade_pct": round(mean(trades), 4),
-        "profit_factor": round(gp / gl, 3) if gl > 0 else None,
-        "sum_net_returns_pct": round(sum(trades), 3),
-        "max_drawdown_pct": round(max_drawdown_pct(trades), 3),
+        **summary,
         "cost_bps_round_trip": BACKTEST_COST_BPS,
+        "execution_cost_stress": stress,
+        "execution_cost_note": (
+            "Candle history lacks executable historical bid/ask quotes; no spread is fabricated. "
+            "Results are stress-tested under deterministic higher round-trip costs instead."
+        ),
         "warning": "Research backtest only. Use walk-forward/holdout results before trusting live signals."
     }
 
@@ -101,10 +133,10 @@ def walk_forward(symbol, bar="15m", bars=3000):
     valid = hist[int(n * 0.6):int(n * 0.8)]
     test = hist[int(n * 0.8):]
 
-    def score_segment(seg, threshold):
+    def score_segment(seg, threshold, cost_bps=BACKTEST_COST_BPS):
         if len(seg) < 300:
             return {"trades": 0, "avg": 0.0, "sum": 0.0, "max_drawdown_pct": 0.0}
-        rs = _score_history(seg, bar, threshold)
+        rs = _score_history(seg, bar, threshold, cost_bps)
         return {
             "trades": len(rs),
             "avg": mean(rs),
@@ -121,6 +153,13 @@ def walk_forward(symbol, bar="15m", bars=3000):
     best = max(viable, key=lambda t: train_scores[t]["avg"])
     valid_score = score_segment(valid, best)
     test_score = score_segment(test, best)
+    holdout_cost_stress = {
+        str(cost_bps): {
+            "cost_bps_round_trip": cost_bps,
+            **score_segment(test, best, cost_bps),
+        }
+        for cost_bps in execution_cost_scenarios()
+    }
 
     return {
         "ok": True,
@@ -131,5 +170,9 @@ def walk_forward(symbol, bar="15m", bars=3000):
         "train": train_scores[best],
         "validation": valid_score,
         "holdout_test": test_score,
-        "note": "Threshold selected on training only; holdout remains untouched until final scoring."
+        "holdout_execution_cost_stress": holdout_cost_stress,
+        "note": (
+            "Threshold selected on training only; holdout remains untouched until final scoring. "
+            "Cost stress changes only the assumed round-trip execution cost, not trade selection."
+        )
     }
