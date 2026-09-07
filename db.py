@@ -69,11 +69,53 @@ def replace_opportunities(scan_id, horizon, rows):
         payload.append({k:v for k,v in row.items() if k in {
             "scan_id","horizon","rank","symbol","direction","action","entry_price","entry_low","entry_high",
             "stop_loss","target_1","target_2","risk_reward","quant_score","evidence_score","market_regime",
-            "reasoning","strategy_version"
+            "reasoning","strategy_version","calibration"
         }})
     r=http.post(f"{SUPABASE_URL}/rest/v1/crypto_opportunities",headers=headers("return=minimal"),json=payload)
     if r.status_code>=300:
         raise RuntimeError(f"Supabase opportunity insert failed: {r.status_code} {r.text}")
+
+def insert_prediction_ledger(rows):
+    if not configured() or not rows:
+        return
+    payload=[{k:v for k,v in row.items() if k in {
+        "scan_id","symbol","horizon","direction","entry_price","score",
+        "market_regime","strategy_identity","action_at_forecast","due_at","calibration"
+    }} for row in rows]
+    r=http.post(f"{SUPABASE_URL}/rest/v1/prediction_ledger",
+        headers=headers("resolution=ignore-duplicates,return=minimal"),json=payload)
+    if r.status_code>=300:
+        raise RuntimeError(f"Supabase prediction ledger insert failed: {r.status_code} {r.text}")
+
+def fetch_due_predictions(limit=500):
+    if not configured():
+        return []
+    params={"select":"*","resolved_at":"is.null","due_at":f"lte.{iso(now_utc())}",
+            "order":"due_at.asc","limit":str(max(1,min(int(limit),1000)))}
+    r=http.get(f"{SUPABASE_URL}/rest/v1/prediction_ledger",headers=headers(),params=params)
+    if r.status_code>=300:
+        raise RuntimeError(f"Supabase due prediction fetch failed: {r.status_code} {r.text}")
+    return r.json()
+
+def fetch_resolved_predictions(limit=5000):
+    if not configured():
+        return []
+    params={"select":"horizon,score,market_regime,correct","resolved_at":"not.is.null",
+            "order":"resolved_at.desc","limit":str(max(1,min(int(limit),10000)))}
+    r=http.get(f"{SUPABASE_URL}/rest/v1/prediction_ledger",headers=headers(),params=params)
+    if r.status_code>=300:
+        raise RuntimeError(f"Supabase resolved prediction fetch failed: {r.status_code} {r.text}")
+    return r.json()
+
+def patch_prediction(prediction_id, fields):
+    if not configured() or not fields:
+        return
+    allowed={"outcome_price","directional_return_pct","correct","resolved_at"}
+    payload={k:v for k,v in fields.items() if k in allowed}
+    r=http.patch(f"{SUPABASE_URL}/rest/v1/prediction_ledger",headers=headers("return=minimal"),
+        params={"id":f"eq.{prediction_id}","resolved_at":"is.null"},json=payload)
+    if r.status_code>=300:
+        raise RuntimeError(f"Supabase prediction update failed: {r.status_code} {r.text}")
 
 def fetch_ranked_opportunities(horizon="24h", hours=None, limit=20):
     if not configured():

@@ -33,6 +33,10 @@ The 15-minute scan workflow validates the returned JSON rather than trusting HTT
 `operational_monitor.py` keeps a sanitized in-process record of the last scan and recent component error types. `/health` exposes this summary without exception messages, credentials or upstream response bodies. Protected API endpoints now log full exceptions server-side while returning generic public errors.
 Security regression coverage, Bandit static analysis and dependency auditing remain enforced. This hardening passed 45 unit tests locally, Bandit, pip-audit with no known vulnerabilities, workflow YAML parsing and diff checks before publication.
 
+## PREDICTION LEDGER / CONFIDENCE CALIBRATION
+Every ranked 24h and 7d forecast is now recorded before its outcome in an append-only Supabase prediction ledger, including timestamp, deadline, direction, entry, score, regime, strategy identity, action and the calibration snapshot available at forecast time. Evaluation resolves each due forecast from the first hourly close at or after its fixed deadline and stores directional return plus correctness, preventing hindsight relabeling.
+Calibration is separated by horizon and 10-point score bin, prefers regime-specific evidence once populated, and requires at least 30 comparable resolved forecasts. A 95% Wilson lower confidence bound must be at least 50% before calibration permits an otherwise fully approved live action. Missing, sparse or weak calibration always forces WAIT. Calibration can only restrict a signal; it cannot approve a strategy or bypass research, robustness, registry, risk or dual-signature gates.
+
 ## IMMUTABLE EVIDENCE / MULTI-APPROVAL PROMOTION
 Research JSON is now wrapped in a canonical SHA-256 envelope. Any later modification to its payload fails integrity verification, and promotion manifests must reference at least three distinct valid SHA-256 research-artifact identities.
 `live_promotions.json` is the canonical promotion manifest and is intentionally empty. `production_validation.py` no longer accepts a manually inserted fingerprint set. A live promotion must match the exact current strategy identity, mark every required stage true, and contain valid independent HMAC-SHA256 attestations from both Strategy Registry and Production Risk.
@@ -114,7 +118,7 @@ The owner explicitly enabled verified-only autonomous merging on 2026-09-07. `AU
 Insufficient or unreliable evidence always means WAIT / NO TRADE / RESEARCH_ONLY.
 
 ## EXACT NEXT STEP
-1. Verify the always-on coordinator service remains healthy through at least one production deploy/restart and detects a controlled unavailable-health response without gaining write or trade authority.
+1. Verify the prediction-ledger migration, first production forecast inserts, due-outcome evaluator and protected `/calibration` endpoint on Render; confirm sparse calibration forces WAIT and no historical row is relabeled.
 2. Verify the hardened release deploys successfully and the next production scan passes `tools/validate_scan_response.py`, produces no unvalidated `TRADE` / BUY / SELL decision, and exposes a healthy sanitized `/health` operational snapshot.
 3. Keep `live_promotions.json` empty and signing keys unused until a strategy has completed repeated backtests, untouched OOS, robustness/stability, strategy-registry review and production-risk review; never sign from a single OOS pass or AI label.
 4. Verify the next cloud research run produces SHA-256-sealed envelopes, deterministic robustness output and a sealed repeated-run aggregation artifact; never interpret `READY_FOR_STRATEGY_REGISTRY_REVIEW` as live approval.
