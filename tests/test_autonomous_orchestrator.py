@@ -86,7 +86,10 @@ class _HeadersOnlyResponse:
         self.headers = {"retry-after": retry_after}
 
 
-def test_retry_delay_honors_and_caps_retry_after():
+def test_retry_delay_honors_retry_after_and_malformed_value_falls_back():
     assert _retry_delay(_HeadersOnlyResponse("17"), 0) == 17.0
-    assert _retry_delay(_HeadersOnlyResponse("999"), 0) == 120.0
     assert _retry_delay(_HeadersOnlyResponse("invalid"), 1) == 10.0
+
+
+def test_excessive_openai_retry_after_is_capped_at_120_seconds():
+    assert _retry_delay(_HeadersOnlyResponse("999999999"), 0) == 120.0
