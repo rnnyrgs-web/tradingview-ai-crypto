@@ -12,7 +12,7 @@ Goal: cloud-first continuous quantitative research; local PC is not the research
 
 ## PRODUCTION STATUS
 V3 is LIVE on Render. Docker V3 module-copy failure was fixed by commit `b9c499f3358d22a8d722ebff61d1649879c270f9` using `COPY *.py ./`.
-Latest production code deploy verified LIVE before this state-only update: commit `5998251e0da997f038dd0a54fda1d621d3a8a846`, deploy `dep-daf236v9l3cc73brkh60`.
+Latest production code deploy verified LIVE before the strategy-family research rollout: commit `5998251e0da997f038dd0a54fda1d621d3a8a846`, deploy `dep-daf236v9l3cc73brkh60`.
 
 ## CONTINUOUS TOP-20 OPPORTUNITY ENGINE
 Implemented and verified.
@@ -42,7 +42,6 @@ END-TO-END VERIFICATION:
 - Production scan run `34076472531` successfully completed its market-scan step after deployment.
 - Supabase verified fresh scan `bd056a38-77dd-4a71-a343-0ad25a06550a` persisted exactly 20 rows for 24h (ranks 1-20) and 20 rows for 7d (ranks 1-20).
 - That verification snapshot had 1 AI-approved TRADE in the 24h ranking and 0 AI-approved TRADEs in the 7d ranking; all others correctly remained WAIT.
-- The same workflow's evaluator step was still running at the last state check; this does not block the verified Top-20 ranking path.
 
 ## DASHBOARD / TRADINGVIEW VISUALS
 Private dashboard exists in `dashboard.py` with separate dashboard authentication secret, signed HttpOnly Secure SameSite=Strict session cookie, 24h/7d tabs, BUY/SELL/WAIT, entry area, stop, targets, R:R, evidence, regime, reasoning, risk-level visual and TradingView link.
@@ -59,7 +58,55 @@ Cloud runner: `8ff79cf4820c06fb8ba7682f169178e5b407767c`.
 24/7 hourly scheduling: `c498557691d8632893a384d8adc0be33e27d9417`.
 V4 cloud sharding commit: `8546068a07936494beeab29e942c9210723e3b5a`.
 Current history cap is 50,000 candles per call as a cost/rate-limit guardrail, not an architectural limit.
-Multiple independent strategy-family implementations are NOT complete yet.
+
+### Distinct strategy families + OOS registry
+Implemented in `strategy_families.py`.
+Core commits:
+- `0b843f491e352a9e962ddf92187ce92144428bb4` — six distinct deterministic strategy families plus strict OOS gates
+- `2dc8d6322925f1c2854fc188221f62fe48040471` — cloud runner executes strategy registry
+- `d08382db37a506f5c5de2d152ccc76618a4b1595` — unit tests for strategy list and OOS gate behavior
+- `2838194e68c4a23cc593d819fadf3f5837002039` — upload compact strategy registry artifact
+- `4785d21a42162c150e897e0739a659acaf46089f` — trigger cloud research automatically after relevant research-code changes
+
+Families now researched independently:
+1. trend
+2. breakout
+3. momentum
+4. mean reversion
+5. volatility expansion
+6. relative strength vs BTC benchmark
+
+Execution remains no-lookahead: signal uses information through candle i, entry is next-bar open, ATR-based stop/1.9R target, configured round-trip cost, conservative stop-first same-candle ambiguity, and non-overlapping holds.
+
+Chronological split is 60% train / 20% validation / 20% untouched holdout for every family-symbol-timeframe combination.
+
+Strict eligibility gate currently requires ALL of:
+- >=12 train trades
+- >=6 validation trades
+- >=6 holdout trades
+- >=15 combined OOS trades
+- positive validation expectancy
+- positive holdout expectancy
+- validation profit factor >=1.05
+- holdout profit factor >=1.10
+- validation max drawdown <=18%
+- holdout max drawdown <=18%
+
+Failed candidates are explicitly `RESEARCH_ONLY`; passed candidates are `ELIGIBLE_OOS`. Passing is necessary but is not a profit guarantee. Current live production rankings do NOT yet consume these strategy-family weights, so unverified research cannot leak into live signals.
+
+`research_runner.py` now writes:
+- `research_output/backtest_results.json`
+- `research_output/strategy_registry.json`
+The compact registry lists only OOS-eligible strategy/symbol/timeframe candidates for later ensemble integration.
+
+Cloud workflow remains hourly and 4-way sharded and now also triggers on relevant research code changes. Workflow run `34077019168` was started for commit `4785d21a42162c150e897e0739a659acaf46089f`; all four shards reached the strategy-registry execution step and were still running at the last state update. Do not claim final strategy performance or eligibility counts until this run/artifacts complete.
+
+SECURITY VERIFICATION FOR THIS ROLLOUT:
+Security workflow run `34077019112` completed SUCCESS on commit `4785d21a42162c150e897e0739a659acaf46089f`:
+- unit tests SUCCESS
+- dependency vulnerability audit SUCCESS
+- static security scan SUCCESS
+- committed-secret detector SUCCESS
 
 ## SECURITY / RELIABILITY
 Security is core architecture because signals may influence real money. Never promise zero bugs/hacks/profit. Fail closed: invalid/uncertain data => no signal / WAIT.
@@ -77,7 +124,6 @@ Current automated checks:
 - secrets only in secret/env stores
 - exchange research integrations public/read-only; no withdrawal permission
 
-Latest security verification: run `34076472577` SUCCESS on commit `5998251e0da997f038dd0a54fda1d621d3a8a846`.
 Prior query-string SCAN_SECRET exposure still means secret rotation is recommended. Repository is public.
 
 ## QUANT / ALGO TARGET ARCHITECTURE
@@ -100,10 +146,12 @@ NO TRADE / WAIT is valid. Capital survival and robust risk-adjusted expectancy o
 
 ## AUTOMATION
 Production scan/evaluate workflow runs approximately every 15 minutes using `X-Scan-Secret`. Cloud research runs hourly 24/7 with parallel sharding.
-Production scan workflow now retries transient 5xx/network failures during Render deployments.
+Production scan workflow retries transient 5xx/network failures during Render deployments.
+Cloud research also runs automatically after relevant strategy/backtest/data workflow changes.
 
 ## EXACT NEXT STEP
-1. Implement distinct strategy families (trend, breakout, momentum, mean reversion, volatility expansion, relative strength) in the cloud research matrix.
-2. Add strict OOS quality gates/strategy registry so only robust validated strategies can influence live ranking/ensemble weights.
-3. Backtest and optimize entry-zone construction instead of using the current display-only ±10% risk-distance zone.
-4. Activate/test the Windows notifier and TradingView visual bridge locally without exposing secrets.
+1. Inspect completion/artifacts of cloud research run `34077019168` and record which, if any, strategy-family/symbol/timeframe candidates pass the strict OOS gate. Do not live-weight anything that fails.
+2. Strengthen robustness before live integration: deeper histories, rolling walk-forward windows, nearby-parameter stability and bootstrap/Monte Carlo confidence checks; persist longitudinal registry history rather than trusting one run.
+3. Only after those checks, connect OOS-approved strategy weights into the live Top-20 ensemble with a hard fail-closed registry gate.
+4. Backtest and optimize entry-zone construction instead of using the current display-only ±10% risk-distance zone.
+5. Activate/test the Windows notifier and TradingView visual bridge locally without exposing secrets.
