@@ -10,6 +10,10 @@ log = logging.getLogger(__name__)
 http = httpx.Client(timeout=25.0, follow_redirects=True)
 
 
+# This contract is a research-required exception to the ranked spot universe.
+FORCED_SWAP_SYMBOL = "PONS-USDT-SWAP"
+
+
 def okx_get(path, params=None):
     r = http.get(f"{OKX_BASE}{path}", params=params or {})
     r.raise_for_status()
@@ -109,6 +113,28 @@ def get_derivatives(base):
     return out
 
 
+def _forced_pons_ticker():
+    """Return a live, priced PONS swap ticker, or None (fail closed).
+
+    Instrument discovery is separate from ticker discovery: an API error, a
+    non-live instrument, or a ticker without executable two-sided prices must
+    never manufacture a universe member.
+    """
+    try:
+        instruments = okx_get("/api/v5/public/instruments", {"instType": "SWAP"})
+        if not any(
+            str(row.get("instId")) == FORCED_SWAP_SYMBOL
+            and str(row.get("state", "")).lower() == "live"
+            for row in instruments
+        ):
+            return None
+        tickers = okx_get("/api/v5/market/ticker", {"instId": FORCED_SWAP_SYMBOL})
+        return next((row for row in tickers if str(row.get("instId")) == FORCED_SWAP_SYMBOL), None)
+    except Exception as exc:
+        log.info("Forced symbol unavailable for %s: %s", FORCED_SWAP_SYMBOL, type(exc).__name__)
+        return None
+
+
 def build_universe():
     rows = []
     for t in get_spot_tickers():
@@ -142,4 +168,24 @@ def build_universe():
             "spread_bps": spread_bps, "activity_score": activity
         })
     rows.sort(key=lambda x: x["activity_score"], reverse=True)
-    return rows[:UNIVERSE_SIZE]
+
+    # Keep the forced contract only when OKX proves both instrument state and
+    # current two-sided market availability. It replaces the least-active
+    # ranked member rather than silently exceeding the configured universe size.
+    forced = _forced_pons_ticker()
+    if forced and f(forced.get("last")) > 0 and f(forced.get("bidPx")) > 0 and f(forced.get("askPx")) > 0:
+        last = f(forced.get("last"))
+        bid = f(forced.get("bidPx"))
+        ask = f(forced.get("askPx"))
+        qv = f(forced.get("volCcy24h"))
+        spread_bps = (ask - bid) / last * 10000.0
+        rows = [row for row in rows if row["symbol"] != FORCED_SWAP_SYMBOL]
+        rows = rows[:max(0, UNIVERSE_SIZE - 1)]
+        rows.append({
+            "symbol": FORCED_SWAP_SYMBOL, "base": "PONS", "last": last,
+            "quote_volume_24h": qv, "change_24h_pct": 0.0,
+            "spread_bps": spread_bps, "activity_score": 0.0,
+        })
+    else:
+        rows = rows[:UNIVERSE_SIZE]
+    return rows
