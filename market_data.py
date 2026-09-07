@@ -6,10 +6,11 @@ import httpx
 from config import (
     BINANCE_FUTURES_BASE, BINANCE_SPOT_BASE, MARKET_DATA_MAX_AGE_SECONDS,
     MAX_SPREAD_BPS, MIN_QUOTE_VOLUME, OKX_BASE,
+    ORDER_BOOK_DEPTH, ORDER_BOOK_MAX_SPREAD_BPS, ORDER_BOOK_MIN_LEVELS,
     PRICE_CONSENSUS_MAX_DEVIATION_BPS, PRICE_CONSENSUS_MIN_SOURCES,
     STABLE_BASES, UNIVERSE_SIZE,
 )
-from market_intelligence import derivatives_summary, price_consensus
+from market_intelligence import cross_exchange_order_book, derivatives_summary, order_book_summary, price_consensus
 from utils import f, pct_change
 
 log = logging.getLogger(__name__)
@@ -158,6 +159,32 @@ def get_derivatives(base):
     out = derivatives_summary(exchange_rows, liquidation_rows)
     out["swap_available"] = bool(exchange_rows)
     return out
+
+
+def get_order_book_intelligence(base):
+    """Two-exchange spot depth snapshot; evidence only, never trade authority."""
+    books = []
+    inst = f"{base}-USDT"
+    try:
+        rows = okx_get("/api/v5/market/books", {"instId": inst, "sz": str(ORDER_BOOK_DEPTH)})
+        if rows:
+            summary = order_book_summary(
+                rows[0].get("bids"), rows[0].get("asks"), ORDER_BOOK_MIN_LEVELS, ORDER_BOOK_MAX_SPREAD_BPS
+            )
+            books.append({"exchange": "okx", **summary})
+    except Exception as exc:
+        log.info("OKX order book unavailable for %s: %s", inst, type(exc).__name__)
+    try:
+        row = _binance_get(BINANCE_SPOT_BASE, "/api/v3/depth", {
+            "symbol": f"{base}USDT", "limit": str(ORDER_BOOK_DEPTH)
+        })
+        summary = order_book_summary(
+            row.get("bids"), row.get("asks"), ORDER_BOOK_MIN_LEVELS, ORDER_BOOK_MAX_SPREAD_BPS
+        )
+        books.append({"exchange": "binance", **summary})
+    except Exception as exc:
+        log.info("Binance order book unavailable for %s: %s", base, type(exc).__name__)
+    return cross_exchange_order_book(books)
 
 
 def build_universe():

@@ -1,4 +1,4 @@
-from market_intelligence import derivatives_summary, price_consensus
+from market_intelligence import cross_exchange_order_book, derivatives_summary, order_book_summary, price_consensus
 
 
 NOW = 2_000_000
@@ -50,3 +50,32 @@ def test_derivatives_summary_does_not_claim_reliability_from_one_exchange():
     ])
     assert result["reliable"] is False
     assert result["funding_source_count"] == 1
+
+
+def test_order_book_summary_computes_depth_and_imbalance():
+    bids = [[100 - i * 0.01, 2] for i in range(12)]
+    asks = [[100.1 + i * 0.01, 1] for i in range(12)]
+    result = order_book_summary(bids, asks, min_levels=10, max_spread_bps=20)
+    assert result["reliable"] is True
+    assert result["imbalance_25bps"] > 0
+    assert result["bid_depth_25bps"] > result["ask_depth_25bps"]
+
+
+def test_order_book_summary_rejects_crossed_and_thin_books():
+    crossed = order_book_summary([[101, 1]] * 10, [[100, 1]] * 10, min_levels=10)
+    thin = order_book_summary([[99, 1]], [[101, 1]], min_levels=10)
+    assert crossed["reliable"] is False
+    assert crossed["reason"] == "crossed_book"
+    assert thin["reason"] == "insufficient_levels"
+
+
+def test_cross_exchange_order_book_is_research_only_and_needs_two_sources():
+    one = cross_exchange_order_book([{"exchange":"okx","reliable":True,"imbalance_25bps":0.2}])
+    two = cross_exchange_order_book([
+        {"exchange":"okx","reliable":True,"imbalance_25bps":0.2},
+        {"exchange":"binance","reliable":True,"imbalance_25bps":-0.1},
+    ])
+    assert one["reliable"] is False
+    assert two["reliable"] is True
+    assert two["research_only"] is True
+    assert two["direction_disagreement"] is True

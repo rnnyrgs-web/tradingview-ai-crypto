@@ -77,3 +77,63 @@ def derivatives_summary(exchange_rows, liquidation_rows=None):
         "exchanges": exchange_rows,
         "liquidations": liq,
     }
+
+
+def order_book_summary(bids, asks, min_levels=10, max_spread_bps=50.0):
+    """Summarize one spot-book snapshot without predicting from it."""
+    def levels(rows, reverse=False):
+        clean = []
+        for row in rows or []:
+            if not isinstance(row, (list, tuple)) or len(row) < 2:
+                continue
+            price, size = f(row[0]), f(row[1])
+            if price > 0 and size > 0:
+                clean.append((price, size))
+        return sorted(clean, key=lambda x: x[0], reverse=reverse)
+
+    clean_bids, clean_asks = levels(bids, True), levels(asks)
+    if not clean_bids or not clean_asks:
+        return {"reliable": False, "reason": "empty_book", "level_count": 0}
+    best_bid, best_ask = clean_bids[0][0], clean_asks[0][0]
+    mid = (best_bid + best_ask) / 2.0
+    crossed = best_bid >= best_ask
+    spread_bps = (best_ask - best_bid) / mid * 10000.0
+
+    def depth(rows, boundary):
+        return sum(price * size for price, size in rows if boundary(price))
+
+    bid_10 = depth(clean_bids, lambda p: p >= mid * 0.999)
+    ask_10 = depth(clean_asks, lambda p: p <= mid * 1.001)
+    bid_25 = depth(clean_bids, lambda p: p >= mid * 0.9975)
+    ask_25 = depth(clean_asks, lambda p: p <= mid * 1.0025)
+    total_25 = bid_25 + ask_25
+    imbalance = (bid_25 - ask_25) / total_25 if total_25 > 0 else None
+    enough = len(clean_bids) >= min_levels and len(clean_asks) >= min_levels
+    reliable = enough and not crossed and spread_bps <= max_spread_bps and total_25 > 0
+    reason = "ok" if reliable else (
+        "insufficient_levels" if not enough else "crossed_book" if crossed else
+        "spread_too_wide" if spread_bps > max_spread_bps else "zero_depth"
+    )
+    return {
+        "reliable": reliable, "reason": reason,
+        "level_count": min(len(clean_bids), len(clean_asks)),
+        "mid_price": mid, "spread_bps": spread_bps,
+        "bid_depth_10bps": bid_10, "ask_depth_10bps": ask_10,
+        "bid_depth_25bps": bid_25, "ask_depth_25bps": ask_25,
+        "imbalance_25bps": imbalance,
+    }
+
+
+def cross_exchange_order_book(exchange_books):
+    reliable = [x for x in exchange_books if x.get("reliable")]
+    imbalances = [x["imbalance_25bps"] for x in reliable if x.get("imbalance_25bps") is not None]
+    disagreement = len(imbalances) >= 2 and min(imbalances) < 0 < max(imbalances)
+    return {
+        "research_only": True,
+        "reliable": len(reliable) >= 2,
+        "reason": "ok" if len(reliable) >= 2 else "insufficient_reliable_exchanges",
+        "exchange_count": len(reliable),
+        "median_imbalance_25bps": statistics.median(imbalances) if imbalances else None,
+        "direction_disagreement": disagreement,
+        "exchanges": exchange_books,
+    }
