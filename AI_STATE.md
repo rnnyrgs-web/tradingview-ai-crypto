@@ -15,7 +15,7 @@ When the user says `ok1` in a new chat:
 ## ARCHITECTURE
 GitHub -> Render -> Python/FastAPI V3 signal engine -> Supabase.
 
-Research/backtesting path now also includes:
+Research/backtesting path:
 OKX public historical APIs -> GitHub Actions cloud runner -> backtest artifact/results.
 
 Goal: heavy research runs in cloud, not on the user's local PC. Local CPU/disk are not the limiting factor. Limits are instead exchange history depth, API rate limits, cloud-runner limits/cost, and data quality.
@@ -67,8 +67,6 @@ Verified after fix:
 ## CLOUD BACKTESTING — COMPLETED FOUNDATION
 User explicitly wants online/cloud backtesting instead of relying on local CPU strength.
 
-Implemented:
-
 ### Deep online history
 Commit:
 `b6ace184c8592366466c8b8fd761765d22cee590`
@@ -110,20 +108,29 @@ It accepts environment-configured:
 It runs standard backtest + walk-forward tests and writes JSON results.
 
 ### GitHub Actions cloud research workflow
-Commit:
+Initial commit:
 `0b36932096c24093e30a3c45e38a421d1cf7813a`
 `Add GitHub Actions cloud backtesting workflow`
 
-Added `.github/workflows/cloud_research.yml`.
+Continuous scheduling commit:
+`c498557691d8632893a384d8adc0be33e27d9417`
+`Run cloud backtesting continuously`
 
-It:
+`.github/workflows/cloud_research.yml` now:
+- runs automatically every hour, 24/7, at minute 7
+- can still be run manually
 - runs on GitHub-hosted cloud compute
 - downloads market history online from OKX
 - does not use the user's local CPU
-- supports manual workflow inputs
-- uploads `cloud-backtest-results` artifact
-- keeps result artifact 30 days
+- defaults to BTC, ETH, SOL, XRP, LINK
+- defaults to 15m and 1H
+- defaults to 5000 candles/test
 - has a 30-minute safety timeout
+- has concurrency protection to avoid overlapping research runs
+- uploads `cloud-backtest-results`
+- retains artifacts 7 days to control storage/cost
+
+This is continuous round-the-clock batch research, not a single permanently-running process. If research duration or scale grows, move to sharded workers and/or a dedicated queue instead of increasing one workflow indefinitely.
 
 First automatic cloud research run:
 - Workflow run ID: `34073785214`
@@ -174,11 +181,13 @@ Existing GitHub Actions scan workflow calls:
 - `/evaluate`
 approximately every 15 minutes.
 
+Cloud research workflow runs every hour, 24/7.
+
 Authentication uses `X-Scan-Secret` header.
 Never put SCAN_SECRET in URLs.
 Prior query-string secret exposure means rotation is still recommended.
 
-## SECURITY
+## SECURITY / COST CONTROL
 Repository is public.
 
 Rules:
@@ -188,6 +197,10 @@ Rules:
 - authenticated sensitive endpoints
 - least privilege
 - fail closed where appropriate
+- concurrency guard on cloud research
+- timeout on cloud research
+- short artifact retention to limit storage usage
+- do not blindly increase frequency/data depth without measuring API/compute impact
 
 Future hardening:
 - rotate exposed old scan secret
