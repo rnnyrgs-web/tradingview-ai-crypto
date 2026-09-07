@@ -1,4 +1,4 @@
-from agents.autonomous_orchestrator import extract_json, normalize_relpath, path_allowed
+from agents.autonomous_orchestrator import bounded_tool_steps, extract_json, normalize_relpath, path_allowed
 from agents.autonomous_worker import _completion_text
 
 
@@ -58,3 +58,12 @@ def test_worker_completion_marker_is_required():
 def test_worker_accepts_explicit_ready_or_no_change_markers():
     assert "READY_FOR_PR" in _completion_text({"output_text": "CHANGE_STATUS: READY_FOR_PR"})
     assert "NO_CHANGE" in _completion_text({"output_text": "CHANGE_STATUS: NO_CHANGE"})
+
+
+def test_tool_step_budget_is_always_hard_bounded():
+    assert bounded_tool_steps(None) == 12
+    assert bounded_tool_steps("20") == 20
+    assert bounded_tool_steps("32") == 32
+    assert bounded_tool_steps("999") == 32
+    assert bounded_tool_steps("0") == 1
+    assert bounded_tool_steps("invalid") == 12
