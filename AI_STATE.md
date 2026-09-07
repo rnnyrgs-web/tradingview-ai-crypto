@@ -7,16 +7,16 @@ Authoritative continuation state for `rnnyrgs-web/tradingview-ai-crypto`. Read t
 ## CURRENT ARCHITECTURE
 Production is GitHub -> Render -> Python/FastAPI V3 -> Supabase. Production scans run approximately every 15 minutes and produce separate 24h and 7d Top-20 opportunity rankings. Cloud research/backtesting runs hourly 24/7. The dynamic intraday research universe targets Top-80 liquid OKX markets on 15m + 1H, with PONS forcibly included as `PONS-USDT-SWAP`; major swing research remains 4H + 1D.
 
-There are 15 autonomous development roles: Lead Integrator plus 14 specialists: quant-trend, quant-mean-reversion, quant-breakout-volatility, quant-cross-asset, data-market, data-integrity, market-microstructure, onchain-tokenomics, news-macro, strategy-registry, portfolio-risk, production-signals, testing-security and infra-cost. The specialist cycle uses exactly one `CHANGE` role plus thirteen read-only `AUDIT` roles to avoid stale competing branches. The Lead runs after specialist workflows plus a minute-47 fallback.
+There are 15 autonomous development roles: Lead Integrator plus 14 specialists: quant-trend, quant-mean-reversion, quant-breakout-volatility, quant-cross-asset, data-market, data-integrity, market-microstructure, onchain-tokenomics, news-macro, strategy-registry, portfolio-risk, production-signals, testing-security and infra-cost. Specialist cycles allow exactly one `CHANGE` role plus thirteen read-only `AUDIT` roles. The Lead runs after specialist workflows plus a minute-47 fallback.
 
-Specialist proposals originate from isolated `auto/<role>/<run>` candidate branches. Specialist agents cannot edit `AI_STATE.md`, orchestration safeguards or other protected paths. A candidate cannot be autonomously integrated unless Security and Reliability CI passes on the exact candidate SHA, independent Security AI and Lead AI reviews approve it, protected-path and diff checks pass, and the Lead completes final integration validation and updates this canonical state.
+Specialist proposals originate from isolated `auto/<role>/<run>` branches. Specialists cannot edit protected orchestration/state files or write directly to `main`. Candidate integration requires exact-SHA Security and Reliability success, independent Security AI and Lead AI approval, bounded/protected-path checks, final tests and canonical `AI_STATE.md` update.
 
 ## USER-MANDATED LIVE SIGNAL RULE — ENFORCED
-No AI opinion, ranking score, evidence score or single OOS result may authorize live BUY/SELL. The mandatory chain is:
+No AI opinion, ranking score, evidence score or single OOS result may authorize live BUY/SELL. Mandatory chain:
 RESEARCH -> BACKTEST -> VALIDATION -> UNTOUCHED OOS -> ROBUSTNESS/STABILITY -> STRATEGY-REGISTRY APPROVAL -> PRODUCTION-RISK APPROVAL -> LIVE BUY/SELL.
 Missing or unreliable evidence always means `WAIT / NO TRADE / RESEARCH_ONLY`.
 
-PR #19 merged as `1a0004c31f1f8be570c72cfe0380a99994797316` and established exact-fingerprint live validation. `production_validation.py` uses the canonical `live_promotions.json`, currently intentionally empty. `strategy_identity.py` binds symbol, horizon, normalized family, required timeframes, strategy version, modeled cost and implementation SHA-256. `engine.py` and `opportunity_engine.py` both downgrade unapproved actions to WAIT. Promotion requires at least three distinct sealed research artifacts and independent Strategy Registry + Production Risk HMAC-SHA256 attestations. Signing keys remain intentionally unused until all evidence is genuinely complete.
+`production_validation.py` uses exact-fingerprint live validation and canonical `live_promotions.json`, currently intentionally empty. `strategy_identity.py` binds symbol, horizon, normalized family, required timeframes, strategy version, modeled cost and implementation SHA-256. `engine.py` and `opportunity_engine.py` downgrade unapproved actions to WAIT. Promotion requires >=3 distinct sealed research artifacts plus independent Strategy Registry + Production Risk HMAC-SHA256 attestations. Signing keys remain intentionally unused until all evidence is genuinely complete.
 
 ## VALIDATION / CALIBRATION / ROBUSTNESS
 Chronological validation remains 60% train / 20% validation / 20% untouched holdout. Research candidates receive deterministic OOS robustness: 500 seeded bootstrap/Monte Carlo resamples, ±10% threshold perturbations, multi-regime holdout testing, realistic cost assumptions and the original chronological gate. Only all-pass candidates become `ROBUST_OOS`, still research-only.
@@ -25,46 +25,45 @@ Research artifacts are SHA-256 sealed. `research_aggregation.py` rejects tamperi
 
 The append-only Supabase prediction ledger records every ranked 24h/7d forecast before outcome with fixed `due_at`, direction, entry, score, regime, strategy identity, action and calibration snapshot. Outcomes use the first hourly close at or after the deadline. Calibration is horizon + score-bin specific, prefers regime-specific samples once populated, requires >=30 comparable resolved forecasts, and requires a 95% Wilson lower bound >=50%. Calibration can only restrict; it cannot approve or bypass research/registry/risk/promotion gates.
 
-The first strict OOS pass set from run `34077019168` was: ETH-USDT 1H trend; SOL-USDT 15m mean reversion; DOGE-USDT 1H volatility expansion; ADA-USDT 1H breakout; ADA-USDT 1H volatility expansion. None are live-weighted. One OOS pass remains insufficient for live weighting or promotion.
+First strict OOS pass set from run `34077019168`: ETH-USDT 1H trend; SOL-USDT 15m mean reversion; DOGE-USDT 1H volatility expansion; ADA-USDT 1H breakout; ADA-USDT 1H volatility expansion. None are live-weighted; one OOS pass is insufficient for promotion.
 
 ## MARKET / EXECUTION INTELLIGENCE
 Production uses fail-closed fresh OKX + Binance spot price consensus. Fewer than two valid sources, stale observations or excessive disagreement forces WAIT. Derivatives context includes exchange-specific funding/open interest, median funding, dispersion/crowding and optional liquidation pressure represented in raw contract units when USD notional is not defensible.
 
-PR #31 merged as `8aefc5004ca7f9bcfbf3aa07240a97629ccae6e5` and added research-only cross-exchange order-book intelligence for AI finalists: 10/25 bps depth, spread, bounded imbalance, thin/crossed/wide-book rejection, two-source reliability and explicit disagreement. It has no path that promotes WAIT to TRADE.
+PR #31 merged as `8aefc5004ca7f9bcfbf3aa07240a97629ccae6e5` and added research-only cross-exchange order-book intelligence for finalists: 10/25 bps depth, spread, bounded imbalance, thin/crossed/wide-book rejection, two-source reliability and explicit disagreement. It cannot promote WAIT to TRADE.
 
-ACC-001 execution-realism work is in progress. PR #38 `Add execution-cost stress testing to research backtests` passed exact-SHA Security and Reliability run `34164900477` and merged as `18a12236270cc753dfa703b21b51e647edebdd0b`. `backtest.py` stress-tests the same research trade path under deterministic 1.0x/1.5x/2.0x/3.0x round-trip cost assumptions and reports both full-backtest and untouched-holdout cost stress. Historical candle data does not contain executable bid/ask history, so no historical spread is fabricated.
+ACC-001 execution-realism work is IN PROGRESS:
+- PR #38 passed exact-SHA Security and merged as `18a12236270cc753dfa703b21b51e647edebdd0b`. Backtests now stress the same selected trade path under deterministic 1.0x/1.5x/2.0x/3.0x round-trip cost assumptions for full and untouched-holdout results. Historical executable bid/ask data is not fabricated.
+- Event-driven specialist run `34164957501` used compact supervisor context, all 14 specialists, exactly one CHANGE (`market-microstructure`) + thirteen AUDIT roles. Candidate `aa26b262e1846ec8f6b19f89ef246c1455f05e5b` passed exact-SHA Security run `34165052774`, independent reviews, and Lead run `34165057364` integrated it as main commit `3ee439912b7dcf91efd9a9891e40c39649820c91`. This validated the event-driven one-writer/thirteen-auditor path end-to-end.
+- That candidate added fail-closed strict timestamp ordering before positional future-bar scoring. Missing, invalid, duplicate or non-increasing timestamps refuse backtests/walk-forward rather than sort/fill/fabricate chronology. Cost scenarios preserve the exact selected trade path.
+- PR #39 passed exact-SHA Security and Reliability run `34165273009` and merged as `2e71fd84446a5a527ca82999b15a4b182c236cf4`. `market_data.py` now provides research-only, chronologically deduplicated OKX + Binance funding history and recent Binance USDⓈ-M OI history/change. Funding is reliable only with >=2 populated sources. Missing/invalid upstream data remains explicitly unavailable. Timestamp-safe basis history and historical liquidation notional remain unavailable rather than fabricated.
 
-Event-driven specialist run `34164957501` completed successfully with the compact supervisor context, all 14 specialists active, exactly one `CHANGE` role (`market-microstructure`) and thirteen `AUDIT` roles. Its candidate `aa26b262e1846ec8f6b19f89ef246c1455f05e5b` passed exact-SHA Security run `34165052774`, independent Security AI and Lead AI approval, and was autonomously integrated by Lead run `34165057364` as main commit `3ee439912b7dcf91efd9a9891e40c39649820c91`. This validates the event-driven one-writer/thirteen-auditor orchestration path end-to-end.
-
-That candidate added a fail-closed strict timestamp-ordering gate before positional future-bar scoring in research backtests and walk-forward validation. Missing, invalid, duplicate or non-increasing timestamps now cause refusal rather than sorting, filling or fabricating chronology. The execution-cost scenarios continue to reuse the same timestamp-safe trade path and change only assumed returns. The supplied tests cover unavailable/non-chronological timestamps and verify that moving from 12 bps to 36 bps preserves trade count while reducing each selected trade return by the expected 24 bps. The change is bounded to research backtesting and does not alter live-trading behavior or weaken any promotion gate.
-
-PR #39 `Add timestamp-safe historical derivatives evidence` passed exact-SHA Security and Reliability run `34165273009` and merged as `2e71fd84446a5a527ca82999b15a4b182c236cf4`. `market_data.py` now has a research-only historical derivatives evidence layer that normalizes and chronologically deduplicates public observations, collects independent OKX and Binance funding-rate history, collects recent Binance USDⓈ-M open-interest history, and computes OI change only when defensible. Funding is marked reliable only with at least two populated sources. Missing/invalid upstream data stays explicitly unavailable and errors expose source plus error type only. Timestamp-safe basis history is still marked unavailable, and historical liquidation notional is still marked unavailable rather than fabricated. Deterministic tests cover chronology/deduplication, two-source funding reliability, OI change and fail-closed upstream failures.
-
-ACC-001 is not complete. Next evidence work is timestamp-safe basis history and defensible liquidation/fill/slippage research integration, followed by relevant untouched-OOS/robustness validation. Unavailable historical order-book, spread, execution or liquidation notional must never be fabricated.
+ACC-001 is not complete. Remaining work: timestamp-safe basis history where genuinely available, defensible liquidation evidence, realistic fill/slippage research integration, then relevant untouched-OOS/robustness validation. Never fabricate unavailable historical order-book, spread, execution or liquidation notional.
 
 Operational monitoring exposes sanitized health only. The 15-minute workflow validates returned JSON and fails on `ok != true`, empty/degraded scans, AI/opportunity errors, excessive symbol failures, missing fingerprint or any unvalidated TRADE. Security regression, Bandit, dependency audit and committed-secret checks remain enforced.
 
 ## 24/7 AI / ORCHESTRATION
-A token-free Render `continuous_coordinator.py` watchdog checks production health and this canonical handoff every minute. Render service `srv-dafgtead0e5s73cc7ekg` is live and has no scan/write/promotion/trade authority.
+A token-free Render `continuous_coordinator.py` watchdog checks production health + this handoff every minute. Render service `srv-dafgtead0e5s73cc7ekg` is live and has no scan/write/promotion/trade authority.
 
-The owner requested a real AI agent active 24/7. PR #35 merged as `0b199acdca36c666091940d8b5c6a591ff03adc0`, adding `continuous_ai_agent.py` inside the production FastAPI process. It performs a bounded AI research/operations assessment every five minutes by default and exposes the compact result through `/health.continuous_ai`. It has explicit `trade_authority=false`, `write_authority=false`, and `promotion_authority=false`.
+PR #35 added `continuous_ai_agent.py` inside the production FastAPI process. It runs a read-only AI research/operations assessment every five minutes by default and exposes compact state through `/health.continuous_ai`. It has `trade_authority=false`, `write_authority=false`, and `promotion_authority=false`.
 
-The first live cycle exposed a model-output `JSONDecodeError`. PR #36 merged as `433421d244259e749827e8fba63e13cee4bbc7a5`, hardened parsing while keeping malformed output fail-closed, and passed Security and Reliability run `34164097754`. Main state sync commit `641d4688fc959ecc466e6c1a853767b4392728ba` deployed live. A successful post-fix cycle still needs direct verification; recent Render log filtering still showed only the older parser failure and no later sanitized success line, so this is not yet claimed as verified.
+The first live cycle exposed `JSONDecodeError`; PR #36 hardened parsing and passed Security run `34164097754`. Subsequent production verification found that after redeploys the observer had no later success/failure completion evidence within the expected window, while the loop wiring in `app.py` was correct. Inspection identified an unbounded OpenAI SDK request as a possible stall path.
+
+PR #40 `Bound continuous AI observer request time` fixed that operational risk. Exact head `c09b33042fbd0cee0116a15d545bd07bc6c859c8` passed Security and Reliability run `34165649218` including unit tests, dependency audit, static security scan and secret rejection, then merged as `3e26d60bdf812564203be61df842b7e3456fcf36`. The observer now uses an explicit bounded OpenAI request timeout (default 60s, clamped 10-240s), zero SDK retries for predictable cycle duration, exposes `request_timeout_seconds` in sanitized status and logs cycle start. It remains read-only with no trade/write/promotion authority. Render deploy `dep-dafjca7avr4c73c7hrr0` reached LIVE. Final post-deploy cycle completion verification is still required; Render log querying temporarily returned a Loki 502/503 during the first check, so success is not yet claimed.
 
 ## EVENT-DRIVEN SUPERVISOR / ACCURACY ROADMAP — LIVE
-PR #37 `Add event-driven AI supervisor and accuracy backlog` passed exact-final-SHA Security and Reliability run `34164722593` and merged as `6314dbe518bf2c1989b87507a656b73955735c90`.
+PR #37 passed exact-final-SHA Security run `34164722593` and merged as `6314dbe518bf2c1989b87507a656b73955735c90`.
 
-The autonomous control plane now:
-- wakes on completed `Crypto 15m Scan` and `Cloud Crypto Research` workflows as well as the minute-17 hourly fallback;
-- uses `agents/supervisor_snapshot.py` to provide a compact machine-readable context with trigger metadata, safety invariants, exact next steps and prioritized backlog;
-- stores signal-accuracy work in protected `orchestration/priority_backlog.json`, which autonomous specialists cannot edit and which cannot authorize live promotion;
-- accepts specialist proposals only from isolated candidate branches;
-- still permits exactly one `CHANGE` worker and thirteen parallel read-only `AUDIT` workers with `max-parallel: 14`;
-- protects `AI_STATE.md`, `agents/`, `orchestration/`, `.github/workflows/`, `requirements.txt` and `Dockerfile` from autonomous specialist writes;
-- requires Security CI on the exact candidate SHA plus independent Security AI and Lead AI approval before verified autonomous integration.
+The control plane:
+- wakes after completed `Crypto 15m Scan` and `Cloud Crypto Research` workflows plus the minute-17 hourly fallback;
+- uses `agents/supervisor_snapshot.py` for compact machine-readable context;
+- stores accuracy work in protected `orchestration/priority_backlog.json`;
+- allows exactly one CHANGE + thirteen parallel AUDIT workers (`max-parallel: 14`);
+- protects `AI_STATE.md`, `agents/`, `orchestration/`, `.github/workflows/`, `requirements.txt` and `Dockerfile` from specialist writes;
+- requires exact-SHA Security plus independent Security AI + Lead AI approval before verified autonomous integration.
 
-The protected accuracy backlog is:
-1. `ACC-001` market-microstructure — realistic execution + richer market-state evidence. IN PROGRESS: deterministic execution-cost stress, fail-closed timestamp chronology, two-source historical funding evidence and recent OI-change evidence are integrated; basis/liquidation/fill-slippage evidence remain.
+Protected accuracy backlog:
+1. `ACC-001` market-microstructure — realistic execution + richer market-state evidence. IN PROGRESS: execution-cost stress, timestamp chronology, two-source historical funding and recent OI-change are integrated; basis/liquidation/fill-slippage remain.
 2. `ACC-002` quant-cross-asset — cross-sectional relative-strength/rank prediction across the liquid universe.
 3. `ACC-003` quant-breakout-volatility — regime-specialist models for bull, bear, range, high-volatility stress and compression with no-lookahead labels/minimum samples.
 4. `ACC-004` strategy-registry — calibrated champion/challenger ensemble weighting with correlation/deterioration penalties and automatic demotion.
@@ -72,36 +71,26 @@ The protected accuracy backlog is:
 6. `ACC-006` production-signals — continuous forecast scoring and strategy/feature/regime/asset deterioration detection from the immutable prediction ledger.
 7. `ACC-007` testing-security — expanded adversarial strategy-destruction tests across exchanges, periods, fees, slippage, parameters, malformed data and regime shifts.
 
-These items are research/development priorities only. Each must still pass its own tests, untouched OOS/robustness where applicable, exact-SHA Security, independent reviews and the normal promotion chain before affecting BUY/SELL.
+These are research/development priorities only. Each must pass tests, untouched OOS/robustness where applicable, exact-SHA Security, independent reviews and the normal promotion chain before affecting BUY/SELL.
 
 ## COST / SPEED POLICY
-Use deterministic Python for calculation, backtesting, filtering and evidence checks. Use AI for bounded planning, research hypothesis generation, implementation/review and orchestration. Routine planner/specialists use `gpt-5.6-luna`; testing-security, strategy-registry, portfolio-risk and production-signals use `gpt-5.6-sol`; Lead and independent integration reviews use `gpt-5.6-sol`. Recheck official model/pricing information before future routing changes.
+Use deterministic Python for calculation, backtesting, filtering and evidence checks. Use AI for bounded planning, hypothesis generation, implementation/review and orchestration. Routine planner/specialists use `gpt-5.6-luna`; testing-security, strategy-registry, portfolio-risk and production-signals use `gpt-5.6-sol`; Lead and independent integration reviews use `gpt-5.6-sol`. Recheck official model/pricing before future routing changes.
 
-Prefer event-driven wakeups over idle polling when a meaningful repository/research/production event already exists. Preserve concurrency locks so overlapping events do not create competing write candidates. Increase useful parallelism through read-only audits/research shards, not multiple simultaneous writes to `main`.
+Prefer event-driven wakeups over idle polling. Preserve concurrency locks so overlapping events cannot create competing write candidates. Increase useful parallelism through read-only audits/research shards, not multiple simultaneous writes to `main`.
 
 ## SAFETY INVARIANTS
-Specialists work on isolated `auto/<role>/<run>` branches. Specialist agents may propose changes only through those candidate branches and cannot directly write to `main`.
+Specialists use isolated `auto/<role>/<run>` branches and cannot directly write to `main`. Protected paths: `AI_STATE.md`, `agents/`, `orchestration/`, `.github/workflows/`, `requirements.txt`, `Dockerfile`. Candidate code must pass full pytest, cache cleanup and protected-path checks before publication. Candidate publication dispatches Security and Reliability.
 
-Protected orchestration/state paths are `AI_STATE.md`, `agents/`, `orchestration/`, `.github/workflows/`, `requirements.txt` and `Dockerfile`; specialists must never modify them or weaken orchestration safeguards. Candidate code must pass full pytest, generated-cache cleanup and protected-path checks before publication. Candidate publication dispatches Security and Reliability.
-
-Lead integration requires:
-- Security CI success on the exact candidate SHA;
-- independent Security AI approval;
-- independent Lead AI approval;
-- rejection of oversized or protected-path diffs;
-- final post-squash pytest;
-- canonical `AI_STATE.md` update before pushing `main`.
-
-Verified-only autonomous merging is enabled, but all of these gates remain mandatory. Research, news, on-chain, order-book, continuous-AI and backlog evidence can never bypass live strategy approval. Missing, malformed, stale, contradictory or chronologically invalid evidence must fail closed.
+Verified-only autonomous merging remains enabled but cannot bypass: exact-SHA Security, independent Security AI, independent Lead AI, bounded/protected diffs, final tests and canonical state update. Research/news/on-chain/order-book/continuous-AI/backlog evidence can never bypass live strategy approval. Missing, malformed, stale, contradictory or chronologically invalid evidence must fail closed.
 
 ## EXACT NEXT STEP
-1. Verify the post-PR #36 production AI observer live cycle: `/health.continuous_ai` must show `configured=true`, `cycle_count>=1`, no current parser error, five-minute bounded cadence, and trade/write/promotion authority false; Render logs should show `continuous AI observer cycle completed`.
-2. Continue `ACC-001` with timestamp-safe basis history where genuinely available and defensible liquidation/fill/slippage evidence. Do not fabricate unavailable historical order-book, spread, execution or liquidation notional. Wire new evidence into research only after tests, then require relevant untouched-OOS/robustness evidence before calling ACC-001 complete.
-3. Verify the next event-driven specialist cycle continues to use compact supervisor context, exactly one CHANGE plus thirteen AUDIT roles, and exact-SHA Security/Lead integration without competing write candidates.
-4. Then execute `ACC-002` through `ACC-007` sequentially by evidence while non-owner specialists audit in parallel. Never mark an item complete merely because code was written.
-5. Verify the first full post-order-book production scan keeps latency/errors healthy, order-book evidence stays research-only and no unvalidated trade appears.
-6. Verify an authenticated production workflow scan has two-source consensus where available, fails closed where not, passes `tools/validate_scan_response.py` and contains no unvalidated trade.
-7. After forecast deadlines pass, verify first 24h/7d outcomes use only data at or after `due_at` and calibration remains restrictive until >=30 comparable resolutions and the 95% Wilson lower bound is >=50%.
-8. Keep `live_promotions.json` empty and signing keys unused until strategies complete repeated backtests, untouched OOS, robustness/stability, registry review and production-risk review.
-9. Verify the next cloud research run emits valid sealed robustness/repeated-run evidence; `READY_FOR_STRATEGY_REGISTRY_REVIEW` remains research-only. Inspect run `34079774231` artifacts before any PONS-specific result claim or promotion.
+1. Re-check Render after PR #40 deployment and verify a bounded observer cycle either completes successfully or fails closed within <=60s default request timeout. A successful state must have `configured=true`, `cycle_count>=1`, `last_error_type=null`, five-minute cadence and trade/write/promotion authority false. Do not claim success without direct evidence.
+2. Continue `ACC-001` with timestamp-safe basis history where genuinely available and defensible liquidation/fill/slippage evidence. Do not fabricate unavailable historical order-book, spread, execution or liquidation notional. Wire evidence into research only after tests, then require relevant untouched-OOS/robustness evidence before calling ACC-001 complete.
+3. Verify subsequent event-driven specialist cycles continue exactly one CHANGE + thirteen AUDIT roles with compact supervisor context and exact-SHA Security/Lead integration.
+4. Execute `ACC-002` through `ACC-007` sequentially by evidence while non-owner specialists audit in parallel. Never mark work complete merely because code was written.
+5. Verify full post-order-book production scans remain healthy, order-book evidence stays research-only and no unvalidated trade appears.
+6. Verify authenticated production workflow scans have two-source consensus where available, fail closed where not, pass `tools/validate_scan_response.py` and contain no unvalidated trade.
+7. After forecast deadlines pass, verify first 24h/7d outcomes use only data at/after `due_at`; calibration remains restrictive until >=30 comparable resolutions and 95% Wilson lower bound >=50%.
+8. Keep `live_promotions.json` empty and signing keys unused until repeated backtests, untouched OOS, robustness/stability, registry review and production-risk review genuinely complete.
+9. Verify next cloud research emits valid sealed robustness/repeated-run evidence; `READY_FOR_STRATEGY_REGISTRY_REVIEW` remains research-only. Inspect run `34079774231` artifacts before any PONS-specific result or promotion claim.
 10. Update this file after every completed development/integration cycle.
