@@ -19,6 +19,25 @@ def _mean(values):
     return sum(values) / len(values) if values else 0.0
 
 
+def _valid_candle(candle):
+    """Return false for malformed market data; signals and trades fail closed."""
+    try:
+        values = [candle[key] for key in ("open", "high", "low", "close", "volume")]
+        values = [float(value) for value in values]
+    except (KeyError, TypeError, ValueError, OverflowError):
+        return False
+    if not all(isfinite(value) for value in values):
+        return False
+    open_price, high, low, close, volume = values
+    return (
+        min(open_price, high, low, close) > 0
+        and volume >= 0
+        and high >= low
+        and low <= open_price <= high
+        and low <= close <= high
+    )
+
+
 def _profit_factor(returns):
     gains = sum(x for x in returns if x > 0)
     losses = abs(sum(x for x in returns if x <= 0))
@@ -78,7 +97,7 @@ def _signal_trend(candles, i, _benchmark):
 
 
 def _signal_breakout(candles, i, _benchmark):
-    if i < 35:
+    if i < 35 or not all(_valid_candle(candles[j]) for j in range(i - 29, i + 1)):
         return None
     prior = candles[i - 20:i]
     close = candles[i]["close"]
@@ -125,7 +144,7 @@ def _signal_mean_reversion(candles, i, _benchmark):
 
 
 def _signal_volatility_expansion(candles, i, _benchmark):
-    if i < 35:
+    if i < 35 or not all(_valid_candle(candles[j]) for j in range(i - 29, i + 1)):
         return None
     prior_tr = [_true_range(candles, j) for j in range(i - 20, i)]
     current_tr = _true_range(candles, i)
@@ -187,6 +206,9 @@ def _simulate(candles, bar, family, benchmark=None):
     i = 70
 
     while i < len(candles) - max_hold - 2:
+        if not _valid_candle(candles[i]):
+            i += 1
+            continue
         direction = signal_fn(candles, i, benchmark)
         if not direction:
             i += 1
@@ -194,17 +216,22 @@ def _simulate(candles, bar, family, benchmark=None):
 
         context = candles[max(0, i - 40):i + 1]
         a = atr(context, 14)
-        entry = candles[i + 1]["open"]
-        if a <= 0 or entry <= 0:
+        entry_candle = candles[i + 1]
+        end = min(i + 1 + max_hold, len(candles) - 1)
+        if not _valid_candle(entry_candle) or not all(_valid_candle(candles[j]) for j in range(i + 1, end + 1)):
+            i += 1
+            continue
+        entry = entry_candle["open"]
+        if a <= 0 or entry <= 0 or not isfinite(a):
             i += 1
             continue
 
         risk = max(a * 1.55, entry * 0.0035)
         target = entry + risk * 1.9 if direction == "LONG" else entry - risk * 1.9
         stop = entry - risk if direction == "LONG" else entry + risk
-        exit_price = candles[min(i + 1 + max_hold, len(candles) - 1)]["close"]
+        exit_price = candles[end]["close"]
 
-        for j in range(i + 1, min(i + 1 + max_hold, len(candles))):
+        for j in range(i + 1, end):
             bar_data = candles[j]
             stop_hit = bar_data["low"] <= stop if direction == "LONG" else bar_data["high"] >= stop
             target_hit = bar_data["high"] >= target if direction == "LONG" else bar_data["low"] <= target

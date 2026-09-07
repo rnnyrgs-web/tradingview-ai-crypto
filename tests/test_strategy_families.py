@@ -1,4 +1,9 @@
-from strategy_families import STRATEGY_FAMILIES, _quality_gate
+from strategy_families import (
+    STRATEGY_FAMILIES,
+    _quality_gate,
+    _signal_breakout,
+    _signal_volatility_expansion,
+)
 
 
 def metrics(trades, avg, pf, dd=5.0):
@@ -44,3 +49,21 @@ def test_quality_gate_rejects_negative_holdout():
     assert gate["eligible_for_live_ensemble"] is False
     assert "holdout_expectancy<=0" in gate["reasons"]
     assert "holdout_pf<1.10" in gate["reasons"]
+
+
+def _candle(price=100.0):
+    return {
+        "open": price,
+        "high": price + 1.0,
+        "low": price - 1.0,
+        "close": price,
+        "volume": 100.0,
+    }
+
+
+def test_breakout_and_volatility_signals_fail_closed_on_nan_ohlcv():
+    candles = [_candle() for _ in range(40)]
+    candles[39]["close"] = float("nan")
+
+    assert _signal_breakout(candles, 39, None) is None
+    assert _signal_volatility_expansion(candles, 39, None) is None
