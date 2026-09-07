@@ -134,6 +134,38 @@ def _normalized_history_points(rows, timestamp_key, value_key):
     return [{"ts": ts, "value": by_ts[ts]} for ts in sorted(by_ts)]
 
 
+def _normalized_price_candles(rows):
+    """Normalize completed OKX mark/index candles to chronological closes only."""
+    by_ts = {}
+    for row in rows or []:
+        if not isinstance(row, (list, tuple)) or len(row) < 5:
+            continue
+        try:
+            ts = int(row[0])
+            close = float(row[4])
+        except (TypeError, ValueError):
+            continue
+        confirm = str(row[5]) if len(row) > 5 else "1"
+        if ts <= 0 or close <= 0 or confirm == "0":
+            continue
+        by_ts[ts] = close
+    return [{"ts": ts, "value": by_ts[ts]} for ts in sorted(by_ts)]
+
+
+def _aligned_basis_history(mark_points, index_points):
+    """Compute mark-vs-index basis only at exact shared timestamps."""
+    marks = {p["ts"]: p["value"] for p in mark_points}
+    indexes = {p["ts"]: p["value"] for p in index_points}
+    out = []
+    for ts in sorted(set(marks) & set(indexes)):
+        index = indexes[ts]
+        mark = marks[ts]
+        if index <= 0 or mark <= 0:
+            continue
+        out.append({"ts": ts, "basis_bps": (mark / index - 1.0) * 10000.0})
+    return out
+
+
 def _history_change_pct(points):
     if len(points) < 2:
         return None
@@ -149,8 +181,9 @@ def get_derivatives_history(base, limit=90):
 
     Funding history is collected independently from OKX and Binance. Binance
     public USDⓈ-M open-interest statistics provide recent hourly OI history.
-    Missing endpoints remain explicitly unavailable; no interpolation, inferred
-    basis, or historical order-book reconstruction is performed here.
+    OKX mark-price and index-price candles are aligned only at exact timestamps
+    before basis is computed. Missing endpoints remain explicitly unavailable;
+    no interpolation or historical order-book reconstruction is performed.
     """
     base = str(base).upper().strip()
     inst = f"{base}-USDT-SWAP"
@@ -189,6 +222,25 @@ def get_derivatives_history(base, limit=90):
     except Exception as exc:
         errors.append({"source": "binance_open_interest_history", "error_type": type(exc).__name__})
 
+    mark_points = []
+    index_points = []
+    try:
+        rows = okx_get("/api/v5/market/history-mark-price-candles", {
+            "instId": inst, "bar": "1H", "limit": str(min(wanted, 100))
+        })
+        mark_points = _normalized_price_candles(rows)
+    except Exception as exc:
+        errors.append({"source": "okx_mark_price_history", "error_type": type(exc).__name__})
+
+    try:
+        rows = okx_get("/api/v5/market/history-index-candles", {
+            "instId": f"{base}-USDT", "bar": "1H", "limit": str(min(wanted, 100))
+        })
+        index_points = _normalized_price_candles(rows)
+    except Exception as exc:
+        errors.append({"source": "okx_index_price_history", "error_type": type(exc).__name__})
+
+    basis_points = _aligned_basis_history(mark_points, index_points)
     funding_sources = sum(1 for points in funding.values() if len(points) >= 2)
     return {
         "research_only": True,
@@ -198,7 +250,12 @@ def get_derivatives_history(base, limit=90):
         "funding_reliable": funding_sources >= 2,
         "open_interest_history": {"binance": oi_points},
         "open_interest_change_pct": _history_change_pct(oi_points),
-        "basis_history": {"available": False, "reason": "timestamp_safe_source_not_yet_integrated"},
+        "basis_history": {
+            "available": len(basis_points) >= 2,
+            "source": "okx_mark_vs_index",
+            "points": basis_points,
+            "reason": None if len(basis_points) >= 2 else "insufficient_exact_timestamp_overlap",
+        },
         "liquidation_history": {"available": False, "reason": "historical_notional_not_defensible_from_current_public_feed"},
         "errors": errors,
     }
