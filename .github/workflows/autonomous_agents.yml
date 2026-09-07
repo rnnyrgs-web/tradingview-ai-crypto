@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: autonomous-specialist-agents
@@ -132,4 +133,6 @@ jobs:
           git diff --cached --check
           git commit -m "autonomous($ROLE): bounded improvement"
           git push origin "$BRANCH"
-          echo "Published candidate branch $BRANCH. Security and Reliability runs automatically on the exact pushed SHA."
+          echo "Published candidate branch $BRANCH."
+          echo "Dispatching Security and Reliability explicitly because pushes made with GITHUB_TOKEN do not trigger downstream push workflows."
+          gh workflow run security.yml --repo "$GITHUB_REPOSITORY" --ref "$BRANCH"
