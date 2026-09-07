@@ -2,12 +2,17 @@ name: Autonomous Lead Integrator
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows:
+      - Autonomous Specialist Agents
+    types:
+      - completed
   schedule:
     - cron: "47 * * * *"
 
 permissions:
   contents: write
-  pull-requests: write
+  issues: write
 
 concurrency:
   group: autonomous-lead-integrator
@@ -22,120 +27,153 @@ jobs:
       OPENAI_AGENT_MODEL: ${{ vars.OPENAI_AGENT_MODEL }}
       AUTONOMOUS_MERGE_ENABLED: ${{ vars.AUTONOMOUS_MERGE_ENABLED }}
       GH_TOKEN: ${{ github.token }}
+      PYTHONPATH: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
-          fetch-depth: 30
+          fetch-depth: 50
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
       - name: Install lead runtime
-        run: pip install httpx
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
       - name: Fail closed unless agent credentials are configured
         run: |
           test -n "$OPENAI_API_KEY" || { echo "OPENAI_API_KEY missing"; exit 1; }
           test -n "$OPENAI_AGENT_MODEL" || { echo "OPENAI_AGENT_MODEL missing"; exit 1; }
-      - name: Select oldest autonomous specialist PR
+      - name: Select oldest current-base autonomous candidate
         id: select
         run: |
-          PR="$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 100 --json number,headRefName,createdAt --jq '[.[] | select(.headRefName | startswith("auto/"))] | sort_by(.createdAt) | .[0].number // empty')"
-          echo "pr=$PR" >> "$GITHUB_OUTPUT"
-          if [ -z "$PR" ]; then
-            echo "No autonomous specialist PR is waiting."
+          git fetch origin main '+refs/heads/auto/*:refs/remotes/origin/auto/*'
+          BASE_SHA="$(git rev-parse origin/main)"
+          SELECTED=""
+          SELECTED_SHA=""
+          while IFS= read -r REF; do
+            [ -n "$REF" ] || continue
+            if git merge-base --is-ancestor "$REF" origin/main 2>/dev/null; then
+              continue
+            fi
+            MERGE_BASE="$(git merge-base origin/main "$REF" 2>/dev/null || true)"
+            [ "$MERGE_BASE" = "$BASE_SHA" ] || continue
+            HEAD_SHA="$(git rev-parse "$REF")"
+            if [ "$AUTONOMOUS_MERGE_ENABLED" != "true" ]; then
+              ALREADY="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "$HEAD_SHA in:title" --limit 10 --json number --jq '.[0].number // empty' || true)"
+              [ -z "$ALREADY" ] || continue
+            fi
+            SELECTED="${REF#origin/}"
+            SELECTED_SHA="$HEAD_SHA"
+            break
+          done < <(git for-each-ref --sort=committerdate --format='%(refname:short)' refs/remotes/origin/auto/)
+          echo "branch=$SELECTED" >> "$GITHUB_OUTPUT"
+          echo "sha=$SELECTED_SHA" >> "$GITHUB_OUTPUT"
+          if [ -z "$SELECTED" ]; then
+            echo "No current-base autonomous candidate is waiting."
           else
-            echo "Selected PR #$PR"
+            echo "Selected $SELECTED at $SELECTED_SHA"
           fi
-      - name: Stop when queue is empty
-        if: steps.select.outputs.pr == ''
-        run: echo "Queue empty; nothing to integrate."
-      - name: Require all current PR checks to pass
-        if: steps.select.outputs.pr != ''
-        id: checks
+      - name: Stop when candidate queue is empty
+        if: steps.select.outputs.branch == ''
+        run: echo "Queue empty; nothing to review."
+      - name: Require exact candidate Security and Reliability success
+        if: steps.select.outputs.branch != ''
         env:
-          PR: ${{ steps.select.outputs.pr }}
+          BRANCH: ${{ steps.select.outputs.branch }}
+          HEAD_SHA: ${{ steps.select.outputs.sha }}
         run: |
-          gh pr checks "$PR" --repo "$GITHUB_REPOSITORY" --json name,bucket,state > /tmp/checks.json || true
-          cat /tmp/checks.json
-          COUNT="$(jq 'length' /tmp/checks.json)"
-          if [ "$COUNT" -eq 0 ]; then
-            echo "No checks found; fail closed."
-            exit 1
-          fi
-          BAD="$(jq '[.[] | select(.bucket != "pass")] | length' /tmp/checks.json)"
-          if [ "$BAD" -ne 0 ]; then
-            echo "At least one check is not passing; fail closed."
-            exit 1
-          fi
-      - name: Fetch and bound proposed diff
-        if: steps.select.outputs.pr != ''
+          FOUND=""
+          for ATTEMPT in $(seq 1 24); do
+            RUNS="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow 'Security and Reliability' --branch "$BRANCH" --limit 20 --json databaseId,status,conclusion,headSha)"
+            MATCH="$(printf '%s' "$RUNS" | jq -c --arg sha "$HEAD_SHA" '[.[] | select(.headSha == $sha)] | .[0] // empty')"
+            if [ -n "$MATCH" ]; then
+              STATUS="$(printf '%s' "$MATCH" | jq -r '.status')"
+              CONCLUSION="$(printf '%s' "$MATCH" | jq -r '.conclusion // ""')"
+              echo "Security run for $HEAD_SHA: status=$STATUS conclusion=$CONCLUSION"
+              if [ "$STATUS" = "completed" ]; then
+                [ "$CONCLUSION" = "success" ] || { echo "Exact candidate security run did not pass; fail closed."; exit 1; }
+                FOUND="yes"
+                break
+              fi
+            fi
+            sleep 20
+          done
+          [ "$FOUND" = "yes" ] || { echo "No completed successful Security and Reliability run found for exact candidate SHA; fail closed."; exit 1; }
+      - name: Fetch and bound candidate diff
+        if: steps.select.outputs.branch != ''
         env:
-          PR: ${{ steps.select.outputs.pr }}
+          BRANCH: ${{ steps.select.outputs.branch }}
         run: |
-          gh pr diff "$PR" --repo "$GITHUB_REPOSITORY" > /tmp/pr.diff
-          BYTES="$(wc -c < /tmp/pr.diff)"
+          git diff --binary origin/main..."origin/$BRANCH" > /tmp/candidate.diff
+          BYTES="$(wc -c < /tmp/candidate.diff)"
           echo "Diff bytes: $BYTES"
           test "$BYTES" -gt 0
           test "$BYTES" -le 80000 || { echo "Diff too large; fail closed."; exit 1; }
-          if grep -Eq '^diff --git a/(AI_STATE\.md|agents/|\.github/workflows/|requirements\.txt|Dockerfile)' /tmp/pr.diff; then
+          if grep -Eq '^diff --git a/(AI_STATE\.md|agents/|\.github/workflows/|requirements\.txt|Dockerfile)' /tmp/candidate.diff; then
             echo "Protected path changed; refusing autonomous integration."
             exit 1
           fi
       - name: Independent security review
-        if: steps.select.outputs.pr != ''
-        run: python agents/autonomous_orchestrator.py review --reviewer security --diff /tmp/pr.diff --output /tmp/security-review.json
+        if: steps.select.outputs.branch != ''
+        run: python agents/autonomous_orchestrator.py review --reviewer security --diff /tmp/candidate.diff --output /tmp/security-review.json
       - name: Independent lead review
-        if: steps.select.outputs.pr != ''
-        run: python agents/autonomous_orchestrator.py review --reviewer lead --diff /tmp/pr.diff --output /tmp/lead-review.json
+        if: steps.select.outputs.branch != ''
+        run: python agents/autonomous_orchestrator.py review --reviewer lead --diff /tmp/candidate.diff --output /tmp/lead-review.json
       - name: Require both AI reviewers to approve
-        if: steps.select.outputs.pr != ''
+        if: steps.select.outputs.branch != ''
         run: |
           jq -e '.approve == true' /tmp/security-review.json
           jq -e '.approve == true' /tmp/lead-review.json
           echo "Security review:" && cat /tmp/security-review.json
           echo "Lead review:" && cat /tmp/lead-review.json
-      - name: Record reviews on PR
-        if: steps.select.outputs.pr != ''
+      - name: Record approved dry-run review
+        if: steps.select.outputs.branch != '' && env.AUTONOMOUS_MERGE_ENABLED != 'true'
         env:
-          PR: ${{ steps.select.outputs.pr }}
+          BRANCH: ${{ steps.select.outputs.branch }}
+          HEAD_SHA: ${{ steps.select.outputs.sha }}
         run: |
-          BODY="$(printf 'Autonomous Security review:\n```json\n%s\n```\n\nAutonomous Lead review:\n```json\n%s\n```' "$(cat /tmp/security-review.json)" "$(cat /tmp/lead-review.json)")"
-          gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body "$BODY"
-      - name: Stop before merge unless explicitly enabled
-        if: steps.select.outputs.pr != '' && env.AUTONOMOUS_MERGE_ENABLED != 'true'
-        run: |
-          echo "Reviews passed, but AUTONOMOUS_MERGE_ENABLED is not true."
-          echo "Fail-safe mode: PR remains open for human/Work Lead approval."
-      - name: Capture merge context
-        if: steps.select.outputs.pr != '' && env.AUTONOMOUS_MERGE_ENABLED == 'true'
+          BODY="$(printf 'Candidate branch: `%s`\nExact reviewed SHA: `%s`\n\nSecurity and Reliability: PASS on exact candidate SHA.\n\nAutonomous Security review:\n```json\n%s\n```\n\nAutonomous Lead review:\n```json\n%s\n```\n\n`AUTONOMOUS_MERGE_ENABLED` is not true, so this candidate remains unmerged.' "$BRANCH" "$HEAD_SHA" "$(cat /tmp/security-review.json)" "$(cat /tmp/lead-review.json)")"
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "autonomous-review: $HEAD_SHA" --body "$BODY"
+          {
+            echo "### Autonomous candidate approved in dry-run mode"
+            echo "- Branch: $BRANCH"
+            echo "- SHA: $HEAD_SHA"
+            echo "- Security CI: PASS"
+            echo "- Security AI: APPROVE"
+            echo "- Lead AI: APPROVE"
+            echo "- Merge: DISABLED"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Prepare verified candidate integration
+        if: steps.select.outputs.branch != '' && env.AUTONOMOUS_MERGE_ENABLED == 'true'
         env:
-          PR: ${{ steps.select.outputs.pr }}
+          BRANCH: ${{ steps.select.outputs.branch }}
+          HEAD_SHA: ${{ steps.select.outputs.sha }}
         run: |
-          gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json number,title,body,headRefName,baseRefName,commits,files > /tmp/pr-context.json
-          printf '\nDIFF:\n' >> /tmp/pr-context.json
-          cat /tmp/pr.diff >> /tmp/pr-context.json
-      - name: Merge one verified PR only
-        if: steps.select.outputs.pr != '' && env.AUTONOMOUS_MERGE_ENABLED == 'true'
-        env:
-          PR: ${{ steps.select.outputs.pr }}
-        run: gh pr merge "$PR" --repo "$GITHUB_REPOSITORY" --squash --delete-branch
-      - name: Update canonical main and AI_STATE.md
-        if: steps.select.outputs.pr != '' && env.AUTONOMOUS_MERGE_ENABLED == 'true'
-        env:
-          PR: ${{ steps.select.outputs.pr }}
-        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          context = {
+              "candidate_branch": os.environ["BRANCH"],
+              "candidate_head_sha": os.environ["HEAD_SHA"],
+              "security_ci": "PASS on exact candidate SHA",
+              "security_review": json.loads(Path("/tmp/security-review.json").read_text()),
+              "lead_review": json.loads(Path("/tmp/lead-review.json").read_text()),
+          }
+          text = json.dumps(context, indent=2) + "\n\nDIFF:\n" + Path("/tmp/candidate.diff").read_text()
+          Path("/tmp/candidate-context.txt").write_text(text, encoding="utf-8")
+          PY
           git config user.name "autonomous-lead-integrator"
           git config user.email "actions@users.noreply.github.com"
-          git fetch origin main
-          git checkout main
-          git reset --hard origin/main
-          python agents/lead_state.py --pr-context /tmp/pr-context.json
-          git diff --check
-          if git diff --quiet -- AI_STATE.md; then
-            echo "Lead state updater produced no AI_STATE.md change; fail closed."
-            exit 1
-          fi
-          git add AI_STATE.md
-          git commit -m "state: record autonomous integration of PR #$PR"
-          git pull --rebase origin main
+          git checkout -B main origin/main
+          git merge --squash "origin/$BRANCH"
+          git diff --cached --check
+          pytest -q
+          python agents/lead_state.py --pr-context /tmp/candidate-context.txt
+          git add -A
+          git diff --cached --check
+          git commit -m "autonomous lead: integrate $HEAD_SHA"
           git push origin main
+          git push origin --delete "$BRANCH"
