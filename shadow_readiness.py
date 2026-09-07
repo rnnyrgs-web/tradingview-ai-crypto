@@ -29,7 +29,15 @@ def _identity_matches(row, target_identity):
     if not target_identity:
         return True
     identity = row.get("strategy_identity") or {}
-    for key in ("symbol", "horizon", "strategy_family", "strategy_version", "implementation_sha256"):
+    for key in (
+        "symbol",
+        "production_horizon",
+        "strategy_family",
+        "strategy_version",
+        "backtest_cost_bps",
+        "research_code_sha256",
+        "fingerprint",
+    ):
         expected = target_identity.get(key)
         if expected not in (None, "") and identity.get(key) != expected:
             return False
@@ -88,7 +96,7 @@ def _sequence_drawdown_pct(returns):
 
 
 def assess_shadow_readiness(predictions, target_identity=None, horizon=None):
-    horizon = str(horizon or (target_identity or {}).get("horizon") or "24h")
+    horizon = str(horizon or (target_identity or {}).get("production_horizon") or "24h")
     usable = []
     for row in predictions or []:
         if str(row.get("horizon") or "") != horizon:
