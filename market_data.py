@@ -1,4 +1,5 @@
 import logging
+import math
 import time
 from datetime import datetime, timezone, timedelta
 import httpx
@@ -8,6 +9,14 @@ from utils import f, pct_change
 
 log = logging.getLogger(__name__)
 http = httpx.Client(timeout=25.0, follow_redirects=True)
+
+
+_BAR_MS = {
+    "1m": 60_000, "3m": 180_000, "5m": 300_000, "15m": 900_000,
+    "30m": 1_800_000, "1H": 3_600_000, "2H": 7_200_000,
+    "4H": 14_400_000, "6H": 21_600_000, "12H": 43_200_000,
+    "1D": 86_400_000, "1W": 604_800_000,
+}
 
 
 def okx_get(path, params=None):
@@ -23,22 +32,56 @@ def get_spot_tickers():
     return okx_get("/api/v5/market/tickers", {"instType": "SPOT"})
 
 
-def normalize_candles(rows):
+def normalize_candles(rows, bar=None):
+    """Validate OKX's newest-first candle response, then return oldest-first data.
+
+    Invalid rows are not discarded: silently dropping one can create an
+    apparently valid but incomplete backtest window.  Unconfirmed candles are
+    the sole intentional omission and are still validated before omission.
+    """
+    if not isinstance(rows, (list, tuple)):
+        raise ValueError("candle response is not a sequence")
+
+    parsed = []
+    previous_ts = None
+    for row in rows:
+        if not isinstance(row, (list, tuple)) or len(row) < 9:
+            raise ValueError("malformed candle row")
+        try:
+            ts = int(row[0])
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError("invalid candle timestamp") from exc
+        if previous_ts is not None and ts >= previous_ts:
+            raise ValueError("candles are duplicated or not newest-first")
+        previous_ts = ts
+
+        values = []
+        try:
+            values = [float(row[i]) for i in range(1, 6)] + [float(row[7])]
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError("malformed candle numeric field") from exc
+        if not all(math.isfinite(value) for value in values):
+            raise ValueError("non-finite candle value")
+        open_, high, low, close, volume, quote_volume = values
+        if min(open_, high, low, close) <= 0 or volume < 0 or quote_volume < 0:
+            raise ValueError("invalid candle value")
+        if high < max(open_, close, low) or low > min(open_, close, high):
+            raise ValueError("inconsistent candle OHLC")
+        parsed.append((ts, row, open_, high, low, close, volume, quote_volume))
+
+    interval = _BAR_MS.get(bar)
+    if interval and len(parsed) > 1:
+        timestamps = [item[0] for item in parsed]
+        if any(older - newer != interval for newer, older in zip(timestamps, timestamps[1:])):
+            raise ValueError("missing or non-contiguous candle")
+
     out = []
-    for row in reversed(rows):
-        if len(row) < 6:
-            continue
-        confirm = str(row[8]) if len(row) > 8 else "1"
-        if confirm == "0":
+    for ts, row, open_, high, low, close, volume, quote_volume in reversed(parsed):
+        if str(row[8]) == "0":
             continue
         out.append({
-            "ts": int(row[0]),
-            "open": f(row[1]),
-            "high": f(row[2]),
-            "low": f(row[3]),
-            "close": f(row[4]),
-            "volume": f(row[5]),
-            "quote_volume": f(row[7]) if len(row) > 7 else 0.0,
+            "ts": ts, "open": open_, "high": high, "low": low,
+            "close": close, "volume": volume, "quote_volume": quote_volume,
         })
     return out
 
@@ -47,7 +90,13 @@ def get_candles(symbol, bar="15m", limit=120):
     rows = okx_get("/api/v5/market/candles", {
         "instId": symbol, "bar": bar, "limit": str(min(limit, 300))
     })
-    return normalize_candles(rows)
+    candles = normalize_candles(rows, bar=bar)
+    interval = _BAR_MS.get(bar)
+    if candles and interval:
+        now_ms = int(time.time() * 1000)
+        if now_ms - candles[-1]["ts"] > interval * 3:
+            raise ValueError("stale candle response")
+    return candles
 
 
 def get_history(symbol, bar="15m", bars=1000, max_bars=50000):
@@ -84,9 +133,11 @@ def get_history(symbol, bar="15m", bars=1000, max_bars=50000):
 
         time.sleep(0.12)
 
-    by_ts = {int(r[0]): r for r in collected}
-    rows = [by_ts[k] for k in sorted(by_ts.keys(), reverse=True)][:wanted]
-    return normalize_candles(rows)
+    timestamps = [int(row[0]) for row in collected]
+    if len(timestamps) != len(set(timestamps)):
+        raise ValueError("duplicate candles across history pages")
+    rows = [row for row in sorted(collected, key=lambda row: int(row[0]), reverse=True)][:wanted]
+    return normalize_candles(rows, bar=bar)
 
 
 def get_derivatives(base):
