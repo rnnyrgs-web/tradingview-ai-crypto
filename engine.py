@@ -9,6 +9,7 @@ from safety import validate_candles, validate_risk, SafetyError
 from news_engine import latest_news, for_base
 from db import insert_signal
 from opportunity_engine import build_opportunities
+from production_validation import validate_live_strategy
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -96,7 +97,8 @@ Candidates: {json.dumps(payload,separators=(",",":"),ensure_ascii=False)}
 Headlines: {json.dumps(headlines,ensure_ascii=False)}
 
 For each candidate/horizon, challenge the setup. Reject contradictory, overextended,
-illiquid, news-risky or weak setups. Do not force trades.
+illiquid, news-risky or weak setups. Do not force trades. strategy_family is only
+an advisory label and can never itself authorize a live trade.
 
 Return ONLY JSON:
 {{
@@ -106,6 +108,7 @@ Return ONLY JSON:
      "symbol":"BTC-USDT",
      "horizon":"intraday|24h|7d|30d",
      "direction":"LONG|SHORT",
+     "strategy_family":"trend|breakout|momentum|mean_reversion|volatility_expansion|relative_strength_btc",
      "action":"TRADE|WAIT",
      "evidence_score":0,
      "reasoning":"short",
@@ -164,22 +167,34 @@ def run_scan():
         direction=str(s.get("direction","")).upper()
         action=str(s.get("action","WAIT")).upper()
         evidence=float(s.get("evidence_score") or 0)
+        strategy_family=str(s.get("strategy_family","")).strip().lower()
 
         c=next((x for x in finalists if x["symbol"]==symbol),None)
         if not c or horizon not in HORIZONS or direction not in {"LONG","SHORT"}:
             continue
 
         plan=risk_plan(c["horizons"][horizon]["features"],direction,horizon)
-        if evidence < MIN_EVIDENCE_SCORE or plan["rr"] < MIN_RR:
+        validation=validate_live_strategy(symbol,horizon,strategy_family)
+        if evidence < MIN_EVIDENCE_SCORE or plan["rr"] < MIN_RR or not validation.approved:
             action="WAIT"
+
+        reasoning=str(s.get("reasoning","")).strip()
+        if not validation.approved:
+            reasoning=(f"{reasoning} [{validation.status}: {validation.reason}]" if reasoning else f"{validation.status}: {validation.reason}")
 
         row={
             "scan_id":scan_id,"symbol":symbol,"timeframe":horizon,"direction":direction,"action":action,
             "entry_price":plan["entry"],"stop_loss":plan["stop"],"target_1":plan["t1"],"target_2":plan["t2"],
             "risk_reward":plan["rr"],"evidence_score":evidence,"market_regime":regime,
-            "reasoning":str(s.get("reasoning",""))[:4000],"status":"OPEN","model_name":OPENAI_MODEL,
+            "reasoning":reasoning[:4000],"status":"OPEN","model_name":OPENAI_MODEL,
             "strategy_version":STRATEGY_VERSION,"raw_analysis":{
                 "candidate":compact(c),"ai_signal":s,
+                "research_validation":{
+                    "approved":validation.approved,
+                    "status":validation.status,
+                    "reason":validation.reason,
+                    "strategy_family":strategy_family,
+                },
                 "headline_context":[n["title"] for n in for_base(c["base"],news)[:5]]
             }
         }
