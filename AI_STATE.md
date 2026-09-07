@@ -95,6 +95,7 @@ The orchestration now requires exactly one `CHANGE` role and thirteen read-only 
 ## COST / 24-7 BEHAVIOR
 The owner explicitly requested all 15 roles work every hour, 24/7, with cost-aware routing and verified-only autonomous integration.
 - A separate always-on `continuous_coordinator.py` watchdog checks production health and this canonical handoff every minute. Normal operation uses zero AI tokens, exposes only sanitized status, has no market-scan/write/promotion/trade authority, and fails unhealthy after repeated observation failures. The 14 specialists remain event/hourly workers so idle model cost is not incurred.
+- Continuous coordinator Render service `srv-dafgtead0e5s73cc7ekg` deployed commit `03e91acc6a3242cd99747de2910e161af251b2c0` as `dep-dafgteid0e5s73cc7ffg` and reached `live`. Its first observed `/health` response reported `production_ok=true`, `state_ok=true`, zero consecutive failures, `ai_calls_normal_operation=0`, and `trade_authority=false`.
 - Autonomous specialist planner: minute 17 every hour, 24/7.
 - Cloud research/backtesting/algo testing: hourly 24/7.
 - Production market scans: approximately every 15 minutes.
