@@ -22,7 +22,7 @@ jobs:
       active_roles: ${{ steps.plan.outputs.active_roles }}
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      OPENAI_AGENT_MODEL: ${{ vars.OPENAI_AGENT_MODEL }}
+      OPENAI_AGENT_MODEL: gpt-5.6-luna
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
@@ -68,14 +68,14 @@ jobs:
     if: ${{ needs.plan.outputs.active_roles != '[]' }}
     strategy:
       fail-fast: false
-      max-parallel: 4
+      max-parallel: 14
       matrix:
         role: ${{ fromJSON(needs.plan.outputs.active_roles) }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      OPENAI_AGENT_MODEL: ${{ vars.OPENAI_AGENT_MODEL }}
+      OPENAI_AGENT_MODEL: ${{ contains(fromJSON('["testing-security","strategy-registry","portfolio-risk","production-signals"]'), matrix.role) && 'gpt-5.6-sol' || 'gpt-5.6-luna' }}
       GH_TOKEN: ${{ github.token }}
       PYTHONPATH: ${{ github.workspace }}
       PYTHONDONTWRITEBYTECODE: "1"

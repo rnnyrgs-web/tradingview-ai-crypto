@@ -49,21 +49,20 @@ def test_protected_paths_are_never_specialist_writable():
         assert not path_allowed(role, "Dockerfile")
 
 
-def test_planner_hard_caps_active_specialists_per_cycle():
+def test_planner_requires_every_specialist_to_be_active():
     roles = load_roles()
-    tasks = {role: {"status": "NO_TASK", "task": ""} for role in roles}
-    for role in list(roles)[:MAX_ACTIVE_TASKS_PER_CYCLE]:
-        tasks[role] = {"status": "TASK", "task": "bounded task"}
+    assert MAX_ACTIVE_TASKS_PER_CYCLE == len(roles) == 14
+    tasks = {role: {"status": "TASK", "task": "bounded task"} for role in roles}
     validate_plan({"tasks": tasks}, roles)
 
-    extra_role = list(roles)[MAX_ACTIVE_TASKS_PER_CYCLE]
-    tasks[extra_role] = {"status": "TASK", "task": "too many"}
+    inactive_role = next(iter(roles))
+    tasks[inactive_role] = {"status": "NO_TASK", "task": ""}
     try:
         validate_plan({"tasks": tasks}, roles)
     except RuntimeError as exc:
-        assert "cost cap" in str(exc)
+        assert "activate every specialist" in str(exc)
     else:
-        raise AssertionError("planner accepted more active specialists than the hard cost cap")
+        raise AssertionError("planner accepted an inactive specialist")
 
 
 def test_planner_requires_exact_role_set():
@@ -137,3 +136,19 @@ def test_retry_delay_honors_and_caps_retry_after():
     assert _retry_delay(_HeadersOnlyResponse("17"), 0) == 17.0
     assert _retry_delay(_HeadersOnlyResponse("999"), 0) == 120.0
     assert _retry_delay(_HeadersOnlyResponse("invalid"), 1) == 10.0
+
+
+def test_hourly_workflows_keep_cost_routing_and_verified_auto_merge_enabled():
+    specialist_workflow = open(
+        ".github/workflows/autonomous_agents.yml", encoding="utf-8"
+    ).read()
+    lead_workflow = open(".github/workflows/autonomous_lead.yml", encoding="utf-8").read()
+
+    assert 'cron: "17 * * * *"' in specialist_workflow
+    assert "max-parallel: 14" in specialist_workflow
+    assert "OPENAI_AGENT_MODEL: gpt-5.6-luna" in specialist_workflow
+    assert "'gpt-5.6-sol' || 'gpt-5.6-luna'" in specialist_workflow
+    assert "OPENAI_AGENT_MODEL: gpt-5.6-sol" in lead_workflow
+    assert 'AUTONOMOUS_MERGE_ENABLED: "true"' in lead_workflow
+    assert "Require exact candidate Security and Reliability success" in lead_workflow
+    assert "Require both AI reviewers to approve" in lead_workflow
