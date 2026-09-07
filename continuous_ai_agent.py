@@ -30,6 +30,9 @@ CONTINUOUS_AI_MODEL = os.getenv("CONTINUOUS_AI_MODEL", OPENAI_MODEL).strip()
 CONTINUOUS_AI_INTERVAL_SECONDS = max(
     60, int(os.getenv("CONTINUOUS_AI_INTERVAL_SECONDS", "300"))
 )
+CONTINUOUS_AI_TIMEOUT_SECONDS = max(
+    10, min(int(os.getenv("CONTINUOUS_AI_TIMEOUT_SECONDS", "60")), 240)
+)
 MAX_STATE_CHARS = 24000
 MAX_TEXT_CHARS = 1600
 
@@ -39,6 +42,7 @@ _status = {
     "configured": bool(OPENAI_API_KEY and CONTINUOUS_AI_MODEL),
     "model": CONTINUOUS_AI_MODEL or None,
     "interval_seconds": CONTINUOUS_AI_INTERVAL_SECONDS,
+    "request_timeout_seconds": CONTINUOUS_AI_TIMEOUT_SECONDS,
     "cycle_count": 0,
     "last_cycle_at": None,
     "last_status": None,
@@ -113,7 +117,11 @@ CANONICAL AI_STATE:
 Return JSON only:
 {{"status":"HEALTHY|INVESTIGATE|DEGRADED","priority":"LOW|MEDIUM|HIGH","summary":"brief evidence-based assessment","next_action":"one bounded next action for the normal specialist/Lead pipeline"}}
 """
-    client = OpenAI(api_key=OPENAI_API_KEY)
+    client = OpenAI(
+        api_key=OPENAI_API_KEY,
+        timeout=CONTINUOUS_AI_TIMEOUT_SECONDS,
+        max_retries=0,
+    )
     response = client.responses.create(
         model=CONTINUOUS_AI_MODEL,
         input=prompt,
@@ -152,6 +160,7 @@ def status_snapshot() -> dict:
 
 async def continuous_ai_loop() -> None:
     while True:
+        log.info("continuous AI observer cycle started")
         try:
             result = await asyncio.to_thread(run_ai_cycle)
             apply_result(result)
