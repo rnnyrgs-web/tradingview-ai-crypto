@@ -4,29 +4,9 @@ on:
   schedule:
     - cron: "7 * * * *"
   workflow_dispatch:
-    inputs:
-      symbols:
-        description: "Comma-separated OKX symbols"
-        required: false
-        default: "BTC-USDT,ETH-USDT,SOL-USDT,XRP-USDT,LINK-USDT"
-      timeframes:
-        description: "Comma-separated OKX bars"
-        required: false
-        default: "15m,1H"
-      bars:
-        description: "Historical candles per test"
-        required: false
-        default: "5000"
-      threshold:
-        description: "Signal score threshold"
-        required: false
-        default: "2.25"
-  push:
-    paths:
-      - "research_runner.py"
-      - "backtest.py"
-      - "market_data.py"
-      - ".github/workflows/cloud_research.yml"
+
+permissions:
+  contents: read
 
 concurrency:
   group: cloud-crypto-research
@@ -34,32 +14,38 @@ concurrency:
 
 jobs:
   research:
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        shard:
+          - {name: majors-a, symbols: "BTC-USDT,ETH-USDT,SOL-USDT", timeframes: "15m,1H"}
+          - {name: majors-b, symbols: "XRP-USDT,LINK-USDT,BNB-USDT", timeframes: "15m,1H"}
+          - {name: majors-c, symbols: "DOGE-USDT,ADA-USDT,TRX-USDT", timeframes: "15m,1H"}
+          - {name: swing-a, symbols: "BTC-USDT,ETH-USDT,SOL-USDT,XRP-USDT,LINK-USDT", timeframes: "4H,1D"}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      RESEARCH_SYMBOLS: ${{ inputs.symbols || 'BTC-USDT,ETH-USDT,SOL-USDT,XRP-USDT,LINK-USDT' }}
-      RESEARCH_TIMEFRAMES: ${{ inputs.timeframes || '15m,1H' }}
-      RESEARCH_BARS: ${{ inputs.bars || '5000' }}
-      RESEARCH_THRESHOLD: ${{ inputs.threshold || '2.25' }}
+      RESEARCH_SYMBOLS: ${{ matrix.shard.symbols }}
+      RESEARCH_TIMEFRAMES: ${{ matrix.shard.timeframes }}
+      RESEARCH_BARS: "5000"
+      RESEARCH_THRESHOLD: "2.25"
+      PYTHONPATH: ${{ github.workspace }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
       - name: Install dependencies
         run: pip install -r requirements.txt
-
       - name: Run cloud backtests
         run: python research_runner.py
-
       - name: Upload research results
         uses: actions/upload-artifact@v4
         with:
-          name: cloud-backtest-results
+          name: cloud-backtest-results-${{ matrix.shard.name }}
           path: research_output/backtest_results.json
           retention-days: 7
