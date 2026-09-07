@@ -2,7 +2,7 @@ from datetime import timedelta, datetime, timezone
 
 from utils import f, parse_dt, now_utc, iso
 from market_data import get_candles
-from db import fetch_recent, patch_signal
+from db import fetch_due_predictions, fetch_recent, patch_prediction, patch_signal
 
 HORIZON_MAP = {
     "intraday": timedelta(hours=4),
@@ -21,6 +21,12 @@ def nearest_close(candles,target_ms):
         if c["ts"]>=target_ms:
             return c["close"]
     return candles[-1]["close"] if candles else None
+
+def close_at_or_after(candles,target_ms):
+    for candle in candles:
+        if candle["ts"]>=target_ms:
+            return candle["close"]
+    return None
 
 def run_evaluation():
     signals=fetch_recent(hours=24*35,limit=1000)
@@ -96,4 +102,26 @@ def run_evaluation():
         except Exception as e:
             errors.append({"id":sig.get("id"),"error":str(e)})
 
-    return {"ok":True,"checked":len(signals),"updated":updated,"errors":errors[:20]}
+    predictions=fetch_due_predictions()
+    predictions_updated=0
+    for prediction in predictions:
+        try:
+            candles=get_candles(prediction["symbol"],"1H",300)
+            due=parse_dt(prediction["due_at"])
+            outcome=close_at_or_after(candles,int(due.timestamp()*1000))
+            entry=f(prediction.get("entry_price"))
+            direction=str(prediction.get("direction","")).upper()
+            if outcome is None or entry<=0 or direction not in {"LONG","SHORT"}:
+                continue
+            result=directional_return(entry,outcome,direction)
+            patch_prediction(prediction["id"],{
+                "outcome_price":outcome,"directional_return_pct":result,
+                "correct":result>0,"resolved_at":iso(now_utc()),
+            })
+            predictions_updated+=1
+        except Exception as e:
+            errors.append({"prediction_id":prediction.get("id"),"error_type":type(e).__name__})
+
+    return {"ok":not errors,"checked":len(signals),"updated":updated,
+            "predictions_checked":len(predictions),"predictions_updated":predictions_updated,
+            "errors":errors[:20]}

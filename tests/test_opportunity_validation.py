@@ -10,6 +10,8 @@ def _risk_plan(features, direction, horizon):
 def test_ai_trade_is_downgraded_without_full_research_validation(monkeypatch):
     persisted = []
     monkeypatch.setattr(oe, "replace_opportunities", lambda scan_id, horizon, rows: persisted.extend(rows))
+    monkeypatch.setattr(oe, "insert_prediction_ledger", lambda rows: None)
+    monkeypatch.setattr(oe, "fetch_resolved_predictions", lambda: [])
     candidates = [{
         "symbol": "ETH-USDT",
         "activity_score": 10.0,
@@ -35,6 +37,11 @@ def test_ai_trade_is_downgraded_without_full_research_validation(monkeypatch):
 def test_exact_promoted_strategy_can_preserve_trade(monkeypatch):
     persisted = []
     monkeypatch.setattr(oe, "replace_opportunities", lambda scan_id, horizon, rows: persisted.extend(rows))
+    monkeypatch.setattr(oe, "insert_prediction_ledger", lambda rows: None)
+    monkeypatch.setattr(oe, "fetch_resolved_predictions", lambda: [
+        {"horizon":"24h","score":90,"market_regime":"BULL_TREND","correct":True}
+        for _ in range(30)
+    ])
     monkeypatch.setattr(
         oe,
         "validate_live_strategy",
