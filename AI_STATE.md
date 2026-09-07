@@ -48,51 +48,46 @@ PONS is forcibly added as `PONS-USDT-SWAP`. Because PONS is very new, insufficie
 Security and Reliability run `34079782584` for commit `9db28766d045ff0acf4b90fbc7c1effc89cd1eab` completed successfully.
 Expanded Cloud Crypto Research run `34079774231` was still `in_progress` at the latest verified check. Do not claim success or new OOS eligibility counts until artifacts are inspected.
 
-## AUTONOMOUS MULTI-AGENT DEVELOPMENT — ACTIVE DRY-RUN PHASE
+## AUTONOMOUS MULTI-AGENT DEVELOPMENT — READY FOR END-TO-END DRY-RUN VALIDATION
 User requirement: six AI development roles should work continuously without interfering with each other and use GitHub as the shared synchronization layer.
-PR #1, `Add fail-closed 24/7 autonomous multi-agent orchestration`, was merged to `main` at merge commit `38b6119f3694a099d6800f9e8ef4df7cd34b00cf`.
-PR #2, `Fix autonomous dry-run worker and test path`, was merged to `main` at merge commit `8cdaceef7a24a131b8203893dd03702aada57e03`.
+
+Merged orchestration history:
+- PR #1 `Add fail-closed 24/7 autonomous multi-agent orchestration` -> main merge commit `38b6119f3694a099d6800f9e8ef4df7cd34b00cf`.
+- PR #2 `Fix autonomous dry-run worker and test path` -> main merge commit `8cdaceef7a24a131b8203893dd03702aada57e03`.
+- PR #3 `Fix autonomous dry-run cache guard and step budget` -> main merge commit `2653dd2a1db3afb33bfaec9b7e3f5249350ad610`.
+
 Repository configuration:
 - GitHub Actions secret `OPENAI_API_KEY` configured.
 - GitHub Actions variable `OPENAI_AGENT_MODEL=gpt-5.6` configured.
-- `AUTONOMOUS_MERGE_ENABLED` remains unset/false during dry-run validation.
+- `AUTONOMOUS_MERGE_ENABLED` remains unset/false. Autonomous merging is still intentionally disabled.
 
-Merged orchestration components:
-- `agents/roles.json` defines five specialist missions, branch prefixes and strict file allowlists.
-- `agents/autonomous_orchestrator.py` implements Lead planning, bounded specialist tools and independent Lead/Security diff review.
-- Protected specialist-write paths include `AI_STATE.md`, `agents/`, `.github/workflows/`, `requirements.txt` and `Dockerfile`.
-- `.github/workflows/autonomous_agents.yml` schedules hourly Lead planning and up to five parallel specialist jobs on unique `auto/<role>/<run>` branches.
-- `.github/workflows/autonomous_lead.yml` performs hourly oldest-PR review, requires checks, rejects protected/oversized diffs, and runs independent security + lead AI reviews.
-- `agents/lead_state.py` prepares canonical `AI_STATE.md` replacement after verified autonomous integration.
-- `agents/autonomous_worker.py` persists specialist instructions across Responses API continuations and requires explicit `CHANGE_STATUS` completion markers.
+Core orchestration:
+- Lead planning hourly.
+- Five parallel specialists: Quant Research, Data/Market, Strategy Registry, Production/Risk, Testing/Security.
+- Unique `auto/<role>/<run>` branches.
+- Strict role path allowlists and protected paths.
+- Full repository pytest before PR creation.
+- Independent Security AI and Lead AI reviews before any integration.
+- At most one verified autonomous PR integrated per Lead cycle when autonomous merge is eventually enabled.
+- Canonical `AI_STATE.md` remains Lead-owned and protected from specialist writes.
 
-Dry run #1 — run `34081978561`:
-- Lead planner PASS.
-- Five specialists started.
-- All five failed closed because full pytest lacked repository-root import resolution and specialist instructions were lost across tool continuations.
-- No PR reached main.
+Dry run history:
+- Run #1 `34081978561`: Lead planning passed, specialists failed closed due import-path and instruction-continuation issues. No PR reached main.
+- Run #2 `34083255188`: scheduled immediately before PR #2 merged, so it used old main and is not a valid test of PR #2.
+- Run #3 `34083647208`: executed fixed main `8cdaceef...`; Lead planner passed and all five roles launched on isolated branches. Data/Market, Quant Research, Production/Risk and Testing/Security completed real bounded work and passed the full repository test gate. Data/Market explicitly reported `41 passed` and `CHANGE_STATUS: READY_FOR_PR`.
+- Run #3 then exposed two remaining orchestration defects: generated `__pycache__` folders falsely tripped the protected `agents/` path guard; Strategy Registry exhausted the old 12-step tool budget and failed closed.
 
-PR #2 fixed dry-run #1 by adding repository-root pytest import handling, specialist `PYTHONPATH`, persistent instructions and completion markers. Security and Reliability run `34083176744` passed unit tests, dependency audit, Bandit and secret scan.
+PR #3 fixes now merged:
+- Specialist jobs set `PYTHONDONTWRITEBYTECODE=1`.
+- Generated `__pycache__`, `.pytest_cache`, `.pyc` and `.pyo` artifacts are removed before changed-path inspection.
+- Specialist-only `AGENT_MAX_STEPS` is now 20: still hard-bounded, but sufficient for more complex bounded tasks.
+- Worker instructions explicitly require efficient tool use and minimal file inspection.
+- Protected source-path checks remain intact.
+- Full-test gates remain intact.
+- Completion-marker fail-closed behavior remains intact.
+- Autonomous merge remains disabled.
 
-Scheduled run #2 — run `34083255188`:
-- This run started immediately before PR #2 merged and therefore executed old main commit `38b6119f...`.
-- Its failures do not test PR #2 and must not be interpreted as a regression in the fix.
-
-Manual dry run #3 — run `34083647208` on fixed main commit `8cdaceef...`:
-- Lead planner PASS and generated bounded tasks for all five roles.
-- All five roles launched on isolated `auto/<role>/<run>` branches.
-- Data/Market, Quant Research, Production/Risk and Testing/Security executed real bounded work and their full repository test gates passed.
-- Verified Data/Market result: implemented stricter historical-candle validation; focused tests passed and full suite reported `41 passed`; final marker `CHANGE_STATUS: READY_FOR_PR`.
-- Those successful specialist jobs were incorrectly blocked by the protected-path guard because Python/pytest generated untracked `__pycache__/` directories, including `agents/__pycache__/`, which matched the protected `agents/` prefix even though no protected source file was edited.
-- Strategy Registry failed separately inside the worker after exhausting the 12-tool-step bound: `RuntimeError: agent exceeded maximum tool steps; failing closed`.
-- No specialist PR from run #3 was opened and nothing reached main. Fail-closed containment worked.
-
-Current fix development is isolated on `lead/fix-autonomous-dry-run-3` and is NOT yet merged:
-- `.github/workflows/autonomous_agents.yml` sets `PYTHONDONTWRITEBYTECODE=1` for specialist jobs.
-- The workflow explicitly removes generated `__pycache__`, `.pytest_cache`, `.pyc` and `.pyo` artifacts after full tests and before protected-path inspection.
-- Specialist `AGENT_MAX_STEPS` is raised from 12 to a still-bounded 20 only in the specialist workflow, so more complex bounded tasks such as Strategy Registry can finish without removing the hard cap.
-- `agents/autonomous_worker.py` now explicitly instructs specialists to minimize/rationalize tool calls, avoid rereading unchanged files and prioritize bounded completion over optional exploration.
-- Protected source-path restrictions, full-test gates, completion-marker enforcement and autonomous-merge disablement are unchanged.
+PR #3 Security and Reliability run `34084042179` completed successfully: unit tests PASS, dependency audit PASS, Bandit PASS, committed-secret scan PASS.
 
 ## TARGET QUANT ARCHITECTURE
 Continue building evidence in layers: clean multi-exchange data; spot/perpetual microstructure; options where useful; on-chain/tokenomics; timestamped news/macro catalysts; independently validated strategy families; realistic execution costs; rigorous rolling validation and overfit controls; portfolio risk; fail-closed strategy registry; continuous live-vs-backtest monitoring. AI is an adversarial research/review layer, not an oracle.
@@ -103,15 +98,14 @@ Production market scans: approximately every 15 minutes.
 Cloud research/backtesting/algo testing: hourly, 24/7.
 Expanded intraday research target: dynamic Top 80 liquid OKX spot markets + forced PONS-USDT-SWAP on 15m and 1H.
 Existing major swing research remains on 4H and 1D.
-Autonomous development target cadence: Lead planning hourly, up to five specialist jobs in parallel, separate PRs, Security CI, dual AI review, then at most one verified PR integrated per Lead cycle.
-Autonomous merge remains disabled until a complete dry-run cycle proves planner execution, specialist completion, branch isolation, full tests, protected-path checks, autonomous PR creation and Lead/Security review behavior.
+Autonomous Specialist Agents schedule: minute 17 each hour.
+Autonomous Lead Integrator schedule: minute 47 each hour.
+Autonomous merge remains disabled until one complete green end-to-end dry-run cycle proves specialist PR creation plus independent Security/Lead review behavior.
 
 ## EXACT NEXT STEP
-1. Open a PR from `lead/fix-autonomous-dry-run-3` to `main`.
-2. Require Security and Reliability CI to pass fully: unit tests, dependency audit, Bandit and committed-secret scan.
-3. Review the diff specifically to verify generated-cache cleanup cannot hide protected source changes, the 20-step specialist cap remains bounded, no subprocess surface is reintroduced, and autonomous merge remains disabled.
-4. Merge only after green CI.
-5. Allow the next `Autonomous Specialist Agents` run on the new main (scheduled hourly or manual) and verify all five roles reach one of: valid PR creation with full tests/protected-path checks passing, or explicit safe NO_CHANGE.
-6. Inspect any autonomous specialist PRs and exercise the Autonomous Lead Integrator review path with `AUTONOMOUS_MERGE_ENABLED` still unset/false. Verify independent Security + Lead AI reviews before enabling any automatic merge.
-7. Only after at least one end-to-end green dry-run cycle should `AUTONOMOUS_MERGE_ENABLED=true` be considered.
-8. Separately re-check Cloud Crypto Research run `34079774231`; when complete, inspect Top-80 coverage, actual PONS-USDT-SWAP attempt, insufficient-history fail-closed behavior and newly eligible candidates.
+1. Let the next scheduled `Autonomous Specialist Agents` cycle run from main commit `2653dd2a1db3afb33bfaec9b7e3f5249350ad610` or newer.
+2. Verify all five roles reach a safe terminal state: valid autonomous PR creation after full tests and protected-path checks, or explicit `NO_CHANGE`.
+3. Inspect autonomous specialist PRs and let `Autonomous Lead Integrator` review the oldest one with `AUTONOMOUS_MERGE_ENABLED` still unset/false.
+4. Require both independent Security and Lead AI reviews to approve and verify the PR remains unmerged in dry-run mode.
+5. Only after that complete green cycle should `AUTONOMOUS_MERGE_ENABLED=true` be considered.
+6. Separately re-check Cloud Crypto Research run `34079774231`; inspect Top-80 coverage, actual PONS-USDT-SWAP attempt, insufficient-history fail-closed behavior and newly eligible candidates.
