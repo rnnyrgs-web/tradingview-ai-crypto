@@ -18,13 +18,20 @@ Anything missing any stage must remain `WAIT / RESEARCH_ONLY`.
 PR #19 `Fail closed all unvalidated production trade signals` passed Security and Reliability run `34142270947`, including unit tests, dependency vulnerability audit, static security scan and committed-secret rejection. It merged to `main` as `1a0004c31f1f8be570c72cfe0380a99994797316` and Render auto-deploy `dep-dafe5tvavr4c73c187n0` reached `live` successfully.
 
 Live enforcement now includes:
-- `production_validation.py` with an explicit exact-key live-validation registry;
+- `production_validation.py` with an explicit exact-fingerprint live-validation registry;
 - registry intentionally empty because no strategy has yet completed the full live-promotion process;
+- `strategy_identity.py` deterministically binds symbol, production horizon, normalized family, required timeframes, strategy version, modeled trading cost and a SHA-256 of the backtest/feature/strategy implementation into one fingerprint;
 - `engine.py` downgrades AI `TRADE` to `WAIT` unless the exact symbol+horizon+strategy-family key is explicitly live validated;
 - `opportunity_engine.py` applies the same gate to 24h/7d dashboard opportunities;
 - missing/unknown research identity fails closed;
 - regression tests verify unpromoted AI TRADE output cannot become production TRADE.
 Until a strategy completes the full promotion process, the correct production result is no BUY/SELL signal rather than an unvalidated trade. Existing database rows from scans before commit `1a0004c3...` can remain historically visible until replaced/refreshed; new production decisions are gated.
+
+## ERROR MONITORING / SECURITY HARDENING
+Production scans now expose their exact deterministic strategy fingerprint inside research-validation evidence. Changing the backtest, feature or strategy-family implementation changes the fingerprint automatically and invalidates any prior approval.
+The 15-minute scan workflow validates the returned JSON rather than trusting HTTP 200 alone. It fails visibly on `ok != true`, empty universe/deep scan, AI failure, opportunity persistence failure, excessive symbol failures, a missing fingerprint, or any unvalidated `TRADE`. Failed response diagnostics are retained for seven days.
+`operational_monitor.py` keeps a sanitized in-process record of the last scan and recent component error types. `/health` exposes this summary without exception messages, credentials or upstream response bodies. Protected API endpoints now log full exceptions server-side while returning generic public errors.
+Security regression coverage, Bandit static analysis and dependency auditing remain enforced. This hardening passed 45 unit tests locally, Bandit, pip-audit with no known vulnerabilities, workflow YAML parsing and diff checks before publication.
 
 ## RESEARCH UNIVERSE
 Dynamic intraday research targets Top-80 liquid OKX spot markets on 15m + 1H across deterministic shards, with PONS forcibly included as `PONS-USDT-SWAP`. Existing major swing research remains on 4H + 1D.
@@ -86,9 +93,9 @@ The owner explicitly enabled verified-only autonomous merging on 2026-09-07. `AU
 Insufficient or unreliable evidence always means WAIT / NO TRADE / RESEARCH_ONLY.
 
 ## EXACT NEXT STEP
-1. Verify the next production scan on commit `1a0004c31f1f8be570c72cfe0380a99994797316` produces no unvalidated `TRADE` / BUY / SELL decision; unvalidated candidates must be WAIT / RESEARCH_ONLY.
+1. Verify the hardened release deploys successfully and the next production scan passes `tools/validate_scan_response.py`, produces no unvalidated `TRADE` / BUY / SELL decision, and exposes a healthy sanitized `/health` operational snapshot.
 2. Keep `LIVE_VALIDATED_STRATEGIES` empty until a strategy has completed repeated backtests, untouched OOS, robustness/stability, strategy-registry review and production-risk review; never populate it from a single OOS pass or AI label.
-3. Build the deterministic research-to-production identity bridge so future promoted strategies are tied to the exact backtested family/rules, not merely an AI-provided label.
+3. Extend the deterministic identity bridge into signed/immutable research artifacts and a multi-review promotion manifest; never copy a fingerprint into `LIVE_VALIDATED_STRATEGIES` without the complete evidence chain.
 4. Inspect research run `34079774231` artifact contents before any PONS-specific result claim or promotion.
 5. Monitor the first full 14-specialist hourly cycle for completion, API spend, rate limits, useful vs `NO_CHANGE` output, candidate queue behavior and exact-SHA Security dispatches; reduce task/token budgets rather than weakening safety if cost is excessive.
 6. Verify the first automatic integration includes all required gates and updates this file in the same commit; fail closed on any missing check or stale candidate base.

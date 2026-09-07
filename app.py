@@ -1,4 +1,5 @@
 import hmac
+import logging
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Header, Request
 
@@ -9,8 +10,16 @@ from evaluator import run_evaluation
 from backtest import run_backtest, walk_forward
 from market_data import build_universe
 from dashboard import login_page, handle_login, dashboard_page, signal_detail_page
+from operational_monitor import health_snapshot, record_error
 
 app=FastAPI(title="Crypto Signal Engine V3")
+log = logging.getLogger(__name__)
+
+
+def internal_error(component, exc, public_message):
+    record_error(component, exc)
+    log.exception("%s failed", component)
+    raise HTTPException(status_code=500, detail=public_message) from exc
 
 def verify_secret(secret:Optional[str],x_scan_secret:Optional[str]):
     supplied=x_scan_secret or secret or ""
@@ -34,7 +43,8 @@ def health():
         "supabase_configured":configured(),
         "universe_size":UNIVERSE_SIZE,
         "deep_scan_size":DEEP_SCAN_SIZE,
-        "horizons":list(HORIZONS.keys())
+        "horizons":list(HORIZONS.keys()),
+        "operations":health_snapshot(),
     }
 
 @app.get("/dashboard/login")
@@ -50,14 +60,14 @@ def dashboard(request:Request,horizon:str="24h"):
     try:
         return dashboard_page(request,horizon)
     except Exception as e:
-        raise HTTPException(status_code=500,detail="Dashboard unavailable") from e
+        internal_error("dashboard", e, "Dashboard unavailable")
 
 @app.get("/dashboard/signal/{signal_id}")
 def dashboard_signal(request:Request,signal_id:int):
     try:
         return signal_detail_page(request,signal_id)
     except Exception as e:
-        raise HTTPException(status_code=500,detail="Signal visual unavailable") from e
+        internal_error("dashboard_signal", e, "Signal visual unavailable")
 
 @app.get("/universe")
 def universe(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
@@ -71,7 +81,7 @@ def signal_cursor(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(d
     try:
         return {"ok":True,"latest_id":fetch_latest_signal_id()}
     except Exception as e:
-        raise HTTPException(status_code=500,detail=str(e))
+        internal_error("signal_cursor", e, "Signal cursor unavailable")
 
 @app.get("/signals")
 def signals(after_id:int=0,limit:int=20,secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
@@ -80,7 +90,7 @@ def signals(after_id:int=0,limit:int=20,secret:Optional[str]=None,x_scan_secret:
         rows=fetch_actionable_after(after_id,limit)
         return {"ok":True,"count":len(rows),"signals":rows}
     except Exception as e:
-        raise HTTPException(status_code=500,detail=str(e))
+        internal_error("signals", e, "Signal feed unavailable")
 
 @app.get("/scan")
 def scan(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
@@ -88,7 +98,7 @@ def scan(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=No
     try:
         return run_scan()
     except Exception as e:
-        raise HTTPException(status_code=500,detail=str(e))
+        internal_error("scan", e, "Production scan failed")
 
 @app.get("/evaluate")
 def evaluate(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
@@ -96,7 +106,7 @@ def evaluate(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(defaul
     try:
         return run_evaluation()
     except Exception as e:
-        raise HTTPException(status_code=500,detail=str(e))
+        internal_error("evaluation", e, "Signal evaluation failed")
 
 @app.get("/backtest")
 def backtest(symbol:str="BTC-USDT",bar:str="15m",bars:int=2500,
@@ -105,7 +115,7 @@ def backtest(symbol:str="BTC-USDT",bar:str="15m",bars:int=2500,
     try:
         return run_backtest(symbol.upper(),bar,bars)
     except Exception as e:
-        raise HTTPException(status_code=500,detail=str(e))
+        internal_error("backtest", e, "Backtest failed")
 
 @app.get("/walkforward")
 def walkforward(symbol:str="BTC-USDT",bar:str="15m",bars:int=3000,
@@ -114,4 +124,4 @@ def walkforward(symbol:str="BTC-USDT",bar:str="15m",bars:int=3000,
     try:
         return walk_forward(symbol.upper(),bar,bars)
     except Exception as e:
-        raise HTTPException(status_code=500,detail=str(e))
+        internal_error("walkforward", e, "Walk-forward validation failed")
