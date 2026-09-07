@@ -33,6 +33,12 @@ The 15-minute scan workflow validates the returned JSON rather than trusting HTT
 `operational_monitor.py` keeps a sanitized in-process record of the last scan and recent component error types. `/health` exposes this summary without exception messages, credentials or upstream response bodies. Protected API endpoints now log full exceptions server-side while returning generic public errors.
 Security regression coverage, Bandit static analysis and dependency auditing remain enforced. This hardening passed 45 unit tests locally, Bandit, pip-audit with no known vulnerabilities, workflow YAML parsing and diff checks before publication.
 
+## IMMUTABLE EVIDENCE / MULTI-APPROVAL PROMOTION
+Research JSON is now wrapped in a canonical SHA-256 envelope. Any later modification to its payload fails integrity verification, and promotion manifests must reference at least three distinct valid SHA-256 research-artifact identities.
+`live_promotions.json` is the canonical promotion manifest and is intentionally empty. `production_validation.py` no longer accepts a manually inserted fingerprint set. A live promotion must match the exact current strategy identity, mark every required stage true, and contain valid independent HMAC-SHA256 attestations from both Strategy Registry and Production Risk.
+The two signing keys must be distinct secret environment variables with at least 32 characters: `STRATEGY_REGISTRY_SIGNING_KEY` and `PRODUCTION_RISK_SIGNING_KEY`. They are intentionally not configured/populated merely to make signals appear. Missing keys, missing stages, fewer than three research artifacts, modified identity/code, malformed data, or either bad signature all fail closed to `RESEARCH_ONLY`.
+`tools/sign_promotion.py` applies exactly one role's attestation at a time. Promotion signing remains forbidden until the underlying evidence genuinely completes every stage. This layer passed 51 unit tests, Bandit and pip-audit with no known vulnerabilities before publication.
+
 ## RESEARCH UNIVERSE
 Dynamic intraday research targets Top-80 liquid OKX spot markets on 15m + 1H across deterministic shards, with PONS forcibly included as `PONS-USDT-SWAP`. Existing major swing research remains on 4H + 1D.
 Expanded research run `34079774231` completed successfully and all 16 universe shard artifacts plus `swing-a` exist. Artifact contents still need inspection before making PONS-specific execution or new OOS-eligibility claims.
@@ -94,8 +100,8 @@ Insufficient or unreliable evidence always means WAIT / NO TRADE / RESEARCH_ONLY
 
 ## EXACT NEXT STEP
 1. Verify the hardened release deploys successfully and the next production scan passes `tools/validate_scan_response.py`, produces no unvalidated `TRADE` / BUY / SELL decision, and exposes a healthy sanitized `/health` operational snapshot.
-2. Keep `LIVE_VALIDATED_STRATEGIES` empty until a strategy has completed repeated backtests, untouched OOS, robustness/stability, strategy-registry review and production-risk review; never populate it from a single OOS pass or AI label.
-3. Extend the deterministic identity bridge into signed/immutable research artifacts and a multi-review promotion manifest; never copy a fingerprint into `LIVE_VALIDATED_STRATEGIES` without the complete evidence chain.
+2. Keep `live_promotions.json` empty and signing keys unused until a strategy has completed repeated backtests, untouched OOS, robustness/stability, strategy-registry review and production-risk review; never sign from a single OOS pass or AI label.
+3. Verify the next cloud research run produces SHA-256-sealed envelopes and preserves the exact evidence digest through artifact upload; then build repeated-run evidence aggregation and deterministic robustness/stability results needed by the promotion manifest.
 4. Inspect research run `34079774231` artifact contents before any PONS-specific result claim or promotion.
 5. Monitor the first full 14-specialist hourly cycle for completion, API spend, rate limits, useful vs `NO_CHANGE` output, candidate queue behavior and exact-SHA Security dispatches; reduce task/token budgets rather than weakening safety if cost is excessive.
 6. Verify the first automatic integration includes all required gates and updates this file in the same commit; fail closed on any missing check or stale candidate base.
