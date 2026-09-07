@@ -8,6 +8,7 @@ from features import timeframe_features
 from safety import validate_candles, validate_risk, SafetyError
 from news_engine import latest_news, for_base
 from db import insert_signal
+from opportunity_engine import build_opportunities
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -40,7 +41,6 @@ def detect_regime(cands):
     return "TRANSITIONAL"
 
 def risk_plan(features, direction, horizon):
-    # Use shortest bar ATR inside horizon for entry risk.
     ft=next(iter(features.values()))
     entry=ft["last"]
     a=ft["atr"]
@@ -121,7 +121,6 @@ Maximum 6 signals total.
 def run_scan():
     scan_id=str(uuid.uuid4())
     universe=build_universe()
-    # Cheap prefilter: strongest movers + liquidity/activity.
     pre=universe[:DEEP_SCAN_SIZE]
     deep=[]
     errors=[]
@@ -133,7 +132,6 @@ def run_scan():
                 score, feats=horizon_score(item["symbol"],h)
                 hs[h]={"score":score,"features":feats}
             item={**item,"horizons":hs,"derivatives":get_derivatives(item["base"])}
-            # rank by strongest absolute horizon evidence
             item["rank_score"]=max(abs(v["score"]) for v in hs.values())
             deep.append(item)
         except Exception as e:
@@ -152,6 +150,13 @@ def run_scan():
         signals=[]
         ai_error=str(e)
 
+    opportunity_error=None
+    opportunities={"24h":[],"7d":[]}
+    try:
+        opportunities=build_opportunities(scan_id,deep,signals,regime,risk_plan)
+    except Exception as e:
+        opportunity_error=str(e)
+
     saved=[]
     for s in signals[:MAX_SAVED_SIGNALS]:
         symbol=str(s.get("symbol","")).upper()
@@ -169,25 +174,12 @@ def run_scan():
             action="WAIT"
 
         row={
-            "scan_id":scan_id,
-            "symbol":symbol,
-            "timeframe":horizon,
-            "direction":direction,
-            "action":action,
-            "entry_price":plan["entry"],
-            "stop_loss":plan["stop"],
-            "target_1":plan["t1"],
-            "target_2":plan["t2"],
-            "risk_reward":plan["rr"],
-            "evidence_score":evidence,
-            "market_regime":regime,
-            "reasoning":str(s.get("reasoning",""))[:4000],
-            "status":"OPEN",
-            "model_name":OPENAI_MODEL,
-            "strategy_version":STRATEGY_VERSION,
-            "raw_analysis":{
-                "candidate":compact(c),
-                "ai_signal":s,
+            "scan_id":scan_id,"symbol":symbol,"timeframe":horizon,"direction":direction,"action":action,
+            "entry_price":plan["entry"],"stop_loss":plan["stop"],"target_1":plan["t1"],"target_2":plan["t2"],
+            "risk_reward":plan["rr"],"evidence_score":evidence,"market_regime":regime,
+            "reasoning":str(s.get("reasoning",""))[:4000],"status":"OPEN","model_name":OPENAI_MODEL,
+            "strategy_version":STRATEGY_VERSION,"raw_analysis":{
+                "candidate":compact(c),"ai_signal":s,
                 "headline_context":[n["title"] for n in for_base(c["base"],news)[:5]]
             }
         }
@@ -196,7 +188,8 @@ def run_scan():
 
     return {
         "ok":True,"version":STRATEGY_VERSION,"scan_id":scan_id,
-        "universe_count":len(universe),"deep_scanned":len(deep),
-        "market_regime":regime,"signals_saved":len(saved),
-        "signals":saved,"scan_errors":errors[:20],"ai_error":ai_error
+        "universe_count":len(universe),"deep_scanned":len(deep),"market_regime":regime,
+        "signals_saved":len(saved),"signals":saved,"scan_errors":errors[:20],"ai_error":ai_error,
+        "opportunities_saved":{"24h":len(opportunities.get("24h",[])),"7d":len(opportunities.get("7d",[]))},
+        "opportunity_error":opportunity_error
     }
