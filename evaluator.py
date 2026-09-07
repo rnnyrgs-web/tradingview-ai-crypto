@@ -20,7 +20,8 @@ def nearest_close(candles,target_ms):
     for c in candles:
         if c["ts"]>=target_ms:
             return c["close"]
-    return candles[-1]["close"] if candles else None
+    # A pre-horizon close is not evidence of the requested future return.
+    return None
 
 def run_evaluation():
     signals=fetch_recent(hours=24*35,limit=1000)
