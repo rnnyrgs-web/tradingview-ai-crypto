@@ -1,0 +1,56 @@
+{
+  "quant-research": {
+    "branch_prefix": "auto/quant-research/",
+    "allowed_paths": [
+      "strategy_families.py",
+      "backtest.py",
+      "research_runner.py",
+      "tests/test_strategy_families.py",
+      "tests/test_research_runner.py",
+      "tests/test_quant_*.py"
+    ],
+    "mission": "Improve strategy discovery and validation without weakening no-lookahead, untouched OOS, realistic execution, or fail-closed research rules."
+  },
+  "data-market": {
+    "branch_prefix": "auto/data-market/",
+    "allowed_paths": [
+      "market_data.py",
+      "tests/test_market_data.py",
+      "tests/test_data_*.py"
+    ],
+    "mission": "Improve market-universe coverage, exchange data quality, historical/live integrity, liquidity filters, timestamps, and safe handling of missing or stale data."
+  },
+  "strategy-registry": {
+    "branch_prefix": "auto/strategy-registry/",
+    "allowed_paths": [
+      "strategy_registry.py",
+      "tests/test_strategy_registry.py",
+      "tests/test_registry_*.py"
+    ],
+    "mission": "Build longitudinal champion/challenger selection, robust promotion/demotion, drift monitoring, and fail-closed approval gates."
+  },
+  "production-risk": {
+    "branch_prefix": "auto/production-risk/",
+    "allowed_paths": [
+      "engine.py",
+      "evaluator.py",
+      "opportunity_engine.py",
+      "safety.py",
+      "dashboard.py",
+      "tests/test_safety.py",
+      "tests/test_dashboard.py",
+      "tests/test_production_*.py",
+      "tests/test_risk_*.py"
+    ],
+    "mission": "Improve live opportunity ranking and portfolio safety while preserving WAIT/NO TRADE behavior and preventing unapproved research from reaching production."
+  },
+  "testing-security": {
+    "branch_prefix": "auto/testing-security/",
+    "allowed_paths": [
+      "tests/test_*.py",
+      "SECURITY.md",
+      "docs/security_*.md"
+    ],
+    "mission": "Adversarially test the system for security, data leakage, lookahead bias, malformed inputs, CI regressions, and failures that should produce safe WAIT/RESEARCH_ONLY outcomes."
+  }
+}
