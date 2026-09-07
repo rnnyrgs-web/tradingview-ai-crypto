@@ -9,10 +9,43 @@ def test_entry_zone_is_ten_percent_of_stop_distance():
     assert hi==101.0
 
 
-def test_trade_labels_do_not_turn_wait_into_trade():
+def test_trade_labels_fail_closed_without_approved_exact_identity(monkeypatch):
     assert dashboard._trade_label({"action":"WAIT","direction":"LONG"})=="WAIT"
-    assert dashboard._trade_label({"action":"TRADE","direction":"LONG"})=="BUY"
-    assert dashboard._trade_label({"action":"TRADE","direction":"SHORT"})=="SELL"
+    assert dashboard._trade_label({"action":"TRADE","direction":"LONG"})=="WAIT"
+
+    identity={"strategy_family":"trend","fingerprint":"approved"}
+    decision=type("Decision", (), {
+        "approved":True,
+        "identity":{"fingerprint":"approved"},
+    })()
+    monkeypatch.setattr(dashboard, "validate_live_strategy", lambda *args: decision)
+    row={
+        "action":"TRADE", "direction":"LONG", "symbol":"ETH-USDT", "horizon":"24h",
+        "strategy_identity":identity,
+    }
+    assert dashboard._trade_label(row)=="BUY"
+    row["direction"]="SHORT"
+    assert dashboard._trade_label(row)=="SELL"
+
+
+def test_trade_label_rejects_unapproved_or_mismatched_persisted_identity(monkeypatch):
+    row={
+        "action":"TRADE", "direction":"LONG", "symbol":"ETH-USDT", "horizon":"24h",
+        "strategy_identity":{"strategy_family":"unknown", "fingerprint":"supplied"},
+    }
+    rejected=type("Decision", (), {
+        "approved":False,
+        "identity":{"fingerprint":"supplied"},
+    })()
+    monkeypatch.setattr(dashboard, "validate_live_strategy", lambda *args: rejected)
+    assert dashboard._trade_label(row)=="WAIT"
+
+    mismatched=type("Decision", (), {
+        "approved":True,
+        "identity":{"fingerprint":"different"},
+    })()
+    monkeypatch.setattr(dashboard, "validate_live_strategy", lambda *args: mismatched)
+    assert dashboard._trade_label(row)=="WAIT"
 
 
 def test_dashboard_session_signature(monkeypatch):

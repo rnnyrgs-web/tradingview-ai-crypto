@@ -10,6 +10,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 
 from config import DASHBOARD_SECRET
 from db import fetch_ranked_opportunities, fetch_signal_by_id
+from production_validation import validate_live_strategy
 
 SESSION_COOKIE = "crypto_dashboard_session"
 SESSION_TTL_SECONDS = 12 * 60 * 60
@@ -63,10 +64,32 @@ def _entry_zone(row):
     return entry - pad, entry + pad
 
 
+def _strategy_identity(row):
+    identity = row.get("strategy_identity")
+    if isinstance(identity, dict):
+        return identity
+    raw = row.get("raw_analysis")
+    if isinstance(raw, dict):
+        validation = raw.get("research_validation")
+        if isinstance(validation, dict) and isinstance(validation.get("strategy_identity"), dict):
+            return validation["strategy_identity"]
+    return {}
+
+
 def _trade_label(row):
     action = str(row.get("action") or "WAIT").upper()
     direction = str(row.get("direction") or "").upper()
-    if action != "TRADE":
+    if action != "TRADE" or direction not in {"LONG", "SHORT"}:
+        return "WAIT"
+
+    # Recheck persisted rows at display time so stale, legacy, or tampered TRADE
+    # values cannot bypass the exact live strategy registry.
+    identity = _strategy_identity(row)
+    horizon = row.get("timeframe") or row.get("horizon")
+    decision = validate_live_strategy(
+        row.get("symbol"), horizon, identity.get("strategy_family")
+    )
+    if not decision.approved or identity.get("fingerprint") != decision.identity.get("fingerprint"):
         return "WAIT"
     return "BUY" if direction == "LONG" else "SELL"
 
