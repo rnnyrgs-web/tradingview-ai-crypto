@@ -1,34 +1,81 @@
 from agents.autonomous_orchestrator import (
+    MAX_ACTIVE_TASKS_PER_CYCLE,
     _retry_delay,
     bounded_tool_steps,
     extract_json,
+    load_roles,
     normalize_relpath,
     path_allowed,
+    validate_plan,
 )
 from agents.autonomous_worker import _completion_text
 
 
+def test_15_agent_architecture_has_14_specialists_plus_lead():
+    roles = load_roles()
+    assert len(roles) == 14
+    assert "quant-trend" in roles
+    assert "quant-mean-reversion" in roles
+    assert "quant-breakout-volatility" in roles
+    assert "quant-cross-asset" in roles
+    assert "data-market" in roles
+    assert "data-integrity" in roles
+    assert "market-microstructure" in roles
+    assert "onchain-tokenomics" in roles
+    assert "news-macro" in roles
+    assert "strategy-registry" in roles
+    assert "portfolio-risk" in roles
+    assert "production-signals" in roles
+    assert "testing-security" in roles
+    assert "infra-cost" in roles
+
+
 def test_role_path_allowlists_are_fail_closed():
-    assert path_allowed("quant-research", "strategy_families.py")
+    assert path_allowed("quant-trend", "strategy_families.py")
     assert path_allowed("data-market", "market_data.py")
-    assert path_allowed("production-risk", "safety.py")
-    assert not path_allowed("quant-research", "market_data.py")
+    assert path_allowed("portfolio-risk", "safety.py")
+    assert path_allowed("news-macro", "news_macro.py")
+    assert not path_allowed("quant-trend", "market_data.py")
     assert not path_allowed("data-market", "engine.py")
+    assert not path_allowed("infra-cost", ".github/workflows/autonomous_agents.yml")
 
 
 def test_protected_paths_are_never_specialist_writable():
-    for role in (
-        "quant-research",
-        "data-market",
-        "strategy-registry",
-        "production-risk",
-        "testing-security",
-    ):
+    for role in load_roles():
         assert not path_allowed(role, "AI_STATE.md")
         assert not path_allowed(role, "agents/autonomous_orchestrator.py")
         assert not path_allowed(role, ".github/workflows/security.yml")
         assert not path_allowed(role, "requirements.txt")
         assert not path_allowed(role, "Dockerfile")
+
+
+def test_planner_hard_caps_active_specialists_per_cycle():
+    roles = load_roles()
+    tasks = {role: {"status": "NO_TASK", "task": ""} for role in roles}
+    for role in list(roles)[:MAX_ACTIVE_TASKS_PER_CYCLE]:
+        tasks[role] = {"status": "TASK", "task": "bounded task"}
+    validate_plan({"tasks": tasks}, roles)
+
+    extra_role = list(roles)[MAX_ACTIVE_TASKS_PER_CYCLE]
+    tasks[extra_role] = {"status": "TASK", "task": "too many"}
+    try:
+        validate_plan({"tasks": tasks}, roles)
+    except RuntimeError as exc:
+        assert "cost cap" in str(exc)
+    else:
+        raise AssertionError("planner accepted more active specialists than the hard cost cap")
+
+
+def test_planner_requires_exact_role_set():
+    roles = load_roles()
+    tasks = {role: {"status": "NO_TASK", "task": ""} for role in roles}
+    tasks.pop(next(iter(tasks)))
+    try:
+        validate_plan({"tasks": tasks}, roles)
+    except RuntimeError as exc:
+        assert "invalid role set" in str(exc)
+    else:
+        raise AssertionError("planner accepted an incomplete specialist roster")
 
 
 def test_path_traversal_is_rejected():
