@@ -2,7 +2,7 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException, Header
 
 from config import *
-from db import configured, fetch_actionable_after
+from db import configured, fetch_actionable_after, fetch_latest_signal_id
 from engine import run_scan
 from evaluator import run_evaluation
 from backtest import run_backtest, walk_forward
@@ -21,7 +21,7 @@ def root():
         "ok":True,
         "service":"Crypto Signal Engine V3",
         "version":STRATEGY_VERSION,
-        "endpoints":["/health","/scan","/evaluate","/backtest","/walkforward","/universe","/signals"]
+        "endpoints":["/health","/scan","/evaluate","/backtest","/walkforward","/universe","/signals","/signals/cursor"]
     }
 
 @app.get("/health")
@@ -39,6 +39,14 @@ def universe(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(defaul
     verify_secret(secret,x_scan_secret)
     u=build_universe()
     return {"ok":True,"count":len(u),"top":u[:50]}
+
+@app.get("/signals/cursor")
+def signal_cursor(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
+    verify_secret(secret,x_scan_secret)
+    try:
+        return {"ok":True,"latest_id":fetch_latest_signal_id()}
+    except Exception as e:
+        raise HTTPException(status_code=500,detail=str(e))
 
 @app.get("/signals")
 def signals(after_id:int=0,limit:int=20,secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
