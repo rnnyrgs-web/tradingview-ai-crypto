@@ -8,7 +8,7 @@ Authoritative continuation state for `rnnyrgs-web/tradingview-ai-crypto`. Read t
 Production: GitHub -> Render -> Python/FastAPI V3 -> Supabase. Production scans run about every 15 minutes and produce separate 24h/7d Top-20 rankings. Cloud research/backtesting runs continuously through a bounded 17-worker Python army on the existing Render coordinator. PONS is included only when defensible public data supports it. Specialist development uses isolated branches and exact-head Security and Reliability success is required before merge.
 
 ## SAFETY INVARIANTS
-No AI opinion, ranking score, evidence score, current order-book snapshot, paper P&L, ensemble weight, single OOS result, signed historical promotion, observability metric, or risk-gate result by itself may authorize live BUY/SELL.
+No AI opinion, ranking score, evidence score, current order-book snapshot, paper P&L, ensemble weight, single OOS result, signed historical promotion, observability metric, supervisor status, or risk-gate result by itself may authorize live BUY/SELL.
 
 Mandatory chain:
 RESEARCH -> BACKTEST -> VALIDATION -> UNTOUCHED OOS -> ROBUSTNESS/STABILITY -> MULTIPLE-TESTING FIREWALL -> POINT-IN-TIME UNIVERSE SAFETY -> STRATEGY-REGISTRY APPROVAL -> PRODUCTION-RISK APPROVAL -> GENUINE FORWARD PROOF -> GLOBAL/EXECUTION RISK CLEAR -> LIVE BUY/SELL.
@@ -18,7 +18,7 @@ Every later stage is restrictive-only. Missing, stale, contradictory, deteriorat
 `live_promotions.json` remains intentionally empty. Signing keys remain unused. Broker remains disconnected.
 
 ## VALIDATION / CALIBRATION
-Chronological validation remains train / validation / untouched holdout. Robustness includes deterministic bootstrap/Monte Carlo resampling, parameter perturbation, regime stability, conservative execution-cost stress and false-discovery/search-breadth penalties. Prediction ledger is append-only with fixed `due_at`; forward proof counts only non-overlapping full-horizon resolved forecasts for the exact immutable strategy fingerprint. Calibration, deterioration and observability can only restrict or inform research operations; none can authorize trading.
+Chronological validation remains train / validation / untouched holdout. Robustness includes deterministic bootstrap/Monte Carlo resampling, parameter perturbation, regime stability, conservative execution-cost stress and false-discovery/search-breadth penalties. Prediction ledger is append-only with fixed `due_at`; forward proof counts only non-overlapping full-horizon resolved forecasts for the exact immutable strategy fingerprint. Calibration, deterioration, observability and worker supervision can only restrict or inform research operations; none can authorize trading.
 
 ## ACCURACY PROGRAM STATUS
 - ACC-001 MARKET / EXECUTION REALISM — COMPLETE. PRs #38-#44 and follow-ons: realistic costs, timestamp-safe derivatives inputs, visible-depth evidence, strict chronology.
@@ -75,9 +75,23 @@ PR #85 passed exact-head run `34273647346` on `dab29b5993fd35a9e5b4ba3fe2ae51a35
 PR #86 `Log private research observability summaries` passed exact-head Security and Reliability run `34274577191` on `f23b14298056a991dade1921646e10dd3bba32bb` and merged as `0213cd2ffabeb03a800e4078bb64d880662744fe`.
 PR #87 fixed Render/Uvicorn logger routing; exact-head Security and Reliability run `34274827705` on `47722a0d986c3ff850408782e739358fa48866d1` passed and merged as `8070d434aeb42f82f623fb22a46244079332f01c`.
 
-Private coordinator logs now expose only a bounded non-sensitive summary: cache hit/rejection and p50/p95, exact history-network p50/p95 and fetch counts, worker failure/timeout health, worker elapsed time, and three ACC-002 gate booleans. Raw research evidence/arrays and secrets are not logged. Trade/signal/promotion authority remains false.
+Private coordinator logs expose only a bounded non-sensitive summary: cache hit/rejection and p50/p95, exact history-network p50/p95 and fetch counts, worker failure/timeout health, worker elapsed time, three ACC-002 gate booleans and supervisor status. Raw research evidence/arrays and secrets are not logged. Trade/signal/promotion authority remains false.
 
-Initial live observation immediately after the PR #87 restart showed `cache_reads=0`, `history_fetches=0`, `worker_completed=0`, `worker_failed=0`, `worker_timeouts=0`. This is startup-only and is NOT sufficient evidence to identify a bottleneck. Render resource telemetry showed the coordinator instance live with CPU/memory activity, so the service was active rather than crashed. Do not optimize from the zero-sample startup snapshot.
+## SELF-HEALING 24/7 WORKER SUPERVISOR — COMPLETE
+PR #88 `Add self-healing supervision for 24/7 research workers` passed exact-head Security and Reliability run `34275821381` on `f11389cdd47175019e2dd6d8e397115ae66c73c9` and was squash-merged as `f02d91edb458cacb5be02fba4325555f381f7123`.
+
+Implemented:
+- each logical worker emits bounded heartbeats while a subprocess is computing and while the worker is resting/backing off;
+- supervisor distinguishes legitimate long-running work from stale/crashed worker loops;
+- unexpected logical-worker task exits are deterministically fingerprinted, classified and recreated after a bounded delay;
+- existing heavy-job semaphores remain unchanged, so self-healing restarts cannot increase paid/heavy concurrency;
+- runtime failures are classified as timeout, network/exchange, malformed/invalid evidence, resource/runtime or generic process failure;
+- bounded append-only runtime incident ledger records deterministic fingerprints and has trade/promotion/write authority hard-coded false;
+- coordinator health is fail-closed on worker-supervisor health, so stale/crashed workers make the coordinator unhealthy until recovered;
+- private Render logs include supervisor health, stale/crashed worker lists and restart count;
+- tests cover failure classification, fingerprint determinism, incident append behavior, stale/crash detection and no-authority invariants.
+
+Important limitation: runtime supervision can restart unhealthy worker loops automatically, but it does NOT auto-edit or auto-merge production code and does NOT have Render rollback authority. Code bugs still require isolated repair branches/PRs plus exact-head CI, and deploy rollback remains a controlled deployment action rather than autonomous worker authority.
 
 ## AUTHENTIC PAPER TRADING STATE
 The continuous paper account remains forward-only and broker-disconnected. Authentic baseline is exactly `$100,000` from `2026-09-08T01:17:49Z`; never reset or rewrite it. Current account value = immutable starting capital plus realized/open P&L. Safety/execution gates may reject entries but never fabricate or reset history. Paper performance is evidence only.
@@ -90,10 +104,10 @@ Preserve stable exact strategy fingerprints while genuine forward observations a
 
 ## EXACT NEXT STEP
 1. Continue genuine ACC-002 24h/7d forward/OOS evidence and worker-health monitoring. No profitability claim unless evidence genuinely passes.
-2. Wait for non-zero private runtime observability samples after the current restart, then compare exact history-network p50/p95 against ACC-002 worker elapsed time and cache hit rate.
-3. Do not classify network retrieval as the bottleneck until multiple completed worker/fetch observations exist; the startup-zero snapshot is insufficient.
-4. If network history retrieval is a dominant share of worker runtime, optimize proven request duplication/batching/source behavior conservatively; do not raise concurrency or stretch TTLs by guesswork.
-5. If network time is not dominant, investigate CPU/backtest/panel construction or scheduling next.
+2. Verify the PR #88 supervisor stays healthy in live Render logs: no stale workers, no unexpected task-restart loop, and heartbeats continue through long ACC-002 jobs.
+3. Use non-zero cache/network/worker samples to identify the proven throughput bottleneck; do not optimize from startup-zero samples.
+4. Next reliability upgrade should be a deployment-canary/rollback decision layer that can detect post-deploy regression and recommend or execute controlled rollback only with explicit deployment authority; do not give research workers repository-write or merge authority.
+5. Build a durable bug/regression ledger for confirmed code defects so every fixed defect has a permanent reproducer/regression test; runtime incident fingerprints alone are not persistent across Render redeploys.
 6. Preserve stable exact champion fingerprints while challengers run in shadow; only evidence-backed changes create a new fingerprint.
 7. Preserve empty `live_promotions.json`, unused signing keys, PONS fail-closed behavior, immutable $100k paper ledger and broker-disconnected state.
 8. Only add microstructure features when genuine timestamped data supports them; never reconstruct unavailable order books/liquidations from candles.
