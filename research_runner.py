@@ -7,7 +7,8 @@ from datetime import datetime, timezone
 from backtest import run_backtest, walk_forward
 from execution_oos import evaluate_execution_oos
 from market_data import build_universe
-from strategy_families import evaluate_strategy_registry
+from multiple_testing import apply_registry_firewall
+from strategy_families import STRATEGY_FAMILIES, evaluate_strategy_registry
 from research_artifact import seal_research_payload
 
 
@@ -59,12 +60,24 @@ def resolve_research_symbols():
     }
 
 
+def declared_hypothesis_trials(symbols, timeframes, universe_meta):
+    """Predeclare search breadth before inspecting any OOS strategy result.
+
+    Count the full resolved universe rather than only this worker shard, six
+    strategy families, and base + two parameter perturbations. Continuous runs
+    must not lower this declaration merely because a shard happens to be small.
+    """
+    resolved = int(universe_meta.get("universe_size_resolved") or len(symbols) or 1)
+    return max(1, resolved) * max(1, len(timeframes)) * len(STRATEGY_FAMILIES) * 3
+
+
 def main():
     symbols, universe_meta = resolve_research_symbols()
     timeframes = csv_env("RESEARCH_TIMEFRAMES", "15m,1H")
     bars = int(os.getenv("RESEARCH_BARS", "5000"))
     threshold = float(os.getenv("RESEARCH_THRESHOLD", "2.25"))
     execution_quote_notional = float(os.getenv("RESEARCH_EXECUTION_NOTIONAL", "5000"))
+    trial_count = declared_hypothesis_trials(symbols, timeframes, universe_meta)
 
     started = datetime.now(timezone.utc).isoformat()
     results = []
@@ -75,6 +88,7 @@ def main():
                 "symbol": symbol,
                 "bar": bar,
                 "bars_requested": bars,
+                "declared_hypothesis_trials": trial_count,
             }
             t0 = time.time()
             try:
@@ -86,7 +100,8 @@ def main():
                     bars=bars,
                     quote_notional=execution_quote_notional,
                 )
-                item["strategy_registry"] = evaluate_strategy_registry(symbol, bar=bar, bars=bars)
+                raw_registry = evaluate_strategy_registry(symbol, bar=bar, bars=bars)
+                item["strategy_registry"] = apply_registry_firewall(raw_registry, trial_count)
                 item["ok"] = True
             except Exception as exc:
                 item["ok"] = False
@@ -107,6 +122,7 @@ def main():
                     "validation": strategy["validation"],
                     "holdout_test": strategy["holdout_test"],
                     "robustness": strategy["robustness"],
+                    "multiple_testing_gate": strategy["multiple_testing_gate"],
                 })
 
     payload = {
@@ -120,7 +136,12 @@ def main():
         "threshold": threshold,
         "execution_quote_notional": execution_quote_notional,
         "universe": universe_meta,
-        "strategy_policy": "research-only unless strict validation+holdout OOS quality gate passes",
+        "declared_hypothesis_trials": trial_count,
+        "strategy_policy": "research-only unless strict validation+holdout OOS+robustness+search-breadth gates pass",
+        "multiple_testing_policy": (
+            "Search breadth is declared before OOS inspection. More strategy/parameter hypotheses require deeper OOS "
+            "and stronger bootstrap support. This is a conservative evidence penalty, not a claimed formal p-value correction."
+        ),
         "execution_policy": (
             "Current live order-book slippage may expand conservative untouched-OOS cost stress only; "
             "it is never backfilled as historical execution data and cannot authorize promotion."
@@ -139,6 +160,8 @@ def main():
         registry_payload = {
             "generated_at": payload["generated_at"],
             "policy": payload["strategy_policy"],
+            "multiple_testing_policy": payload["multiple_testing_policy"],
+            "declared_hypothesis_trials": trial_count,
             "execution_policy": payload["execution_policy"],
             "universe": universe_meta,
             "eligible_strategy_count": len(eligible),
@@ -149,7 +172,7 @@ def main():
     failures = sum(1 for x in results if not x.get("ok"))
     print(
         f"Completed {len(results)} research jobs with {failures} failures and "
-        f"{len(eligible)} OOS-eligible strategies. Universe={universe_meta}."
+        f"{len(eligible)} OOS-eligible strategies after {trial_count} declared hypotheses. Universe={universe_meta}."
     )
     if results and failures == len(results):
         raise SystemExit(1)
