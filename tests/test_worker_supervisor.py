@@ -1,10 +1,12 @@
 import json
-from pathlib import Path
 
 from worker_supervisor import (
     classify_failure,
+    diagnostic_fingerprint,
     incident_fingerprint,
+    infer_error_type,
     record_incident,
+    sanitize_diagnostic,
     supervisor_summary,
     worker_health,
 )
@@ -17,25 +19,48 @@ def test_failure_classification_is_conservative():
     assert classify_failure(-1, "MemoryError") == "resource_or_runtime"
     assert classify_failure(2, None) == "process_failure"
     assert classify_failure(0, None) == "none"
+    assert classify_failure(1, "ProcessExitError", "httpx.ConnectError: DNS failed") == "network_or_exchange"
 
 
 def test_incident_fingerprint_is_deterministic_and_worker_specific():
     a = incident_fingerprint("major-btc", "timeout", "TimeoutError", -9)
     b = incident_fingerprint("major-btc", "timeout", "TimeoutError", -9)
     c = incident_fingerprint("major-eth", "timeout", "TimeoutError", -9)
+    d = incident_fingerprint("major-btc", "timeout", "TimeoutError", -9, "different root cause")
     assert a == b
     assert a != c
+    assert a != d
     assert len(a) == 20
 
 
-def test_record_incident_is_append_only_and_has_no_authority(tmp_path):
+def test_diagnostic_is_bounded_redacted_and_type_is_inferred():
+    raw = (
+        "Authorization: Bearer very-secret-token-value\n"
+        "api_key=abc123secret\n"
+        "Traceback (most recent call last):\n"
+        "  File \"runner.py\", line 1, in <module>\n"
+        "ValueError: insufficient supported liquidity subsets for ACC-002 stability gate\n"
+    )
+    clean = sanitize_diagnostic(raw, max_chars=1000)
+    assert "very-secret-token-value" not in clean
+    assert "abc123secret" not in clean
+    assert "<redacted>" in clean
+    assert infer_error_type(clean) == "ValueError"
+    assert diagnostic_fingerprint(clean) == diagnostic_fingerprint(clean)
+
+
+def test_record_incident_is_append_only_private_diagnostic_and_has_no_authority(tmp_path):
     ledger = tmp_path / "incidents.jsonl"
-    incident = record_incident("major-btc", -9, "TimeoutError", ledger_path=ledger)
-    record_incident("major-btc", -9, "TimeoutError", ledger_path=ledger)
+    diagnostic = "Traceback\nValueError: bad research evidence"
+    incident = record_incident("major-btc", 1, "ValueError", diagnostic=diagnostic, ledger_path=ledger)
+    record_incident("major-btc", 1, "ValueError", diagnostic=diagnostic, ledger_path=ledger)
     rows = [json.loads(line) for line in ledger.read_text(encoding="utf-8").splitlines()]
     assert len(rows) == 2
     assert rows[0]["fingerprint"] == rows[1]["fingerprint"]
-    assert incident["classification"] == "timeout"
+    assert rows[0]["diagnostic_excerpt"] == diagnostic
+    assert "diagnostic_excerpt" not in incident
+    assert incident["diagnostic_fingerprint"] is not None
+    assert incident["classification"] == "malformed_or_invalid_evidence"
     assert incident["trade_authority"] is False
     assert incident["promotion_authority"] is False
     assert incident["write_authority"] is False

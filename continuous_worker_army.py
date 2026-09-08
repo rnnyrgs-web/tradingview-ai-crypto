@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 import sys
 import tempfile
@@ -19,7 +20,12 @@ from pathlib import Path
 from threading import Lock
 
 from research_observability import record_worker_result, snapshot as research_metrics_snapshot
-from worker_supervisor import record_incident, supervisor_summary
+from worker_supervisor import (
+    infer_error_type,
+    record_incident,
+    sanitize_diagnostic,
+    supervisor_summary,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -30,6 +36,7 @@ MAX_ERROR_BACKOFF_SECONDS = max(30, min(int(os.getenv("WORKER_ARMY_MAX_ERROR_BAC
 HEARTBEAT_SECONDS = max(15, min(int(os.getenv("WORKER_ARMY_HEARTBEAT_SECONDS", "30")), 120))
 SUPERVISOR_INTERVAL_SECONDS = max(10, min(int(os.getenv("WORKER_ARMY_SUPERVISOR_INTERVAL_SECONDS", "30")), 120))
 TASK_RESTART_DELAY_SECONDS = max(5, min(int(os.getenv("WORKER_ARMY_TASK_RESTART_DELAY_SECONDS", "15")), 300))
+log = logging.getLogger("uvicorn.error")
 
 
 @dataclass(frozen=True)
@@ -176,6 +183,14 @@ def _retry_delay_seconds(consecutive_failures: int) -> int:
     return min(MAX_ERROR_BACKOFF_SECONDS, max(REST_SECONDS, REST_SECONDS * multiplier))
 
 
+def _read_diagnostic_tail(path: Path) -> str:
+    try:
+        raw = path.read_bytes()
+    except OSError:
+        return ""
+    return sanitize_diagnostic(raw[-16_384:].decode("utf-8", errors="replace"))
+
+
 async def _wait_for_process(process: asyncio.subprocess.Process, spec: WorkerSpec) -> tuple[int, str | None]:
     started = time.monotonic()
     while True:
@@ -216,36 +231,55 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> int:
         exit_code = None
         error_type = None
         evidence = None
+        diagnostic = ""
         try:
             with tempfile.TemporaryDirectory(prefix=f"crypto-{spec.name}-") as tmpdir:
                 summary_path = str(Path(tmpdir) / "evidence-summary.json")
-                process = await asyncio.create_subprocess_exec(
-                    sys.executable,
-                    str(PROJECT_ROOT / spec.script),
-                    cwd=tmpdir,
-                    env=_worker_env(spec, summary_path),
-                    stdout=asyncio.subprocess.DEVNULL,
-                    stderr=asyncio.subprocess.DEVNULL,
-                )
-                exit_code, error_type = await _wait_for_process(process, spec)
+                stderr_path = Path(tmpdir) / "worker-stderr.log"
+                with stderr_path.open("wb") as stderr_handle:
+                    process = await asyncio.create_subprocess_exec(
+                        sys.executable,
+                        str(PROJECT_ROOT / spec.script),
+                        cwd=tmpdir,
+                        env=_worker_env(spec, summary_path),
+                        stdout=asyncio.subprocess.DEVNULL,
+                        stderr=stderr_handle,
+                    )
+                    exit_code, error_type = await _wait_for_process(process, spec)
+                if exit_code != 0:
+                    diagnostic = _read_diagnostic_tail(stderr_path)
+                    error_type = infer_error_type(diagnostic, error_type)
                 if exit_code == 0 and spec.script == "cross_asset_runner.py":
                     try:
                         evidence = json.loads(Path(summary_path).read_text(encoding="utf-8"))
-                    except (OSError, ValueError, TypeError):
+                    except (OSError, ValueError, TypeError) as exc:
                         exit_code = -1
                         error_type = "EvidenceSummaryError"
+                        diagnostic = sanitize_diagnostic(f"{type(exc).__name__}: failed to read cross-asset evidence summary")
         except asyncio.CancelledError:
             raise
         except Exception as exc:
             exit_code = -1
             error_type = type(exc).__name__
+            diagnostic = sanitize_diagnostic(f"{type(exc).__name__}: worker launcher exception")
 
         exit_code = int(exit_code if exit_code is not None else -1)
         elapsed = round(time.monotonic() - started, 2)
         incident = None
         if exit_code != 0:
             error_type = error_type or "ProcessExitError"
-            incident = record_incident(spec.name, exit_code, error_type)
+            incident = record_incident(spec.name, exit_code, error_type, diagnostic=diagnostic)
+            compact = diagnostic.replace("\n", " | ") if diagnostic else "<none>"
+            log.error(
+                "worker_failure worker=%s exit=%s error_type=%s classification=%s incident=%s diagnostic_fp=%s diagnostic=%s",
+                spec.name,
+                exit_code,
+                error_type,
+                incident.get("classification"),
+                incident.get("fingerprint"),
+                incident.get("diagnostic_fingerprint"),
+                compact,
+            )
         with _lock:
             previous_failures = int(_status["workers"][spec.name].get("consecutive_failures") or 0)
             consecutive_failures = 0 if exit_code == 0 else previous_failures + 1
@@ -343,13 +377,15 @@ async def run_army() -> None:
                 if shutting_down:
                     continue
                 error_type = "WorkerLoopExit"
+                diagnostic = ""
                 try:
                     exc = task.exception()
                     if exc is not None:
                         error_type = type(exc).__name__
+                        diagnostic = sanitize_diagnostic(f"{type(exc).__name__}: logical worker loop exited unexpectedly")
                 except asyncio.CancelledError:
                     error_type = "CancelledError"
-                incident = record_incident(name, -1, error_type)
+                incident = record_incident(name, -1, error_type, diagnostic=diagnostic)
                 with _lock:
                     previous = _status["workers"].get(name, {})
                     _status["task_restarts"] = int(_status["task_restarts"]) + 1
@@ -361,6 +397,13 @@ async def run_army() -> None:
                         "heartbeat_at": _now(),
                         "heartbeat_monotonic": time.monotonic(),
                     }
+                log.error(
+                    "worker_loop_restart worker=%s error_type=%s incident=%s diagnostic_fp=%s",
+                    name,
+                    error_type,
+                    incident.get("fingerprint"),
+                    incident.get("diagnostic_fingerprint"),
+                )
                 await asyncio.sleep(TASK_RESTART_DELAY_SECONDS)
                 spec = specs[name]
                 tasks[name] = asyncio.create_task(_worker_loop(spec, lanes[name]), name=name)
