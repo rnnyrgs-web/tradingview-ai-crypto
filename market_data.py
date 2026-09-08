@@ -1,6 +1,9 @@
 import logging
 import time
+from collections import OrderedDict
+from copy import deepcopy
 from datetime import datetime, timezone, timedelta
+from threading import Lock
 import httpx
 
 from config import (
@@ -14,16 +17,35 @@ from market_intelligence import cross_exchange_order_book, derivatives_summary, 
 from utils import f, pct_change
 
 log = logging.getLogger(__name__)
-http = httpx.Client(timeout=25.0, follow_redirects=True)
+http = httpx.Client(
+    timeout=httpx.Timeout(connect=10.0, read=45.0, write=10.0, pool=10.0),
+    follow_redirects=True,
+)
+OKX_MAX_ATTEMPTS = 3
+HISTORY_CACHE_SIZE = 32
+_history_cache = OrderedDict()
+_history_cache_lock = Lock()
 
 
 def okx_get(path, params=None):
-    r = http.get(f"{OKX_BASE}{path}", params=params or {})
-    r.raise_for_status()
-    obj = r.json()
-    if str(obj.get("code", "0")) != "0":
-        raise RuntimeError(f"OKX error {obj.get('code')}: {obj.get('msg')}")
-    return obj.get("data", [])
+    for attempt in range(OKX_MAX_ATTEMPTS):
+        try:
+            r = http.get(f"{OKX_BASE}{path}", params=params or {})
+            r.raise_for_status()
+            obj = r.json()
+            if str(obj.get("code", "0")) != "0":
+                raise RuntimeError(f"OKX error {obj.get('code')}: {obj.get('msg')}")
+            return obj.get("data", [])
+        except (httpx.TimeoutException, httpx.NetworkError, httpx.HTTPStatusError) as exc:
+            retryable_status = (
+                not isinstance(exc, httpx.HTTPStatusError)
+                or exc.response.status_code == 429
+                or exc.response.status_code >= 500
+            )
+            if not retryable_status or attempt + 1 >= OKX_MAX_ATTEMPTS:
+                raise
+            time.sleep(0.35 * (2 ** attempt))
+    raise RuntimeError("unreachable OKX retry state")
 
 
 def get_spot_tickers():
@@ -81,6 +103,12 @@ def get_history(symbol, bar="15m", bars=1000, max_bars=50000):
     a data-model limitation and can be raised for cloud research jobs.
     """
     wanted = max(100, min(int(bars), int(max_bars)))
+    cache_key = (str(symbol), str(bar), wanted, int(max_bars))
+    with _history_cache_lock:
+        cached = _history_cache.get(cache_key)
+        if cached is not None:
+            _history_cache.move_to_end(cache_key)
+            return deepcopy(cached)
     collected = []
     after = None
     seen_oldest = None
@@ -109,7 +137,19 @@ def get_history(symbol, bar="15m", bars=1000, max_bars=50000):
 
     by_ts = {int(r[0]): r for r in collected}
     rows = [by_ts[k] for k in sorted(by_ts.keys(), reverse=True)][:wanted]
-    return normalize_candles(rows)
+    normalized = normalize_candles(rows)
+    with _history_cache_lock:
+        _history_cache[cache_key] = normalized
+        _history_cache.move_to_end(cache_key)
+        while len(_history_cache) > HISTORY_CACHE_SIZE:
+            _history_cache.popitem(last=False)
+    return deepcopy(normalized)
+
+
+def clear_history_cache():
+    """Clear the process-local cache used to reuse identical research inputs."""
+    with _history_cache_lock:
+        _history_cache.clear()
 
 
 def _normalized_history_points(rows, timestamp_key, value_key):
