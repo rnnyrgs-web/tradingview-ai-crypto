@@ -22,6 +22,9 @@ def test_worker_mix_has_major_pons_universe_swing_and_cross_asset():
     cross_24h = next(worker for worker in army.WORKERS if worker.name == "cross-asset-rank-24h")
     cross_7d = next(worker for worker in army.WORKERS if worker.name == "cross-asset-rank-7d")
     assert cross_24h.script == cross_7d.script == "cross_asset_runner.py"
+    assert army._is_accuracy_worker(cross_24h)
+    assert army._is_accuracy_worker(cross_7d)
+    assert not army._is_accuracy_worker(next(worker for worker in army.WORKERS if worker.name == "major-btc"))
     assert cross_24h.env["CROSS_ASSET_HORIZON"] == "24h"
     assert cross_7d.env["CROSS_ASSET_HORIZON"] == "7d"
 

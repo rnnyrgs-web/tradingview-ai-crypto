@@ -75,6 +75,7 @@ _status: dict[str, object] = {
     "enabled": True,
     "started_at": None,
     "max_concurrent": MAX_CONCURRENT,
+    "accuracy_reserved_slots": 1 if MAX_CONCURRENT >= 2 else 0,
     "job_timeout_seconds": JOB_TIMEOUT_SECONDS,
     "worker_count": len(WORKERS),
     "active_jobs": 0,
@@ -121,6 +122,10 @@ def _worker_env(spec: WorkerSpec, summary_path: str | None = None) -> dict[str, 
         env["RESEARCH_SHARD_COUNT"] = "1"
         env["RESEARCH_FORCE_SYMBOLS"] = ""
     return env
+
+
+def _is_accuracy_worker(spec: WorkerSpec) -> bool:
+    return spec.script == "cross_asset_runner.py"
 
 
 async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> None:
@@ -210,8 +215,17 @@ async def run_army() -> None:
             }
             for spec in WORKERS
         }
-    semaphore = asyncio.Semaphore(MAX_CONCURRENT)
-    tasks = [asyncio.create_task(_worker_loop(spec, semaphore), name=spec.name) for spec in WORKERS]
+    if MAX_CONCURRENT == 1:
+        shared = asyncio.Semaphore(1)
+        lanes = {spec.name: shared for spec in WORKERS}
+    else:
+        accuracy_lane = asyncio.Semaphore(1)
+        general_lane = asyncio.Semaphore(MAX_CONCURRENT - 1)
+        lanes = {
+            spec.name: accuracy_lane if _is_accuracy_worker(spec) else general_lane
+            for spec in WORKERS
+        }
+    tasks = [asyncio.create_task(_worker_loop(spec, lanes[spec.name]), name=spec.name) for spec in WORKERS]
     try:
         await asyncio.gather(*tasks)
     finally:
