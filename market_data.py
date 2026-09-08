@@ -17,6 +17,7 @@ from historical_cache import prune_cache as prune_shared_history_cache
 from historical_cache import read_history as read_shared_history
 from historical_cache import write_history as write_shared_history
 from market_intelligence import cross_exchange_order_book, derivatives_summary, order_book_summary, price_consensus
+from research_observability import record_history_network_fetch
 from utils import f, pct_change
 
 log = logging.getLogger(__name__)
@@ -113,6 +114,10 @@ def get_history(symbol, bar="15m", bars=1000, max_bars=50000):
     shared immutable cache object is checked. A miss or any malformed/corrupt
     cache object falls back to the public OKX endpoint; cached data never bypass
     normalization, chronology, or future-timestamp validation.
+
+    Observability records only the sum of actual deep-history OKX request
+    durations. Cache time, normalization and intentional pagination sleeps are
+    excluded, and the metric has no signal/trade/promotion authority.
     """
     wanted = max(100, min(int(bars), int(max_bars)))
     cache_key = (str(symbol), str(bar), wanted, int(max_bars))
@@ -130,24 +135,53 @@ def get_history(symbol, bar="15m", bars=1000, max_bars=50000):
     collected = []
     after = None
     seen_oldest = None
-    while len(collected) < wanted:
-        page_size = min(100, wanted - len(collected))
-        params = {"instId": symbol, "bar": bar, "limit": str(page_size)}
-        if after:
-            params["after"] = after
-        rows = okx_get("/api/v5/market/history-candles", params)
-        if not rows:
-            break
-        collected.extend(rows)
-        oldest = min(int(r[0]) for r in rows)
-        if seen_oldest is not None and oldest >= seen_oldest:
-            break
-        seen_oldest = oldest
-        after = str(oldest)
-        if len(rows) < page_size:
-            break
-        time.sleep(0.12)
+    network_ms = 0.0
+    network_requests = 0
+    network_rows = 0
+    try:
+        while len(collected) < wanted:
+            page_size = min(100, wanted - len(collected))
+            params = {"instId": symbol, "bar": bar, "limit": str(page_size)}
+            if after:
+                params["after"] = after
+            request_started = time.monotonic()
+            try:
+                rows = okx_get("/api/v5/market/history-candles", params)
+            finally:
+                network_ms += max(0.0, (time.monotonic() - request_started) * 1000.0)
+                network_requests += 1
+            network_rows += len(rows or [])
+            if not rows:
+                break
+            collected.extend(rows)
+            oldest = min(int(r[0]) for r in rows)
+            if seen_oldest is not None and oldest >= seen_oldest:
+                break
+            seen_oldest = oldest
+            after = str(oldest)
+            if len(rows) < page_size:
+                break
+            time.sleep(0.12)
+    except Exception as exc:
+        record_history_network_fetch(
+            symbol,
+            bar,
+            request_count=network_requests,
+            rows_received=network_rows,
+            network_latency_ms=network_ms,
+            success=False,
+            error_type=type(exc).__name__,
+        )
+        raise
 
+    record_history_network_fetch(
+        symbol,
+        bar,
+        request_count=network_requests,
+        rows_received=network_rows,
+        network_latency_ms=network_ms,
+        success=True,
+    )
     by_ts = {int(r[0]): r for r in collected}
     rows = [by_ts[k] for k in sorted(by_ts.keys(), reverse=True)][:wanted]
     normalized = normalize_candles(rows)
