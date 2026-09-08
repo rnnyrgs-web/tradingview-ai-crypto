@@ -87,6 +87,13 @@ Master tracking issue #45 covers the safe acceleration program.
   - Existing `/dashboard/paper` remains available, and `/dashboard/signals` serves the embedded signal table; signal-detail/chart routes remain unchanged.
   - This is visualization/navigation only and does not alter research, promotion, broker connectivity, or trade authority.
   - Render deploy `dep-daflunbbc2fs73de0jig` completed live successfully.
+- PR #52 `Make paper trading forward-only and realistic` initially exposed a stale unit-test assumption, then passed exact-head Security and Reliability run `34176047490` on `cc2989dcdcd3a89fd9dadc8e98f3631094bb1975` and was squash-merged as `ff1764e07530e1536cd66ca50133bf41e5ce6215`.
+  - New paper positions no longer use the signal's earlier/model `entry_price` as the simulated fill. They fetch the observable current market price at the actual paper-cycle opening instant, apply adverse one-way execution friction, and record that forward fill as the true paper entry.
+  - Stop and target distances are re-anchored to the actual forward fill so stale signal prices cannot create inherited/free P&L.
+  - Stop/target/time exits use the observed current market price rather than pretending execution happened exactly at an idealized trigger level.
+  - The simulator remains `research_only=true`, `real_money=false`, `broker_connected=false`, `trade_authority=false`.
+  - Render deployment `dep-dafm3tbm8hqs73e5v0v0` completed live for PR #52.
+  - All legacy paper trades, equity snapshots and the old unrealized gain were explicitly invalidated and cleared after the new code was live. Supabase account `default` was reset at `2026-09-08T01:17:49Z` to exactly `$100,000` cash/equity, `$0` realized P&L, zero drawdown, zero trades and zero snapshots. Only forward trades opened after this reset count as authentic paper-performance evidence.
 - Future acceleration work remains subordinate to the mandatory research-to-live chain; speed must come from parallelism, caching, early rejection, prioritization, event-driven agents and deterministic automation, never weaker evidence.
 
 ## COST / SPEED POLICY
@@ -96,8 +103,8 @@ Use deterministic Python for calculation/backtesting/filtering/evidence checks. 
 1. Inspect completed Cloud Crypto Research run `34170631618` artifacts. Verify `execution_oos_robustness` exists in real artifacts, uses the same untouched holdout path, current snapshot anchor is never presented as historical, and record which strategies/timeframes retain positive expectancy/sum under maximum conservative execution stress. Also verify the new independent artifact-audit output. Do not infer results before artifact inspection.
 2. If the replacement run has infrastructure/data failures, fix only the bounded cause and rerun. If evidence is valid, decide whether ACC-001 has enough execution robustness evidence to close; do not mark complete merely because code exists.
 3. Obtain direct production observer state evidence: `/health.continuous_ai` must show `configured=true`, `cycle_count>=1`, `last_error_type=null`, five-minute cadence, bounded timeout and trade/write/promotion authority false.
-4. Verify a post-PR #42/#43/#44/#47/#48/#49/#51 production scan remains healthy, execution/liquidation evidence stays research-only, no unvalidated TRADE appears, and the paper simulator remains broker-disconnected/research-only.
-5. Continue collecting paper trades from the hypothetical $100k account. Alert only when the persisted `consistently_profitable` gate is genuinely satisfied; do not infer profitability from unrealized equity or a small sample.
+4. Verify a post-PR #42/#43/#44/#47/#48/#49/#51/#52 production scan remains healthy, execution/liquidation evidence stays research-only, no unvalidated TRADE appears, and the paper simulator remains broker-disconnected/research-only.
+5. Let the freshly reset `$100,000` forward-only paper account collect new trades from zero. Treat only trades opened after `2026-09-08T01:17:49Z` as authentic paper-performance evidence. Alert only when the persisted `consistently_profitable` gate is genuinely satisfied; do not infer profitability from unrealized equity or a small sample.
 6. After ACC-001 evidence is genuinely complete, refresh PR #46 on current main, require exact-head Security and Reliability success, then integrate only if its shadow/canary layer remains read-only/fail-closed.
 7. Only then move to `ACC-002` cross-sectional ranking, then ACC-003 through ACC-007 sequentially while non-owner specialists audit in parallel.
 8. Keep `live_promotions.json` empty and signing keys unused until repeated backtests, untouched OOS, robustness/stability, Strategy Registry review and Production Risk review genuinely complete.
