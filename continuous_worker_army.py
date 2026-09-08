@@ -31,8 +31,6 @@ class WorkerSpec:
     script: str = "research_runner.py"
 
 
-# Persistent logical workers keep cycling 24/7. A bounded semaphore prevents
-# one inexpensive machine from being overloaded. ACC-002 gets a dedicated loop.
 WORKERS = (
     WorkerSpec("major-btc", {"RESEARCH_SYMBOLS": "BTC-USDT", "RESEARCH_TIMEFRAMES": "15m,1H"}),
     WorkerSpec("major-eth", {"RESEARCH_SYMBOLS": "ETH-USDT", "RESEARCH_TIMEFRAMES": "15m,1H"}),
@@ -53,7 +51,7 @@ WORKERS = (
         "cross-asset-rank",
         {
             "CROSS_ASSET_UNIVERSE_SIZE": "30",
-            "CROSS_ASSET_BARS": "1200",
+            "CROSS_ASSET_BARS": "3000",
             "CROSS_ASSET_BAR": "1H",
             "CROSS_ASSET_FORWARD_BARS": "24",
             "CROSS_ASSET_ROUND_TRIP_COST_BPS": "12",
