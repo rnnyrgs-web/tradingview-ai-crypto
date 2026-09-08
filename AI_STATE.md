@@ -86,11 +86,16 @@ PR #55 `Add bounded 24/7 Python research worker army` passed exact-head Security
   - Coordinator deploy `dep-dag294jbc2fs73dqak00` and production deploy `dep-dag294jbc2fs73dqajq0` reached `live`.
   - Live `/workers` verified 17 persistent logical workers, `max_concurrent=2`, `accuracy_reserved_slots=1`, the 24h ACC-002 worker running immediately, zero completed/failed jobs at startup, and all trade/write/promotion/broker authorities false.
   - Production `/health` was healthy with zero recent operational errors. Optional `continuous_ai` remained bounded/read-only but rate-limited; deterministic Python research is unaffected.
+- PR #68 `Improve deep history fetch reliability` passed exact-head Security and Reliability run `34246946142` on `f07957f2120452eb80281c01bf5d2d1396542636` and was squash-merged as `2ab5dd9352717bce895821270340386030b82caa`.
+  - Reproduced ACC-002 evidence generation was being blocked by transient OKX deep-history `ReadTimeout` failures.
+  - Added bounded retries for transient timeout/network/429/5xx failures with exponential backoff.
+  - Added bounded process-local reuse of identical deep-history datasets with defensive copies, reducing duplicate public-data calls inside a single research subprocess without adding paid infrastructure.
+  - Coordinator deploy `dep-dag3gmu7bikc73alps30` and production deploy `dep-dag3gmu7bikc73alpr20` both reached `live` before the subsequent PR #69 deploy replaced them.
 - All ACC-002 outputs remain `research_only=true`, `live_approved=false`, `trade_authority=false`. No profitability has been claimed yet; genuine live public-data evidence must be collected and inspected.
 
 ## ACCURACY BACKLOG
 1. `ACC-001` market-microstructure — COMPLETE.
-2. `ACC-002` quant-cross-asset — IN PROGRESS; core rank engine, nonstop worker, purge/non-overlap, sufficient independent OOS depth, pre-OOS fixed-grid selection, parameter stability, liquidity-subset stability, 3x cost stress and 500-resample bootstrap confidence are integrated. Genuine live public-data evidence still needs collection/inspection and horizon robustness.
+2. `ACC-002` quant-cross-asset — IN PROGRESS; core rank engine, nonstop worker, purge/non-overlap, sufficient independent OOS depth, pre-OOS fixed-grid selection, parameter stability, liquidity-subset stability, 3x cost stress, 500-resample bootstrap confidence, dedicated 24h/7d workers, reserved accuracy capacity and bounded deep-history retry/cache reliability are integrated. Genuine live public-data evidence still needs collection/inspection and horizon robustness.
 3. `ACC-003` quant-breakout-volatility — no-lookahead regime-specialist models for bull/bear/range/high-volatility/compression.
 4. `ACC-004` strategy-registry — calibrated champion/challenger ensemble weighting with correlation/deterioration penalties and automatic demotion.
 5. `ACC-005` data-market — broader exchange/data coverage with provenance/freshness/contradiction checks and safe PONS handling.
@@ -109,18 +114,24 @@ Master tracking issue #45 covers the safe acceleration program.
   - Fixed dashboard/accounting mismatch where open-position display double-counted entry friction relative to account equity.
   - Dashboard now reconciles `Total P&L = Realized P&L + Open P&L` and `Current Equity = Starting Capital + Total P&L` from the same live marks, with an explicit Open P&L card.
   - Production and coordinator Render deploys for the merge reached live before the subsequent PR #64 deploy replaced them.
+- PR #69 `Preserve authentic paper trading ledger` passed Security and Reliability run `34251552315` on `3910c1126ed87be0e6fb113eb22e02bf9592301f` and was squash-merged as `15a48dda50fcdd34916c86f00fe021a07cc258a2`.
+  - `initial_cash` can only be written at account creation, preserving the original `$100,000` baseline while Current Account Value moves with realized + open P&L.
+  - Background/manual paper cycles are serialized and a close only credits cash/realized P&L when the persisted OPEN trade was actually claimed, preventing double-credit races.
+  - Persisted paper account state now fails closed on a mutated starting balance or non-finite accounting fields.
+  - The dashboard now foregrounds dynamic `Current Account Value` while retaining the original starting capital separately.
+  - Coordinator deploy `dep-dag3hke7bikc73alr90g` and production deploy `dep-dag3hke7bikc73alr95g` both reached `live`.
 - Future acceleration work remains subordinate to the mandatory research-to-live chain; speed must come from parallelism, caching, early rejection, prioritization, event-driven agents and deterministic automation, never weaker evidence.
 
 ## COST / SPEED POLICY
 Hard infrastructure ceiling: USD 30/month unless the user explicitly changes it. Use the existing single paid Render worker/coordinator rather than multiplying paid machines. Default worker-army heavy concurrency is 2; raise only after measured capacity evidence and never by adding paid capacity without approval. Use deterministic Python for calculation/backtesting/filtering/evidence checks. Use free/public market data where defensible. Use AI only for bounded planning, hypothesis generation, implementation/review and orchestration. Prefer event-driven wakeups, caching/reuse, early rejection and read-only parallel audits over idle paid computation or competing writes.
 
 ## EXACT NEXT STEP
-1. Inspect the first genuine 24h and 7d ACC-002 public-data summaries from coordinator `/workers`. Report supported liquidity subsets, each candidate's train/validation stability, selected fixed candidate if any, whether untouched OOS was opened, OOS sample count, rank IC, 3x-cost top-minus-bottom spread and both bootstrap lower bounds. Do not claim profitability if either horizon gate fails or evidence is small.
-2. Recheck that both accuracy workers continue cycling without repeated failure/timeout and that the general lane gives every major/PONS/universe/swing worker bounded progress.
+1. Inspect the first genuine post-PR-#68 24h and 7d ACC-002 public-data summaries from coordinator `/workers`. Report supported liquidity subsets, each candidate's train/validation stability, selected fixed candidate if any, whether untouched OOS was opened, OOS sample count, rank IC, 3x-cost top-minus-bottom spread and both bootstrap lower bounds. Do not claim profitability if either horizon gate fails or evidence is small.
+2. Recheck that both accuracy workers continue cycling without repeated failure/timeout after the retry/cache fix and that the general lane gives every major/PONS/universe/swing worker bounded progress.
 3. Recheck production `/health.continuous_ai`; require bounded timeout and all trade/write/promotion authorities false. Fix only bounded provider/cadence issues if rate limiting persists.
 4. Tune worker scheduling for throughput-per-dollar: reuse/caching first, reject weak candidates early, retain majors/PONS/ACC-002 fast lanes, and avoid duplicate overlapping research between Render and GitHub Actions.
 5. Investigate any repeated PONS worker failure and keep PONS research fail-closed if its public market/history data are insufficient or inconsistent.
-6. Let the reset `$100,000` forward-only paper account collect authentic post-reset trades. Alert only when persisted `consistently_profitable` is genuinely satisfied.
+6. Let the authentic `$100,000` forward-only paper account continue collecting post-reset trades without resetting or rewriting starting capital. Alert only when persisted `consistently_profitable` is genuinely satisfied.
 7. Continue ACC-003 through ACC-007 after ACC-002 evidence, while non-owner specialists audit in parallel.
 8. Keep `live_promotions.json` empty and signing keys unused until repeated backtests, untouched OOS, robustness/stability, Strategy Registry review and Production Risk review genuinely complete.
 9. Update this file after every completed development/integration cycle.
