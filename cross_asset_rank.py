@@ -3,7 +3,8 @@
 This module is deliberately research-only. It ranks a liquid crypto universe using
 features available at each timestamp, then evaluates forward cross-sectional rank
 IC and top-minus-bottom spread on chronological train/validation/untouched OOS
-segments. No future value is used in feature construction or model fitting.
+segments. Split boundaries are purged by the forward horizon and observations are
+sampled at non-overlapping horizons to reduce leakage/autocorrelation inflation.
 """
 
 from __future__ import annotations
@@ -21,6 +22,8 @@ class CrossAssetConfig:
     top_fraction: float = 0.20
     round_trip_cost_bps: float = 12.0
     min_assets: int = 8
+    cost_stress_multipliers: tuple[float, ...] = (1.0, 1.5, 2.0, 3.0)
+    non_overlapping_evaluation: bool = True
 
 
 def _pct(a: float, b: float) -> float:
@@ -90,8 +93,6 @@ def _feature_for(closes: list[float], idx: int, lookbacks: tuple[int, ...]) -> f
     returns = [_pct(closes[idx - lb], closes[idx]) for lb in lookbacks]
     one_bar = [_pct(closes[j - 1], closes[j]) for j in range(idx - max(lookbacks) + 1, idx + 1)]
     vol = _stdev(one_bar) or 1e-9
-    # Blend multiple horizons; volatility normalization prevents the noisiest coin
-    # from winning the rank solely because it has the largest raw moves.
     return mean(returns) / vol
 
 
@@ -120,25 +121,39 @@ def build_cross_section_panel(
     return panel
 
 
+def _purged_split_ranges(n: int, forward_bars: int) -> dict[str, tuple[int, int]]:
+    if n < 5:
+        raise ValueError("insufficient panel for chronological splits")
+    train_boundary = max(1, int(n * 0.60))
+    validation_boundary = max(train_boundary + 1, int(n * 0.80))
+    validation_boundary = min(validation_boundary, n)
+    purge = max(1, int(forward_bars))
+
+    train_end = max(0, train_boundary - purge)
+    validation_end = max(train_boundary, validation_boundary - purge)
+    if train_end <= 0 or validation_end <= train_boundary or validation_boundary >= n:
+        raise ValueError("insufficient panel after split purge")
+    return {
+        "train": (0, train_end),
+        "validation": (train_boundary, validation_end),
+        "untouched_oos": (validation_boundary, n),
+    }
+
+
 def evaluate_panel(panel: list[dict], config: CrossAssetConfig = CrossAssetConfig()) -> dict:
     if not panel:
         raise ValueError("empty panel")
-    n = len(panel)
-    train_end = max(1, int(n * 0.60))
-    val_end = max(train_end + 1, int(n * 0.80))
-    val_end = min(val_end, n)
-    split_ranges = {
-        "train": (0, train_end),
-        "validation": (train_end, val_end),
-        "untouched_oos": (val_end, n),
-    }
+    split_ranges = _purged_split_ranges(len(panel), config.forward_bars)
+    stride = max(1, config.forward_bars if config.non_overlapping_evaluation else 1)
+    stress_grid = tuple(sorted({float(x) for x in config.cost_stress_multipliers if float(x) >= 1.0}))
+    if not stress_grid:
+        raise ValueError("cost stress grid must contain multiplier >= 1")
 
     def score_segment(start: int, end: int) -> dict:
+        sampled = panel[start:end:stride]
         ics: list[float] = []
         spreads: list[float] = []
-        net_spreads: list[float] = []
-        cost = config.round_trip_cost_bps / 10000.0
-        for item in panel[start:end]:
+        for item in sampled:
             rows = item["rows"]
             scores = [r["score"] for r in rows]
             outcomes = [r["forward_return"] for r in rows]
@@ -149,29 +164,42 @@ def evaluate_panel(panel: list[dict], config: CrossAssetConfig = CrossAssetConfi
             bucket = max(1, int(len(ranked) * config.top_fraction))
             bottom = mean([r["forward_return"] for r in ranked[:bucket]])
             top = mean([r["forward_return"] for r in ranked[-bucket:]])
-            spread = top - bottom
-            spreads.append(spread)
-            net_spreads.append(spread - cost)
-        positive_ic_rate = sum(x > 0 for x in ics) / len(ics) if ics else 0.0
-        positive_net_rate = sum(x > 0 for x in net_spreads) / len(net_spreads) if net_spreads else 0.0
+            spreads.append(top - bottom)
+
+        stress_metrics = {}
+        for multiplier in stress_grid:
+            cost = (config.round_trip_cost_bps * multiplier) / 10000.0
+            net = [spread - cost for spread in spreads]
+            stress_metrics[str(multiplier)] = {
+                "cost_multiplier": multiplier,
+                "round_trip_cost_bps": config.round_trip_cost_bps * multiplier,
+                "mean_net_top_minus_bottom": mean(net) if net else None,
+                "positive_net_spread_rate": sum(x > 0 for x in net) / len(net) if net else 0.0,
+                "cumulative_net_spread": sum(net),
+            }
+
+        base = stress_metrics[str(min(stress_grid))]
         return {
-            "timestamps": end - start,
+            "timestamps": len(sampled),
+            "raw_range_observations": max(0, end - start),
+            "evaluation_stride": stride,
             "mean_rank_ic": mean(ics) if ics else None,
-            "positive_rank_ic_rate": positive_ic_rate,
+            "positive_rank_ic_rate": sum(x > 0 for x in ics) / len(ics) if ics else 0.0,
             "mean_gross_top_minus_bottom": mean(spreads) if spreads else None,
-            "mean_net_top_minus_bottom": mean(net_spreads) if net_spreads else None,
-            "positive_net_spread_rate": positive_net_rate,
-            "cumulative_net_spread": sum(net_spreads),
+            "mean_net_top_minus_bottom": base["mean_net_top_minus_bottom"],
+            "positive_net_spread_rate": base["positive_net_spread_rate"],
+            "cumulative_net_spread": base["cumulative_net_spread"],
+            "cost_stress": stress_metrics,
         }
 
     metrics = {name: score_segment(a, b) for name, (a, b) in split_ranges.items()}
     oos = metrics["untouched_oos"]
-    # Research gate only: deliberately conservative and not a live promotion gate.
+    worst = oos["cost_stress"][str(max(stress_grid))]
     research_pass = bool(
         oos["timestamps"] >= 20
         and (oos["mean_rank_ic"] or 0.0) > 0.0
-        and (oos["mean_net_top_minus_bottom"] or 0.0) > 0.0
-        and oos["positive_net_spread_rate"] >= 0.50
+        and (worst["mean_net_top_minus_bottom"] or 0.0) > 0.0
+        and worst["positive_net_spread_rate"] >= 0.50
     )
     return {
         "research_only": True,
@@ -179,7 +207,13 @@ def evaluate_panel(panel: list[dict], config: CrossAssetConfig = CrossAssetConfi
         "trade_authority": False,
         "lookbacks": list(config.lookbacks),
         "forward_bars": config.forward_bars,
+        "purge_bars": config.forward_bars,
+        "non_overlapping_evaluation": config.non_overlapping_evaluation,
+        "evaluation_stride": stride,
         "round_trip_cost_bps": config.round_trip_cost_bps,
+        "cost_stress_multipliers": list(stress_grid),
+        "split_ranges": {k: list(v) for k, v in split_ranges.items()},
         "splits": metrics,
         "passes_acc002_research_gate": research_pass,
+        "gate_uses_max_cost_stress": True,
     }
