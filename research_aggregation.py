@@ -6,6 +6,7 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
+from champion_challenger import build_champion_challenger
 from research_artifact import seal_research_payload, verify_research_envelope
 
 
@@ -39,10 +40,13 @@ def aggregate_registry_artifacts(root: Path, minimum_runs: int = 3) -> dict:
             }
 
     candidates = []
+    run_history = {}
     for (symbol, bar, family), runs in sorted(evidence.items()):
         hashes = sorted(runs)
         if len(hashes) < minimum_runs:
             continue
+        key = (symbol, bar, family)
+        run_history[key] = [runs[digest] for digest in hashes]
         candidates.append({
             "symbol": symbol,
             "bar": bar,
@@ -52,14 +56,20 @@ def aggregate_registry_artifacts(root: Path, minimum_runs: int = 3) -> dict:
             "status": "READY_FOR_STRATEGY_REGISTRY_REVIEW",
             "live_approved": False,
         })
+
+    ensemble = build_champion_challenger(candidates, run_history)
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "minimum_distinct_runs": minimum_runs,
         "valid_artifact_count": valid_artifacts,
         "invalid_artifacts": invalid_artifacts,
         "candidate_count": len(candidates),
         "candidates": candidates,
-        "policy": "Aggregation is research evidence only and cannot authorize a live signal.",
+        "champion_challenger": ensemble,
+        "policy": (
+            "Aggregation and champion/challenger weighting are research evidence only. "
+            "They cannot authorize a live signal or bypass Strategy Registry / Production Risk approval."
+        ),
     }
 
 
@@ -74,7 +84,10 @@ def main() -> int:
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(seal_research_payload(result), indent=2) + "\n", encoding="utf-8")
-    print(f"Aggregated {result['valid_artifact_count']} sealed artifacts; candidates={result['candidate_count']}")
+    print(
+        f"Aggregated {result['valid_artifact_count']} sealed artifacts; "
+        f"candidates={result['candidate_count']}; ensemble={result['champion_challenger']['status']}"
+    )
     return 0
 
 
