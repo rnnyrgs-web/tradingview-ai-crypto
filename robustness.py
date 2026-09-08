@@ -10,6 +10,12 @@ def _mean(values):
     return sum(values) / len(values) if values else 0.0
 
 
+def _valid_returns(values):
+    if not isinstance(values, (list, tuple)):
+        return False
+    return all(isinstance(value, (int, float)) and math.isfinite(float(value)) for value in values)
+
+
 def _drawdown(returns):
     equity = peak = 1.0
     worst = 0.0
@@ -28,10 +34,14 @@ def _percentile(values, fraction):
 
 
 def monte_carlo_bootstrap(returns, identity_seed, simulations=500):
+    if not _valid_returns(returns):
+        return {"passed": False, "reason": "invalid_nonfinite_oos_returns", "simulations": 0}
     if len(returns) < 12:
         return {"passed": False, "reason": "oos_trades<12", "simulations": 0}
+    if not isinstance(simulations, int) or simulations < 100 or simulations > 5000:
+        return {"passed": False, "reason": "invalid_simulation_count", "simulations": 0}
     totals, drawdowns = [], []
-    seed = identity_seed.encode("utf-8")
+    seed = str(identity_seed).encode("utf-8")
     counter = 0
     for _ in range(simulations):
         sample = []
@@ -56,6 +66,34 @@ def monte_carlo_bootstrap(returns, identity_seed, simulations=500):
 
 
 def evaluate_robustness(base_oos, parameter_variants, regime_returns, identity_seed):
+    malformed = []
+    if not _valid_returns(base_oos):
+        malformed.append("base_oos")
+    if not isinstance(parameter_variants, dict) or not parameter_variants:
+        malformed.append("parameter_variants")
+    else:
+        malformed.extend(
+            f"parameter:{name}" for name, values in parameter_variants.items()
+            if not _valid_returns(values)
+        )
+    if not isinstance(regime_returns, dict) or not regime_returns:
+        malformed.append("regime_returns")
+    else:
+        malformed.extend(
+            f"regime:{name}" for name, values in regime_returns.items()
+            if not _valid_returns(values)
+        )
+    if malformed:
+        return {
+            "passed": False,
+            "reason": "malformed_or_nonfinite_robustness_input",
+            "invalid_inputs": malformed,
+            "monte_carlo": {"passed": False, "simulations": 0},
+            "parameter_stability": {"passed": False, "variants": {}},
+            "regime_stability": {"passed": False, "regimes": {}},
+            "policy": "Malformed, non-finite or missing robustness inputs fail closed.",
+        }
+
     monte_carlo = monte_carlo_bootstrap(base_oos, identity_seed)
     parameter_metrics = {
         name: {"trades": len(values), "avg_trade_pct": round(_mean(values), 6)}
