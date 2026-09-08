@@ -12,7 +12,8 @@ from news_engine import latest_news, for_base
 from db import insert_signal
 from opportunity_engine import build_opportunities
 from production_validation import validate_live_strategy
-from operational_monitor import record_scan
+from production_risk_gate import assess_execution_risk, assess_global_market_risk
+from operational_monitor import health_snapshot, record_scan
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 log = logging.getLogger(__name__)
@@ -159,6 +160,7 @@ def run_scan():
                 item["order_book"] = {"research_only":True,"reliable":False,"reason":"collection_error"}
     regime=detect_regime(finalists)
     news=latest_news()
+    global_risk=assess_global_market_risk(finalists, health_snapshot())
 
     try:
         review=ai_review(finalists,regime,news)
@@ -190,8 +192,16 @@ def run_scan():
 
         plan=risk_plan(c["horizons"][horizon]["features"],direction,horizon)
         validation=validate_live_strategy(symbol,horizon,strategy_family)
-        consensus = c.get("market_consensus", {})
-        if evidence < MIN_EVIDENCE_SCORE or plan["rr"] < MIN_RR or not validation.approved or not consensus.get("reliable"):
+        consensus=c.get("market_consensus", {})
+        execution_risk=assess_execution_risk(c,direction)
+        if (
+            evidence < MIN_EVIDENCE_SCORE
+            or plan["rr"] < MIN_RR
+            or not validation.approved
+            or not consensus.get("reliable")
+            or global_risk.blocked
+            or execution_risk.blocked
+        ):
             action="WAIT"
 
         reasoning=str(s.get("reasoning","")).strip()
@@ -199,6 +209,10 @@ def run_scan():
             reasoning=(f"{reasoning} [{validation.status}: {validation.reason}]" if reasoning else f"{validation.status}: {validation.reason}")
         if not consensus.get("reliable"):
             reasoning=(f"{reasoning} [MARKET_CONSENSUS_UNRELIABLE: {consensus.get('reason', 'missing')}]" if reasoning else "MARKET_CONSENSUS_UNRELIABLE")
+        if global_risk.blocked:
+            reasoning=(f"{reasoning} [GLOBAL_RISK_WAIT: {','.join(global_risk.reasons)}]" if reasoning else f"GLOBAL_RISK_WAIT: {','.join(global_risk.reasons)}")
+        if execution_risk.blocked:
+            reasoning=(f"{reasoning} [EXECUTION_RISK_WAIT: {','.join(execution_risk.reasons)}]" if reasoning else f"EXECUTION_RISK_WAIT: {','.join(execution_risk.reasons)}")
 
         row={
             "scan_id":scan_id,"symbol":symbol,"timeframe":horizon,"direction":direction,"action":action,
@@ -214,6 +228,12 @@ def run_scan():
                     "strategy_family":strategy_family,
                     "strategy_identity":validation.identity,
                 },
+                "execution_risk":{
+                    "blocked":execution_risk.blocked,"reasons":list(execution_risk.reasons),"metrics":execution_risk.metrics,
+                },
+                "global_risk":{
+                    "blocked":global_risk.blocked,"reasons":list(global_risk.reasons),"metrics":global_risk.metrics,
+                },
                 "headline_context":[n["title"] for n in for_base(c["base"],news)[:5]]
             }
         }
@@ -226,7 +246,9 @@ def run_scan():
         "signals_saved":len(saved),"signals":saved,"scan_error_count":len(errors),
         "scan_errors":errors[:20],"ai_error":ai_error,
         "opportunities_saved":{"24h":len(opportunities.get("24h",[])),"7d":len(opportunities.get("7d",[]))},
-        "opportunity_error":opportunity_error
+        "opportunity_error":opportunity_error,
+        "global_risk_wait":global_risk.blocked,
+        "global_risk_reasons":list(global_risk.reasons),
     }
     record_scan(result)
     if errors:
