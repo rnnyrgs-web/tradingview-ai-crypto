@@ -105,13 +105,24 @@ Implemented:
 - observability hard-codes trade, signal and promotion authority to false and is not consulted by strategy/risk/promotion code;
 - tests cover cache miss/hit/tamper rejection, worker timeout/failure accounting, ACC-002 evidence surfacing and no-authority invariants.
 
-Important scope: current latency metrics measure shared-cache read latency and whole-worker elapsed time. They do not yet measure exact end-to-end latency of each network history download, so do not interpret them as exchange/API network latency.
+## EXACT DEEP-HISTORY NETWORK LATENCY — COMPLETE
+PR #85 `Measure exact deep-history network latency` passed exact-head Security and Reliability run `34273647346` on `dab29b5993fd35a9e5b4ba3fe2ae51a3595f2988` and was squash-merged as `774a335402ca481eb35ecc75c180963c670d5032`.
+
+Implemented:
+- `get_history()` now measures only actual OKX `/api/v5/market/history-candles` request durations on shared-cache misses;
+- paginated request durations are summed across the full deep-history fetch;
+- cache read time, normalization, shared-cache writes and intentional pagination sleeps are excluded from the network-latency metric;
+- internal retry/backoff inside `okx_get()` remains reflected in each measured request duration, so slow/retrying exchange calls are visible;
+- observability records fetch count, failures, request count, rows received, latency mean/p50/p95, average requests/rows per fetch and latest fetch metadata;
+- failed deep-history fetches are recorded before the original exception is re-raised; observability never converts failure into success;
+- tests cover success/failure accounting and integration proving `get_history()` records network time while excluding non-network work;
+- metrics remain read-only and have trade/signal/promotion authority hard-coded false.
 
 ## AUTHENTIC PAPER TRADING STATE
 The continuous paper account remains forward-only and broker-disconnected. Authentic baseline is exactly `$100,000` from `2026-09-08T01:17:49Z`; never reset or rewrite it. Current account value = immutable starting capital plus realized/open P&L. Safety/execution gates may reject entries but never fabricate or reset history. Paper performance is evidence only.
 
 ## ACCURACY PROGRAM STATUS
-ACC-001 COMPLETE; ACC-002 IN PROGRESS; ACC-003 COMPLETE; ACC-004 COMPLETE; ACC-005 COMPLETE; ACC-006 COMPLETE; ACC-007 COMPLETE; ACC-008 COMPLETE; ACC-009 COMPLETE; ACC-010 COMPLETE; ACC-011 COMPLETE; ACC-012 COMPLETE; ACC-013 COMPLETE; ACC-014 COMPLETE; safe worker throughput COMPLETE; shared immutable deep-history cache COMPLETE; research observability COMPLETE.
+ACC-001 COMPLETE; ACC-002 IN PROGRESS; ACC-003 COMPLETE; ACC-004 COMPLETE; ACC-005 COMPLETE; ACC-006 COMPLETE; ACC-007 COMPLETE; ACC-008 COMPLETE; ACC-009 COMPLETE; ACC-010 COMPLETE; ACC-011 COMPLETE; ACC-012 COMPLETE; ACC-013 COMPLETE; ACC-014 COMPLETE; safe worker throughput COMPLETE; shared immutable deep-history cache COMPLETE; research observability COMPLETE; exact deep-history network latency COMPLETE.
 
 ## COST / SPEED POLICY
 Hard recurring infrastructure ceiling: USD 30/month unless explicitly changed. Prefer existing shared Render compute, deterministic Python, public/free defensible data, caching/reuse, early rejection and bounded concurrency. No paid feed/service/compute without approval.
@@ -121,10 +132,11 @@ The fastest safe path is to preserve stable exact strategy fingerprints while ge
 
 ## EXACT NEXT STEP
 1. Continue genuine ACC-002 24h/7d forward/OOS evidence and worker-health monitoring. No profitability claim unless the required evidence genuinely passes.
-2. Let the new observability metrics accumulate enough runtime data, then use cache hit/rejection rate, worker elapsed time, timeout/failure rate and ACC-002 summaries to identify the real next bottleneck.
-3. If worker elapsed time remains dominated by history retrieval, instrument exact end-to-end `get_history()` network-fetch latency before changing TTL, concurrency or source behavior.
-4. Preserve stable exact champion fingerprints while challengers run in shadow; only evidence-backed strategy changes create a new fingerprint.
-5. Preserve `live_promotions.json` empty, signing keys unused, PONS fail-closed, immutable $100k paper ledger and broker-disconnected state.
-6. Only add further microstructure features when genuine timestamped data supports them; never reconstruct unavailable order books or liquidations from candles.
-7. Optimize after-cost risk-adjusted realized performance with tail protection and abstention, not headline accuracy.
-8. Update this file after every completed integration cycle.
+2. Let cache, exact deep-history network latency and worker elapsed-time metrics accumulate enough runtime data; compare p50/p95 network time against whole-worker elapsed time before optimizing anything.
+3. If network history retrieval is a dominant share of worker runtime, optimize the proven bottleneck conservatively using request deduplication/batching/source behavior only after measuring it; do not raise concurrency or stretch TTLs by guesswork.
+4. If network time is not dominant, investigate CPU/backtest/panel construction or worker scheduling next instead of changing market-data behavior.
+5. Preserve stable exact champion fingerprints while challengers run in shadow; only evidence-backed strategy changes create a new fingerprint.
+6. Preserve `live_promotions.json` empty, signing keys unused, PONS fail-closed, immutable $100k paper ledger and broker-disconnected state.
+7. Only add further microstructure features when genuine timestamped data supports them; never reconstruct unavailable order books or liquidations from candles.
+8. Optimize after-cost risk-adjusted realized performance with tail protection and abstention, not headline accuracy.
+9. Update this file after every completed integration cycle.
