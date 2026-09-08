@@ -1,8 +1,8 @@
 """Continuous ACC-002 cross-asset research runner.
 
 A small fixed lookback grid is evaluated on train+validation only. The untouched
-holdout is opened exactly once, and only for the preselected configuration. This
-prevents parameter selection from peeking at OOS while keeping the process cheap.
+holdout is opened exactly once, and only when nearby parameterizations show a
+stable edge. This reduces selection bias while keeping research cheap.
 """
 
 from __future__ import annotations
@@ -22,12 +22,9 @@ from research_artifact import seal_research_payload
 
 
 MIN_INDEPENDENT_OOS_SAMPLES = 20
+MIN_STABLE_CANDIDATES = 2
 MAX_HISTORY_BARS = 5000
-FIXED_LOOKBACK_GRID = (
-    (4, 16, 64),
-    (6, 24, 72),
-    (8, 32, 96),
-)
+FIXED_LOOKBACK_GRID = ((4, 16, 64), (6, 24, 72), (8, 32, 96))
 
 
 def _int_env(name: str, default: int, low: int, high: int) -> int:
@@ -41,15 +38,12 @@ def required_history_bars(config: CrossAssetConfig, min_oos_samples: int = MIN_I
 
 def _worst_stress(segment: dict) -> dict:
     stress = segment["cost_stress"]
-    key = max(stress, key=lambda x: float(x))
-    return stress[key]
+    return stress[max(stress, key=lambda x: float(x))]
 
 
 def _pre_oos_candidate_ok(pre: dict) -> bool:
-    train = pre["train"]
-    validation = pre["validation"]
-    train_worst = _worst_stress(train)
-    validation_worst = _worst_stress(validation)
+    train, validation = pre["train"], pre["validation"]
+    train_worst, validation_worst = _worst_stress(train), _worst_stress(validation)
     return bool(
         train["timestamps"] >= 20
         and validation["timestamps"] >= 20
@@ -62,16 +56,9 @@ def _pre_oos_candidate_ok(pre: dict) -> bool:
 
 
 def _robust_selection_score(pre: dict) -> tuple[float, float]:
-    train_worst = _worst_stress(pre["train"])
-    validation_worst = _worst_stress(pre["validation"])
-    worst_net = min(
-        float(train_worst["mean_net_top_minus_bottom"] or -1e9),
-        float(validation_worst["mean_net_top_minus_bottom"] or -1e9),
-    )
-    worst_ic = min(
-        float(pre["train"]["mean_rank_ic"] or -1e9),
-        float(pre["validation"]["mean_rank_ic"] or -1e9),
-    )
+    train_worst, validation_worst = _worst_stress(pre["train"]), _worst_stress(pre["validation"])
+    worst_net = min(float(train_worst["mean_net_top_minus_bottom"] or -1e9), float(validation_worst["mean_net_top_minus_bottom"] or -1e9))
+    worst_ic = min(float(pre["train"]["mean_rank_ic"] or -1e9), float(pre["validation"]["mean_rank_ic"] or -1e9))
     return worst_net, worst_ic
 
 
@@ -82,39 +69,21 @@ def run() -> dict:
     forward_bars = _int_env("CROSS_ASSET_FORWARD_BARS", 24, 1, 168)
     cost_bps = float(os.getenv("CROSS_ASSET_ROUND_TRIP_COST_BPS", "12"))
 
-    configs = [
-        CrossAssetConfig(
-            lookbacks=lookbacks,
-            forward_bars=forward_bars,
-            round_trip_cost_bps=cost_bps,
-            min_assets=8,
-        )
-        for lookbacks in FIXED_LOOKBACK_GRID
-    ]
+    configs = [CrossAssetConfig(lookbacks=lookbacks, forward_bars=forward_bars, round_trip_cost_bps=cost_bps, min_assets=8) for lookbacks in FIXED_LOOKBACK_GRID]
     minimum_bars = max(required_history_bars(config) for config in configs)
     if minimum_bars > MAX_HISTORY_BARS:
-        raise ValueError(
-            f"forward horizon requires at least {minimum_bars} bars for "
-            f"{MIN_INDEPENDENT_OOS_SAMPLES} independent OOS observations; "
-            f"maximum supported is {MAX_HISTORY_BARS}; use a coarser bar interval"
-        )
+        raise ValueError(f"forward horizon requires at least {minimum_bars} bars for {MIN_INDEPENDENT_OOS_SAMPLES} independent OOS observations; maximum supported is {MAX_HISTORY_BARS}; use a coarser bar interval")
     bars = max(requested_bars, minimum_bars)
 
     symbols = [row["symbol"] for row in build_universe()[:universe_size]]
-    histories = {}
-    failures = []
+    histories, failures = {}, []
     for symbol in symbols:
         try:
             rows = get_history(symbol, bar=bar, bars=bars)
             if len(rows) >= minimum_bars:
                 histories[symbol] = rows
             else:
-                failures.append({
-                    "symbol": symbol,
-                    "error_type": "InsufficientHistory",
-                    "bars_received": len(rows),
-                    "bars_required": minimum_bars,
-                })
+                failures.append({"symbol": symbol, "error_type": "InsufficientHistory", "bars_received": len(rows), "bars_required": minimum_bars})
         except Exception as exc:
             failures.append({"symbol": symbol, "error_type": type(exc).__name__})
 
@@ -122,38 +91,19 @@ def run() -> dict:
     for index, config in enumerate(configs):
         panel = build_cross_section_panel(histories, config)
         pre = evaluate_pre_oos(panel, config)
-        candidates.append({
-            "index": index,
-            "lookbacks": list(config.lookbacks),
-            "pre_oos": pre,
-            "eligible_pre_oos": _pre_oos_candidate_ok(pre),
-            "_panel": panel,
-            "_config": config,
-        })
+        candidates.append({"index": index, "lookbacks": list(config.lookbacks), "pre_oos": pre, "eligible_pre_oos": _pre_oos_candidate_ok(pre), "_panel": panel, "_config": config})
 
     eligible = [candidate for candidate in candidates if candidate["eligible_pre_oos"]]
-    selected = max(eligible, key=lambda item: _robust_selection_score(item["pre_oos"])) if eligible else None
+    stability_pass = len(eligible) >= MIN_STABLE_CANDIDATES
+    selected = max(eligible, key=lambda item: _robust_selection_score(item["pre_oos"])) if stability_pass else None
     selected_evaluation = None
     if selected is not None:
         oos = evaluate_untouched_oos(selected["_panel"], selected["_config"])
         if oos["metrics"]["timestamps"] < MIN_INDEPENDENT_OOS_SAMPLES:
             raise ValueError("insufficient independent untouched-OOS observations after alignment")
-        selected_evaluation = {
-            "index": selected["index"],
-            "lookbacks": selected["lookbacks"],
-            "pre_oos": selected["pre_oos"],
-            "untouched_oos": oos,
-        }
+        selected_evaluation = {"index": selected["index"], "lookbacks": selected["lookbacks"], "pre_oos": selected["pre_oos"], "untouched_oos": oos}
 
-    public_candidates = [
-        {
-            "index": candidate["index"],
-            "lookbacks": candidate["lookbacks"],
-            "pre_oos": candidate["pre_oos"],
-            "eligible_pre_oos": candidate["eligible_pre_oos"],
-        }
-        for candidate in candidates
-    ]
+    public_candidates = [{"index": c["index"], "lookbacks": c["lookbacks"], "pre_oos": c["pre_oos"], "eligible_pre_oos": c["eligible_pre_oos"]} for c in candidates]
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "acc": "ACC-002",
@@ -161,7 +111,8 @@ def run() -> dict:
         "live_approved": False,
         "trade_authority": False,
         "source": "OKX public historical API",
-        "selection_policy": "fixed_grid_train_validation_only_then_open_one_untouched_oos",
+        "selection_policy": "fixed_grid_train_validation_stability_then_open_one_untouched_oos",
+        "parameter_stability": {"minimum_eligible_candidates": MIN_STABLE_CANDIDATES, "eligible_candidate_count": len(eligible), "passes": stability_pass},
         "untouched_oos_opened_for_candidate_count": 1 if selected is not None else 0,
         "candidate_count": len(public_candidates),
         "candidates": public_candidates,
