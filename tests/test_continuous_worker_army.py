@@ -2,7 +2,7 @@ import continuous_worker_army as army
 
 
 def test_worker_army_is_bounded_and_research_only():
-    assert len(army.WORKERS) == 16
+    assert len(army.WORKERS) == 17
     assert 1 <= army.MAX_CONCURRENT <= 4
     snap = army.snapshot()
     assert snap["trade_authority"] is False
@@ -17,10 +17,13 @@ def test_worker_mix_has_major_pons_universe_swing_and_cross_asset():
     assert {"major-btc", "major-eth", "major-sol", "major-xrp", "major-link"} <= names
     assert "pons" in names
     assert "swing-majors" in names
-    assert "cross-asset-rank" in names
+    assert {"cross-asset-rank-24h", "cross-asset-rank-7d"} <= names
     assert {f"universe-{idx}" for idx in range(8)} <= names
-    cross = next(worker for worker in army.WORKERS if worker.name == "cross-asset-rank")
-    assert cross.script == "cross_asset_runner.py"
+    cross_24h = next(worker for worker in army.WORKERS if worker.name == "cross-asset-rank-24h")
+    cross_7d = next(worker for worker in army.WORKERS if worker.name == "cross-asset-rank-7d")
+    assert cross_24h.script == cross_7d.script == "cross_asset_runner.py"
+    assert cross_24h.env["CROSS_ASSET_HORIZON"] == "24h"
+    assert cross_7d.env["CROSS_ASSET_HORIZON"] == "7d"
 
 
 def test_explicit_symbol_workers_disable_forced_symbol_duplication(monkeypatch):
