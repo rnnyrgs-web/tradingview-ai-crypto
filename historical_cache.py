@@ -91,40 +91,61 @@ def _valid_rows(rows, now_ms, wanted):
     return True
 
 
+def _read_bucket(symbol, bar, wanted, max_bars, bucket, now_ms, ttl_seconds, cache_dir):
+    descriptor = _request_descriptor(symbol, bar, wanted, max_bars, bucket)
+    key = _cache_key(descriptor)
+    path = _cache_path(cache_dir, key)
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, TypeError):
+        return None
+    if not isinstance(payload, dict) or payload.get("descriptor") != descriptor or payload.get("cache_key") != key:
+        return None
+    try:
+        fetched_at_ms = int(payload.get("fetched_at_ms"))
+    except (TypeError, ValueError):
+        return None
+    if fetched_at_ms <= 0 or fetched_at_ms > now_ms + MAX_FUTURE_SKEW_MS:
+        return None
+    # The bucket is an immutable publication namespace, not permission to make a
+    # snapshot stale early. Reuse across one bucket boundary only while the
+    # snapshot's actual age remains strictly within the configured TTL.
+    if now_ms - fetched_at_ms >= int(ttl_seconds) * 1000:
+        return None
+    rows = payload.get("rows")
+    if not _valid_rows(rows, now_ms, wanted):
+        return None
+    if payload.get("rows_sha256") != _rows_digest(rows):
+        return None
+    return rows
+
+
 def read_history(symbol, bar, wanted, max_bars, *, now_ms=None, ttl_seconds=None, cache_dir=None, observe=True):
     started = time.perf_counter()
     now_ms = int(now_ms if now_ms is not None else time.time() * 1000)
     ttl_seconds = int(ttl_seconds or DEFAULT_TTL_SECONDS)
     cache_dir = Path(cache_dir or DEFAULT_CACHE_DIR)
-    descriptor = _request_descriptor(symbol, bar, wanted, max_bars, _bucket(now_ms, ttl_seconds))
-    key = _cache_key(descriptor)
-    path = _cache_path(cache_dir, key)
+    current_bucket = _bucket(now_ms, ttl_seconds)
 
     def finish(result, value):
         if observe:
             record_cache_read(result, (time.perf_counter() - started) * 1000.0)
         return value
 
-    if not path.exists():
-        return finish("miss", None)
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError, TypeError):
-        return finish("rejection", None)
-    if not isinstance(payload, dict) or payload.get("descriptor") != descriptor or payload.get("cache_key") != key:
-        return finish("rejection", None)
-    try:
-        fetched_at_ms = int(payload.get("fetched_at_ms"))
-    except (TypeError, ValueError):
-        return finish("rejection", None)
-    if fetched_at_ms <= 0 or fetched_at_ms > now_ms + MAX_FUTURE_SKEW_MS:
-        return finish("rejection", None)
-    rows = payload.get("rows")
-    if not _valid_rows(rows, now_ms, wanted):
-        return finish("rejection", None)
-    if payload.get("rows_sha256") != _rows_digest(rows):
-        return finish("rejection", None)
-    return finish("hit", rows)
+    rows = _read_bucket(symbol, bar, wanted, max_bars, current_bucket, now_ms, ttl_seconds, cache_dir)
+    if rows is not None:
+        return finish("hit", rows)
+
+    # A fetch near the end of a bucket used to become an immediate cache miss at
+    # the boundary, causing another full ~30-page history download seconds later.
+    # The previous immutable bucket may be reused only when its exact request
+    # identity and digest validate and its real fetched age is still < TTL.
+    rows = _read_bucket(symbol, bar, wanted, max_bars, current_bucket - 1, now_ms, ttl_seconds, cache_dir)
+    if rows is not None:
+        return finish("hit", rows)
+    return finish("miss", None)
 
 
 def write_history(symbol, bar, wanted, max_bars, rows, *, now_ms=None, ttl_seconds=None, cache_dir=None):
