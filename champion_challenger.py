@@ -185,6 +185,10 @@ def build_champion_challenger(candidates, run_history, correlation_matrix=None, 
 
     champion = members[0] if members else None
     allocated = min(1.0, sum(member["weight"] for member in members))
+    unallocated = max(0.0, 1.0 - allocated)
+    if unallocated < 0.000005:
+        unallocated = 0.0
+        allocated = 1.0
     return {
         "status": "RESEARCH_ENSEMBLE_READY" if champion else "NO_QUALIFIED_ENSEMBLE",
         "champion": champion,
@@ -192,7 +196,7 @@ def build_champion_challenger(candidates, run_history, correlation_matrix=None, 
         "demoted": demoted,
         "max_member_weight": cap,
         "allocated_weight": round(allocated, 6),
-        "unallocated_wait_weight": round(max(0.0, 1.0 - allocated), 6),
+        "unallocated_wait_weight": round(unallocated, 6),
         "live_approved": False,
         "automatic_demotion": "Severe recent sealed-run deterioration sets research weight to zero; it never auto-promotes.",
         "policy": (
