@@ -13,6 +13,9 @@ from config import (
     PRICE_CONSENSUS_MAX_DEVIATION_BPS, PRICE_CONSENSUS_MIN_SOURCES,
     STABLE_BASES, UNIVERSE_SIZE,
 )
+from historical_cache import prune_cache as prune_shared_history_cache
+from historical_cache import read_history as read_shared_history
+from historical_cache import write_history as write_shared_history
 from market_intelligence import cross_exchange_order_book, derivatives_summary, order_book_summary, price_consensus
 from utils import f, pct_change
 
@@ -95,12 +98,21 @@ def get_candles(symbol, bar="15m", limit=120):
     return normalize_candles(rows)
 
 
-def get_history(symbol, bar="15m", bars=1000, max_bars=50000):
-    """Fetch deep history directly from OKX with pagination.
+def _remember_history(cache_key, rows):
+    with _history_cache_lock:
+        _history_cache[cache_key] = deepcopy(rows)
+        _history_cache.move_to_end(cache_key)
+        while len(_history_cache) > HISTORY_CACHE_SIZE:
+            _history_cache.popitem(last=False)
 
-    This is intentionally online/on-demand so backtesting is not limited by the
-    user's local disk or CPU. The cap is a safety/cost/rate-limit guardrail, not
-    a data-model limitation and can be raised for cloud research jobs.
+
+def get_history(symbol, bar="15m", bars=1000, max_bars=50000):
+    """Fetch normalized completed OKX history with safe cross-process reuse.
+
+    Process-local memory is checked first. Then a provenance/integrity-checked
+    shared immutable cache object is checked. A miss or any malformed/corrupt
+    cache object falls back to the public OKX endpoint; cached data never bypass
+    normalization, chronology, or future-timestamp validation.
     """
     wanted = max(100, min(int(bars), int(max_bars)))
     cache_key = (str(symbol), str(bar), wanted, int(max_bars))
@@ -109,45 +121,44 @@ def get_history(symbol, bar="15m", bars=1000, max_bars=50000):
         if cached is not None:
             _history_cache.move_to_end(cache_key)
             return deepcopy(cached)
+
+    shared = read_shared_history(symbol, bar, wanted, max_bars)
+    if shared is not None:
+        _remember_history(cache_key, shared)
+        return deepcopy(shared)
+
     collected = []
     after = None
     seen_oldest = None
-
     while len(collected) < wanted:
         page_size = min(100, wanted - len(collected))
         params = {"instId": symbol, "bar": bar, "limit": str(page_size)}
         if after:
             params["after"] = after
-
         rows = okx_get("/api/v5/market/history-candles", params)
         if not rows:
             break
-
         collected.extend(rows)
         oldest = min(int(r[0]) for r in rows)
         if seen_oldest is not None and oldest >= seen_oldest:
             break
         seen_oldest = oldest
         after = str(oldest)
-
         if len(rows) < page_size:
             break
-
         time.sleep(0.12)
 
     by_ts = {int(r[0]): r for r in collected}
     rows = [by_ts[k] for k in sorted(by_ts.keys(), reverse=True)][:wanted]
     normalized = normalize_candles(rows)
-    with _history_cache_lock:
-        _history_cache[cache_key] = normalized
-        _history_cache.move_to_end(cache_key)
-        while len(_history_cache) > HISTORY_CACHE_SIZE:
-            _history_cache.popitem(last=False)
+    _remember_history(cache_key, normalized)
+    write_shared_history(symbol, bar, wanted, max_bars, normalized)
+    prune_shared_history_cache()
     return deepcopy(normalized)
 
 
 def clear_history_cache():
-    """Clear the process-local cache used to reuse identical research inputs."""
+    """Clear process-local history memory; shared cache objects expire by bucket."""
     with _history_cache_lock:
         _history_cache.clear()
 
