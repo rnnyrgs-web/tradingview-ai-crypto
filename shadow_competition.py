@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import hashlib
 import math
-import random
 from datetime import datetime, timezone
 
 
@@ -81,14 +80,19 @@ def _independent_map(predictions, identity, horizon):
 
 
 def _bootstrap_mean_lower(values, seed_material):
+    """Deterministic SHA-256 bootstrap without pseudo-random state."""
     if not values:
         return None
-    seed = int(hashlib.sha256(seed_material.encode("utf-8")).hexdigest()[:16], 16)
-    rng = random.Random(seed)
-    means = []
     n = len(values)
+    seed = str(seed_material).encode("utf-8")
+    means = []
+    counter = 0
     for _ in range(BOOTSTRAP_RESAMPLES):
-        sample = [values[rng.randrange(n)] for _ in range(n)]
+        sample = []
+        for _ in range(n):
+            digest = hashlib.sha256(seed + counter.to_bytes(8, "big")).digest()
+            sample.append(values[int.from_bytes(digest[:8], "big") % n])
+            counter += 1
         means.append(sum(sample) / n)
     means.sort()
     return means[max(0, int(0.05 * len(means)) - 1)]
