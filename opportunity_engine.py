@@ -92,7 +92,8 @@ def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
                 provenance = consensus.get("provenance") or {}
                 accepted = provenance.get("accepted_exchange_names") or []
                 base_reason = (
-                    f"{base_reason} [MARKET_DATA_RESTRICTED: {consensus.get('reason', 'missing')}; "
+                    f"{base_reason} [MARKET_CONSENSUS_UNRELIABLE] "
+                    f"[MARKET_DATA_RESTRICTED: {consensus.get('reason', 'missing')}; "
                     f"independent_sources={consensus.get('source_count', 0)}; accepted={accepted}; "
                     f"confidence_multiplier={data_multiplier:.3f}; live action blocked]"
                 )
