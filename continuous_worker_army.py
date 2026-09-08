@@ -18,6 +18,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock
 
+from research_observability import record_worker_result, snapshot as research_metrics_snapshot
+
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 MAX_CONCURRENT = max(1, min(int(os.getenv("WORKER_ARMY_MAX_CONCURRENT", "2")), 4))
@@ -101,7 +103,8 @@ def snapshot() -> dict:
     with _lock:
         data = dict(_status)
         data["workers"] = {k: dict(v) for k, v in (_status["workers"] or {}).items()}
-        return data
+    data["observability"] = research_metrics_snapshot()
+    return data
 
 
 def _worker_env(spec: WorkerSpec, summary_path: str | None = None) -> dict[str, str]:
@@ -212,6 +215,10 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> int:
                 "consecutive_failures": consecutive_failures,
                 "next_retry_delay_seconds": retry_delay,
             }
+        try:
+            record_worker_result(spec.name, exit_code, elapsed, evidence)
+        except OSError:
+            pass
         return exit_code
 
 
