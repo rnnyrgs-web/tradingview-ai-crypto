@@ -12,6 +12,7 @@ from evaluator import run_evaluation
 from backtest import run_backtest, walk_forward
 from market_data import build_universe
 from dashboard import login_page, handle_login, dashboard_page, signal_detail_page, signal_chart_data
+from paper_dashboard import paper_portfolio_page
 from operational_monitor import health_snapshot, record_error
 from calibration import calibration_summary
 from continuous_ai_agent import continuous_ai_loop, status_snapshot as continuous_ai_status
@@ -55,6 +56,7 @@ def root():
         "service":"Crypto Signal Engine V3",
         "version":STRATEGY_VERSION,
         "dashboard":"/dashboard",
+        "paper_portfolio":"/dashboard/paper",
         "endpoints":["/health","/paper","/paper/run","/scan","/evaluate","/calibration","/backtest","/walkforward","/universe","/signals","/signals/cursor"]
     }
 
@@ -101,6 +103,13 @@ def dashboard(request:Request,horizon:str="24h"):
         return dashboard_page(request,horizon)
     except Exception as e:
         internal_error("dashboard", e, "Dashboard unavailable")
+
+@app.get("/dashboard/paper")
+def dashboard_paper(request:Request):
+    try:
+        return paper_portfolio_page(request)
+    except Exception as e:
+        internal_error("dashboard_paper", e, "Paper portfolio unavailable")
 
 @app.get("/dashboard/signal/{signal_id}")
 def dashboard_signal(request:Request,signal_id:int):
