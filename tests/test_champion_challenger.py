@@ -44,11 +44,12 @@ def test_ensemble_weights_are_capped_and_research_only():
     assert result["status"] == "RESEARCH_ENSEMBLE_READY"
     assert result["live_approved"] is False
     assert abs(sum(member["weight"] for member in result["members"]) - 1.0) < 1e-5
+    assert result["unallocated_wait_weight"] == 0.0
     assert all(member["weight"] <= 0.450001 for member in result["members"])
     assert result["members"][0]["role"] == "CHAMPION"
 
 
-def test_recent_deterioration_demotes_strategy():
+def test_recent_deterioration_demotes_strategy_to_zero_weight():
     good = _candidate("BTC-USDT", "trend")
     fading = _candidate("ETH-USDT", "momentum")
     history = {
@@ -67,8 +68,12 @@ def test_recent_deterioration_demotes_strategy():
     }
     result = build_champion_challenger([good, fading], history)
     members = {row["symbol"]: row for row in result["members"]}
-    assert members["ETH-USDT"]["deterioration_penalty"] < members["BTC-USDT"]["deterioration_penalty"]
-    assert members["BTC-USDT"]["weight"] > members["ETH-USDT"]["weight"]
+    demoted = {row["symbol"]: row for row in result["demoted"]}
+    assert "BTC-USDT" in members
+    assert "ETH-USDT" not in members
+    assert demoted["ETH-USDT"]["reason"] == "SEVERE_RECENT_DETERIORATION"
+    assert demoted["ETH-USDT"]["weight"] == 0.0
+    assert result["unallocated_wait_weight"] > 0.0
 
 
 def test_high_correlation_penalizes_duplicate_exposure():
@@ -95,6 +100,7 @@ def test_high_correlation_penalizes_duplicate_exposure():
 def test_less_than_three_runs_cannot_enter_ensemble():
     candidate = _candidate("BTC-USDT", "trend")
     key = ("BTC-USDT", "1H", "trend")
-    result = build_champion_challenger(candidate and [candidate], {key: [_run("1"), _run("2")]})
+    result = build_champion_challenger([candidate], {key: [_run("1"), _run("2")]})
     assert result["status"] == "NO_QUALIFIED_ENSEMBLE"
     assert result["members"] == []
+    assert result["unallocated_wait_weight"] == 1.0
