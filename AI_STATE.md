@@ -54,36 +54,40 @@ PR #76; exact-head run `34264596759` on `285add1ac65903432d8ed4ffaa19aba149f2aa3
 PR #77; exact-head run `34265226943` on `324fc08f4723190df50e01d28e608e506d3fec95`; merge `edbed73a7b4236234ea2ff958e94ca2510db2df1`. Current-snapshot simulator requires >=2 reliable books with complete fill evidence; uses the smallest supported tier at/above requested size and worse independent fill; never extrapolates hidden liquidity or backfills current books into history. Paper entries fail closed without size-aware evidence, include fee friction, adverse stop gaps and capped favorable target gaps. Paper only opens rows already marked TRADE. Stored signals and Top-20 paths share global/execution WAIT gates. Immutable paper ledger preserved.
 
 ## ACC-011 POINT-IN-TIME UNIVERSE / SURVIVORSHIP FIREWALL — COMPLETE
-PR #79 `ACC-011: Add point-in-time universe survivorship firewall` passed exact-head Security and Reliability run `34266482390` on `5815277b697b3bda8fac2a33ec9c286ef8f42c68` and was squash-merged as `20c383c1dae1d2413c534b749b10faf95fb83f57`.
-
-Implemented:
-- today's liquid survivors are explicitly not accepted as proof of historical investable-universe membership;
-- listing/delisting dates alone are insufficient for cross-sectional Top-N survivorship safety;
-- promotion-grade evidence requires timestamped historical investable-universe snapshots with provenance;
-- missing historical members or uncovered snapshot intervals fail closed and block promotion review;
-- historical histories are filtered by verified membership only when the full required manifest is covered;
-- malformed, overlapping, missing, or uncovered snapshot evidence cannot create authority;
-- general strategy research is demoted when historical member coverage is incomplete;
-- no dead/missing coin, delisting, or liquidity history is fabricated.
+PR #79 passed exact-head Security and Reliability run `34266482390` on `5815277b697b3bda8fac2a33ec9c286ef8f42c68`; squash merge `20c383c1dae1d2413c534b749b10faf95fb83f57`. Today's survivors are not accepted as historical universe evidence; promotion-grade cross-sectional research requires timestamped investable-universe snapshots with provenance; uncovered/malformed historical membership blocks promotion; no dead/missing assets are fabricated.
 
 ## ACC-012 MULTIPLE-TESTING / FALSE-DISCOVERY FIREWALL — COMPLETE
-PR #78 `ACC-012: Add multiple-testing false-discovery firewall` passed exact-head Security and Reliability run `34265615227` on `4bd7d3905a89602630e4137b3a3714c2311eee71` and was squash-merged as `8ddac654e63a70a95f811dd14777e649faefd625`. Research predeclares full search breadth before OOS; worker sharding cannot hide breadth; required OOS depth/bootstrap support rise with search breadth; positive bootstrap 5th-percentile return remains mandatory; gate can only demote/reject.
+PR #78 passed exact-head Security and Reliability run `34265615227` on `4bd7d3905a89602630e4137b3a3714c2311eee71`; squash merge `8ddac654e63a70a95f811dd14777e649faefd625`. Research predeclares full search breadth before OOS; worker sharding cannot hide breadth; required OOS depth/bootstrap support rise with search breadth; positive bootstrap 5th-percentile return remains mandatory; gate can only demote/reject.
+
+## ACC-013 GENUINE-FORWARD SHADOW CHAMPION / CHALLENGER — COMPLETE
+PR #80 `ACC-013: Add genuine-forward shadow champion challenger comparison` passed exact-head Security and Reliability run `34268140486` on `0a034a920d22d2e9415a105170edd3ef831b12ed` and was squash-merged as `51db55b5339bcbd5183044a50521e6fe36770caa`.
+
+Implemented:
+- champion and challenger are compared only on matched independent future horizon buckets;
+- exact distinct immutable strategy fingerprints are mandatory;
+- each strategy pays 3x its own modeled backtest cost before comparison;
+- requires >=20 matched independent 24h periods or >=12 matched independent 7d periods;
+- challenger requires positive after-cost expectancy, positive mean advantage, >=55% pairwise wins, and positive deterministic SHA-256 bootstrap 5th-percentile mean advantage;
+- overlapping intraday forecasts cannot inflate sample size;
+- passing result is only a Strategy Registry review recommendation and never creates promotion/trade authority;
+- initial CI had all 207 tests and dependency audit green but Bandit rejected `random.Random`; deterministic SHA-256 indexed resampling replaced it and exact-head CI then passed.
 
 ## AUTHENTIC PAPER TRADING STATE
-The continuous paper account remains forward-only and broker-disconnected. Authentic baseline is exactly `$100,000` from `2026-09-08T01:17:49Z`; never reset or rewrite it. Current account value = immutable starting capital plus realized/open P&L. New safety/execution gates may reject entries but never fabricate or reset history. Paper performance is evidence only.
+The continuous paper account remains forward-only and broker-disconnected. Authentic baseline is exactly `$100,000` from `2026-09-08T01:17:49Z`; never reset or rewrite it. Current account value = immutable starting capital plus realized/open P&L. Safety/execution gates may reject entries but never fabricate or reset history. Paper performance is evidence only.
 
 ## ACCURACY PROGRAM STATUS
-ACC-001 COMPLETE; ACC-002 IN PROGRESS; ACC-003 COMPLETE; ACC-004 COMPLETE; ACC-005 COMPLETE; ACC-006 COMPLETE; ACC-007 COMPLETE; ACC-008 COMPLETE; ACC-009 COMPLETE; ACC-010 COMPLETE; ACC-011 COMPLETE; ACC-012 COMPLETE; ACC-013 IN REVIEW/CI; ACC-014 NEXT.
+ACC-001 COMPLETE; ACC-002 IN PROGRESS; ACC-003 COMPLETE; ACC-004 COMPLETE; ACC-005 COMPLETE; ACC-006 COMPLETE; ACC-007 COMPLETE; ACC-008 COMPLETE; ACC-009 COMPLETE; ACC-010 COMPLETE; ACC-011 COMPLETE; ACC-012 COMPLETE; ACC-013 COMPLETE; ACC-014 IN REVIEW/CI.
 
 ## COST / SPEED POLICY
 Hard recurring infrastructure ceiling: USD 30/month unless explicitly changed. Prefer existing shared Render compute, deterministic Python, public/free defensible data, caching/reuse, early rejection and bounded concurrency. No paid feed/service/compute without approval.
 
+## SPEED WITHOUT CHEATING
+The fastest safe path is to preserve stable exact strategy fingerprints while genuine forward observations accumulate. Challengers may research and run in shadow, but avoid needless champion fingerprint churn that discards comparable forward evidence. Never count overlapping forecasts as independent, lower forward-proof thresholds, or reset paper history to accelerate results.
+
 ## EXACT NEXT STEP
-1. Never loosen ACC-008/009/010/011/012 merely to increase trade count or accelerate promotion.
-2. Finish ACC-013 exact-head CI; merge only if green. ACC-013 compares champion/challenger only on matched independent future periods, exact fingerprints and conservative after-cost results, and can only recommend Strategy Registry review.
-3. Implement ACC-014 disaster/failure injection: API timeouts, 429/5xx, stale/future/corrupt timestamps, DB outage, restart/partial state, extreme spikes, partial service failure and malformed dependency output must resolve to WAIT or research-only safe degradation.
-4. Continue genuine ACC-002 24h/7d evidence and worker health in parallel. Speed comes from bounded parallel collection/caching, never overlapping-observation inflation or lowered thresholds.
-5. Keep PONS fail-closed, `live_promotions.json` empty and signing keys unused.
-6. Preserve immutable $100k paper baseline and broker-disconnected state.
-7. Optimize after-cost risk-adjusted realized performance with tail protection and abstention, not headline accuracy.
-8. Update this file after every completed integration cycle.
+1. Finish ACC-014 exact-head CI and merge only if green.
+2. Continue genuine ACC-002 24h/7d evidence and worker health in parallel. Speed comes from bounded parallel collection/caching, stable fingerprints and eliminating failed/redundant work—not lower standards.
+3. Preserve `live_promotions.json` empty, signing keys unused, PONS fail-closed, immutable $100k paper ledger and broker-disconnected state.
+4. After ACC-014, focus on forward evidence quality/coverage and only add microstructure features when genuine timestamped data supports them.
+5. Optimize after-cost risk-adjusted realized performance with tail protection and abstention, not headline accuracy.
+6. Update this file after every completed integration cycle.
