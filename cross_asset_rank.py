@@ -1,18 +1,22 @@
 """Timestamp-safe cross-sectional relative-strength research (ACC-002).
 
-This module is deliberately research-only. It ranks a liquid crypto universe using
-features available at each timestamp, then evaluates forward cross-sectional rank
-IC and top-minus-bottom spread on chronological train/validation/untouched OOS
-segments. Split boundaries are purged by the forward horizon and observations are
-sampled at non-overlapping horizons to reduce leakage/autocorrelation inflation.
+This module is research-only. Candidate selection is train/validation only; the
+untouched holdout is opened once for the selected configuration. Split boundaries
+are purged, forward observations are non-overlapping by default, and OOS evidence
+is stress-tested with deterministic bootstrap confidence bounds.
 """
 
 from __future__ import annotations
 
+import hashlib
 import math
 from dataclasses import dataclass
 from statistics import mean
 from typing import Iterable
+
+
+BOOTSTRAP_RESAMPLES = 500
+BOOTSTRAP_SEED = 20260908
 
 
 @dataclass(frozen=True)
@@ -94,9 +98,7 @@ def _feature_for(closes: list[float], idx: int, lookbacks: tuple[int, ...]) -> f
     return mean(returns) / vol
 
 
-def build_cross_section_panel(
-    histories: dict[str, Iterable[dict]], config: CrossAssetConfig = CrossAssetConfig()
-) -> list[dict]:
+def build_cross_section_panel(histories: dict[str, Iterable[dict]], config: CrossAssetConfig = CrossAssetConfig()) -> list[dict]:
     normalized = normalize_histories(histories)
     if len(normalized) < config.min_assets:
         raise ValueError("insufficient assets")
@@ -104,7 +106,6 @@ def build_cross_section_panel(
     warmup = max(config.lookbacks)
     if len(common_ts) <= warmup + config.forward_bars:
         raise ValueError("insufficient aligned history")
-
     symbols = sorted(normalized)
     closes = {s: [normalized[s][ts] for ts in common_ts] for s in symbols}
     panel = []
@@ -112,9 +113,11 @@ def build_cross_section_panel(
         rows = []
         for symbol in symbols:
             series = closes[symbol]
-            score = _feature_for(series, idx, config.lookbacks)
-            forward = _pct(series[idx], series[idx + config.forward_bars])
-            rows.append({"symbol": symbol, "score": score, "forward_return": forward})
+            rows.append({
+                "symbol": symbol,
+                "score": _feature_for(series, idx, config.lookbacks),
+                "forward_return": _pct(series[idx], series[idx + config.forward_bars]),
+            })
         panel.append({"ts": common_ts[idx], "rows": rows})
     return panel
 
@@ -123,10 +126,8 @@ def purged_split_ranges(n: int, forward_bars: int) -> dict[str, tuple[int, int]]
     if n < 5:
         raise ValueError("insufficient panel for chronological splits")
     train_boundary = max(1, int(n * 0.60))
-    validation_boundary = max(train_boundary + 1, int(n * 0.80))
-    validation_boundary = min(validation_boundary, n)
+    validation_boundary = min(max(train_boundary + 1, int(n * 0.80)), n)
     purge = max(1, int(forward_bars))
-
     train_end = max(0, train_boundary - purge)
     validation_end = max(train_boundary, validation_boundary - purge)
     if train_end <= 0 or validation_end <= train_boundary or validation_boundary >= n:
@@ -136,6 +137,32 @@ def purged_split_ranges(n: int, forward_bars: int) -> dict[str, tuple[int, int]]
         "validation": (train_boundary, validation_end),
         "untouched_oos": (validation_boundary, n),
     }
+
+
+def _percentile(values: list[float], q: float) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    pos = max(0, min(len(ordered) - 1, int(math.floor(q * (len(ordered) - 1)))))
+    return ordered[pos]
+
+
+def _deterministic_index(seed: int, resample: int, draw: int, n: int) -> int:
+    raw = f"{seed}:{resample}:{draw}".encode("ascii")
+    digest = hashlib.sha256(raw).digest()
+    return int.from_bytes(digest[:8], "big") % n
+
+
+def bootstrap_mean_lower_bound(values: list[float], resamples: int = BOOTSTRAP_RESAMPLES, seed: int = BOOTSTRAP_SEED) -> float | None:
+    """Deterministic 5th percentile bootstrap lower bound for the sample mean."""
+    clean = [float(v) for v in values if math.isfinite(float(v))]
+    if len(clean) < 10:
+        return None
+    means = []
+    n = len(clean)
+    for resample in range(max(100, int(resamples))):
+        means.append(mean(clean[_deterministic_index(seed, resample, draw, n)] for draw in range(n)))
+    return _percentile(means, 0.05)
 
 
 def score_segment(panel: list[dict], start: int, end: int, config: CrossAssetConfig) -> dict:
@@ -155,8 +182,8 @@ def score_segment(panel: list[dict], start: int, end: int, config: CrossAssetCon
             ics.append(ic)
         ranked = sorted(rows, key=lambda r: r["score"])
         bucket = max(1, int(len(ranked) * config.top_fraction))
-        bottom = mean([r["forward_return"] for r in ranked[:bucket]])
-        top = mean([r["forward_return"] for r in ranked[-bucket:]])
+        bottom = mean(r["forward_return"] for r in ranked[:bucket])
+        top = mean(r["forward_return"] for r in ranked[-bucket:])
         spreads.append(top - bottom)
 
     stress_metrics = {}
@@ -169,6 +196,7 @@ def score_segment(panel: list[dict], start: int, end: int, config: CrossAssetCon
             "mean_net_top_minus_bottom": mean(net) if net else None,
             "positive_net_spread_rate": sum(x > 0 for x in net) / len(net) if net else 0.0,
             "cumulative_net_spread": sum(net),
+            "net_spread_samples": net,
         }
 
     base = stress_metrics[str(min(stress_grid))]
@@ -178,6 +206,7 @@ def score_segment(panel: list[dict], start: int, end: int, config: CrossAssetCon
         "evaluation_stride": stride,
         "mean_rank_ic": mean(ics) if ics else None,
         "positive_rank_ic_rate": sum(x > 0 for x in ics) / len(ics) if ics else 0.0,
+        "rank_ic_samples": ics,
         "mean_gross_top_minus_bottom": mean(spreads) if spreads else None,
         "mean_net_top_minus_bottom": base["mean_net_top_minus_bottom"],
         "positive_net_spread_rate": base["positive_net_spread_rate"],
@@ -187,43 +216,47 @@ def score_segment(panel: list[dict], start: int, end: int, config: CrossAssetCon
 
 
 def evaluate_pre_oos(panel: list[dict], config: CrossAssetConfig = CrossAssetConfig()) -> dict:
-    """Return only train+validation metrics for candidate selection.
-
-    This function intentionally does not calculate untouched-OOS metrics, so model
-    or parameter selection can be completed before the holdout is opened.
-    """
     if not panel:
         raise ValueError("empty panel")
     ranges = purged_split_ranges(len(panel), config.forward_bars)
-    train = score_segment(panel, *ranges["train"], config)
-    validation = score_segment(panel, *ranges["validation"], config)
     return {
         "lookbacks": list(config.lookbacks),
         "forward_bars": config.forward_bars,
         "split_ranges": {"train": list(ranges["train"]), "validation": list(ranges["validation"])},
-        "train": train,
-        "validation": validation,
+        "train": score_segment(panel, *ranges["train"], config),
+        "validation": score_segment(panel, *ranges["validation"], config),
         "untouched_oos_opened": False,
     }
 
 
 def evaluate_untouched_oos(panel: list[dict], config: CrossAssetConfig = CrossAssetConfig()) -> dict:
-    """Open the untouched holdout for exactly one preselected configuration."""
+    """Open untouched holdout once and require confidence under maximum cost stress."""
     if not panel:
         raise ValueError("empty panel")
     ranges = purged_split_ranges(len(panel), config.forward_bars)
     oos = score_segment(panel, *ranges["untouched_oos"], config)
     stress_grid = tuple(sorted({float(x) for x in config.cost_stress_multipliers if float(x) >= 1.0}))
     worst = oos["cost_stress"][str(max(stress_grid))]
+    ic_lb = bootstrap_mean_lower_bound(oos["rank_ic_samples"], seed=BOOTSTRAP_SEED)
+    net_lb = bootstrap_mean_lower_bound(worst["net_spread_samples"], seed=BOOTSTRAP_SEED + 1)
+    bootstrap = {
+        "resamples": BOOTSTRAP_RESAMPLES,
+        "seed": BOOTSTRAP_SEED,
+        "rank_ic_mean_95pct_lower_bound": ic_lb,
+        "max_cost_net_spread_mean_95pct_lower_bound": net_lb,
+        "passes": bool(ic_lb is not None and net_lb is not None and ic_lb > 0.0 and net_lb > 0.0),
+    }
     research_pass = bool(
         oos["timestamps"] >= 20
         and (oos["mean_rank_ic"] or 0.0) > 0.0
         and (worst["mean_net_top_minus_bottom"] or 0.0) > 0.0
         and worst["positive_net_spread_rate"] >= 0.50
+        and bootstrap["passes"]
     )
     return {
         "range": list(ranges["untouched_oos"]),
         "metrics": oos,
+        "bootstrap_robustness": bootstrap,
         "passes_acc002_research_gate": research_pass,
         "gate_uses_max_cost_stress": True,
         "untouched_oos_opened": True,
@@ -231,7 +264,6 @@ def evaluate_untouched_oos(panel: list[dict], config: CrossAssetConfig = CrossAs
 
 
 def evaluate_panel(panel: list[dict], config: CrossAssetConfig = CrossAssetConfig()) -> dict:
-    """Compatibility wrapper for a single already-fixed configuration."""
     pre = evaluate_pre_oos(panel, config)
     oos = evaluate_untouched_oos(panel, config)
     return {
@@ -247,6 +279,7 @@ def evaluate_panel(panel: list[dict], config: CrossAssetConfig = CrossAssetConfi
         "cost_stress_multipliers": list(config.cost_stress_multipliers),
         "split_ranges": {**pre["split_ranges"], "untouched_oos": oos["range"]},
         "splits": {"train": pre["train"], "validation": pre["validation"], "untouched_oos": oos["metrics"]},
+        "bootstrap_robustness": oos["bootstrap_robustness"],
         "passes_acc002_research_gate": oos["passes_acc002_research_gate"],
         "gate_uses_max_cost_stress": True,
     }

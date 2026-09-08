@@ -18,8 +18,9 @@ def test_required_history_supports_20_non_overlapping_oos_samples():
     assert required <= runner.MAX_HISTORY_BARS
 
 
-def test_fixed_grid_is_small_and_predeclared():
+def test_fixed_grid_is_small_predeclared_and_requires_neighbor_stability():
     assert runner.FIXED_LOOKBACK_GRID == ((4, 16, 64), (6, 24, 72), (8, 32, 96))
+    assert runner.MIN_STABLE_CANDIDATES == 2
 
 
 def _segment(ic=0.1, worst_net=0.01, positive_rate=0.6):
