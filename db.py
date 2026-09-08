@@ -100,8 +100,10 @@ def fetch_due_predictions(limit=500):
 def fetch_resolved_predictions(limit=5000):
     if not configured():
         return []
-    params={"select":"horizon,score,market_regime,correct,resolved_at","resolved_at":"not.is.null",
-            "order":"resolved_at.desc","limit":str(max(1,min(int(limit),10000)))}
+    params={
+        "select":"created_at,due_at,resolved_at,horizon,score,market_regime,correct,directional_return_pct,strategy_identity,action_at_forecast",
+        "resolved_at":"not.is.null","order":"resolved_at.desc","limit":str(max(1,min(int(limit),10000)))
+    }
     r=http.get(f"{SUPABASE_URL}/rest/v1/prediction_ledger",headers=headers(),params=params)
     if r.status_code>=300:
         raise RuntimeError(f"Supabase resolved prediction fetch failed: {r.status_code} {r.text}")
