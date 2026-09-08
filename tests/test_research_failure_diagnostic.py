@@ -14,4 +14,4 @@ def test_private_research_failure_diagnostic_is_sanitized(capsys):
     assert "RuntimeError" in captured.err
     assert "upstream history unavailable" in captured.err
     assert "super-secret-token" not in captured.err
-    assert "[REDACTED]" in captured.err
+    assert "<redacted>" in captured.err
