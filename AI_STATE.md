@@ -8,7 +8,7 @@ Authoritative continuation state for `rnnyrgs-web/tradingview-ai-crypto`. Read t
 Production: GitHub -> Render -> Python/FastAPI V3 -> Supabase. Production scans run about every 15 minutes and produce separate 24h/7d Top-20 rankings. Cloud research/backtesting runs continuously through a bounded 17-worker Python army on the existing Render coordinator. PONS is included only when defensible public data supports it. Specialist development uses isolated branches and exact-head Security and Reliability success is required before merge.
 
 ## SAFETY INVARIANTS
-No AI opinion, ranking score, evidence score, current order-book snapshot, paper P&L, ensemble weight, single OOS result, signed historical promotion, observability metric, supervisor status, or risk-gate result by itself may authorize live BUY/SELL.
+No AI opinion, ranking score, evidence score, current order-book snapshot, paper P&L, ensemble weight, single OOS result, signed historical promotion, observability metric, supervisor status, diagnostic, incident fingerprint, or risk-gate result by itself may authorize live BUY/SELL.
 
 Mandatory chain:
 RESEARCH -> BACKTEST -> VALIDATION -> UNTOUCHED OOS -> ROBUSTNESS/STABILITY -> MULTIPLE-TESTING FIREWALL -> POINT-IN-TIME UNIVERSE SAFETY -> STRATEGY-REGISTRY APPROVAL -> PRODUCTION-RISK APPROVAL -> GENUINE FORWARD PROOF -> GLOBAL/EXECUTION RISK CLEAR -> LIVE BUY/SELL.
@@ -18,10 +18,10 @@ Every later stage is restrictive-only. Missing, stale, contradictory, deteriorat
 `live_promotions.json` remains intentionally empty. Signing keys remain unused. Broker remains disconnected.
 
 ## VALIDATION / CALIBRATION
-Chronological validation remains train / validation / untouched holdout. Robustness includes deterministic bootstrap/Monte Carlo resampling, parameter perturbation, regime stability, conservative execution-cost stress and false-discovery/search-breadth penalties. Prediction ledger is append-only with fixed `due_at`; forward proof counts only non-overlapping full-horizon resolved forecasts for the exact immutable strategy fingerprint. Calibration, deterioration, observability and worker supervision can only restrict or inform research operations; none can authorize trading.
+Chronological validation remains train / validation / untouched holdout. Robustness includes deterministic bootstrap/Monte Carlo resampling, parameter perturbation, regime stability, conservative execution-cost stress and false-discovery/search-breadth penalties. Prediction ledger is append-only with fixed `due_at`; forward proof counts only non-overlapping full-horizon resolved forecasts for the exact immutable strategy fingerprint. Calibration, deterioration, observability, worker supervision and diagnostics can only restrict or inform research operations; none can authorize trading.
 
 ## ACCURACY PROGRAM STATUS
-- ACC-001 MARKET / EXECUTION REALISM — COMPLETE. PRs #38-#44 and follow-ons: realistic costs, timestamp-safe derivatives inputs, visible-depth evidence, strict chronology.
+- ACC-001 MARKET / EXECUTION REALISM — COMPLETE. PRs #38-#44 and follow-ons.
 - ACC-002 CROSS-ASSET RANK RESEARCH — IN PROGRESS. PRs #56-#60 and #64-#68: cross-sectional relative strength, multi-lookback vol-normalized momentum, train/validation/untouched OOS, purging, non-overlapping observations, fixed predeclared grids, Top-15/30/45 liquidity stability, 1x/1.5x/2x/3x cost stress, deterministic 500-resample bootstrap, dedicated 24h/7d workers. No profitability claim authorized yet.
 - ACC-003 REGIME GATING — COMPLETE. PR #70; run `34252423032`; merge `606595e50f3057452714c50eb88e8178213ac5c8`.
 - ACC-004 CHAMPION / CHALLENGER — COMPLETE. PR #71; run `34256093230`; merge `223bbd094e0ca8350f2673e94bec3d34a8836f87`.
@@ -31,67 +31,62 @@ Chronological validation remains train / validation / untouched holdout. Robustn
 - ACC-008 GENUINE FORWARD PROOF — COMPLETE. PR #75; run `34258912558`; merge `cf66104242467c8cf1177c91e20db206c92f62e5`. Exact fingerprint, >=20 independent 24h or >=12 7d, 3x modeled cost, positive after-cost expectancy, Wilson 95% lower >=50%, max forward DD <=12%, no deterioration.
 - ACC-009 GLOBAL PORTFOLIO / EXECUTION RISK — COMPLETE. PR #76; run `34264596759`; merge `4f70e89f81b4f16df39d4fd2fe88b3c0f298d6f5`.
 - ACC-010 SIZE-AWARE EXECUTION — COMPLETE. PR #77; run `34265226943`; merge `edbed73a7b4236234ea2ff958e94ca2510db2df1`.
-- ACC-011 POINT-IN-TIME UNIVERSE / SURVIVORSHIP FIREWALL — COMPLETE. PR #79; run `34266482390`; merge `20c383c1dae1d2413c534b749b10faf95fb83f57`. Today’s survivors are not accepted as historical universe evidence.
+- ACC-011 POINT-IN-TIME UNIVERSE / SURVIVORSHIP FIREWALL — COMPLETE. PR #79; run `34266482390`; merge `20c383c1dae1d2413c534b749b10faf95fb83f57`.
 - ACC-012 MULTIPLE-TESTING / FALSE-DISCOVERY FIREWALL — COMPLETE. PR #78; run `34265615227`; merge `8ddac654e63a70a95f811dd14777e649faefd625`.
 - ACC-013 GENUINE-FORWARD SHADOW CHAMPION / CHALLENGER — COMPLETE. PR #80; run `34268140486`; merge `51db55b5339bcbd5183044a50521e6fe36770caa`.
 - ACC-014 CHAOS / FAILURE FAIL-CLOSED GATES — COMPLETE. PR #81; run `34268401662`; merge `c91e337439782ac4b6c60a06a81aee5fb051ee29`.
 
 ## SAFE WORKER THROUGHPUT — COMPLETE
-PR #82 passed exact-head run `34268787553` and merged as `3af7eba0488da8576382b8c480698826eefdff8d`.
-- successful workers cycle at the configured fast rest interval;
+PR #82; exact-head run `34268787553`; merge `3af7eba0488da8576382b8c480698826eefdff8d`.
+- successful workers cycle at configured fast rest interval;
 - failing/timing-out workers use bounded exponential backoff;
-- dedicated accuracy lane remains reserved for 24h/7d ACC-002 work;
-- max heavy concurrency remains bounded; no paid capacity increase;
+- dedicated accuracy lane remains reserved for ACC-002 24h/7d;
+- heavy concurrency remains bounded under the $30/month ceiling;
 - all workers remain research-only.
 
 ## SHARED IMMUTABLE DEEP-HISTORY CACHE — COMPLETE
-PR #83 passed exact-head run `34270418760` and merged as `593d2126edc8e754cced4df98a4e9cb6a9c3b07f`.
-- process-local LRU then cross-process cache before OKX network fetch;
-- exact request identity + bounded TTL bucket;
-- same-bucket objects immutable;
-- SHA-256 integrity + provenance;
-- malformed, corrupt, wrong-key, future-dated or nonchronological objects rejected;
-- atomic publication and conservative pruning;
-- cache never changes chronology/OOS/forward-proof rules.
+PR #83; exact-head run `34270418760`; merge `593d2126edc8e754cced4df98a4e9cb6a9c3b07f`.
+Process-local LRU then cross-process immutable cache before OKX network fetch; exact request identity, bounded TTL bucket, SHA-256 integrity/provenance, invalid/future/nonchronological cache rejection, atomic publication and conservative pruning. Cache never changes chronology/OOS/forward-proof rules.
 
 ## RESEARCH OBSERVABILITY — COMPLETE
-PR #84 passed exact-head run `34271387837` and merged as `dcaad1dc3edecbe04a4ce825c9e8966c79febc36`.
-- cross-process cache hit/miss/rejection counts and cache-read p50/p95;
-- worker completed/failed/timeout counts and failure rate;
-- latest ACC-002 24h/7d evidence summaries and worker elapsed time;
-- metrics are read-only and hard-code trade/signal/promotion authority false;
-- detailed application endpoint remains protected by the existing scan secret.
+PR #84; exact-head run `34271387837`; merge `dcaad1dc3edecbe04a4ce825c9e8966c79febc36`.
+Cross-process cache hit/miss/rejection and p50/p95, worker completed/failed/timeout/failure rate, ACC-002 24h/7d summaries and elapsed time. Metrics are read-only with trade/signal/promotion authority false.
 
 ## EXACT DEEP-HISTORY NETWORK LATENCY — COMPLETE
-PR #85 passed exact-head run `34273647346` on `dab29b5993fd35a9e5b4ba3fe2ae51a3595f2988` and merged as `774a335402ca481eb35ecc75c180963c670d5032`.
-- `get_history()` measures actual OKX `/api/v5/market/history-candles` request time on cache misses;
-- paginated network durations are summed;
-- cache time, normalization, writes and intentional pagination sleeps are excluded;
-- internal retry/backoff time remains visible;
-- fetch count/failures/request count/rows/mean/p50/p95 are recorded;
-- failed fetches are recorded before the original exception is re-raised.
+PR #85; exact-head run `34273647346` on `dab29b5993fd35a9e5b4ba3fe2ae51a3595f2988`; merge `774a335402ca481eb35ecc75c180963c670d5032`.
+Measures actual OKX `/api/v5/market/history-candles` request time on cache misses, excluding cache time, normalization, writes and intentional pagination sleeps; retry/backoff remains visible. Fetch count/failure/request count/rows/mean/p50/p95 are recorded.
 
 ## PRIVATE RENDER OBSERVABILITY LOGGING — COMPLETE
-PR #86 `Log private research observability summaries` passed exact-head Security and Reliability run `34274577191` on `f23b14298056a991dade1921646e10dd3bba32bb` and merged as `0213cd2ffabeb03a800e4078bb64d880662744fe`.
-PR #87 fixed Render/Uvicorn logger routing; exact-head Security and Reliability run `34274827705` on `47722a0d986c3ff850408782e739358fa48866d1` passed and merged as `8070d434aeb42f82f623fb22a46244079332f01c`.
-
-Private coordinator logs expose only a bounded non-sensitive summary: cache hit/rejection and p50/p95, exact history-network p50/p95 and fetch counts, worker failure/timeout health, worker elapsed time, three ACC-002 gate booleans and supervisor status. Raw research evidence/arrays and secrets are not logged. Trade/signal/promotion authority remains false.
+PR #86 exact-head run `34274577191`; merge `0213cd2ffabeb03a800e4078bb64d880662744fe`. PR #87 exact-head run `34274827705`; merge `8070d434aeb42f82f623fb22a46244079332f01c`.
+Private Render logs expose bounded non-sensitive cache/network/worker/ACC-002/supervisor summaries. Raw research arrays and secrets are not logged. Authority remains false.
 
 ## SELF-HEALING 24/7 WORKER SUPERVISOR — COMPLETE
-PR #88 `Add self-healing supervision for 24/7 research workers` passed exact-head Security and Reliability run `34275821381` on `f11389cdd47175019e2dd6d8e397115ae66c73c9` and was squash-merged as `f02d91edb458cacb5be02fba4325555f381f7123`.
+PR #88 `Add self-healing supervision for 24/7 research workers`; exact-head Security and Reliability run `34275821381` on `f11389cdd47175019e2dd6d8e397115ae66c73c9`; squash merge `f02d91edb458cacb5be02fba4325555f381f7123`.
+- bounded heartbeats during computing and rest/backoff;
+- stale/crashed logical worker detection;
+- unexpected logical-worker exits are fingerprinted and recreated after bounded delay;
+- restart cannot increase heavy concurrency;
+- runtime failure categories: timeout, network/exchange, malformed/invalid evidence, resource/runtime, generic process failure;
+- coordinator health fails closed on supervisor health;
+- supervisor/incident data have trade/promotion/write authority false.
+
+## PRIVACY-PRESERVING WORKER FAILURE DIAGNOSTICS / DURABLE BUG LEDGER — COMPLETE
+PR #89 `Capture private worker failure diagnostics` passed exact-head Security and Reliability run `34277010057` on `3f0aed2f1d056dfe34d27a1afa90f0af0d1ac6b6` and was squash-merged as `edef2386262459935987249cb7a6414bd721dbfe`.
 
 Implemented:
-- each logical worker emits bounded heartbeats while a subprocess is computing and while the worker is resting/backing off;
-- supervisor distinguishes legitimate long-running work from stale/crashed worker loops;
-- unexpected logical-worker task exits are deterministically fingerprinted, classified and recreated after a bounded delay;
-- existing heavy-job semaphores remain unchanged, so self-healing restarts cannot increase paid/heavy concurrency;
-- runtime failures are classified as timeout, network/exchange, malformed/invalid evidence, resource/runtime or generic process failure;
-- bounded append-only runtime incident ledger records deterministic fingerprints and has trade/promotion/write authority hard-coded false;
-- coordinator health is fail-closed on worker-supervisor health, so stale/crashed workers make the coordinator unhealthy until recovered;
-- private Render logs include supervisor health, stale/crashed worker lists and restart count;
-- tests cover failure classification, fingerprint determinism, incident append behavior, stale/crash detection and no-authority invariants.
+- failed subprocess stderr is captured only into that job's temporary directory instead of being discarded;
+- only a bounded tail is read after non-zero exit;
+- common bearer-token/API-key/token/secret/password/JWT/OpenAI-key forms are redacted before storage/logging;
+- final traceback exception type is inferred where possible rather than treating every non-zero exit as generic `ProcessExitError`;
+- incident fingerprints include a deterministic diagnostic fingerprint so recurring root causes can be grouped;
+- sanitized traceback detail is retained only in the private runtime incident ledger and private Render application logs;
+- public worker/coordinator snapshots expose safe error type/classification/fingerprints but never the diagnostic excerpt;
+- `BUG_REGRESSION_LEDGER.md` is repository-backed durable defect history, separate from ephemeral Render runtime incident files;
+- `WORKER-DIAG-001` records the confirmed prior defect where subprocess stderr was sent to DEVNULL and root cause was lost;
+- tests cover bounded/redacted diagnostics, error-type inference, diagnostic-sensitive fingerprints, append-only private incident detail, public/private boundary and no-authority invariants;
+- `DIAGNOSTICS_PRIVACY.md` documents the privacy boundary.
 
-Important limitation: runtime supervision can restart unhealthy worker loops automatically, but it does NOT auto-edit or auto-merge production code and does NOT have Render rollback authority. Code bugs still require isolated repair branches/PRs plus exact-head CI, and deploy rollback remains a controlled deployment action rather than autonomous worker authority.
+Live deployment of PR #89 completed successfully. Immediately after restart the new supervisor was healthy with no stale/crashed workers and zero task restarts. Fresh ACC-002 jobs had not yet completed at the time of this state update, so no post-PR-89 traceback existed yet. Do NOT invent or prematurely classify the prior ACC-002 exit-code-1 root cause; use the first new sanitized `worker_failure` trace as evidence.
 
 ## AUTHENTIC PAPER TRADING STATE
 The continuous paper account remains forward-only and broker-disconnected. Authentic baseline is exactly `$100,000` from `2026-09-08T01:17:49Z`; never reset or rewrite it. Current account value = immutable starting capital plus realized/open P&L. Safety/execution gates may reject entries but never fabricate or reset history. Paper performance is evidence only.
@@ -104,12 +99,12 @@ Preserve stable exact strategy fingerprints while genuine forward observations a
 
 ## EXACT NEXT STEP
 1. Continue genuine ACC-002 24h/7d forward/OOS evidence and worker-health monitoring. No profitability claim unless evidence genuinely passes.
-2. Verify the PR #88 supervisor stays healthy in live Render logs: no stale workers, no unexpected task-restart loop, and heartbeats continue through long ACC-002 jobs.
-3. Use non-zero cache/network/worker samples to identify the proven throughput bottleneck; do not optimize from startup-zero samples.
-4. Next reliability upgrade should be a deployment-canary/rollback decision layer that can detect post-deploy regression and recommend or execute controlled rollback only with explicit deployment authority; do not give research workers repository-write or merge authority.
-5. Build a durable bug/regression ledger for confirmed code defects so every fixed defect has a permanent reproducer/regression test; runtime incident fingerprints alone are not persistent across Render redeploys.
-6. Preserve stable exact champion fingerprints while challengers run in shadow; only evidence-backed changes create a new fingerprint.
-7. Preserve empty `live_promotions.json`, unused signing keys, PONS fail-closed behavior, immutable $100k paper ledger and broker-disconnected state.
-8. Only add microstructure features when genuine timestamped data supports them; never reconstruct unavailable order books/liquidations from candles.
-9. Optimize after-cost risk-adjusted realized performance with tail protection and abstention, not headline accuracy.
-10. Update this file after every completed integration cycle.
+2. Read the first fresh post-PR-89 sanitized `worker_failure` trace for ACC-002. Classify the real root cause from evidence; do not infer it from old exit code alone.
+3. If the trace proves a code defect, reproduce it in a permanent test, add/update `BUG_REGRESSION_LEDGER.md`, fix it on an isolated branch, require exact-head Security and Reliability success, then merge/deploy. If the trace is an intentional fail-closed insufficiency gate, distinguish expected research-not-ready from actual runtime failure without weakening the gate.
+4. Verify supervisor remains healthy in live Render logs: no stale workers, no restart loop, heartbeats continue through long jobs.
+5. Use non-zero cache/network/worker samples to identify the proven throughput bottleneck; do not optimize from startup-zero samples.
+6. Next larger reliability upgrade after current failure classification: deployment-canary/controlled rollback decision layer. Do not give research workers repository-write/merge authority.
+7. Preserve stable exact champion fingerprints while challengers run in shadow; only evidence-backed changes create a new fingerprint.
+8. Preserve empty `live_promotions.json`, unused signing keys, PONS fail-closed behavior, immutable $100k paper ledger and broker-disconnected state.
+9. Only add microstructure features when genuine timestamped data supports them; never reconstruct unavailable order books/liquidations from candles.
+10. Optimize after-cost risk-adjusted realized performance with tail protection and abstention, not headline accuracy.
