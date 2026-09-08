@@ -1,10 +1,8 @@
-import asyncio
-
 import continuous_worker_army as army
 
 
 def test_worker_army_is_bounded_and_research_only():
-    assert len(army.WORKERS) == 15
+    assert len(army.WORKERS) == 16
     assert 1 <= army.MAX_CONCURRENT <= 4
     snap = army.snapshot()
     assert snap["trade_authority"] is False
@@ -14,12 +12,15 @@ def test_worker_army_is_bounded_and_research_only():
     assert snap["research_only"] is True
 
 
-def test_worker_mix_has_major_pons_universe_and_swing():
+def test_worker_mix_has_major_pons_universe_swing_and_cross_asset():
     names = {worker.name for worker in army.WORKERS}
     assert {"major-btc", "major-eth", "major-sol", "major-xrp", "major-link"} <= names
     assert "pons" in names
     assert "swing-majors" in names
+    assert "cross-asset-rank" in names
     assert {f"universe-{idx}" for idx in range(8)} <= names
+    cross = next(worker for worker in army.WORKERS if worker.name == "cross-asset-rank")
+    assert cross.script == "cross_asset_runner.py"
 
 
 def test_explicit_symbol_workers_disable_forced_symbol_duplication(monkeypatch):

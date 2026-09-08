@@ -1,6 +1,6 @@
 """Bounded always-on Python worker army for continuous crypto research.
 
-The army runs many persistent logical worker loops on one Render service while
+The army runs persistent logical worker loops on one Render service while
 strictly limiting simultaneous heavy subprocesses. Workers are research-only:
 they have no broker, promotion, GitHub-write, or live-trade authority.
 """
@@ -21,17 +21,18 @@ from threading import Lock
 PROJECT_ROOT = Path(__file__).resolve().parent
 MAX_CONCURRENT = max(1, min(int(os.getenv("WORKER_ARMY_MAX_CONCURRENT", "2")), 4))
 JOB_TIMEOUT_SECONDS = max(300, min(int(os.getenv("WORKER_ARMY_JOB_TIMEOUT_SECONDS", "2700")), 3600))
-REST_SECONDS = max(5, min(int(os.getenv("WORKER_ARMY_REST_SECONDS", "20")), 300))
+REST_SECONDS = max(5, min(int(os.getenv("WORKER_ARMY_REST_SECONDS", "5")), 300))
 
 
 @dataclass(frozen=True)
 class WorkerSpec:
     name: str
     env: dict[str, str]
+    script: str = "research_runner.py"
 
 
-# Fifteen persistent logical workers. They all keep looping 24/7, but a bounded
-# semaphore prevents one inexpensive machine from being overloaded.
+# Persistent logical workers keep cycling 24/7. A bounded semaphore prevents
+# one inexpensive machine from being overloaded. ACC-002 gets a dedicated loop.
 WORKERS = (
     WorkerSpec("major-btc", {"RESEARCH_SYMBOLS": "BTC-USDT", "RESEARCH_TIMEFRAMES": "15m,1H"}),
     WorkerSpec("major-eth", {"RESEARCH_SYMBOLS": "ETH-USDT", "RESEARCH_TIMEFRAMES": "15m,1H"}),
@@ -48,6 +49,17 @@ WORKERS = (
     WorkerSpec("universe-6", {"RESEARCH_SHARD_INDEX": "6", "RESEARCH_SHARD_COUNT": "8", "RESEARCH_TIMEFRAMES": "15m,1H"}),
     WorkerSpec("universe-7", {"RESEARCH_SHARD_INDEX": "7", "RESEARCH_SHARD_COUNT": "8", "RESEARCH_TIMEFRAMES": "15m,1H"}),
     WorkerSpec("swing-majors", {"RESEARCH_SYMBOLS": "BTC-USDT,ETH-USDT,SOL-USDT,XRP-USDT,LINK-USDT", "RESEARCH_TIMEFRAMES": "4H,1D"}),
+    WorkerSpec(
+        "cross-asset-rank",
+        {
+            "CROSS_ASSET_UNIVERSE_SIZE": "30",
+            "CROSS_ASSET_BARS": "1200",
+            "CROSS_ASSET_BAR": "1H",
+            "CROSS_ASSET_FORWARD_BARS": "24",
+            "CROSS_ASSET_ROUND_TRIP_COST_BPS": "12",
+        },
+        script="cross_asset_runner.py",
+    ),
 )
 
 _lock = Lock()
@@ -108,6 +120,7 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> None:
             workers = _status["workers"]
             workers[spec.name] = {
                 "state": "running",
+                "script": spec.script,
                 "last_started_at": _now(),
                 "last_finished_at": workers.get(spec.name, {}).get("last_finished_at"),
                 "last_exit_code": workers.get(spec.name, {}).get("last_exit_code"),
@@ -121,7 +134,7 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> None:
             with tempfile.TemporaryDirectory(prefix=f"crypto-{spec.name}-") as tmpdir:
                 process = await asyncio.create_subprocess_exec(
                     sys.executable,
-                    str(PROJECT_ROOT / "research_runner.py"),
+                    str(PROJECT_ROOT / spec.script),
                     cwd=tmpdir,
                     env=_worker_env(spec),
                     stdout=asyncio.subprocess.DEVNULL,
@@ -134,7 +147,7 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> None:
                     await process.wait()
                     exit_code = -9
                     error_type = "TimeoutError"
-        except Exception as exc:  # fail closed; supervisor continues other workers
+        except Exception as exc:
             exit_code = -1
             error_type = type(exc).__name__
 
@@ -147,6 +160,7 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> None:
             _status["last_completion_at"] = _now()
             _status["workers"][spec.name] = {
                 "state": "resting" if exit_code == 0 else "error_backoff",
+                "script": spec.script,
                 "last_started_at": _status["workers"][spec.name].get("last_started_at"),
                 "last_finished_at": _now(),
                 "last_exit_code": exit_code,
@@ -156,7 +170,6 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> None:
 
 
 async def _worker_loop(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> None:
-    # Stagger starts to avoid a thundering herd at deploy time.
     await asyncio.sleep((sum(spec.name.encode("utf-8")) % 17) + 1)
     while True:
         await _run_once(spec, semaphore)
@@ -169,6 +182,7 @@ async def run_army() -> None:
         _status["workers"] = {
             spec.name: {
                 "state": "starting",
+                "script": spec.script,
                 "last_started_at": None,
                 "last_finished_at": None,
                 "last_exit_code": None,
