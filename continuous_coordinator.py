@@ -2,7 +2,7 @@
 
 The coordinator observes production/state while the worker army continuously
 runs research/backtest jobs. Neither component has live trade, promotion,
-broker, or repository-write authority.
+broker, deployment, rollback, or repository-write authority.
 """
 
 from __future__ import annotations
@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from threading import Lock
@@ -18,6 +19,7 @@ import httpx
 from fastapi import FastAPI
 
 from continuous_worker_army import run_army, snapshot as worker_army_snapshot
+from deployment_canary import evaluate_canary
 
 
 PRODUCTION_HEALTH_URL = os.getenv(
@@ -34,6 +36,7 @@ WORKER_ARMY_ENABLED = os.getenv("WORKER_ARMY_ENABLED", "1").strip().lower() not 
 
 log = logging.getLogger("uvicorn.error")
 _lock = Lock()
+_started_monotonic = time.monotonic()
 _status = {
     "started_at": None,
     "last_check_at": None,
@@ -153,18 +156,41 @@ def apply_check(result: dict) -> None:
             _status["consecutive_failures"] += 1
 
 
+def canary_snapshot(army: dict | None = None) -> dict:
+    with _lock:
+        coordinator = dict(_status)
+    if army is None:
+        army = worker_army_snapshot() if WORKER_ARMY_ENABLED else {"enabled": False, "supervisor": {"healthy": True}}
+    return evaluate_canary(
+        coordinator,
+        army,
+        uptime_seconds=time.monotonic() - _started_monotonic,
+    )
+
+
 async def coordinator_loop() -> None:
     timeout = httpx.Timeout(REQUEST_TIMEOUT_SECONDS)
     async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
         while True:
             apply_check(await check_once(client))
             if WORKER_ARMY_ENABLED:
-                log.info("research_observability %s", observability_log_payload(worker_army_snapshot()))
+                army = worker_army_snapshot()
+                log.info("research_observability %s", observability_log_payload(army))
+                canary = canary_snapshot(army)
+                log.info(
+                    "deployment_canary status=%s rollback_recommended=%s reasons=%s worker_samples=%s",
+                    canary.get("status"),
+                    canary.get("rollback_recommended"),
+                    canary.get("reasons"),
+                    canary.get("worker_samples"),
+                )
             await asyncio.sleep(POLL_SECONDS)
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    global _started_monotonic
+    _started_monotonic = time.monotonic()
     with _lock:
         _status["started_at"] = _now()
     tasks = [asyncio.create_task(coordinator_loop(), name="coordinator-watchdog")]
@@ -186,25 +212,30 @@ app = FastAPI(title="Crypto Continuous Coordinator", lifespan=lifespan)
 def health() -> dict:
     with _lock:
         snapshot = dict(_status)
-    army = worker_army_snapshot() if WORKER_ARMY_ENABLED else {"enabled": False}
+    army = worker_army_snapshot() if WORKER_ARMY_ENABLED else {"enabled": False, "supervisor": {"healthy": True}}
     supervisor = army.get("supervisor") if isinstance(army.get("supervisor"), dict) else {}
     supervisor_ok = supervisor.get("healthy") is True if WORKER_ARMY_ENABLED else True
+    canary = canary_snapshot(army)
     healthy = (
         snapshot["production_ok"]
         and snapshot["state_ok"]
         and snapshot["consecutive_failures"] < 3
         and supervisor_ok
+        and canary.get("rollback_recommended") is not True
     )
     return {
         "ok": healthy,
         "service": "crypto-continuous-coordinator",
-        "mode": "observe_and_research_only",
+        "mode": "observe_research_and_canary_only",
         "ai_calls_normal_operation": 0,
         "trade_authority": False,
         "write_authority": False,
         "promotion_authority": False,
+        "deployment_authority": False,
+        "automatic_rollback_authority": False,
         "broker_connected": False,
         "research_only": True,
+        "deployment_canary": canary,
         "worker_army": army,
         **snapshot,
     }
@@ -213,3 +244,8 @@ def health() -> dict:
 @app.get("/workers")
 def workers() -> dict:
     return worker_army_snapshot() if WORKER_ARMY_ENABLED else {"enabled": False}
+
+
+@app.get("/deployment-canary")
+def deployment_canary() -> dict:
+    return canary_snapshot()
