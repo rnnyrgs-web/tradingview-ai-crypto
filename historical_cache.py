@@ -68,16 +68,22 @@ def _valid_rows(rows, now_ms, wanted):
             return False
         try:
             ts = int(row["ts"])
-            values = [float(row[k]) for k in required[1:]]
+            open_px = float(row["open"])
+            high_px = float(row["high"])
+            low_px = float(row["low"])
+            close_px = float(row["close"])
+            volume = float(row["volume"])
+            quote_volume = float(row["quote_volume"])
         except (TypeError, ValueError):
             return False
+        values = (open_px, high_px, low_px, close_px, volume, quote_volume)
         if ts <= last_ts or ts <= 0 or ts > now_ms + MAX_FUTURE_SKEW_MS:
             return False
         if not all(math.isfinite(v) for v in values):
             return False
-        if row["high"] < row["low"] or row["open"] <= 0 or row["high"] <= 0 or row["low"] <= 0 or row["close"] <= 0:
+        if high_px < low_px or min(open_px, high_px, low_px, close_px) <= 0:
             return False
-        if row["volume"] < 0 or row["quote_volume"] < 0:
+        if volume < 0 or quote_volume < 0:
             return False
         last_ts = ts
     return True
@@ -150,8 +156,7 @@ def write_history(symbol, bar, wanted, max_bars, rows, *, now_ms=None, ttl_secon
         return False
 
 
-def prune_cache(*, now_ms=None, ttl_seconds=None, cache_dir=None, keep_buckets=2):
-    now_ms = int(now_ms if now_ms is not None else time.time() * 1000)
+def prune_cache(*, ttl_seconds=None, cache_dir=None, keep_buckets=2):
     ttl_seconds = int(ttl_seconds or DEFAULT_TTL_SECONDS)
     cache_dir = Path(cache_dir or DEFAULT_CACHE_DIR)
     if not cache_dir.exists():
