@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from db import (
+from paper_db import (
     close_paper_trade,
     fetch_open_paper_trades,
     fetch_paper_account,
