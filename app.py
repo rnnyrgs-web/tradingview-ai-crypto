@@ -11,8 +11,7 @@ from engine import run_scan
 from evaluator import run_evaluation
 from backtest import run_backtest, walk_forward
 from market_data import build_universe
-from dashboard import login_page, handle_login, dashboard_page, signal_detail_page
-from tradingview_overlay import pine_overlay_page
+from dashboard import login_page, handle_login, dashboard_page, signal_detail_page, signal_chart_data
 from operational_monitor import health_snapshot, record_error
 from calibration import calibration_summary
 from continuous_ai_agent import continuous_ai_loop, status_snapshot as continuous_ai_status
@@ -87,14 +86,14 @@ def dashboard_signal(request:Request,signal_id:int):
     try:
         return signal_detail_page(request,signal_id)
     except Exception as e:
-        internal_error("dashboard_signal", e, "Signal visual unavailable")
+        internal_error("dashboard_signal", e, "Signal chart unavailable")
 
-@app.get("/dashboard/signal/{signal_id}/tradingview-overlay")
-def dashboard_signal_tradingview_overlay(request:Request,signal_id:int):
+@app.get("/dashboard/signal/{signal_id}/chart-data")
+def dashboard_signal_chart_data(request:Request,signal_id:int):
     try:
-        return pine_overlay_page(request,signal_id)
+        return signal_chart_data(request,signal_id)
     except Exception as e:
-        internal_error("dashboard_signal_tradingview_overlay", e, "TradingView overlay unavailable")
+        internal_error("dashboard_signal_chart_data", e, "Signal chart data unavailable")
 
 @app.get("/universe")
 def universe(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
