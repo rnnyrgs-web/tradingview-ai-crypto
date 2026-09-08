@@ -36,6 +36,16 @@ def _default_state() -> dict[str, Any]:
             "read_latency_ms": [],
             "last_event_at_ms": None,
         },
+        "history_network": {
+            "fetches": 0,
+            "failures": 0,
+            "request_count": 0,
+            "rows_received": 0,
+            "network_latency_ms": [],
+            "requests_per_fetch": [],
+            "last_event_at_ms": None,
+            "last_fetch": None,
+        },
         "workers": {
             "completed": 0,
             "failed": 0,
@@ -59,7 +69,7 @@ def _read_state(path: Path) -> dict[str, Any]:
     if not isinstance(raw, dict):
         return _default_state()
     state = _default_state()
-    for section in ("cache", "workers"):
+    for section in ("cache", "history_network", "workers"):
         if isinstance(raw.get(section), dict):
             state[section].update(raw[section])
     return state
@@ -94,6 +104,17 @@ def _mutate(mutator, *, metrics_dir=None) -> None:
             fcntl.flock(lock_handle.fileno(), fcntl.LOCK_UN)
 
 
+def _bounded_samples(existing, value: float) -> list[float]:
+    samples = [
+        float(v)
+        for v in (existing or [])
+        if isinstance(v, (int, float)) and math.isfinite(float(v)) and float(v) >= 0
+    ]
+    if math.isfinite(value) and value >= 0:
+        samples.append(round(value, 3))
+    return samples[-MAX_LATENCY_SAMPLES:]
+
+
 def record_cache_read(result: str, latency_ms: float, *, metrics_dir=None) -> None:
     if result not in {"hit", "miss", "rejection"}:
         return
@@ -106,15 +127,54 @@ def record_cache_read(result: str, latency_ms: float, *, metrics_dir=None) -> No
             latency = float(latency_ms)
         except (TypeError, ValueError):
             latency = -1.0
-        if math.isfinite(latency) and latency >= 0:
-            samples = [
-                float(v)
-                for v in (cache.get("read_latency_ms") or [])
-                if isinstance(v, (int, float)) and math.isfinite(float(v)) and float(v) >= 0
-            ]
-            samples.append(round(latency, 3))
-            cache["read_latency_ms"] = samples[-MAX_LATENCY_SAMPLES:]
+        cache["read_latency_ms"] = _bounded_samples(cache.get("read_latency_ms"), latency)
         cache["last_event_at_ms"] = int(time.time() * 1000)
+
+    _mutate(mutate, metrics_dir=metrics_dir)
+
+
+def record_history_network_fetch(
+    symbol: str,
+    bar: str,
+    *,
+    request_count: int,
+    rows_received: int,
+    network_latency_ms: float,
+    success: bool,
+    error_type: str | None = None,
+    metrics_dir=None,
+) -> None:
+    """Record only deep-history network time; never strategy/trading evidence."""
+    try:
+        requests = max(0, int(request_count))
+        rows = max(0, int(rows_received))
+        latency = float(network_latency_ms)
+    except (TypeError, ValueError):
+        return
+    if not math.isfinite(latency) or latency < 0:
+        return
+
+    def mutate(state):
+        network = state["history_network"]
+        network["fetches"] = max(0, int(network.get("fetches") or 0)) + 1
+        if not success:
+            network["failures"] = max(0, int(network.get("failures") or 0)) + 1
+        network["request_count"] = max(0, int(network.get("request_count") or 0)) + requests
+        network["rows_received"] = max(0, int(network.get("rows_received") or 0)) + rows
+        network["network_latency_ms"] = _bounded_samples(network.get("network_latency_ms"), latency)
+        network["requests_per_fetch"] = _bounded_samples(network.get("requests_per_fetch"), float(requests))
+        now_ms = int(time.time() * 1000)
+        network["last_event_at_ms"] = now_ms
+        network["last_fetch"] = {
+            "symbol": str(symbol),
+            "bar": str(bar),
+            "request_count": requests,
+            "rows_received": rows,
+            "network_latency_ms": round(latency, 3),
+            "success": bool(success),
+            "error_type": str(error_type) if error_type else None,
+            "updated_at_ms": now_ms,
+        }
 
     _mutate(mutate, metrics_dir=metrics_dir)
 
@@ -147,6 +207,20 @@ def _percentile(values: list[float], q: float):
     return round(ordered[max(0, min(idx, len(ordered) - 1))], 3)
 
 
+def _latency_summary(values) -> dict[str, Any]:
+    samples = [
+        float(v)
+        for v in (values or [])
+        if isinstance(v, (int, float)) and math.isfinite(float(v)) and float(v) >= 0
+    ]
+    return {
+        "samples": len(samples),
+        "mean": round(sum(samples) / len(samples), 3) if samples else None,
+        "p50": _percentile(samples, 0.50),
+        "p95": _percentile(samples, 0.95),
+    }
+
+
 def snapshot(*, metrics_dir=None) -> dict[str, Any]:
     root, state_path, lock_path = _paths(metrics_dir)
     root.mkdir(parents=True, exist_ok=True)
@@ -162,11 +236,12 @@ def snapshot(*, metrics_dir=None) -> dict[str, Any]:
     misses = max(0, int(cache.get("misses") or 0))
     rejections = max(0, int(cache.get("rejections") or 0))
     total_reads = hits + misses + rejections
-    samples = [
-        float(v)
-        for v in (cache.get("read_latency_ms") or [])
-        if isinstance(v, (int, float)) and math.isfinite(float(v)) and float(v) >= 0
-    ]
+
+    network = state["history_network"]
+    fetches = max(0, int(network.get("fetches") or 0))
+    network_failures = max(0, int(network.get("failures") or 0))
+    request_count = max(0, int(network.get("request_count") or 0))
+    rows_received = max(0, int(network.get("rows_received") or 0))
 
     workers = state["workers"]
     completed = max(0, int(workers.get("completed") or 0))
@@ -194,13 +269,22 @@ def snapshot(*, metrics_dir=None) -> dict[str, Any]:
             "rejections": rejections,
             "hit_rate": round(hits / total_reads, 4) if total_reads else None,
             "rejection_rate": round(rejections / total_reads, 4) if total_reads else None,
-            "read_latency_ms": {
-                "samples": len(samples),
-                "mean": round(sum(samples) / len(samples), 3) if samples else None,
-                "p50": _percentile(samples, 0.50),
-                "p95": _percentile(samples, 0.95),
-            },
+            "read_latency_ms": _latency_summary(cache.get("read_latency_ms")),
             "last_event_at_ms": cache.get("last_event_at_ms"),
+        },
+        "history_network": {
+            "fetches": fetches,
+            "failures": network_failures,
+            "failure_rate": round(network_failures / fetches, 4) if fetches else None,
+            "request_count": request_count,
+            "rows_received": rows_received,
+            "avg_requests_per_fetch": round(request_count / fetches, 3) if fetches else None,
+            "avg_rows_per_fetch": round(rows_received / fetches, 3) if fetches else None,
+            "network_latency_ms": _latency_summary(network.get("network_latency_ms")),
+            "requests_per_fetch": _latency_summary(network.get("requests_per_fetch")),
+            "last_event_at_ms": network.get("last_event_at_ms"),
+            "last_fetch": network.get("last_fetch") if isinstance(network.get("last_fetch"), dict) else None,
+            "scope": "sum_of_actual_OKX_history_candle_request_durations_only; excludes cache, normalization and pagination sleep",
         },
         "workers": {
             "completed": completed,
