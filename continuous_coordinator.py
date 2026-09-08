@@ -32,7 +32,7 @@ POLL_SECONDS = max(30, int(os.getenv("COORDINATOR_POLL_SECONDS", "60")))
 REQUEST_TIMEOUT_SECONDS = 15.0
 WORKER_ARMY_ENABLED = os.getenv("WORKER_ARMY_ENABLED", "1").strip().lower() not in {"0", "false", "no", "off"}
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("uvicorn.error")
 _lock = Lock()
 _status = {
     "started_at": None,
