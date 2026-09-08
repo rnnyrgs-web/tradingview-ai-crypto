@@ -20,6 +20,7 @@ from continuous_ai_agent import continuous_ai_loop, status_snapshot as continuou
 from production_validation import validate_live_strategy
 from shadow_readiness import assess_shadow_readiness, canary_review_decision
 from paper_trading import paper_status, paper_trading_loop, run_paper_cycle
+from research_observability import snapshot as research_observability_snapshot
 
 
 @asynccontextmanager
@@ -60,7 +61,7 @@ def root():
         "version":STRATEGY_VERSION,
         "dashboard":"/dashboard",
         "paper_portfolio":"/dashboard/paper",
-        "endpoints":["/health","/paper","/paper/run","/scan","/evaluate","/calibration","/shadow-readiness","/backtest","/walkforward","/universe","/signals","/signals/cursor"]
+        "endpoints":["/health","/research-observability","/paper","/paper/run","/scan","/evaluate","/calibration","/shadow-readiness","/backtest","/walkforward","/universe","/signals","/signals/cursor"]
     }
 
 @app.get("/health")
@@ -74,7 +75,16 @@ def health():
         "operations":health_snapshot(),
         "continuous_ai":continuous_ai_status(),
         "paper_trading":paper_status(),
+        "research_observability":research_observability_snapshot(),
     }
+
+@app.get("/research-observability")
+def research_observability(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
+    verify_secret(secret,x_scan_secret)
+    try:
+        return {"ok":True,**research_observability_snapshot()}
+    except Exception as e:
+        internal_error("research_observability", e, "Research observability unavailable")
 
 @app.get("/paper")
 def paper(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
