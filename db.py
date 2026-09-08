@@ -100,7 +100,7 @@ def fetch_due_predictions(limit=500):
 def fetch_resolved_predictions(limit=5000):
     if not configured():
         return []
-    params={"select":"horizon,score,market_regime,correct","resolved_at":"not.is.null",
+    params={"select":"horizon,score,market_regime,correct,resolved_at","resolved_at":"not.is.null",
             "order":"resolved_at.desc","limit":str(max(1,min(int(limit),10000)))}
     r=http.get(f"{SUPABASE_URL}/rest/v1/prediction_ledger",headers=headers(),params=params)
     if r.status_code>=300:
@@ -160,7 +160,6 @@ def fetch_ranked_opportunities(horizon="24h", hours=None, limit=20):
 def fetch_signal_by_id(signal_id):
     if not configured():
         return None
-    # Dashboard IDs refer to opportunity rows first; legacy signal detail remains a fallback.
     r=http.get(f"{SUPABASE_URL}/rest/v1/crypto_opportunities",headers=headers(),params={"select":"*","id":f"eq.{int(signal_id)}","limit":"1"})
     if r.status_code<300 and r.json():
         row=r.json()[0]
