@@ -1,4 +1,5 @@
 from datetime import timedelta
+from types import SimpleNamespace
 
 import pytest
 
@@ -33,7 +34,7 @@ def test_consistent_profitability_requires_real_sample_and_risk_controls():
     assert p._consistent({**good, "last_20_pnl_usd": -1}, 8.0) is False
 
 
-def test_close_decision_uses_observed_exit_price_not_idealized_trigger():
+def test_close_decision_uses_bad_gap_for_stop_but_not_good_gap_for_target():
     base = {
         "direction": "LONG",
         "stop_loss": 95,
@@ -42,20 +43,42 @@ def test_close_decision_uses_observed_exit_price_not_idealized_trigger():
         "horizon": "24h",
     }
     assert p._close_decision(base, 94) == (94, "STOP")
-    assert p._close_decision(base, 111) == (111, "TARGET")
+    assert p._close_decision(base, 111) == (110, "TARGET")
+    short = {**base, "direction": "SHORT", "stop_loss": 105, "target_price": 90}
+    assert p._close_decision(short, 106) == (106, "STOP")
+    assert p._close_decision(short, 89) == (90, "TARGET")
     expired = {**base, "opened_at": (now_utc() - timedelta(hours=25)).isoformat()}
     assert p._close_decision(expired, 102) == (102, "TIME")
 
 
-def test_paper_fill_is_forward_market_price_with_adverse_friction(monkeypatch):
+def test_paper_fill_requires_current_size_aware_execution_evidence(monkeypatch):
     monkeypatch.setattr(p, "_last_price", lambda symbol: 100.0)
-    market, long_fill = p._paper_fill_price("BTC-USDT", "LONG")
-    _, short_fill = p._paper_fill_price("BTC-USDT", "SHORT")
+    monkeypatch.setattr(p, "get_order_book_intelligence", lambda base: {"reliable": True})
+    simulation = SimpleNamespace(
+        executable=True,
+        reason="ok_conservative_current_snapshot",
+        fill_price=100.25,
+        supported_notional=5000.0,
+        worst_slippage_bps=12.0,
+        source_count=2,
+    )
+    monkeypatch.setattr(p, "simulate_market_fill", lambda book, direction, requested, fee: simulation)
+    market, fill, evidence = p._paper_fill_price("BTC-USDT", "LONG", 4000.0)
     assert market == 100.0
-    assert long_fill > market
-    assert short_fill < market
-    assert round(long_fill, 6) == round(100.0 * (1 + p.FEE_BPS_ONE_WAY / 10000.0), 6)
-    assert round(short_fill, 6) == round(100.0 * (1 - p.FEE_BPS_ONE_WAY / 10000.0), 6)
+    assert fill == 100.25
+    assert evidence.source_count == 2
+
+
+def test_paper_fill_fails_closed_without_execution_evidence(monkeypatch):
+    monkeypatch.setattr(p, "_last_price", lambda symbol: 100.0)
+    monkeypatch.setattr(p, "get_order_book_intelligence", lambda base: {"reliable": False})
+    monkeypatch.setattr(
+        p,
+        "simulate_market_fill",
+        lambda *args: SimpleNamespace(executable=False, reason="insufficient_independent_visible_depth", fill_price=None),
+    )
+    with pytest.raises(RuntimeError, match="Execution evidence unavailable"):
+        p._paper_fill_price("BTC-USDT", "LONG", 4000.0)
 
 
 def test_persistent_account_requires_immutable_100k_start():
