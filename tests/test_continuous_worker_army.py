@@ -43,3 +43,17 @@ def test_status_snapshot_is_copy():
     original = army.snapshot()
     original["worker_count"] = -1
     assert army.snapshot()["worker_count"] == len(army.WORKERS)
+
+
+def test_retry_delay_grows_on_failures_and_is_bounded():
+    assert army._retry_delay_seconds(0) == army.REST_SECONDS
+    first = army._retry_delay_seconds(1)
+    second = army._retry_delay_seconds(2)
+    later = army._retry_delay_seconds(20)
+    assert first >= army.REST_SECONDS
+    assert second >= first
+    assert later <= army.MAX_ERROR_BACKOFF_SECONDS
+
+
+def test_success_resets_retry_delay_to_fast_cycle():
+    assert army._retry_delay_seconds(0) < army._retry_delay_seconds(4)

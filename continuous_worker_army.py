@@ -23,6 +23,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 MAX_CONCURRENT = max(1, min(int(os.getenv("WORKER_ARMY_MAX_CONCURRENT", "2")), 4))
 JOB_TIMEOUT_SECONDS = max(300, min(int(os.getenv("WORKER_ARMY_JOB_TIMEOUT_SECONDS", "2700")), 3600))
 REST_SECONDS = max(5, min(int(os.getenv("WORKER_ARMY_REST_SECONDS", "5")), 300))
+MAX_ERROR_BACKOFF_SECONDS = max(30, min(int(os.getenv("WORKER_ARMY_MAX_ERROR_BACKOFF_SECONDS", "300")), 900))
 
 
 @dataclass(frozen=True)
@@ -77,6 +78,7 @@ _status: dict[str, object] = {
     "max_concurrent": MAX_CONCURRENT,
     "accuracy_reserved_slots": 1 if MAX_CONCURRENT >= 2 else 0,
     "job_timeout_seconds": JOB_TIMEOUT_SECONDS,
+    "max_error_backoff_seconds": MAX_ERROR_BACKOFF_SECONDS,
     "worker_count": len(WORKERS),
     "active_jobs": 0,
     "completed_jobs": 0,
@@ -128,18 +130,30 @@ def _is_accuracy_worker(spec: WorkerSpec) -> bool:
     return spec.script == "cross_asset_runner.py"
 
 
-async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> None:
+def _retry_delay_seconds(consecutive_failures: int) -> int:
+    """Bound retries so unhealthy workers cannot monopolize scarce heavy slots."""
+    failures = max(0, int(consecutive_failures))
+    if failures <= 0:
+        return REST_SECONDS
+    multiplier = 2 ** min(failures, 6)
+    return min(MAX_ERROR_BACKOFF_SECONDS, max(REST_SECONDS, REST_SECONDS * multiplier))
+
+
+async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> int:
     async with semaphore:
         with _lock:
             _status["active_jobs"] = int(_status["active_jobs"]) + 1
             workers = _status["workers"]
+            previous = workers.get(spec.name, {})
             workers[spec.name] = {
                 "state": "running",
                 "script": spec.script,
                 "last_started_at": _now(),
-                "last_finished_at": workers.get(spec.name, {}).get("last_finished_at"),
-                "last_exit_code": workers.get(spec.name, {}).get("last_exit_code"),
+                "last_finished_at": previous.get("last_finished_at"),
+                "last_exit_code": previous.get("last_exit_code"),
                 "last_error_type": None,
+                "consecutive_failures": int(previous.get("consecutive_failures") or 0),
+                "next_retry_delay_seconds": 0,
             }
 
         started = time.monotonic()
@@ -174,8 +188,12 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> None:
             exit_code = -1
             error_type = type(exc).__name__
 
+        exit_code = int(exit_code if exit_code is not None else -1)
         elapsed = round(time.monotonic() - started, 2)
         with _lock:
+            previous_failures = int(_status["workers"][spec.name].get("consecutive_failures") or 0)
+            consecutive_failures = 0 if exit_code == 0 else previous_failures + 1
+            retry_delay = _retry_delay_seconds(consecutive_failures)
             _status["active_jobs"] = max(0, int(_status["active_jobs"]) - 1)
             _status["completed_jobs"] = int(_status["completed_jobs"]) + 1
             if exit_code != 0:
@@ -191,14 +209,19 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> None:
                 "last_error_type": error_type,
                 "elapsed_seconds": elapsed,
                 "latest_evidence": evidence,
+                "consecutive_failures": consecutive_failures,
+                "next_retry_delay_seconds": retry_delay,
             }
+        return exit_code
 
 
 async def _worker_loop(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> None:
     await asyncio.sleep((sum(spec.name.encode("utf-8")) % 17) + 1)
+    consecutive_failures = 0
     while True:
-        await _run_once(spec, semaphore)
-        await asyncio.sleep(REST_SECONDS)
+        exit_code = await _run_once(spec, semaphore)
+        consecutive_failures = 0 if exit_code == 0 else consecutive_failures + 1
+        await asyncio.sleep(_retry_delay_seconds(consecutive_failures))
 
 
 async def run_army() -> None:
@@ -212,6 +235,8 @@ async def run_army() -> None:
                 "last_finished_at": None,
                 "last_exit_code": None,
                 "last_error_type": None,
+                "consecutive_failures": 0,
+                "next_retry_delay_seconds": 0,
             }
             for spec in WORKERS
         }
