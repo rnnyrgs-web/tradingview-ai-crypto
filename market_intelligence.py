@@ -8,39 +8,114 @@ DEFAULT_FILL_NOTIONALS = (1000.0, 5000.0, 10000.0)
 
 
 def price_consensus(quotes, min_sources=2, max_deviation_bps=50.0, max_age_seconds=120, now_ms=None):
-    """Validate independent exchange quotes without silently accepting stale data."""
+    """Validate independent exchange quotes with explicit provenance and freshness.
+
+    Source count is based on unique exchanges, so duplicate observations from a
+    single venue can never masquerade as independent confirmation. For each
+    exchange the freshest valid observation is retained. Reliability remains
+    fail-closed: stale/missing sources or excessive cross-exchange disagreement
+    cannot authorize a live action.
+    """
     now_ms = int(now_ms or time.time() * 1000)
-    valid = []
+    accepted_by_exchange = {}
     rejected = []
-    for quote in quotes:
-        exchange = str(quote.get("exchange", "unknown"))
+    raw_source_names = []
+
+    for quote in quotes or []:
+        exchange = str(quote.get("exchange", "unknown")).strip().lower() or "unknown"
+        raw_source_names.append(exchange)
         price = f(quote.get("price"), 0.0)
         observed_ms = int(f(quote.get("observed_ms"), 0.0))
         age_seconds = (now_ms - observed_ms) / 1000.0 if observed_ms else None
         if price <= 0:
             rejected.append({"exchange": exchange, "reason": "invalid_price"})
-        elif age_seconds is not None and (age_seconds < -5 or age_seconds > max_age_seconds):
-            rejected.append({"exchange": exchange, "reason": "stale_quote"})
-        else:
-            valid.append({"exchange": exchange, "price": price, "age_seconds": age_seconds})
+            continue
+        if observed_ms <= 0:
+            rejected.append({"exchange": exchange, "reason": "missing_timestamp"})
+            continue
+        if age_seconds < -5:
+            rejected.append({"exchange": exchange, "reason": "future_quote"})
+            continue
+        if age_seconds > max_age_seconds:
+            rejected.append({"exchange": exchange, "reason": "stale_quote", "age_seconds": age_seconds})
+            continue
 
+        current = accepted_by_exchange.get(exchange)
+        candidate = {
+            "exchange": exchange,
+            "price": price,
+            "observed_ms": observed_ms,
+            "age_seconds": age_seconds,
+        }
+        if current is None or observed_ms > current["observed_ms"]:
+            if current is not None:
+                rejected.append({"exchange": exchange, "reason": "superseded_duplicate_quote"})
+            accepted_by_exchange[exchange] = candidate
+        else:
+            rejected.append({"exchange": exchange, "reason": "duplicate_exchange_quote"})
+
+    valid = list(accepted_by_exchange.values())
     median = statistics.median(q["price"] for q in valid) if valid else None
     for quote in valid:
         quote["deviation_bps"] = abs(quote["price"] - median) / median * 10000.0
-    price_range_bps = ((max(q["price"] for q in valid) - min(q["price"] for q in valid)) / median * 10000.0) if valid else None
-    reliable = len(valid) >= min_sources and price_range_bps is not None and price_range_bps <= max_deviation_bps
-    reason = "ok" if reliable else (
-        "insufficient_sources" if len(valid) < min_sources else "exchange_price_disagreement"
+    price_range_bps = (
+        (max(q["price"] for q in valid) - min(q["price"] for q in valid)) / median * 10000.0
+        if valid else None
     )
+    unique_source_count = len(valid)
+    reliable = (
+        unique_source_count >= min_sources
+        and price_range_bps is not None
+        and price_range_bps <= max_deviation_bps
+    )
+    if reliable:
+        reason = "ok"
+    elif unique_source_count < min_sources:
+        reason = "insufficient_independent_sources"
+    else:
+        reason = "exchange_price_disagreement"
+
+    ages = [q["age_seconds"] for q in valid if q.get("age_seconds") is not None]
+    max_age = max(ages) if ages else None
+    freshness_ratio = 0.0
+    if ages and max_age_seconds > 0:
+        freshness_ratio = max(0.0, min(1.0, 1.0 - max_age / max_age_seconds))
+    source_ratio = min(1.0, unique_source_count / max(1, int(min_sources)))
+
+    # This multiplier is restrictive only. It is not a probability. A fully
+    # reliable consensus retains 1.0; one fresh independent source can retain at
+    # most 0.5 research confidence; explicit contradiction collapses to zero.
+    if reliable:
+        confidence_multiplier = 1.0
+    elif reason == "exchange_price_disagreement":
+        confidence_multiplier = 0.0
+    elif unique_source_count == 1:
+        confidence_multiplier = min(0.5, 0.5 * freshness_ratio)
+    else:
+        confidence_multiplier = 0.0
+
     return {
         "reliable": reliable,
         "reason": reason,
-        "source_count": len(valid),
+        "source_count": unique_source_count,
+        "required_source_count": int(min_sources),
         "median_price": median,
         "max_deviation_bps": max((q["deviation_bps"] for q in valid), default=None),
         "price_range_bps": price_range_bps,
+        "max_quote_age_seconds": max_age,
+        "freshness_ratio": freshness_ratio,
+        "source_ratio": source_ratio,
+        "confidence_multiplier": confidence_multiplier,
         "quotes": valid,
         "rejected": rejected,
+        "provenance": {
+            "raw_observation_count": len(quotes or []),
+            "raw_exchange_names": sorted(set(raw_source_names)),
+            "accepted_exchange_names": sorted(accepted_by_exchange),
+            "independent_source_count": unique_source_count,
+            "max_age_seconds_policy": max_age_seconds,
+            "max_deviation_bps_policy": max_deviation_bps,
+        },
     }
 
 
@@ -120,12 +195,6 @@ def _clean_book_levels(rows, reverse=False):
 
 
 def _simulate_quote_notional_fill(levels, quote_notional, mid_price, side):
-    """Estimate immediate market fill from one current order-book snapshot.
-
-    BUY walks asks and spends quote currency. SELL walks bids and converts enough
-    base quantity, estimated from the requested quote notional at mid, into
-    quote currency. Partial coverage is reported instead of extrapolated.
-    """
     requested = max(0.0, f(quote_notional, 0.0))
     if requested <= 0 or mid_price <= 0 or side not in {"buy", "sell"}:
         return {"available": False, "reason": "invalid_request"}
@@ -159,7 +228,10 @@ def _simulate_quote_notional_fill(levels, quote_notional, mid_price, side):
     else:
         coverage = min(1.0, filled_base / target_base) if target_base else 0.0
     vwap = filled_quote / filled_base
-    slippage_bps = ((vwap - mid_price) / mid_price * 10000.0) if side == "buy" else ((mid_price - vwap) / mid_price * 10000.0)
+    slippage_bps = (
+        (vwap - mid_price) / mid_price * 10000.0
+        if side == "buy" else (mid_price - vwap) / mid_price * 10000.0
+    )
     complete = coverage >= 0.999999
     return {
         "available": True,
@@ -175,12 +247,6 @@ def _simulate_quote_notional_fill(levels, quote_notional, mid_price, side):
 
 
 def live_fill_slippage_estimates(bids, asks, notionals=DEFAULT_FILL_NOTIONALS):
-    """Research-only current-book market-impact estimates.
-
-    These are snapshot estimates, not historical slippage and not execution
-    guarantees. No unseen depth, queue position, latency or future movement is
-    inferred.
-    """
     clean_bids = _clean_book_levels(bids, True)
     clean_asks = _clean_book_levels(asks)
     if not clean_bids or not clean_asks or clean_bids[0][0] >= clean_asks[0][0]:
@@ -207,7 +273,6 @@ def live_fill_slippage_estimates(bids, asks, notionals=DEFAULT_FILL_NOTIONALS):
 
 
 def order_book_summary(bids, asks, min_levels=10, max_spread_bps=50.0):
-    """Summarize one spot-book snapshot without predicting from it."""
     clean_bids, clean_asks = _clean_book_levels(bids, True), _clean_book_levels(asks)
     if not clean_bids or not clean_asks:
         return {"reliable": False, "reason": "empty_book", "level_count": 0}

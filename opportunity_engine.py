@@ -16,14 +16,20 @@ def _entry_zone(plan):
     return plan["entry"] - pad, plan["entry"] + pad
 
 
+def _bounded_multiplier(value, default=0.0):
+    try:
+        return min(1.0, max(0.0, float(value)))
+    except (TypeError, ValueError):
+        return default
+
+
 def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
     """Persist top-20 24h and 7d rankings from the current scan.
 
     Direction/rank comes from deterministic multi-timeframe quant evidence.
-    BUY/SELL eligibility is fail-closed: even an adversarial AI TRADE review is
-    downgraded to WAIT unless the exact strategy identity has completed the
-    explicit research-to-live promotion process.
-    Evidence score is a ranking score, not a probability.
+    BUY/SELL eligibility is fail-closed. Market-data quality is restrictive:
+    stale, missing or contradictory independent exchange evidence can only lower
+    displayed evidence/rank and forces WAIT when consensus is not reliable.
     """
     ai_map = {}
     for s in ai_signals or []:
@@ -58,22 +64,40 @@ def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
             strategy_family = str(reviewed.get("strategy_family", ""))
             validation = validate_live_strategy(c["symbol"], horizon, strategy_family)
             consensus = c.get("market_consensus", {})
-            if reviewed_direction != direction or action != "TRADE" or not validation.approved or not consensus.get("reliable"):
+            consensus_reliable = consensus.get("reliable") is True
+            data_multiplier = _bounded_multiplier(
+                consensus.get("confidence_multiplier"),
+                1.0 if consensus_reliable else 0.0,
+            )
+            if reviewed_direction != direction or action != "TRADE" or not validation.approved or not consensus_reliable:
                 action = "WAIT"
-            evidence = float(reviewed.get("evidence_score") or min(99.0, abs(q) / 5.5 * 100.0))
+
+            raw_evidence = float(reviewed.get("evidence_score") or min(99.0, abs(q) / 5.5 * 100.0))
+            evidence = raw_evidence * data_multiplier
             calibration = calibration_assessment(evidence, horizon, resolved_predictions, regime)
             if action == "TRADE" and not calibration["allows_live_action"]:
                 action = "WAIT"
+
             liquidity_bonus = min(15.0, max(0.0, c.get("activity_score", 0.0)))
             spread_penalty = min(20.0, float(c.get("spread_bps") or 0.0) * 0.35)
-            rank_score = abs(q) * 20.0 + liquidity_bonus - spread_penalty
+            raw_rank_score = max(0.0, abs(q) * 20.0 + liquidity_bonus - spread_penalty)
+            rank_score = raw_rank_score * data_multiplier
+
             base_reason = str(reviewed.get("reasoning") or f"Quant rank from multi-timeframe {horizon} evidence; not AI-approved for trade.")
             if not validation.approved:
                 base_reason = f"{base_reason} [{validation.status}: {validation.reason}]"
             elif not calibration["allows_live_action"]:
                 base_reason = f"{base_reason} [CALIBRATION_PENDING_OR_WEAK: live action blocked]"
-            if not consensus.get("reliable"):
-                base_reason = f"{base_reason} [MARKET_CONSENSUS_UNRELIABLE: {consensus.get('reason', 'missing')}]"
+            if not consensus_reliable:
+                provenance = consensus.get("provenance") or {}
+                accepted = provenance.get("accepted_exchange_names") or []
+                base_reason = (
+                    f"{base_reason} [MARKET_CONSENSUS_UNRELIABLE] "
+                    f"[MARKET_DATA_RESTRICTED: {consensus.get('reason', 'missing')}; "
+                    f"independent_sources={consensus.get('source_count', 0)}; accepted={accepted}; "
+                    f"confidence_multiplier={data_multiplier:.3f}; live action blocked]"
+                )
+
             ranked.append({
                 "scan_id": scan_id,
                 "horizon": horizon,

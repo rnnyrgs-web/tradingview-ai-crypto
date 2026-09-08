@@ -12,6 +12,8 @@ def test_price_consensus_accepts_fresh_close_independent_quotes():
     assert result["reliable"] is True
     assert result["source_count"] == 2
     assert result["reason"] == "ok"
+    assert result["confidence_multiplier"] == 1.0
+    assert result["provenance"]["accepted_exchange_names"] == ["binance", "okx"]
 
 
 def test_price_consensus_rejects_exchange_disagreement():
@@ -21,6 +23,7 @@ def test_price_consensus_rejects_exchange_disagreement():
     ], now_ms=NOW, max_deviation_bps=50)
     assert result["reliable"] is False
     assert result["reason"] == "exchange_price_disagreement"
+    assert result["confidence_multiplier"] == 0.0
 
 
 def test_price_consensus_rejects_stale_source_and_fails_closed():
@@ -29,8 +32,33 @@ def test_price_consensus_rejects_stale_source_and_fails_closed():
         {"exchange": "binance", "price": 100.0, "observed_ms": NOW - 121_000},
     ], now_ms=NOW, max_age_seconds=120)
     assert result["reliable"] is False
-    assert result["reason"] == "insufficient_sources"
-    assert result["rejected"] == [{"exchange": "binance", "reason": "stale_quote"}]
+    assert result["reason"] == "insufficient_independent_sources"
+    assert result["source_count"] == 1
+    assert result["confidence_multiplier"] <= 0.5
+    assert result["rejected"][0]["exchange"] == "binance"
+    assert result["rejected"][0]["reason"] == "stale_quote"
+
+
+def test_duplicate_exchange_quotes_cannot_fake_independent_confirmation():
+    result = price_consensus([
+        {"exchange": "okx", "price": 100.0, "observed_ms": NOW - 1_000},
+        {"exchange": "okx", "price": 100.1, "observed_ms": NOW},
+    ], now_ms=NOW)
+    assert result["reliable"] is False
+    assert result["source_count"] == 1
+    assert result["provenance"]["raw_observation_count"] == 2
+    assert result["provenance"]["independent_source_count"] == 1
+    assert any(row["reason"] == "superseded_duplicate_quote" for row in result["rejected"])
+
+
+def test_missing_timestamp_is_not_treated_as_fresh():
+    result = price_consensus([
+        {"exchange": "okx", "price": 100.0},
+        {"exchange": "binance", "price": 100.0, "observed_ms": NOW},
+    ], now_ms=NOW)
+    assert result["reliable"] is False
+    assert result["source_count"] == 1
+    assert any(row["reason"] == "missing_timestamp" for row in result["rejected"])
 
 
 def test_derivatives_summary_requires_two_funding_sources_and_flags_crowding():
