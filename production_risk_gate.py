@@ -8,6 +8,7 @@ market, or system conditions are unsafe.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 import math
 
 
@@ -18,6 +19,10 @@ MAX_SINGLE_TRADE_SPREAD_BPS = 35.0
 MAX_VISIBLE_SLIPPAGE_BPS = 25.0
 GLOBAL_WIDE_SPREAD_BPS = 100.0
 GLOBAL_VOL_SHOCK_24H_PCT = 20.0
+MIN_MARKET_SNAPSHOT_VALID_RATIO = 0.80
+MAX_HEALTH_AGE_SECONDS = 45 * 60
+MAX_SCAN_ERROR_RATIO = 0.35
+MIN_DEEP_SCAN_COVERAGE_RATIO = 0.40
 
 
 @dataclass(frozen=True)
@@ -38,12 +43,20 @@ def _finite(value) -> bool:
         return False
 
 
-def assess_execution_risk(candidate: dict, direction: str, quote_notional: float = 5000.0) -> RiskGateDecision:
-    """Reject execution conditions that can plausibly erase a forecast edge.
+def _parse_time(value):
+    if not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
-    Uses only contemporaneous observable microstructure. It does not infer hidden
-    liquidity and does not interpret order-book imbalance as alpha.
-    """
+
+def assess_execution_risk(candidate: dict, direction: str, quote_notional: float = 5000.0) -> RiskGateDecision:
+    """Reject execution conditions that can plausibly erase a forecast edge."""
     reasons = []
     metrics = {"quote_notional": float(quote_notional)}
     direction = str(direction or "").upper()
@@ -101,36 +114,87 @@ def assess_execution_risk(candidate: dict, direction: str, quote_notional: float
 
 
 def assess_global_market_risk(candidates: list[dict], health: dict | None = None) -> RiskGateDecision:
-    """Detect broad market/data/system stress and force a global WAIT when triggered."""
+    """Detect broad market/data/system stress and force global WAIT when triggered."""
     reasons = []
     metrics = {}
     rows = list(candidates or [])
 
     if rows:
-        valid_changes = [abs(float(c["change_24h_pct"])) for c in rows if _finite(c.get("change_24h_pct"))]
+        valid_changes = [abs(float(c["change_24h_pct"])) for c in rows if isinstance(c, dict) and _finite(c.get("change_24h_pct"))]
+        valid_spreads = [float(c["spread_bps"]) for c in rows if isinstance(c, dict) and _finite(c.get("spread_bps")) and float(c["spread_bps"]) >= 0]
+        reliable_consensus = sum(
+            isinstance(c, dict) and isinstance(c.get("market_consensus"), dict)
+            and c["market_consensus"].get("reliable") in {True, False}
+            for c in rows
+        )
+        metrics["market_rows"] = len(rows)
+        metrics["valid_change_ratio"] = len(valid_changes) / len(rows)
+        metrics["valid_spread_ratio"] = len(valid_spreads) / len(rows)
+        metrics["valid_consensus_ratio"] = reliable_consensus / len(rows)
+        if len(rows) >= 5 and min(
+            metrics["valid_change_ratio"], metrics["valid_spread_ratio"], metrics["valid_consensus_ratio"]
+        ) < MIN_MARKET_SNAPSHOT_VALID_RATIO:
+            reasons.append("incomplete_or_corrupt_market_snapshot")
+
         shock_count = sum(x >= GLOBAL_VOL_SHOCK_24H_PCT for x in valid_changes)
         metrics["vol_shock_count"] = shock_count
         if len(valid_changes) >= 5 and shock_count / len(valid_changes) >= 0.40:
             reasons.append("broad_market_volatility_shock")
 
-        valid_spreads = [float(c["spread_bps"]) for c in rows if _finite(c.get("spread_bps")) and float(c["spread_bps"]) >= 0]
         wide_count = sum(x >= GLOBAL_WIDE_SPREAD_BPS for x in valid_spreads)
         metrics["wide_spread_count"] = wide_count
         if len(valid_spreads) >= 5 and wide_count / len(valid_spreads) >= 0.30:
             reasons.append("broad_liquidity_stress")
 
-        disagreements = sum((c.get("market_consensus") or {}).get("reason") == "exchange_price_disagreement" for c in rows)
+        disagreements = sum(
+            isinstance(c, dict) and (c.get("market_consensus") or {}).get("reason") == "exchange_price_disagreement"
+            for c in rows
+        )
         metrics["exchange_disagreement_count"] = disagreements
         if disagreements >= 2:
             reasons.append("cross_exchange_data_instability")
 
-    if health:
-        last_scan = health.get("last_scan") or {}
-        if last_scan and last_scan.get("ok") is False:
-            reasons.append("production_scan_unhealthy")
-        recent_errors = health.get("recent_error_count")
-        if isinstance(recent_errors, int) and recent_errors >= 10:
-            reasons.append("repeated_system_errors")
+    if health is not None:
+        if not isinstance(health, dict):
+            reasons.append("malformed_system_health")
+        else:
+            last_scan = health.get("last_scan")
+            if last_scan is not None:
+                if not isinstance(last_scan, dict):
+                    reasons.append("malformed_system_health")
+                else:
+                    if last_scan.get("ok") is False:
+                        reasons.append("production_scan_unhealthy")
+                    observed = _parse_time(last_scan.get("at"))
+                    if observed is None:
+                        reasons.append("malformed_system_health")
+                    else:
+                        age = max(0.0, (datetime.now(timezone.utc) - observed).total_seconds())
+                        metrics["health_age_seconds"] = round(age, 3)
+                        if age > MAX_HEALTH_AGE_SECONDS:
+                            reasons.append("stale_system_health")
+
+                    universe = last_scan.get("universe_count")
+                    deep = last_scan.get("deep_scanned")
+                    scan_errors = last_scan.get("scan_error_count")
+                    if not all(isinstance(x, int) and x >= 0 for x in (universe, deep, scan_errors)):
+                        reasons.append("malformed_system_health")
+                    elif universe > 0:
+                        coverage = deep / universe
+                        metrics["deep_scan_coverage_ratio"] = coverage
+                        if coverage < MIN_DEEP_SCAN_COVERAGE_RATIO:
+                            reasons.append("deep_scan_coverage_collapse")
+                        denominator = max(1, deep + scan_errors)
+                        error_ratio = scan_errors / denominator
+                        metrics["scan_error_ratio"] = error_ratio
+                        if error_ratio > MAX_SCAN_ERROR_RATIO:
+                            reasons.append("excessive_scan_failures")
+
+            recent_errors = health.get("recent_error_count")
+            if not isinstance(recent_errors, int) or recent_errors < 0:
+                reasons.append("malformed_system_health")
+            elif recent_errors >= 10:
+                reasons.append("repeated_system_errors")
 
     return RiskGateDecision(bool(reasons), tuple(sorted(set(reasons))), metrics)
 
