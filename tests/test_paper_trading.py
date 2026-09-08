@@ -31,7 +31,7 @@ def test_consistent_profitability_requires_real_sample_and_risk_controls():
     assert p._consistent({**good, "last_20_pnl_usd": -1}, 8.0) is False
 
 
-def test_close_decision_hits_stop_target_and_timeout():
+def test_close_decision_uses_observed_exit_price_not_idealized_trigger():
     base = {
         "direction": "LONG",
         "stop_loss": 95,
@@ -39,7 +39,18 @@ def test_close_decision_hits_stop_target_and_timeout():
         "opened_at": (now_utc() - timedelta(hours=2)).isoformat(),
         "horizon": "24h",
     }
-    assert p._close_decision(base, 94) == (95.0, "STOP")
-    assert p._close_decision(base, 111) == (110.0, "TARGET")
+    assert p._close_decision(base, 94) == (94, "STOP")
+    assert p._close_decision(base, 111) == (111, "TARGET")
     expired = {**base, "opened_at": (now_utc() - timedelta(hours=25)).isoformat()}
     assert p._close_decision(expired, 102) == (102, "TIME")
+
+
+def test_paper_fill_is_forward_market_price_with_adverse_friction(monkeypatch):
+    monkeypatch.setattr(p, "_last_price", lambda symbol: 100.0)
+    market, long_fill = p._paper_fill_price("BTC-USDT", "LONG")
+    _, short_fill = p._paper_fill_price("BTC-USDT", "SHORT")
+    assert market == 100.0
+    assert long_fill > market
+    assert short_fill < market
+    assert round(long_fill, 6) == round(100.0 * (1 + p.FEE_BPS_ONE_WAY / 10000.0), 6)
+    assert round(short_fill, 6) == round(100.0 * (1 - p.FEE_BPS_ONE_WAY / 10000.0), 6)
