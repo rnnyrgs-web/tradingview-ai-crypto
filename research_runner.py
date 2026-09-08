@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import time
 import zlib
 from datetime import datetime, timezone
@@ -11,6 +12,7 @@ from multiple_testing import apply_registry_firewall
 from point_in_time_universe import assess_symbol_set, load_manifest
 from strategy_families import STRATEGY_FAMILIES, evaluate_strategy_registry
 from research_artifact import seal_research_payload
+from worker_supervisor import sanitize_diagnostic
 
 
 def csv_env(name, default=""):
@@ -81,6 +83,15 @@ def _demote_for_survivorship(registry_result, survivorship):
     return registry_result
 
 
+def _emit_private_failure_diagnostic(symbol, bar, exc):
+    diagnostic = sanitize_diagnostic(f"{type(exc).__name__}: {exc}")
+    print(
+        f"research_job_failure symbol={symbol} bar={bar} diagnostic={diagnostic or '<none>'}",
+        file=sys.stderr,
+        flush=True,
+    )
+
+
 def main():
     symbols, universe_meta = resolve_research_symbols()
     timeframes = csv_env("RESEARCH_TIMEFRAMES", "15m,1H")
@@ -122,6 +133,7 @@ def main():
             except Exception as exc:
                 item["ok"] = False
                 item["error"] = f"{type(exc).__name__}: {exc}"
+                _emit_private_failure_diagnostic(symbol, bar, exc)
             item["elapsed_seconds"] = round(time.time() - t0, 2)
             results.append(item)
             print(json.dumps(item, default=str), flush=True)
