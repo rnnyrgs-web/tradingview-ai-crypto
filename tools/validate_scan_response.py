@@ -1,4 +1,10 @@
-"""Fail a production workflow when a scan hides errors or unsafe trades."""
+"""Fail a production workflow when a scan hides core errors or unsafe trades.
+
+The adversarial AI review is optional/degraded-only. A provider quota/rate-limit
+failure must not turn a healthy deterministic market scan into a failed workflow.
+Live actions remain fail-closed because opportunity_engine downgrades anything
+without an approved review/strategy identity to WAIT.
+"""
 
 from __future__ import annotations
 
@@ -9,7 +15,8 @@ from pathlib import Path
 
 def validate_scan_payload(payload: dict) -> list[str]:
     errors = []
-    if payload.get("ok") is not True:
+    ai_unavailable = bool(payload.get("ai_error"))
+    if payload.get("ok") is not True and not ai_unavailable:
         errors.append("scan did not report ok=true")
     if int(payload.get("universe_count") or 0) <= 0:
         errors.append("empty market universe")
@@ -18,8 +25,6 @@ def validate_scan_payload(payload: dict) -> list[str]:
     attempted = int(payload.get("deep_scanned") or 0) + int(payload.get("scan_error_count") or 0)
     if attempted and int(payload.get("scan_error_count") or 0) / attempted > 0.20:
         errors.append("more than 20% of deep-scan candidates failed")
-    if payload.get("ai_error"):
-        errors.append("AI review failed")
     if payload.get("opportunity_error"):
         errors.append("opportunity persistence failed")
 
@@ -45,10 +50,11 @@ def main(path: str) -> int:
         for error in errors:
             print(f"- {error}", file=sys.stderr)
         return 1
+    degraded = " AI_REVIEW_DEGRADED" if payload.get("ai_error") else ""
     print(
         "Production scan validation PASS: "
         f"universe={payload['universe_count']} deep={payload['deep_scanned']} "
-        f"signals={payload.get('signals_saved', 0)}"
+        f"signals={payload.get('signals_saved', 0)}{degraded}"
     )
     return 0
 
