@@ -91,11 +91,27 @@ Implemented:
 - chronology/OOS/point-in-time/forward-proof rules are unchanged; cache only avoids redundant downloads;
 - CI first caught a hard-coded temp-directory Bandit issue; it was corrected and the new exact head then passed all checks. Unit tests reached 229 passing in the first cache CI run before the security-path fix.
 
+## RESEARCH OBSERVABILITY — COMPLETE
+PR #84 `Add read-only research observability metrics` passed exact-head Security and Reliability run `34271387837` on `389eafe98ea7deb79bfa04decd4896f7548d42d1` and was squash-merged as `dcaad1dc3edecbe04a4ce825c9e8966c79febc36`.
+
+Implemented:
+- cross-process counters for shared-cache hits, misses and rejected/tampered cache objects;
+- bounded shared-cache read-latency samples with mean/p50/p95 summaries;
+- worker completed/failed/timeout counts and failure rate;
+- latest 24h/7d ACC-002 evidence summaries plus worker elapsed time;
+- file locking and atomic replacement prevent subprocess metrics races from corrupting state;
+- worker status now includes the read-only observability snapshot;
+- detailed metrics are exposed only through scan-secret-protected `/research-observability`, not public `/health`;
+- observability hard-codes trade, signal and promotion authority to false and is not consulted by strategy/risk/promotion code;
+- tests cover cache miss/hit/tamper rejection, worker timeout/failure accounting, ACC-002 evidence surfacing and no-authority invariants.
+
+Important scope: current latency metrics measure shared-cache read latency and whole-worker elapsed time. They do not yet measure exact end-to-end latency of each network history download, so do not interpret them as exchange/API network latency.
+
 ## AUTHENTIC PAPER TRADING STATE
 The continuous paper account remains forward-only and broker-disconnected. Authentic baseline is exactly `$100,000` from `2026-09-08T01:17:49Z`; never reset or rewrite it. Current account value = immutable starting capital plus realized/open P&L. Safety/execution gates may reject entries but never fabricate or reset history. Paper performance is evidence only.
 
 ## ACCURACY PROGRAM STATUS
-ACC-001 COMPLETE; ACC-002 IN PROGRESS; ACC-003 COMPLETE; ACC-004 COMPLETE; ACC-005 COMPLETE; ACC-006 COMPLETE; ACC-007 COMPLETE; ACC-008 COMPLETE; ACC-009 COMPLETE; ACC-010 COMPLETE; ACC-011 COMPLETE; ACC-012 COMPLETE; ACC-013 COMPLETE; ACC-014 COMPLETE; safe worker throughput COMPLETE; shared immutable deep-history cache COMPLETE.
+ACC-001 COMPLETE; ACC-002 IN PROGRESS; ACC-003 COMPLETE; ACC-004 COMPLETE; ACC-005 COMPLETE; ACC-006 COMPLETE; ACC-007 COMPLETE; ACC-008 COMPLETE; ACC-009 COMPLETE; ACC-010 COMPLETE; ACC-011 COMPLETE; ACC-012 COMPLETE; ACC-013 COMPLETE; ACC-014 COMPLETE; safe worker throughput COMPLETE; shared immutable deep-history cache COMPLETE; research observability COMPLETE.
 
 ## COST / SPEED POLICY
 Hard recurring infrastructure ceiling: USD 30/month unless explicitly changed. Prefer existing shared Render compute, deterministic Python, public/free defensible data, caching/reuse, early rejection and bounded concurrency. No paid feed/service/compute without approval.
@@ -105,9 +121,10 @@ The fastest safe path is to preserve stable exact strategy fingerprints while ge
 
 ## EXACT NEXT STEP
 1. Continue genuine ACC-002 24h/7d forward/OOS evidence and worker-health monitoring. No profitability claim unless the required evidence genuinely passes.
-2. Measure shared-cache hit/miss/rejection rates and deep-history request latency so future optimization is evidence-based; metrics must not affect trading authority.
-3. Preserve stable exact champion fingerprints while challengers run in shadow; only evidence-backed strategy changes create a new fingerprint.
-4. Preserve `live_promotions.json` empty, signing keys unused, PONS fail-closed, immutable $100k paper ledger and broker-disconnected state.
-5. Only add further microstructure features when genuine timestamped data supports them; never reconstruct unavailable order books or liquidations from candles.
-6. Optimize after-cost risk-adjusted realized performance with tail protection and abstention, not headline accuracy.
-7. Update this file after every completed integration cycle.
+2. Let the new observability metrics accumulate enough runtime data, then use cache hit/rejection rate, worker elapsed time, timeout/failure rate and ACC-002 summaries to identify the real next bottleneck.
+3. If worker elapsed time remains dominated by history retrieval, instrument exact end-to-end `get_history()` network-fetch latency before changing TTL, concurrency or source behavior.
+4. Preserve stable exact champion fingerprints while challengers run in shadow; only evidence-backed strategy changes create a new fingerprint.
+5. Preserve `live_promotions.json` empty, signing keys unused, PONS fail-closed, immutable $100k paper ledger and broker-disconnected state.
+6. Only add further microstructure features when genuine timestamped data supports them; never reconstruct unavailable order books or liquidations from candles.
+7. Optimize after-cost risk-adjusted realized performance with tail protection and abstention, not headline accuracy.
+8. Update this file after every completed integration cycle.
