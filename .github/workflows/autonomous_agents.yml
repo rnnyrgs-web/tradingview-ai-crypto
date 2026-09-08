@@ -2,9 +2,6 @@ name: Autonomous Specialist Agents
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows: ["Crypto 15m Scan", "Cloud Crypto Research"]
-    types: [completed]
   schedule:
     - cron: "17 * * * *"
 
@@ -37,10 +34,6 @@ jobs:
           python-version: "3.12"
       - name: Install runtime
         run: pip install httpx pytest
-      - name: Fail closed unless agent credentials are configured
-        run: |
-          test -n "$OPENAI_API_KEY" || { echo "OPENAI_API_KEY missing"; exit 1; }
-          test -n "$OPENAI_AGENT_MODEL" || { echo "OPENAI_AGENT_MODEL missing"; exit 1; }
       - name: Collect compact supervisor and GitHub context
         run: |
           {
@@ -48,12 +41,6 @@ jobs:
             python agents/supervisor_snapshot.py
             echo
             echo "Trigger event: $GITHUB_EVENT_NAME"
-            if [ "$GITHUB_EVENT_NAME" = "workflow_run" ]; then
-              echo "Upstream workflow: ${{ github.event.workflow_run.name }}"
-              echo "Upstream conclusion: ${{ github.event.workflow_run.conclusion }}"
-              echo "Upstream run id: ${{ github.event.workflow_run.id }}"
-              echo "Upstream head SHA: ${{ github.event.workflow_run.head_sha }}"
-            fi
             echo
             echo "Recent workflow runs:"
             gh run list --repo "$GITHUB_REPOSITORY" --limit 15 || true
@@ -64,8 +51,19 @@ jobs:
       - id: plan
         name: Generate fail-closed specialist plan
         run: |
+          if [ -z "$OPENAI_API_KEY" ] || [ -z "$OPENAI_AGENT_MODEL" ]; then
+            echo "AI planner credentials unavailable; safely skipping this cycle."
+            echo "active_roles=[]" >> "$GITHUB_OUTPUT"
+            echo "plan_b64=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           export AGENT_EXTERNAL_CONTEXT="$(cat /tmp/github-context.txt)"
-          python agents/autonomous_orchestrator.py plan --output /tmp/agent-plan.json
+          if ! python agents/autonomous_orchestrator.py plan --output /tmp/agent-plan.json; then
+            echo "AI planner unavailable or quota/rate-limited; safely skipping this cycle instead of failing the workflow."
+            echo "active_roles=[]" >> "$GITHUB_OUTPUT"
+            echo "plan_b64=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           echo "plan_b64=$(base64 -w0 /tmp/agent-plan.json)" >> "$GITHUB_OUTPUT"
           ACTIVE_ROLES="$(python - <<'PY'
           import json

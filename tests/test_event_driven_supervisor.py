@@ -17,24 +17,26 @@ def test_priority_backlog_is_ordered_and_fail_closed():
 
 
 def test_supervisor_snapshot_is_compact_and_contains_handoff_and_queue(monkeypatch):
-    monkeypatch.setenv("GITHUB_EVENT_NAME", "workflow_run")
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "schedule")
     monkeypatch.setenv("GITHUB_RUN_ID", "123")
     monkeypatch.setenv("GITHUB_SHA", "abc")
     snapshot = build_snapshot()
-    assert snapshot["event"]["name"] == "workflow_run"
+    assert snapshot["event"]["name"] == "schedule"
     assert snapshot["highest_ready"] == "ACC-001"
     assert "EXACT NEXT STEP" in snapshot["exact_next_step"]
     assert "SAFETY INVARIANTS" in snapshot["safety_invariants"]
     assert len(json.dumps(snapshot)) < 20000
 
 
-def test_autonomous_workflow_wakes_on_scan_and_research_completion():
+def test_autonomous_workflow_is_hourly_manual_and_quota_safe():
     workflow = Path(".github/workflows/autonomous_agents.yml").read_text(encoding="utf-8")
-    assert "workflow_run:" in workflow
-    assert 'workflows: ["Crypto 15m Scan", "Cloud Crypto Research"]' in workflow
+    assert "workflow_dispatch:" in workflow
+    assert "workflow_run:" not in workflow
+    assert 'cron: "17 * * * *"' in workflow
+    assert "safely skipping this cycle" in workflow
+    assert "active_roles=[]" in workflow
     assert "python agents/supervisor_snapshot.py" in workflow
     assert "orchestration/" in workflow
-    assert 'cron: "17 * * * *"' in workflow
     assert "max-parallel: 14" in workflow
 
 
