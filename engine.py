@@ -14,6 +14,7 @@ from opportunity_engine import build_opportunities
 from production_validation import validate_live_strategy
 from production_risk_gate import assess_execution_risk, assess_global_market_risk
 from operational_monitor import health_snapshot, record_scan
+from scan_failure_diagnostics import safe_failure
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 log = logging.getLogger(__name__)
@@ -171,11 +172,14 @@ def run_scan():
         ai_error=str(e)
 
     opportunity_error=None
+    opportunity_failure=None
     opportunities={"24h":[],"7d":[]}
     try:
         opportunities=build_opportunities(scan_id,deep,signals,regime,risk_plan)
     except Exception as e:
-        opportunity_error=str(e)
+        opportunity_error=type(e).__name__
+        opportunity_failure=safe_failure("opportunity_persistence", e)
+        log.exception("Opportunity persistence failed fingerprint=%s", opportunity_failure["fingerprint"])
 
     saved=[]
     for s in signals[:MAX_SAVED_SIGNALS]:
@@ -246,7 +250,7 @@ def run_scan():
         "signals_saved":len(saved),"signals":saved,"scan_error_count":len(errors),
         "scan_errors":errors[:20],"ai_error":ai_error,
         "opportunities_saved":{"24h":len(opportunities.get("24h",[])),"7d":len(opportunities.get("7d",[]))},
-        "opportunity_error":opportunity_error,
+        "opportunity_error":opportunity_error,"opportunity_failure":opportunity_failure,
         "global_risk_wait":global_risk.blocked,
         "global_risk_reasons":list(global_risk.reasons),
     }
