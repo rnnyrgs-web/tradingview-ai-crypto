@@ -93,10 +93,17 @@ PR #55 `Add bounded 24/7 Python research worker army` passed exact-head Security
   - Coordinator deploy `dep-dag3gmu7bikc73alps30` and production deploy `dep-dag3gmu7bikc73alpr20` both reached `live` before the subsequent PR #69 deploy replaced them.
 - All ACC-002 outputs remain `research_only=true`, `live_approved=false`, `trade_authority=false`. No profitability has been claimed yet; genuine live public-data evidence must be collected and inspected.
 
+## ACC-003 REGIME-CONDITIONED STRATEGY GATING — COMPLETE
+- PR #70 `ACC-003: Add causal regime-conditioned strategy gating` passed exact-head Security and Reliability run `34252423032` on `c192affed37965f75f0972b608b965ae7c40084e` and was squash-merged as `606595e50f3057452714c50eb88e8178213ac5c8`.
+- Regime classification is causal/trailing-only and distinguishes `TREND_UP`, `TREND_DOWN`, `HIGH_VOL`, `COMPRESSION`, and `RANGE`.
+- Strategy regime eligibility is frozen from train + validation before untouched holdout inspection. Holdout and robustness evidence are restricted to those preselected regimes, preventing a strategy from acquiring authority in market states where it did not demonstrate pre-OOS edge.
+- Tests cover no-lookahead regime classification, trend direction, and rejection of unproven regimes.
+- Existing OOS/robustness gates remain mandatory; all outputs remain research-only unless the full promotion chain passes.
+
 ## ACCURACY BACKLOG
 1. `ACC-001` market-microstructure — COMPLETE.
 2. `ACC-002` quant-cross-asset — IN PROGRESS; core rank engine, nonstop worker, purge/non-overlap, sufficient independent OOS depth, pre-OOS fixed-grid selection, parameter stability, liquidity-subset stability, 3x cost stress, 500-resample bootstrap confidence, dedicated 24h/7d workers, reserved accuracy capacity and bounded deep-history retry/cache reliability are integrated. Genuine live public-data evidence still needs collection/inspection and horizon robustness.
-3. `ACC-003` quant-breakout-volatility — no-lookahead regime-specialist models for bull/bear/range/high-volatility/compression.
+3. `ACC-003` quant-breakout-volatility / regime-conditioned gating — COMPLETE for causal regime classification and pre-OOS regime eligibility; further specialist models may be added only if they improve independent evidence.
 4. `ACC-004` strategy-registry — calibrated champion/challenger ensemble weighting with correlation/deterioration penalties and automatic demotion.
 5. `ACC-005` data-market — broader exchange/data coverage with provenance/freshness/contradiction checks and safe PONS handling.
 6. `ACC-006` production-signals — continuous forecast scoring and deterioration detection from immutable prediction ledger.
@@ -126,12 +133,13 @@ Master tracking issue #45 covers the safe acceleration program.
 Hard infrastructure ceiling: USD 30/month unless the user explicitly changes it. Use the existing single paid Render worker/coordinator rather than multiplying paid machines. Default worker-army heavy concurrency is 2; raise only after measured capacity evidence and never by adding paid capacity without approval. Use deterministic Python for calculation/backtesting/filtering/evidence checks. Use free/public market data where defensible. Use AI only for bounded planning, hypothesis generation, implementation/review and orchestration. Prefer event-driven wakeups, caching/reuse, early rejection and read-only parallel audits over idle paid computation or competing writes.
 
 ## EXACT NEXT STEP
-1. Inspect the first genuine post-PR-#68 24h and 7d ACC-002 public-data summaries from coordinator `/workers`. Report supported liquidity subsets, each candidate's train/validation stability, selected fixed candidate if any, whether untouched OOS was opened, OOS sample count, rank IC, 3x-cost top-minus-bottom spread and both bootstrap lower bounds. Do not claim profitability if either horizon gate fails or evidence is small.
-2. Recheck that both accuracy workers continue cycling without repeated failure/timeout after the retry/cache fix and that the general lane gives every major/PONS/universe/swing worker bounded progress.
-3. Recheck production `/health.continuous_ai`; require bounded timeout and all trade/write/promotion authorities false. Fix only bounded provider/cadence issues if rate limiting persists.
-4. Tune worker scheduling for throughput-per-dollar: reuse/caching first, reject weak candidates early, retain majors/PONS/ACC-002 fast lanes, and avoid duplicate overlapping research between Render and GitHub Actions.
-5. Investigate any repeated PONS worker failure and keep PONS research fail-closed if its public market/history data are insufficient or inconsistent.
-6. Let the authentic `$100,000` forward-only paper account continue collecting post-reset trades without resetting or rewriting starting capital. Alert only when persisted `consistently_profitable` is genuinely satisfied.
-7. Continue ACC-003 through ACC-007 after ACC-002 evidence, while non-owner specialists audit in parallel.
-8. Keep `live_promotions.json` empty and signing keys unused until repeated backtests, untouched OOS, robustness/stability, Strategy Registry review and Production Risk review genuinely complete.
-9. Update this file after every completed development/integration cycle.
+1. Implement `ACC-004`: calibrated champion/challenger ensemble weighting that uses only validated research evidence, penalizes correlated strategies and recent deterioration, and automatically demotes strategies when evidence weakens. It must not grant live authority by itself.
+2. Inspect the first genuine post-PR-#68 24h and 7d ACC-002 public-data summaries from coordinator `/workers`. Report supported liquidity subsets, each candidate's train/validation stability, selected fixed candidate if any, whether untouched OOS was opened, OOS sample count, rank IC, 3x-cost top-minus-bottom spread and both bootstrap lower bounds. Do not claim profitability if either horizon gate fails or evidence is small.
+3. Recheck that both accuracy workers continue cycling without repeated failure/timeout after the retry/cache fix and that the general lane gives every major/PONS/universe/swing worker bounded progress.
+4. Recheck production `/health.continuous_ai`; require bounded timeout and all trade/write/promotion authorities false. Fix only bounded provider/cadence issues if rate limiting persists.
+5. Tune worker scheduling for throughput-per-dollar: reuse/caching first, reject weak candidates early, retain majors/PONS/ACC-002 fast lanes, and avoid duplicate overlapping research between Render and GitHub Actions.
+6. Investigate any repeated PONS worker failure and keep PONS research fail-closed if its public market/history data are insufficient or inconsistent.
+7. Let the authentic `$100,000` forward-only paper account continue collecting post-reset trades without resetting or rewriting starting capital. Alert only when persisted `consistently_profitable` is genuinely satisfied.
+8. Continue ACC-005 through ACC-007 after ACC-004, while non-owner specialists audit in parallel.
+9. Keep `live_promotions.json` empty and signing keys unused until repeated backtests, untouched OOS, robustness/stability, Strategy Registry review and Production Risk review genuinely complete.
+10. Update this file after every completed development/integration cycle.
