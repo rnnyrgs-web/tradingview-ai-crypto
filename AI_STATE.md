@@ -54,7 +54,7 @@ Integrated evidence:
 ## 24/7 AI / ORCHESTRATION
 Token-free Render coordinator checks production health/state every minute with no trade/write/promotion authority.
 
-`continuous_ai_agent.py` runs inside production every five minutes by default, read-only, with `trade_authority=false`, `write_authority=false`, `promotion_authority=false`. PR #40 merged `3e26d60bdf812564203be61df842b7e3456fcf36`; OpenAI requests have bounded timeout (default 60s, clamped 10-240s), zero SDK retries and sanitized timeout state. Direct `/health.continuous_ai` evidence showing `cycle_count>=1` is still required before claiming full live-cycle verification.
+`continuous_ai_agent.py` runs inside production every five minutes by default, read-only, with `trade_authority=false`, `write_authority=false`, `promotion_authority=false`. PR #40 merged `3e26d60bdf812564203be61df842b7e3456fcf36`; OpenAI requests have bounded timeout (default 60s, clamped 10-240s), zero SDK retries and sanitized timeout state. Direct pre-PR #46 production evidence on 2026-09-08 showed `configured=true`, `cycle_count=7`, `last_error_type=null`, 300-second cadence, 60-second timeout and all three authorities false. The PR #46 deployment restarted in-memory state and its first AI call hit `RateLimitError`; a fresh post-deploy successful cycle is still required before claiming current live-cycle health.
 
 Event-driven supervisor from PR #37 wakes on completed production scan/cloud research plus hourly fallback, provides compact supervisor context and allows exactly one CHANGE + thirteen AUDIT workers with max-parallel 14. The one-writer/thirteen-auditor path has been verified end-to-end.
 
@@ -70,7 +70,11 @@ Event-driven supervisor from PR #37 wakes on completed production scan/cloud res
 ## REAL-MONEY READINESS ACCELERATION
 Master tracking issue #45 covers the safe acceleration program.
 - PR #44 is integrated: event/ref-isolated cloud concurrency, higher parallelism, liquid-major fast lane, deterministic early rejection and independent artifact audit.
-- PR #46 `Add forward shadow and canary readiness gates` is open and remains unmerged pending exact-head verification/rebase after ACC-001 evidence work. It is designed to add read-only forward evidence, de-correlated prediction samples, Wilson/expectancy/drawdown checks and tiny-canary/scale review gates with `trade_authority=false` and `canary_execution_enabled=false`.
+- PR #46 `Add forward shadow and canary readiness gates` was refreshed onto current main, passed all 119 local tests, then passed exact-head Security and Reliability run `34178583205` on `4c8c9b33a62e587a4d08571b1e7d5cf4cd22ca61` and was squash-merged as `b19913c383501defe84d8f22ba3590e0f8ed71b2`.
+  - Resolved forward forecasts are bound to the exact production strategy identity and de-correlated to at most one observation per horizon-sized UTC bucket.
+  - Readiness reports forward win rate, 95% Wilson lower bound, average/sum/recent directional return and sequence drawdown, with separate tiny-canary-review and scale-review gates.
+  - Existing live promotion validation remains mandatory. The layer is read-only with hard-coded `trade_authority=false` and `canary_execution_enabled=false`.
+  - Render deploy `dep-dafmpc942hec73dffjfg` completed live; `/shadow-readiness` is present in the production endpoint catalog. The first post-restart continuous-AI call was rate-limited as recorded above; deterministic services remained healthy and no authority changed.
 - PR #47 `Add compact crypto signal rows with one-click TradingView` passed Security and Reliability run `34172595104` on exact head `975734cc4c164754ab94ad22ae6d578b81f7b661` and was squash-merged as `1d381b6b5f75d8b92bd1feccfaa84196fea6d344`.
   - Dashboard became a compact multi-crypto row view showing signal, duration, entry area, stop loss and %, expected T1/T2 moves and %, R:R and evidence.
 - PR #48 `Embed signal levels directly on TradingView-style chart` passed Security and Reliability run `34173194223` on exact head `45d7bb85721e94fe8b7f233bdd62bf952d1fa2ac` and was squash-merged as `dc0abff7e67ad75cd4e9b8463f9c6a356a8865c1`.
@@ -104,10 +108,10 @@ Master tracking issue #45 covers the safe acceleration program.
 Use deterministic Python for calculation/backtesting/filtering/evidence checks. Use AI for bounded planning, hypothesis generation, implementation/review and orchestration. Routine planner/specialists use `gpt-5.6-luna`; testing-security, strategy-registry, portfolio-risk and production-signals use `gpt-5.6-sol`; Lead and independent integration reviews use `gpt-5.6-sol`. Prefer event-driven wakeups over idle polling and read-only parallel audits over competing writes.
 
 ## EXACT NEXT STEP
-1. Obtain direct production observer state evidence: `/health.continuous_ai` must show `configured=true`, `cycle_count>=1`, `last_error_type=null`, five-minute cadence, bounded timeout and trade/write/promotion authority false.
-2. Verify a post-PR #42/#43/#44/#47/#48/#49/#51/#52 production scan remains healthy, execution/liquidation evidence stays research-only, no unvalidated TRADE appears, and the paper simulator remains broker-disconnected/research-only.
-3. Let the freshly reset `$100,000` forward-only paper account collect new trades from zero. Treat only trades opened after `2026-09-08T01:17:49Z` as authentic paper-performance evidence. Alert only when the persisted `consistently_profitable` gate is genuinely satisfied; do not infer profitability from unrealized equity or a small sample.
-4. Refresh PR #46 on current main, require exact-head Security and Reliability success, then integrate only if its shadow/canary layer remains read-only/fail-closed.
-5. Move to `ACC-002` cross-sectional ranking after PR #46 verification, then ACC-003 through ACC-007 sequentially while non-owner specialists audit in parallel.
+1. Recheck post-PR #46 `/health.continuous_ai` after the next five-minute attempt; require `cycle_count>=1`, `last_error_type=null`, bounded timeout and trade/write/promotion authority false. If rate limiting persists, fix only the bounded provider/cadence cause without granting authority.
+2. Verify the next post-PR #46 production scan is healthy, execution/liquidation evidence stays research-only, no unvalidated TRADE appears, and the paper simulator remains broker-disconnected/research-only.
+3. Begin `ACC-002` cross-sectional relative-strength/rank prediction across the liquid universe. Keep feature computation timestamp-safe and evaluate rank information coefficient/top-minus-bottom spread using chronological train/validation/untouched OOS plus realistic costs.
+4. Let the freshly reset `$100,000` forward-only paper account collect new trades from zero. Treat only trades opened after `2026-09-08T01:17:49Z` as authentic paper-performance evidence. Alert only when the persisted `consistently_profitable` gate is genuinely satisfied; do not infer profitability from unrealized equity or a small sample.
+5. Continue ACC-003 through ACC-007 sequentially after ACC-002 evidence, while non-owner specialists audit in parallel.
 6. Keep `live_promotions.json` empty and signing keys unused until repeated backtests, untouched OOS, robustness/stability, Strategy Registry review and Production Risk review genuinely complete.
 7. Update this file after every completed development/integration cycle.
