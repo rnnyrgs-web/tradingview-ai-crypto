@@ -99,6 +99,18 @@ Fresh post-PR-91 production diagnostics proved the PONS worker's recurring exit-
 PR #93 `Add deployment canary and rollback decision layer` passed exact-head Security and Reliability run `34289540726` on `1c088a372beef4fe2f9785a542ad320ac6aa3881` and was squash-merged as `62a7811cd004b7ec4441f6d749308fe55308e7a7`.
 The coordinator now has a bounded warm-up canary that evaluates production/state checks, supervisor health, stale/crashed workers, task restarts, worker timeouts and sufficiently sampled worker failure rate. After the grace period, unhealthy evidence yields `rollback_recommended=true` and coordinator health fails closed. The canary exposes a read-only `/deployment-canary` view and private bounded logs. It has `automatic_rollback_authority=false`, `deployment_authority=false`, `repository_write_authority=false`, `trade_authority=false` and `promotion_authority=false`; therefore it recommends rollback but cannot mutate Render/GitHub or authorize trades. Regression coverage lives in `tests/test_deployment_canary.py`.
 
+## DEEP-HISTORY TTL-BOUNDARY CACHE REUSE — COMPLETE
+PR #94 passed exact-head Security and Reliability run `34290656077` on `6e54b4822fe4e606d0e3bf899dcf26337ccf7f98` and was squash-merged as `4e3e9bd2c13d4134fd8990a9a17496376f3bbe97`.
+Still-fresh exact-request immutable history may be reused across one TTL bucket boundary only when actual age is strictly inside TTL and integrity/chronology checks pass. Corrupt current cache remains rejection and cannot silently fall back. This reduces redundant full deep-history refetches at bucket boundaries without stretching TTL, changing source behavior, chronology, OOS evidence, concurrency, or cost policy.
+
+## KRAKEN BROKER-DISCONNECTED SHADOW EXECUTION — COMPLETE
+PR #95 passed exact-head Security and Reliability run `34292185973` on `5134af4980f02586d72518c69761d63f61baa26d` and was squash-merged as `dd2ecd13ce5860f31a33580b890b56d39ca60f8d`.
+Public timestamped Kraken order-book snapshots can now be walked for hypothetical visible-depth VWAP/slippage/fee-adjusted fills. Stale/future/malformed/insufficient-depth books fail closed; hidden liquidity is never extrapolated. The adapter has broker/order/trade authority false and contains no private credentials or order endpoints.
+
+## PRODUCTION SCAN PERSISTENCE FAILURE DIAGNOSTICS — COMPLETE
+PR #97 passed exact-head Security and Reliability run `34292801678` on `1e07b192ea619286113cf4df4161bdf1e4178165` and was squash-merged as `4a1f30beb42d1b2f64b7956ad8404e5ff400b6ea`.
+GitHub Crypto 15m Scan run `34292249175` showed a transient Render HTTP 502 followed by a completed scan response that failed validation because opportunity persistence failed. The pre-fix response exposed only a generic failure to the workflow, preventing safe root-cause classification. The engine now preserves failure semantics while emitting only exception type plus deterministic component/type fingerprint, keeps raw exception detail redacted, and logs the full traceback server-side. No persistence failure is ignored or marked healthy; trade/promotion authority remains false. The next fresh post-deploy failure must be used to identify the actual persistence exception class before changing Supabase/persistence behavior.
+
 ## AUTHENTIC PAPER TRADING STATE
 The continuous paper account remains forward-only and broker-disconnected. Authentic baseline is exactly `$100,000` from `2026-09-08T01:17:49Z`; never reset or rewrite it. Current account value = immutable starting capital plus realized/open P&L. Safety/execution gates may reject entries but never fabricate or reset history. Paper performance is evidence only.
 
@@ -109,13 +121,14 @@ Hard recurring infrastructure ceiling: USD 30/month unless explicitly changed. P
 Preserve stable exact strategy fingerprints while genuine forward observations accumulate. Challengers may run in shadow. Never count overlapping forecasts as independent, lower forward-proof thresholds, reset paper history, raise heavy concurrency, stretch cache TTLs, or change market-data source behavior merely to accelerate results.
 
 ## EXACT NEXT STEP
-1. Verify PR #93 auto-deploy reaches live and confirm the deployment canary transitions from `warming` to `healthy` on a clean deployment, or `rollback_recommended` only on proven unhealthy post-grace evidence.
-2. Confirm a fresh PONS cycle after PR #92 completes without incrementing worker failures while insufficient public history remains explicitly research-blocked; do not fabricate or lower history requirements.
-3. Continue genuine ACC-002 24h/7d forward/OOS evidence and worker-health monitoring. No profitability claim unless evidence genuinely passes.
-4. Verify supervisor remains healthy in live Render logs: no stale workers, no restart loop, heartbeats continue through long jobs.
-5. Use current non-zero cache/network/worker samples to quantify the cold/deep-history bottleneck. Optimize only proven request/pagination or cache-reuse inefficiency without changing chronology, source behavior, evidence requirements or the $30/month ceiling.
-6. Next Kraken-readiness development after reliability verification: build a broker-disconnected Kraken shadow-execution adapter using genuine Kraken public market/order-book data only. It may calculate hypothetical Kraken orders/fills and reconciliation metrics but must not hold private API credentials or place/cancel real orders yet.
-7. Preserve stable exact champion fingerprints while challengers run in shadow; only evidence-backed changes create a new fingerprint.
-8. Preserve empty `live_promotions.json`, unused signing keys, PONS fail-closed behavior, immutable $100k paper ledger and broker-disconnected state.
-9. Only add microstructure features when genuine timestamped data supports them; never reconstruct unavailable order books/liquidations from candles.
-10. Optimize after-cost risk-adjusted realized performance with tail protection and abstention, not headline accuracy.
+1. Verify PR #97 auto-deploy is live and inspect the next Crypto 15m Scan. If opportunity persistence fails again, use only the new redacted exception type/fingerprint plus private Render traceback to identify the root cause; do not guess or weaken persistence validation.
+2. Re-evaluate open PR #96 against the new `main` after PR #97; refresh/retest exact head if necessary before any merge. Its selective-precision analysis remains research-only and must not select thresholds from forward/untouched outcomes to authorize trades.
+3. Continue genuine ACC-002 24h/7d forward/OOS evidence and worker-health monitoring. No profitability or accuracy-improvement claim unless genuine evidence passes.
+4. Confirm a fresh PONS cycle after PR #92 completes without incrementing worker failures while insufficient public history remains explicitly research-blocked; do not fabricate or lower history requirements.
+5. Verify supervisor/canary remain healthy in live Render logs: no stale/crashed workers, restart loop, timeout spike, or rollback recommendation without proven unhealthy evidence.
+6. Compare post-PR #94 non-zero cache/history metrics; optimize only proven cold/deep-history inefficiency without changing chronology, market-data source behavior, evidence requirements, or the $30/month ceiling.
+7. Extend Kraken readiness only with broker-disconnected public-data shadow execution/reconciliation until genuine forward proof and all canonical approval gates pass; no credentials or real orders yet.
+8. Preserve stable exact champion fingerprints while challengers run in shadow; only evidence-backed changes create a new fingerprint.
+9. Preserve empty `live_promotions.json`, unused signing keys, PONS fail-closed behavior, immutable $100k paper ledger and broker-disconnected state.
+10. Only add microstructure features when genuine timestamped data supports them; never reconstruct unavailable order books/liquidations from candles.
+11. Optimize after-cost risk-adjusted realized performance with tail protection and abstention, not headline accuracy.
