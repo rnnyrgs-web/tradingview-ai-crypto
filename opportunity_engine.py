@@ -24,12 +24,6 @@ def _bounded_multiplier(value, default=0.0):
 
 
 def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
-    """Persist top-20 24h and 7d rankings from the current scan.
-
-    Direction/rank comes from deterministic multi-timeframe quant evidence.
-    BUY/SELL eligibility is fail-closed. Market-data quality and genuine forward
-    proof are restrictive: either may force WAIT and neither can create authority.
-    """
     ai_map = {}
     for s in ai_signals or []:
         symbol = str(s.get("symbol", "")).upper()
@@ -51,25 +45,17 @@ def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
             try:
                 plan = risk_plan_fn(hv["features"], direction, horizon)
             except Exception as exc:
-                log.warning(
-                    "Opportunity rejected because risk plan failed: symbol=%s horizon=%s error=%s",
-                    c.get("symbol"), horizon, type(exc).__name__,
-                )
+                log.warning("Opportunity rejected because risk plan failed: symbol=%s horizon=%s error=%s", c.get("symbol"), horizon, type(exc).__name__)
                 continue
             entry_low, entry_high = _entry_zone(plan)
             reviewed = ai_map.get((c["symbol"], horizon), {})
             reviewed_direction = str(reviewed.get("direction", "")).upper()
             action = str(reviewed.get("action", "WAIT")).upper()
             strategy_family = str(reviewed.get("strategy_family", ""))
-            validation = validate_live_strategy(
-                c["symbol"], horizon, strategy_family, resolved_predictions=resolved_predictions
-            )
+            validation = validate_live_strategy(c["symbol"], horizon, strategy_family, resolved_predictions)
             consensus = c.get("market_consensus", {})
             consensus_reliable = consensus.get("reliable") is True
-            data_multiplier = _bounded_multiplier(
-                consensus.get("confidence_multiplier"),
-                1.0 if consensus_reliable else 0.0,
-            )
+            data_multiplier = _bounded_multiplier(consensus.get("confidence_multiplier"), 1.0 if consensus_reliable else 0.0)
             if reviewed_direction != direction or action != "TRADE" or not validation.approved or not consensus_reliable:
                 action = "WAIT"
 
@@ -81,9 +67,7 @@ def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
 
             liquidity_bonus = min(15.0, max(0.0, c.get("activity_score", 0.0)))
             spread_penalty = min(20.0, float(c.get("spread_bps") or 0.0) * 0.35)
-            raw_rank_score = max(0.0, abs(q) * 20.0 + liquidity_bonus - spread_penalty)
-            rank_score = raw_rank_score * data_multiplier
-
+            rank_score = max(0.0, abs(q) * 20.0 + liquidity_bonus - spread_penalty) * data_multiplier
             base_reason = str(reviewed.get("reasoning") or f"Quant rank from multi-timeframe {horizon} evidence; not AI-approved for trade.")
             if not validation.approved:
                 base_reason = f"{base_reason} [{validation.status}: {validation.reason}]"
@@ -93,34 +77,16 @@ def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
                 provenance = consensus.get("provenance") or {}
                 accepted = provenance.get("accepted_exchange_names") or []
                 base_reason = (
-                    f"{base_reason} [MARKET_CONSENSUS_UNRELIABLE] "
-                    f"[MARKET_DATA_RESTRICTED: {consensus.get('reason', 'missing')}; "
-                    f"independent_sources={consensus.get('source_count', 0)}; accepted={accepted}; "
-                    f"confidence_multiplier={data_multiplier:.3f}; live action blocked]"
+                    f"{base_reason} [MARKET_CONSENSUS_UNRELIABLE] [MARKET_DATA_RESTRICTED: {consensus.get('reason', 'missing')}; "
+                    f"independent_sources={consensus.get('source_count', 0)}; accepted={accepted}; confidence_multiplier={data_multiplier:.3f}; live action blocked]"
                 )
 
             ranked.append({
-                "scan_id": scan_id,
-                "horizon": horizon,
-                "symbol": c["symbol"],
-                "direction": direction,
-                "action": action,
-                "entry_price": plan["entry"],
-                "entry_low": entry_low,
-                "entry_high": entry_high,
-                "stop_loss": plan["stop"],
-                "target_1": plan["t1"],
-                "target_2": plan["t2"],
-                "risk_reward": plan["rr"],
-                "quant_score": q,
-                "evidence_score": evidence,
-                "market_regime": regime,
-                "reasoning": base_reason[:4000],
-                "strategy_version": STRATEGY_VERSION,
-                "strategy_identity": validation.identity,
-                "calibration": calibration,
-                "forward_proof": validation.forward_proof,
-                "_rank_score": rank_score,
+                "scan_id": scan_id,"horizon": horizon,"symbol": c["symbol"],"direction": direction,"action": action,
+                "entry_price": plan["entry"],"entry_low": entry_low,"entry_high": entry_high,"stop_loss": plan["stop"],
+                "target_1": plan["t1"],"target_2": plan["t2"],"risk_reward": plan["rr"],"quant_score": q,
+                "evidence_score": evidence,"market_regime": regime,"reasoning": base_reason[:4000],"strategy_version": STRATEGY_VERSION,
+                "strategy_identity": validation.identity,"calibration": calibration,"forward_proof": validation.forward_proof,"_rank_score": rank_score,
             })
         ranked.sort(key=lambda x: x["_rank_score"], reverse=True)
         rows = ranked[:20]
@@ -131,12 +97,9 @@ def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
         due_at = now_utc() + (timedelta(hours=24) if horizon == "24h" else timedelta(days=7))
         for row in rows:
             ledger_rows.append({
-                "scan_id": scan_id,"symbol": row["symbol"],"horizon": horizon,
-                "direction": row["direction"],"entry_price": row["entry_price"],
-                "score": row["evidence_score"],"market_regime": regime,
-                "strategy_identity": row["strategy_identity"],
-                "action_at_forecast": row["action"],"due_at": iso(due_at),
-                "calibration": row["calibration"],
+                "scan_id": scan_id,"symbol": row["symbol"],"horizon": horizon,"direction": row["direction"],"entry_price": row["entry_price"],
+                "score": row["evidence_score"],"market_regime": regime,"strategy_identity": row["strategy_identity"],
+                "action_at_forecast": row["action"],"due_at": iso(due_at),"calibration": row["calibration"],
             })
         saved[horizon] = rows
     insert_prediction_ledger(ledger_rows)
