@@ -82,6 +82,11 @@ Master tracking issue #45 covers the safe acceleration program.
   - `consistently_profitable` is false until >=30 closed paper trades, net P&L > 0, profit factor >=1.20, max drawdown <=10%, and last 20 closed trades net positive.
   - Initial production deployment `dep-dafli7vavr4c73c9evk0` exposed a missing service-role grant; the bounded database permission fix was applied and deployment `dep-daflj3tg1s2s73f30c6g` restarted the simulator successfully.
   - First verified live paper cycle updated the account at `2026-09-08T00:41:12Z`: equity about `$100,561.99`, cash about `$70,053.04`, realized P&L `$0`, and 5 open paper positions. This is unrealized hypothetical performance only and is not evidence of consistent profitability.
+- PR #51 `Show $100k paper portfolio on main dashboard` passed exact-head Security and Reliability run `34175434804` on `12a3d9507283dac2ad695012700faf516ed84f8d` and was squash-merged as `1334f6a457bf56c01cbdad2d79d8a465809d728f`.
+  - `/dashboard` now shows the authenticated hypothetical $100k paper portfolio and ranked crypto signals on one page.
+  - Existing `/dashboard/paper` remains available, and `/dashboard/signals` serves the embedded signal table; signal-detail/chart routes remain unchanged.
+  - This is visualization/navigation only and does not alter research, promotion, broker connectivity, or trade authority.
+  - Render deploy `dep-daflunbbc2fs73de0jig` completed live successfully.
 - Future acceleration work remains subordinate to the mandatory research-to-live chain; speed must come from parallelism, caching, early rejection, prioritization, event-driven agents and deterministic automation, never weaker evidence.
 
 ## COST / SPEED POLICY
@@ -91,7 +96,7 @@ Use deterministic Python for calculation/backtesting/filtering/evidence checks. 
 1. Inspect completed Cloud Crypto Research run `34170631618` artifacts. Verify `execution_oos_robustness` exists in real artifacts, uses the same untouched holdout path, current snapshot anchor is never presented as historical, and record which strategies/timeframes retain positive expectancy/sum under maximum conservative execution stress. Also verify the new independent artifact-audit output. Do not infer results before artifact inspection.
 2. If the replacement run has infrastructure/data failures, fix only the bounded cause and rerun. If evidence is valid, decide whether ACC-001 has enough execution robustness evidence to close; do not mark complete merely because code exists.
 3. Obtain direct production observer state evidence: `/health.continuous_ai` must show `configured=true`, `cycle_count>=1`, `last_error_type=null`, five-minute cadence, bounded timeout and trade/write/promotion authority false.
-4. Verify a post-PR #42/#43/#44/#47/#48/#49 production scan remains healthy, execution/liquidation evidence stays research-only, no unvalidated TRADE appears, and the paper simulator remains broker-disconnected/research-only.
+4. Verify a post-PR #42/#43/#44/#47/#48/#49/#51 production scan remains healthy, execution/liquidation evidence stays research-only, no unvalidated TRADE appears, and the paper simulator remains broker-disconnected/research-only.
 5. Continue collecting paper trades from the hypothetical $100k account. Alert only when the persisted `consistently_profitable` gate is genuinely satisfied; do not infer profitability from unrealized equity or a small sample.
 6. After ACC-001 evidence is genuinely complete, refresh PR #46 on current main, require exact-head Security and Reliability success, then integrate only if its shadow/canary layer remains read-only/fail-closed.
 7. Only then move to `ACC-002` cross-sectional ranking, then ACC-003 through ACC-007 sequentially while non-owner specialists audit in parallel.
