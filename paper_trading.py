@@ -1,3 +1,5 @@
+import asyncio
+import logging
 from datetime import datetime, timedelta
 
 from paper_db import (
@@ -13,6 +15,7 @@ from paper_db import (
 from market_data import get_candles
 from utils import now_utc
 
+log = logging.getLogger(__name__)
 ACCOUNT_ID = "default"
 INITIAL_CASH = 100000.0
 RISK_PER_TRADE_PCT = 0.50
@@ -20,6 +23,7 @@ MAX_OPEN_POSITIONS = 5
 MAX_NOTIONAL_PCT = 20.0
 FEE_BPS_ONE_WAY = 6.0
 MIN_EVIDENCE_SCORE = 60.0
+PAPER_INTERVAL_SECONDS = 15 * 60
 
 
 def _last_price(symbol):
@@ -66,7 +70,7 @@ def _net_pnl(trade, exit_price):
     qty = float(trade["quantity"])
     gross = _mark_pnl(trade["direction"], entry, exit_price, qty)
     fees = (entry * qty + exit_price * qty) * float(trade["fee_bps_one_way"]) / 10000.0
-    return gross - fees, fees
+    return gross - fees
 
 
 def _consistent(stats, max_drawdown_pct):
@@ -104,10 +108,11 @@ def run_paper_cycle():
         exit_price, reason = _close_decision(trade, price)
         if exit_price is None:
             continue
-        pnl, fees = _net_pnl(trade, float(exit_price))
+        pnl = _net_pnl(trade, float(exit_price))
         cash += float(trade["notional_usd"]) + pnl
         realized += pnl
-        close_paper_trade(trade["id"], float(exit_price), reason, pnl, fees)
+        pnl_pct = pnl / float(trade["notional_usd"]) * 100.0 if float(trade["notional_usd"]) > 0 else 0.0
+        close_paper_trade(trade["id"], float(exit_price), reason, pnl, pnl_pct)
 
     open_trades = fetch_open_paper_trades(ACCOUNT_ID)
     open_pairs = {(t["symbol"], t["horizon"]) for t in open_trades}
@@ -169,7 +174,8 @@ def run_paper_cycle():
 
     unrealized = 0.0
     held_notional = 0.0
-    for trade in fetch_open_paper_trades(ACCOUNT_ID):
+    open_trades = fetch_open_paper_trades(ACCOUNT_ID)
+    for trade in open_trades:
         held_notional += float(trade["notional_usd"])
         try:
             price = _last_price(trade["symbol"])
@@ -191,7 +197,7 @@ def run_paper_cycle():
         "max_drawdown_pct": max_dd,
         "profitable_alert": profitable,
     })
-    insert_paper_equity_snapshot(ACCOUNT_ID, equity, cash, len(fetch_open_paper_trades(ACCOUNT_ID)), realized)
+    insert_paper_equity_snapshot(ACCOUNT_ID, equity, cash, len(open_trades), realized)
     return paper_status()
 
 
@@ -222,3 +228,14 @@ def paper_status():
         "consistently_profitable": bool(account["profitable_alert"]),
         "profitability_rule": ">=30 closed trades, net P&L > 0, PF >= 1.20, max DD <= 10%, last 20 trades net positive",
     }
+
+
+async def paper_trading_loop():
+    while True:
+        try:
+            await asyncio.to_thread(run_paper_cycle)
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            log.exception("paper trading cycle failed: %s", type(exc).__name__)
+        await asyncio.sleep(PAPER_INTERVAL_SECONDS)
