@@ -8,6 +8,7 @@ from backtest import run_backtest, walk_forward
 from execution_oos import evaluate_execution_oos
 from market_data import build_universe
 from multiple_testing import apply_registry_firewall
+from point_in_time_universe import assess_symbol_set, load_manifest
 from strategy_families import STRATEGY_FAMILIES, evaluate_strategy_registry
 from research_artifact import seal_research_payload
 
@@ -46,14 +47,12 @@ def resolve_research_symbols():
         if symbol not in ranked:
             ranked.append(symbol)
 
-    selected = [
-        symbol for symbol in ranked
-        if stable_shard(symbol, shard_count) == shard_index
-    ]
+    selected = [symbol for symbol in ranked if stable_shard(symbol, shard_count) == shard_index]
     return selected, {
         "mode": "dynamic_liquid_universe",
         "universe_size_target": target,
         "universe_size_resolved": len(ranked),
+        "resolved_symbols": ranked,
         "forced_symbols": forced,
         "shard_index": shard_index,
         "shard_count": shard_count,
@@ -61,14 +60,25 @@ def resolve_research_symbols():
 
 
 def declared_hypothesis_trials(symbols, timeframes, universe_meta):
-    """Predeclare search breadth before inspecting any OOS strategy result.
-
-    Count the full resolved universe rather than only this worker shard, six
-    strategy families, and base + two parameter perturbations. Continuous runs
-    must not lower this declaration merely because a shard happens to be small.
-    """
     resolved = int(universe_meta.get("universe_size_resolved") or len(symbols) or 1)
     return max(1, resolved) * max(1, len(timeframes)) * len(STRATEGY_FAMILIES) * 3
+
+
+def _demote_for_survivorship(registry_result, survivorship):
+    """ACC-011 is restrictive only and cannot make a strategy eligible."""
+    for row in (registry_result.get("registry") or []):
+        row["point_in_time_universe_gate"] = survivorship
+        if row.get("eligible_for_promotion_review") is True and not survivorship.get("promotion_allowed"):
+            row["eligible_for_promotion_review"] = False
+            row["status"] = "RESEARCH_ONLY"
+            quality = row.setdefault("quality_gate", {})
+            reasons = list(quality.get("reasons") or [])
+            if "point_in_time_universe_evidence_insufficient" not in reasons:
+                reasons.append("point_in_time_universe_evidence_insufficient")
+            quality["reasons"] = reasons
+    registry_result["eligible_count"] = sum(1 for row in (registry_result.get("registry") or []) if row.get("eligible_for_promotion_review") is True)
+    registry_result["point_in_time_universe"] = survivorship
+    return registry_result
 
 
 def main():
@@ -78,6 +88,10 @@ def main():
     threshold = float(os.getenv("RESEARCH_THRESHOLD", "2.25"))
     execution_quote_notional = float(os.getenv("RESEARCH_EXECUTION_NOTIONAL", "5000"))
     trial_count = declared_hypothesis_trials(symbols, timeframes, universe_meta)
+
+    manifest = load_manifest(os.getenv("POINT_IN_TIME_UNIVERSE_MANIFEST", "").strip() or None)
+    full_research_symbol_set = universe_meta.get("resolved_symbols") or symbols
+    survivorship = assess_symbol_set(manifest, full_research_symbol_set)
 
     started = datetime.now(timezone.utc).isoformat()
     results = []
@@ -89,6 +103,7 @@ def main():
                 "bar": bar,
                 "bars_requested": bars,
                 "declared_hypothesis_trials": trial_count,
+                "point_in_time_universe": survivorship,
             }
             t0 = time.time()
             try:
@@ -101,7 +116,8 @@ def main():
                     quote_notional=execution_quote_notional,
                 )
                 raw_registry = evaluate_strategy_registry(symbol, bar=bar, bars=bars)
-                item["strategy_registry"] = apply_registry_firewall(raw_registry, trial_count)
+                multiple_testing_registry = apply_registry_firewall(raw_registry, trial_count)
+                item["strategy_registry"] = _demote_for_survivorship(multiple_testing_registry, survivorship)
                 item["ok"] = True
             except Exception as exc:
                 item["ok"] = False
@@ -123,6 +139,7 @@ def main():
                     "holdout_test": strategy["holdout_test"],
                     "robustness": strategy["robustness"],
                     "multiple_testing_gate": strategy["multiple_testing_gate"],
+                    "point_in_time_universe_gate": strategy["point_in_time_universe_gate"],
                 })
 
     payload = {
@@ -136,11 +153,16 @@ def main():
         "threshold": threshold,
         "execution_quote_notional": execution_quote_notional,
         "universe": universe_meta,
+        "point_in_time_universe": survivorship,
         "declared_hypothesis_trials": trial_count,
-        "strategy_policy": "research-only unless strict validation+holdout OOS+robustness+search-breadth gates pass",
+        "strategy_policy": "research-only unless validation+holdout OOS+robustness+search-breadth+point-in-time-universe gates pass",
         "multiple_testing_policy": (
             "Search breadth is declared before OOS inspection. More strategy/parameter hypotheses require deeper OOS "
             "and stronger bootstrap support. This is a conservative evidence penalty, not a claimed formal p-value correction."
+        ),
+        "survivorship_policy": (
+            "Today's survivors cannot establish historical universe membership. Promotion review is blocked unless a "
+            "provenanced point-in-time snapshot manifest covers all historical universe members used by the research search."
         ),
         "execution_policy": (
             "Current live order-book slippage may expand conservative untouched-OOS cost stress only; "
@@ -161,6 +183,8 @@ def main():
             "generated_at": payload["generated_at"],
             "policy": payload["strategy_policy"],
             "multiple_testing_policy": payload["multiple_testing_policy"],
+            "survivorship_policy": payload["survivorship_policy"],
+            "point_in_time_universe": survivorship,
             "declared_hypothesis_trials": trial_count,
             "execution_policy": payload["execution_policy"],
             "universe": universe_meta,
@@ -172,7 +196,7 @@ def main():
     failures = sum(1 for x in results if not x.get("ok"))
     print(
         f"Completed {len(results)} research jobs with {failures} failures and "
-        f"{len(eligible)} OOS-eligible strategies after {trial_count} declared hypotheses. Universe={universe_meta}."
+        f"{len(eligible)} promotion-review-eligible strategies after {trial_count} declared hypotheses. Universe={universe_meta}."
     )
     if results and failures == len(results):
         raise SystemExit(1)
