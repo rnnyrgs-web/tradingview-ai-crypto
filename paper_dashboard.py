@@ -31,6 +31,13 @@ def _last_price(symbol):
 
 
 def _live_position(trade):
+    """Mark an open position exactly as the paper account marks equity.
+
+    Entry friction is already embedded adversely in entry_price. Exit friction is
+    charged only when the simulated trade actually closes, so subtracting a
+    round-trip fee here would double-count entry friction and make the position
+    rows disagree with account equity.
+    """
     entry = float(trade.get("entry_price") or 0)
     qty = float(trade.get("quantity") or 0)
     notional = float(trade.get("notional_usd") or 0)
@@ -38,14 +45,20 @@ def _live_position(trade):
     price = _last_price(str(trade.get("symbol") or ""))
     if price is None or entry <= 0 or qty <= 0:
         return {**trade, "last_price": None, "live_pnl": 0.0, "live_pnl_pct": 0.0}
-    gross = (price - entry) * qty
+    pnl = (price - entry) * qty
     if direction == "SHORT":
-        gross = -gross
-    fee_bps = float(trade.get("fee_bps_one_way") or 0)
-    estimated_roundtrip_fees = (entry * qty + price * qty) * fee_bps / 10000.0
-    pnl = gross - estimated_roundtrip_fees
+        pnl = -pnl
     pct = pnl / notional * 100.0 if notional > 0 else 0.0
     return {**trade, "last_price": price, "live_pnl": pnl, "live_pnl_pct": pct}
+
+
+def _reconciled_totals(status, positions):
+    initial = float(status.get("starting_capital_usd") or 100000.0)
+    realized = float(status.get("realized_pnl_usd") or 0.0)
+    open_pnl = sum(float(p.get("live_pnl") or 0.0) for p in positions)
+    total_pnl = realized + open_pnl
+    equity = initial + total_pnl
+    return initial, realized, open_pnl, total_pnl, equity
 
 
 def paper_portfolio_page(request: Request):
@@ -65,22 +78,17 @@ def paper_portfolio_page(request: Request):
         pnl = float(p.get("live_pnl") or 0)
         cls = "gain" if pnl >= 0 else "loss"
         rows.append(f"""
-<tr>
-<td><b>{html.escape(str(p.get('symbol') or ''))}</b></td>
-<td>{html.escape(str(p.get('horizon') or ''))}</td>
-<td>{html.escape(str(p.get('direction') or ''))}</td>
-<td>{_money(p.get('notional_usd'))}</td>
-<td>{p.get('entry_price')}</td>
+<tr><td><b>{html.escape(str(p.get('symbol') or ''))}</b></td>
+<td>{html.escape(str(p.get('horizon') or ''))}</td><td>{html.escape(str(p.get('direction') or ''))}</td>
+<td>{_money(p.get('notional_usd'))}</td><td>{p.get('entry_price')}</td>
 <td>{'—' if p.get('last_price') is None else p.get('last_price')}</td>
-<td>{p.get('stop_loss')}</td>
-<td>{p.get('target_price')}</td>
-<td class="{cls}"><b>{_money(pnl)}</b><small>{_pct(p.get('live_pnl_pct'))}</small></td>
-</tr>""")
+<td>{p.get('stop_loss')}</td><td>{p.get('target_price')}</td>
+<td class="{cls}"><b>{_money(pnl)}</b><small>{_pct(p.get('live_pnl_pct'))}</small></td></tr>""")
 
-    equity = float(status.get("equity_usd") or 0)
-    initial = float(status.get("starting_capital_usd") or 100000)
-    total_pnl = equity - initial
+    initial, realized, open_pnl, total_pnl, equity = _reconciled_totals(status, positions)
     total_cls = "gain" if total_pnl >= 0 else "loss"
+    open_cls = "gain" if open_pnl >= 0 else "loss"
+    return_pct = total_pnl / initial * 100.0 if initial > 0 else 0.0
     profitable = bool(status.get("consistently_profitable"))
     badge = "CONSISTENTLY PROFITABLE" if profitable else "TESTING — NOT PROVEN YET"
     badge_cls = "good" if profitable else "testing"
@@ -93,8 +101,9 @@ def paper_portfolio_page(request: Request):
 <div class="card"><small>STARTING CAPITAL</small><b>{_money(initial)}</b></div>
 <div class="card"><small>CURRENT EQUITY</small><b>{_money(equity)}</b></div>
 <div class="card"><small>TOTAL P&L</small><b class="{total_cls}">{_money(total_pnl)}</b></div>
-<div class="card"><small>RETURN</small><b class="{total_cls}">{_pct(status.get('return_pct'))}</b></div>
-<div class="card"><small>REALIZED P&L</small><b>{_money(status.get('realized_pnl_usd'))}</b></div>
+<div class="card"><small>RETURN</small><b class="{total_cls}">{_pct(return_pct)}</b></div>
+<div class="card"><small>REALIZED P&L</small><b>{_money(realized)}</b></div>
+<div class="card"><small>OPEN P&L</small><b class="{open_cls}">{_money(open_pnl)}</b></div>
 <div class="card"><small>MAX DRAWDOWN</small><b>{float(status.get('max_drawdown_pct') or 0):.2f}%</b></div>
 <div class="card"><small>OPEN POSITIONS</small><b>{int(status.get('open_positions') or 0)}</b></div>
 <div class="card"><small>CLOSED TRADES</small><b>{int(status.get('closed_trades') or 0)}</b></div>
@@ -104,5 +113,5 @@ def paper_portfolio_page(request: Request):
 <div class="card"><small>STATUS</small><b>{'PASS' if profitable else 'COLLECTING DATA'}</b></div>
 </div>
 <h2>Open simulated positions</h2><div class="tablewrap"><table><thead><tr><th>CRYPTO</th><th>HORIZON</th><th>SIDE</th><th>SIZE</th><th>ENTRY</th><th>LIVE PRICE</th><th>STOP</th><th>TARGET</th><th>LIVE P&L</th></tr></thead><tbody>{''.join(rows) if rows else '<tr><td colspan="9">No open paper positions right now.</td></tr>'}</tbody></table></div>
-<div class="note">Hypothetical paper trading only. No broker is connected and no real orders can be placed. Live P&L includes an estimated round-trip fee using the simulator's configured execution-cost assumption. The system only labels itself consistently profitable after the full persisted profitability gate is met.</div>
+<div class="note"><b>Reconciliation:</b> Total P&L = Realized P&L + Open P&L, and Current Equity = Starting Capital + Total P&L. Entry execution friction is already embedded in each simulated fill; exit friction is charged when a trade actually closes. Hypothetical paper trading only. No broker is connected and no real orders can be placed.</div>
 </div></body></html>""")
