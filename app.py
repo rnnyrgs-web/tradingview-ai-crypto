@@ -11,25 +11,31 @@ from engine import run_scan
 from evaluator import run_evaluation
 from backtest import run_backtest, walk_forward
 from market_data import build_universe
-from dashboard import login_page, handle_login, dashboard_page, signal_detail_page
+from dashboard import login_page, handle_login, dashboard_page, signal_detail_page, signal_chart_data
+from paper_dashboard import paper_portfolio_page
+from combined_dashboard import combined_dashboard_page
 from operational_monitor import health_snapshot, record_error
 from calibration import calibration_summary
 from continuous_ai_agent import continuous_ai_loop, status_snapshot as continuous_ai_status
 from production_validation import validate_live_strategy
 from shadow_readiness import assess_shadow_readiness, canary_review_decision
+from paper_trading import paper_status, paper_trading_loop, run_paper_cycle
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    task = asyncio.create_task(continuous_ai_loop())
+    ai_task = asyncio.create_task(continuous_ai_loop())
+    paper_task = asyncio.create_task(paper_trading_loop())
     try:
         yield
     finally:
-        task.cancel()
-        try:
-            await task
-        except asyncio.CancelledError:
-            pass
+        ai_task.cancel()
+        paper_task.cancel()
+        for task in (ai_task, paper_task):
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
 
 
 app=FastAPI(title="Crypto Signal Engine V3", lifespan=lifespan)
@@ -53,7 +59,8 @@ def root():
         "service":"Crypto Signal Engine V3",
         "version":STRATEGY_VERSION,
         "dashboard":"/dashboard",
-        "endpoints":["/health","/scan","/evaluate","/calibration","/shadow-readiness","/backtest","/walkforward","/universe","/signals","/signals/cursor"]
+        "paper_portfolio":"/dashboard/paper",
+        "endpoints":["/health","/paper","/paper/run","/scan","/evaluate","/calibration","/shadow-readiness","/backtest","/walkforward","/universe","/signals","/signals/cursor"]
     }
 
 @app.get("/health")
@@ -66,7 +73,24 @@ def health():
         "horizons":list(HORIZONS.keys()),
         "operations":health_snapshot(),
         "continuous_ai":continuous_ai_status(),
+        "paper_trading":paper_status(),
     }
+
+@app.get("/paper")
+def paper(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
+    verify_secret(secret,x_scan_secret)
+    try:
+        return paper_status()
+    except Exception as e:
+        internal_error("paper_status", e, "Paper trading status unavailable")
+
+@app.get("/paper/run")
+def paper_run(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
+    verify_secret(secret,x_scan_secret)
+    try:
+        return run_paper_cycle()
+    except Exception as e:
+        internal_error("paper_run", e, "Paper trading cycle failed")
 
 @app.get("/dashboard/login")
 def dashboard_login_get():
@@ -79,16 +103,37 @@ async def dashboard_login_post(request:Request):
 @app.get("/dashboard")
 def dashboard(request:Request,horizon:str="24h"):
     try:
-        return dashboard_page(request,horizon)
+        return combined_dashboard_page(request,horizon)
     except Exception as e:
         internal_error("dashboard", e, "Dashboard unavailable")
+
+@app.get("/dashboard/signals")
+def dashboard_signals(request:Request,horizon:str="24h"):
+    try:
+        return dashboard_page(request,horizon)
+    except Exception as e:
+        internal_error("dashboard_signals", e, "Signals unavailable")
+
+@app.get("/dashboard/paper")
+def dashboard_paper(request:Request):
+    try:
+        return paper_portfolio_page(request)
+    except Exception as e:
+        internal_error("dashboard_paper", e, "Paper portfolio unavailable")
 
 @app.get("/dashboard/signal/{signal_id}")
 def dashboard_signal(request:Request,signal_id:int):
     try:
         return signal_detail_page(request,signal_id)
     except Exception as e:
-        internal_error("dashboard_signal", e, "Signal visual unavailable")
+        internal_error("dashboard_signal", e, "Signal chart unavailable")
+
+@app.get("/dashboard/signal/{signal_id}/chart-data")
+def dashboard_signal_chart_data(request:Request,signal_id:int):
+    try:
+        return signal_chart_data(request,signal_id)
+    except Exception as e:
+        internal_error("dashboard_signal_chart_data", e, "Signal chart data unavailable")
 
 @app.get("/universe")
 def universe(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):

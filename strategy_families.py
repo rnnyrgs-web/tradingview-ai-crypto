@@ -286,6 +286,22 @@ def _quality_gate(train, validation, holdout):
     }
 
 
+def _skipped_robustness(gate):
+    """Fail fast before expensive robustness when basic OOS quality already fails.
+
+    This cannot promote a strategy or weaken a gate: a quality-gate failure is
+    already ineligible. Skipping bootstrap/perturbation work only saves compute
+    for candidates that are deterministically RESEARCH_ONLY.
+    """
+    return {
+        "passed": False,
+        "status": "SKIPPED_QUALITY_GATE_FAILED",
+        "reason": "quality_gate_failed_before_expensive_robustness",
+        "gate_reasons": list(gate.get("reasons") or []),
+        "bootstrap_runs": 0,
+    }
+
+
 def evaluate_strategy_registry(symbol, bar="15m", bars=5000):
     history = get_history(symbol, bar, bars)
     if len(history) < 1000:
@@ -309,18 +325,21 @@ def evaluate_strategy_registry(symbol, bar="15m", bars=5000):
         validation_metrics = _segment_metrics(validation_returns)
         holdout_metrics = _segment_metrics(holdout_returns)
         gate = _quality_gate(train_metrics, validation_metrics, holdout_metrics)
-        robustness = evaluate_robustness(
-            validation_returns + holdout_returns,
-            {
-                "threshold_90pct": _simulate(holdout, bar, family, benchmark, parameter_scale=0.9),
-                "threshold_110pct": _simulate(holdout, bar, family, benchmark, parameter_scale=1.1),
-            },
-            {
-                regime: [row["return_pct"] for row in holdout_records if row["regime"] == regime]
-                for regime in ("TREND", "HIGH_VOL", "RANGE")
-            },
-            f"{symbol}|{bar}|{family}",
-        )
+        if gate["passed"]:
+            robustness = evaluate_robustness(
+                validation_returns + holdout_returns,
+                {
+                    "threshold_90pct": _simulate(holdout, bar, family, benchmark, parameter_scale=0.9),
+                    "threshold_110pct": _simulate(holdout, bar, family, benchmark, parameter_scale=1.1),
+                },
+                {
+                    regime: [row["return_pct"] for row in holdout_records if row["regime"] == regime]
+                    for regime in ("TREND", "HIGH_VOL", "RANGE")
+                },
+                f"{symbol}|{bar}|{family}",
+            )
+        else:
+            robustness = _skipped_robustness(gate)
         eligible = gate["passed"] and robustness["passed"]
         registry.append({
             "strategy_family": family,

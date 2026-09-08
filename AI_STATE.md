@@ -21,7 +21,7 @@ Chronological validation remains 60% train / 20% validation / 20% untouched hold
 
 Prediction ledger is append-only with fixed `due_at`. Outcomes use the first hourly close at/after deadline. Calibration is horizon + score-bin specific, requires >=30 comparable resolved forecasts and 95% Wilson lower bound >=50%, and can only restrict.
 
-## ACC-001 MARKET / EXECUTION REALISM — IN PROGRESS
+## ACC-001 MARKET / EXECUTION REALISM — COMPLETE
 Integrated evidence:
 - PR #38 merged `18a12236270cc753dfa703b21b51e647edebdd0b`: deterministic 1.0x/1.5x/2.0x/3.0x execution-cost stress on full and untouched-holdout paths.
 - Event-driven candidate `aa26b262e1846ec8f6b19f89ef246c1455f05e5b` integrated as `3ee439912b7dcf91efd9a9891e40c39649820c91`: fail-closed strict timestamp ordering; missing/duplicate/non-increasing timestamps refuse backtest/walk-forward.
@@ -35,8 +35,21 @@ Integrated evidence:
   - `research_runner.py` now emits `execution_oos_robustness` in sealed cloud-research artifacts. This evidence is research-only and does not alter Strategy Registry eligibility, promotion gates or live authority.
   - Deterministic tests prove two-source/complete-fill requirements, conservative-only stress expansion, unchanged holdout path/threshold, and fail-closed behavior when no training threshold exists.
 - While validating PR #43, Security exposed a pre-existing supervisor test regression caused by compacting the AI_STATE safety heading. Lead fixed `agents/supervisor_snapshot.py` directly on main as `e0a6d234d103e5415ba2342ab09d43d180357b02`; it now preserves safety context under both explicit and compact safety headings without weakening safeguards.
-
-Cloud Crypto Research run `34168479313` was automatically triggered by merge `dbefac4...` and is the first live research cycle expected to emit the new untouched-OOS execution robustness evidence. ACC-001 must NOT be called complete until that run (or a later valid run) finishes and its artifacts are inspected for real holdout/stress outcomes.
+- Original Cloud Crypto Research run `34168479313` was cancelled before jobs/artifacts were produced, so it provides no ACC-001 evidence.
+- PR #44 `Accelerate cloud research without weakening gates` passed exact-head Security and Reliability run `34170047571` on `7107d85f6a81ca21e2cc7e2371837094a10552b7` and merged as `442b93e864682326195a3ae6c799fc231d43cbcd`.
+  - Cloud research concurrency is isolated by event/ref so stale feature-branch runs cannot block main research.
+  - Broad-universe matrix parallelism increases from 8 to 16 when GitHub capacity is available.
+  - Dedicated BTC/ETH/SOL/XRP/LINK fast-evidence workers run 15m + 1H in parallel while Top-80 + forced PONS research continues.
+  - Expensive bootstrap/perturbation robustness is skipped only for candidates that already fail deterministic train/validation/untouched-OOS quality gates.
+  - A separate adversarial artifact audit independently checks sealed integrity, fail-closed promotion, same-holdout execution policy and that live snapshot slippage is never represented as historical.
+  - No OOS, robustness, promotion or live-authority gate was weakened.
+- Merge `442b93e...` triggered Cloud Crypto Research run `34170631618`. Lead inspected the downloaded broad-universe, swing, fast-evidence, repeated-run and adversarial-audit artifacts on 2026-09-08 rather than inferring success from workflow status.
+  - 177/177 result records carrying `execution_oos_robustness` were `ok=true`, preserved `same_trade_path_policy=true`, and explicitly reported `historical_slippage_available=false`; current snapshots were never represented as historical evidence.
+  - Four TIA/ETC records had valid two-source current $5k quote-notional snapshot anchors. Each anchor was explicitly `historical=false` and only expanded conservative stress; all four failed positive expectancy/sum at their maximum stress.
+  - 23 unique symbol/timeframe paths retained positive expectancy and positive cumulative net return at their maximum conservative execution stress: `SOL-USDT 1H`, `CHIP-USDT 1H`, `EDGE-USDT 1H`, `PEPE-USDT 1H`, `ARB-USDT 15m`, `NEAR-USDT 1H`, `CRV-USDT 15m`, `CRV-USDT 1H`, `XMSTR-USDT 1H`, `DOT-USDT 1H`, `AEON-USDT 1H`, `DOOD-USDT 15m`, `UNI-USDT 1H`, `ZAMA-USDT 1H`, `ENA-USDT 1H`, `INJ-USDT 1H`, `ETH-USDT 1D`, `SOL-USDT 4H`, `XRP-USDT 4H`, `LINK-USDT 1D`, `HBAR-USDT 1H`, `FET-USDT 1H`, and `APT-USDT 1H`. This is screening evidence only; weak profit factors, drawdowns or small samples still fail later gates.
+  - Independent `adversarial_audit.json` reported `ok=true`, zero failures, and checked all 17 broad/swing artifact groups (172 results). The separate five fast-evidence results were also inspected and contained the same fail-closed execution-OOS structure.
+  - Repeated-run aggregation validated 51 sealed artifacts and advanced only `ARB-USDT 15m trend`, `DOOD-USDT 15m breakout`, and `DOOD-USDT 15m momentum` to `READY_FOR_STRATEGY_REGISTRY_REVIEW`; all remain `live_approved=false`.
+  - ACC-001 is closed as completed market/execution-realism evidence work. It is not a profitability claim and grants no signal, promotion or trading authority.
 
 ## 24/7 AI / ORCHESTRATION
 Token-free Render coordinator checks production health/state every minute with no trade/write/promotion authority.
@@ -46,7 +59,7 @@ Token-free Render coordinator checks production health/state every minute with n
 Event-driven supervisor from PR #37 wakes on completed production scan/cloud research plus hourly fallback, provides compact supervisor context and allows exactly one CHANGE + thirteen AUDIT workers with max-parallel 14. The one-writer/thirteen-auditor path has been verified end-to-end.
 
 ## ACCURACY BACKLOG
-1. `ACC-001` market-microstructure — IN PROGRESS; execution evidence and untouched-OOS stress machinery are integrated; first real cloud artifact/result verification pending.
+1. `ACC-001` market-microstructure — COMPLETE; replacement accelerated run artifacts were inspected and validated, with surviving stress-positive paths recorded above and no live authority granted.
 2. `ACC-002` quant-cross-asset — cross-sectional relative-strength/rank prediction across liquid universe.
 3. `ACC-003` quant-breakout-volatility — no-lookahead regime-specialist models for bull/bear/range/high-volatility/compression.
 4. `ACC-004` strategy-registry — calibrated champion/challenger ensemble weighting with correlation/deterioration penalties and automatic demotion.
@@ -54,14 +67,47 @@ Event-driven supervisor from PR #37 wakes on completed production scan/cloud res
 6. `ACC-006` production-signals — continuous forecast scoring and deterioration detection from immutable prediction ledger.
 7. `ACC-007` testing-security — expanded adversarial strategy-destruction tests across exchanges, periods, fees, slippage, parameters, malformed data and regimes.
 
+## REAL-MONEY READINESS ACCELERATION
+Master tracking issue #45 covers the safe acceleration program.
+- PR #44 is integrated: event/ref-isolated cloud concurrency, higher parallelism, liquid-major fast lane, deterministic early rejection and independent artifact audit.
+- PR #46 `Add forward shadow and canary readiness gates` is open and remains unmerged pending exact-head verification/rebase after ACC-001 evidence work. It is designed to add read-only forward evidence, de-correlated prediction samples, Wilson/expectancy/drawdown checks and tiny-canary/scale review gates with `trade_authority=false` and `canary_execution_enabled=false`.
+- PR #47 `Add compact crypto signal rows with one-click TradingView` passed Security and Reliability run `34172595104` on exact head `975734cc4c164754ab94ad22ae6d578b81f7b661` and was squash-merged as `1d381b6b5f75d8b92bd1feccfaa84196fea6d344`.
+  - Dashboard became a compact multi-crypto row view showing signal, duration, entry area, stop loss and %, expected T1/T2 moves and %, R:R and evidence.
+- PR #48 `Embed signal levels directly on TradingView-style chart` passed Security and Reliability run `34173194223` on exact head `45d7bb85721e94fe8b7f233bdd62bf952d1fa2ac` and was squash-merged as `dc0abff7e67ad75cd4e9b8463f9c6a356a8865c1`.
+  - The dashboard no longer exposes the separate Pine overlay workflow.
+  - Clicking a crypto row opens an embedded TradingView Lightweight Charts candlestick view using current OKX candle data.
+  - BUY/SELL marker, entry line, entry-zone bounds, stop loss, T1/T2, expected move %, duration, R:R and evidence are drawn directly on the chart.
+  - The chart-data endpoint is dashboard-session authenticated and visualization-only; it does not alter research, promotion, or trade authority.
+  - Render production deploy `dep-daflbknavr4c73c99k00` completed live successfully for merge `dc0abff7...`.
+- PR #49 `Add $100k continuous paper trading simulator` passed exact-head Security and Reliability run `34173933985` on `505202d9ae3b335bffd1b059e97b8aac33058f99` and was squash-merged as `909d9bd5a8284fb99b1d19883471ae1fb63af254`.
+  - Supabase migration `add_paper_trading_100k` created persistent `paper_account`, `paper_trades`, and `paper_equity_snapshots`; migration `grant_paper_trading_service_role` granted the production service role only the required table/sequence privileges.
+  - Paper simulation starts with hypothetical `$100,000`, runs every 15 minutes inside production, risks at most 0.5% equity per paper position, caps open positions at 5 and per-position notional at 20% equity, models 6 bps one-way execution cost, and exits on modeled stop, T1 target, or horizon expiry.
+  - The simulator may shadow research-only directional candidates for evidence collection but is permanently marked `research_only=true`, `real_money=false`, `broker_connected=false`, `trade_authority=false`; it cannot submit real orders or promote strategies.
+  - `consistently_profitable` is false until >=30 closed paper trades, net P&L > 0, profit factor >=1.20, max drawdown <=10%, and last 20 closed trades net positive.
+  - Initial production deployment `dep-dafli7vavr4c73c9evk0` exposed a missing service-role grant; the bounded database permission fix was applied and deployment `dep-daflj3tg1s2s73f30c6g` restarted the simulator successfully.
+  - First verified live paper cycle updated the account at `2026-09-08T00:41:12Z`: equity about `$100,561.99`, cash about `$70,053.04`, realized P&L `$0`, and 5 open paper positions. This is unrealized hypothetical performance only and is not evidence of consistent profitability.
+- PR #51 `Show $100k paper portfolio on main dashboard` passed exact-head Security and Reliability run `34175434804` on `12a3d9507283dac2ad695012700faf516ed84f8d` and was squash-merged as `1334f6a457bf56c01cbdad2d79d8a465809d728f`.
+  - `/dashboard` now shows the authenticated hypothetical $100k paper portfolio and ranked crypto signals on one page.
+  - Existing `/dashboard/paper` remains available, and `/dashboard/signals` serves the embedded signal table; signal-detail/chart routes remain unchanged.
+  - This is visualization/navigation only and does not alter research, promotion, broker connectivity, or trade authority.
+  - Render deploy `dep-daflunbbc2fs73de0jig` completed live successfully.
+- PR #52 `Make paper trading forward-only and realistic` initially exposed a stale unit-test assumption, then passed exact-head Security and Reliability run `34176047490` on `cc2989dcdcd3a89fd9dadc8e98f3631094bb1975` and was squash-merged as `ff1764e07530e1536cd66ca50133bf41e5ce6215`.
+  - New paper positions no longer use the signal's earlier/model `entry_price` as the simulated fill. They fetch the observable current market price at the actual paper-cycle opening instant, apply adverse one-way execution friction, and record that forward fill as the true paper entry.
+  - Stop and target distances are re-anchored to the actual forward fill so stale signal prices cannot create inherited/free P&L.
+  - Stop/target/time exits use the observed current market price rather than pretending execution happened exactly at an idealized trigger level.
+  - The simulator remains `research_only=true`, `real_money=false`, `broker_connected=false`, `trade_authority=false`.
+  - Render deployment `dep-dafm3tbm8hqs73e5v0v0` completed live for PR #52.
+  - All legacy paper trades, equity snapshots and the old unrealized gain were explicitly invalidated and cleared after the new code was live. Supabase account `default` was reset at `2026-09-08T01:17:49Z` to exactly `$100,000` cash/equity, `$0` realized P&L, zero drawdown, zero trades and zero snapshots. Only forward trades opened after this reset count as authentic paper-performance evidence.
+- Future acceleration work remains subordinate to the mandatory research-to-live chain; speed must come from parallelism, caching, early rejection, prioritization, event-driven agents and deterministic automation, never weaker evidence.
+
 ## COST / SPEED POLICY
 Use deterministic Python for calculation/backtesting/filtering/evidence checks. Use AI for bounded planning, hypothesis generation, implementation/review and orchestration. Routine planner/specialists use `gpt-5.6-luna`; testing-security, strategy-registry, portfolio-risk and production-signals use `gpt-5.6-sol`; Lead and independent integration reviews use `gpt-5.6-sol`. Prefer event-driven wakeups over idle polling and read-only parallel audits over competing writes.
 
 ## EXACT NEXT STEP
-1. Inspect Cloud Crypto Research run `34168479313` after completion. Verify `execution_oos_robustness` exists in real artifacts, uses the same untouched holdout path, current snapshot anchor is never presented as historical, and record which strategies/timeframes retain positive expectancy/sum under maximum conservative execution stress. Do not infer results before artifacts exist.
-2. If the first run has infrastructure/data failures, fix only the bounded cause and rerun. If evidence is valid, decide whether ACC-001 has enough execution robustness evidence to close; do not mark complete merely because code exists.
-3. Obtain direct production observer state evidence: `/health.continuous_ai` must show `configured=true`, `cycle_count>=1`, `last_error_type=null`, five-minute cadence, bounded timeout and trade/write/promotion authority false.
-4. Verify a post-PR #42/#43 production scan remains healthy, execution/liquidation evidence stays research-only, and no unvalidated TRADE appears.
-5. Only after ACC-001 evidence is genuinely complete move to `ACC-002` cross-sectional ranking, then ACC-003 through ACC-007 sequentially while non-owner specialists audit in parallel.
+1. Obtain direct production observer state evidence: `/health.continuous_ai` must show `configured=true`, `cycle_count>=1`, `last_error_type=null`, five-minute cadence, bounded timeout and trade/write/promotion authority false.
+2. Verify a post-PR #42/#43/#44/#47/#48/#49/#51/#52 production scan remains healthy, execution/liquidation evidence stays research-only, no unvalidated TRADE appears, and the paper simulator remains broker-disconnected/research-only.
+3. Let the freshly reset `$100,000` forward-only paper account collect new trades from zero. Treat only trades opened after `2026-09-08T01:17:49Z` as authentic paper-performance evidence. Alert only when the persisted `consistently_profitable` gate is genuinely satisfied; do not infer profitability from unrealized equity or a small sample.
+4. Refresh PR #46 on current main, require exact-head Security and Reliability success, then integrate only if its shadow/canary layer remains read-only/fail-closed.
+5. Move to `ACC-002` cross-sectional ranking after PR #46 verification, then ACC-003 through ACC-007 sequentially while non-owner specialists audit in parallel.
 6. Keep `live_promotions.json` empty and signing keys unused until repeated backtests, untouched OOS, robustness/stability, Strategy Registry review and Production Risk review genuinely complete.
 7. Update this file after every completed development/integration cycle.
