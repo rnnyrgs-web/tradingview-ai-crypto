@@ -69,11 +69,18 @@ PR #55 `Add bounded 24/7 Python research worker army` passed exact-head Security
   - The selected untouched OOS receives 500 deterministic seeded bootstrap resamples.
   - ACC-002 research pass requires positive 95% bootstrap lower bounds for both mean rank IC and maximum-cost net top-minus-bottom spread, in addition to the existing sample/count/positive-spread gates.
   - First implementation triggered Bandit B311 for seeded `random.Random`; it was replaced with deterministic SHA-256 index sampling and the final exact-head Security and Reliability run passed all unit, dependency, static-security and secret checks.
+- PR #64 `ACC-002: Require liquidity-subset stability` passed exact-head Security and Reliability run `34236350206` on `8a477b4159a3e14f8b0fe59e517bc206f4ba8eb9` and was squash-merged as `6d56244fa9bf7afd797e56aed90be809fca81cc6`.
+  - Adds predeclared Top-15/Top-30/Top-45 liquidity-universe stability using train+validation only.
+  - A candidate must survive at least two supported liquidity subsets before any untouched OOS is opened.
+  - Lower-ranked assets are never substituted into a failed Top-N subset; each subset requires at least 80% of the requested Top-N histories to resolve.
+  - Candidate selection uses the worst passing liquidity-subset score, and untouched OOS is opened exactly once on the largest supported subset so universe size is not selected on OOS.
+  - The same fetched histories are reused across subsets to improve robustness without adding paid infrastructure.
+  - Render production deploy `dep-dag1e1vavr4c73ckvq20` and coordinator deploy `dep-dag1e1vavr4c73ckvq80` both reached `live` for merge `6d56244fa9bf7afd797e56aed90be809fca81cc6`.
 - All ACC-002 outputs remain `research_only=true`, `live_approved=false`, `trade_authority=false`. No profitability has been claimed yet; genuine live public-data evidence must be collected and inspected.
 
 ## ACCURACY BACKLOG
 1. `ACC-001` market-microstructure — COMPLETE.
-2. `ACC-002` quant-cross-asset — IN PROGRESS; core rank engine, nonstop worker, purge/non-overlap, sufficient independent OOS depth, pre-OOS fixed-grid selection, parameter stability, 3x cost stress and 500-resample bootstrap confidence are integrated. Genuine live public-data evidence still needs collection/inspection and liquidity-subset/horizon robustness.
+2. `ACC-002` quant-cross-asset — IN PROGRESS; core rank engine, nonstop worker, purge/non-overlap, sufficient independent OOS depth, pre-OOS fixed-grid selection, parameter stability, liquidity-subset stability, 3x cost stress and 500-resample bootstrap confidence are integrated. Genuine live public-data evidence still needs collection/inspection and horizon robustness.
 3. `ACC-003` quant-breakout-volatility — no-lookahead regime-specialist models for bull/bear/range/high-volatility/compression.
 4. `ACC-004` strategy-registry — calibrated champion/challenger ensemble weighting with correlation/deterioration penalties and automatic demotion.
 5. `ACC-005` data-market — broader exchange/data coverage with provenance/freshness/contradiction checks and safe PONS handling.
@@ -88,19 +95,22 @@ Master tracking issue #45 covers the safe acceleration program.
 - PR #49 added the persistent $100k continuous paper trading simulator, permanently research-only and broker-disconnected.
 - PR #51 combined the paper portfolio and ranked signals on the main dashboard.
 - PR #52 made paper trading forward-only and realistic. All legacy paper trades/equity were invalidated and account `default` reset at `2026-09-08T01:17:49Z` to exactly `$100,000` cash/equity, `$0` realized P&L, zero drawdown, zero trades and zero snapshots. Only forward trades opened after this reset count as authentic paper-performance evidence.
+- PR #62 `Fix paper portfolio P&L reconciliation` passed exact-head Security and Reliability run `34235818721` on `3b3a45d52b2c08fce8fce84133f55eb41f08e95f` and was squash-merged as `50d086e7560887ea7d4034ccb5a48151982a1a5f`.
+  - Fixed dashboard/accounting mismatch where open-position display double-counted entry friction relative to account equity.
+  - Dashboard now reconciles `Total P&L = Realized P&L + Open P&L` and `Current Equity = Starting Capital + Total P&L` from the same live marks, with an explicit Open P&L card.
+  - Production and coordinator Render deploys for the merge reached live before the subsequent PR #64 deploy replaced them.
 - Future acceleration work remains subordinate to the mandatory research-to-live chain; speed must come from parallelism, caching, early rejection, prioritization, event-driven agents and deterministic automation, never weaker evidence.
 
 ## COST / SPEED POLICY
 Hard infrastructure ceiling: USD 30/month unless the user explicitly changes it. Use the existing single paid Render worker/coordinator rather than multiplying paid machines. Default worker-army heavy concurrency is 2; raise only after measured capacity evidence and never by adding paid capacity without approval. Use deterministic Python for calculation/backtesting/filtering/evidence checks. Use free/public market data where defensible. Use AI only for bounded planning, hypothesis generation, implementation/review and orchestration. Prefer event-driven wakeups, caching/reuse, early rejection and read-only parallel audits over idle paid computation or competing writes.
 
 ## EXACT NEXT STEP
-1. Verify Render auto-deploy for PR #60 and inspect coordinator worker health/logs: ACC-002 worker present, bounded heavy concurrency target 2, no repeated timeouts/failure loop, and all broker/trade/write/promotion authorities false.
-2. Collect the first genuine ACC-002 public-data run after PR #60 and inspect the sealed result. Report train/validation stability, which fixed candidate (if any) was selected, whether untouched OOS was opened, OOS sample count, rank IC, 3x-cost top-minus-bottom spread and both bootstrap lower bounds. Do not claim profitability if the gate fails or evidence is small.
-3. Add liquidity-subset stability (e.g. Top-15/Top-30/Top-45 where data supports it) without selecting on untouched OOS. An edge that exists only in one narrow universe must be rejected.
-4. Add horizon stability using predeclared 24h/7d-compatible configurations with enough independent observations; use coarser bars for long horizons rather than weak overlapping samples.
-5. Recheck production `/health.continuous_ai`; require bounded timeout and all trade/write/promotion authorities false. Fix only bounded provider/cadence issues if rate limiting persists.
-6. Tune worker scheduling for throughput-per-dollar: reuse/caching first, reject weak candidates early, retain majors/PONS/ACC-002 fast lanes, and avoid duplicate overlapping research between Render and GitHub Actions.
-7. Let the reset `$100,000` forward-only paper account collect authentic post-reset trades. Alert only when persisted `consistently_profitable` is genuinely satisfied.
-8. Continue ACC-003 through ACC-007 after ACC-002 evidence, while non-owner specialists audit in parallel.
-9. Keep `live_promotions.json` empty and signing keys unused until repeated backtests, untouched OOS, robustness/stability, Strategy Registry review and Production Risk review genuinely complete.
-10. Update this file after every completed development/integration cycle.
+1. Inspect the first genuine ACC-002 public-data run produced after PR #64 on the live coordinator. Report supported liquidity subsets, each candidate's train/validation stability, selected fixed candidate if any, whether untouched OOS was opened, OOS sample count, rank IC, 3x-cost top-minus-bottom spread and both bootstrap lower bounds. Do not claim profitability if the gate fails or evidence is small.
+2. Add horizon stability using predeclared 24h/7d-compatible configurations with enough independent observations; use coarser bars for long horizons rather than weak overlapping samples and do not select horizon on untouched OOS.
+3. Recheck production `/health.continuous_ai`; require bounded timeout and all trade/write/promotion authorities false. Fix only bounded provider/cadence issues if rate limiting persists.
+4. Tune worker scheduling for throughput-per-dollar: reuse/caching first, reject weak candidates early, retain majors/PONS/ACC-002 fast lanes, and avoid duplicate overlapping research between Render and GitHub Actions.
+5. Investigate any repeated PONS worker failure and keep PONS research fail-closed if its public market/history data are insufficient or inconsistent.
+6. Let the reset `$100,000` forward-only paper account collect authentic post-reset trades. Alert only when persisted `consistently_profitable` is genuinely satisfied.
+7. Continue ACC-003 through ACC-007 after ACC-002 evidence, while non-owner specialists audit in parallel.
+8. Keep `live_promotions.json` empty and signing keys unused until repeated backtests, untouched OOS, robustness/stability, Strategy Registry review and Production Risk review genuinely complete.
+9. Update this file after every completed development/integration cycle.
