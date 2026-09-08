@@ -46,7 +46,7 @@ def test_exact_promoted_strategy_can_preserve_trade(monkeypatch):
     monkeypatch.setattr(
         oe,
         "validate_live_strategy",
-        lambda symbol, horizon, family: type("D", (), {
+        lambda *args: type("D", (), {
             "approved": True,
             "status": "LIVE_VALIDATED",
             "reason": "approved",
