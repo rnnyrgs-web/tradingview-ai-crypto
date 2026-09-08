@@ -76,6 +76,11 @@ PR #55 `Add bounded 24/7 Python research worker army` passed exact-head Security
   - Candidate selection uses the worst passing liquidity-subset score, and untouched OOS is opened exactly once on the largest supported subset so universe size is not selected on OOS.
   - The same fetched histories are reused across subsets to improve robustness without adding paid infrastructure.
   - Render production deploy `dep-dag1e1vavr4c73ckvq20` and coordinator deploy `dep-dag1e1vavr4c73ckvq80` both reached `live` for merge `6d56244fa9bf7afd797e56aed90be809fca81cc6`.
+- PR #65 `ACC-002: Add 24h/7d horizon evidence workers` passed exact-head Security and Reliability run `34241199565` on `c506ffe168c3fc4132ebb2d4b2beb6cd88bec3eb`; merge/deploy verification is pending.
+  - Replaces the single ACC-002 loop with dedicated nonstop 24h and 7d logical workers while retaining the existing maximum of two concurrent heavy subprocesses and the USD 30/month ceiling.
+  - Uses predeclared 24h `1H/24-bar` and 7d `4H/42-bar` profiles. The 7d lookback grid is fixed before OOS and fits at least 20 independent non-overlapping untouched-OOS observations within the 5,000-bar cap.
+  - Each successful worker run now preserves a bounded evidence summary in coordinator `/workers`: supported liquidity subsets, candidate train/validation stability, fixed selection, whether OOS opened, OOS sample count, rank IC, 3x-cost spread and both bootstrap lower bounds.
+  - All evidence remains in-memory, research-only, broker-disconnected and without trade/write/promotion authority. A restart clears the displayed summary and requires a fresh genuine run.
 - All ACC-002 outputs remain `research_only=true`, `live_approved=false`, `trade_authority=false`. No profitability has been claimed yet; genuine live public-data evidence must be collected and inspected.
 
 ## ACCURACY BACKLOG
@@ -105,8 +110,8 @@ Master tracking issue #45 covers the safe acceleration program.
 Hard infrastructure ceiling: USD 30/month unless the user explicitly changes it. Use the existing single paid Render worker/coordinator rather than multiplying paid machines. Default worker-army heavy concurrency is 2; raise only after measured capacity evidence and never by adding paid capacity without approval. Use deterministic Python for calculation/backtesting/filtering/evidence checks. Use free/public market data where defensible. Use AI only for bounded planning, hypothesis generation, implementation/review and orchestration. Prefer event-driven wakeups, caching/reuse, early rejection and read-only parallel audits over idle paid computation or competing writes.
 
 ## EXACT NEXT STEP
-1. Inspect the first genuine ACC-002 public-data run produced after PR #64 on the live coordinator. Report supported liquidity subsets, each candidate's train/validation stability, selected fixed candidate if any, whether untouched OOS was opened, OOS sample count, rank IC, 3x-cost top-minus-bottom spread and both bootstrap lower bounds. Do not claim profitability if the gate fails or evidence is small.
-2. Add horizon stability using predeclared 24h/7d-compatible configurations with enough independent observations; use coarser bars for long horizons rather than weak overlapping samples and do not select horizon on untouched OOS.
+1. Merge/deploy PR #65 only after its updated exact head passes Security and Reliability. Verify both Render services reach `live` without repeated restart/failure.
+2. Inspect the first genuine 24h and 7d ACC-002 public-data summaries from coordinator `/workers`. Report supported liquidity subsets, each candidate's train/validation stability, selected fixed candidate if any, whether untouched OOS was opened, OOS sample count, rank IC, 3x-cost top-minus-bottom spread and both bootstrap lower bounds. Do not claim profitability if either horizon gate fails or evidence is small.
 3. Recheck production `/health.continuous_ai`; require bounded timeout and all trade/write/promotion authorities false. Fix only bounded provider/cadence issues if rate limiting persists.
 4. Tune worker scheduling for throughput-per-dollar: reuse/caching first, reject weak candidates early, retain majors/PONS/ACC-002 fast lanes, and avoid duplicate overlapping research between Render and GitHub Actions.
 5. Investigate any repeated PONS worker failure and keep PONS research fail-closed if its public market/history data are insufficient or inconsistent.
