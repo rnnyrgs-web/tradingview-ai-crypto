@@ -24,11 +24,19 @@ def test_healthy_fail_closed_scan_passes_monitor():
     assert validate_scan_payload(_healthy_payload()) == []
 
 
-def test_hidden_scan_errors_fail_monitor():
+def test_ai_provider_failure_is_degraded_not_workflow_failure():
     payload = _healthy_payload()
+    payload["ok"] = False
+    payload["ai_error"] = "429 Too Many Requests"
+    assert validate_scan_payload(payload) == []
+
+
+def test_core_persistence_failure_still_fails_monitor_even_if_ai_is_down():
+    payload = _healthy_payload()
+    payload["ok"] = False
     payload["ai_error"] = "timeout"
     payload["opportunity_error"] = "database unavailable"
-    assert validate_scan_payload(payload) == ["AI review failed", "opportunity persistence failed"]
+    assert validate_scan_payload(payload) == ["opportunity persistence failed"]
 
 
 def test_unvalidated_trade_fails_monitor():
