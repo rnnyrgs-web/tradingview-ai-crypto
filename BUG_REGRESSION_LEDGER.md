@@ -40,3 +40,29 @@ Run a research subprocess that raises an exception (for example a `ValueError`).
 
 ### Safety invariants
 No strategy logic, forward-proof threshold, cache TTL, market-data source behavior, concurrency, paper ledger, broker connectivity, or live promotion authority changes as part of this fix.
+
+## ACC002-BLOCK-001 — Expected insufficient-data gate counted as worker crash
+
+Status: FIXED IN PR (pending merge at time of entry)
+Component: `cross_asset_runner.py`
+Detected: 2026-09-08
+Severity: reliability / observability semantics
+
+### Symptom
+Fresh post-PR-89 diagnostics proved the recurring ACC-002 24h/7d exit-code-1 was caused by the fail-closed liquidity-stability requirement after cross-exchange / historical data availability was insufficient. The runner raised `ValueError("insufficient supported liquidity subsets for ACC-002 stability gate")`, so the worker army counted an expected research-not-ready outcome as a software failure and repeatedly entered error backoff.
+
+### Reproducer
+Resolve fewer than two predeclared liquidity subsets with the required coverage and run `cross_asset_runner.run()`. Before the fix, the runner raised `ValueError` even though the safety policy was working as intended.
+
+### Fix
+The runner now emits a sealed `research_blocked` ACC-002 artifact with reason `insufficient_supported_liquidity_subsets`, zero candidates, zero untouched-OOS openings, failed parameter stability, no promotion eligibility, `live_approved=false`, and `trade_authority=false`. The process can therefore complete normally while preserving the exact fail-closed evidence gate.
+
+### Permanent regression coverage
+`tests/test_cross_asset_research_blocked.py`
+- reproduces insufficient liquidity coverage;
+- verifies the result is a structured research-blocked outcome rather than an exception;
+- verifies no OOS is opened;
+- verifies no promotion/live/trade authority is created.
+
+### Safety invariants
+No liquidity threshold, OOS threshold, survivorship requirement, forward-proof rule, multiple-testing firewall, concurrency limit, paper ledger, broker connectivity, or live promotion authority is weakened by this fix.
