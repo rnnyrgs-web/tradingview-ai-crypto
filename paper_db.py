@@ -24,9 +24,12 @@ def fetch_paper_account(account_id="default"):
 def update_paper_account(account_id, fields, create=False):
     if not _configured():
         return
-    payload = {k: v for k, v in fields.items() if k in {
-        "initial_cash","cash","equity","realized_pnl","peak_equity","max_drawdown_pct","profitable_alert"
-    }}
+    allowed = {
+        "cash","equity","realized_pnl","peak_equity","max_drawdown_pct","profitable_alert"
+    }
+    if create:
+        allowed.add("initial_cash")
+    payload = {k: v for k, v in fields.items() if k in allowed}
     payload["updated_at"] = iso(now_utc())
     if create:
         payload = {"id": account_id, **payload}
@@ -59,15 +62,16 @@ def insert_paper_trade(row):
 
 def close_paper_trade(trade_id, exit_price, exit_reason, pnl_usd, pnl_pct):
     if not _configured():
-        return
+        return False
     stamp = iso(now_utc())
     payload = {
         "status":"CLOSED","closed_at":stamp,"exit_price":exit_price,"exit_reason":exit_reason,
         "pnl_usd":pnl_usd,"pnl_pct":pnl_pct,"updated_at":stamp
     }
-    r = http.patch(f"{SUPABASE_URL}/rest/v1/paper_trades", headers=headers("return=minimal"), params={"id":f"eq.{int(trade_id)}","status":"eq.OPEN"}, json=payload)
+    r = http.patch(f"{SUPABASE_URL}/rest/v1/paper_trades", headers=headers("return=representation"), params={"id":f"eq.{int(trade_id)}","status":"eq.OPEN"}, json=payload)
     if r.status_code >= 300:
         raise RuntimeError(f"Paper trade close failed: {r.status_code} {r.text}")
+    return bool(r.json())
 
 
 def insert_paper_equity_snapshot(account_id, equity, cash, open_positions, realized_pnl):
