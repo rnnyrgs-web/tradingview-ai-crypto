@@ -130,6 +130,8 @@ def read_history(symbol, bar, wanted, max_bars, *, now_ms=None, ttl_seconds=None
     current_bucket = _bucket(now_ms, ttl_seconds)
 
     def finish(result, value):
+        # Observability is deliberately request-scoped: checking the fallback
+        # immutable bucket is an implementation detail, not a second cache read.
         if observe:
             record_cache_read(result, (time.perf_counter() - started) * 1000.0)
         return value
