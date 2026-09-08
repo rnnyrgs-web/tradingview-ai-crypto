@@ -1,13 +1,15 @@
 """Continuous ACC-002 cross-asset research runner.
 
-A small fixed lookback grid is evaluated on train+validation only. The untouched
-holdout is opened exactly once, and only when nearby parameterizations show a
-stable edge. This reduces selection bias while keeping research cheap.
+A small fixed lookback grid is evaluated on train+validation only. Candidate
+parameters must also survive predeclared liquidity subsets before the untouched
+holdout is opened exactly once on the largest supported subset. This reduces
+selection bias and rejects edges that exist only in one narrow universe.
 """
 
 from __future__ import annotations
 
 import json
+import math
 import os
 from datetime import datetime, timezone
 
@@ -23,8 +25,11 @@ from research_artifact import seal_research_payload
 
 MIN_INDEPENDENT_OOS_SAMPLES = 20
 MIN_STABLE_CANDIDATES = 2
+MIN_STABLE_LIQUIDITY_SUBSETS = 2
+MIN_LIQUIDITY_SUBSET_COVERAGE = 0.80
 MAX_HISTORY_BARS = 5000
 FIXED_LOOKBACK_GRID = ((4, 16, 64), (6, 24, 72), (8, 32, 96))
+LIQUIDITY_SUBSETS = (15, 30, 45)
 
 
 def _int_env(name: str, default: int, low: int, high: int) -> int:
@@ -62,8 +67,38 @@ def _robust_selection_score(pre: dict) -> tuple[float, float]:
     return worst_net, worst_ic
 
 
+def _build_liquidity_subsets(symbols: list[str], histories: dict[str, list[dict]]) -> dict[int, dict[str, list[dict]]]:
+    """Return predeclared Top-N subsets only when enough of that Top-N resolved.
+
+    The ordering comes from build_universe(), so failed histories are never replaced
+    by lower-ranked assets. This keeps Top-N provenance honest while allowing a small
+    amount of public-API/history attrition.
+    """
+    subsets = {}
+    for requested in LIQUIDITY_SUBSETS:
+        if len(symbols) < requested:
+            continue
+        requested_symbols = symbols[:requested]
+        resolved = {symbol: histories[symbol] for symbol in requested_symbols if symbol in histories}
+        minimum = max(8, int(math.ceil(requested * MIN_LIQUIDITY_SUBSET_COVERAGE)))
+        if len(resolved) >= minimum:
+            subsets[requested] = resolved
+    return subsets
+
+
+def _candidate_selection_score(candidate: dict) -> tuple[float, float]:
+    scores = [
+        _robust_selection_score(item["pre_oos"])
+        for item in candidate["liquidity_subsets"].values()
+        if item["eligible_pre_oos"]
+    ]
+    if not scores:
+        return -1e9, -1e9
+    return min(score[0] for score in scores), min(score[1] for score in scores)
+
+
 def run() -> dict:
-    universe_size = _int_env("CROSS_ASSET_UNIVERSE_SIZE", 30, 8, 60)
+    universe_size = _int_env("CROSS_ASSET_UNIVERSE_SIZE", 45, 8, 60)
     requested_bars = _int_env("CROSS_ASSET_BARS", 3000, 300, MAX_HISTORY_BARS)
     bar = os.getenv("CROSS_ASSET_BAR", "1H")
     forward_bars = _int_env("CROSS_ASSET_FORWARD_BARS", 24, 1, 168)
@@ -87,23 +122,71 @@ def run() -> dict:
         except Exception as exc:
             failures.append({"symbol": symbol, "error_type": type(exc).__name__})
 
+    liquidity_histories = _build_liquidity_subsets(symbols, histories)
+    if len(liquidity_histories) < MIN_STABLE_LIQUIDITY_SUBSETS:
+        raise ValueError("insufficient supported liquidity subsets for ACC-002 stability gate")
+    primary_subset_size = max(liquidity_histories)
+
     candidates = []
     for index, config in enumerate(configs):
-        panel = build_cross_section_panel(histories, config)
-        pre = evaluate_pre_oos(panel, config)
-        candidates.append({"index": index, "lookbacks": list(config.lookbacks), "pre_oos": pre, "eligible_pre_oos": _pre_oos_candidate_ok(pre), "_panel": panel, "_config": config})
+        subset_evidence = {}
+        primary_panel = None
+        primary_pre = None
+        for subset_size, subset_histories in liquidity_histories.items():
+            panel = build_cross_section_panel(subset_histories, config)
+            pre = evaluate_pre_oos(panel, config)
+            eligible_pre_oos = _pre_oos_candidate_ok(pre)
+            subset_evidence[str(subset_size)] = {
+                "requested_assets": subset_size,
+                "resolved_assets": len(subset_histories),
+                "pre_oos": pre,
+                "eligible_pre_oos": eligible_pre_oos,
+            }
+            if subset_size == primary_subset_size:
+                primary_panel = panel
+                primary_pre = pre
+        stable_subset_count = sum(1 for item in subset_evidence.values() if item["eligible_pre_oos"])
+        liquidity_stability_pass = stable_subset_count >= MIN_STABLE_LIQUIDITY_SUBSETS
+        candidates.append({
+            "index": index,
+            "lookbacks": list(config.lookbacks),
+            "pre_oos": primary_pre,
+            "eligible_pre_oos": liquidity_stability_pass,
+            "liquidity_stability": {
+                "minimum_passing_subsets": MIN_STABLE_LIQUIDITY_SUBSETS,
+                "passing_subset_count": stable_subset_count,
+                "passes": liquidity_stability_pass,
+            },
+            "liquidity_subsets": subset_evidence,
+            "_panel": primary_panel,
+            "_config": config,
+        })
 
     eligible = [candidate for candidate in candidates if candidate["eligible_pre_oos"]]
     stability_pass = len(eligible) >= MIN_STABLE_CANDIDATES
-    selected = max(eligible, key=lambda item: _robust_selection_score(item["pre_oos"])) if stability_pass else None
+    selected = max(eligible, key=_candidate_selection_score) if stability_pass else None
     selected_evaluation = None
     if selected is not None:
         oos = evaluate_untouched_oos(selected["_panel"], selected["_config"])
         if oos["metrics"]["timestamps"] < MIN_INDEPENDENT_OOS_SAMPLES:
             raise ValueError("insufficient independent untouched-OOS observations after alignment")
-        selected_evaluation = {"index": selected["index"], "lookbacks": selected["lookbacks"], "pre_oos": selected["pre_oos"], "untouched_oos": oos}
+        selected_evaluation = {
+            "index": selected["index"],
+            "lookbacks": selected["lookbacks"],
+            "primary_liquidity_subset": primary_subset_size,
+            "pre_oos": selected["pre_oos"],
+            "liquidity_stability": selected["liquidity_stability"],
+            "untouched_oos": oos,
+        }
 
-    public_candidates = [{"index": c["index"], "lookbacks": c["lookbacks"], "pre_oos": c["pre_oos"], "eligible_pre_oos": c["eligible_pre_oos"]} for c in candidates]
+    public_candidates = [{
+        "index": c["index"],
+        "lookbacks": c["lookbacks"],
+        "pre_oos": c["pre_oos"],
+        "eligible_pre_oos": c["eligible_pre_oos"],
+        "liquidity_stability": c["liquidity_stability"],
+        "liquidity_subsets": c["liquidity_subsets"],
+    } for c in candidates]
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "acc": "ACC-002",
@@ -111,8 +194,16 @@ def run() -> dict:
         "live_approved": False,
         "trade_authority": False,
         "source": "OKX public historical API",
-        "selection_policy": "fixed_grid_train_validation_stability_then_open_one_untouched_oos",
+        "selection_policy": "fixed_grid_train_validation_parameter_and_liquidity_stability_then_open_one_untouched_oos",
         "parameter_stability": {"minimum_eligible_candidates": MIN_STABLE_CANDIDATES, "eligible_candidate_count": len(eligible), "passes": stability_pass},
+        "liquidity_stability_policy": {
+            "predeclared_subsets": list(LIQUIDITY_SUBSETS),
+            "supported_subsets": sorted(liquidity_histories),
+            "minimum_subset_coverage": MIN_LIQUIDITY_SUBSET_COVERAGE,
+            "minimum_passing_subsets_per_candidate": MIN_STABLE_LIQUIDITY_SUBSETS,
+            "primary_oos_subset": primary_subset_size,
+            "oos_subset_count": 1,
+        },
         "untouched_oos_opened_for_candidate_count": 1 if selected is not None else 0,
         "candidate_count": len(public_candidates),
         "candidates": public_candidates,
