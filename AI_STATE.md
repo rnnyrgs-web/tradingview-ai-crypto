@@ -12,19 +12,19 @@ Production scans run about every 15 minutes and produce separate 24h/7d Top-20 r
 There are 15 autonomous development roles: Lead Integrator plus 14 specialists. Specialists use isolated branches and do not write directly to `main`. Verified integration requires exact-head Security and Reliability success plus the existing review/integration safeguards.
 
 ## SAFETY INVARIANTS
-No AI opinion, ranking score, evidence score, current order-book snapshot, paper P&L, ensemble weight, or single OOS result may authorize live BUY/SELL.
+No AI opinion, ranking score, evidence score, current order-book snapshot, paper P&L, ensemble weight, single OOS result, or signed historical promotion by itself may authorize live BUY/SELL.
 
 Mandatory chain:
-RESEARCH -> BACKTEST -> VALIDATION -> UNTOUCHED OOS -> ROBUSTNESS/STABILITY -> STRATEGY-REGISTRY APPROVAL -> PRODUCTION-RISK APPROVAL -> LIVE BUY/SELL.
+RESEARCH -> BACKTEST -> VALIDATION -> UNTOUCHED OOS -> ROBUSTNESS/STABILITY -> STRATEGY-REGISTRY APPROVAL -> PRODUCTION-RISK APPROVAL -> GENUINE FORWARD PROOF -> LIVE BUY/SELL.
 
-Missing, stale, contradictory, deteriorating, malformed, or insufficient evidence means `WAIT / NO TRADE / RESEARCH_ONLY`.
+Missing, stale, contradictory, deteriorating, malformed, overlapping-only, or insufficient evidence means `WAIT / NO TRADE / RESEARCH_ONLY`.
 
-`live_promotions.json` remains intentionally empty. Promotion still requires repeated sealed robust evidence plus independent Strategy Registry and Production Risk approval. Signing keys remain unused until genuine evidence is complete.
+`live_promotions.json` remains intentionally empty. Promotion still requires repeated sealed robust evidence plus independent Strategy Registry and Production Risk approval. Signing keys remain unused until genuine evidence is complete. Even a valid signed promotion now remains blocked from live validation until ACC-008 genuine forward proof also passes for the exact strategy fingerprint.
 
 ## VALIDATION / CALIBRATION
 Chronological validation remains train / validation / untouched holdout. Robustness includes deterministic bootstrap/Monte Carlo resampling, parameter perturbation, regime stability, and realistic execution costs.
 
-Prediction ledger remains append-only with fixed `due_at`. Outcomes are resolved from market data at/after the deadline. Calibration is horizon + score-bin specific and can only restrict live eligibility.
+Prediction ledger remains append-only with fixed `due_at`. Outcomes are resolved from market data at/after the deadline. Calibration is horizon + score-bin specific and can only restrict live eligibility. Genuine forward-proof evidence is fingerprint-specific and counts only non-overlapping full-horizon resolved forecasts.
 
 ## ACC-001 MARKET / EXECUTION REALISM — COMPLETE
 Integrated earlier across PRs #38-#44 and follow-on validation work.
@@ -133,6 +133,24 @@ Implemented:
 - deterministic bootstrap behavior retained;
 - these tests can only reject/demote research evidence, never promote or authorize live use.
 
+## ACC-008 GENUINE FORWARD-PROOF PROMOTION GATE — COMPLETE
+PR #75 `ACC-008: Require genuine forward proof before live validation` passed exact-head Security and Reliability run `34258912558` on `d47870757d4fdb846a8afadd3fab5835549a29d2` and was squash-merged as `cf66104242467c8cf1177c91e20db206c92f62e5`.
+
+Implemented:
+- a valid signed/historical promotion is necessary but no longer sufficient for live validation;
+- genuine forward evidence is bound to the exact immutable strategy fingerprint from the prediction ledger;
+- overlapping high-frequency forecasts cannot inflate sample size: only chronological non-overlapping full-horizon forecasts count;
+- minimum forward proof requires at least 20 independent 24h observations or 12 independent 7d observations;
+- conservative forward scoring subtracts 3x the configured modeled round-trip cost before calculating wins and expectancy;
+- after-cost mean expectancy must be positive;
+- Wilson 95% lower bound for after-cost directional precision must be >= 50%;
+- maximum compounded forward drawdown must be <= 12%;
+- no active recent forward deterioration is allowed;
+- missing/malformed timestamps, non-finite returns, wrong fingerprint, weak sample size, weak confidence, excessive drawdown, negative expectancy, or deterioration fail closed;
+- the live opportunity path now supplies resolved immutable prediction-ledger evidence directly to production validation;
+- ACC-008 can only restrict. It cannot bypass signed promotion, Strategy Registry, Production Risk, calibration, market-data, regime, or robustness requirements;
+- final exact-head pipeline passed 176 unit tests plus dependency audit, static security scan, and committed-secret scan.
+
 ## AUTHENTIC PAPER TRADING STATE
 The continuous paper account remains forward-only and broker-disconnected.
 
@@ -152,6 +170,7 @@ Paper performance is evidence only. It does not authorize real-money trading.
 - `ACC-005` provenance/freshness/contradiction market-data gating — COMPLETE.
 - `ACC-006` continuous resolved-forecast deterioration gating — COMPLETE.
 - `ACC-007` adversarial strategy-destruction hardening — COMPLETE.
+- `ACC-008` exact-fingerprint genuine forward-proof live gate — COMPLETE.
 
 ## COST / SPEED POLICY
 Hard recurring infrastructure ceiling: USD 30/month unless the user explicitly changes it.
@@ -169,13 +188,14 @@ Prefer:
 Do not buy another service, paid market-data feed, or additional persistent compute without explicit approval.
 
 ## EXACT NEXT STEP
-1. Do NOT add more indicators/models merely for complexity. Measure whether ACC-003 through ACC-007 improve genuine forward accuracy and after-cost paper performance.
+1. Do NOT loosen ACC-008 sample/confidence/cost/drawdown requirements to make a strategy pass faster. Let genuine independent forward evidence accumulate naturally.
 2. Inspect genuine 24h and 7d ACC-002 `/workers` evidence: supported liquidity subsets, pre-OOS stability, fixed candidate, whether OOS opened, independent OOS sample count, rank IC, 3x-cost top-minus-bottom spread, and bootstrap lower bounds. Do not claim profitability if either horizon gate fails.
 3. Recheck continuous worker health and ensure both accuracy workers plus majors/PONS/universe/swing workers continue bounded progress without repeated timeout/failure.
 4. Let the authentic `$100,000` forward-only paper ledger continue without reset. Track current account value, realized/open P&L, drawdown, win rate, expectancy, and calibration over a meaningful forward sample.
-5. Use the immutable prediction ledger to monitor 24h/7d precision and recent deterioration. If deterioration triggers, restrict/WAIT rather than retuning on the same forward sample.
+5. Use the immutable prediction ledger for ACC-008 exact-fingerprint forward proof and ACC-006 deterioration monitoring. Overlapping forecasts must never be counted as independent forward evidence.
 6. Keep PONS fail-closed when independent data confirmation/history is insufficient or contradictory.
-7. Continue research only when a new hypothesis can be tested with predeclared rules, untouched OOS, robust costs, regime stability, and adversarial validation.
-8. Keep `live_promotions.json` empty and signing keys unused until repeated robust evidence plus Strategy Registry and Production Risk approvals genuinely complete.
-9. Never optimize for headline accuracy alone; optimize for after-cost risk-adjusted realized performance while preserving drawdown/tail protection and abstention when evidence is weak.
-10. Update this file after every completed integration/development cycle.
+7. Next development priority: `ACC-009` portfolio-level/global kill switch for abnormal drawdown, correlated exposure, market-data outages, extreme volatility, repeated losses, and system-health failures. Triggered conditions must force global `WAIT` and never create new trade authority.
+8. After ACC-009, prioritize stricter execution simulation, point-in-time universe/survivorship protection, multiple-testing controls, shadow-production champion/challenger comparison, and disaster/failure injection.
+9. Keep `live_promotions.json` empty and signing keys unused until repeated robust evidence plus Strategy Registry, Production Risk, and genuine ACC-008 forward proof genuinely complete.
+10. Never optimize for headline accuracy alone; optimize for after-cost risk-adjusted realized performance while preserving drawdown/tail protection and abstention when evidence is weak.
+11. Update this file after every completed integration/development cycle.
