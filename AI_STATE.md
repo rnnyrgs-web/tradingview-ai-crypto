@@ -8,7 +8,7 @@ Authoritative continuation state for `rnnyrgs-web/tradingview-ai-crypto`. Read t
 Production: GitHub -> Render -> Python/FastAPI V3 -> Supabase. Production scans run about every 15 minutes and produce separate 24h/7d Top-20 rankings. Cloud research/backtesting runs continuously through a bounded 17-worker Python army on the existing Render coordinator. PONS is included only when defensible public data supports it. Specialist development uses isolated branches and exact-head Security and Reliability success is required before merge.
 
 ## SAFETY INVARIANTS
-No AI opinion, ranking score, evidence score, current order-book snapshot, paper P&L, ensemble weight, single OOS result, signed historical promotion, observability metric, supervisor status, diagnostic, incident fingerprint, or risk-gate result by itself may authorize live BUY/SELL.
+No AI opinion, ranking score, evidence score, current order-book snapshot, paper P&L, ensemble weight, single OOS result, signed historical promotion, observability metric, supervisor status, diagnostic, incident fingerprint, canary result, or risk-gate result by itself may authorize live BUY/SELL.
 
 Mandatory chain:
 RESEARCH -> BACKTEST -> VALIDATION -> UNTOUCHED OOS -> ROBUSTNESS/STABILITY -> MULTIPLE-TESTING FIREWALL -> POINT-IN-TIME UNIVERSE SAFETY -> STRATEGY-REGISTRY APPROVAL -> PRODUCTION-RISK APPROVAL -> GENUINE FORWARD PROOF -> GLOBAL/EXECUTION RISK CLEAR -> LIVE BUY/SELL.
@@ -18,7 +18,7 @@ Every later stage is restrictive-only. Missing, stale, contradictory, deteriorat
 `live_promotions.json` remains intentionally empty. Signing keys remain unused. Broker remains disconnected.
 
 ## VALIDATION / CALIBRATION
-Chronological validation remains train / validation / untouched holdout. Robustness includes deterministic bootstrap/Monte Carlo resampling, parameter perturbation, regime stability, conservative execution-cost stress and false-discovery/search-breadth penalties. Prediction ledger is append-only with fixed `due_at`; forward proof counts only non-overlapping full-horizon resolved forecasts for the exact immutable strategy fingerprint. Calibration, deterioration, observability, worker supervision and diagnostics can only restrict or inform research operations; none can authorize trading.
+Chronological validation remains train / validation / untouched holdout. Robustness includes deterministic bootstrap/Monte Carlo resampling, parameter perturbation, regime stability, conservative execution-cost stress and false-discovery/search-breadth penalties. Prediction ledger is append-only with fixed `due_at`; forward proof counts only non-overlapping full-horizon resolved forecasts for the exact immutable strategy fingerprint. Calibration, deterioration, observability, worker supervision, diagnostics and deployment canary signals can only restrict or inform operations; none can authorize trading.
 
 ## ACCURACY PROGRAM STATUS
 - ACC-001 MARKET / EXECUTION REALISM — COMPLETE. PRs #38-#44 and follow-ons.
@@ -95,6 +95,10 @@ Fresh post-PR-90 production evidence showed `worker_failure worker=pons exit=1 .
 PR #92 `Classify PONS insufficient history as research blocked` passed exact-head Security and Reliability run `34289018995` on `c43eff90711d27a829163f83f1eeb244a14db174` and was squash-merged as `03fcf47c8745538bad76013ebec07ef8b439a917`.
 Fresh post-PR-91 production diagnostics proved the PONS worker's recurring exit-code-1 was caused by insufficient public history: 15m returned `Need at least 1000 candles for walk-forward`; 1H and 4H returned `Not enough historical candles`. Only those two proven `RuntimeError` messages are now classified as `research_blocked` with reason `insufficient_historical_candles`. No candle minimum is lowered, no missing history is fabricated, and blocked items remain research-only with promotion/live/trade authority false. Unknown exceptions still fail and keep diagnostics. `BUG_REGRESSION_LEDGER.md` records `PONS-BLOCK-001`; `tests/test_research_insufficient_history_blocked.py` permanently verifies the fail-closed classification.
 
+## DEPLOYMENT CANARY / CONTROLLED ROLLBACK DECISION LAYER — COMPLETE
+PR #93 `Add deployment canary and rollback decision layer` passed exact-head Security and Reliability run `34289540726` on `1c088a372beef4fe2f9785a542ad320ac6aa3881` and was squash-merged as `62a7811cd004b7ec4441f6d749308fe55308e7a7`.
+The coordinator now has a bounded warm-up canary that evaluates production/state checks, supervisor health, stale/crashed workers, task restarts, worker timeouts and sufficiently sampled worker failure rate. After the grace period, unhealthy evidence yields `rollback_recommended=true` and coordinator health fails closed. The canary exposes a read-only `/deployment-canary` view and private bounded logs. It has `automatic_rollback_authority=false`, `deployment_authority=false`, `repository_write_authority=false`, `trade_authority=false` and `promotion_authority=false`; therefore it recommends rollback but cannot mutate Render/GitHub or authorize trades. Regression coverage lives in `tests/test_deployment_canary.py`.
+
 ## AUTHENTIC PAPER TRADING STATE
 The continuous paper account remains forward-only and broker-disconnected. Authentic baseline is exactly `$100,000` from `2026-09-08T01:17:49Z`; never reset or rewrite it. Current account value = immutable starting capital plus realized/open P&L. Safety/execution gates may reject entries but never fabricate or reset history. Paper performance is evidence only.
 
@@ -105,12 +109,13 @@ Hard recurring infrastructure ceiling: USD 30/month unless explicitly changed. P
 Preserve stable exact strategy fingerprints while genuine forward observations accumulate. Challengers may run in shadow. Never count overlapping forecasts as independent, lower forward-proof thresholds, reset paper history, raise heavy concurrency, stretch cache TTLs, or change market-data source behavior merely to accelerate results.
 
 ## EXACT NEXT STEP
-1. Verify PR #92 auto-deploy reaches live and confirm a fresh PONS cycle completes without incrementing worker failure count while the insufficient-history condition remains fail-closed/research-only.
-2. Continue genuine ACC-002 24h/7d forward/OOS evidence and worker-health monitoring. No profitability claim unless evidence genuinely passes.
-3. Verify supervisor remains healthy in live Render logs: no stale workers, no restart loop, heartbeats continue through long jobs.
-4. Use current non-zero cache/network/worker samples to identify the proven throughput bottleneck. Warm-cache reuse is high; cold/deep-history acquisition remains the leading candidate because each miss currently requires many paginated public requests, but do not optimize until fresh post-deploy samples confirm it.
-5. After PR #92 live verification and bottleneck review, implement the next larger reliability upgrade: deployment-canary/controlled rollback decision layer. Do not give research workers repository-write/merge authority.
-6. Preserve stable exact champion fingerprints while challengers run in shadow; only evidence-backed changes create a new fingerprint.
-7. Preserve empty `live_promotions.json`, unused signing keys, PONS fail-closed behavior, immutable $100k paper ledger and broker-disconnected state.
-8. Only add microstructure features when genuine timestamped data supports them; never reconstruct unavailable order books/liquidations from candles.
-9. Optimize after-cost risk-adjusted realized performance with tail protection and abstention, not headline accuracy.
+1. Verify PR #93 auto-deploy reaches live and confirm the deployment canary transitions from `warming` to `healthy` on a clean deployment, or `rollback_recommended` only on proven unhealthy post-grace evidence.
+2. Confirm a fresh PONS cycle after PR #92 completes without incrementing worker failures while insufficient public history remains explicitly research-blocked; do not fabricate or lower history requirements.
+3. Continue genuine ACC-002 24h/7d forward/OOS evidence and worker-health monitoring. No profitability claim unless evidence genuinely passes.
+4. Verify supervisor remains healthy in live Render logs: no stale workers, no restart loop, heartbeats continue through long jobs.
+5. Use current non-zero cache/network/worker samples to quantify the cold/deep-history bottleneck. Optimize only proven request/pagination or cache-reuse inefficiency without changing chronology, source behavior, evidence requirements or the $30/month ceiling.
+6. Next Kraken-readiness development after reliability verification: build a broker-disconnected Kraken shadow-execution adapter using genuine Kraken public market/order-book data only. It may calculate hypothetical Kraken orders/fills and reconciliation metrics but must not hold private API credentials or place/cancel real orders yet.
+7. Preserve stable exact champion fingerprints while challengers run in shadow; only evidence-backed changes create a new fingerprint.
+8. Preserve empty `live_promotions.json`, unused signing keys, PONS fail-closed behavior, immutable $100k paper ledger and broker-disconnected state.
+9. Only add microstructure features when genuine timestamped data supports them; never reconstruct unavailable order books/liquidations from candles.
+10. Optimize after-cost risk-adjusted realized performance with tail protection and abstention, not headline accuracy.
