@@ -2,200 +2,101 @@
 Last updated: 2026-09-08
 
 ## PURPOSE
-Authoritative continuation state for `rnnyrgs-web/tradingview-ai-crypto`. Read this file before development. Never infer project state from ChatGPT memory. Update this file on `main` after every completed development/integration cycle.
+Authoritative continuation state for `rnnyrgs-web/tradingview-ai-crypto`. Read this file from `main` before development. Never infer project state from ChatGPT memory. Update this file on `main` after every completed development/integration cycle.
 
 ## CURRENT ARCHITECTURE
-Production: GitHub -> Render -> Python/FastAPI V3 -> Supabase.
+Production: GitHub -> Render -> Python/FastAPI V3 -> Supabase. Production scans run about every 15 minutes and produce separate 24h/7d Top-20 rankings. Cloud research/backtesting runs continuously through the existing bounded Python worker army. PONS is included when public data supports it and must fail closed when evidence is insufficient or inconsistent.
 
-Production scans run about every 15 minutes and produce separate 24h/7d Top-20 rankings. Cloud research/backtesting runs continuously through the existing bounded worker army. Intraday research targets a broad liquid OKX universe on 15m + 1H; swing research uses 4H + 1D. PONS is deliberately included when public data supports it, but must fail closed when data is insufficient or inconsistent.
-
-There are 15 autonomous development roles: Lead Integrator plus 14 specialists. Specialists use isolated branches and do not write directly to `main`. Verified integration requires exact-head Security and Reliability success plus the existing review/integration safeguards.
+There are 15 autonomous development roles. Specialists use isolated branches and never write directly to `main`. Verified integration requires exact-head Security and Reliability success before merge.
 
 ## SAFETY INVARIANTS
-No AI opinion, ranking score, evidence score, current order-book snapshot, paper P&L, ensemble weight, single OOS result, or signed historical promotion by itself may authorize live BUY/SELL.
+No AI opinion, ranking score, evidence score, current order-book snapshot, paper P&L, ensemble weight, single OOS result, signed historical promotion, or risk-gate result by itself may authorize live BUY/SELL.
 
 Mandatory chain:
-RESEARCH -> BACKTEST -> VALIDATION -> UNTOUCHED OOS -> ROBUSTNESS/STABILITY -> STRATEGY-REGISTRY APPROVAL -> PRODUCTION-RISK APPROVAL -> GENUINE FORWARD PROOF -> LIVE BUY/SELL.
+RESEARCH -> BACKTEST -> VALIDATION -> UNTOUCHED OOS -> ROBUSTNESS/STABILITY -> STRATEGY-REGISTRY APPROVAL -> PRODUCTION-RISK APPROVAL -> GENUINE FORWARD PROOF -> GLOBAL/EXECUTION RISK CLEAR -> LIVE BUY/SELL.
 
-Missing, stale, contradictory, deteriorating, malformed, overlapping-only, or insufficient evidence means `WAIT / NO TRADE / RESEARCH_ONLY`.
+Every later stage is restrictive-only. Missing, stale, contradictory, deteriorating, malformed, overlapping-only, insufficient, illiquid, execution-unsafe, portfolio-unsafe, or system-unsafe evidence means `WAIT / NO TRADE / RESEARCH_ONLY`.
 
-`live_promotions.json` remains intentionally empty. Promotion still requires repeated sealed robust evidence plus independent Strategy Registry and Production Risk approval. Signing keys remain unused until genuine evidence is complete. Even a valid signed promotion now remains blocked from live validation until ACC-008 genuine forward proof also passes for the exact strategy fingerprint.
+`live_promotions.json` remains intentionally empty. Signing keys remain unused until genuine evidence is complete. A signed historical promotion remains insufficient without ACC-008 exact-fingerprint forward proof and all later risk gates.
 
 ## VALIDATION / CALIBRATION
-Chronological validation remains train / validation / untouched holdout. Robustness includes deterministic bootstrap/Monte Carlo resampling, parameter perturbation, regime stability, and realistic execution costs.
-
-Prediction ledger remains append-only with fixed `due_at`. Outcomes are resolved from market data at/after the deadline. Calibration is horizon + score-bin specific and can only restrict live eligibility. Genuine forward-proof evidence is fingerprint-specific and counts only non-overlapping full-horizon resolved forecasts.
+Chronological validation remains train / validation / untouched holdout. Robustness includes deterministic bootstrap/Monte Carlo resampling, parameter perturbation, regime stability, and conservative execution-cost stress. Prediction ledger is append-only with fixed `due_at`; forward proof counts only non-overlapping full-horizon resolved forecasts for the exact immutable strategy fingerprint. Calibration and deterioration can only restrict eligibility.
 
 ## ACC-001 MARKET / EXECUTION REALISM — COMPLETE
-Integrated earlier across PRs #38-#44 and follow-on validation work.
-
-Key protections remain:
-- realistic execution-cost stress including conservative multi-x cost scenarios;
-- strict timestamp ordering and fail-closed malformed chronology;
-- timestamp-safe funding/open-interest/basis evidence;
-- current-book visible-depth fill/slippage estimates without inventing unseen liquidity;
-- untouched-OOS execution robustness;
-- research-only status until full promotion gates pass.
-
-Repeated historical screening advanced only a small set of candidates to Strategy Registry review; it did not grant live authority.
+Integrated across PRs #38-#44 and follow-on work. Protections include realistic execution-cost stress, timestamp-safe funding/OI/basis, visible-depth fill/slippage estimates without inventing hidden liquidity, untouched-OOS execution robustness, strict chronology, and research-only status until all promotion gates pass.
 
 ## 24/7 RESEARCH / ORCHESTRATION
-PR #55 added the bounded continuous Python research worker army on the existing paid Render coordinator. PRs #65-#68 strengthened dedicated 24h/7d ACC-002 evidence collection, reserved accuracy capacity, sufficient independent history, and bounded retry/cache behavior.
-
-Current policy:
-- existing paid infrastructure only unless user explicitly changes the budget;
-- heavy subprocess concurrency remains bounded;
-- deterministic Python and public/free market data are preferred;
-- workers remain research-only with `trade_authority=false`, `write_authority=false`, `promotion_authority=false`, and `broker_connected=false`;
-- USD 30/month recurring infrastructure ceiling remains in force.
+PR #55 added bounded continuous Python research workers. PRs #65-#68 strengthened dedicated 24h/7d ACC-002 evidence collection, reserved accuracy capacity, sufficient independent history, and bounded retry/cache behavior. Existing paid infrastructure only unless explicitly approved; heavy concurrency remains bounded; recurring infrastructure ceiling is USD 30/month. Workers remain `research_only=true`, `trade_authority=false`, `write_authority=false`, `promotion_authority=false`, `broker_connected=false`.
 
 ## ACC-002 CROSS-ASSET RANK RESEARCH — IN PROGRESS
-Integrated PRs #56-#60 and #64-#68.
-
-Current ACC-002 protections include:
-- timestamp-safe cross-sectional relative-strength ranking;
-- multi-lookback momentum normalized by realized volatility;
-- chronological train/validation/untouched OOS;
-- split purging and non-overlapping forward observations;
-- predeclared candidate grids chosen before OOS;
-- sufficient independent OOS depth;
-- parameter stability across nearby configurations;
-- Top-15/Top-30/Top-45 liquidity-universe stability;
-- 1x/1.5x/2x/3x execution-cost stress;
-- deterministic 500-resample bootstrap confidence;
-- dedicated nonstop 24h and 7d workers;
-- bounded deep-history retry/cache reliability.
-
-All ACC-002 outputs remain `research_only=true`, `live_approved=false`, `trade_authority=false`. Genuine forward/public-data evidence must continue accumulating; no profitability claim is authorized yet.
+Integrated PRs #56-#60 and #64-#68. Current protections: timestamp-safe cross-sectional relative-strength ranking; multi-lookback momentum normalized by realized vol; chronological train/validation/untouched OOS; split purging; non-overlapping forward observations; predeclared candidate grids; sufficient independent OOS depth; nearby-parameter stability; Top-15/30/45 liquidity-subset stability; 1x/1.5x/2x/3x cost stress; deterministic 500-resample bootstrap; dedicated nonstop 24h and 7d workers; bounded deep-history retry/cache. All outputs remain research-only and no profitability claim is authorized yet.
 
 ## ACC-003 REGIME-CONDITIONED STRATEGY GATING — COMPLETE
-PR #70 `ACC-003: Add causal regime-conditioned strategy gating` passed exact-head Security and Reliability run `34252423032` on `c192affed37965f75f0972b608b965ae7c40084e` and was squash-merged as `606595e50f3057452714c50eb88e8178213ac5c8`.
+PR #70 passed exact-head Security and Reliability run `34252423032` on `c192affed37965f75f0972b608b965ae7c40084e`, squash merge `606595e50f3057452714c50eb88e8178213ac5c8`. Causal trailing-only regimes are TREND_UP, TREND_DOWN, HIGH_VOL, COMPRESSION, RANGE. Regime eligibility is frozen from train + validation before holdout; unproven regimes cannot authorize.
 
-Implemented:
-- causal/trailing-only regimes: `TREND_UP`, `TREND_DOWN`, `HIGH_VOL`, `COMPRESSION`, `RANGE`;
-- strategy regime eligibility frozen from train + validation before untouched holdout inspection;
-- holdout/robustness evidence restricted to preselected proven regimes;
-- no strategy may gain authority in a market state where it did not demonstrate pre-OOS edge;
-- tests for no-lookahead classification, directional trend regimes, and rejection of unproven regimes.
-
-## ACC-004 CHAMPION / CHALLENGER STRATEGY REGISTRY — COMPLETE
-PR #71 `ACC-004: Add champion challenger ensemble weighting` passed exact-head Security and Reliability run `34256093230` on `e40ba49678e7726462df79fb16df6645b00396a0` and was squash-merged as `223bbd094e0ca8350f2673e94bec3d34a8836f87`.
-
-Implemented:
-- only strategies with >=3 distinct sealed robust OOS runs can enter the research ensemble;
-- conservative quality score uses validation + untouched-holdout expectancy, profit factor, drawdown, and bounded sample confidence;
-- chronological recent-deterioration penalty;
-- severe deterioration => zero research weight / `DEMOTED`;
-- correlation and structural-overlap penalties reduce duplicate exposure;
-- per-strategy concentration cap;
-- insufficient trustworthy candidates leave explicit `unallocated_wait_weight` rather than forcing weak strategies to fill 100%;
-- one research `CHAMPION` plus `CHALLENGER` members;
-- `live_approved=false` remains mandatory.
+## ACC-004 CHAMPION / CHALLENGER REGISTRY — COMPLETE
+PR #71 passed exact-head run `34256093230` on `e40ba49678e7726462df79fb16df6645b00396a0`, squash merge `223bbd094e0ca8350f2673e94bec3d34a8836f87`. Requires >=3 distinct sealed robust OOS runs; conservative quality score; deterioration demotion; correlation/structural overlap penalties; concentration cap; explicit `unallocated_wait_weight`; one research champion plus challengers; `live_approved=false`.
 
 ## ACC-005 PROVENANCE-AWARE MARKET DATA GATING — COMPLETE
-PR #72 `ACC-005: Add provenance-aware market data gating` passed exact-head Security and Reliability run `34256741680` on `a4e5efe2fe0a0b6bcf89a735216abb37b9cd4651` and was squash-merged as `bb4c0e4060bba067e5bee1a86f1247d30901d19e`.
-
-Implemented:
-- independent market sources are counted by unique exchange, so duplicate quotes from one venue cannot fake confirmation;
-- missing timestamps, future timestamps, and stale quotes are rejected;
-- only the freshest valid observation per exchange is retained;
-- explicit provenance records accepted/rejected exchanges and freshness/source quality;
-- cross-exchange price contradiction collapses market-data confidence to zero;
-- single-source evidence remains research-visible but restricted and cannot authorize a live action;
-- opportunity evidence score and ranking can only be reduced by market-data quality;
-- unreliable consensus always forces `WAIT`;
-- legacy `MARKET_CONSENSUS_UNRELIABLE` marker is preserved for compatibility;
-- PONS naturally remains fail-closed when a second independent source is unavailable.
+PR #72 passed exact-head run `34256741680` on `a4e5efe2fe0a0b6bcf89a735216abb37b9cd4651`, squash merge `bb4c0e4060bba067e5bee1a86f1247d30901d19e`. Independent sources count by unique exchange; missing/future/stale timestamps rejected; freshest valid quote retained; cross-exchange contradiction collapses confidence to zero; single-source evidence restricted; unreliable consensus forces WAIT; PONS naturally fails closed if independent confirmation is missing.
 
 ## ACC-006 ROLLING FORECAST DETERIORATION — COMPLETE
-PR #73 `ACC-006: Add rolling forecast deterioration gating` passed exact-head Security and Reliability run `34257098538` on `86b661a45817970ddaf91e56ffb469372125d20a` and was squash-merged as `ad3973d01fe94d52010cdd6628d9f85a9dc23a3d`.
-
-Implemented:
-- resolved prediction reads include `resolved_at` for chronological scoring;
-- recent comparable forecasts are evaluated separately from prior history;
-- default deterioration window compares the most recent 20 resolved comparable forecasts with at least 30 prior comparable forecasts;
-- both Wilson lower bound and material precision-drop requirements are used to avoid reacting to tiny/noisy samples;
-- recent collapse can block an otherwise acceptable long-run calibration result;
-- insufficient deterioration evidence does not create authority or a false deterioration claim;
-- 24h and 7d calibration summaries expose deterioration status separately;
-- deterioration detection is restrictive only and cannot authorize a strategy.
+PR #73 passed exact-head run `34257098538` on `86b661a45817970ddaf91e56ffb469372125d20a`, squash merge `ad3973d01fe94d52010cdd6628d9f85a9dc23a3d`. Recent 20 comparable resolved forecasts are compared with at least 30 prior; both weak Wilson lower bound and material precision drop are required to flag deterioration. Deterioration can block only.
 
 ## ACC-007 ADVERSARIAL STRATEGY-DESTRUCTION TESTING — COMPLETE
-PR #74 `ACC-007: Add adversarial strategy destruction tests` passed exact-head Security and Reliability run `34257293281` on `59d7af5fcdbf8aee830f571a26f50488b81a6d58` and was squash-merged as `76d83786acf132b6cc848dacf0edf17acba2ed77`.
-
-Implemented:
-- robustness evaluation fails closed on NaN, Infinity, missing, or malformed OOS/parameter/regime return inputs;
-- bounded Monte Carlo simulation-count validation;
-- adversarial tests for catastrophic tail loss;
-- parameter-collapse destruction test despite strong base OOS;
-- single-regime dependence cannot substitute for multi-regime robustness;
-- missing parameter/regime evidence fails closed;
-- deterministic bootstrap behavior retained;
-- these tests can only reject/demote research evidence, never promote or authorize live use.
+PR #74 passed exact-head run `34257293281` on `59d7af5fcdbf8aee830f571a26f50488b81a6d58`, squash merge `76d83786acf132b6cc848dacf0edf17acba2ed77`. Robustness fails closed on NaN/Infinity/missing/malformed evidence; tests catastrophic tails, parameter collapse, insufficient regime diversity and deterministic bootstrap behavior.
 
 ## ACC-008 GENUINE FORWARD-PROOF PROMOTION GATE — COMPLETE
-PR #75 `ACC-008: Require genuine forward proof before live validation` passed exact-head Security and Reliability run `34258912558` on `d47870757d4fdb846a8afadd3fab5835549a29d2` and was squash-merged as `cf66104242467c8cf1177c91e20db206c92f62e5`.
+PR #75 passed exact-head run `34258912558` on `d47870757d4fdb846a8afadd3fab5835549a29d2`, squash merge `cf66104242467c8cf1177c91e20db206c92f62e5`. Requirements: exact immutable strategy fingerprint; chronological non-overlapping full-horizon forecasts; >=20 independent 24h or >=12 independent 7d observations; subtract 3x modeled round-trip cost; positive after-cost expectancy; Wilson 95% lower bound >=50%; max compounded forward DD <=12%; no active recent deterioration. Wrong fingerprint, malformed chronology, overlapping-only evidence, weak confidence, negative expectancy, excessive DD or deterioration fail closed.
 
-Implemented:
-- a valid signed/historical promotion is necessary but no longer sufficient for live validation;
-- genuine forward evidence is bound to the exact immutable strategy fingerprint from the prediction ledger;
-- overlapping high-frequency forecasts cannot inflate sample size: only chronological non-overlapping full-horizon forecasts count;
-- minimum forward proof requires at least 20 independent 24h observations or 12 independent 7d observations;
-- conservative forward scoring subtracts 3x the configured modeled round-trip cost before calculating wins and expectancy;
-- after-cost mean expectancy must be positive;
-- Wilson 95% lower bound for after-cost directional precision must be >= 50%;
-- maximum compounded forward drawdown must be <= 12%;
-- no active recent forward deterioration is allowed;
-- missing/malformed timestamps, non-finite returns, wrong fingerprint, weak sample size, weak confidence, excessive drawdown, negative expectancy, or deterioration fail closed;
-- the live opportunity path now supplies resolved immutable prediction-ledger evidence directly to production validation;
-- ACC-008 can only restrict. It cannot bypass signed promotion, Strategy Registry, Production Risk, calibration, market-data, regime, or robustness requirements;
-- final exact-head pipeline passed 176 unit tests plus dependency audit, static security scan, and committed-secret scan.
+## ACC-009 GLOBAL PORTFOLIO / EXECUTION RISK GATES — COMPLETE
+PR #76 `ACC-009: Add Harris-inspired global and execution risk gates` passed exact-head Security and Reliability run `34264596759` on `285add1ac65903432d8ed4ffaa19aba149f2aa3d` and was squash-merged as `4f70e89f81b4f16df39d4fd2fe88b3c0f298d6f5`.
+
+Implemented as restrictive-only gates inspired by Larry Harris market-microstructure principles:
+- global WAIT on broad abnormal volatility, widespread liquidity/spread stress, repeated cross-exchange price disagreement, unhealthy production scan state, or repeated system errors;
+- per-candidate execution gate requires reliable market consensus and reliable order-book evidence; rejects malformed/wide spreads, cross-exchange book-direction disagreement, insufficient visible depth at the requested size, and excessive current visible slippage;
+- portfolio kill switch blocks new paper positions on >=10% drawdown, >=4 consecutive losing closes, malformed/non-finite account state, or >3 same-direction positions;
+- paper status exposes global-risk WAIT state and reasons;
+- new gates never create TRADE authority and cannot bypass validation/calibration/forward-proof/promotion requirements;
+- first CI run found 2 legacy-fixture compatibility failures with 183 tests passing; the tests were isolated from the new execution gate rather than weakening production behavior; the final exact-head run passed.
+
+ACC-009 thresholds must not be tuned to current paper P&L merely to keep trading active. Missing execution evidence may restrict a candidate rather than inventing liquidity.
 
 ## AUTHENTIC PAPER TRADING STATE
-The continuous paper account remains forward-only and broker-disconnected.
-
-PR #52 established the authentic reset baseline at exactly `$100,000` on `2026-09-08T01:17:49Z`. Only post-reset forward trades count as authentic evidence.
-
-PR #62 fixed P&L reconciliation so current equity matches starting capital + realized P&L + open P&L.
-
-PR #69 `Preserve authentic paper trading ledger` was squash-merged as `15a48dda50fcdd34916c86f00fe021a07cc258a2` and preserves the original `$100,000` baseline while `Current Account Value` moves with realized + open P&L. Starting capital must not be reset or rewritten.
-
-Paper performance is evidence only. It does not authorize real-money trading.
+The continuous paper account remains forward-only and broker-disconnected. PR #52 established the authentic reset baseline at exactly `$100,000` on `2026-09-08T01:17:49Z`; only post-reset forward trades count. PR #62 fixed P&L reconciliation. PR #69 squash merge `15a48dda50fcdd34916c86f00fe021a07cc258a2` preserves immutable original `$100,000` starting capital while current account value moves with realized + open P&L. ACC-009 may stop new paper entries for portfolio risk but must never reset, rewrite or fabricate the ledger. Paper performance is evidence only and grants no live authority.
 
 ## ACCURACY PROGRAM STATUS
-- `ACC-001` market/execution realism — COMPLETE.
-- `ACC-002` cross-asset rank research — IN PROGRESS; continue genuine 24h/7d evidence collection and horizon robustness.
-- `ACC-003` causal regime-conditioned strategy gating — COMPLETE.
-- `ACC-004` champion/challenger weighting + deterioration/correlation/concentration controls — COMPLETE.
-- `ACC-005` provenance/freshness/contradiction market-data gating — COMPLETE.
-- `ACC-006` continuous resolved-forecast deterioration gating — COMPLETE.
-- `ACC-007` adversarial strategy-destruction hardening — COMPLETE.
-- `ACC-008` exact-fingerprint genuine forward-proof live gate — COMPLETE.
+- ACC-001 market/execution realism — COMPLETE.
+- ACC-002 cross-asset rank research — IN PROGRESS.
+- ACC-003 causal regime-conditioned gating — COMPLETE.
+- ACC-004 champion/challenger weighting — COMPLETE.
+- ACC-005 provenance/freshness/contradiction gating — COMPLETE.
+- ACC-006 forecast deterioration — COMPLETE.
+- ACC-007 adversarial destruction hardening — COMPLETE.
+- ACC-008 exact-fingerprint genuine forward proof — COMPLETE.
+- ACC-009 global portfolio/execution risk gates — COMPLETE.
 
 ## COST / SPEED POLICY
-Hard recurring infrastructure ceiling: USD 30/month unless the user explicitly changes it.
+Hard recurring infrastructure ceiling: USD 30/month unless explicitly changed by the user. Prefer existing shared Render compute, deterministic Python, public/free defensible data, caching/reuse, early rejection, bounded concurrency and event-driven work. Do not add a paid data feed, service or persistent compute without approval.
 
-Prefer:
-- existing shared paid Render machine;
-- deterministic Python;
-- public/free defensible data;
-- caching/reuse;
-- early rejection of weak candidates;
-- event-driven scheduling;
-- reserved accuracy capacity;
-- read-only parallel audits.
+## BOOK-DERIVED MARKET-MICROSTRUCTURE ROADMAP
+Larry Harris principles should be used as principles, not copied mechanically from 2002 traditional-market plumbing. Crypto-specific implementation must account for 24/7 trading, fragmented exchanges, perpetual funding/liquidations and exchange failure.
 
-Do not buy another service, paid market-data feed, or additional persistent compute without explicit approval.
+Highest-value remaining work:
+1. `ACC-010` stricter execution/fill simulator and execution-intelligence layer. Separate alpha quality from execution quality. Model only observable/supportable spread, visible depth, size-dependent slippage, partial/insufficient fill, maker/taker economics, latency stress and conservative stop gaps. Never backfill current order-book snapshots into historical data.
+2. Integrate the global/execution gate consistently across every action surface, including stored `trading_signals`, so no path can display TRADE while the Top-20 path says WAIT.
+3. `ACC-012` multiple-testing / false-discovery firewall so the worker army cannot manufacture apparent edge by trying huge numbers of hypotheses.
+4. `ACC-011` point-in-time universe / survivorship and delisting protection.
+5. `ACC-013` genuine-forward shadow champion/challenger comparison with no challenger authority.
+6. `ACC-014` disaster/failure injection: exchange/API timeout, stale/corrupt timestamps, DB outage, restarts, rate limits, extreme spikes and partial service failure; dangerous states => WAIT.
 
 ## EXACT NEXT STEP
-1. Do NOT loosen ACC-008 sample/confidence/cost/drawdown requirements to make a strategy pass faster. Let genuine independent forward evidence accumulate naturally.
-2. Inspect genuine 24h and 7d ACC-002 `/workers` evidence: supported liquidity subsets, pre-OOS stability, fixed candidate, whether OOS opened, independent OOS sample count, rank IC, 3x-cost top-minus-bottom spread, and bootstrap lower bounds. Do not claim profitability if either horizon gate fails.
-3. Recheck continuous worker health and ensure both accuracy workers plus majors/PONS/universe/swing workers continue bounded progress without repeated timeout/failure.
-4. Let the authentic `$100,000` forward-only paper ledger continue without reset. Track current account value, realized/open P&L, drawdown, win rate, expectancy, and calibration over a meaningful forward sample.
-5. Use the immutable prediction ledger for ACC-008 exact-fingerprint forward proof and ACC-006 deterioration monitoring. Overlapping forecasts must never be counted as independent forward evidence.
-6. Keep PONS fail-closed when independent data confirmation/history is insufficient or contradictory.
-7. Next development priority: `ACC-009` portfolio-level/global kill switch for abnormal drawdown, correlated exposure, market-data outages, extreme volatility, repeated losses, and system-health failures. Triggered conditions must force global `WAIT` and never create new trade authority.
-8. After ACC-009, prioritize stricter execution simulation, point-in-time universe/survivorship protection, multiple-testing controls, shadow-production champion/challenger comparison, and disaster/failure injection.
-9. Keep `live_promotions.json` empty and signing keys unused until repeated robust evidence plus Strategy Registry, Production Risk, and genuine ACC-008 forward proof genuinely complete.
-10. Never optimize for headline accuracy alone; optimize for after-cost risk-adjusted realized performance while preserving drawdown/tail protection and abstention when evidence is weak.
-11. Update this file after every completed integration/development cycle.
+1. Do not loosen ACC-008 or ACC-009 thresholds to make a strategy trade faster.
+2. Start ACC-010 on a fresh isolated branch from current `main`: make paper/execution simulation size-aware using current reliable multi-exchange visible-depth/slippage evidence; do not extrapolate hidden liquidity; preserve existing open trades and the immutable $100k ledger.
+3. Ensure all outward action surfaces use the same restrictive execution/global-risk decision.
+4. Continue genuine 24h/7d ACC-002 evidence collection and worker-health monitoring in parallel; no profitability claim unless both horizon evidence gates support it.
+5. Keep PONS fail-closed if independent history/confirmation is insufficient or contradictory.
+6. Keep `live_promotions.json` empty and signing keys unused until the full chain genuinely passes.
+7. After ACC-010, prioritize ACC-012, ACC-011, ACC-013 and ACC-014 in that order unless new evidence justifies reprioritization.
+8. Never optimize headline accuracy alone; optimize after-cost risk-adjusted realized performance with drawdown/tail protection and explicit abstention.
+9. Update this file after every completed integration/development cycle.
