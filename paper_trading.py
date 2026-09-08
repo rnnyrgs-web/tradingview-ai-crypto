@@ -27,10 +27,26 @@ PAPER_INTERVAL_SECONDS = 15 * 60
 
 
 def _last_price(symbol):
+    """Return the latest observable market close used at this paper-cycle instant."""
     candles = get_candles(symbol, "15m", 3)
     if not candles:
         raise RuntimeError(f"No paper price for {symbol}")
     return float(candles[-1]["close"])
+
+
+def _paper_fill_price(symbol, direction):
+    """Create a conservative forward-only simulated fill from the current market price.
+
+    Never reuse the signal's historical/model entry as the simulated execution price.
+    The fixed one-way execution assumption is applied adversely at entry so the paper
+    account cannot inherit gains that happened before the simulated position existed.
+    """
+    market_price = _last_price(symbol)
+    if market_price <= 0:
+        raise RuntimeError(f"Invalid paper market price for {symbol}")
+    slip = FEE_BPS_ONE_WAY / 10000.0
+    fill = market_price * (1.0 + slip if direction == "LONG" else 1.0 - slip)
+    return market_price, fill
 
 
 def _signal_key(row):
@@ -47,14 +63,14 @@ def _close_decision(trade, price):
     target = float(trade["target_price"])
     if trade["direction"] == "LONG":
         if price <= stop:
-            return stop, "STOP"
+            return price, "STOP"
         if price >= target:
-            return target, "TARGET"
+            return price, "TARGET"
     else:
         if price >= stop:
-            return stop, "STOP"
+            return price, "STOP"
         if price <= target:
-            return target, "TARGET"
+            return price, "TARGET"
     opened = None
     try:
         opened = datetime.fromisoformat(str(trade["opened_at"]).replace("Z", "+00:00"))
@@ -71,7 +87,9 @@ def _net_pnl(trade, exit_price):
     entry = float(trade["entry_price"])
     qty = float(trade["quantity"])
     gross = _mark_pnl(trade["direction"], entry, exit_price, qty)
-    fees = (entry * qty + exit_price * qty) * float(trade["fee_bps_one_way"]) / 10000.0
+    # Entry adverse fill already models one-way execution friction. Charge one-way
+    # exit friction here as a fee proxy, avoiding invented pre-open performance.
+    fees = exit_price * qty * float(trade["fee_bps_one_way"]) / 10000.0
     return gross - fees
 
 
@@ -103,12 +121,10 @@ def run_paper_cycle():
     realized = float(account["realized_pnl"])
 
     for trade in fetch_open_paper_trades(ACCOUNT_ID):
-        price = None
         try:
             price = _last_price(trade["symbol"])
         except Exception as exc:
             log.warning("Paper close price unavailable for %s: %s", trade.get("symbol"), type(exc).__name__)
-        if price is None:
             continue
         exit_price, reason = _close_decision(trade, price)
         if exit_price is None:
@@ -138,9 +154,30 @@ def run_paper_cycle():
             continue
         if (symbol, horizon) in open_pairs:
             continue
-        entry = float(row.get("entry_price") or 0)
-        stop = float(row.get("stop_loss") or 0)
-        target = float(row.get("target_1") or 0)
+
+        signal_entry = float(row.get("entry_price") or 0)
+        signal_stop = float(row.get("stop_loss") or 0)
+        signal_target = float(row.get("target_1") or 0)
+        if min(signal_entry, signal_stop, signal_target) <= 0:
+            continue
+        try:
+            observed_market, entry = _paper_fill_price(symbol, direction)
+        except Exception as exc:
+            log.warning("Paper entry price unavailable for %s: %s", symbol, type(exc).__name__)
+            continue
+
+        # Preserve the signal's stop/target distances, but anchor them to the actual
+        # forward paper fill. This prevents stale signal prices from creating free P&L.
+        if direction == "LONG":
+            stop_distance_pct = max(0.0, (signal_entry - signal_stop) / signal_entry)
+            target_distance_pct = max(0.0, (signal_target - signal_entry) / signal_entry)
+            stop = entry * (1.0 - stop_distance_pct)
+            target = entry * (1.0 + target_distance_pct)
+        else:
+            stop_distance_pct = max(0.0, (signal_stop - signal_entry) / signal_entry)
+            target_distance_pct = max(0.0, (signal_entry - signal_target) / signal_entry)
+            stop = entry * (1.0 + stop_distance_pct)
+            target = entry * (1.0 - target_distance_pct)
         risk_per_unit = abs(entry - stop)
         if min(entry, stop, target, risk_per_unit) <= 0:
             continue
@@ -152,8 +189,7 @@ def run_paper_cycle():
         if quantity <= 0:
             continue
         notional = quantity * entry
-        entry_fee = notional * FEE_BPS_ONE_WAY / 10000.0
-        if notional + entry_fee > cash:
+        if notional > cash:
             continue
         if insert_paper_trade({
             "account_id": ACCOUNT_ID,
@@ -173,7 +209,8 @@ def run_paper_cycle():
             "evidence_score": float(row.get("evidence_score") or 0),
             "research_only": True,
         }):
-            cash -= notional + entry_fee
+            log.info("Paper trade opened forward-only symbol=%s observed_market=%s fill=%s", symbol, observed_market, entry)
+            cash -= notional
             open_trades = fetch_open_paper_trades(ACCOUNT_ID)
             open_pairs.add((symbol, horizon))
 
@@ -182,12 +219,10 @@ def run_paper_cycle():
     open_trades = fetch_open_paper_trades(ACCOUNT_ID)
     for trade in open_trades:
         held_notional += float(trade["notional_usd"])
-        price = None
         try:
             price = _last_price(trade["symbol"])
         except Exception as exc:
             log.warning("Paper mark price unavailable for %s: %s", trade.get("symbol"), type(exc).__name__)
-        if price is None:
             price = float(trade["entry_price"])
         unrealized += _mark_pnl(trade["direction"], float(trade["entry_price"]), price, float(trade["quantity"]))
     equity = cash + held_notional + unrealized
@@ -221,6 +256,7 @@ def paper_status():
         "real_money": False,
         "broker_connected": False,
         "trade_authority": False,
+        "forward_fill_only": True,
         "starting_capital_usd": INITIAL_CASH,
         "equity_usd": round(float(account["equity"]), 2),
         "cash_usd": round(float(account["cash"]), 2),
