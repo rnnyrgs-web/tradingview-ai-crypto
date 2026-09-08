@@ -84,6 +84,13 @@ PR #89 `Capture private worker failure diagnostics` passed exact-head Security a
 PR #90 `Classify insufficient ACC-002 evidence as research blocked` passed exact-head Security and Reliability run `34286298608` on `073683edea01168012ab2ece5f31131355dcbc9e` and was squash-merged as `220452eca6242999cac7381bb9a37c77354b710a`.
 Fresh post-PR-89 diagnostics proved the recurring 24h/7d exit-code-1 was not a strategy or runtime crash: public cross-exchange / historical availability sometimes resolved fewer than the required predeclared liquidity subsets, correctly triggering the ACC-002 fail-closed liquidity-stability gate. The runner now emits a sealed `research_blocked` artifact with reason `insufficient_supported_liquidity_subsets`, no OOS opening, no promotion eligibility, `live_approved=false`, and `trade_authority=false`, instead of raising a worker-crash `ValueError`. No evidence threshold or safety gate was weakened. `BUG_REGRESSION_LEDGER.md` records `ACC002-BLOCK-001`; `tests/test_cross_asset_research_blocked.py` permanently reproduces the case.
 
+## PR #90 LIVE VERIFICATION — COMPLETE
+Fresh Render instance `srv-dafgtead0e5s73cc7ekg-6svgk` confirmed the post-PR-90 deploy is live. ACC-002 24h completed with exit 0, then ACC-002 7d completed with exit 0; subsequent cycles continued exiting 0. Worker failure count remained 0 until an independent PONS failure occurred. Supervisor stayed healthy with no stale workers, no crashed workers and no task restarts. Cache hit rate rose above 90% after warmup, confirming non-zero runtime samples are now available for bottleneck analysis.
+
+## PONS FAILURE DIAGNOSTIC GAP — COMPLETE
+PR #91 `Capture PONS research failure diagnostics` passed exact-head Security and Reliability run `34288072983` on `6e901c1c5201ceec64e39c6378f330f09eb582b4` and was squash-merged as `fa5541ff3154da1be11c560008155c582b3de3ef`.
+Fresh post-PR-90 production evidence showed `worker_failure worker=pons exit=1 ... diagnostic=<none>`. Root cause could not yet be identified because `research_runner.py` catches per-job exceptions and historically printed them only to stdout, while the worker army intentionally discards stdout and captures stderr on failure. PR #91 preserves fail-closed behavior and adds sanitized private stderr emission for caught research-job exceptions so the next PONS failure can expose a bounded root-cause diagnostic without leaking secrets. `BUG_REGRESSION_LEDGER.md` records `PONS-DIAG-001`; `tests/test_research_failure_diagnostic.py` permanently verifies stderr-only sanitized diagnostics. No strategy/evidence threshold, market-data policy, concurrency, paper ledger, broker connectivity, promotion authority or trade authority was changed.
+
 ## AUTHENTIC PAPER TRADING STATE
 The continuous paper account remains forward-only and broker-disconnected. Authentic baseline is exactly `$100,000` from `2026-09-08T01:17:49Z`; never reset or rewrite it. Current account value = immutable starting capital plus realized/open P&L. Safety/execution gates may reject entries but never fabricate or reset history. Paper performance is evidence only.
 
@@ -94,13 +101,12 @@ Hard recurring infrastructure ceiling: USD 30/month unless explicitly changed. P
 Preserve stable exact strategy fingerprints while genuine forward observations accumulate. Challengers may run in shadow. Never count overlapping forecasts as independent, lower forward-proof thresholds, reset paper history, raise heavy concurrency, stretch cache TTLs, or change market-data source behavior merely to accelerate results.
 
 ## EXACT NEXT STEP
-1. Verify the PR #90 auto-deploy reaches live and confirm fresh ACC-002 24h/7d cycles report `research_blocked` as a normal completed research outcome rather than incrementing worker failure counts.
+1. Verify PR #91 auto-deploy reaches live. Watch fresh PONS cycles; if PONS fails again, use the new sanitized private stderr diagnostic to identify the exact cause. Fix only a proven code defect; if it is expected unavailable-data/research-blocked behavior, classify it explicitly without weakening fail-closed evidence rules.
 2. Continue genuine ACC-002 24h/7d forward/OOS evidence and worker-health monitoring. No profitability claim unless evidence genuinely passes.
-3. Investigate any remaining recurring non-ACC-002 worker failures from fresh sanitized diagnostics. PONS had isolated opaque exit-code-1 events with no stderr; if it recurs, capture enough bounded non-sensitive evidence to distinguish expected unavailable-data/research-blocked behavior from a true code defect, then fix only the proven defect with a permanent regression test.
-4. Verify supervisor remains healthy in live Render logs: no stale workers, no restart loop, heartbeats continue through long jobs.
-5. Use non-zero cache/network/worker samples to identify the proven throughput bottleneck; do not optimize from startup-zero samples.
-6. Next larger reliability upgrade after current failure cleanup: deployment-canary/controlled rollback decision layer. Do not give research workers repository-write/merge authority.
-7. Preserve stable exact champion fingerprints while challengers run in shadow; only evidence-backed changes create a new fingerprint.
-8. Preserve empty `live_promotions.json`, unused signing keys, PONS fail-closed behavior, immutable $100k paper ledger and broker-disconnected state.
-9. Only add microstructure features when genuine timestamped data supports them; never reconstruct unavailable order books/liquidations from candles.
-10. Optimize after-cost risk-adjusted realized performance with tail protection and abstention, not headline accuracy.
+3. Verify supervisor remains healthy in live Render logs: no stale workers, no restart loop, heartbeats continue through long jobs.
+4. Use current non-zero cache/network/worker samples to identify the proven throughput bottleneck. Current warm-cache hit rate exceeded 90%; do not optimize by assumption or alter research evidence rules merely for speed.
+5. After PONS failure classification and bottleneck review, implement the next larger reliability upgrade: deployment-canary/controlled rollback decision layer. Do not give research workers repository-write/merge authority.
+6. Preserve stable exact champion fingerprints while challengers run in shadow; only evidence-backed changes create a new fingerprint.
+7. Preserve empty `live_promotions.json`, unused signing keys, PONS fail-closed behavior, immutable $100k paper ledger and broker-disconnected state.
+8. Only add microstructure features when genuine timestamped data supports them; never reconstruct unavailable order books/liquidations from candles.
+9. Optimize after-cost risk-adjusted realized performance with tail protection and abstention, not headline accuracy.
