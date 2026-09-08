@@ -72,21 +72,17 @@ PR #88 `Add self-healing supervision for 24/7 research workers`; exact-head Secu
 
 ## PRIVACY-PRESERVING WORKER FAILURE DIAGNOSTICS / DURABLE BUG LEDGER — COMPLETE
 PR #89 `Capture private worker failure diagnostics` passed exact-head Security and Reliability run `34277010057` on `3f0aed2f1d056dfe34d27a1afa90f0af0d1ac6b6` and was squash-merged as `edef2386262459935987249cb7a6414bd721dbfe`.
-
-Implemented:
 - failed subprocess stderr is captured only into that job's temporary directory instead of being discarded;
 - only a bounded tail is read after non-zero exit;
 - common bearer-token/API-key/token/secret/password/JWT/OpenAI-key forms are redacted before storage/logging;
-- final traceback exception type is inferred where possible rather than treating every non-zero exit as generic `ProcessExitError`;
-- incident fingerprints include a deterministic diagnostic fingerprint so recurring root causes can be grouped;
-- sanitized traceback detail is retained only in the private runtime incident ledger and private Render application logs;
-- public worker/coordinator snapshots expose safe error type/classification/fingerprints but never the diagnostic excerpt;
-- `BUG_REGRESSION_LEDGER.md` is repository-backed durable defect history, separate from ephemeral Render runtime incident files;
-- `WORKER-DIAG-001` records the confirmed prior defect where subprocess stderr was sent to DEVNULL and root cause was lost;
-- tests cover bounded/redacted diagnostics, error-type inference, diagnostic-sensitive fingerprints, append-only private incident detail, public/private boundary and no-authority invariants;
-- `DIAGNOSTICS_PRIVACY.md` documents the privacy boundary.
+- final traceback exception type is inferred where possible;
+- incident fingerprints include a deterministic diagnostic fingerprint;
+- sanitized traceback detail is private; public worker/coordinator snapshots never expose diagnostic text;
+- `BUG_REGRESSION_LEDGER.md` is durable defect history separate from ephemeral runtime incidents.
 
-Live deployment of PR #89 completed successfully. Immediately after restart the new supervisor was healthy with no stale/crashed workers and zero task restarts. Fresh ACC-002 jobs had not yet completed at the time of this state update, so no post-PR-89 traceback existed yet. Do NOT invent or prematurely classify the prior ACC-002 exit-code-1 root cause; use the first new sanitized `worker_failure` trace as evidence.
+## ACC-002 EXPECTED RESEARCH-BLOCKED OUTCOME — COMPLETE
+PR #90 `Classify insufficient ACC-002 evidence as research blocked` passed exact-head Security and Reliability run `34286298608` on `073683edea01168012ab2ece5f31131355dcbc9e` and was squash-merged as `220452eca6242999cac7381bb9a37c77354b710a`.
+Fresh post-PR-89 diagnostics proved the recurring 24h/7d exit-code-1 was not a strategy or runtime crash: public cross-exchange / historical availability sometimes resolved fewer than the required predeclared liquidity subsets, correctly triggering the ACC-002 fail-closed liquidity-stability gate. The runner now emits a sealed `research_blocked` artifact with reason `insufficient_supported_liquidity_subsets`, no OOS opening, no promotion eligibility, `live_approved=false`, and `trade_authority=false`, instead of raising a worker-crash `ValueError`. No evidence threshold or safety gate was weakened. `BUG_REGRESSION_LEDGER.md` records `ACC002-BLOCK-001`; `tests/test_cross_asset_research_blocked.py` permanently reproduces the case.
 
 ## AUTHENTIC PAPER TRADING STATE
 The continuous paper account remains forward-only and broker-disconnected. Authentic baseline is exactly `$100,000` from `2026-09-08T01:17:49Z`; never reset or rewrite it. Current account value = immutable starting capital plus realized/open P&L. Safety/execution gates may reject entries but never fabricate or reset history. Paper performance is evidence only.
@@ -98,12 +94,12 @@ Hard recurring infrastructure ceiling: USD 30/month unless explicitly changed. P
 Preserve stable exact strategy fingerprints while genuine forward observations accumulate. Challengers may run in shadow. Never count overlapping forecasts as independent, lower forward-proof thresholds, reset paper history, raise heavy concurrency, stretch cache TTLs, or change market-data source behavior merely to accelerate results.
 
 ## EXACT NEXT STEP
-1. Continue genuine ACC-002 24h/7d forward/OOS evidence and worker-health monitoring. No profitability claim unless evidence genuinely passes.
-2. Read the first fresh post-PR-89 sanitized `worker_failure` trace for ACC-002. Classify the real root cause from evidence; do not infer it from old exit code alone.
-3. If the trace proves a code defect, reproduce it in a permanent test, add/update `BUG_REGRESSION_LEDGER.md`, fix it on an isolated branch, require exact-head Security and Reliability success, then merge/deploy. If the trace is an intentional fail-closed insufficiency gate, distinguish expected research-not-ready from actual runtime failure without weakening the gate.
+1. Verify the PR #90 auto-deploy reaches live and confirm fresh ACC-002 24h/7d cycles report `research_blocked` as a normal completed research outcome rather than incrementing worker failure counts.
+2. Continue genuine ACC-002 24h/7d forward/OOS evidence and worker-health monitoring. No profitability claim unless evidence genuinely passes.
+3. Investigate any remaining recurring non-ACC-002 worker failures from fresh sanitized diagnostics. PONS had isolated opaque exit-code-1 events with no stderr; if it recurs, capture enough bounded non-sensitive evidence to distinguish expected unavailable-data/research-blocked behavior from a true code defect, then fix only the proven defect with a permanent regression test.
 4. Verify supervisor remains healthy in live Render logs: no stale workers, no restart loop, heartbeats continue through long jobs.
 5. Use non-zero cache/network/worker samples to identify the proven throughput bottleneck; do not optimize from startup-zero samples.
-6. Next larger reliability upgrade after current failure classification: deployment-canary/controlled rollback decision layer. Do not give research workers repository-write/merge authority.
+6. Next larger reliability upgrade after current failure cleanup: deployment-canary/controlled rollback decision layer. Do not give research workers repository-write/merge authority.
 7. Preserve stable exact champion fingerprints while challengers run in shadow; only evidence-backed changes create a new fingerprint.
 8. Preserve empty `live_promotions.json`, unused signing keys, PONS fail-closed behavior, immutable $100k paper ledger and broker-disconnected state.
 9. Only add microstructure features when genuine timestamped data supports them; never reconstruct unavailable order books/liquidations from candles.
