@@ -15,6 +15,14 @@ STRATEGY_FAMILIES = (
     "relative_strength",
 )
 
+REGIMES = (
+    "TREND_UP",
+    "TREND_DOWN",
+    "HIGH_VOL",
+    "COMPRESSION",
+    "RANGE",
+)
+
 
 def _mean(values):
     return sum(values) / len(values) if values else 0.0
@@ -183,15 +191,33 @@ SIGNAL_FUNCTIONS = {
 
 
 def _regime(candles, i):
-    context = candles[max(0, i - 59):i + 1]
+    """Classify the market using only information available at candle i."""
+    context = candles[max(0, i - 79):i + 1]
     closes = [row["close"] for row in context]
     last = closes[-1]
+    if last <= 0:
+        return "RANGE"
+
+    fast = ema(closes, 20)
+    slow = ema(closes, 50) if len(closes) >= 50 else fast
+    signed_gap = fast / slow - 1.0 if slow else 0.0
+    local_slope = slope_pct(closes, min(20, len(closes))) if len(closes) >= 2 else 0.0
     a = atr(context, 14)
-    gap = abs(ema(closes, 20) / ema(closes, 50) - 1.0) if len(closes) >= 50 else 0.0
-    if gap >= 0.012:
-        return "TREND"
-    if a / last >= 0.018:
+    vol_ratio = a / last if a > 0 else 0.0
+
+    recent_tr = [_true_range(candles, j) for j in range(max(1, i - 13), i + 1)]
+    baseline_tr = [_true_range(candles, j) for j in range(max(1, i - 59), i + 1)]
+    recent_vol = _mean(recent_tr)
+    baseline_vol = _mean(baseline_tr)
+
+    if vol_ratio >= 0.018:
         return "HIGH_VOL"
+    if signed_gap >= 0.010 and local_slope > 0:
+        return "TREND_UP"
+    if signed_gap <= -0.010 and local_slope < 0:
+        return "TREND_DOWN"
+    if baseline_vol > 0 and recent_vol / baseline_vol <= 0.70 and abs(signed_gap) < 0.008:
+        return "COMPRESSION"
     return "RANGE"
 
 
@@ -200,7 +226,7 @@ def _simulate(candles, bar, family, benchmark=None, parameter_scale=1.0, detaile
     max_hold = {"15m": 16, "1H": 24, "4H": 42, "1D": 30}.get(bar, 16)
     benchmark = benchmark or {}
     returns = []
-    i = 70
+    i = 80
 
     while i < len(candles) - max_hold - 2:
         direction = signal_fn(candles, i, benchmark, parameter_scale)
@@ -234,10 +260,51 @@ def _simulate(candles, bar, family, benchmark=None, parameter_scale=1.0, detaile
         raw = (exit_price / entry - 1.0) * 100.0
         directional = raw if direction == "LONG" else -raw
         result = directional - BACKTEST_COST_BPS / 100.0
-        returns.append({"return_pct": result, "regime": _regime(candles, i)}) if detailed else returns.append(result)
+        record = {"return_pct": result, "regime": _regime(candles, i)}
+        returns.append(record if detailed else result)
         i += max_hold
 
     return returns
+
+
+def _records_by_regime(records, regime):
+    return [row["return_pct"] for row in records if row["regime"] == regime]
+
+
+def _select_pre_oos_regimes(train_records, validation_records):
+    """Freeze permitted regimes before inspecting untouched holdout results."""
+    selected = []
+    evidence = {}
+    for regime in REGIMES:
+        train_metrics = _segment_metrics(_records_by_regime(train_records, regime))
+        validation_metrics = _segment_metrics(_records_by_regime(validation_records, regime))
+        val_pf = validation_metrics["profit_factor"] or 0.0
+        reasons = []
+        if train_metrics["trades"] < 4:
+            reasons.append("train_regime_trades<4")
+        if validation_metrics["trades"] < 3:
+            reasons.append("validation_regime_trades<3")
+        if train_metrics["avg_trade_pct"] <= 0:
+            reasons.append("train_regime_expectancy<=0")
+        if validation_metrics["avg_trade_pct"] <= 0:
+            reasons.append("validation_regime_expectancy<=0")
+        if val_pf < 1.05:
+            reasons.append("validation_regime_pf<1.05")
+        passed = not reasons
+        if passed:
+            selected.append(regime)
+        evidence[regime] = {
+            "passed_pre_oos": passed,
+            "reasons": reasons,
+            "train": train_metrics,
+            "validation": validation_metrics,
+        }
+    return selected, evidence
+
+
+def _filter_records(records, allowed_regimes):
+    allowed = set(allowed_regimes)
+    return [row["return_pct"] for row in records if row["regime"] in allowed]
 
 
 def _quality_gate(train, validation, holdout):
@@ -287,12 +354,6 @@ def _quality_gate(train, validation, holdout):
 
 
 def _skipped_robustness(gate):
-    """Fail fast before expensive robustness when basic OOS quality already fails.
-
-    This cannot promote a strategy or weaken a gate: a quality-gate failure is
-    already ineligible. Skipping bootstrap/perturbation work only saves compute
-    for candidates that are deterministically RESEARCH_ONLY.
-    """
     return {
         "passed": False,
         "status": "SKIPPED_QUALITY_GATE_FAILED",
@@ -317,33 +378,51 @@ def evaluate_strategy_registry(symbol, bar="15m", bars=5000):
 
     registry = []
     for family in STRATEGY_FAMILIES:
-        train_returns = _simulate(train, bar, family, benchmark)
-        validation_returns = _simulate(validation, bar, family, benchmark)
+        train_records = _simulate(train, bar, family, benchmark, detailed=True)
+        validation_records = _simulate(validation, bar, family, benchmark, detailed=True)
         holdout_records = _simulate(holdout, bar, family, benchmark, detailed=True)
-        holdout_returns = [row["return_pct"] for row in holdout_records]
+
+        selected_regimes, regime_evidence = _select_pre_oos_regimes(train_records, validation_records)
+        train_returns = _filter_records(train_records, selected_regimes)
+        validation_returns = _filter_records(validation_records, selected_regimes)
+        holdout_returns = _filter_records(holdout_records, selected_regimes)
+
         train_metrics = _segment_metrics(train_returns)
         validation_metrics = _segment_metrics(validation_returns)
         holdout_metrics = _segment_metrics(holdout_returns)
         gate = _quality_gate(train_metrics, validation_metrics, holdout_metrics)
+        if not selected_regimes:
+            gate["passed"] = False
+            gate["eligible_for_live_ensemble"] = False
+            gate["reasons"] = ["no_pre_oos_regime_with_edge"] + gate["reasons"]
+
         if gate["passed"]:
+            perturbed = {}
+            for label, scale in (("threshold_90pct", 0.9), ("threshold_110pct", 1.1)):
+                records = _simulate(holdout, bar, family, benchmark, parameter_scale=scale, detailed=True)
+                perturbed[label] = _filter_records(records, selected_regimes)
             robustness = evaluate_robustness(
                 validation_returns + holdout_returns,
+                perturbed,
                 {
-                    "threshold_90pct": _simulate(holdout, bar, family, benchmark, parameter_scale=0.9),
-                    "threshold_110pct": _simulate(holdout, bar, family, benchmark, parameter_scale=1.1),
+                    regime: _records_by_regime(holdout_records, regime)
+                    for regime in selected_regimes
                 },
-                {
-                    regime: [row["return_pct"] for row in holdout_records if row["regime"] == regime]
-                    for regime in ("TREND", "HIGH_VOL", "RANGE")
-                },
-                f"{symbol}|{bar}|{family}",
+                f"{symbol}|{bar}|{family}|regimes={','.join(selected_regimes)}",
             )
         else:
             robustness = _skipped_robustness(gate)
+
         eligible = gate["passed"] and robustness["passed"]
         registry.append({
             "strategy_family": family,
             "status": "ROBUST_OOS" if eligible else "RESEARCH_ONLY",
+            "regime_policy": {
+                "selection_stage": "TRAIN_PLUS_VALIDATION_ONLY",
+                "selected_before_holdout": selected_regimes,
+                "evidence": regime_evidence,
+                "holdout_not_used_for_regime_selection": True,
+            },
             "train": train_metrics,
             "validation": validation_metrics,
             "holdout_test": holdout_metrics,
@@ -359,8 +438,9 @@ def evaluate_strategy_registry(symbol, bar="15m", bars=5000):
         "candles": len(history),
         "benchmark": "BTC-USDT",
         "cost_bps_round_trip": BACKTEST_COST_BPS,
+        "regimes": list(REGIMES),
         "families_tested": len(registry),
-        "eligible_count": sum(1 for x in registry if x["quality_gate"]["passed"]),
+        "eligible_count": sum(1 for x in registry if x["eligible_for_promotion_review"]),
         "registry": registry,
-        "note": "No strategy may influence the live ensemble unless its OOS quality gate passes. Passing is necessary, not a profit guarantee.",
+        "note": "Regime permissions are frozen using train+validation only before untouched holdout is inspected. Missing regime evidence means no trade in that regime. Passing remains research evidence, not a profit guarantee or live authority.",
     }
