@@ -66,3 +66,29 @@ The runner now emits a sealed `research_blocked` ACC-002 artifact with reason `i
 
 ### Safety invariants
 No liquidity threshold, OOS threshold, survivorship requirement, forward-proof rule, multiple-testing firewall, concurrency limit, paper ledger, broker connectivity, or live promotion authority is weakened by this fix.
+
+## PONS-DIAG-001 — Research-runner failures were invisible to worker stderr capture
+
+Status: FIXED IN PR (pending merge at time of entry)
+Component: `research_runner.py`
+Detected: 2026-09-08
+Severity: reliability / diagnosability
+
+### Symptom
+Fresh production evidence showed the PONS research worker could exit with code 1 while the worker supervisor reported `diagnostic=<none>`. `research_runner.py` caught per-job exceptions and printed the structured result only to stdout. The continuous worker intentionally discards stdout and captures stderr on failure, so an all-failed PONS cycle could not expose the bounded root-cause diagnostic needed to distinguish unavailable-data/research-blocked behavior from a real code defect.
+
+### Reproducer
+Cause every job in a `research_runner.py` invocation to fail. The runner exits 1, but before this fix no sanitized failure reason is emitted on stderr for the worker supervisor to capture.
+
+### Fix
+Each caught research-job exception now emits a bounded, sanitized private stderr diagnostic containing the symbol, timeframe, exception type and sanitized exception message. Existing stdout result behavior is preserved. The worker supervisor still performs its own bounded tail capture and sanitization before private logging, and public worker state still receives no diagnostic excerpt.
+
+### Permanent regression coverage
+`tests/test_research_failure_diagnostic.py`
+- verifies the failure diagnostic is emitted on stderr only;
+- verifies symbol/timeframe and exception type are retained;
+- verifies credential-like content is redacted;
+- verifies no secret value is emitted.
+
+### Safety invariants
+No strategy logic, evidence threshold, OOS/forward-proof rule, market-data source behavior, concurrency, paper ledger, broker connectivity, promotion authority or live-trade authority changes as part of this fix.
