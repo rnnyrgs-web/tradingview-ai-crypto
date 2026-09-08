@@ -35,6 +35,11 @@ def _setup(monkeypatch):
         "calibration_assessment",
         lambda evidence, *_args: {"allows_live_action": True, "evidence": evidence},
     )
+    monkeypatch.setattr(
+        opportunity_engine,
+        "assess_execution_risk",
+        lambda *_args, **_kwargs: SimpleNamespace(blocked=False, reasons=()),
+    )
     monkeypatch.setattr(opportunity_engine, "replace_opportunities", lambda scan, horizon, rows: saved.append((horizon, rows)))
     monkeypatch.setattr(opportunity_engine, "insert_prediction_ledger", lambda rows: ledgers.extend(rows))
     return saved, ledgers

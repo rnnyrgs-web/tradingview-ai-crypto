@@ -15,6 +15,7 @@ from paper_db import (
     update_paper_account,
 )
 from market_data import get_candles
+from production_risk_gate import assess_portfolio_risk
 from utils import now_utc
 
 log = logging.getLogger(__name__)
@@ -90,8 +91,6 @@ def _net_pnl(trade, exit_price):
     entry = float(trade["entry_price"])
     qty = float(trade["quantity"])
     gross = _mark_pnl(trade["direction"], entry, exit_price, qty)
-    # Entry adverse fill already models one-way execution friction. Charge one-way
-    # exit friction here as a fee proxy, avoiding invented pre-open performance.
     fees = exit_price * qty * float(trade["fee_bps_one_way"]) / 10000.0
     return gross - fees
 
@@ -120,8 +119,6 @@ def _validate_persistent_account(account):
 
 
 def run_paper_cycle():
-    # The background loop and authenticated manual endpoint can overlap. Serialize
-    # them so a position can never be credited twice to cash or realized P&L.
     with _cycle_lock:
         return _run_paper_cycle_locked()
 
@@ -162,10 +159,15 @@ def _run_paper_cycle_locked():
 
     open_trades = fetch_open_paper_trades(ACCOUNT_ID)
     open_pairs = {(t["symbol"], t["horizon"]) for t in open_trades}
+    preopen_stats = fetch_paper_trade_stats(ACCOUNT_ID, INITIAL_CASH)
+    portfolio_risk = assess_portfolio_risk(account, open_trades, preopen_stats)
     candidates = []
-    for horizon in ("24h", "7d"):
-        candidates.extend(fetch_ranked_opportunities(horizon=horizon, limit=20))
-    candidates.sort(key=lambda r: float(r.get("evidence_score") or 0), reverse=True)
+    if portfolio_risk.blocked:
+        log.warning("Global paper WAIT: %s", ",".join(portfolio_risk.reasons))
+    else:
+        for horizon in ("24h", "7d"):
+            candidates.extend(fetch_ranked_opportunities(horizon=horizon, limit=20))
+        candidates.sort(key=lambda r: float(r.get("evidence_score") or 0), reverse=True)
 
     for row in candidates:
         if len(open_trades) >= MAX_OPEN_POSITIONS:
@@ -191,8 +193,6 @@ def _run_paper_cycle_locked():
             log.warning("Paper entry price unavailable for %s: %s", symbol, type(exc).__name__)
             continue
 
-        # Preserve the signal's stop/target distances, but anchor them to the actual
-        # forward paper fill. This prevents stale signal prices from creating free P&L.
         if direction == "LONG":
             stop_distance_pct = max(0.0, (signal_entry - signal_stop) / signal_entry)
             target_distance_pct = max(0.0, (signal_target - signal_entry) / signal_entry)
@@ -238,6 +238,10 @@ def _run_paper_cycle_locked():
             cash -= notional
             open_trades = fetch_open_paper_trades(ACCOUNT_ID)
             open_pairs.add((symbol, horizon))
+            portfolio_risk = assess_portfolio_risk(account, open_trades, preopen_stats)
+            if portfolio_risk.blocked:
+                log.warning("Global paper WAIT after concentration change: %s", ",".join(portfolio_risk.reasons))
+                break
 
     unrealized = 0.0
     held_notional = 0.0
@@ -275,6 +279,7 @@ def paper_status():
         return {"configured": False, "research_only": True, "real_money": False, "trade_authority": False}
     stats = fetch_paper_trade_stats(ACCOUNT_ID, INITIAL_CASH)
     max_dd = max(float(account["max_drawdown_pct"]), stats["max_drawdown_pct"])
+    portfolio_risk = assess_portfolio_risk(account, fetch_open_paper_trades(ACCOUNT_ID), stats)
     return {
         "configured": True,
         "research_only": True,
@@ -294,6 +299,9 @@ def paper_status():
         "profit_factor": round(stats["profit_factor"], 3),
         "max_drawdown_pct": round(max_dd, 3),
         "last_20_pnl_usd": round(stats["last_20_pnl_usd"], 2),
+        "consecutive_losses": int(stats.get("consecutive_losses") or 0),
+        "global_risk_wait": portfolio_risk.blocked,
+        "global_risk_reasons": list(portfolio_risk.reasons),
         "consistently_profitable": bool(account["profitable_alert"]),
         "profitability_rule": ">=30 closed trades, net P&L > 0, PF >= 1.20, max DD <= 10%, last 20 trades net positive",
     }

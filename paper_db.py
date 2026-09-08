@@ -85,8 +85,12 @@ def insert_paper_equity_snapshot(account_id, equity, cash, open_positions, reali
 
 
 def fetch_paper_trade_stats(account_id="default", initial_cash=100000.0):
+    empty = {
+        "closed_trades":0,"wins":0,"losses":0,"net_pnl_usd":0.0,"profit_factor":0.0,
+        "last_20_pnl_usd":0.0,"max_drawdown_pct":0.0,"consecutive_losses":0,"recent_pnls":[]
+    }
     if not _configured():
-        return {"closed_trades":0,"wins":0,"losses":0,"net_pnl_usd":0.0,"profit_factor":0.0,"last_20_pnl_usd":0.0,"max_drawdown_pct":0.0}
+        return empty
     r = http.get(f"{SUPABASE_URL}/rest/v1/paper_trades", headers=headers(), params={
         "select":"pnl_usd,closed_at","account_id":f"eq.{account_id}","status":"eq.CLOSED","order":"closed_at.asc","limit":"10000"
     })
@@ -106,9 +110,16 @@ def fetch_paper_trade_stats(account_id="default", initial_cash=100000.0):
         peak = max(peak, equity)
         if peak > 0:
             max_dd = max(max_dd, (peak - equity) / peak * 100.0)
+    loss_streak = 0
+    for x in reversed(pnl):
+        if x < 0:
+            loss_streak += 1
+        else:
+            break
     return {
         "closed_trades":len(pnl),"wins":len(wins),"losses":len(losses),"net_pnl_usd":sum(pnl),
-        "profit_factor":pf,"last_20_pnl_usd":sum(pnl[-20:]),"max_drawdown_pct":max_dd
+        "profit_factor":pf,"last_20_pnl_usd":sum(pnl[-20:]),"max_drawdown_pct":max_dd,
+        "consecutive_losses":loss_streak,"recent_pnls":pnl[-20:]
     }
 
 

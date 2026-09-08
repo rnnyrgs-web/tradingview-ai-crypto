@@ -7,6 +7,14 @@ def _risk_plan(features, direction, horizon):
     return {"entry": 100.0, "stop": 110.0, "t1": 81.0, "t2": 70.0, "rr": 1.9}
 
 
+def _allow_execution(monkeypatch):
+    monkeypatch.setattr(
+        oe,
+        "assess_execution_risk",
+        lambda *_args, **_kwargs: type("R", (), {"blocked": False, "reasons": ()})(),
+    )
+
+
 def test_ai_trade_is_downgraded_without_full_research_validation(monkeypatch):
     persisted = []
     monkeypatch.setattr(oe, "replace_opportunities", lambda scan_id, horizon, rows: persisted.extend(rows))
@@ -53,6 +61,7 @@ def test_exact_promoted_strategy_can_preserve_trade(monkeypatch):
             "identity": {"fingerprint": "a" * 64},
         })(),
     )
+    _allow_execution(monkeypatch)
     candidates = [{
         "symbol": "ETH-USDT",
         "activity_score": 10.0,
