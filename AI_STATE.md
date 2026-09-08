@@ -68,10 +68,13 @@ Master tracking issue #45 covers the safe acceleration program.
 - PR #44 is integrated: event/ref-isolated cloud concurrency, higher parallelism, liquid-major fast lane, deterministic early rejection and independent artifact audit.
 - PR #46 `Add forward shadow and canary readiness gates` is open and remains unmerged pending exact-head verification/rebase after ACC-001 evidence work. It is designed to add read-only forward evidence, de-correlated prediction samples, Wilson/expectancy/drawdown checks and tiny-canary/scale review gates with `trade_authority=false` and `canary_execution_enabled=false`.
 - PR #47 `Add compact crypto signal rows with one-click TradingView` passed Security and Reliability run `34172595104` on exact head `975734cc4c164754ab94ad22ae6d578b81f7b661` and was squash-merged as `1d381b6b5f75d8b92bd1feccfaa84196fea6d344`.
-  - Dashboard is now a compact multi-crypto row view showing signal, duration, entry area, stop loss and %, expected T1/T2 moves and %, R:R and evidence.
-  - Each row has TradingView chart and generated Pine v6 overlay actions. The generated overlay draws BUY/SELL, entry, stop/risk area, T1/T2, expected move %, duration, R:R and evidence directly on TradingView after the one-time Pine Editor paste/add-to-chart step.
-  - Standard external TradingView chart URLs cannot inject arbitrary Pine scripts/drawings, so the overlay generator provides the supported workflow without changing signal logic or authority.
-  - Render production deploy `dep-dafl71m7bikc73ee7qug` for merge `1d381b6b...` completed live successfully.
+  - Dashboard became a compact multi-crypto row view showing signal, duration, entry area, stop loss and %, expected T1/T2 moves and %, R:R and evidence.
+- PR #48 `Embed signal levels directly on TradingView-style chart` passed Security and Reliability run `34173194223` on exact head `45d7bb85721e94fe8b7f233bdd62bf952d1fa2ac` and was squash-merged as `dc0abff7e67ad75cd4e9b8463f9c6a356a8865c1`.
+  - The dashboard no longer exposes the separate Pine overlay workflow.
+  - Clicking a crypto row opens an embedded TradingView Lightweight Charts candlestick view using current OKX candle data.
+  - BUY/SELL marker, entry line, entry-zone bounds, stop loss, T1/T2, expected move %, duration, R:R and evidence are drawn directly on the chart.
+  - The chart-data endpoint is dashboard-session authenticated and visualization-only; it does not alter research, promotion, or trade authority.
+  - Render production deploy `dep-daflbknavr4c73c99k00` completed live successfully for merge `dc0abff7...`.
 - Future acceleration work remains subordinate to the mandatory research-to-live chain; speed must come from parallelism, caching, early rejection, prioritization, event-driven agents and deterministic automation, never weaker evidence.
 
 ## COST / SPEED POLICY
@@ -81,7 +84,7 @@ Use deterministic Python for calculation/backtesting/filtering/evidence checks. 
 1. Inspect completed Cloud Crypto Research run `34170631618` artifacts. Verify `execution_oos_robustness` exists in real artifacts, uses the same untouched holdout path, current snapshot anchor is never presented as historical, and record which strategies/timeframes retain positive expectancy/sum under maximum conservative execution stress. Also verify the new independent artifact-audit output. Do not infer results before artifact inspection.
 2. If the replacement run has infrastructure/data failures, fix only the bounded cause and rerun. If evidence is valid, decide whether ACC-001 has enough execution robustness evidence to close; do not mark complete merely because code exists.
 3. Obtain direct production observer state evidence: `/health.continuous_ai` must show `configured=true`, `cycle_count>=1`, `last_error_type=null`, five-minute cadence, bounded timeout and trade/write/promotion authority false.
-4. Verify a post-PR #42/#43/#44/#47 production scan remains healthy, execution/liquidation evidence stays research-only, and no unvalidated TRADE appears.
+4. Verify a post-PR #42/#43/#44/#47/#48 production scan remains healthy, execution/liquidation evidence stays research-only, and no unvalidated TRADE appears.
 5. After ACC-001 evidence is genuinely complete, refresh PR #46 on current main, require exact-head Security and Reliability success, then integrate only if its shadow/canary layer remains read-only/fail-closed.
 6. Only then move to `ACC-002` cross-sectional ranking, then ACC-003 through ACC-007 sequentially while non-owner specialists audit in parallel.
 7. Keep `live_promotions.json` empty and signing keys unused until repeated backtests, untouched OOS, robustness/stability, Strategy Registry review and Production Risk review genuinely complete.
