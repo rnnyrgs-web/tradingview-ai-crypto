@@ -16,6 +16,8 @@ import tempfile
 import time
 from pathlib import Path
 
+from research_observability import record_cache_read
+
 
 CACHE_VERSION = 1
 DEFAULT_TTL_SECONDS = max(60, min(int(os.getenv("HISTORY_SHARED_CACHE_TTL_SECONDS", "900")), 3600))
@@ -89,31 +91,40 @@ def _valid_rows(rows, now_ms, wanted):
     return True
 
 
-def read_history(symbol, bar, wanted, max_bars, *, now_ms=None, ttl_seconds=None, cache_dir=None):
+def read_history(symbol, bar, wanted, max_bars, *, now_ms=None, ttl_seconds=None, cache_dir=None, observe=True):
+    started = time.perf_counter()
     now_ms = int(now_ms if now_ms is not None else time.time() * 1000)
     ttl_seconds = int(ttl_seconds or DEFAULT_TTL_SECONDS)
     cache_dir = Path(cache_dir or DEFAULT_CACHE_DIR)
     descriptor = _request_descriptor(symbol, bar, wanted, max_bars, _bucket(now_ms, ttl_seconds))
     key = _cache_key(descriptor)
     path = _cache_path(cache_dir, key)
+
+    def finish(result, value):
+        if observe:
+            record_cache_read(result, (time.perf_counter() - started) * 1000.0)
+        return value
+
+    if not path.exists():
+        return finish("miss", None)
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError, TypeError):
-        return None
+        return finish("rejection", None)
     if not isinstance(payload, dict) or payload.get("descriptor") != descriptor or payload.get("cache_key") != key:
-        return None
+        return finish("rejection", None)
     try:
         fetched_at_ms = int(payload.get("fetched_at_ms"))
     except (TypeError, ValueError):
-        return None
+        return finish("rejection", None)
     if fetched_at_ms <= 0 or fetched_at_ms > now_ms + MAX_FUTURE_SKEW_MS:
-        return None
+        return finish("rejection", None)
     rows = payload.get("rows")
     if not _valid_rows(rows, now_ms, wanted):
-        return None
+        return finish("rejection", None)
     if payload.get("rows_sha256") != _rows_digest(rows):
-        return None
-    return rows
+        return finish("rejection", None)
+    return finish("hit", rows)
 
 
 def write_history(symbol, bar, wanted, max_bars, rows, *, now_ms=None, ttl_seconds=None, cache_dir=None):
@@ -135,7 +146,10 @@ def write_history(symbol, bar, wanted, max_bars, rows, *, now_ms=None, ttl_secon
     try:
         cache_dir.mkdir(parents=True, exist_ok=True)
         if path.exists():
-            existing = read_history(symbol, bar, wanted, max_bars, now_ms=now_ms, ttl_seconds=ttl_seconds, cache_dir=cache_dir)
+            existing = read_history(
+                symbol, bar, wanted, max_bars,
+                now_ms=now_ms, ttl_seconds=ttl_seconds, cache_dir=cache_dir, observe=False,
+            )
             return existing is not None
         with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=cache_dir, prefix=f".{key}.", suffix=".tmp", delete=False) as handle:
             temp_path = Path(handle.name)
@@ -151,7 +165,10 @@ def write_history(symbol, bar, wanted, max_bars, rows, *, now_ms=None, ttl_secon
                 temp_path.unlink()
             except FileNotFoundError:
                 pass
-        return read_history(symbol, bar, wanted, max_bars, now_ms=now_ms, ttl_seconds=ttl_seconds, cache_dir=cache_dir) is not None
+        return read_history(
+            symbol, bar, wanted, max_bars,
+            now_ms=now_ms, ttl_seconds=ttl_seconds, cache_dir=cache_dir, observe=False,
+        ) is not None
     except OSError:
         return False
 
