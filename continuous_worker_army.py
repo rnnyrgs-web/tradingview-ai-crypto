@@ -19,6 +19,7 @@ from pathlib import Path
 from threading import Lock
 
 from research_observability import record_worker_result, snapshot as research_metrics_snapshot
+from worker_supervisor import record_incident, supervisor_summary
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -26,6 +27,9 @@ MAX_CONCURRENT = max(1, min(int(os.getenv("WORKER_ARMY_MAX_CONCURRENT", "2")), 4
 JOB_TIMEOUT_SECONDS = max(300, min(int(os.getenv("WORKER_ARMY_JOB_TIMEOUT_SECONDS", "2700")), 3600))
 REST_SECONDS = max(5, min(int(os.getenv("WORKER_ARMY_REST_SECONDS", "5")), 300))
 MAX_ERROR_BACKOFF_SECONDS = max(30, min(int(os.getenv("WORKER_ARMY_MAX_ERROR_BACKOFF_SECONDS", "300")), 900))
+HEARTBEAT_SECONDS = max(15, min(int(os.getenv("WORKER_ARMY_HEARTBEAT_SECONDS", "30")), 120))
+SUPERVISOR_INTERVAL_SECONDS = max(10, min(int(os.getenv("WORKER_ARMY_SUPERVISOR_INTERVAL_SECONDS", "30")), 120))
+TASK_RESTART_DELAY_SECONDS = max(5, min(int(os.getenv("WORKER_ARMY_TASK_RESTART_DELAY_SECONDS", "15")), 300))
 
 
 @dataclass(frozen=True)
@@ -80,12 +84,16 @@ _status: dict[str, object] = {
     "max_concurrent": MAX_CONCURRENT,
     "accuracy_reserved_slots": 1 if MAX_CONCURRENT >= 2 else 0,
     "job_timeout_seconds": JOB_TIMEOUT_SECONDS,
+    "heartbeat_seconds": HEARTBEAT_SECONDS,
+    "supervisor_interval_seconds": SUPERVISOR_INTERVAL_SECONDS,
     "max_error_backoff_seconds": MAX_ERROR_BACKOFF_SECONDS,
     "worker_count": len(WORKERS),
     "active_jobs": 0,
     "completed_jobs": 0,
     "failed_jobs": 0,
+    "task_restarts": 0,
     "last_completion_at": None,
+    "last_supervisor_check_at": None,
     "workers": {},
     "trade_authority": False,
     "write_authority": False,
@@ -99,10 +107,37 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _touch_worker(name: str) -> None:
+    with _lock:
+        worker = (_status.get("workers") or {}).get(name)
+        if isinstance(worker, dict):
+            worker["heartbeat_at"] = _now()
+            worker["heartbeat_monotonic"] = time.monotonic()
+
+
 def snapshot() -> dict:
+    now_mono = time.monotonic()
     with _lock:
         data = dict(_status)
-        data["workers"] = {k: dict(v) for k, v in (_status["workers"] or {}).items()}
+        raw_workers = {k: dict(v) for k, v in (_status["workers"] or {}).items()}
+    supervision = supervisor_summary(raw_workers, now_monotonic=now_mono, job_timeout_seconds=JOB_TIMEOUT_SECONDS)
+    safe_workers = {}
+    for name, row in raw_workers.items():
+        row.pop("heartbeat_monotonic", None)
+        row["health"] = supervision["worker_health"].get(name, {})
+        safe_workers[name] = row
+    data["workers"] = safe_workers
+    data["supervisor"] = {
+        "healthy": supervision["healthy"],
+        "stale_workers": supervision["stale_workers"],
+        "crashed_workers": supervision["crashed_workers"],
+        "task_restarts": data.get("task_restarts", 0),
+        "last_check_at": data.get("last_supervisor_check_at"),
+        "trade_authority": False,
+        "promotion_authority": False,
+        "write_authority": False,
+        "research_only": True,
+    }
     data["observability"] = research_metrics_snapshot()
     return data
 
@@ -134,12 +169,26 @@ def _is_accuracy_worker(spec: WorkerSpec) -> bool:
 
 
 def _retry_delay_seconds(consecutive_failures: int) -> int:
-    """Bound retries so unhealthy workers cannot monopolize scarce heavy slots."""
     failures = max(0, int(consecutive_failures))
     if failures <= 0:
         return REST_SECONDS
     multiplier = 2 ** min(failures, 6)
     return min(MAX_ERROR_BACKOFF_SECONDS, max(REST_SECONDS, REST_SECONDS * multiplier))
+
+
+async def _wait_for_process(process: asyncio.subprocess.Process, spec: WorkerSpec) -> tuple[int, str | None]:
+    started = time.monotonic()
+    while True:
+        remaining = JOB_TIMEOUT_SECONDS - (time.monotonic() - started)
+        if remaining <= 0:
+            process.kill()
+            await process.wait()
+            return -9, "TimeoutError"
+        try:
+            code = await asyncio.wait_for(process.wait(), timeout=min(HEARTBEAT_SECONDS, remaining))
+            return int(code), None
+        except asyncio.TimeoutError:
+            _touch_worker(spec.name)
 
 
 async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> int:
@@ -148,6 +197,7 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> int:
             _status["active_jobs"] = int(_status["active_jobs"]) + 1
             workers = _status["workers"]
             previous = workers.get(spec.name, {})
+            now_mono = time.monotonic()
             workers[spec.name] = {
                 "state": "running",
                 "script": spec.script,
@@ -155,8 +205,11 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> int:
                 "last_finished_at": previous.get("last_finished_at"),
                 "last_exit_code": previous.get("last_exit_code"),
                 "last_error_type": None,
+                "last_incident": previous.get("last_incident"),
                 "consecutive_failures": int(previous.get("consecutive_failures") or 0),
                 "next_retry_delay_seconds": 0,
+                "heartbeat_at": _now(),
+                "heartbeat_monotonic": now_mono,
             }
 
         started = time.monotonic()
@@ -174,25 +227,25 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> int:
                     stdout=asyncio.subprocess.DEVNULL,
                     stderr=asyncio.subprocess.DEVNULL,
                 )
-                try:
-                    exit_code = await asyncio.wait_for(process.wait(), timeout=JOB_TIMEOUT_SECONDS)
-                except asyncio.TimeoutError:
-                    process.kill()
-                    await process.wait()
-                    exit_code = -9
-                    error_type = "TimeoutError"
+                exit_code, error_type = await _wait_for_process(process, spec)
                 if exit_code == 0 and spec.script == "cross_asset_runner.py":
                     try:
                         evidence = json.loads(Path(summary_path).read_text(encoding="utf-8"))
                     except (OSError, ValueError, TypeError):
                         exit_code = -1
                         error_type = "EvidenceSummaryError"
+        except asyncio.CancelledError:
+            raise
         except Exception as exc:
             exit_code = -1
             error_type = type(exc).__name__
 
         exit_code = int(exit_code if exit_code is not None else -1)
         elapsed = round(time.monotonic() - started, 2)
+        incident = None
+        if exit_code != 0:
+            error_type = error_type or "ProcessExitError"
+            incident = record_incident(spec.name, exit_code, error_type)
         with _lock:
             previous_failures = int(_status["workers"][spec.name].get("consecutive_failures") or 0)
             consecutive_failures = 0 if exit_code == 0 else previous_failures + 1
@@ -201,7 +254,6 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> int:
             _status["completed_jobs"] = int(_status["completed_jobs"]) + 1
             if exit_code != 0:
                 _status["failed_jobs"] = int(_status["failed_jobs"]) + 1
-                error_type = error_type or "ProcessExitError"
             _status["last_completion_at"] = _now()
             _status["workers"][spec.name] = {
                 "state": "resting" if exit_code == 0 else "error_backoff",
@@ -210,10 +262,13 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> int:
                 "last_finished_at": _now(),
                 "last_exit_code": exit_code,
                 "last_error_type": error_type,
+                "last_incident": incident,
                 "elapsed_seconds": elapsed,
                 "latest_evidence": evidence,
                 "consecutive_failures": consecutive_failures,
                 "next_retry_delay_seconds": retry_delay,
+                "heartbeat_at": _now(),
+                "heartbeat_monotonic": time.monotonic(),
             }
         try:
             record_worker_result(spec.name, exit_code, elapsed, evidence)
@@ -226,41 +281,91 @@ async def _worker_loop(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> None:
     await asyncio.sleep((sum(spec.name.encode("utf-8")) % 17) + 1)
     consecutive_failures = 0
     while True:
+        _touch_worker(spec.name)
         exit_code = await _run_once(spec, semaphore)
         consecutive_failures = 0 if exit_code == 0 else consecutive_failures + 1
-        await asyncio.sleep(_retry_delay_seconds(consecutive_failures))
+        delay = _retry_delay_seconds(consecutive_failures)
+        with _lock:
+            row = _status["workers"].get(spec.name, {})
+            if isinstance(row, dict):
+                row["state"] = "resting" if exit_code == 0 else "error_backoff"
+                row["next_retry_delay_seconds"] = delay
+        slept = 0
+        while slept < delay:
+            chunk = min(HEARTBEAT_SECONDS, delay - slept)
+            await asyncio.sleep(chunk)
+            slept += chunk
+            _touch_worker(spec.name)
+
+
+def _initial_worker_state(spec: WorkerSpec) -> dict:
+    return {
+        "state": "starting",
+        "script": spec.script,
+        "last_started_at": None,
+        "last_finished_at": None,
+        "last_exit_code": None,
+        "last_error_type": None,
+        "last_incident": None,
+        "consecutive_failures": 0,
+        "next_retry_delay_seconds": 0,
+        "heartbeat_at": _now(),
+        "heartbeat_monotonic": time.monotonic(),
+    }
 
 
 async def run_army() -> None:
     with _lock:
         _status["started_at"] = _now()
-        _status["workers"] = {
-            spec.name: {
-                "state": "starting",
-                "script": spec.script,
-                "last_started_at": None,
-                "last_finished_at": None,
-                "last_exit_code": None,
-                "last_error_type": None,
-                "consecutive_failures": 0,
-                "next_retry_delay_seconds": 0,
-            }
-            for spec in WORKERS
-        }
+        _status["workers"] = {spec.name: _initial_worker_state(spec) for spec in WORKERS}
     if MAX_CONCURRENT == 1:
         shared = asyncio.Semaphore(1)
         lanes = {spec.name: shared for spec in WORKERS}
     else:
         accuracy_lane = asyncio.Semaphore(1)
         general_lane = asyncio.Semaphore(MAX_CONCURRENT - 1)
-        lanes = {
-            spec.name: accuracy_lane if _is_accuracy_worker(spec) else general_lane
-            for spec in WORKERS
-        }
-    tasks = [asyncio.create_task(_worker_loop(spec, lanes[spec.name]), name=spec.name) for spec in WORKERS]
+        lanes = {spec.name: accuracy_lane if _is_accuracy_worker(spec) else general_lane for spec in WORKERS}
+
+    specs = {spec.name: spec for spec in WORKERS}
+    tasks = {name: asyncio.create_task(_worker_loop(spec, lanes[name]), name=name) for name, spec in specs.items()}
+    shutting_down = False
     try:
-        await asyncio.gather(*tasks)
+        while True:
+            done, _ = await asyncio.wait(
+                list(tasks.values()),
+                timeout=SUPERVISOR_INTERVAL_SECONDS,
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            with _lock:
+                _status["last_supervisor_check_at"] = _now()
+            for task in done:
+                name = task.get_name()
+                if shutting_down:
+                    continue
+                error_type = "WorkerLoopExit"
+                try:
+                    exc = task.exception()
+                    if exc is not None:
+                        error_type = type(exc).__name__
+                except asyncio.CancelledError:
+                    error_type = "CancelledError"
+                incident = record_incident(name, -1, error_type)
+                with _lock:
+                    previous = _status["workers"].get(name, {})
+                    _status["task_restarts"] = int(_status["task_restarts"]) + 1
+                    _status["workers"][name] = {
+                        **(previous if isinstance(previous, dict) else {}),
+                        "state": "crashed",
+                        "last_error_type": error_type,
+                        "last_incident": incident,
+                        "heartbeat_at": _now(),
+                        "heartbeat_monotonic": time.monotonic(),
+                    }
+                await asyncio.sleep(TASK_RESTART_DELAY_SECONDS)
+                spec = specs[name]
+                tasks[name] = asyncio.create_task(_worker_loop(spec, lanes[name]), name=name)
     finally:
-        for task in tasks:
+        shutting_down = True
+        for task in tasks.values():
             task.cancel()
-        await asyncio.gather(*tasks, return_exceptions=True)
+        await asyncio.gather(*tasks.values(), return_exceptions=True)

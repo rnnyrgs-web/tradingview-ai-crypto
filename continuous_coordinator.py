@@ -76,6 +76,7 @@ def observability_log_payload(army: object) -> dict:
     network = observed.get("history_network") if isinstance(observed.get("history_network"), dict) else {}
     workers = observed.get("workers") if isinstance(observed.get("workers"), dict) else {}
     acc002 = observed.get("acc002") if isinstance(observed.get("acc002"), dict) else {}
+    supervisor = army.get("supervisor") if isinstance(army.get("supervisor"), dict) else {}
 
     def compact_acc(name: str) -> dict:
         row = acc002.get(name) if isinstance(acc002.get(name), dict) else {}
@@ -107,6 +108,10 @@ def observability_log_payload(army: object) -> dict:
         "worker_failed": workers.get("failed"),
         "worker_timeouts": workers.get("timeouts"),
         "worker_failure_rate": workers.get("failure_rate"),
+        "supervisor_healthy": supervisor.get("healthy"),
+        "stale_workers": supervisor.get("stale_workers"),
+        "crashed_workers": supervisor.get("crashed_workers"),
+        "task_restarts": supervisor.get("task_restarts"),
         "acc002_24h": compact_acc("cross-asset-rank-24h"),
         "acc002_7d": compact_acc("cross-asset-rank-7d"),
         "trade_authority": False,
@@ -132,9 +137,7 @@ async def check_once(client: httpx.AsyncClient) -> dict:
         state.raise_for_status()
         result["production_ok"] = validate_production_health(production.json())
         result["state_last_updated"] = parse_state_last_updated(state.text)
-        result["state_ok"] = bool(
-            result["state_last_updated"] and "## EXACT NEXT STEP" in state.text
-        )
+        result["state_ok"] = bool(result["state_last_updated"] and "## EXACT NEXT STEP" in state.text)
     except (httpx.HTTPError, ValueError, TypeError) as exc:
         result["last_error_type"] = type(exc).__name__
         log.warning("coordinator check failed: %s", type(exc).__name__)
@@ -184,10 +187,13 @@ def health() -> dict:
     with _lock:
         snapshot = dict(_status)
     army = worker_army_snapshot() if WORKER_ARMY_ENABLED else {"enabled": False}
+    supervisor = army.get("supervisor") if isinstance(army.get("supervisor"), dict) else {}
+    supervisor_ok = supervisor.get("healthy") is True if WORKER_ARMY_ENABLED else True
     healthy = (
         snapshot["production_ok"]
         and snapshot["state_ok"]
         and snapshot["consecutive_failures"] < 3
+        and supervisor_ok
     )
     return {
         "ok": healthy,
