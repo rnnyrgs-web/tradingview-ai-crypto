@@ -2,7 +2,13 @@ import math
 
 import pytest
 
-from cross_asset_rank import CrossAssetConfig, build_cross_section_panel, evaluate_panel, spearman_rank_ic
+from cross_asset_rank import (
+    CrossAssetConfig,
+    bootstrap_mean_lower_bound,
+    build_cross_section_panel,
+    evaluate_panel,
+    spearman_rank_ic,
+)
 
 
 def _histories(asset_count=10, bars=220):
@@ -22,6 +28,15 @@ def test_spearman_rank_ic_basic():
     assert spearman_rank_ic([1, 2, 3, 4], [40, 30, 20, 10]) == pytest.approx(-1.0)
 
 
+def test_bootstrap_lower_bound_is_deterministic_and_fail_closed_on_tiny_sample():
+    positive = [0.01 + i * 0.0001 for i in range(30)]
+    first = bootstrap_mean_lower_bound(positive)
+    second = bootstrap_mean_lower_bound(positive)
+    assert first == second
+    assert first > 0
+    assert bootstrap_mean_lower_bound([0.1] * 9) is None
+
+
 def test_panel_and_oos_are_chronological_and_research_only():
     cfg = CrossAssetConfig(lookbacks=(4, 8, 16), forward_bars=4, min_assets=8)
     panel = build_cross_section_panel(_histories(), cfg)
@@ -35,6 +50,7 @@ def test_panel_and_oos_are_chronological_and_research_only():
     assert result["evaluation_stride"] == 4
     assert result["splits"]["untouched_oos"]["timestamps"] > 0
     assert result["splits"]["untouched_oos"]["mean_rank_ic"] > 0
+    assert result["bootstrap_robustness"]["resamples"] == 500
 
 
 def test_split_boundaries_are_purged_by_forward_horizon():
@@ -56,13 +72,14 @@ def test_gate_uses_maximum_cost_stress_not_base_cost_only():
         round_trip_cost_bps=1.0,
         cost_stress_multipliers=(1.0, 3.0),
     )
-    panel = build_cross_section_panel(_histories(bars=300), cfg)
+    panel = build_cross_section_panel(_histories(bars=400), cfg)
     result = evaluate_panel(panel, cfg)
     oos = result["splits"]["untouched_oos"]
     assert "1.0" in oos["cost_stress"]
     assert "3.0" in oos["cost_stress"]
     assert result["gate_uses_max_cost_stress"] is True
     assert oos["cost_stress"]["3.0"]["mean_net_top_minus_bottom"] <= oos["cost_stress"]["1.0"]["mean_net_top_minus_bottom"]
+    assert "max_cost_net_spread_mean_95pct_lower_bound" in result["bootstrap_robustness"]
 
 
 def test_overlapping_evaluation_can_be_disabled_explicitly():
