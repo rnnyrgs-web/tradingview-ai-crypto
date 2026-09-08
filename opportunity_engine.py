@@ -86,7 +86,7 @@ def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
                 "entry_price": plan["entry"],"entry_low": entry_low,"entry_high": entry_high,"stop_loss": plan["stop"],
                 "target_1": plan["t1"],"target_2": plan["t2"],"risk_reward": plan["rr"],"quant_score": q,
                 "evidence_score": evidence,"market_regime": regime,"reasoning": base_reason[:4000],"strategy_version": STRATEGY_VERSION,
-                "strategy_identity": validation.identity,"calibration": calibration,"forward_proof": validation.forward_proof,"_rank_score": rank_score,
+                "strategy_identity": validation.identity,"calibration": calibration,"_rank_score": rank_score,
             })
         ranked.sort(key=lambda x: x["_rank_score"], reverse=True)
         rows = ranked[:20]
