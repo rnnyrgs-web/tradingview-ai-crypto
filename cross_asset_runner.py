@@ -127,6 +127,51 @@ def _horizon_settings() -> tuple[str, str, int, tuple[tuple[int, ...], ...]]:
     return horizon, profile["bar"], profile["forward_bars"], profile["lookback_grid"]
 
 
+def _blocked_payload(*, horizon: str, bar: str, universe_size: int, requested_bars: int, bars: int, minimum_bars: int, histories: dict, failures: list, survivorship: dict, liquidity_histories: dict, reason: str) -> dict:
+    payload = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "acc": "ACC-002",
+        "research_only": True,
+        "research_blocked": True,
+        "research_blocked_reason": reason,
+        "live_approved": False,
+        "trade_authority": False,
+        "source": "OKX public historical API",
+        "selection_policy": "fixed_grid_train_validation_parameter_and_liquidity_stability_then_open_one_untouched_oos",
+        "survivorship_policy": (
+            "Today's liquid universe is not historical membership evidence. Cross-sectional promotion review requires "
+            "timestamped investable-universe snapshots with provenance and all manifest members actually fetched."
+        ),
+        "point_in_time_universe": survivorship,
+        "parameter_stability": {"minimum_eligible_candidates": MIN_STABLE_CANDIDATES, "eligible_candidate_count": 0, "passes": False},
+        "liquidity_stability_policy": {
+            "predeclared_subsets": list(LIQUIDITY_SUBSETS),
+            "supported_subsets": sorted(liquidity_histories),
+            "minimum_subset_coverage": MIN_LIQUIDITY_SUBSET_COVERAGE,
+            "minimum_passing_subsets_per_candidate": MIN_STABLE_LIQUIDITY_SUBSETS,
+            "primary_oos_subset": None,
+            "oos_subset_count": 0,
+        },
+        "untouched_oos_opened_for_candidate_count": 0,
+        "candidate_count": 0,
+        "candidates": [],
+        "selected_evaluation": None,
+        "universe_requested": universe_size,
+        "universe_resolved": len(histories),
+        "universe_selection_origin": "current_liquid_universe_unless_acc011_snapshots_verified",
+        "symbols": sorted(histories),
+        "failed_symbols": failures,
+        "bar": bar,
+        "horizon": horizon,
+        "bars_requested_env": requested_bars,
+        "bars_effective": bars,
+        "minimum_history_bars": minimum_bars,
+        "minimum_independent_oos_samples": MIN_INDEPENDENT_OOS_SAMPLES,
+        "eligible_for_promotion_review": False,
+    }
+    return seal_research_payload(payload)
+
+
 def run() -> dict:
     universe_size = _int_env("CROSS_ASSET_UNIVERSE_SIZE", 45, 8, 60)
     requested_bars = _int_env("CROSS_ASSET_BARS", 3000, 300, MAX_HISTORY_BARS)
@@ -154,13 +199,22 @@ def run() -> dict:
     manifest = load_manifest(os.getenv("POINT_IN_TIME_UNIVERSE_MANIFEST", "").strip() or None)
     research_histories, survivorship = filter_histories(manifest, histories)
 
-    # Only a fully verified snapshot manifest is allowed to replace current-survivor
-    # histories. When ACC-011 is not safe, research continues on current survivors
-    # but is explicitly barred from promotion review.
     research_symbols = [symbol for symbol in symbols if symbol in research_histories]
     liquidity_histories = _build_liquidity_subsets(research_symbols, research_histories)
     if len(liquidity_histories) < MIN_STABLE_LIQUIDITY_SUBSETS:
-        raise ValueError("insufficient supported liquidity subsets for ACC-002 stability gate")
+        return _blocked_payload(
+            horizon=horizon,
+            bar=bar,
+            universe_size=universe_size,
+            requested_bars=requested_bars,
+            bars=bars,
+            minimum_bars=minimum_bars,
+            histories=research_histories,
+            failures=failures,
+            survivorship=survivorship,
+            liquidity_histories=liquidity_histories,
+            reason="insufficient_supported_liquidity_subsets",
+        )
     primary_subset_size = max(liquidity_histories)
 
     candidates = []
@@ -319,6 +373,8 @@ def summarize_evidence(envelope: dict) -> dict:
         "generated_at": payload["generated_at"],
         "horizon": payload["horizon"],
         "bar": payload["bar"],
+        "research_blocked": bool(payload.get("research_blocked")),
+        "research_blocked_reason": payload.get("research_blocked_reason"),
         "supported_liquidity_subsets": payload["liquidity_stability_policy"]["supported_subsets"],
         "parameter_stability": payload["parameter_stability"],
         "point_in_time_universe": payload["point_in_time_universe"],
