@@ -55,13 +55,15 @@ def _close_decision(trade, price):
             return stop, "STOP"
         if price <= target:
             return target, "TARGET"
+    opened = None
     try:
         opened = datetime.fromisoformat(str(trade["opened_at"]).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        log.warning("Invalid paper trade opened_at for id=%s", trade.get("id"))
+    if opened is not None:
         hours = 24 if trade["horizon"] == "24h" else 168
         if now_utc() >= opened + timedelta(hours=hours):
             return price, "TIME"
-    except Exception:
-        pass
     return None, None
 
 
@@ -101,9 +103,12 @@ def run_paper_cycle():
     realized = float(account["realized_pnl"])
 
     for trade in fetch_open_paper_trades(ACCOUNT_ID):
+        price = None
         try:
             price = _last_price(trade["symbol"])
-        except Exception:
+        except Exception as exc:
+            log.warning("Paper close price unavailable for %s: %s", trade.get("symbol"), type(exc).__name__)
+        if price is None:
             continue
         exit_price, reason = _close_decision(trade, price)
         if exit_price is None:
@@ -177,9 +182,12 @@ def run_paper_cycle():
     open_trades = fetch_open_paper_trades(ACCOUNT_ID)
     for trade in open_trades:
         held_notional += float(trade["notional_usd"])
+        price = None
         try:
             price = _last_price(trade["symbol"])
-        except Exception:
+        except Exception as exc:
+            log.warning("Paper mark price unavailable for %s: %s", trade.get("symbol"), type(exc).__name__)
+        if price is None:
             price = float(trade["entry_price"])
         unrealized += _mark_pnl(trade["direction"], float(trade["entry_price"]), price, float(trade["quantity"]))
     equity = cash + held_notional + unrealized
