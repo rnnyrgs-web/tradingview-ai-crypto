@@ -75,7 +75,6 @@ def health():
         "operations":health_snapshot(),
         "continuous_ai":continuous_ai_status(),
         "paper_trading":paper_status(),
-        "research_observability":research_observability_snapshot(),
     }
 
 @app.get("/research-observability")
