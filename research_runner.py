@@ -15,6 +15,12 @@ from research_artifact import seal_research_payload
 from worker_supervisor import sanitize_diagnostic
 
 
+INSUFFICIENT_HISTORY_MESSAGES = (
+    "need at least 1000 candles for walk-forward",
+    "not enough historical candles",
+)
+
+
 def csv_env(name, default=""):
     raw = os.getenv(name, default)
     return [x.strip() for x in raw.split(",") if x.strip()]
@@ -92,6 +98,27 @@ def _emit_private_failure_diagnostic(symbol, bar, exc):
     )
 
 
+def _research_blocked_reason(exc):
+    if not isinstance(exc, RuntimeError):
+        return None
+    message = str(exc).strip().lower()
+    if any(expected in message for expected in INSUFFICIENT_HISTORY_MESSAGES):
+        return "insufficient_historical_candles"
+    return None
+
+
+def _blocked_item(item, exc, reason):
+    item["ok"] = True
+    item["research_only"] = True
+    item["research_blocked"] = True
+    item["research_blocked_reason"] = reason
+    item["error"] = f"{type(exc).__name__}: {exc}"
+    item["eligible_for_promotion_review"] = False
+    item["live_approved"] = False
+    item["trade_authority"] = False
+    return item
+
+
 def main():
     symbols, universe_meta = resolve_research_symbols()
     timeframes = csv_env("RESEARCH_TIMEFRAMES", "15m,1H")
@@ -130,10 +157,16 @@ def main():
                 multiple_testing_registry = apply_registry_firewall(raw_registry, trial_count)
                 item["strategy_registry"] = _demote_for_survivorship(multiple_testing_registry, survivorship)
                 item["ok"] = True
+                item["research_blocked"] = False
             except Exception as exc:
-                item["ok"] = False
-                item["error"] = f"{type(exc).__name__}: {exc}"
-                _emit_private_failure_diagnostic(symbol, bar, exc)
+                blocked_reason = _research_blocked_reason(exc)
+                if blocked_reason:
+                    _blocked_item(item, exc, blocked_reason)
+                else:
+                    item["ok"] = False
+                    item["research_blocked"] = False
+                    item["error"] = f"{type(exc).__name__}: {exc}"
+                    _emit_private_failure_diagnostic(symbol, bar, exc)
             item["elapsed_seconds"] = round(time.time() - t0, 2)
             results.append(item)
             print(json.dumps(item, default=str), flush=True)
@@ -154,6 +187,8 @@ def main():
                     "point_in_time_universe_gate": strategy["point_in_time_universe_gate"],
                 })
 
+    blocked = sum(1 for x in results if x.get("research_blocked") is True)
+    failures = sum(1 for x in results if not x.get("ok"))
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "started_at": started,
@@ -167,6 +202,8 @@ def main():
         "universe": universe_meta,
         "point_in_time_universe": survivorship,
         "declared_hypothesis_trials": trial_count,
+        "research_blocked_count": blocked,
+        "software_failure_count": failures,
         "strategy_policy": "research-only unless validation+holdout OOS+robustness+search-breadth+point-in-time-universe gates pass",
         "multiple_testing_policy": (
             "Search breadth is declared before OOS inspection. More strategy/parameter hypotheses require deeper OOS "
@@ -200,14 +237,15 @@ def main():
             "declared_hypothesis_trials": trial_count,
             "execution_policy": payload["execution_policy"],
             "universe": universe_meta,
+            "research_blocked_count": blocked,
+            "software_failure_count": failures,
             "eligible_strategy_count": len(eligible),
             "eligible_strategies": eligible,
         }
         json.dump(seal_research_payload(registry_payload), f, indent=2)
 
-    failures = sum(1 for x in results if not x.get("ok"))
     print(
-        f"Completed {len(results)} research jobs with {failures} failures and "
+        f"Completed {len(results)} research jobs with {failures} software failures, {blocked} research-blocked outcomes and "
         f"{len(eligible)} promotion-review-eligible strategies after {trial_count} declared hypotheses. Universe={universe_meta}."
     )
     if results and failures == len(results):
