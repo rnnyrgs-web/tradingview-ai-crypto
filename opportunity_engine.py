@@ -4,6 +4,8 @@ from datetime import timedelta
 from config import STRATEGY_VERSION
 from calibration import calibration_assessment
 from db import fetch_resolved_predictions, insert_prediction_ledger, replace_opportunities
+from operational_monitor import health_snapshot
+from production_risk_gate import assess_execution_risk, assess_global_market_risk
 from production_validation import validate_live_strategy
 from utils import iso, now_utc
 
@@ -32,6 +34,7 @@ def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
             ai_map[(symbol, horizon)] = s
 
     resolved_predictions = fetch_resolved_predictions()
+    global_risk = assess_global_market_risk(candidates, health_snapshot())
     saved = {}
     ledger_rows = []
     for horizon in ("24h", "7d"):
@@ -56,7 +59,15 @@ def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
             consensus = c.get("market_consensus", {})
             consensus_reliable = consensus.get("reliable") is True
             data_multiplier = _bounded_multiplier(consensus.get("confidence_multiplier"), 1.0 if consensus_reliable else 0.0)
-            if reviewed_direction != direction or action != "TRADE" or not validation.approved or not consensus_reliable:
+            execution_risk = assess_execution_risk(c, direction)
+            if (
+                reviewed_direction != direction
+                or action != "TRADE"
+                or not validation.approved
+                or not consensus_reliable
+                or global_risk.blocked
+                or execution_risk.blocked
+            ):
                 action = "WAIT"
 
             raw_evidence = float(reviewed.get("evidence_score") or min(99.0, abs(q) / 5.5 * 100.0))
@@ -73,6 +84,10 @@ def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
                 base_reason = f"{base_reason} [{validation.status}: {validation.reason}]"
             elif not calibration["allows_live_action"]:
                 base_reason = f"{base_reason} [CALIBRATION_PENDING_OR_WEAK: live action blocked]"
+            if global_risk.blocked:
+                base_reason = f"{base_reason} [GLOBAL_RISK_WAIT: {','.join(global_risk.reasons)}]"
+            if execution_risk.blocked:
+                base_reason = f"{base_reason} [EXECUTION_RISK_WAIT: {','.join(execution_risk.reasons)}]"
             if not consensus_reliable:
                 provenance = consensus.get("provenance") or {}
                 accepted = provenance.get("accepted_exchange_names") or []
