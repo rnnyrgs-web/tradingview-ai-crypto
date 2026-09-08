@@ -28,53 +28,52 @@ Integrated evidence:
 - PR #39 merged `2e71fd84446a5a527ca82999b15a4b182c236cf4`: timestamp-safe OKX + Binance funding history and recent Binance USDⓈ-M OI history/change; two populated funding sources required for reliability.
 - PR #41 merged `d48d627b6d51bdd7262a4707856e5c6fd9280827`: timestamp-safe historical OKX mark-vs-index basis using exact shared timestamps only; no interpolation.
 - PR #42 merged `f6f0e2df83ed7e6d593a2cf3cc99b22809a90cf1`: research-only current-book fill/slippage simulation for ~1k/5k/10k quote notionals, visible-depth-only VWAP/slippage/coverage/partial-fill evidence, and defensible raw liquidation pressure units with no false USD notional.
-- PR #43 `Add untouched OOS execution robustness evidence` passed Security and Reliability run `34168441761` on final head `6eb5248189df9ecc53a2c590d58cdee20573639d` and merged as `dbefac4bbc9a145e18d6b871b4edb93cf73a0976`.
-- PR #44 `Accelerate cloud research without weakening gates` passed exact-head Security and Reliability run `34170047571` on `7107d85f6a81ca21e2cc7e2371837094a10552b7` and merged as `442b93e864682326195a3ae6c799fc231d43cbcd`.
-  - Cloud research concurrency is isolated by event/ref so stale feature-branch runs cannot block main research.
-  - Broad-universe matrix parallelism increases from 8 to 16 when GitHub capacity is available.
-  - Dedicated BTC/ETH/SOL/XRP/LINK fast-evidence workers run 15m + 1H in parallel while Top-80 + forced PONS research continues.
-  - Expensive bootstrap/perturbation robustness is skipped only for candidates that already fail deterministic train/validation/untouched-OOS quality gates.
-  - A separate adversarial artifact audit independently checks sealed integrity, fail-closed promotion, same-holdout execution policy and that live snapshot slippage is never represented as historical.
-  - No OOS, robustness, promotion or live-authority gate was weakened.
-- Merge `442b93e...` triggered Cloud Crypto Research run `34170631618`. Lead inspected the downloaded broad-universe, swing, fast-evidence, repeated-run and adversarial-audit artifacts on 2026-09-08 rather than inferring success from workflow status.
-  - 177/177 result records carrying `execution_oos_robustness` were `ok=true`, preserved `same_trade_path_policy=true`, and explicitly reported `historical_slippage_available=false`; current snapshots were never represented as historical evidence.
-  - 23 unique symbol/timeframe paths retained positive expectancy and positive cumulative net return at their maximum conservative execution stress: `SOL-USDT 1H`, `CHIP-USDT 1H`, `EDGE-USDT 1H`, `PEPE-USDT 1H`, `ARB-USDT 15m`, `NEAR-USDT 1H`, `CRV-USDT 15m`, `CRV-USDT 1H`, `XMSTR-USDT 1H`, `DOT-USDT 1H`, `AEON-USDT 1H`, `DOOD-USDT 15m`, `UNI-USDT 1H`, `ZAMA-USDT 1H`, `ENA-USDT 1H`, `INJ-USDT 1H`, `ETH-USDT 1D`, `SOL-USDT 4H`, `XRP-USDT 4H`, `LINK-USDT 1D`, `HBAR-USDT 1H`, `FET-USDT 1H`, and `APT-USDT 1H`.
-  - Independent `adversarial_audit.json` reported `ok=true`, zero failures, and checked all 17 broad/swing artifact groups (172 results).
-  - Repeated-run aggregation validated 51 sealed artifacts and advanced only `ARB-USDT 15m trend`, `DOOD-USDT 15m breakout`, and `DOOD-USDT 15m momentum` to `READY_FOR_STRATEGY_REGISTRY_REVIEW`; all remain `live_approved=false`.
-  - ACC-001 is closed as completed market/execution-realism evidence work. It is not a profitability claim and grants no signal, promotion or trading authority.
+- PR #43 `Add untouched OOS execution robustness evidence` passed Security and Reliability run `34168441761` and merged as `dbefac4bbc9a145e18d6b871b4edb93cf73a0976`.
+- PR #44 `Accelerate cloud research without weakening gates` passed Security and Reliability run `34170047571` and merged as `442b93e864682326195a3ae6c799fc231d43cbcd`.
+- Replacement research artifacts were inspected: 177/177 execution-OOS records were valid/research-only, 23 unique symbol/timeframe paths remained positive under maximum conservative execution stress, and independent adversarial audit reported zero failures. Repeated-run aggregation advanced only `ARB-USDT 15m trend`, `DOOD-USDT 15m breakout`, and `DOOD-USDT 15m momentum` to `READY_FOR_STRATEGY_REGISTRY_REVIEW`; all remain `live_approved=false`.
+- ACC-001 is complete. This is screening evidence, not a profitability claim and grants no live authority.
 
 ## 24/7 AI / ORCHESTRATION
 Token-free Render coordinator checks production health/state every minute with no trade/write/promotion authority.
 
-`continuous_ai_agent.py` runs inside production every five minutes by default, read-only, with `trade_authority=false`, `write_authority=false`, `promotion_authority=false`. PR #40 merged `3e26d60bdf812564203be61df842b7e3456fcf36`; OpenAI requests have bounded timeout (default 60s, clamped 10-240s), zero SDK retries and sanitized timeout state. Direct pre-PR #46 production evidence on 2026-09-08 showed `configured=true`, `cycle_count=7`, `last_error_type=null`, 300-second cadence, 60-second timeout and all three authorities false. The PR #46 deployment restarted in-memory state and its first AI call hit `RateLimitError`; a fresh post-deploy successful cycle is still required before claiming current live-cycle health.
+`continuous_ai_agent.py` runs inside production every five minutes by default, read-only, with `trade_authority=false`, `write_authority=false`, `promotion_authority=false`. PR #40 merged `3e26d60bdf812564203be61df842b7e3456fcf36`; OpenAI requests have bounded timeout and zero SDK retries. The first post-PR #46 restart call was rate-limited, so current live-cycle health still requires direct recheck before claiming healthy AI cycles.
 
 Event-driven supervisor from PR #37 wakes on completed production scan/cloud research plus hourly fallback, provides compact supervisor context and allows exactly one CHANGE + thirteen AUDIT workers with max-parallel 14. The one-writer/thirteen-auditor path has been verified end-to-end.
 
-PR #55 `Add bounded 24/7 Python research worker army` passed exact-head Security and Reliability run `34180983272` on `73026f62b951ced740b0699e9c0e0c02cb376030` and was squash-merged as `10416b2ef89f54b46632aeabb49968edbb6d8c67`.
+PR #55 `Add bounded 24/7 Python research worker army` passed exact-head Security and Reliability run `34180983272` and was squash-merged as `10416b2ef89f54b46632aeabb49968edbb6d8c67`.
 - Existing paid Render Starter coordinator hosts persistent logical Python research loops on the same single paid service; no additional paid Render service was created.
-- Worker coverage includes BTC, ETH, SOL, XRP, LINK, PONS, eight liquid-universe shards, major swing research, and after PR #56 a dedicated cross-asset ACC-002 worker.
-- Heavy subprocess concurrency is hard-bounded to 2 by default and at most 4, with staggered starts, timeouts, temp working directories, and rest/backoff loops. This keeps one inexpensive machine continuously productive without an uncontrolled CPU/process explosion.
+- Worker coverage includes BTC, ETH, SOL, XRP, LINK, PONS, eight liquid-universe shards, major swing research, and a dedicated ACC-002 cross-asset worker.
+- Heavy subprocess concurrency is hard-bounded to 2 by default and at most 4, with staggered starts, timeouts, temp working directories, and short rest/backoff loops.
 - Normal worker-army operation uses deterministic Python and public market-data calls, not OpenAI API calls.
 - Worker army is hard-coded research-only: `trade_authority=false`, `write_authority=false`, `promotion_authority=false`, `broker_connected=false`.
-- Render auto-deploy `dep-dafndl3bc2fs73df6nj0` for merge `10416b2e...` completed `live` on 2026-09-08.
-- Cost policy: keep recurring infrastructure within the user's hard ceiling of USD 30/month. Prefer one shared paid machine, bounded concurrency, free/public data, deterministic Python, caching/reuse and GitHub-hosted research where cost-free/within included quota. Do not add another paid service or paid data/API dependency without explicit user approval.
+- Cost policy: recurring infrastructure hard ceiling USD 30/month. Prefer one shared paid machine, bounded concurrency, free/public data, deterministic Python, caching/reuse and included/free GitHub-hosted research. Do not add another paid service or paid data/API dependency without explicit user approval.
 
 ## ACC-002 CROSS-ASSET RANK RESEARCH — IN PROGRESS
 - PR #56 `ACC-002: Add nonstop cross-asset rank research` passed exact-head Security and Reliability run `34181843712` on `95976e1c05dd67f84f2a1c31b67ee58b155ceab7` and was squash-merged as `b0524525c48cd92639839e1324914e2d226c3780`.
   - Added timestamp-safe cross-sectional relative-strength ranking over a liquid crypto universe.
-  - Uses multi-lookback momentum normalized by realized volatility, chronological 60/20/20 train/validation/untouched OOS segmentation, Spearman rank IC, and after-cost top-minus-bottom spread metrics.
-  - Added a dedicated nonstop ACC-002 research runner/worker on the existing paid Render coordinator; no new paid service or paid data dependency.
-  - Research outputs are sealed and remain `research_only=true`, `live_approved=false`, `trade_authority=false`.
+  - Uses multi-lookback momentum normalized by realized volatility, chronological train/validation/untouched OOS segmentation, Spearman rank IC, and after-cost top-minus-bottom spread metrics.
+  - Added a dedicated nonstop ACC-002 research worker on the existing paid Render coordinator.
 - PR #57 `ACC-002: Purge split leakage and stress execution costs` passed exact-head Security and Reliability run `34182015157` on `7dfb7cce0182649e52b44bf5bf4243f6c54ee0e8` and was squash-merged as `876b65135d54beba4771dcec8ce6dc4da48f2a26`.
-  - Purges train/validation boundaries by the full forward horizon so labels cannot cross evaluation boundaries.
-  - Defaults to non-overlapping forward-horizon observations to reduce autocorrelation/sample-count inflation.
-  - Adds deterministic 1.0x/1.5x/2.0x/3.0x execution-cost stress.
-  - ACC-002 research pass now requires untouched-OOS positive rank IC and positive top-minus-bottom spread at the maximum configured cost stress, with at least 50% positive net-spread observations and minimum sample size.
-  - This is a stricter research screen, not a profitability claim and not a promotion/live-trading gate.
+  - Purges split boundaries by the full forward horizon.
+  - Uses non-overlapping forward-horizon observations by default.
+  - Adds 1.0x/1.5x/2.0x/3.0x execution-cost stress.
+- PR #58 `ACC-002: Enforce enough history for independent OOS evidence` passed Security and Reliability run `34182218869` on `6d4056bfeaf0f5398e9bd7b835216b1d30135c43` and was squash-merged as `f2fa7d61092f499a3906cbeabd1b1284a4428824`.
+  - Default 24h/1H worker depth increased to 3000 bars.
+  - Runner automatically requires enough history for >=20 independent untouched-OOS observations; unsupported long horizons fail closed and require a coarser bar interval.
+- PR #59 `ACC-002: Preselect candidates before opening untouched OOS` passed Security and Reliability run `34182413741` on `5b8d265c707cd549ad174be1cc242f8eb9489cf6` and was squash-merged as `6d72741b0808ad756061309ba422389fcb7bea12`.
+  - Uses a small fixed lookback grid declared before OOS: `(4,16,64)`, `(6,24,72)`, `(8,32,96)`.
+  - Candidate selection uses train+validation only and requires both splits to survive 3x cost stress.
+  - Untouched OOS is opened for at most one preselected candidate; if no candidate passes pre-OOS gates, the holdout is not opened.
+- PR #60 `ACC-002: Require parameter stability and bootstrap confidence` passed exact-head Security and Reliability run `34182666817` on `8f168e76537b40572a36c1328de7082f756c00a0` and was squash-merged as `b1486463506912a24afe185353354a7220a12592`.
+  - Requires at least 2 of the 3 nearby lookback configurations to independently survive train+validation and 3x cost stress before any untouched OOS is opened.
+  - The selected untouched OOS receives 500 deterministic seeded bootstrap resamples.
+  - ACC-002 research pass requires positive 95% bootstrap lower bounds for both mean rank IC and maximum-cost net top-minus-bottom spread, in addition to the existing sample/count/positive-spread gates.
+  - First implementation triggered Bandit B311 for seeded `random.Random`; it was replaced with deterministic SHA-256 index sampling and the final exact-head Security and Reliability run passed all unit, dependency, static-security and secret checks.
+- All ACC-002 outputs remain `research_only=true`, `live_approved=false`, `trade_authority=false`. No profitability has been claimed yet; genuine live public-data evidence must be collected and inspected.
 
 ## ACCURACY BACKLOG
 1. `ACC-001` market-microstructure — COMPLETE.
-2. `ACC-002` quant-cross-asset — IN PROGRESS; core rank engine, nonstop worker, purged boundaries, non-overlap evaluation and max-cost-stress screen integrated. Genuine live public-data evidence still needs collection/inspection and parameter/horizon selection must not peek at untouched OOS.
+2. `ACC-002` quant-cross-asset — IN PROGRESS; core rank engine, nonstop worker, purge/non-overlap, sufficient independent OOS depth, pre-OOS fixed-grid selection, parameter stability, 3x cost stress and 500-resample bootstrap confidence are integrated. Genuine live public-data evidence still needs collection/inspection and liquidity-subset/horizon robustness.
 3. `ACC-003` quant-breakout-volatility — no-lookahead regime-specialist models for bull/bear/range/high-volatility/compression.
 4. `ACC-004` strategy-registry — calibrated champion/challenger ensemble weighting with correlation/deterioration penalties and automatic demotion.
 5. `ACC-005` data-market — broader exchange/data coverage with provenance/freshness/contradiction checks and safe PONS handling.
@@ -83,24 +82,25 @@ PR #55 `Add bounded 24/7 Python research worker army` passed exact-head Security
 
 ## REAL-MONEY READINESS ACCELERATION
 Master tracking issue #45 covers the safe acceleration program.
-- PR #46 `Add forward shadow and canary readiness gates` was squash-merged as `b19913c383501defe84d8f22ba3590e0f8ed71b2` after exact-head Security and Reliability success.
+- PR #46 added forward shadow/canary readiness gates and remains read-only with `trade_authority=false` and `canary_execution_enabled=false`.
 - PR #47 added compact crypto signal rows with one-click TradingView.
-- PR #48 embedded signal levels directly on a TradingView-style chart and deployed live.
+- PR #48 embedded signal levels directly on a TradingView-style chart.
 - PR #49 added the persistent $100k continuous paper trading simulator, permanently research-only and broker-disconnected.
 - PR #51 combined the paper portfolio and ranked signals on the main dashboard.
-- PR #52 made paper trading forward-only and realistic. All legacy paper trades/equity were invalidated and Supabase account `default` reset at `2026-09-08T01:17:49Z` to exactly `$100,000` cash/equity, `$0` realized P&L, zero drawdown, zero trades and zero snapshots. Only forward trades opened after this reset count as authentic paper-performance evidence.
+- PR #52 made paper trading forward-only and realistic. All legacy paper trades/equity were invalidated and account `default` reset at `2026-09-08T01:17:49Z` to exactly `$100,000` cash/equity, `$0` realized P&L, zero drawdown, zero trades and zero snapshots. Only forward trades opened after this reset count as authentic paper-performance evidence.
 - Future acceleration work remains subordinate to the mandatory research-to-live chain; speed must come from parallelism, caching, early rejection, prioritization, event-driven agents and deterministic automation, never weaker evidence.
 
 ## COST / SPEED POLICY
-Hard infrastructure ceiling: USD 30/month unless the user explicitly changes it. Use the existing single paid Render worker/coordinator rather than multiplying paid machines. Default worker-army heavy concurrency is 2; raise only after measured capacity evidence and never by adding paid capacity without approval. Use deterministic Python for calculation/backtesting/filtering/evidence checks. Use free/public market data where defensible. Use AI only for bounded planning, hypothesis generation, implementation/review and orchestration. Routine planner/specialists use `gpt-5.6-luna`; testing-security, strategy-registry, portfolio-risk and production-signals use `gpt-5.6-sol`; Lead and independent integration reviews use `gpt-5.6-sol`. Prefer event-driven wakeups, caching/reuse, early rejection and read-only parallel audits over idle paid computation or competing writes.
+Hard infrastructure ceiling: USD 30/month unless the user explicitly changes it. Use the existing single paid Render worker/coordinator rather than multiplying paid machines. Default worker-army heavy concurrency is 2; raise only after measured capacity evidence and never by adding paid capacity without approval. Use deterministic Python for calculation/backtesting/filtering/evidence checks. Use free/public market data where defensible. Use AI only for bounded planning, hypothesis generation, implementation/review and orchestration. Prefer event-driven wakeups, caching/reuse, early rejection and read-only parallel audits over idle paid computation or competing writes.
 
 ## EXACT NEXT STEP
-1. Verify the latest Render deployment for PR #56/#57 is live and inspect continuous coordinator `/health` worker state: dedicated ACC-002 worker present, bounded heavy concurrency target 2, research-only authorities false, and no repeated timeouts/failure loop.
-2. Collect and inspect genuine ACC-002 public-data evidence from the nonstop worker. Do not tune on untouched OOS. Define a fixed candidate grid of horizons/lookbacks before reading OOS, choose candidates using train/validation only, and expose untouched OOS only for the preselected candidate.
-3. Add parameter/horizon stability tests and bootstrap/Monte Carlo confidence around rank IC and top-minus-bottom spread. Reject candidates whose edge disappears under nearby lookbacks, different liquidity subsets, or 3x cost stress.
-4. Recheck production `/health.continuous_ai`; require `cycle_count>=1`, `last_error_type=null`, bounded timeout and trade/write/promotion authority false. If rate limiting persists, fix only the bounded provider/cadence cause without granting authority.
-5. Tune worker scheduling for throughput-per-dollar rather than raw process count: reuse/caching first, reject weak candidates early, keep majors/PONS/ACC-002 fast lanes, and avoid duplicate overlapping research between Render and GitHub Actions.
-6. Let the freshly reset `$100,000` forward-only paper account collect new trades from zero. Treat only trades opened after `2026-09-08T01:17:49Z` as authentic paper-performance evidence. Alert only when persisted `consistently_profitable` is genuinely satisfied.
-7. Continue ACC-003 through ACC-007 after ACC-002 evidence, while non-owner specialists audit in parallel.
-8. Keep `live_promotions.json` empty and signing keys unused until repeated backtests, untouched OOS, robustness/stability, Strategy Registry review and Production Risk review genuinely complete.
-9. Update this file after every completed development/integration cycle.
+1. Verify Render auto-deploy for PR #60 and inspect coordinator worker health/logs: ACC-002 worker present, bounded heavy concurrency target 2, no repeated timeouts/failure loop, and all broker/trade/write/promotion authorities false.
+2. Collect the first genuine ACC-002 public-data run after PR #60 and inspect the sealed result. Report train/validation stability, which fixed candidate (if any) was selected, whether untouched OOS was opened, OOS sample count, rank IC, 3x-cost top-minus-bottom spread and both bootstrap lower bounds. Do not claim profitability if the gate fails or evidence is small.
+3. Add liquidity-subset stability (e.g. Top-15/Top-30/Top-45 where data supports it) without selecting on untouched OOS. An edge that exists only in one narrow universe must be rejected.
+4. Add horizon stability using predeclared 24h/7d-compatible configurations with enough independent observations; use coarser bars for long horizons rather than weak overlapping samples.
+5. Recheck production `/health.continuous_ai`; require bounded timeout and all trade/write/promotion authorities false. Fix only bounded provider/cadence issues if rate limiting persists.
+6. Tune worker scheduling for throughput-per-dollar: reuse/caching first, reject weak candidates early, retain majors/PONS/ACC-002 fast lanes, and avoid duplicate overlapping research between Render and GitHub Actions.
+7. Let the reset `$100,000` forward-only paper account collect authentic post-reset trades. Alert only when persisted `consistently_profitable` is genuinely satisfied.
+8. Continue ACC-003 through ACC-007 after ACC-002 evidence, while non-owner specialists audit in parallel.
+9. Keep `live_promotions.json` empty and signing keys unused until repeated backtests, untouched OOS, robustness/stability, Strategy Registry review and Production Risk review genuinely complete.
+10. Update this file after every completed development/integration cycle.
