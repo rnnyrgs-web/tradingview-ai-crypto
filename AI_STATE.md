@@ -11,9 +11,9 @@ Production: GitHub -> Render -> Python/FastAPI V3 -> Supabase. Production scans 
 No AI opinion, ranking score, evidence score, current order-book snapshot, paper P&L, ensemble weight, single OOS result, signed historical promotion, or risk-gate result by itself may authorize live BUY/SELL.
 
 Mandatory chain:
-RESEARCH -> BACKTEST -> VALIDATION -> UNTOUCHED OOS -> ROBUSTNESS/STABILITY -> MULTIPLE-TESTING FIREWALL -> STRATEGY-REGISTRY APPROVAL -> PRODUCTION-RISK APPROVAL -> GENUINE FORWARD PROOF -> GLOBAL/EXECUTION RISK CLEAR -> LIVE BUY/SELL.
+RESEARCH -> BACKTEST -> VALIDATION -> UNTOUCHED OOS -> ROBUSTNESS/STABILITY -> MULTIPLE-TESTING FIREWALL -> POINT-IN-TIME UNIVERSE SAFETY -> STRATEGY-REGISTRY APPROVAL -> PRODUCTION-RISK APPROVAL -> GENUINE FORWARD PROOF -> GLOBAL/EXECUTION RISK CLEAR -> LIVE BUY/SELL.
 
-Every later stage is restrictive-only. Missing, stale, contradictory, deteriorating, malformed, overlapping-only, insufficient, illiquid, execution-unsafe, portfolio-unsafe, statistically search-breadth-weak, or system-unsafe evidence means `WAIT / NO TRADE / RESEARCH_ONLY`.
+Every later stage is restrictive-only. Missing, stale, contradictory, deteriorating, malformed, overlapping-only, insufficient, illiquid, execution-unsafe, portfolio-unsafe, statistically search-breadth-weak, survivorship-unsafe, or system-unsafe evidence means `WAIT / NO TRADE / RESEARCH_ONLY`.
 
 `live_promotions.json` remains intentionally empty. Signing keys remain unused until genuine evidence is complete.
 
@@ -48,48 +48,42 @@ PR #74; run `34257293281` on `59d7af5fcdbf8aee830f571a26f50488b81a6d58`; merge `
 PR #75; run `34258912558` on `d47870757d4fdb846a8afadd3fab5835549a29d2`; merge `cf66104242467c8cf1177c91e20db206c92f62e5`. Exact fingerprint; non-overlapping full-horizon observations; >=20 independent 24h or >=12 7d; 3x modeled cost; positive after-cost expectancy; Wilson 95% lower >=50%; max forward DD <=12%; no deterioration.
 
 ## ACC-009 GLOBAL PORTFOLIO / EXECUTION RISK — COMPLETE
-PR #76; exact-head run `34264596759` on `285add1ac65903432d8ed4ffaa19aba149f2aa3d`; merge `4f70e89f81b4f16df39d4fd2fe88b3c0f298d6f5`.
-
-Restrictive-only global WAIT on broad volatility/liquidity/data/system stress; per-candidate spread/book/depth/slippage gate; portfolio kill switch at >=10% drawdown, >=4 consecutive losses, malformed state or >3 same-direction positions. Never creates TRADE authority.
+PR #76; exact-head run `34264596759` on `285add1ac65903432d8ed4ffaa19aba149f2aa3d`; merge `4f70e89f81b4f16df39d4fd2fe88b3c0f298d6f5`. Restrictive-only global WAIT on broad volatility/liquidity/data/system stress; per-candidate spread/book/depth/slippage gate; portfolio kill switch at >=10% drawdown, >=4 consecutive losses, malformed state or >3 same-direction positions. Never creates TRADE authority.
 
 ## ACC-010 SIZE-AWARE EXECUTION — COMPLETE
-PR #77; exact-head run `34265226943` on `324fc08f4723190df50e01d28e608e506d3fec95`; merge `edbed73a7b4236234ea2ff958e94ca2510db2df1`.
+PR #77; exact-head run `34265226943` on `324fc08f4723190df50e01d28e608e506d3fec95`; merge `edbed73a7b4236234ea2ff958e94ca2510db2df1`. Current-snapshot simulator requires >=2 reliable books with complete fill evidence; uses the smallest supported tier at/above requested size and worse independent fill; never extrapolates hidden liquidity or backfills current books into history. Paper entries fail closed without size-aware evidence, include fee friction, adverse stop gaps and capped favorable target gaps. Paper only opens rows already marked TRADE. Stored signals and Top-20 paths share global/execution WAIT gates. Immutable paper ledger preserved.
 
-Current-snapshot simulator requires >=2 reliable books with complete fill evidence; uses the smallest supported tier at/above requested size and worse independent fill; never extrapolates hidden liquidity or backfills current books into history. Paper entries fail closed without size-aware evidence, include fee friction, adverse stop gaps and capped favorable target gaps. Paper only opens rows already marked TRADE. Stored signals and Top-20 paths now share global/execution WAIT gates. Immutable paper ledger preserved.
-
-## ACC-012 MULTIPLE-TESTING / FALSE-DISCOVERY FIREWALL — COMPLETE
-PR #78 `ACC-012: Add multiple-testing false-discovery firewall` passed exact-head Security and Reliability run `34265615227` on `4bd7d3905a89602630e4137b3a3714c2311eee71` and was squash-merged as `8ddac654e63a70a95f811dd14777e649faefd625`.
+## ACC-011 POINT-IN-TIME UNIVERSE / SURVIVORSHIP FIREWALL — COMPLETE
+PR #79 `ACC-011: Add point-in-time universe survivorship firewall` passed exact-head Security and Reliability run `34266482390` on `5815277b697b3bda8fac2a33ec9c286ef8f42c68` and was squash-merged as `20c383c1dae1d2413c534b749b10faf95fb83f57`.
 
 Implemented:
-- research predeclares the full resolved-universe x timeframe x strategy-family x base/parameter-variant hypothesis breadth before inspecting OOS outcomes;
-- worker sharding cannot reduce the declared breadth and make evidence appear stronger;
-- as declared search breadth rises, the minimum combined independent OOS depth and required bootstrap probability-positive rise, capped conservatively at 0.99;
-- positive bootstrap 5th-percentile return remains mandatory;
-- the method is explicitly identified as a conservative search-breadth evidence penalty, not misrepresented as a formal p-value/FDR correction;
-- the gate can only demote/reject; a previously ineligible strategy can never be promoted by it;
-- sealed research artifacts record trial count and policy so later reviewers can audit how much searching preceded a claimed edge.
+- today's liquid survivors are explicitly not accepted as proof of historical investable-universe membership;
+- listing/delisting dates alone are insufficient for cross-sectional Top-N survivorship safety;
+- promotion-grade evidence requires timestamped historical investable-universe snapshots with provenance;
+- missing historical members or uncovered snapshot intervals fail closed and block promotion review;
+- historical histories are filtered by verified membership only when the full required manifest is covered;
+- malformed, overlapping, missing, or uncovered snapshot evidence cannot create authority;
+- general strategy research is demoted when historical member coverage is incomplete;
+- no dead/missing coin, delisting, or liquidity history is fabricated.
+
+## ACC-012 MULTIPLE-TESTING / FALSE-DISCOVERY FIREWALL — COMPLETE
+PR #78 `ACC-012: Add multiple-testing false-discovery firewall` passed exact-head Security and Reliability run `34265615227` on `4bd7d3905a89602630e4137b3a3714c2311eee71` and was squash-merged as `8ddac654e63a70a95f811dd14777e649faefd625`. Research predeclares full search breadth before OOS; worker sharding cannot hide breadth; required OOS depth/bootstrap support rise with search breadth; positive bootstrap 5th-percentile return remains mandatory; gate can only demote/reject.
 
 ## AUTHENTIC PAPER TRADING STATE
 The continuous paper account remains forward-only and broker-disconnected. Authentic baseline is exactly `$100,000` from `2026-09-08T01:17:49Z`; never reset or rewrite it. Current account value = immutable starting capital plus realized/open P&L. New safety/execution gates may reject entries but never fabricate or reset history. Paper performance is evidence only.
 
 ## ACCURACY PROGRAM STATUS
-ACC-001 COMPLETE; ACC-002 IN PROGRESS; ACC-003 COMPLETE; ACC-004 COMPLETE; ACC-005 COMPLETE; ACC-006 COMPLETE; ACC-007 COMPLETE; ACC-008 COMPLETE; ACC-009 COMPLETE; ACC-010 COMPLETE; ACC-012 COMPLETE.
+ACC-001 COMPLETE; ACC-002 IN PROGRESS; ACC-003 COMPLETE; ACC-004 COMPLETE; ACC-005 COMPLETE; ACC-006 COMPLETE; ACC-007 COMPLETE; ACC-008 COMPLETE; ACC-009 COMPLETE; ACC-010 COMPLETE; ACC-011 COMPLETE; ACC-012 COMPLETE; ACC-013 IN REVIEW/CI; ACC-014 NEXT.
 
 ## COST / SPEED POLICY
 Hard recurring infrastructure ceiling: USD 30/month unless explicitly changed. Prefer existing shared Render compute, deterministic Python, public/free defensible data, caching/reuse, early rejection and bounded concurrency. No paid feed/service/compute without approval.
 
-## BOOK-DERIVED MARKET-MICROSTRUCTURE ROADMAP
-Use Larry Harris principles, not obsolete 2002 exchange plumbing. Highest-value remaining work:
-1. `ACC-011` point-in-time universe / survivorship and delisting protection.
-2. `ACC-013` genuine-forward shadow champion/challenger comparison with no challenger authority.
-3. `ACC-014` disaster/failure injection: API timeout, stale/corrupt timestamps, DB outage, restart, rate limits, extreme spikes, partial service failure => WAIT.
-4. Later only if supportable data exists: maker/limit queue and fill-probability modeling, measured latency, and adverse-selection estimation. Do not invent them from candles.
-
 ## EXACT NEXT STEP
-1. Do not loosen ACC-008/009/010/012 merely to increase trade count.
-2. Implement `ACC-011` on a fresh isolated branch from current `main`: historical research must use point-in-time membership/availability evidence and treat missing historical availability/delistings conservatively rather than screening only today's survivors.
-3. Continue genuine ACC-002 24h/7d evidence and worker health; no profitability claim unless horizon gates support it.
-4. Keep PONS fail-closed and `live_promotions.json` empty; signing keys unused.
-5. Then implement ACC-013 and ACC-014.
-6. Optimize after-cost risk-adjusted realized performance with drawdown/tail protection and abstention, not headline accuracy.
-7. Update this file after every completed integration cycle.
+1. Never loosen ACC-008/009/010/011/012 merely to increase trade count or accelerate promotion.
+2. Finish ACC-013 exact-head CI; merge only if green. ACC-013 compares champion/challenger only on matched independent future periods, exact fingerprints and conservative after-cost results, and can only recommend Strategy Registry review.
+3. Implement ACC-014 disaster/failure injection: API timeouts, 429/5xx, stale/future/corrupt timestamps, DB outage, restart/partial state, extreme spikes, partial service failure and malformed dependency output must resolve to WAIT or research-only safe degradation.
+4. Continue genuine ACC-002 24h/7d evidence and worker health in parallel. Speed comes from bounded parallel collection/caching, never overlapping-observation inflation or lowered thresholds.
+5. Keep PONS fail-closed, `live_promotions.json` empty and signing keys unused.
+6. Preserve immutable $100k paper baseline and broker-disconnected state.
+7. Optimize after-cost risk-adjusted realized performance with tail protection and abstention, not headline accuracy.
+8. Update this file after every completed integration cycle.
