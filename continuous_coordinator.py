@@ -67,6 +67,54 @@ def parse_state_last_updated(content: str) -> str | None:
     return None
 
 
+def observability_log_payload(army: object) -> dict:
+    """Return a bounded, non-sensitive subset for private Render logs only."""
+    if not isinstance(army, dict):
+        army = {}
+    observed = army.get("observability") if isinstance(army.get("observability"), dict) else {}
+    cache = observed.get("cache") if isinstance(observed.get("cache"), dict) else {}
+    network = observed.get("history_network") if isinstance(observed.get("history_network"), dict) else {}
+    workers = observed.get("workers") if isinstance(observed.get("workers"), dict) else {}
+    acc002 = observed.get("acc002") if isinstance(observed.get("acc002"), dict) else {}
+
+    def compact_acc(name: str) -> dict:
+        row = acc002.get(name) if isinstance(acc002.get(name), dict) else {}
+        evidence = row.get("latest_evidence") if isinstance(row.get("latest_evidence"), dict) else {}
+        selected = evidence.get("selected_evaluation") if isinstance(evidence.get("selected_evaluation"), dict) else {}
+        return {
+            "exit": row.get("last_exit_code"),
+            "elapsed_s": row.get("elapsed_seconds"),
+            "updated_at_ms": row.get("updated_at_ms"),
+            "acc002_pass": selected.get("acc002_research_pass"),
+            "survivorship_pass": selected.get("acc011_survivorship_pass"),
+            "promotion_review": selected.get("eligible_for_promotion_review"),
+        }
+
+    cache_latency = cache.get("read_latency_ms") if isinstance(cache.get("read_latency_ms"), dict) else {}
+    network_latency = network.get("latency_ms") if isinstance(network.get("latency_ms"), dict) else {}
+    return {
+        "cache_reads": cache.get("reads_observed"),
+        "cache_hit_rate": cache.get("hit_rate"),
+        "cache_rejection_rate": cache.get("rejection_rate"),
+        "cache_p50_ms": cache_latency.get("p50"),
+        "cache_p95_ms": cache_latency.get("p95"),
+        "history_fetches": network.get("fetches"),
+        "history_failures": network.get("failures"),
+        "network_p50_ms": network_latency.get("p50"),
+        "network_p95_ms": network_latency.get("p95"),
+        "avg_requests_per_fetch": network.get("avg_requests_per_fetch"),
+        "worker_completed": workers.get("completed"),
+        "worker_failed": workers.get("failed"),
+        "worker_timeouts": workers.get("timeouts"),
+        "worker_failure_rate": workers.get("failure_rate"),
+        "acc002_24h": compact_acc("cross-asset-rank-24h"),
+        "acc002_7d": compact_acc("cross-asset-rank-7d"),
+        "trade_authority": False,
+        "promotion_authority": False,
+        "signal_authority": False,
+    }
+
+
 async def check_once(client: httpx.AsyncClient) -> dict:
     result = {
         "last_check_at": _now(),
@@ -107,6 +155,8 @@ async def coordinator_loop() -> None:
     async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
         while True:
             apply_check(await check_once(client))
+            if WORKER_ARMY_ENABLED:
+                log.info("research_observability %s", observability_log_payload(worker_army_snapshot()))
             await asyncio.sleep(POLL_SECONDS)
 
 
