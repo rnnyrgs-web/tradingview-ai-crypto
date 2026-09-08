@@ -15,19 +15,23 @@ from dashboard import login_page, handle_login, dashboard_page, signal_detail_pa
 from operational_monitor import health_snapshot, record_error
 from calibration import calibration_summary
 from continuous_ai_agent import continuous_ai_loop, status_snapshot as continuous_ai_status
+from paper_trading import paper_status, paper_trading_loop, run_paper_cycle
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    task = asyncio.create_task(continuous_ai_loop())
+    ai_task = asyncio.create_task(continuous_ai_loop())
+    paper_task = asyncio.create_task(paper_trading_loop())
     try:
         yield
     finally:
-        task.cancel()
-        try:
-            await task
-        except asyncio.CancelledError:
-            pass
+        ai_task.cancel()
+        paper_task.cancel()
+        for task in (ai_task, paper_task):
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
 
 
 app=FastAPI(title="Crypto Signal Engine V3", lifespan=lifespan)
@@ -51,7 +55,7 @@ def root():
         "service":"Crypto Signal Engine V3",
         "version":STRATEGY_VERSION,
         "dashboard":"/dashboard",
-        "endpoints":["/health","/scan","/evaluate","/calibration","/backtest","/walkforward","/universe","/signals","/signals/cursor"]
+        "endpoints":["/health","/paper","/paper/run","/scan","/evaluate","/calibration","/backtest","/walkforward","/universe","/signals","/signals/cursor"]
     }
 
 @app.get("/health")
@@ -64,7 +68,24 @@ def health():
         "horizons":list(HORIZONS.keys()),
         "operations":health_snapshot(),
         "continuous_ai":continuous_ai_status(),
+        "paper_trading":paper_status(),
     }
+
+@app.get("/paper")
+def paper(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
+    verify_secret(secret,x_scan_secret)
+    try:
+        return paper_status()
+    except Exception as e:
+        internal_error("paper_status", e, "Paper trading status unavailable")
+
+@app.get("/paper/run")
+def paper_run(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
+    verify_secret(secret,x_scan_secret)
+    try:
+        return run_paper_cycle()
+    except Exception as e:
+        internal_error("paper_run", e, "Paper trading cycle failed")
 
 @app.get("/dashboard/login")
 def dashboard_login_get():
