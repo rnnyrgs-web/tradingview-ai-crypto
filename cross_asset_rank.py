@@ -8,8 +8,8 @@ is stress-tested with deterministic bootstrap confidence bounds.
 
 from __future__ import annotations
 
+import hashlib
 import math
-import random
 from dataclasses import dataclass
 from statistics import mean
 from typing import Iterable
@@ -147,16 +147,21 @@ def _percentile(values: list[float], q: float) -> float | None:
     return ordered[pos]
 
 
+def _deterministic_index(seed: int, resample: int, draw: int, n: int) -> int:
+    raw = f"{seed}:{resample}:{draw}".encode("ascii")
+    digest = hashlib.sha256(raw).digest()
+    return int.from_bytes(digest[:8], "big") % n
+
+
 def bootstrap_mean_lower_bound(values: list[float], resamples: int = BOOTSTRAP_RESAMPLES, seed: int = BOOTSTRAP_SEED) -> float | None:
     """Deterministic 5th percentile bootstrap lower bound for the sample mean."""
     clean = [float(v) for v in values if math.isfinite(float(v))]
     if len(clean) < 10:
         return None
-    rng = random.Random(seed)
     means = []
     n = len(clean)
-    for _ in range(max(100, int(resamples))):
-        means.append(mean(clean[rng.randrange(n)] for _ in range(n)))
+    for resample in range(max(100, int(resamples))):
+        means.append(mean(clean[_deterministic_index(seed, resample, draw, n)] for draw in range(n)))
     return _percentile(means, 0.05)
 
 
