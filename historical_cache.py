@@ -19,7 +19,7 @@ from pathlib import Path
 
 CACHE_VERSION = 1
 DEFAULT_TTL_SECONDS = max(60, min(int(os.getenv("HISTORY_SHARED_CACHE_TTL_SECONDS", "900")), 3600))
-DEFAULT_CACHE_DIR = Path(os.getenv("HISTORY_SHARED_CACHE_DIR", "/tmp/tradingview-ai-history-cache"))
+DEFAULT_CACHE_DIR = Path(os.getenv("HISTORY_SHARED_CACHE_DIR", str(Path(tempfile.gettempdir()) / "tradingview-ai-history-cache")))
 MAX_FUTURE_SKEW_MS = 5000
 SOURCE = "okx"
 ENDPOINT = "/api/v5/market/history-candles"
