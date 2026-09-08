@@ -4,6 +4,11 @@ A small fixed lookback grid is evaluated on train+validation only. Candidate
 parameters must also survive predeclared liquidity subsets before the untouched
 holdout is opened exactly once on the largest supported subset. This reduces
 selection bias and rejects edges that exist only in one narrow universe.
+
+ACC-011 adds a separate survivorship gate. Selecting today's liquid universe and
+pulling those survivors backward is useful research but is not promotion-grade
+point-in-time evidence. Promotion safety requires an explicit timestamped
+listing/delisting manifest with provenance; missing evidence fails closed.
 """
 
 from __future__ import annotations
@@ -21,6 +26,7 @@ from cross_asset_rank import (
     evaluate_untouched_oos,
 )
 from market_data import build_universe, get_history
+from point_in_time_universe import assess_history_coverage, load_manifest
 from research_artifact import seal_research_payload
 
 
@@ -79,9 +85,9 @@ def _robust_selection_score(pre: dict) -> tuple[float, float]:
 def _build_liquidity_subsets(symbols: list[str], histories: dict[str, list[dict]]) -> dict[int, dict[str, list[dict]]]:
     """Return predeclared Top-N subsets only when enough of that Top-N resolved.
 
-    The ordering comes from build_universe(), so failed histories are never replaced
-    by lower-ranked assets. This keeps Top-N provenance honest while allowing a small
-    amount of public-API/history attrition.
+    Ordering comes from today's build_universe(), so failed histories are never
+    replaced by lower-ranked assets. ACC-011 separately prevents this present-day
+    survivor set from being called survivorship-safe without historical membership.
     """
     subsets = {}
     for requested in LIQUIDITY_SUBSETS:
@@ -145,6 +151,9 @@ def run() -> dict:
         except Exception as exc:
             failures.append({"symbol": symbol, "error_type": type(exc).__name__})
 
+    manifest = load_manifest(os.getenv("POINT_IN_TIME_UNIVERSE_MANIFEST", "").strip() or None)
+    survivorship = assess_history_coverage(manifest, histories)
+
     liquidity_histories = _build_liquidity_subsets(symbols, histories)
     if len(liquidity_histories) < MIN_STABLE_LIQUIDITY_SUBSETS:
         raise ValueError("insufficient supported liquidity subsets for ACC-002 stability gate")
@@ -193,6 +202,7 @@ def run() -> dict:
         oos = evaluate_untouched_oos(selected["_panel"], selected["_config"])
         if oos["metrics"]["timestamps"] < MIN_INDEPENDENT_OOS_SAMPLES:
             raise ValueError("insufficient independent untouched-OOS observations after alignment")
+        acc002_pass = bool(oos.get("passes_acc002_research_gate"))
         selected_evaluation = {
             "index": selected["index"],
             "lookbacks": selected["lookbacks"],
@@ -200,6 +210,9 @@ def run() -> dict:
             "pre_oos": selected["pre_oos"],
             "liquidity_stability": selected["liquidity_stability"],
             "untouched_oos": oos,
+            "acc002_research_pass": acc002_pass,
+            "acc011_survivorship_pass": survivorship["promotion_allowed"],
+            "eligible_for_promotion_review": acc002_pass and survivorship["promotion_allowed"],
         }
 
     public_candidates = [{
@@ -218,6 +231,11 @@ def run() -> dict:
         "trade_authority": False,
         "source": "OKX public historical API",
         "selection_policy": "fixed_grid_train_validation_parameter_and_liquidity_stability_then_open_one_untouched_oos",
+        "survivorship_policy": (
+            "Today's liquid universe is not historical membership evidence. Promotion review requires explicit "
+            "timestamped listing/delisting membership with provenance plus actual data inside membership windows."
+        ),
+        "point_in_time_universe": survivorship,
         "parameter_stability": {"minimum_eligible_candidates": MIN_STABLE_CANDIDATES, "eligible_candidate_count": len(eligible), "passes": stability_pass},
         "liquidity_stability_policy": {
             "predeclared_subsets": list(LIQUIDITY_SUBSETS),
@@ -233,6 +251,7 @@ def run() -> dict:
         "selected_evaluation": selected_evaluation,
         "universe_requested": universe_size,
         "universe_resolved": len(histories),
+        "universe_selection_origin": "current_liquid_universe",
         "symbols": sorted(histories),
         "failed_symbols": failures,
         "bar": bar,
@@ -288,7 +307,9 @@ def summarize_evidence(envelope: dict) -> dict:
             "max_cost_net_spread": _worst_stress(metrics)["mean_net_top_minus_bottom"],
             "rank_ic_95pct_lower_bound": bootstrap["rank_ic_mean_95pct_lower_bound"],
             "max_cost_net_spread_95pct_lower_bound": bootstrap["max_cost_net_spread_mean_95pct_lower_bound"],
-            "passes": oos["passes_acc002_research_gate"],
+            "acc002_research_pass": selected["acc002_research_pass"],
+            "acc011_survivorship_pass": selected["acc011_survivorship_pass"],
+            "eligible_for_promotion_review": selected["eligible_for_promotion_review"],
         }
     return {
         "generated_at": payload["generated_at"],
@@ -296,6 +317,7 @@ def summarize_evidence(envelope: dict) -> dict:
         "bar": payload["bar"],
         "supported_liquidity_subsets": payload["liquidity_stability_policy"]["supported_subsets"],
         "parameter_stability": payload["parameter_stability"],
+        "point_in_time_universe": payload["point_in_time_universe"],
         "untouched_oos_opened": selected is not None,
         "selected_oos": oos_summary,
         "candidates": candidate_summaries,
