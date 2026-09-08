@@ -18,6 +18,34 @@ def test_required_history_supports_20_non_overlapping_oos_samples():
     assert required <= runner.MAX_HISTORY_BARS
 
 
+def test_fixed_grid_is_small_and_predeclared():
+    assert runner.FIXED_LOOKBACK_GRID == ((4, 16, 64), (6, 24, 72), (8, 32, 96))
+
+
+def _segment(ic=0.1, worst_net=0.01, positive_rate=0.6):
+    return {
+        "timestamps": 30,
+        "mean_rank_ic": ic,
+        "cost_stress": {
+            "1.0": {"mean_net_top_minus_bottom": worst_net + 0.01, "positive_net_spread_rate": 0.7},
+            "3.0": {"mean_net_top_minus_bottom": worst_net, "positive_net_spread_rate": positive_rate},
+        },
+    }
+
+
+def test_pre_oos_gate_requires_both_train_and_validation_to_survive_worst_cost():
+    good = {"train": _segment(), "validation": _segment()}
+    assert runner._pre_oos_candidate_ok(good)
+    bad = {"train": _segment(), "validation": _segment(worst_net=-0.001)}
+    assert not runner._pre_oos_candidate_ok(bad)
+
+
+def test_robust_selection_rewards_worst_split_not_one_lucky_split():
+    stable = {"train": _segment(worst_net=0.008), "validation": _segment(worst_net=0.009)}
+    lucky_validation = {"train": _segment(worst_net=0.002), "validation": _segment(worst_net=0.030)}
+    assert runner._robust_selection_score(stable) > runner._robust_selection_score(lucky_validation)
+
+
 def test_long_horizon_fails_closed_when_depth_cap_is_insufficient(monkeypatch):
     monkeypatch.setenv("CROSS_ASSET_FORWARD_BARS", "168")
     monkeypatch.setenv("CROSS_ASSET_BARS", "5000")
