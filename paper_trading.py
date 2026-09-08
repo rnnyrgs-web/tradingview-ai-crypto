@@ -14,7 +14,8 @@ from paper_db import (
     insert_paper_trade,
     update_paper_account,
 )
-from market_data import get_candles
+from execution_simulator import simulate_market_fill
+from market_data import get_candles, get_order_book_intelligence
 from production_risk_gate import assess_portfolio_risk
 from utils import now_utc
 
@@ -38,19 +39,22 @@ def _last_price(symbol):
     return float(candles[-1]["close"])
 
 
-def _paper_fill_price(symbol, direction):
-    """Create a conservative forward-only simulated fill from the current market price.
+def _paper_fill_price(symbol, direction, requested_notional):
+    """Create a size-aware forward-only fill from current independent order books.
 
-    Never reuse the signal's historical/model entry as the simulated execution price.
-    The fixed one-way execution assumption is applied adversely at entry so the paper
-    account cannot inherit gains that happened before the simulated position existed.
+    Current book evidence is never backfilled into history. If two reliable
+    exchanges cannot demonstrate a complete fill at a supported notional tier,
+    the paper position is not opened. Hidden liquidity is never extrapolated.
     """
     market_price = _last_price(symbol)
     if market_price <= 0:
         raise RuntimeError(f"Invalid paper market price for {symbol}")
-    slip = FEE_BPS_ONE_WAY / 10000.0
-    fill = market_price * (1.0 + slip if direction == "LONG" else 1.0 - slip)
-    return market_price, fill
+    base = str(symbol).upper().split("-")[0]
+    book = get_order_book_intelligence(base)
+    simulation = simulate_market_fill(book, direction, requested_notional, FEE_BPS_ONE_WAY)
+    if not simulation.executable or simulation.fill_price is None:
+        raise RuntimeError(f"Execution evidence unavailable: {simulation.reason}")
+    return market_price, float(simulation.fill_price), simulation
 
 
 def _signal_key(row):
@@ -63,18 +67,24 @@ def _mark_pnl(direction, entry, price, quantity):
 
 
 def _close_decision(trade, price):
+    """Conservative stop/target handling for observed forward prices.
+
+    Stops use the actually observed worse price when the market has moved through
+    the stop. Targets never receive a favorable gap windfall: they fill at the
+    predefined target. This asymmetry avoids optimistic paper execution.
+    """
     stop = float(trade["stop_loss"])
     target = float(trade["target_price"])
     if trade["direction"] == "LONG":
         if price <= stop:
             return price, "STOP"
         if price >= target:
-            return price, "TARGET"
+            return target, "TARGET"
     else:
         if price >= stop:
             return price, "STOP"
         if price <= target:
-            return price, "TARGET"
+            return target, "TARGET"
     opened = None
     try:
         opened = datetime.fromisoformat(str(trade["opened_at"]).replace("Z", "+00:00"))
@@ -138,7 +148,6 @@ def _run_paper_cycle_locked():
         account = fetch_paper_account(ACCOUNT_ID)
 
     _validate_persistent_account(account)
-
     cash = float(account["cash"])
     realized = float(account["realized_pnl"])
 
@@ -177,9 +186,9 @@ def _run_paper_cycle_locked():
         horizon = str(row.get("horizon") or "")
         if direction not in {"LONG", "SHORT"} or horizon not in {"24h", "7d"}:
             continue
-        if float(row.get("evidence_score") or 0) < MIN_EVIDENCE_SCORE:
+        if str(row.get("action") or "WAIT").upper() != "TRADE":
             continue
-        if (symbol, horizon) in open_pairs:
+        if float(row.get("evidence_score") or 0) < MIN_EVIDENCE_SCORE or (symbol, horizon) in open_pairs:
             continue
 
         signal_entry = float(row.get("entry_price") or 0)
@@ -187,35 +196,46 @@ def _run_paper_cycle_locked():
         signal_target = float(row.get("target_1") or 0)
         if min(signal_entry, signal_stop, signal_target) <= 0:
             continue
-        try:
-            observed_market, entry = _paper_fill_price(symbol, direction)
-        except Exception as exc:
-            log.warning("Paper entry price unavailable for %s: %s", symbol, type(exc).__name__)
-            continue
 
         if direction == "LONG":
             stop_distance_pct = max(0.0, (signal_entry - signal_stop) / signal_entry)
             target_distance_pct = max(0.0, (signal_target - signal_entry) / signal_entry)
-            stop = entry * (1.0 - stop_distance_pct)
-            target = entry * (1.0 + target_distance_pct)
         else:
             stop_distance_pct = max(0.0, (signal_stop - signal_entry) / signal_entry)
             target_distance_pct = max(0.0, (signal_entry - signal_target) / signal_entry)
+        if stop_distance_pct <= 0 or target_distance_pct <= 0:
+            continue
+
+        equity_for_sizing = max(float(account.get("equity") or INITIAL_CASH), 1.0)
+        risk_usd = equity_for_sizing * RISK_PER_TRADE_PCT / 100.0
+        max_notional = equity_for_sizing * MAX_NOTIONAL_PCT / 100.0
+        desired_notional = min(risk_usd / stop_distance_pct, max_notional, cash)
+        if desired_notional <= 0:
+            continue
+
+        try:
+            observed_market, entry, execution = _paper_fill_price(symbol, direction, desired_notional)
+        except Exception as exc:
+            log.warning("Paper execution unavailable for %s: %s", symbol, str(exc)[:160])
+            continue
+
+        if direction == "LONG":
+            stop = entry * (1.0 - stop_distance_pct)
+            target = entry * (1.0 + target_distance_pct)
+        else:
             stop = entry * (1.0 + stop_distance_pct)
             target = entry * (1.0 - target_distance_pct)
         risk_per_unit = abs(entry - stop)
         if min(entry, stop, target, risk_per_unit) <= 0:
             continue
 
-        equity_for_sizing = max(float(account.get("equity") or INITIAL_CASH), 1.0)
-        risk_usd = equity_for_sizing * RISK_PER_TRADE_PCT / 100.0
-        max_notional = equity_for_sizing * MAX_NOTIONAL_PCT / 100.0
-        quantity = min(risk_usd / risk_per_unit, max_notional / entry, cash / entry)
+        quantity = min(risk_usd / risk_per_unit, desired_notional / entry, cash / entry)
         if quantity <= 0:
             continue
         notional = quantity * entry
-        if notional > cash:
+        if notional > cash or (execution.supported_notional is not None and notional > execution.supported_notional + 1e-6):
             continue
+
         if insert_paper_trade({
             "account_id": ACCOUNT_ID,
             "signal_key": _signal_key(row),
@@ -234,7 +254,11 @@ def _run_paper_cycle_locked():
             "evidence_score": float(row.get("evidence_score") or 0),
             "research_only": True,
         }):
-            log.info("Paper trade opened forward-only symbol=%s observed_market=%s fill=%s", symbol, observed_market, entry)
+            log.info(
+                "Paper trade opened size-aware symbol=%s market=%s fill=%s notional=%.2f supported_tier=%s slippage_bps=%s sources=%s",
+                symbol, observed_market, entry, notional, execution.supported_notional,
+                execution.worst_slippage_bps, execution.source_count,
+            )
             cash -= notional
             open_trades = fetch_open_paper_trades(ACCOUNT_ID)
             open_pairs.add((symbol, horizon))
@@ -287,6 +311,8 @@ def paper_status():
         "broker_connected": False,
         "trade_authority": False,
         "forward_fill_only": True,
+        "size_aware_execution": True,
+        "requires_two_reliable_books": True,
         "starting_capital_usd": INITIAL_CASH,
         "equity_usd": round(float(account["equity"]), 2),
         "cash_usd": round(float(account["cash"]), 2),
