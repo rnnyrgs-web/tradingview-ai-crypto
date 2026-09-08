@@ -6,7 +6,7 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException, Header, Request
 
 from config import *
-from db import configured, fetch_actionable_after, fetch_latest_signal_id, fetch_resolved_predictions
+from db import configured, fetch_actionable_after, fetch_latest_signal_id, fetch_resolved_predictions, fetch_shadow_predictions
 from engine import run_scan
 from evaluator import run_evaluation
 from backtest import run_backtest, walk_forward
@@ -17,6 +17,8 @@ from combined_dashboard import combined_dashboard_page
 from operational_monitor import health_snapshot, record_error
 from calibration import calibration_summary
 from continuous_ai_agent import continuous_ai_loop, status_snapshot as continuous_ai_status
+from production_validation import validate_live_strategy
+from shadow_readiness import assess_shadow_readiness, canary_review_decision
 from paper_trading import paper_status, paper_trading_loop, run_paper_cycle
 
 
@@ -58,7 +60,7 @@ def root():
         "version":STRATEGY_VERSION,
         "dashboard":"/dashboard",
         "paper_portfolio":"/dashboard/paper",
-        "endpoints":["/health","/paper","/paper/run","/scan","/evaluate","/calibration","/backtest","/walkforward","/universe","/signals","/signals/cursor"]
+        "endpoints":["/health","/paper","/paper/run","/scan","/evaluate","/calibration","/shadow-readiness","/backtest","/walkforward","/universe","/signals","/signals/cursor"]
     }
 
 @app.get("/health")
@@ -179,6 +181,32 @@ def calibration(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(def
         return calibration_summary(fetch_resolved_predictions())
     except Exception as e:
         internal_error("calibration", e, "Calibration unavailable")
+
+@app.get("/shadow-readiness")
+def shadow_readiness(symbol:str="BTC-USDT",horizon:str="24h",strategy_family:str="",
+                     secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
+    verify_secret(secret,x_scan_secret)
+    try:
+        validation=validate_live_strategy(symbol.upper(),horizon,strategy_family)
+        assessment=assess_shadow_readiness(
+            fetch_shadow_predictions(),target_identity=validation.identity,horizon=horizon
+        )
+        return {
+            "ok":True,
+            "symbol":symbol.upper(),
+            "horizon":horizon,
+            "strategy_family":strategy_family,
+            "live_validation":{
+                "approved":validation.approved,
+                "status":validation.status,
+                "reason":validation.reason,
+                "identity":validation.identity,
+            },
+            "shadow":assessment,
+            "canary_review":canary_review_decision(validation,assessment),
+        }
+    except Exception as e:
+        internal_error("shadow_readiness", e, "Shadow readiness unavailable")
 
 @app.get("/backtest")
 def backtest(symbol:str="BTC-USDT",bar:str="15m",bars:int=2500,
