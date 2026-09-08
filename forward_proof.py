@@ -35,12 +35,7 @@ def _fingerprint(row):
 
 
 def _independent_rows(rows, horizon):
-    """Keep chronological non-overlapping forecasts only.
-
-    Production emits forecasts much more frequently than their horizon. Counting
-    every overlapping forecast would create fake sample size. We therefore keep
-    at most one forecast per full horizon span for the exact strategy.
-    """
+    """Keep chronological non-overlapping forecasts only."""
     span = HORIZON_SPAN.get(horizon)
     if span is None:
         return []
@@ -51,7 +46,7 @@ def _independent_rows(rows, horizon):
         try:
             created = parse_dt(row["created_at"])
             resolved = parse_dt(row["resolved_at"])
-        except Exception:
+        except (TypeError, ValueError, OverflowError):
             continue
         directional = _finite(row.get("directional_return_pct"))
         if directional is None or resolved < created + span:
