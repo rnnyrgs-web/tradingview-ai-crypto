@@ -96,30 +96,27 @@ def _read_bucket(symbol, bar, wanted, max_bars, bucket, now_ms, ttl_seconds, cac
     key = _cache_key(descriptor)
     path = _cache_path(cache_dir, key)
     if not path.exists():
-        return None
+        return "miss", None
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError, TypeError):
-        return None
+        return "rejection", None
     if not isinstance(payload, dict) or payload.get("descriptor") != descriptor or payload.get("cache_key") != key:
-        return None
+        return "rejection", None
     try:
         fetched_at_ms = int(payload.get("fetched_at_ms"))
     except (TypeError, ValueError):
-        return None
+        return "rejection", None
     if fetched_at_ms <= 0 or fetched_at_ms > now_ms + MAX_FUTURE_SKEW_MS:
-        return None
-    # The bucket is an immutable publication namespace, not permission to make a
-    # snapshot stale early. Reuse across one bucket boundary only while the
-    # snapshot's actual age remains strictly within the configured TTL.
+        return "rejection", None
     if now_ms - fetched_at_ms >= int(ttl_seconds) * 1000:
-        return None
+        return "miss", None
     rows = payload.get("rows")
     if not _valid_rows(rows, now_ms, wanted):
-        return None
+        return "rejection", None
     if payload.get("rows_sha256") != _rows_digest(rows):
-        return None
-    return rows
+        return "rejection", None
+    return "hit", rows
 
 
 def read_history(symbol, bar, wanted, max_bars, *, now_ms=None, ttl_seconds=None, cache_dir=None, observe=True):
@@ -130,23 +127,28 @@ def read_history(symbol, bar, wanted, max_bars, *, now_ms=None, ttl_seconds=None
     current_bucket = _bucket(now_ms, ttl_seconds)
 
     def finish(result, value):
-        # Observability is deliberately request-scoped: checking the fallback
-        # immutable bucket is an implementation detail, not a second cache read.
+        # One caller request produces exactly one observability outcome even
+        # though the implementation may safely inspect one fallback bucket.
         if observe:
             record_cache_read(result, (time.perf_counter() - started) * 1000.0)
         return value
 
-    rows = _read_bucket(symbol, bar, wanted, max_bars, current_bucket, now_ms, ttl_seconds, cache_dir)
-    if rows is not None:
+    status, rows = _read_bucket(symbol, bar, wanted, max_bars, current_bucket, now_ms, ttl_seconds, cache_dir)
+    if status == "hit":
         return finish("hit", rows)
+    if status == "rejection":
+        # Never hide a corrupt/current cache object behind an older snapshot.
+        return finish("rejection", None)
 
     # A fetch near the end of a bucket used to become an immediate cache miss at
     # the boundary, causing another full ~30-page history download seconds later.
     # The previous immutable bucket may be reused only when its exact request
     # identity and digest validate and its real fetched age is still < TTL.
-    rows = _read_bucket(symbol, bar, wanted, max_bars, current_bucket - 1, now_ms, ttl_seconds, cache_dir)
-    if rows is not None:
+    status, rows = _read_bucket(symbol, bar, wanted, max_bars, current_bucket - 1, now_ms, ttl_seconds, cache_dir)
+    if status == "hit":
         return finish("hit", rows)
+    if status == "rejection":
+        return finish("rejection", None)
     return finish("miss", None)
 
 
