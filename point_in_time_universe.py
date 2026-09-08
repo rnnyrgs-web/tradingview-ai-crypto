@@ -4,7 +4,7 @@ A current exchange universe is not proof of historical investability. Listing /
 delisting dates alone are also insufficient for cross-sectional Top-N research:
 the strategy needs the actual investable/liquid universe that was knowable at
 each historical interval. This module therefore requires timestamped universe
-snapshots with provenance before cross-sectional research may be called
+snapshots with provenance before historical universe selection may be called
 survivorship-safe. Missing evidence fails closed and is never inferred.
 """
 
@@ -117,9 +117,43 @@ def _snapshot_at(manifest: dict, timestamp):
     return None
 
 
+def manifest_symbols(manifest: dict) -> set[str]:
+    symbols = set()
+    if manifest.get("valid"):
+        for snapshot in manifest.get("snapshots") or []:
+            symbols.update(snapshot["symbols"])
+    return symbols
+
+
 def membership_at(manifest: dict, symbol: str, timestamp) -> bool:
     snapshot = _snapshot_at(manifest, timestamp)
     return bool(snapshot and str(symbol or "").upper() in snapshot["symbols"])
+
+
+def assess_symbol_set(manifest: dict, researched_symbols: list[str] | set[str]) -> dict:
+    """Ensure current research did not silently omit historical universe members."""
+    if not manifest.get("valid"):
+        return {
+            "survivorship_safe": False,
+            "promotion_allowed": False,
+            "reason": manifest.get("reason") or "point_in_time_snapshot_manifest_invalid",
+            "missing_historical_member_symbols": [],
+            "restrictive_only": True,
+            "can_authorize_by_itself": False,
+        }
+    researched = {str(symbol or "").upper() for symbol in researched_symbols if str(symbol or "").strip()}
+    missing = sorted(manifest_symbols(manifest) - researched)
+    safe = bool(researched) and not missing
+    return {
+        "survivorship_safe": safe,
+        "promotion_allowed": safe,
+        "reason": "historical_member_set_covered" if safe else "historical_members_missing_from_research",
+        "missing_historical_member_symbols": missing,
+        "manifest_snapshot_count": len(manifest["snapshots"]),
+        "provenance": manifest.get("provenance"),
+        "restrictive_only": True,
+        "can_authorize_by_itself": False,
+    }
 
 
 def filter_histories(manifest: dict, histories: dict[str, list[dict]]) -> tuple[dict[str, list[dict]], dict]:
@@ -144,11 +178,6 @@ def filter_histories(manifest: dict, histories: dict[str, list[dict]]) -> tuple[
 
     filtered = {}
     covered = excluded = uncovered = malformed = 0
-    observed_timestamps = set()
-    manifest_member_symbols = set()
-    for snapshot in manifest["snapshots"]:
-        manifest_member_symbols.update(snapshot["symbols"])
-
     for symbol, rows in (histories or {}).items():
         kept = []
         for row in rows or []:
@@ -160,12 +189,6 @@ def filter_histories(manifest: dict, histories: dict[str, list[dict]]) -> tuple[
                 uncovered += 1
                 continue
             covered += 1
-            try:
-                ts = _parse_ts(row["ts"])
-            except (TypeError, ValueError, OverflowError):
-                malformed += 1
-                continue
-            observed_timestamps.add(ts)
             if str(symbol).upper() in snapshot["symbols"]:
                 kept.append(row)
             else:
@@ -173,11 +196,8 @@ def filter_histories(manifest: dict, histories: dict[str, list[dict]]) -> tuple[
         if kept:
             filtered[symbol] = kept
 
-    # A manifest may identify historical members that today's survivor-based fetch
-    # never attempted. Their absence is exactly the survivorship problem; do not
-    # silently declare the universe safe in that case.
     fetched_symbols = {str(symbol).upper() for symbol in (histories or {})}
-    missing_manifest_members = sorted(manifest_member_symbols - fetched_symbols)
+    missing_manifest_members = sorted(manifest_symbols(manifest) - fetched_symbols)
     safe = bool(filtered) and uncovered == 0 and malformed == 0 and not missing_manifest_members
     reason = "point_in_time_universe_verified" if safe else "point_in_time_universe_incomplete_or_history_mismatch"
     return filtered if safe else dict(histories or {}), {
@@ -197,6 +217,6 @@ def filter_histories(manifest: dict, histories: dict[str, list[dict]]) -> tuple[
 
 
 def assess_history_coverage(manifest: dict, histories: dict[str, list[dict]]) -> dict:
-    """Backward-compatible assessment helper without mutating the caller's data."""
+    """Backward-compatible assessment helper without mutating caller data."""
     _, assessment = filter_histories(manifest, histories)
     return assessment
