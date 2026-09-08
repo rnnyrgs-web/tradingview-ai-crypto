@@ -24,6 +24,24 @@ def test_fixed_grid_and_liquidity_subsets_are_predeclared():
     assert runner.LIQUIDITY_SUBSETS == (15, 30, 45)
     assert runner.MIN_STABLE_LIQUIDITY_SUBSETS == 2
     assert runner.MIN_LIQUIDITY_SUBSET_COVERAGE == 0.80
+    assert runner.HORIZON_PROFILES["24h"]["bar"] == "1H"
+    assert runner.HORIZON_PROFILES["24h"]["forward_bars"] == 24
+    assert runner.HORIZON_PROFILES["7d"]["bar"] == "4H"
+    assert runner.HORIZON_PROFILES["7d"]["forward_bars"] == 42
+    longest = CrossAssetConfig(
+        lookbacks=max(runner.HORIZON_PROFILES["7d"]["lookback_grid"], key=max),
+        forward_bars=42,
+    )
+    assert runner.required_history_bars(longest) <= runner.MAX_HISTORY_BARS
+
+
+def test_horizon_profiles_override_ad_hoc_bar_settings(monkeypatch):
+    monkeypatch.setenv("CROSS_ASSET_HORIZON", "7d")
+    monkeypatch.setenv("CROSS_ASSET_BAR", "15m")
+    monkeypatch.setenv("CROSS_ASSET_FORWARD_BARS", "1")
+    horizon, bar, forward, grid = runner._horizon_settings()
+    assert (horizon, bar, forward) == ("7d", "4H", 42)
+    assert grid == runner.HORIZON_PROFILES["7d"]["lookback_grid"]
 
 
 def _segment(ic=0.1, worst_net=0.01, positive_rate=0.6):

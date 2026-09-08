@@ -12,6 +12,7 @@ import json
 import math
 import os
 from datetime import datetime, timezone
+from pathlib import Path
 
 from cross_asset_rank import (
     CrossAssetConfig,
@@ -29,6 +30,14 @@ MIN_STABLE_LIQUIDITY_SUBSETS = 2
 MIN_LIQUIDITY_SUBSET_COVERAGE = 0.80
 MAX_HISTORY_BARS = 5000
 FIXED_LOOKBACK_GRID = ((4, 16, 64), (6, 24, 72), (8, 32, 96))
+HORIZON_PROFILES = {
+    "24h": {"bar": "1H", "forward_bars": 24, "lookback_grid": FIXED_LOOKBACK_GRID},
+    "7d": {
+        "bar": "4H",
+        "forward_bars": 42,
+        "lookback_grid": ((3, 12, 42), (6, 24, 84), (12, 42, 126)),
+    },
+}
 LIQUIDITY_SUBSETS = (15, 30, 45)
 
 
@@ -97,14 +106,28 @@ def _candidate_selection_score(candidate: dict) -> tuple[float, float]:
     return min(score[0] for score in scores), min(score[1] for score in scores)
 
 
+def _horizon_settings() -> tuple[str, str, int, tuple[tuple[int, ...], ...]]:
+    horizon = os.getenv("CROSS_ASSET_HORIZON", "").strip().lower()
+    if not horizon:
+        return (
+            "custom",
+            os.getenv("CROSS_ASSET_BAR", "1H"),
+            _int_env("CROSS_ASSET_FORWARD_BARS", 24, 1, 168),
+            FIXED_LOOKBACK_GRID,
+        )
+    if horizon not in HORIZON_PROFILES:
+        raise ValueError("CROSS_ASSET_HORIZON must be one of: 24h, 7d")
+    profile = HORIZON_PROFILES[horizon]
+    return horizon, profile["bar"], profile["forward_bars"], profile["lookback_grid"]
+
+
 def run() -> dict:
     universe_size = _int_env("CROSS_ASSET_UNIVERSE_SIZE", 45, 8, 60)
     requested_bars = _int_env("CROSS_ASSET_BARS", 3000, 300, MAX_HISTORY_BARS)
-    bar = os.getenv("CROSS_ASSET_BAR", "1H")
-    forward_bars = _int_env("CROSS_ASSET_FORWARD_BARS", 24, 1, 168)
+    horizon, bar, forward_bars, lookback_grid = _horizon_settings()
     cost_bps = float(os.getenv("CROSS_ASSET_ROUND_TRIP_COST_BPS", "12"))
 
-    configs = [CrossAssetConfig(lookbacks=lookbacks, forward_bars=forward_bars, round_trip_cost_bps=cost_bps, min_assets=8) for lookbacks in FIXED_LOOKBACK_GRID]
+    configs = [CrossAssetConfig(lookbacks=lookbacks, forward_bars=forward_bars, round_trip_cost_bps=cost_bps, min_assets=8) for lookbacks in lookback_grid]
     minimum_bars = max(required_history_bars(config) for config in configs)
     if minimum_bars > MAX_HISTORY_BARS:
         raise ValueError(f"forward horizon requires at least {minimum_bars} bars for {MIN_INDEPENDENT_OOS_SAMPLES} independent OOS observations; maximum supported is {MAX_HISTORY_BARS}; use a coarser bar interval")
@@ -213,6 +236,7 @@ def run() -> dict:
         "symbols": sorted(histories),
         "failed_symbols": failures,
         "bar": bar,
+        "horizon": horizon,
         "bars_requested_env": requested_bars,
         "bars_effective": bars,
         "minimum_history_bars": minimum_bars,
@@ -221,8 +245,79 @@ def run() -> dict:
     return seal_research_payload(payload)
 
 
+def summarize_evidence(envelope: dict) -> dict:
+    """Produce bounded live evidence without copying raw bootstrap/sample arrays."""
+    payload = envelope["payload"]
+    candidate_summaries = []
+    for candidate in payload["candidates"]:
+        subsets = {}
+        for size, item in candidate["liquidity_subsets"].items():
+            pre = item["pre_oos"]
+            subsets[size] = {
+                "resolved_assets": item["resolved_assets"],
+                "eligible_pre_oos": item["eligible_pre_oos"],
+                "train": {
+                    "samples": pre["train"]["timestamps"],
+                    "rank_ic": pre["train"]["mean_rank_ic"],
+                    "max_cost_net_spread": _worst_stress(pre["train"])["mean_net_top_minus_bottom"],
+                },
+                "validation": {
+                    "samples": pre["validation"]["timestamps"],
+                    "rank_ic": pre["validation"]["mean_rank_ic"],
+                    "max_cost_net_spread": _worst_stress(pre["validation"])["mean_net_top_minus_bottom"],
+                },
+            }
+        candidate_summaries.append({
+            "lookbacks": candidate["lookbacks"],
+            "eligible_pre_oos": candidate["eligible_pre_oos"],
+            "passing_liquidity_subsets": candidate["liquidity_stability"]["passing_subset_count"],
+            "liquidity_subsets": subsets,
+        })
+
+    selected = payload["selected_evaluation"]
+    oos_summary = None
+    if selected is not None:
+        oos = selected["untouched_oos"]
+        metrics = oos["metrics"]
+        bootstrap = oos["bootstrap_robustness"]
+        oos_summary = {
+            "lookbacks": selected["lookbacks"],
+            "primary_liquidity_subset": selected["primary_liquidity_subset"],
+            "samples": metrics["timestamps"],
+            "rank_ic": metrics["mean_rank_ic"],
+            "max_cost_net_spread": _worst_stress(metrics)["mean_net_top_minus_bottom"],
+            "rank_ic_95pct_lower_bound": bootstrap["rank_ic_mean_95pct_lower_bound"],
+            "max_cost_net_spread_95pct_lower_bound": bootstrap["max_cost_net_spread_mean_95pct_lower_bound"],
+            "passes": oos["passes_acc002_research_gate"],
+        }
+    return {
+        "generated_at": payload["generated_at"],
+        "horizon": payload["horizon"],
+        "bar": payload["bar"],
+        "supported_liquidity_subsets": payload["liquidity_stability_policy"]["supported_subsets"],
+        "parameter_stability": payload["parameter_stability"],
+        "untouched_oos_opened": selected is not None,
+        "selected_oos": oos_summary,
+        "candidates": candidate_summaries,
+        "universe_requested": payload["universe_requested"],
+        "universe_resolved": payload["universe_resolved"],
+        "failed_symbol_count": len(payload["failed_symbols"]),
+        "research_only": True,
+        "live_approved": False,
+        "trade_authority": False,
+        "payload_sha256": envelope["integrity"]["payload_sha256"],
+    }
+
+
 def main() -> None:
-    print(json.dumps(run(), default=str), flush=True)
+    envelope = run()
+    summary_path = os.getenv("CROSS_ASSET_SUMMARY_PATH", "").strip()
+    if summary_path:
+        target = Path(summary_path)
+        temporary = target.with_suffix(".tmp")
+        temporary.write_text(json.dumps(summarize_evidence(envelope), sort_keys=True), encoding="utf-8")
+        temporary.replace(target)
+    print(json.dumps(envelope, default=str), flush=True)
 
 
 if __name__ == "__main__":

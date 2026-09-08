@@ -8,6 +8,7 @@ they have no broker, promotion, GitHub-write, or live-trade authority.
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import sys
 import tempfile
@@ -48,12 +49,21 @@ WORKERS = (
     WorkerSpec("universe-7", {"RESEARCH_SHARD_INDEX": "7", "RESEARCH_SHARD_COUNT": "8", "RESEARCH_TIMEFRAMES": "15m,1H"}),
     WorkerSpec("swing-majors", {"RESEARCH_SYMBOLS": "BTC-USDT,ETH-USDT,SOL-USDT,XRP-USDT,LINK-USDT", "RESEARCH_TIMEFRAMES": "4H,1D"}),
     WorkerSpec(
-        "cross-asset-rank",
+        "cross-asset-rank-24h",
         {
+            "CROSS_ASSET_HORIZON": "24h",
             "CROSS_ASSET_UNIVERSE_SIZE": "30",
             "CROSS_ASSET_BARS": "3000",
-            "CROSS_ASSET_BAR": "1H",
-            "CROSS_ASSET_FORWARD_BARS": "24",
+            "CROSS_ASSET_ROUND_TRIP_COST_BPS": "12",
+        },
+        script="cross_asset_runner.py",
+    ),
+    WorkerSpec(
+        "cross-asset-rank-7d",
+        {
+            "CROSS_ASSET_HORIZON": "7d",
+            "CROSS_ASSET_UNIVERSE_SIZE": "30",
+            "CROSS_ASSET_BARS": "5000",
             "CROSS_ASSET_ROUND_TRIP_COST_BPS": "12",
         },
         script="cross_asset_runner.py",
@@ -91,7 +101,7 @@ def snapshot() -> dict:
         return data
 
 
-def _worker_env(spec: WorkerSpec) -> dict[str, str]:
+def _worker_env(spec: WorkerSpec, summary_path: str | None = None) -> dict[str, str]:
     env = dict(os.environ)
     env.update(
         {
@@ -104,6 +114,8 @@ def _worker_env(spec: WorkerSpec) -> dict[str, str]:
         }
     )
     env.update(spec.env)
+    if summary_path and spec.script == "cross_asset_runner.py":
+        env["CROSS_ASSET_SUMMARY_PATH"] = summary_path
     if "RESEARCH_SYMBOLS" in spec.env:
         env["RESEARCH_SHARD_INDEX"] = "0"
         env["RESEARCH_SHARD_COUNT"] = "1"
@@ -128,13 +140,15 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> None:
         started = time.monotonic()
         exit_code = None
         error_type = None
+        evidence = None
         try:
             with tempfile.TemporaryDirectory(prefix=f"crypto-{spec.name}-") as tmpdir:
+                summary_path = str(Path(tmpdir) / "evidence-summary.json")
                 process = await asyncio.create_subprocess_exec(
                     sys.executable,
                     str(PROJECT_ROOT / spec.script),
                     cwd=tmpdir,
-                    env=_worker_env(spec),
+                    env=_worker_env(spec, summary_path),
                     stdout=asyncio.subprocess.DEVNULL,
                     stderr=asyncio.subprocess.DEVNULL,
                 )
@@ -145,6 +159,12 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> None:
                     await process.wait()
                     exit_code = -9
                     error_type = "TimeoutError"
+                if exit_code == 0 and spec.script == "cross_asset_runner.py":
+                    try:
+                        evidence = json.loads(Path(summary_path).read_text(encoding="utf-8"))
+                    except (OSError, ValueError, TypeError):
+                        exit_code = -1
+                        error_type = "EvidenceSummaryError"
         except Exception as exc:
             exit_code = -1
             error_type = type(exc).__name__
@@ -155,6 +175,7 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> None:
             _status["completed_jobs"] = int(_status["completed_jobs"]) + 1
             if exit_code != 0:
                 _status["failed_jobs"] = int(_status["failed_jobs"]) + 1
+                error_type = error_type or "ProcessExitError"
             _status["last_completion_at"] = _now()
             _status["workers"][spec.name] = {
                 "state": "resting" if exit_code == 0 else "error_backoff",
@@ -164,6 +185,7 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> None:
                 "last_exit_code": exit_code,
                 "last_error_type": error_type,
                 "elapsed_seconds": elapsed,
+                "latest_evidence": evidence,
             }
 
 
