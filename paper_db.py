@@ -2,6 +2,7 @@ import httpx
 
 from config import SUPABASE_URL, SUPABASE_SECRET_KEY
 from db import fetch_ranked_opportunities, headers
+from utils import iso, now_utc
 
 http = httpx.Client(timeout=25.0, follow_redirects=True)
 
@@ -26,6 +27,7 @@ def update_paper_account(account_id, fields, create=False):
     payload = {k: v for k, v in fields.items() if k in {
         "initial_cash","cash","equity","realized_pnl","peak_equity","max_drawdown_pct","profitable_alert"
     }}
+    payload["updated_at"] = iso(now_utc())
     if create:
         payload = {"id": account_id, **payload}
         r = http.post(f"{SUPABASE_URL}/rest/v1/paper_account", headers=headers("resolution=ignore-duplicates,return=minimal"), json=payload)
@@ -55,20 +57,15 @@ def insert_paper_trade(row):
     return bool(r.json())
 
 
-def close_paper_trade(trade_id, exit_price, exit_reason, pnl_usd, fees_usd):
+def close_paper_trade(trade_id, exit_price, exit_reason, pnl_usd, pnl_pct):
     if not _configured():
         return
+    stamp = iso(now_utc())
     payload = {
-        "status":"CLOSED","closed_at":"now()","exit_price":exit_price,"exit_reason":exit_reason,
-        "pnl_usd":pnl_usd,"pnl_pct":0.0,"updated_at":"now()"
+        "status":"CLOSED","closed_at":stamp,"exit_price":exit_price,"exit_reason":exit_reason,
+        "pnl_usd":pnl_usd,"pnl_pct":pnl_pct,"updated_at":stamp
     }
     r = http.patch(f"{SUPABASE_URL}/rest/v1/paper_trades", headers=headers("return=minimal"), params={"id":f"eq.{int(trade_id)}","status":"eq.OPEN"}, json=payload)
-    if r.status_code >= 300:
-        # Retry without SQL-like timestamp literals; PostgREST expects actual timestamps, not functions.
-        from utils import iso, now_utc
-        payload["closed_at"] = iso(now_utc())
-        payload["updated_at"] = iso(now_utc())
-        r = http.patch(f"{SUPABASE_URL}/rest/v1/paper_trades", headers=headers("return=minimal"), params={"id":f"eq.{int(trade_id)}","status":"eq.OPEN"}, json=payload)
     if r.status_code >= 300:
         raise RuntimeError(f"Paper trade close failed: {r.status_code} {r.text}")
 
