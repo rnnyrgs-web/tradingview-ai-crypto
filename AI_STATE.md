@@ -24,7 +24,7 @@ Chronological validation remains train / validation / untouched holdout. Robustn
 Integrated across PRs #38-#44 and follow-on work: realistic execution-cost stress, timestamp-safe funding/OI/basis, visible-depth estimates without inventing hidden liquidity, untouched-OOS execution robustness and strict chronology.
 
 ## 24/7 RESEARCH / ORCHESTRATION
-PR #55 added bounded continuous Python research workers. PRs #65-#68 strengthened dedicated 24h/7d ACC-002 evidence collection, reserved accuracy capacity, independent history, and bounded retry/cache behavior. Existing paid infrastructure only unless approved; USD 30/month recurring ceiling. Workers remain research-only, without trade/write/promotion authority or broker connection.
+PR #55 added bounded continuous Python research workers. PRs #65-#68 strengthened dedicated 24h/7d ACC-002 evidence collection, reserved accuracy capacity, independent history, and bounded retry/cache behavior. PR #82 adds bounded exponential failure backoff so broken/timing-out workers cannot repeatedly consume scarce heavy-processing slots while healthy workers continue at the normal fast cycle. Existing paid infrastructure only unless approved; USD 30/month recurring ceiling. Workers remain research-only, without trade/write/promotion authority or broker connection.
 
 ## ACC-002 CROSS-ASSET RANK RESEARCH — IN PROGRESS
 Integrated PRs #56-#60 and #64-#68. Protections include timestamp-safe cross-sectional relative strength; multi-lookback vol-normalized momentum; chronological train/validation/untouched OOS; purging; non-overlapping forward observations; predeclared grids; sufficient independent OOS; parameter and Top-15/30/45 liquidity-subset stability; 1x/1.5x/2x/3x cost stress; deterministic 500-resample bootstrap; dedicated 24h/7d workers. No profitability claim authorized yet.
@@ -63,34 +63,35 @@ PR #78; exact-head run `34265615227` on `4bd7d3905a89602630e4137b3a3714c2311eee7
 PR #80; exact-head run `34268140486` on `0a034a920d22d2e9415a105170edd3ef831b12ed`; squash merge `51db55b5339bcbd5183044a50521e6fe36770caa`. Champion/challenger comparison uses matched independent future buckets, exact distinct fingerprints and 3x own modeled costs. Requires >=20 matched 24h or >=12 matched 7d periods, positive challenger after-cost expectancy/mean advantage, >=55% pairwise wins, and positive deterministic SHA-256 bootstrap 5th-percentile mean advantage. Passing only recommends Strategy Registry review.
 
 ## ACC-014 CHAOS / FAILURE FAIL-CLOSED GATES — COMPLETE
-PR #81 `ACC-014: Add chaos and failure fail-closed gates` passed exact-head Security and Reliability run `34268401662` on `c99ef9261acdcfb4cf340a4bc98d0f2ab8664a0a` and was squash-merged as `c91e337439782ac4b6c60a06a81aee5fb051ee29`.
+PR #81 `ACC-014: Add chaos and failure fail-closed gates` passed exact-head Security and Reliability run `34268401662` on `c99ef9261acdcfb4cf340a4bc98d0f2ab8664a0a` and was squash-merged as `c91e337439782ac4b6c60a06a81aee5fb051ee29`. Incomplete/corrupt market snapshots, stale/malformed system health, deep-scan coverage collapse, excessive scan failures, repeated errors, broad volatility/liquidity stress and cross-exchange instability force WAIT. All behavior is restrictive-only.
+
+## SAFE WORKER THROUGHPUT — COMPLETE
+PR #82 `Improve worker throughput with bounded error backoff` passed exact-head Security and Reliability run `34268787553` on `ac8c5c5e72b063ba0a57784424af9ae573b28af3` and was squash-merged as `3af7eba0488da8576382b8c480698826eefdff8d`.
 
 Implemented:
-- incomplete/corrupt broad market snapshots force global WAIT;
-- stale production health state (>45 minutes) forces global WAIT;
-- malformed health metrics fail closed;
-- deep-scan coverage collapse forces WAIT;
-- excessive scan-failure ratio forces WAIT;
-- repeated system errors, unhealthy scans, broad volatility/liquidity stress and cross-exchange instability remain blocking;
-- adversarial tests cover corrupt market data, stale health, malformed health, scan coverage collapse, excessive scan failures, bad execution, portfolio drawdown/loss streak and directional concentration;
-- all behavior is restrictive-only and cannot create trade authority.
+- successful workers keep cycling at the configured fast rest interval;
+- failing or timing-out workers use bounded exponential backoff, default capped at 5 minutes;
+- unhealthy data/API jobs therefore cannot repeatedly monopolize scarce heavy-processing slots;
+- status exposes consecutive failures and next retry delay;
+- dedicated accuracy lane, 17-worker topology, max-concurrency policy, $30/month ceiling and research-only/broker-disconnected authority remain unchanged;
+- forward-proof sample independence and all promotion thresholds remain unchanged.
 
 ## AUTHENTIC PAPER TRADING STATE
 The continuous paper account remains forward-only and broker-disconnected. Authentic baseline is exactly `$100,000` from `2026-09-08T01:17:49Z`; never reset or rewrite it. Current account value = immutable starting capital plus realized/open P&L. Safety/execution gates may reject entries but never fabricate or reset history. Paper performance is evidence only.
 
 ## ACCURACY PROGRAM STATUS
-ACC-001 COMPLETE; ACC-002 IN PROGRESS; ACC-003 COMPLETE; ACC-004 COMPLETE; ACC-005 COMPLETE; ACC-006 COMPLETE; ACC-007 COMPLETE; ACC-008 COMPLETE; ACC-009 COMPLETE; ACC-010 COMPLETE; ACC-011 COMPLETE; ACC-012 COMPLETE; ACC-013 COMPLETE; ACC-014 COMPLETE.
+ACC-001 COMPLETE; ACC-002 IN PROGRESS; ACC-003 COMPLETE; ACC-004 COMPLETE; ACC-005 COMPLETE; ACC-006 COMPLETE; ACC-007 COMPLETE; ACC-008 COMPLETE; ACC-009 COMPLETE; ACC-010 COMPLETE; ACC-011 COMPLETE; ACC-012 COMPLETE; ACC-013 COMPLETE; ACC-014 COMPLETE; safe worker throughput COMPLETE.
 
 ## COST / SPEED POLICY
 Hard recurring infrastructure ceiling: USD 30/month unless explicitly changed. Prefer existing shared Render compute, deterministic Python, public/free defensible data, caching/reuse, early rejection and bounded concurrency. No paid feed/service/compute without approval.
 
 ## SPEED WITHOUT CHEATING
-The fastest safe path is to preserve stable exact strategy fingerprints while genuine forward observations accumulate. Challengers may research and run in shadow, but avoid needless champion fingerprint churn that discards comparable forward evidence. Never count overlapping forecasts as independent, lower forward-proof thresholds, or reset paper history to accelerate results.
+The fastest safe path is to preserve stable exact strategy fingerprints while genuine forward observations accumulate. Challengers may research and run in shadow, but avoid needless champion fingerprint churn that discards comparable forward evidence. Never count overlapping forecasts as independent, lower forward-proof thresholds, reset paper history, or raise heavy concurrency merely to accelerate results.
 
 ## EXACT NEXT STEP
-1. Continue genuine ACC-002 24h/7d evidence and worker health. No profitability claim unless required horizon evidence genuinely passes.
-2. Audit worker scheduling for wasted duplicate work, timeout hotspots and evidence-continuity churn. Improve caching/deduplication/reserved accuracy capacity without increasing heavy concurrency beyond cost/safety bounds.
-3. Keep stable champion fingerprints while challengers run shadow comparison. Only evidence-backed changes should create a new fingerprint.
+1. Continue genuine ACC-002 24h/7d forward/OOS evidence and worker-health monitoring. No profitability claim unless the required evidence genuinely passes.
+2. Preserve stable exact champion fingerprints while challengers run in shadow; only evidence-backed strategy changes create a new fingerprint.
+3. Next safe speed audit: evaluate cross-process immutable historical-data caching/deduplication to reduce repeated deep-history downloads, with provenance, TTL, atomic writes and stale-data rejection. Do not implement if it can contaminate chronology or point-in-time evidence.
 4. Preserve `live_promotions.json` empty, signing keys unused, PONS fail-closed, immutable $100k paper ledger and broker-disconnected state.
 5. Only add further microstructure features when genuine timestamped data supports them; never reconstruct unavailable order books or liquidations from candles.
 6. Optimize after-cost risk-adjusted realized performance with tail protection and abstention, not headline accuracy.
