@@ -1,7 +1,8 @@
-"""Always-on, token-free coordinator watchdog.
+"""Always-on token-free coordinator plus bounded Python research worker army.
 
-This process observes production and the canonical repository handoff.  It is
-deliberately unable to scan markets, publish branches, or approve trades.
+The coordinator observes production/state while the worker army continuously
+runs research/backtest jobs. Neither component has live trade, promotion,
+broker, or repository-write authority.
 """
 
 from __future__ import annotations
@@ -16,6 +17,8 @@ from threading import Lock
 import httpx
 from fastapi import FastAPI
 
+from continuous_worker_army import run_army, snapshot as worker_army_snapshot
+
 
 PRODUCTION_HEALTH_URL = os.getenv(
     "PRODUCTION_HEALTH_URL",
@@ -27,6 +30,7 @@ STATE_URL = os.getenv(
 )
 POLL_SECONDS = max(30, int(os.getenv("COORDINATOR_POLL_SECONDS", "60")))
 REQUEST_TIMEOUT_SECONDS = 15.0
+WORKER_ARMY_ENABLED = os.getenv("WORKER_ARMY_ENABLED", "1").strip().lower() not in {"0", "false", "no", "off"}
 
 log = logging.getLogger(__name__)
 _lock = Lock()
@@ -110,15 +114,15 @@ async def coordinator_loop() -> None:
 async def lifespan(_: FastAPI):
     with _lock:
         _status["started_at"] = _now()
-    task = asyncio.create_task(coordinator_loop())
+    tasks = [asyncio.create_task(coordinator_loop(), name="coordinator-watchdog")]
+    if WORKER_ARMY_ENABLED:
+        tasks.append(asyncio.create_task(run_army(), name="python-worker-army"))
     try:
         yield
     finally:
-        task.cancel()
-        try:
-            await task
-        except asyncio.CancelledError:
-            pass
+        for task in tasks:
+            task.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
 
 
 app = FastAPI(title="Crypto Continuous Coordinator", lifespan=lifespan)
@@ -129,6 +133,7 @@ app = FastAPI(title="Crypto Continuous Coordinator", lifespan=lifespan)
 def health() -> dict:
     with _lock:
         snapshot = dict(_status)
+    army = worker_army_snapshot() if WORKER_ARMY_ENABLED else {"enabled": False}
     healthy = (
         snapshot["production_ok"]
         and snapshot["state_ok"]
@@ -137,8 +142,18 @@ def health() -> dict:
     return {
         "ok": healthy,
         "service": "crypto-continuous-coordinator",
-        "mode": "observe_only",
+        "mode": "observe_and_research_only",
         "ai_calls_normal_operation": 0,
         "trade_authority": False,
+        "write_authority": False,
+        "promotion_authority": False,
+        "broker_connected": False,
+        "research_only": True,
+        "worker_army": army,
         **snapshot,
     }
+
+
+@app.get("/workers")
+def workers() -> dict:
+    return worker_army_snapshot() if WORKER_ARMY_ENABLED else {"enabled": False}
