@@ -27,9 +27,8 @@ def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
     """Persist top-20 24h and 7d rankings from the current scan.
 
     Direction/rank comes from deterministic multi-timeframe quant evidence.
-    BUY/SELL eligibility is fail-closed. Market-data quality is restrictive:
-    stale, missing or contradictory independent exchange evidence can only lower
-    displayed evidence/rank and forces WAIT when consensus is not reliable.
+    BUY/SELL eligibility is fail-closed. Market-data quality and genuine forward
+    proof are restrictive: either may force WAIT and neither can create authority.
     """
     ai_map = {}
     for s in ai_signals or []:
@@ -62,7 +61,9 @@ def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
             reviewed_direction = str(reviewed.get("direction", "")).upper()
             action = str(reviewed.get("action", "WAIT")).upper()
             strategy_family = str(reviewed.get("strategy_family", ""))
-            validation = validate_live_strategy(c["symbol"], horizon, strategy_family)
+            validation = validate_live_strategy(
+                c["symbol"], horizon, strategy_family, resolved_predictions=resolved_predictions
+            )
             consensus = c.get("market_consensus", {})
             consensus_reliable = consensus.get("reliable") is True
             data_multiplier = _bounded_multiplier(
@@ -118,6 +119,7 @@ def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
                 "strategy_version": STRATEGY_VERSION,
                 "strategy_identity": validation.identity,
                 "calibration": calibration,
+                "forward_proof": validation.forward_proof,
                 "_rank_score": rank_score,
             })
         ranked.sort(key=lambda x: x["_rank_score"], reverse=True)
