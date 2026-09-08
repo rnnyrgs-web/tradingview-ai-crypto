@@ -49,7 +49,7 @@ Detected: 2026-09-08
 Severity: reliability / observability semantics
 
 ### Symptom
-Fresh post-PR-89 diagnostics proved the recurring ACC-002 24h/7d exit-code-1 was caused by the fail-closed liquidity-stability requirement after cross-exchange / historical data availability was insufficient. The runner raised `ValueError("insufficient supported liquidity subsets for ACC-002 stability gate")`, so the worker army counted an expected research-not-ready outcome as a software failure and repeatedly entered error backoff.
+Fresh post-PR-89 diagnostics proved the recurring 24h/7d exit-code-1 was caused by the fail-closed liquidity-stability requirement after cross-exchange / historical data availability was insufficient. The runner raised `ValueError("insufficient supported liquidity subsets for ACC-002 stability gate")`, so the worker army counted an expected research-not-ready outcome as a software failure and repeatedly entered error backoff.
 
 ### Reproducer
 Resolve fewer than two predeclared liquidity subsets with the required coverage and run `cross_asset_runner.run()`. Before the fix, the runner raised `ValueError` even though the safety policy was working as intended.
@@ -92,3 +92,29 @@ Each caught research-job exception now emits a bounded, sanitized private stderr
 
 ### Safety invariants
 No strategy logic, evidence threshold, OOS/forward-proof rule, market-data source behavior, concurrency, paper ledger, broker connectivity, promotion authority or live-trade authority changes as part of this fix.
+
+## PONS-BLOCK-001 — Expected insufficient history counted as software failure
+
+Status: FIXED IN PR (pending merge at time of entry)
+Component: `research_runner.py`
+Detected: 2026-09-08
+Severity: reliability / observability semantics
+
+### Symptom
+Fresh PR #91 production diagnostics proved PONS did not have enough public historical candles for the requested research windows: 15m returned `Need at least 1000 candles for walk-forward`, while 1H and 4H returned `Not enough historical candles`. All three expected evidence insufficiencies were counted as a process failure and triggered worker error backoff.
+
+### Reproducer
+Run `research_runner.py` for an asset/timeframe whose available public history is below the existing backtest/walk-forward minimum. Before the fix, an all-insufficient cycle exits 1 even though the correct research decision is simply to abstain.
+
+### Fix
+Only the two proven `RuntimeError` insufficient-history messages are classified as `research_blocked` with reason `insufficient_historical_candles`. Blocked items are explicitly research-only, ineligible for promotion, `live_approved=false`, and `trade_authority=false`. Unknown runtime errors and non-RuntimeError exceptions remain software failures and retain private diagnostics. No candle minimum is reduced and no missing history is fabricated.
+
+### Permanent regression coverage
+`tests/test_research_insufficient_history_blocked.py`
+- verifies both proven insufficient-history messages are blocked;
+- verifies blocked output has no promotion/live/trade authority;
+- verifies unknown runtime errors are not silently reclassified;
+- verifies a different exception type with similar text is not silently reclassified.
+
+### Safety invariants
+No historical-data minimum, strategy logic, evidence threshold, OOS/forward-proof rule, market-data source behavior, concurrency, paper ledger, broker connectivity, promotion authority or live-trade authority is weakened by this fix.
