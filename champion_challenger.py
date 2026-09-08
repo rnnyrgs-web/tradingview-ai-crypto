@@ -28,8 +28,6 @@ def _run_quality(run):
     oos_dd = max(0.0, _num(holdout.get("max_drawdown_pct")))
     trades = max(0.0, _num(validation.get("trades"))) + max(0.0, _num(holdout.get("trades")))
 
-    # Favor repeatable after-cost expectancy and PF, penalize drawdown, and use
-    # sample size only as a bounded confidence multiplier.
     expectancy = min(val_exp, oos_exp)
     profit_factor = min(val_pf, oos_pf)
     drawdown_penalty = 1.0 / (1.0 + max(val_dd, oos_dd) / 10.0)
@@ -70,10 +68,10 @@ def _pair_correlation(key_a, key_b, correlation_matrix):
 def build_champion_challenger(candidates, run_history, correlation_matrix=None, max_weight=0.45):
     """Return research-only ensemble weights for already-qualified candidates.
 
-    `run_history` maps `(symbol, bar, family)` to repeated sealed run metrics.
-    `correlation_matrix` is optional and maps key-pairs to return correlation.
-    Missing correlations never create a bonus; structural overlap is penalized
-    conservatively after preliminary scoring.
+    Severe recent deterioration is fail-closed: the strategy is explicitly
+    demoted rather than forcing its weight into an otherwise under-diversified
+    ensemble. Any unused ensemble capacity is reported as unallocated WAIT /
+    abstention capacity rather than redistributed into weaker evidence.
     """
     correlation_matrix = correlation_matrix or {}
     cap = min(0.60, max(0.10, _num(max_weight, 0.45)))
@@ -120,18 +118,36 @@ def build_champion_challenger(candidates, run_history, correlation_matrix=None, 
         row["adjusted_score"] = row["raw_score"] * row["correlation_penalty"] * row["structural_overlap_penalty"]
         selected.append(row)
 
-    positive = [row for row in selected if row["adjusted_score"] > 0]
+    demoted = []
+    positive = []
+    for row in selected:
+        reason = None
+        if row["adjusted_score"] <= 0:
+            reason = "NON_POSITIVE_QUALITY"
+        elif row["deterioration_penalty"] <= 0.25:
+            reason = "SEVERE_RECENT_DETERIORATION"
+        if reason:
+            item = {k: v for k, v in row.items() if k != "key"}
+            item["reason"] = reason
+            item["weight"] = 0.0
+            item["role"] = "DEMOTED"
+            demoted.append(item)
+        else:
+            positive.append(row)
+
     total = sum(row["adjusted_score"] for row in positive)
     if total <= 0:
         return {
             "status": "NO_QUALIFIED_ENSEMBLE",
             "champion": None,
             "members": [],
+            "demoted": demoted,
+            "allocated_weight": 0.0,
+            "unallocated_wait_weight": 1.0,
             "live_approved": False,
             "policy": "Research-only. No candidate may gain live authority from ensemble weighting.",
         }
 
-    # Iteratively cap concentration and renormalize remaining capacity.
     remaining = positive[:]
     weights = {row["key"]: 0.0 for row in positive}
     capacity = 1.0
@@ -161,21 +177,26 @@ def build_champion_challenger(candidates, run_history, correlation_matrix=None, 
             continue
         member = {k: v for k, v in row.items() if k != "key"}
         member["weight"] = round(weight, 6)
-        member["role"] = "CHAMPION" if not members else "CHALLENGER"
+        member["role"] = "CHALLENGER"
         members.append(member)
     members.sort(key=lambda row: (-row["weight"], -row["adjusted_score"], row["symbol"], row["bar"], row["strategy_family"]))
     if members:
         members[0]["role"] = "CHAMPION"
-        for member in members[1:]:
-            member["role"] = "CHALLENGER"
 
     champion = members[0] if members else None
+    allocated = min(1.0, sum(member["weight"] for member in members))
     return {
         "status": "RESEARCH_ENSEMBLE_READY" if champion else "NO_QUALIFIED_ENSEMBLE",
         "champion": champion,
         "members": members,
+        "demoted": demoted,
         "max_member_weight": cap,
+        "allocated_weight": round(allocated, 6),
+        "unallocated_wait_weight": round(max(0.0, 1.0 - allocated), 6),
         "live_approved": False,
-        "automatic_demotion": "Recent sealed-run deterioration reduces or can eliminate research weight; it never auto-promotes.",
-        "policy": "Research-only champion/challenger ranking. Strategy Registry and Production Risk approvals remain mandatory for live use.",
+        "automatic_demotion": "Severe recent sealed-run deterioration sets research weight to zero; it never auto-promotes.",
+        "policy": (
+            "Research-only champion/challenger ranking. Unallocated weight means WAIT/abstain rather than forcing weak evidence. "
+            "Strategy Registry and Production Risk approvals remain mandatory for live use."
+        ),
     }
