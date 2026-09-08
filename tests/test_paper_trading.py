@@ -1,5 +1,7 @@
 from datetime import timedelta
 
+import pytest
+
 import paper_trading as p
 from utils import now_utc
 
@@ -54,3 +56,19 @@ def test_paper_fill_is_forward_market_price_with_adverse_friction(monkeypatch):
     assert short_fill < market
     assert round(long_fill, 6) == round(100.0 * (1 + p.FEE_BPS_ONE_WAY / 10000.0), 6)
     assert round(short_fill, 6) == round(100.0 * (1 - p.FEE_BPS_ONE_WAY / 10000.0), 6)
+
+
+def test_persistent_account_requires_immutable_100k_start():
+    valid = {
+        "initial_cash": 100000.0,
+        "cash": 90000.0,
+        "equity": 101000.0,
+        "realized_pnl": 500.0,
+        "peak_equity": 102000.0,
+        "max_drawdown_pct": 1.0,
+    }
+    p._validate_persistent_account(valid)
+    with pytest.raises(RuntimeError, match="immutable"):
+        p._validate_persistent_account({**valid, "initial_cash": 50000.0})
+    with pytest.raises(RuntimeError, match="finite"):
+        p._validate_persistent_account({**valid, "equity": float("nan")})

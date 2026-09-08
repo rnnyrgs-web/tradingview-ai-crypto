@@ -1,5 +1,7 @@
 import asyncio
 import logging
+import math
+import threading
 from datetime import datetime, timedelta
 
 from paper_db import (
@@ -24,6 +26,7 @@ MAX_NOTIONAL_PCT = 20.0
 FEE_BPS_ONE_WAY = 6.0
 MIN_EVIDENCE_SCORE = 60.0
 PAPER_INTERVAL_SECONDS = 15 * 60
+_cycle_lock = threading.Lock()
 
 
 def _last_price(symbol):
@@ -103,7 +106,27 @@ def _consistent(stats, max_drawdown_pct):
     )
 
 
+def _validate_persistent_account(account):
+    """Fail closed if persisted state no longer represents the original $100k run."""
+    if not account:
+        raise RuntimeError("Paper account creation did not persist")
+    initial_cash = float(account.get("initial_cash") or 0)
+    if initial_cash != INITIAL_CASH:
+        raise RuntimeError("Paper account initial_cash is immutable and must remain $100,000")
+    for field in ("cash", "equity", "realized_pnl", "peak_equity", "max_drawdown_pct"):
+        value = float(account.get(field))
+        if not math.isfinite(value):
+            raise RuntimeError(f"Paper account {field} must be finite")
+
+
 def run_paper_cycle():
+    # The background loop and authenticated manual endpoint can overlap. Serialize
+    # them so a position can never be credited twice to cash or realized P&L.
+    with _cycle_lock:
+        return _run_paper_cycle_locked()
+
+
+def _run_paper_cycle_locked():
     account = fetch_paper_account(ACCOUNT_ID)
     if not account:
         update_paper_account(ACCOUNT_ID, {
@@ -116,6 +139,8 @@ def run_paper_cycle():
             "profitable_alert": False,
         }, create=True)
         account = fetch_paper_account(ACCOUNT_ID)
+
+    _validate_persistent_account(account)
 
     cash = float(account["cash"])
     realized = float(account["realized_pnl"])
@@ -130,10 +155,10 @@ def run_paper_cycle():
         if exit_price is None:
             continue
         pnl = _net_pnl(trade, float(exit_price))
-        cash += float(trade["notional_usd"]) + pnl
-        realized += pnl
         pnl_pct = pnl / float(trade["notional_usd"]) * 100.0 if float(trade["notional_usd"]) > 0 else 0.0
-        close_paper_trade(trade["id"], float(exit_price), reason, pnl, pnl_pct)
+        if close_paper_trade(trade["id"], float(exit_price), reason, pnl, pnl_pct):
+            cash += float(trade["notional_usd"]) + pnl
+            realized += pnl
 
     open_trades = fetch_open_paper_trades(ACCOUNT_ID)
     open_pairs = {(t["symbol"], t["horizon"]) for t in open_trades}
