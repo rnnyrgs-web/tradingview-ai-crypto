@@ -36,13 +36,36 @@ def test_shared_cache_round_trip_is_bucket_keyed_and_integrity_checked(tmp_path)
     assert cache.read_history("ETH-USDT", "1H", 100, 50000, now_ms=now_ms + 1_000, ttl_seconds=900, cache_dir=tmp_path) is None
 
 
-def test_next_ttl_bucket_does_not_reuse_previous_snapshot(tmp_path):
+def test_next_ttl_bucket_reuses_snapshot_only_while_actual_age_is_fresh(tmp_path):
     ttl = 60
-    now_ms = 2_000_000_040_000
-    rows = _rows(now_ms)
-    assert cache.write_history("BTC-USDT", "1H", 100, 50000, rows, now_ms=now_ms, ttl_seconds=ttl, cache_dir=tmp_path)
-    next_bucket_ms = ((now_ms // (ttl * 1000)) + 1) * ttl * 1000 + 1
-    assert cache.read_history("BTC-USDT", "1H", 100, 50000, now_ms=next_bucket_ms, ttl_seconds=ttl, cache_dir=tmp_path) is None
+    bucket_ms = ttl * 1000
+    # Fetch ten seconds before a bucket boundary so the immutable object remains
+    # genuinely fresh for fifty seconds after the boundary.
+    boundary_ms = ((2_000_000_040_000 // bucket_ms) + 1) * bucket_ms
+    fetched_ms = boundary_ms - 10_000
+    rows = _rows(fetched_ms)
+    assert cache.write_history("BTC-USDT", "1H", 100, 50000, rows, now_ms=fetched_ms, ttl_seconds=ttl, cache_dir=tmp_path)
+    assert cache.read_history(
+        "BTC-USDT", "1H", 100, 50000,
+        now_ms=boundary_ms + 1_000, ttl_seconds=ttl, cache_dir=tmp_path,
+    ) == rows
+    assert cache.read_history(
+        "BTC-USDT", "1H", 100, 50000,
+        now_ms=fetched_ms + ttl * 1000, ttl_seconds=ttl, cache_dir=tmp_path,
+    ) is None
+
+
+def test_previous_bucket_reuse_keeps_exact_request_identity(tmp_path):
+    ttl = 60
+    bucket_ms = ttl * 1000
+    boundary_ms = ((2_000_000_040_000 // bucket_ms) + 1) * bucket_ms
+    fetched_ms = boundary_ms - 5_000
+    rows = _rows(fetched_ms)
+    assert cache.write_history("BTC-USDT", "1H", 100, 50000, rows, now_ms=fetched_ms, ttl_seconds=ttl, cache_dir=tmp_path)
+    now_ms = boundary_ms + 1_000
+    assert cache.read_history("BTC-USDT", "4H", 100, 50000, now_ms=now_ms, ttl_seconds=ttl, cache_dir=tmp_path) is None
+    assert cache.read_history("BTC-USDT", "1H", 200, 50000, now_ms=now_ms, ttl_seconds=ttl, cache_dir=tmp_path) is None
+    assert cache.read_history("BTC-USDT", "1H", 100, 40000, now_ms=now_ms, ttl_seconds=ttl, cache_dir=tmp_path) is None
 
 
 def test_tampered_cache_is_rejected(tmp_path):
