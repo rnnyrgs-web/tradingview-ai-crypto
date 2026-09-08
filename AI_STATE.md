@@ -76,22 +76,37 @@ Implemented:
 - dedicated accuracy lane, 17-worker topology, max-concurrency policy, $30/month ceiling and research-only/broker-disconnected authority remain unchanged;
 - forward-proof sample independence and all promotion thresholds remain unchanged.
 
+## SHARED IMMUTABLE DEEP-HISTORY CACHE — COMPLETE
+PR #83 `Add safe cross-process historical data cache` passed exact-head Security and Reliability run `34270418760` on `7e7ae9167c0ba9f41a7801cc1f16f7f9dbec9d9b` and was squash-merged as `593d2126edc8e754cced4df98a4e9cb6a9c3b07f`.
+
+Implemented:
+- deep OKX history now checks process-local LRU first, then a cross-process shared cache before network fetch;
+- cache identity includes source, endpoint, symbol, timeframe, requested depth, max-bars cap, cache version and bounded TTL time bucket;
+- same-bucket objects are immutable; a new time bucket creates a new cache object rather than mutating prior evidence;
+- normalized rows carry SHA-256 integrity and exact provenance;
+- wrong-key, malformed, corrupt, nonchronological, future-dated or integrity-mismatched objects are rejected and callers fall back to OKX;
+- publication uses same-directory temporary files and atomic hard-link creation so races cannot corrupt an existing valid object;
+- cache uses Python's runtime temp directory by default, not a hard-coded temp path;
+- old cache objects are pruned conservatively;
+- chronology/OOS/point-in-time/forward-proof rules are unchanged; cache only avoids redundant downloads;
+- CI first caught a hard-coded temp-directory Bandit issue; it was corrected and the new exact head then passed all checks. Unit tests reached 229 passing in the first cache CI run before the security-path fix.
+
 ## AUTHENTIC PAPER TRADING STATE
 The continuous paper account remains forward-only and broker-disconnected. Authentic baseline is exactly `$100,000` from `2026-09-08T01:17:49Z`; never reset or rewrite it. Current account value = immutable starting capital plus realized/open P&L. Safety/execution gates may reject entries but never fabricate or reset history. Paper performance is evidence only.
 
 ## ACCURACY PROGRAM STATUS
-ACC-001 COMPLETE; ACC-002 IN PROGRESS; ACC-003 COMPLETE; ACC-004 COMPLETE; ACC-005 COMPLETE; ACC-006 COMPLETE; ACC-007 COMPLETE; ACC-008 COMPLETE; ACC-009 COMPLETE; ACC-010 COMPLETE; ACC-011 COMPLETE; ACC-012 COMPLETE; ACC-013 COMPLETE; ACC-014 COMPLETE; safe worker throughput COMPLETE.
+ACC-001 COMPLETE; ACC-002 IN PROGRESS; ACC-003 COMPLETE; ACC-004 COMPLETE; ACC-005 COMPLETE; ACC-006 COMPLETE; ACC-007 COMPLETE; ACC-008 COMPLETE; ACC-009 COMPLETE; ACC-010 COMPLETE; ACC-011 COMPLETE; ACC-012 COMPLETE; ACC-013 COMPLETE; ACC-014 COMPLETE; safe worker throughput COMPLETE; shared immutable deep-history cache COMPLETE.
 
 ## COST / SPEED POLICY
 Hard recurring infrastructure ceiling: USD 30/month unless explicitly changed. Prefer existing shared Render compute, deterministic Python, public/free defensible data, caching/reuse, early rejection and bounded concurrency. No paid feed/service/compute without approval.
 
 ## SPEED WITHOUT CHEATING
-The fastest safe path is to preserve stable exact strategy fingerprints while genuine forward observations accumulate. Challengers may research and run in shadow, but avoid needless champion fingerprint churn that discards comparable forward evidence. Never count overlapping forecasts as independent, lower forward-proof thresholds, reset paper history, or raise heavy concurrency merely to accelerate results.
+The fastest safe path is to preserve stable exact strategy fingerprints while genuine forward observations accumulate. Challengers may research and run in shadow, but avoid needless champion fingerprint churn that discards comparable forward evidence. Never count overlapping forecasts as independent, lower forward-proof thresholds, reset paper history, raise heavy concurrency, or stretch cache TTLs merely to accelerate results.
 
 ## EXACT NEXT STEP
 1. Continue genuine ACC-002 24h/7d forward/OOS evidence and worker-health monitoring. No profitability claim unless the required evidence genuinely passes.
-2. Preserve stable exact champion fingerprints while challengers run in shadow; only evidence-backed strategy changes create a new fingerprint.
-3. Next safe speed audit: evaluate cross-process immutable historical-data caching/deduplication to reduce repeated deep-history downloads, with provenance, TTL, atomic writes and stale-data rejection. Do not implement if it can contaminate chronology or point-in-time evidence.
+2. Measure shared-cache hit/miss/rejection rates and deep-history request latency so future optimization is evidence-based; metrics must not affect trading authority.
+3. Preserve stable exact champion fingerprints while challengers run in shadow; only evidence-backed strategy changes create a new fingerprint.
 4. Preserve `live_promotions.json` empty, signing keys unused, PONS fail-closed, immutable $100k paper ledger and broker-disconnected state.
 5. Only add further microstructure features when genuine timestamped data supports them; never reconstruct unavailable order books or liquidations from candles.
 6. Optimize after-cost risk-adjusted realized performance with tail protection and abstention, not headline accuracy.
