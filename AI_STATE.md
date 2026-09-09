@@ -5,7 +5,7 @@ Last updated: 2026-09-09
 Authoritative continuation state for `rnnyrgs-web/tradingview-ai-crypto`. Read this file from current `main` in full before development. Never infer project state only from ChatGPT memory. Update this file after each completed integration cycle.
 
 ## CURRENT MAIN / ARCHITECTURE
-Current tested integration baseline after PR #168: `c73f93ca90dc70e6ecb4810f0ed591994a7d434b`.
+Current tested integration baseline after PR #170: `0fbd13643c01ca9dfd63fcfbd0b60ec5300c2fe6`.
 
 Production: GitHub -> Render -> Python/FastAPI V3 -> Supabase. Production scans run about every 15 minutes and produce separate 24h/7d Top-20 rankings. Continuous research/backtesting runs on the existing Render coordinator with bounded heavy concurrency under the USD 30/month recurring-infrastructure ceiling.
 
@@ -73,6 +73,8 @@ PR #168 makes the multiple-testing requirement real before adaptive OOS admissio
 
 PR #168 also moves adaptive research memory off ephemeral Render `/tmp` in production and onto the existing Supabase project. `public.research_learning_state` is a service-role-only, RLS-enabled singleton store with an atomic append function. It retains a bounded lesson list plus a monotonic conclusive-trial count across deploys. A configured persistent-store failure is not replaced by an empty local state; research fails closed instead. Local/test explicit paths retain the file adapter.
 
+PR #170 increases the cloud-specialist eligibility check cadence from every three hours to hourly while preserving the 12-hour successful-run cooldown, one concurrent/model run, the $1/day runner API budget, the $30/month recurring-infrastructure ceiling, review-only Lead behavior, no automatic merge, and no trade authority. This improves orchestration responsiveness without increasing permitted model-call frequency or physical heavy-research concurrency.
+
 No accuracy or profitability improvement is claimed merely because these infrastructure/scientific changes exist. Any such claim still requires independent evidence through the canonical chain.
 
 ## ACCURACY / RESEARCH PROGRAM
@@ -102,6 +104,7 @@ PR #164 exact head passed Security and Reliability #1232 before merge.
 PR #165 exact head `1067e7c79443fbe532fa36e7e922529d83d5eafb` passed Security and Reliability #1238 before merge as `581121bd2585e4bfdee82b9b7685b74320e44afd`.
 PR #167 exact head `0813b9e352b071a3cb882828a2faeb1867df8ebe` passed Security and Reliability #1246 before merge as `6058aed4f62dd5519d81965ead2bad26503ac820`.
 PR #168 initially failed only because Bandit interpreted a metadata key containing the substring `pass` as a password-like field; the key was renamed without weakening the scientific gate. All unit tests and dependency audit had passed on that attempt. Exact final head `ca3181193fb2c1f0f0ef1be6d661f9e0bfe5aea2` then passed Security and Reliability #1260 before squash merge as `c73f93ca90dc70e6ecb4810f0ed591994a7d434b`.
+PR #170 exact head `bc7d49c3d94839b45e79a42e5b1895d43079efb4` passed Security and Reliability #1277 before squash merge as `0fbd13643c01ca9dfd63fcfbd0b60ec5300c2fe6`.
 
 Post-PR #168 Render deployment `dep-dagqva6q1p3s73d47jrg` reached `live`. Startup logs showed the coordinator running normally, `specialist_factory workers=256 cycles=1 error=None ai_calls=0`, supervisor healthy, no stale/crashed workers at startup, and no promotion authority. Treat this as operational evidence only.
 
@@ -126,7 +129,7 @@ The shared historical cache is intentionally provenance/integrity checked and bo
 Preserve exact strategy fingerprints while genuine forward observations accumulate. Challengers may run in shadow. Never count overlapping forecasts as independent, lower forward-proof thresholds, reset paper history, raise heavy concurrency, stretch data freshness beyond safe semantics, change source behavior, or cherry-pick thresholds merely to accelerate results.
 
 ## CURRENT OPEN DEVELOPMENT
-PRs #160/#163/#164/#165/#167/#168 are integrated and must not be re-applied. PR #166 is a stale state-sync branch based before #167/#168 and must not be merged as-is. Older PRs #140, #105, #34, #33 and #13 are stale/non-mergeable against current main and must not be merged as-is without a fresh compatibility/relevance review.
+PRs #160/#163/#164/#165/#167/#168/#170 are integrated and must not be re-applied. PR #166 is a stale state-sync branch based before #167/#168 and must not be merged as-is. Older PRs #140, #105, #34, #33 and #13 are stale/non-mergeable against current main and must not be merged as-is without a fresh compatibility/relevance review.
 
 Persistent specialist priorities live in `orchestration/specialist_coordination.json`. Specialists may create isolated candidate work only and may not bypass the canonical evidence gates or recurring-cost ceiling.
 
