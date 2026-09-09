@@ -8,6 +8,8 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
+import research_learning_persistent as persistent_store
+
 DEFAULT_PATH = Path(os.getenv("RESEARCH_LEARNING_STATE_PATH", str(Path(tempfile.gettempdir()) / "tradingview-ai-research-learning.json")))
 MAX_LESSONS = 200
 CONCLUSIVE_OUTCOMES = {"validation_failed", "oos_evaluated"}
@@ -29,7 +31,7 @@ def _nonnegative_int(value):
     return max(0, parsed)
 
 
-def load_state(path=None):
+def _file_load_state(path):
     target = _resolve_path(path)
     try:
         raw = json.loads(target.read_text(encoding="utf-8"))
@@ -43,14 +45,29 @@ def load_state(path=None):
     }
 
 
+def load_state(path=None):
+    # Production is already Supabase-backed. Prefer durable memory whenever the
+    # service-role connection exists. A configured persistent-store error is
+    # intentionally not hidden by an empty /tmp fallback: adaptive research must
+    # fail closed rather than forget prior trials after a transient outage.
+    if path is None and persistent_store.configured():
+        return persistent_store.load_state()
+    return _file_load_state(path)
+
+
 def append_lesson(lesson, path=None):
     if not isinstance(lesson, dict):
         raise TypeError("lesson must be a dict")
     allowed = {"fingerprint", "hypothesis", "outcome", "evidence_summary", "recommended_next_test", "reason_not_to_repeat"}
     compact = {k: lesson.get(k) for k in allowed if lesson.get(k) is not None}
     compact.update({"recorded_at": _now(), "research_only": True, "trade_authority": False, "promotion_authority": False})
+
+    if path is None and persistent_store.configured():
+        persistent_store.append_lesson(compact)
+        return compact
+
     target = _resolve_path(path)
-    state = load_state(target)
+    state = _file_load_state(target)
     fingerprint = compact.get("fingerprint")
     if fingerprint:
         state["lessons"] = [x for x in state["lessons"] if x.get("fingerprint") != fingerprint]
