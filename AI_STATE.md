@@ -5,7 +5,7 @@ Last updated: 2026-09-09
 Authoritative continuation state for `rnnyrgs-web/tradingview-ai-crypto`. Read this file from current `main` in full before development. Never infer project state only from ChatGPT memory. Update this file after every completed development/integration cycle.
 
 ## CURRENT MAIN / ARCHITECTURE
-Current runtime integration baseline after PR #153: `19938aaf3381f492ff01a179a89ef7aef580db08`.
+Current runtime integration baseline after PR #155: `6a23c132b118180a9f42ef912cd90679c2892259`.
 
 Production: GitHub -> Render -> Python/FastAPI V3 -> Supabase. Production scans run about every 15 minutes and produce separate 24h/7d Top-20 rankings. Continuous research/backtesting runs on the existing Render coordinator with bounded heavy concurrency under the USD 30/month ceiling.
 
@@ -45,7 +45,9 @@ PR #149 adds the canonical research-development contract:
 - historical/OOS and genuine-forward evidence remain separate and may not be pooled to inflate confidence;
 - no experiment, scorecard, worker, or objective has trade/promotion authority.
 
-No accuracy or profitability improvement is claimed from PR #149 itself. It improves evidence discipline and research allocation, not production signal thresholds.
+PR #155 extends that learning loop with a deterministic quant-science factory. Resolved-error hypotheses now receive a predeclared scientific method, primary/secondary/guardrail endpoints, a minimum effect to continue, a one-search predeclared budget, explicit no-parameter-mining/no-OOS-reuse/no-OOS-forward-pooling rules, and bounded per-method hypothesis breadth. The heavy experiment scheduler defers candidates explicitly blocked by natural-history/prospective-evidence requirements and, all else equal, prefers restrictive abstention-first experiments. The heavy experiment slot remains capped at one and no production behavior or authority changed.
+
+No accuracy or profitability improvement is claimed from PR #149 or #155 themselves. They improve evidence discipline and research allocation, not production signal thresholds.
 
 ## ACCURACY / RESEARCH PROGRAM
 - ACC-001 MARKET / EXECUTION REALISM — COMPLETE.
@@ -56,6 +58,7 @@ No accuracy or profitability improvement is claimed from PR #149 itself. It impr
 - KRAKEN PUBLIC-BOOK MICROSTRUCTURE — prospective research-only measurement from PR #129; stale/future/crossed/one-sided/malformed books fail closed; no historical reconstruction or hidden-liquidity inference.
 - BETA-NEUTRAL RESIDUAL MOMENTUM — PR #131 challenger only; cannot bypass ACC-002 or any canonical validation gate.
 - UNIVERSAL SIGNAL-DEVELOPMENT / LEARNING LOOP — PR #149 active; research-only and information-gain aware.
+- QUANT-SCIENCE RESEARCH FACTORY — PR #155 active; predeclared science design, bounded hypothesis breadth, blocker-aware scheduling and restrictive abstention-first tie-breaking; research-only.
 
 ### ACC-002 genuine bounded evidence
 Post-PR #141 aggregate failure diagnostics now answer the prior blocker question without exposing symbol identities or raw samples:
@@ -65,7 +68,7 @@ Post-PR #141 aggregate failure diagnostics now answer the prior blocker question
 
 This is genuine natural history insufficiency, not a request/source outage and not a failed strategy result. Do not lower the 80% requirement, remove the two-subset requirement, substitute lower-ranked assets, shorten required history merely to pass, fabricate/backfill history, or repeatedly spend scarce research cycles re-diagnosing collection failures while the aggregate failure types remain purely `InsufficientHistory`.
 
-PR #149 therefore marks ACC-002 as `BLOCKED_NATURAL_HISTORY_ACCUMULATION` and reduces its immediate actionable-evidence priority. Periodic re-checks are valid when coverage materially changes; otherwise allocate scarce heavy research to other falsifiable high-information signal-quality experiments.
+PR #149 marks ACC-002 as `BLOCKED_NATURAL_HISTORY_ACCUMULATION` and reduces its immediate actionable-evidence priority. PR #155 makes the heavy experiment scheduler explicitly capable of deferring such blocked candidates so scarce research can target currently actionable hypotheses instead. Periodic ACC-002 re-checks remain valid when coverage materially changes.
 
 ## OPERATIONS / RELIABILITY
 Prediction-ledger persistence issue from PR #98 remains fixed. Continuous observer rate-limit backoff from PR #100 remains bounded. Coordinator observability fixes #133/#135/#136 and aggregate cause classification #141 remain active.
@@ -80,7 +83,9 @@ PR #151 fixed the initial queued-worker supervision false positive, but prospect
 
 PR #153 completes that supervision fix. Every bounded semaphore wait is explicitly labeled `queued`; only `starting` and `queued` waits are exempt from heartbeat staleness, while `running`, `resting`, `error_backoff`, `crashed`, and crashed loop tasks remain fail-closed. Exact head `0f504ca7b66745a3c8288be9ceef068b18a30ce2` passed Security and Reliability run `34381123680` (#1130) before squash merge as `19938aaf3381f492ff01a179a89ef7aef580db08`. No concurrency, cost, signal, broker, promotion, OOS, chronology or paper-ledger behavior changed.
 
-Post-#153 live canary evidence must be monitored prospectively before declaring the false-positive symptom eliminated in operation. A green unit/security suite proves the state-transition fix, not the absence of all future runtime supervision defects.
+PR #155 exact candidate head `01bfe7d2565ca48b55966167219695e1a57f1283` passed Security and Reliability run `34382434366` (#1143) before squash merge as `6a23c132b118180a9f42ef912cd90679c2892259`. The first candidate run correctly failed because the new factory referenced an unregistered objective worker class; the candidate was fixed to bind to the registered `experiment_factory` class, then re-tested on the exact final head. No heavy-concurrency, recurring-cost, broker, promotion, signal-threshold, OOS, chronology or paper-ledger behavior changed.
+
+Post-#153 live canary evidence must still be monitored prospectively before declaring the false-positive symptom eliminated in operation. A green unit/security suite proves the state-transition fix, not the absence of all future runtime supervision defects.
 
 Stale PR #142 was closed as superseded after #149 passed exact-head CI and merged. Temporary isolated-branch integration PR #148 was used only to place the change set onto the latest main baseline; it did not merge directly to main.
 
@@ -96,15 +101,16 @@ Preserve exact strategy fingerprints while genuine forward observations accumula
 ## CURRENT OPEN DEVELOPMENT
 Persistent specialist priorities live in `orchestration/specialist_coordination.json`. Specialists must follow current-main queue ownership/dependencies and may not use coordination state to bypass evidence gates.
 
-PRs #120/#121/#141/#147/#149/#151/#153 are integrated and must not be re-applied. PR #142 is closed/superseded. Old PRs #105, #34, #33 and #13 remain stale/non-mergeable and must not be merged as-is. PR #140 is stale against current main and must not be merged as-is. Any other open PR must be rechecked against current `main`, exact-head Security and Reliability, and current safety invariants before integration.
+PRs #120/#121/#141/#147/#149/#151/#153/#155 are integrated and must not be re-applied. PR #142 is closed/superseded. Old PRs #105, #34, #33 and #13 remain stale/non-mergeable and must not be merged as-is. PR #140 is stale against current main and must not be merged as-is. Any other open PR must be rechecked against current `main`, exact-head Security and Reliability, and current safety invariants before integration.
 
 ## EXACT NEXT STEP
-1. Verify PR #153 prospectively in coordinator canary/observability: repeated subsequent-cycle semaphore waits must remain `queued` and must not trigger false stale-worker rollback recommendations, while genuinely stale running/resting/error/crashed workers must remain fail-closed. Do not weaken watchdog semantics to make the canary green.
-2. Treat ACC-002 as a natural-history accumulation blocker while aggregate failures remain purely `InsufficientHistory`. Keep `minimum_subset_coverage=0.80`, the two-supported-subset requirement, Top-N ordering and untouched OOS unchanged. Re-check only when genuine coverage materially changes.
-3. Use the PR #149 learning/experiment contract to inspect genuinely resolved independent prediction errors and select the highest-information READY challenger by expected after-cost signal-quality impact, falsification value, actionable-evidence probability, compute/API cost and overfitting risk. Do not repeat a prior disproven experiment unless its conditions materially changed.
-4. Prefer restrictive hypotheses that can plausibly improve genuine signal quality after costs: stricter WAIT/abstention, regime conditioning, cross-sectional/residual information, calibration, execution/microstructure filtering, or a predeclared challenger. Every candidate must keep chronology, untouched OOS, multiple-testing, point-in-time universe, cost stress, robustness and genuine-forward proof intact.
-5. Allow PR #129 microstructure and PR #123 future-only consensus evidence to accumulate naturally. Do not reconstruct historical order books, infer hidden liquidity, or backfill consensus.
-6. Monitor the authentic paper ledger under the PR #147 Kraken execution model and PR #127 cross-horizon conflict suppression without rewriting history. Paper results remain evidence only.
-7. Preserve empty `live_promotions.json`, unused signing keys, broker-disconnected state, immutable $100k paper ledger, bounded heavy concurrency and the USD 30/month ceiling.
-8. Keep exact-head Security and Reliability/manual compatibility review mandatory for every merge. Enable GitHub main branch/ruleset protection separately when repository-admin access is available.
-9. Optimize genuine after-cost risk-adjusted realized performance with abstention and tail protection, never headline accuracy alone.
+1. Verify PR #155 prospectively in coordinator output: the existing lightweight experiment-factory worker must emit `quant_science_queue` plus a blocker-aware `heavy_dispatch_plan`, with no trade/promotion/strategy-mutation authority and no heavy-concurrency increase.
+2. Verify PR #153 prospectively in coordinator canary/observability: repeated subsequent-cycle semaphore waits must remain `queued` and must not trigger false stale-worker rollback recommendations, while genuinely stale running/resting/error/crashed workers must remain fail-closed.
+3. Treat ACC-002 as a natural-history accumulation blocker while aggregate failures remain purely `InsufficientHistory`. Keep `minimum_subset_coverage=0.80`, the two-supported-subset requirement, Top-N ordering and untouched OOS unchanged. Re-check only when genuine coverage materially changes.
+4. Use the PR #155 quant-science queue to select the highest-information currently actionable challenger by expected after-cost signal-quality impact, falsification value, actionable-evidence probability, compute/API cost and overfitting risk. Prefer restrictive WAIT/abstention, regime conditioning, calibration, strategy-deterioration, execution/microstructure or other predeclared hypotheses that can be falsified with defensible data.
+5. Every candidate must keep chronology, untouched OOS, multiple-testing, point-in-time universe, cost stress, robustness and genuine-forward proof intact. Never tune on untouched OOS or pool OOS with forward evidence.
+6. Allow PR #129 microstructure and PR #123 future-only consensus evidence to accumulate naturally. Do not reconstruct historical order books, infer hidden liquidity, or backfill consensus.
+7. Monitor the authentic paper ledger under the PR #147 Kraken execution model and PR #127 cross-horizon conflict suppression without rewriting history. Paper results remain evidence only.
+8. Preserve empty `live_promotions.json`, unused signing keys, broker-disconnected state, immutable $100k paper ledger, bounded heavy concurrency and the USD 30/month ceiling.
+9. Keep exact-head Security and Reliability/manual compatibility review mandatory for every merge. Enable GitHub main branch/ruleset protection separately when repository-admin access is available.
+10. Optimize genuine after-cost risk-adjusted realized performance with abstention and tail protection, never headline accuracy alone.
