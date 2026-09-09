@@ -19,6 +19,7 @@ from threading import Lock
 import httpx
 from fastapi import FastAPI
 
+from continuous_specialist_factory import run_factory, snapshot as specialist_factory_snapshot
 from continuous_worker_army import run_army, snapshot as worker_army_snapshot
 from cross_asset_runner import MIN_LIQUIDITY_SUBSET_COVERAGE
 from deployment_canary import evaluate_canary
@@ -36,6 +37,7 @@ STATE_URL = os.getenv(
 POLL_SECONDS = max(30, int(os.getenv("COORDINATOR_POLL_SECONDS", "60")))
 REQUEST_TIMEOUT_SECONDS = 15.0
 WORKER_ARMY_ENABLED = os.getenv("WORKER_ARMY_ENABLED", "1").strip().lower() not in {"0", "false", "no", "off"}
+SPECIALIST_FACTORY_ENABLED = os.getenv("SPECIALIST_FACTORY_ENABLED", "1").strip().lower() not in {"0", "false", "no", "off"}
 
 log = logging.getLogger("uvicorn.error")
 _lock = Lock()
@@ -229,6 +231,15 @@ async def coordinator_loop() -> None:
                     canary.get("reasons"),
                     canary.get("worker_samples"),
                 )
+            if SPECIALIST_FACTORY_ENABLED:
+                factory = specialist_factory_snapshot()
+                log.info(
+                    "specialist_factory workers=%s cycles=%s error=%s ai_calls=%s",
+                    factory.get("logical_worker_count"),
+                    factory.get("cycles_completed"),
+                    factory.get("last_error_type"),
+                    factory.get("ai_calls_normal_operation"),
+                )
             await asyncio.sleep(POLL_SECONDS)
 
 
@@ -241,6 +252,8 @@ async def lifespan(_: FastAPI):
     tasks = [asyncio.create_task(coordinator_loop(), name="coordinator-watchdog")]
     if WORKER_ARMY_ENABLED:
         tasks.append(asyncio.create_task(run_army(), name="python-worker-army"))
+    if SPECIALIST_FACTORY_ENABLED:
+        tasks.append(asyncio.create_task(run_factory(), name="python-specialist-factory"))
     try:
         yield
     finally:
@@ -257,12 +270,18 @@ def director() -> dict:
     return research_director_snapshot()
 
 
+@app.get("/factory")
+def factory() -> dict:
+    return specialist_factory_snapshot()
+
+
 @app.get("/")
 @app.get("/health")
 def health() -> dict:
     with _lock:
         snapshot = dict(_status)
     army = worker_army_snapshot() if WORKER_ARMY_ENABLED else {"enabled": False, "supervisor": {"healthy": True}}
+    factory_state = specialist_factory_snapshot() if SPECIALIST_FACTORY_ENABLED else {"enabled": False, "last_error_type": None}
     director_state = research_director_snapshot()
     supervisor = army.get("supervisor") if isinstance(army.get("supervisor"), dict) else {}
     supervisor_ok = supervisor.get("healthy") is True if WORKER_ARMY_ENABLED else True
@@ -277,7 +296,7 @@ def health() -> dict:
     return {
         "ok": healthy,
         "service": "crypto-continuous-coordinator",
-        "mode": "observe_research_direct_and_canary_only",
+        "mode": "observe_research_direct_factory_and_canary_only",
         "ai_calls_normal_operation": 0,
         "trade_authority": False,
         "write_authority": False,
@@ -287,6 +306,7 @@ def health() -> dict:
         "broker_connected": False,
         "research_only": True,
         "research_director": director_state,
+        "specialist_factory": factory_state,
         "deployment_canary": canary,
         "worker_army": army,
         **snapshot,
