@@ -1,0 +1,1 @@
+All lessons are advisory. Any hypothesis produced from outcome diagnostics must be tested as a new challenger with fresh chronology/OOS/forward evidence. The system must not tune production directly on diagnostic rows.
