@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "objective": "Improve genuine forward 24h/7d BUY/SELL/WAIT precision, after-cost expectancy, robustness and reliability without weakening canonical validation or increasing recurring cost.",
+  "hourly_self_improvement_question": "What should be added, removed, simplified, combined, deprioritized, or tested next to improve genuine after-cost signal accuracy, profitability and reliability while reducing overfitting, duplicated research and wasted compute?",
+  "constraints": {
+    "research_only": true,
+    "trade_authority": false,
+    "promotion_authority": false,
+    "broker_connected": false,
+    "monthly_infrastructure_ceiling_usd": 30,
+    "logical_specialist_target": 256,
+    "increase_logical_specialists_without_evidence": false,
+    "heavy_experiment_concurrency": 1,
+    "blind_indicator_parameter_mining": false,
+    "acc002_pure_insufficient_history_priority": "LOW_RECHECK_ONLY",
+    "untouched_oos_reuse_allowed": false,
+    "historical_orderbook_backfill_allowed": false
+  },
+  "priority_programs": [
+    {
+      "priority": 1,
+      "id": "META_WAIT_ECONOMIC",
+      "title": "Economic meta-label / selective WAIT",
+      "goal": "Test whether pre-forecast conditions can identify primary BUY/SELL signals that should be abstained because expected after-cost value is weak.",
+      "inputs_allowed_when_timestamp_safe": ["primary confidence", "calibration state", "regime", "direction", "strategy identity", "volatility", "BTC/ETH leadership", "cross-sectional rank", "strategy agreement/disagreement", "liquidity/spread", "prospective microstructure", "deterioration state", "execution cost estimate"],
+      "promotion_rule": "research -> validation -> untouched OOS -> robustness -> multiple-testing -> genuine forward; never direct production mutation"
+    },
+    {
+      "priority": 2,
+      "id": "REGIME_STRATEGY_ROUTER",
+      "title": "Regime x strategy shadow router",
+      "goal": "Determine which immutable challenger strategy, if any, deserves trust in each defensibly timestamped regime; otherwise WAIT.",
+      "requirements": ["no-lookahead regimes", "separate 24h/7d evidence", "minimum independent samples", "immutable strategy fingerprints", "restrictive-only until fully validated"]
+    },
+    {
+      "priority": 3,
+      "id": "CROSS_SECTIONAL_RESIDUAL",
+      "title": "Cross-sectional and beta-neutral signal science",
+      "goal": "Expand defensible residual momentum, breadth, dispersion, leadership rotation, correlation-breakdown and relative-strength challengers instead of multiplying generic indicator variants.",
+      "requirements": ["point-in-time universe", "chronological ranking", "liquidity stability", "after-cost testing", "multiple-testing protection"]
+    },
+    {
+      "priority": 4,
+      "id": "ECONOMIC_CALIBRATION",
+      "title": "Economic rather than accuracy-only calibration",
+      "goal": "Evaluate probability-weighted payoff after fees, spread and slippage so a directionally correct but economically poor signal can become WAIT.",
+      "canonical_quantity": "P(win)*E(win) - P(loss)*E(loss) - fees - spread - slippage"
+    },
+    {
+      "priority": 5,
+      "id": "MICROSTRUCTURE_VETO",
+      "title": "Prospective microstructure execution veto",
+      "goal": "Test whether spread, depth, imbalance, liquidity deterioration and size-aware expected slippage should suppress otherwise valid signals.",
+      "requirements": ["prospective timestamped public data only", "no historical order-book reconstruction", "stale/future/crossed/malformed books fail closed"]
+    },
+    {
+      "priority": 6,
+      "id": "ENSEMBLE_DIVERSITY",
+      "title": "Independent-mechanism ensemble diversity",
+      "goal": "Measure residual prediction/error correlation and penalize redundant strategies so apparent agreement from near-duplicate models is not mistaken for independent evidence."
+    }
+  ],
+  "remove_or_deprioritize": [
+    "additional logical-worker expansion above 256 without measured information-value benefit",
+    "blind RSI/MACD/EMA or similar parameter permutations not motivated by a diagnosed resolved-error mechanism",
+    "repeated ACC-002 investigation while failures are purely InsufficientHistory",
+    "duplicate hypotheses already falsified without materially new independent evidence",
+    "features whose apparent edge vanishes after realistic fees/spread/slippage",
+    "ensemble members that add no incremental independent information"
+  ],
+  "preserve": [
+    "single heavy experiment slot",
+    "empty live_promotions.json",
+    "broker disconnected",
+    "authentic append-only $100,000 paper ledger",
+    "chronological development/validation/untouched-OOS separation",
+    "non-overlapping full-horizon forward evidence",
+    "point-in-time universe and timestamp safety",
+    "sequential multiple-testing controls",
+    "genuine forward proof before promotion"
+  ]
+}
