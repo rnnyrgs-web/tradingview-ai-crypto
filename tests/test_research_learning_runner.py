@@ -4,7 +4,7 @@ import research_learning_state
 from research_learning_runner import build_learning_report
 
 
-def test_runner_report_combines_learning_selective_precision_meta_wait_and_router(tmp_path, monkeypatch):
+def test_runner_report_combines_accuracy_profitability_diagnostics(tmp_path, monkeypatch):
     monkeypatch.setattr(research_learning_state, "DEFAULT_PATH", tmp_path / "learning.json")
     rows = []
     start = datetime(2026, 8, 1, tzinfo=timezone.utc)
@@ -17,6 +17,7 @@ def test_runner_report_combines_learning_selective_precision_meta_wait_and_route
             "resolved_at": (due_at + timedelta(minutes=1)).isoformat(),
             "correct": i < 18,
             "horizon": "24h",
+            "symbol": "XRP-USDT",
             "market_regime": "TREND",
             "direction": "LONG",
             "score": 85,
@@ -38,4 +39,12 @@ def test_runner_report_combines_learning_selective_precision_meta_wait_and_route
     assert report["regime_strategy_router"]["ok"] is True
     assert report["regime_strategy_router"]["untouched_oos_outcomes_scored"] is False
     assert report["regime_strategy_router"]["trade_authority"] is False
+    assert report["economic_calibration"]["ok"] is True
+    assert report["economic_calibration"]["untouched_oos_outcomes_scored"] is False
+    assert report["cross_sectional_residual_diagnostics"]["historical_backfill_allowed"] is False
+    assert report["microstructure_veto"]["historical_orderbook_reconstruction_allowed"] is False
+    assert report["ensemble_diversity"]["trade_authority"] is False
+    assert report["resolved_error_attribution"]["automatic_strategy_mutation"] is False
+    assert report["selective_wait_fusion"]["untouched_oos_opened"] is False
+    assert report["selective_wait_fusion"]["trade_authority"] is False
     assert report["research_memory"]["lesson_count"] == 1
