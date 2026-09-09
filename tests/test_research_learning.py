@@ -4,10 +4,8 @@ from research_learning import learning_diagnostics
 
 
 def _row(**overrides):
-    forecast_at = overrides.pop("forecast_at", "2026-09-09T00:00:00+00:00")
     due_at = overrides.pop("due_at", "2026-09-10T00:00:00+00:00")
     row = {
-        "forecast_at": forecast_at,
         "due_at": due_at,
         "resolved_at": "2026-09-10T00:01:00+00:00",
         "correct": False,
@@ -26,9 +24,8 @@ def _independent_rows(n):
     start = datetime(2026, 9, 1, tzinfo=timezone.utc)
     rows = []
     for i in range(n):
-        forecast_at = start + timedelta(days=i)
-        due_at = forecast_at + timedelta(hours=24)
-        rows.append(_row(forecast_at=forecast_at.isoformat(), due_at=due_at.isoformat()))
+        due_at = start + timedelta(days=i + 1)
+        rows.append(_row(due_at=due_at.isoformat(), resolved_at=(due_at + timedelta(minutes=1)).isoformat()))
     return rows
 
 
@@ -39,25 +36,32 @@ def test_unresolved_rows_are_excluded():
     assert result["baseline_precision"] == 0.0
 
 
+def test_production_due_at_reconstructs_independent_origin_without_forecast_at():
+    rows = _independent_rows(12)
+    assert all("forecast_at" not in row for row in rows)
+    result = learning_diagnostics(rows)
+    direction = result["diagnostics"]["direction"][0]
+    assert direction["independent_samples"] == 12
+    assert direction["ready_for_diagnostic"] is True
+    assert result["sample_sufficiency_basis"] == "non_overlapping_full_horizon_windows_reconstructed_from_due_at"
+
+
 def test_overlapping_rows_do_not_create_false_sample_sufficiency():
     rows = []
-    start = datetime(2026, 9, 9, tzinfo=timezone.utc)
+    origin = datetime(2026, 9, 9, tzinfo=timezone.utc)
     for i in range(30):
-        forecast_at = start + timedelta(minutes=15 * i)
-        due_at = forecast_at + timedelta(hours=24)
-        rows.append(_row(forecast_at=forecast_at.isoformat(), due_at=due_at.isoformat()))
+        due_at = origin + timedelta(minutes=15 * i) + timedelta(hours=24)
+        rows.append(_row(due_at=due_at.isoformat(), resolved_at=(due_at + timedelta(minutes=1)).isoformat()))
     result = learning_diagnostics(rows, minimum_samples=12)
     direction = result["diagnostics"]["direction"][0]
     assert direction["samples"] == 30
     assert direction["independent_samples"] == 1
     assert direction["ready_for_diagnostic"] is False
     assert result["research_priorities"] == []
-    assert result["sample_sufficiency_basis"] == "non_overlapping_full_horizon_forecast_windows"
 
 
 def test_priorities_require_independent_windows_and_new_validation():
-    rows = _independent_rows(12)
-    result = learning_diagnostics(rows)
+    result = learning_diagnostics(_independent_rows(12))
     assert result["research_only"] is True
     assert result["trade_authority"] is False
     assert result["promotion_authority"] is False
@@ -75,11 +79,16 @@ def test_small_independent_groups_do_not_become_priorities():
     assert result["research_priorities"] == []
 
 
-def test_missing_or_bad_timestamps_fail_closed_for_independence():
-    rows = [_row(forecast_at=None), _row(due_at="bad-time"), _row(due_at="2026-09-08T00:00:00+00:00")]
+def test_missing_bad_or_premature_chronology_fails_closed_for_independence():
+    rows = [
+        _row(due_at=None),
+        _row(due_at="bad-time"),
+        _row(due_at="2026-09-10T00:00:00+00:00", resolved_at="2026-09-09T23:59:00+00:00"),
+        _row(horizon="unknown"),
+    ]
     result = learning_diagnostics(rows, minimum_samples=1)
     direction = result["diagnostics"]["direction"][0]
-    assert direction["samples"] == 3
+    assert direction["samples"] == 4
     assert direction["independent_samples"] == 0
     assert direction["ready_for_diagnostic"] is False
     assert result["research_priorities"] == []
