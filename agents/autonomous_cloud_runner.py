@@ -155,7 +155,8 @@ def month_start(now: datetime) -> datetime:
 
 
 def budget_gate(config: dict[str, Any], state: dict[str, Any], role: str, now: datetime) -> tuple[bool, str, float]:
-    reserve, b = reserved_cost_usd(config, role), config["budget"]
+    raw_reserve, b = reserved_cost_usd(config, role), config["budget"]
+    reserve = raw_reserve * float(b.get("provider_retry_safety_multiplier", 1.0))
     daily, monthly = spend_since(state, day_start(now)), spend_since(state, month_start(now))
     if daily + reserve > float(b["runner_daily_api_budget_usd"]):
         return False, "DAILY_API_BUDGET", reserve
