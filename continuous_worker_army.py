@@ -211,6 +211,18 @@ async def _wait_for_process(process: asyncio.subprocess.Process, spec: WorkerSpe
 
 
 async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> int:
+    with _lock:
+        workers = _status["workers"]
+        previous = workers.get(spec.name, {})
+        workers[spec.name] = {
+            **(previous if isinstance(previous, dict) else {}),
+            "state": "queued",
+            "script": spec.script,
+            "compute_class": spec.compute_class,
+            "next_retry_delay_seconds": 0,
+            "heartbeat_at": _now(),
+            "heartbeat_monotonic": time.monotonic(),
+        }
     async with semaphore:
         with _lock:
             _status["active_jobs"] = int(_status["active_jobs"]) + 1
