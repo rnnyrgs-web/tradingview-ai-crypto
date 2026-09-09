@@ -90,6 +90,18 @@ def test_worker_health_detects_stale_and_crashed_workers():
     assert crashed["crashed"] is True and crashed["healthy"] is False
 
 
+def test_starting_worker_waiting_for_bounded_lane_is_not_falsely_stale():
+    queued = worker_health(
+        {"state": "starting", "heartbeat_monotonic": 100.0},
+        now_monotonic=1000.0,
+        job_timeout_seconds=300,
+        grace_seconds=120,
+    )
+    assert queued["heartbeat_age_seconds"] == 900.0
+    assert queued["stale"] is False
+    assert queued["healthy"] is True
+
+
 def test_supervisor_summary_fails_closed_and_has_no_authority():
     summary = supervisor_summary(
         {

@@ -148,7 +148,11 @@ def worker_health(worker: dict[str, Any], *, now_monotonic: float, job_timeout_s
     age = None
     if isinstance(heartbeat, (int, float)):
         age = max(0.0, float(now_monotonic) - float(heartbeat))
-        stale = age > max(60, int(job_timeout_seconds) + int(grace_seconds))
+        # A logical worker in "starting" can be legitimately queued behind a
+        # bounded semaphore for longer than one job timeout. The owning asyncio
+        # task is still supervised separately and will be restarted if it exits,
+        # so treating queue wait as worker staleness creates false rollback alarms.
+        stale = state != "starting" and age > max(60, int(job_timeout_seconds) + int(grace_seconds))
     elif state not in {"starting", "unknown"}:
         stale = True
     crashed = state == "crashed"
