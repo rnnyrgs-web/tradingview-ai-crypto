@@ -27,6 +27,7 @@ def test_resolved_prediction_query_matches_production_schema(monkeypatch):
     assert "created_at" not in select
     assert "due_at" in select
     assert "resolved_at" in select
+    assert "calibration" in select
 
 
 def test_shadow_prediction_query_matches_production_schema(monkeypatch):
