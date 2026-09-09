@@ -95,3 +95,15 @@ def test_persistent_account_requires_immutable_100k_start():
         p._validate_persistent_account({**valid, "initial_cash": 50000.0})
     with pytest.raises(RuntimeError, match="finite"):
         p._validate_persistent_account({**valid, "equity": float("nan")})
+
+
+def test_cross_horizon_opposing_symbol_exposure_is_suppressed():
+    open_trades = [{"symbol": "BTC-USDT", "horizon": "24h", "direction": "LONG"}]
+    assert p._has_opposing_symbol_exposure(open_trades, "BTC-USDT", "SHORT") is True
+    assert p._has_opposing_symbol_exposure(open_trades, "BTC-USDT", "LONG") is False
+    assert p._has_opposing_symbol_exposure(open_trades, "ETH-USDT", "SHORT") is False
+
+
+def test_opposing_symbol_exposure_fails_closed_on_invalid_candidate():
+    assert p._has_opposing_symbol_exposure([], "", "LONG") is True
+    assert p._has_opposing_symbol_exposure([], "BTC-USDT", "WAIT") is True
