@@ -60,6 +60,17 @@ def recompute_closed_trade_pnl(trade):
     return pnl
 
 
+def _trade_mark(marks, trade_id, symbol):
+    if not isinstance(marks, dict):
+        return None
+    # Strict paper accounting may produce a different executable liquidation
+    # price for each position because visible-depth VWAP depends on size.
+    for key in (trade_id, str(trade_id), f"trade:{trade_id}"):
+        if key in marks:
+            return marks[key]
+    return marks.get(str(symbol or "").upper())
+
+
 def reconcile_paper_ledger(account, trades, marks, initial_cash=100000.0, compare_persisted=True, tolerance_usd=TOLERANCE_USD):
     reasons = []
     mismatches = []
@@ -103,7 +114,7 @@ def reconcile_paper_ledger(account, trades, marks, initial_cash=100000.0, compar
             except (KeyError, TypeError, ValueError):
                 reasons.append(f"malformed_open_trade:{trade_id}")
                 continue
-            price = marks.get(str(trade.get("symbol") or "").upper()) if isinstance(marks, dict) else None
+            price = _trade_mark(marks, trade_id, trade.get("symbol"))
             if not _finite(price) or float(price) <= 0:
                 reasons.append(f"missing_mark:{trade_id}")
                 continue
