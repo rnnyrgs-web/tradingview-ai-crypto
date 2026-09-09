@@ -1,6 +1,8 @@
 {
   "version": 1,
   "enabled": true,
+  "objective_id": "UNIVERSAL_SIGNAL_DEVELOPMENT_V1",
+  "primary_mission": "Continuously develop the highest achievable genuinely accurate 24h and 7d crypto BUY / SELL / WAIT signals with positive after-cost expectancy.",
   "autonomous_roles": ["data-market"],
   "policy": {
     "max_concurrent_agent_runs": 1,
@@ -60,7 +62,7 @@
         "tests/test_db*.py",
         "tests/test_prediction_ledger*.py"
       ],
-      "mission": "Improve timestamp-safe market information and point-in-time data quality for genuine forward 24h/7d BUY/SELL/WAIT research without fabricating history, introducing lookahead, changing production thresholds, or weakening fail-closed behavior."
+      "mission": "Apply UNIVERSAL_SIGNAL_DEVELOPMENT_V1 by resolving the highest-value timestamp-safe data/evidence bottleneck for genuine forward 24h/7d BUY/SELL/WAIT quality. Current first priority is ACC-002 insufficient_supported_liquidity_subsets: diagnose and improve genuine history/liquidity coverage without lowering the 0.80 coverage requirement, fabricating history, changing production thresholds, or weakening fail-closed behavior."
     }
   }
 }
