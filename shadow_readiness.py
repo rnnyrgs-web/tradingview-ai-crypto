@@ -8,8 +8,11 @@ for later Strategy Registry / Production Risk review.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from math import sqrt
+
+
+HORIZON_SPAN = {"24h": timedelta(hours=24), "7d": timedelta(days=7)}
 
 
 def _parse_dt(value):
@@ -44,33 +47,47 @@ def _identity_matches(row, target_identity):
     return True
 
 
-def _bucket_seconds(horizon):
-    return 7 * 24 * 3600 if str(horizon) == "7d" else 24 * 3600
+def _stable_identity(row):
+    identity = row.get("strategy_identity") or {}
+    return (
+        str(row.get("scan_id") or ""),
+        str(row.get("symbol") or ""),
+        str(identity.get("fingerprint") or "") if isinstance(identity, dict) else "",
+        str(row.get("direction") or ""),
+        str(row.get("score") or ""),
+    )
 
 
 def _independent_rows(rows, horizon):
-    """Keep one resolved forecast per horizon-sized UTC evidence bucket.
+    """Keep deterministic, true full-horizon non-overlapping forecasts only.
 
-    The production ledger can contain many overlapping forecasts. Counting all
-    of them as independent evidence would create false confidence, so readiness
-    uses at most one observation per horizon-sized time bucket.
+    Fixed UTC day/week buckets are not enough: two forecasts minutes apart can
+    straddle midnight and still have almost completely overlapping outcome
+    windows. Production ledger chronology is reconstructed from immutable
+    ``due_at - horizon`` and then greedily de-overlapped without inspecting the
+    outcome. Missing or malformed chronology contributes no readiness evidence.
     """
-    seconds = _bucket_seconds(horizon)
-    buckets = {}
+    span = HORIZON_SPAN.get(str(horizon))
+    if span is None:
+        return []
+    valid = []
     for row in rows:
-        dt = _parse_dt(row.get("due_at") or row.get("resolved_at") or row.get("created_at"))
-        if dt is None:
+        due = _parse_dt(row.get("due_at"))
+        resolved = _parse_dt(row.get("resolved_at"))
+        if due is None or resolved is None or resolved < due:
             continue
-        bucket = int(dt.timestamp()) // seconds
-        current = buckets.get(bucket)
-        if current is None:
-            buckets[bucket] = row
+        origin = due - span
+        valid.append((origin, due, _stable_identity(row), row))
+    valid.sort(key=lambda item: (item[0], item[1], item[2]))
+
+    selected = []
+    covered_until = None
+    for origin, due, _identity, row in valid:
+        if covered_until is not None and origin < covered_until:
             continue
-        current_dt = _parse_dt(current.get("resolved_at") or current.get("due_at") or current.get("created_at"))
-        row_dt = _parse_dt(row.get("resolved_at") or row.get("due_at") or row.get("created_at"))
-        if row_dt and (current_dt is None or row_dt > current_dt):
-            buckets[bucket] = row
-    return [buckets[k] for k in sorted(buckets)]
+        selected.append(row)
+        covered_until = due
+    return selected
 
 
 def _wilson_lower_bound(wins, total, z=1.959963984540054):
@@ -153,7 +170,7 @@ def assess_shadow_readiness(predictions, target_identity=None, horizon=None):
         "horizon": horizon,
         "raw_resolved_forecasts": len(usable),
         "independent_periods": total,
-        "independence_policy": "at_most_one_resolved_forecast_per_horizon_sized_utc_bucket",
+        "independence_policy": "deterministic_non_overlapping_full_horizon_windows_from_due_at",
         "wins": wins,
         "win_rate_pct": round(win_rate * 100.0, 2),
         "wilson_95pct_lower_bound_pct": round(wilson_lb * 100.0, 2),
