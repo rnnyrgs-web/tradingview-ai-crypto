@@ -16,7 +16,7 @@ Hard recurring infrastructure ceiling: USD 30/month unless explicitly changed.
 Parallel ChatGPT development coordination exists through `AGENTS.md` / `docs/CHATGPT_SPECIALISTS.md`. The autonomous lead remains review-only with no automated merge authority to `main`.
 
 ## SAFETY INVARIANTS
-No AI opinion, ranking score, evidence score, current order-book snapshot, paper P&L, ensemble weight, single OOS result, signed historical promotion, observability metric, supervisor status, diagnostic, incident fingerprint, canary result, risk-gate result, selective-precision result, research-memory lesson, experiment priority, saved market-consensus provenance, microstructure snapshot, or shadow execution result by itself may authorize live BUY/SELL.
+No AI opinion, ranking score, evidence score, current order-book snapshot, paper P&L, ensemble weight, single OOS result, signed historical promotion, observability metric, supervisor status, diagnostic, incident fingerprint, canary result, risk-gate result, selective-precision result, research-memory lesson, experiment priority, saved market-consensus provenance, microstructure snapshot, residual-momentum challenger result, or shadow execution result by itself may authorize live BUY/SELL.
 
 Mandatory chain:
 RESEARCH -> BACKTEST -> VALIDATION -> UNTOUCHED OOS -> ROBUSTNESS/STABILITY -> MULTIPLE-TESTING FIREWALL -> POINT-IN-TIME UNIVERSE SAFETY -> STRATEGY-REGISTRY APPROVAL -> PRODUCTION-RISK APPROVAL -> GENUINE FORWARD PROOF -> GLOBAL/EXECUTION RISK CLEAR -> LIVE BUY/SELL.
@@ -38,9 +38,11 @@ PR #123 completed future-only market-consensus provenance. New prediction-ledger
 
 PR #125 completed strategy-identity integrity hardening. Exact head `76818d665991d244b3f25df7b23829c94a32b225` passed Security and Reliability run `34318186208` (#951) and was squash-merged as `1f0cb1923b842861ac7a0d402ba594f1b67eb322`. Incomplete or unsupported strategy identities receive no valid fingerprint and are rejected before promotion/forward-proof lookup.
 
+PR #131 completed a fresh current-main rebuild of the beta-neutral residual-momentum challenger. Exact head `67b867929bc88843f79deb482af08856761e5c0e` passed Security and Reliability run `34338587228` (#979) and was squash-merged as `86146125d31c42dd33cce1a913e461e92075954f`. The challenger remains research-only, uses forecast-time closes only, keeps future returns as labels, and opens untouched OOS only after fixed train/validation preconditions against the canonical control. Unit tests include future-price mutation/no-lookahead, finite bounded beta, and fail-closed untouched-OOS regressions. No accuracy or profitability improvement is claimed from implementation integrity alone.
+
 ## ACCURACY / RESEARCH PROGRAM
 - ACC-001 MARKET / EXECUTION REALISM — COMPLETE.
-- ACC-002 CROSS-ASSET RANK RESEARCH — IN PROGRESS. Dedicated 24h/7d workers continue genuine chronological/OOS/robustness evidence generation. No profitability claim authorized.
+- ACC-002 CROSS-ASSET RANK RESEARCH — IN PROGRESS. Dedicated 24h/7d workers continue genuine chronological/OOS/robustness evidence generation. The beta-neutral residual-momentum challenger from PR #131 is now available as one predeclared research-only feature family; it has no production authority and requires real canonical evidence before any improvement claim.
 - ACC-003 through ACC-014 safety/validation layers — COMPLETE, including regime gating, champion/challenger, data provenance, deterioration, robustness, genuine forward proof, portfolio/execution risk, size-aware execution, point-in-time universe safety, multiple-testing firewall, shadow champion/challenger, and chaos/failure gates.
 - SELECTIVE PRECISION — research-only; non-overlapping full-horizon evidence required.
 - CONTINUOUS RESEARCH LEARNING / EXPERIMENT FACTORY — research-only; independent full-horizon windows required before diagnostic readiness or experiment-priority sample sufficiency.
@@ -56,6 +58,8 @@ Continuous AI observer rate-limit backoff from PR #100 remains active and does n
 PR #127 rebuilt stale PR #118 directly from current main. Exact head `ac72113cf504bd7cb03c7596476d15bf6f537c07` passed Security and Reliability run `34320626916` (#960) and was squash-merged as `aa59e04317ea4f824c9e59fe27eb26dd1de67227`. The paper engine now suppresses only a new opposite-direction same-symbol entry across 24h/7d horizons; it does not close, mutate, reset, or rewrite existing paper positions. Same-direction cross-horizon agreement remains allowed. Invalid candidate symbol/direction fails closed. Stale PR #118 was closed as superseded.
 
 PR #129 rebuilt stale PR #113 directly from current main. Exact head `a842bb3200bd62dda4f03ac104594820ffdd4594` passed Security and Reliability run `34326555109` (#969) and was squash-merged as `ff979ff61afa37409dec5bb5c78fdca2a2c716f4`. Stale PR #113 was closed as superseded. The module is broker-disconnected and research-only and does not change production signal thresholds, fingerprints, paper behavior, paid-data policy, worker concurrency, or any live-trading authority.
+
+PR #131 rebuilt stale PR #115 directly from current main. Exact head `67b867929bc88843f79deb482af08856761e5c0e` passed Security and Reliability run `34338587228` (#979) and was squash-merged as `86146125d31c42dd33cce1a913e461e92075954f`. Stale PR #115 was closed as superseded. The new module is research-only and does not change production signal thresholds, fingerprints, broker status, paper behavior, paid-data policy, worker concurrency, or any live-trading authority.
 
 Live verification after PR #129:
 - exact merge `ff979ff61afa37409dec5bb5c78fdca2a2c716f4` auto-deployed successfully to both production and the continuous coordinator;
@@ -84,15 +88,15 @@ Preserve stable exact strategy fingerprints while genuine forward observations a
 
 ## CURRENT OPEN DEVELOPMENT
 Highest-value remaining specialist candidates must be refreshed from current main and rerun through fresh exact-head Security and Reliability before integration:
-- PR #115 — beta-neutral residual-momentum challenger; research-only. This is now the highest-value existing quant candidate, but it must be rebuilt from current main before consideration.
 - PRs #120/#121 — coordination/autonomous cloud specialist runner work; review separately and preserve the $30/month ceiling and review-only/no-auto-merge safety model.
-- stale PRs #105, #113, #114, #117, #118 and #119 are superseded/closed or otherwise stale and must not be merged as-is.
+- stale PRs #105, #113, #114, #115, #117, #118 and #119 are superseded/closed or otherwise stale and must not be merged as-is.
 
 ## EXACT NEXT STEP
-1. Allow PR #129 prospective timestamped microstructure measurements to accumulate only from genuine available public-book snapshots. Do not reconstruct historical books or infer hidden liquidity. Before any production use, predeclare a research hypothesis and test whether spread/depth imbalance/microprice information improves after-cost 24h/7d OOS/forward results with multiple-testing and execution controls intact.
-2. Refresh PR #115 directly onto current `main` as a research-only beta-neutral residual-momentum challenger. Re-review no-lookahead construction and untouched-OOS sealing, add/retain future-price mutation and fail-closed tests, and require fresh exact-head Security and Reliability before merge. No production behavior change from implementation integrity alone.
+1. Run the PR #131 beta-neutral residual-momentum challenger only as a predeclared ACC-002 research experiment against the canonical control. Preserve the untouched-OOS seal unless fixed train/validation criteria pass, retain non-overlapping evaluation, cost stress, bootstrap robustness, point-in-time universe safety, multiple-testing accounting, and genuine forward proof. Do not tune beta-window/clipping after seeing OOS without declaring a new experiment.
+2. Allow PR #129 prospective timestamped microstructure measurements to accumulate only from genuine available public-book snapshots. Do not reconstruct historical books or infer hidden liquidity. Before any production use, predeclare a research hypothesis and test whether spread/depth imbalance/microprice information improves after-cost 24h/7d OOS/forward results with multiple-testing and execution controls intact.
 3. Let PR #123 future-only consensus provenance and PR #125 strategy fingerprints accumulate naturally. Do not backfill historical rows or claim improved precision/profitability until enough genuinely independent forward evidence resolves.
 4. Continue ACC-002 genuine 24h/7d OOS/forward evidence and worker-health monitoring.
 5. Monitor future paper cycles for `cross_horizon_symbol_conflict` suppression and compare genuine after-cost forward paper behavior without rewriting historical trades.
-6. Preserve empty `live_promotions.json`, unused signing keys, broker-disconnected state, immutable $100k paper ledger, bounded heavy concurrency, and the USD 30/month ceiling.
-7. Optimize after-cost risk-adjusted realized performance with abstention and tail protection, not headline accuracy.
+6. Review PRs #120/#121 separately for coordination value versus added complexity/cost; preserve no-auto-merge and the $30/month ceiling.
+7. Preserve empty `live_promotions.json`, unused signing keys, broker-disconnected state, immutable $100k paper ledger, bounded heavy concurrency, and the USD 30/month ceiling.
+8. Optimize after-cost risk-adjusted realized performance with abstention and tail protection, not headline accuracy.
