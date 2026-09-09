@@ -8,7 +8,7 @@ def test_sequential_alpha_spending_gets_stricter_as_trials_accumulate():
     assert later["trial_index"] == 25
     assert later["alpha_this_trial"] < first["alpha_this_trial"]
     assert later["validation_confidence_z"] > first["validation_confidence_z"]
-    assert first["oos_remains_sealed_until_pass"] is True
+    assert first["oos_sealed_pending_gate"] is True
 
 
 def test_point_lift_alone_cannot_open_oos_when_adjusted_confidence_is_weak():
