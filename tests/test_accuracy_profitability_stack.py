@@ -35,12 +35,25 @@ def test_economic_calibration_positive_and_negative_keep_oos_sealed():
     h = positive["horizons"]["24h"]
     band = next(x for x in h["confidence_bands"] if x["confidence_band"] == "80-89")
     assert band["candidate_status"] == "POSITIVE_ECONOMIC_CALIBRATION_CANDIDATE"
+    assert band["cost_stress_robust"] is True
+    assert band["conservative_edge_pct"] == 0.64
+    assert positive["cost_stress_multipliers"] == [1.0, 1.5, 2.0, 3.0]
     assert positive["untouched_oos_outcomes_scored"] is False
     assert positive["trade_authority"] is False
 
     negative = build_economic_calibration(_rows(return_pct=-1.0, correct=False))
     band = next(x for x in negative["horizons"]["24h"]["confidence_bands"] if x["confidence_band"] == "80-89")
     assert band["candidate_status"] == "RESTRICTIVE_WAIT_CANDIDATE"
+
+
+def test_economic_calibration_marks_base_positive_but_cost_fragile_edge():
+    report = build_economic_calibration(_rows(return_pct=0.2, correct=True))
+    band = next(x for x in report["horizons"]["24h"]["confidence_bands"] if x["confidence_band"] == "80-89")
+    assert band["development"]["expected_value_after_cost_pct"] == 0.08
+    assert band["development"]["cost_stress_expected_value_pct"]["3x"] == -0.16
+    assert band["candidate_status"] == "FRAGILE_POSITIVE_ECONOMIC_EVIDENCE"
+    assert band["cost_stress_robust"] is False
+    assert band["requires_untouched_oos"] is False
 
 
 def test_cross_sectional_never_backfills_missing_fields():
@@ -109,13 +122,15 @@ def test_error_attribution_and_ensemble_diversity_are_research_only():
 
 def test_selective_wait_fusion_only_nominates_experiments():
     fusion = build_selective_wait_fusion(
-        meta_wait={"groups": [{"dimension": "direction", "group": "LONG", "samples": 20, "ready_for_research": True, "after_cost_expectancy_pct": -0.2}]},
+        meta_wait={"groups": [{"horizon": "24h", "dimension": "direction", "group": "LONG", "samples": 20, "ready_for_research": True, "after_cost_expectancy_pct": -0.2}]},
         regime_strategy={"horizons": {"24h": {"pairs": [{"market_regime": "TREND_UP", "strategy_identity": "s1", "candidate_status": "RESTRICTIVE_WAIT_CANDIDATE", "validation": {"samples": 6}}]}}},
         economic_calibration={"horizons": {"24h": {"confidence_bands": [{"confidence_band": "80-89", "candidate_status": "RESTRICTIVE_WAIT_CANDIDATE", "validation": {"samples": 6}}]}}},
         microstructure_veto={"groups": [{"microstructure_state": "wide_spread", "candidate_status": "RESTRICTIVE_VETO_CANDIDATE", "samples": 9}]},
         error_attribution={"research_priorities": [{"reason": "high_confidence_false_positive", "independent_error_samples": 7}]},
     )
     assert len(fusion["restrictive_hypotheses"]) == 5
+    meta = next(x for x in fusion["restrictive_hypotheses"] if x["hypothesis_id"].startswith("meta_wait:"))
+    assert meta["hypothesis_id"] == "meta_wait:24h:direction=LONG"
     assert fusion["untouched_oos_opened"] is False
     assert fusion["trade_authority"] is False
     assert all(x["recommended_action"] == "PREDECLARE_RESTRICTIVE_WAIT_EXPERIMENT" for x in fusion["restrictive_hypotheses"])
