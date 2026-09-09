@@ -22,6 +22,7 @@ from fastapi import FastAPI
 from continuous_worker_army import run_army, snapshot as worker_army_snapshot
 from cross_asset_runner import MIN_LIQUIDITY_SUBSET_COVERAGE
 from deployment_canary import evaluate_canary
+from research_director_runtime import refresh_director, snapshot as research_director_snapshot
 
 
 PRODUCTION_HEALTH_URL = os.getenv(
@@ -211,7 +212,15 @@ async def coordinator_loop() -> None:
             apply_check(await check_once(client))
             if WORKER_ARMY_ENABLED:
                 army = worker_army_snapshot()
+                director = refresh_director(army)
                 log.info("research_observability %s", observability_log_payload(army))
+                log.info(
+                    "research_director missions=%s claims=%s next=%s promotion=%s",
+                    len(director.get("missions") or []),
+                    len(director.get("claims") or []),
+                    len(director.get("next_missions") or []),
+                    director.get("daily_lead_report", {}).get("production_promotion_occurred"),
+                )
                 canary = canary_snapshot(army)
                 log.info(
                     "deployment_canary status=%s rollback_recommended=%s reasons=%s worker_samples=%s",
@@ -243,12 +252,18 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title="Crypto Continuous Coordinator", lifespan=lifespan)
 
 
+@app.get("/director")
+def director() -> dict:
+    return research_director_snapshot()
+
+
 @app.get("/")
 @app.get("/health")
 def health() -> dict:
     with _lock:
         snapshot = dict(_status)
     army = worker_army_snapshot() if WORKER_ARMY_ENABLED else {"enabled": False, "supervisor": {"healthy": True}}
+    director_state = research_director_snapshot()
     supervisor = army.get("supervisor") if isinstance(army.get("supervisor"), dict) else {}
     supervisor_ok = supervisor.get("healthy") is True if WORKER_ARMY_ENABLED else True
     canary = canary_snapshot(army)
@@ -262,7 +277,7 @@ def health() -> dict:
     return {
         "ok": healthy,
         "service": "crypto-continuous-coordinator",
-        "mode": "observe_research_and_canary_only",
+        "mode": "observe_research_direct_and_canary_only",
         "ai_calls_normal_operation": 0,
         "trade_authority": False,
         "write_authority": False,
@@ -271,6 +286,7 @@ def health() -> dict:
         "automatic_rollback_authority": False,
         "broker_connected": False,
         "research_only": True,
+        "research_director": director_state,
         "deployment_canary": canary,
         "worker_army": army,
         **snapshot,
