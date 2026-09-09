@@ -10,6 +10,7 @@ from pathlib import Path
 from db import fetch_shadow_predictions
 from research_learning import learning_diagnostics
 from research_learning_state import append_lesson, load_state
+from research_meta_wait import build_meta_wait_diagnostics
 from selective_precision import selective_precision_summary
 
 
@@ -38,6 +39,7 @@ def _priority_lesson(report):
 def build_learning_report(rows):
     diagnostics = learning_diagnostics(rows)
     selective = selective_precision_summary(rows)
+    meta_wait = build_meta_wait_diagnostics(rows)
     lesson = _priority_lesson(diagnostics)
     if lesson:
         append_lesson(lesson)
@@ -50,6 +52,7 @@ def build_learning_report(rows):
         "automatic_strategy_mutation": False,
         "diagnostics": diagnostics,
         "selective_precision": selective,
+        "meta_wait_economic_diagnostics": meta_wait,
         "research_memory": {
             "lesson_count": len(memory.get("lessons") or []),
             "updated_at": memory.get("updated_at"),
