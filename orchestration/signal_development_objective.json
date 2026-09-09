@@ -1,0 +1,145 @@
+{
+  "version": 1,
+  "objective_id": "UNIVERSAL_SIGNAL_DEVELOPMENT_V1",
+  "primary_mission": "Continuously develop the highest achievable genuinely accurate 24h and 7d crypto BUY / SELL / WAIT signals with positive after-cost expectancy.",
+  "optimization_target": "genuine_forward_signal_quality",
+  "anti_objectives": [
+    "historical_accuracy_maximization",
+    "threshold_mining",
+    "leakage",
+    "overfitting",
+    "cherry_picking",
+    "survivorship_bias",
+    "weakening_WAIT",
+    "overlapping_forecasts_counted_as_independent"
+  ],
+  "hard_invariants": {
+    "monthly_recurring_ceiling_usd": 30,
+    "increase_heavy_concurrency_for_speed": false,
+    "automatic_merge": false,
+    "broker_connected": false,
+    "reset_paper_evidence": false,
+    "fabricate_historical_data": false,
+    "weaken_validation_gates": false,
+    "change_production_thresholds_to_raise_displayed_accuracy": false,
+    "insufficient_evidence": "WAIT_RESEARCH_ONLY"
+  },
+  "task_contract_required_fields": [
+    "hypothesis",
+    "predicted_mechanism",
+    "target_horizon",
+    "expected_signal_quality_effect",
+    "evidence_needed",
+    "falsification_criteria",
+    "chronological_oos_requirements",
+    "realistic_cost_treatment",
+    "independent_sample_requirements",
+    "status",
+    "result",
+    "evidence_conclusion"
+  ],
+  "valid_horizons": ["24h", "7d", "both"],
+  "valid_evidence_conclusions": ["supports", "rejects", "unresolved"],
+  "priority_formula": {
+    "expression": "expected_genuine_signal_quality_impact * expected_information_falsification_value * probability_actionable_evidence / compute_api_cost_units",
+    "factor_range": [0.0, 1.0],
+    "minimum_cost_units": 0.25,
+    "safety_reliability_exception": "Operational/security work may outrank alpha research only when required to preserve validity, availability, authenticity, or fail-closed evidence collection."
+  },
+  "scorecard": {
+    "evidence_policy": "Claims use only independent non-overlapping observations from the declared evidence stage. Historical/OOS and genuine-forward results are reported separately and never pooled to inflate confidence.",
+    "metrics": [
+      "24h_buy_precision",
+      "24h_sell_precision",
+      "7d_buy_precision",
+      "7d_sell_precision",
+      "selective_precision_wait_quality",
+      "after_cost_expectancy",
+      "confidence_calibration",
+      "independent_observation_count",
+      "wilson_confidence_bounds",
+      "drawdown",
+      "regime_specific_performance",
+      "liquidity_specific_performance",
+      "deterioration",
+      "historical_oos_performance",
+      "genuine_forward_performance"
+    ]
+  },
+  "closed_learning_loop": [
+    "resolved_prediction",
+    "classify_correct_or_error",
+    "diagnose_error_conditions",
+    "create_hypothesis",
+    "generate_bounded_experiment",
+    "chronological_backtest",
+    "untouched_oos",
+    "robustness_cost_multiple_testing_checks",
+    "challenger",
+    "genuine_forward_evidence",
+    "promote_or_reject",
+    "feed_result_to_research_memory"
+  ],
+  "current_bottleneck": {
+    "id": "ACC-002-LIQUIDITY-COVERAGE",
+    "status": "BLOCKED_FAIL_CLOSED",
+    "reason": "insufficient_supported_liquidity_subsets",
+    "evidence": "24h currently supports only the predeclared Top-15 subset with 24/30 histories resolved; 7d requires a genuine post-diagnostic summary and prior runs resolved materially fewer histories. Untouched OOS must remain closed until the unchanged supported-subset requirements are met.",
+    "minimum_subset_coverage": 0.8,
+    "lower_requirement_allowed": false,
+    "priority_factors": {
+      "expected_genuine_signal_quality_impact": 1.0,
+      "expected_information_falsification_value": 1.0,
+      "probability_actionable_evidence": 0.95,
+      "compute_api_cost_units": 0.5
+    },
+    "preferred_actions": [
+      "classify unresolved symbol/history causes from genuine bounded diagnostics",
+      "improve timestamp-safe history coverage where source evidence genuinely exists",
+      "verify 24h and 7d supported subsets without survivorship substitution",
+      "keep the 0.80 liquidity coverage requirement unchanged"
+    ]
+  },
+  "worker_registry": {
+    "python_research_workers": {
+      "purpose": "Generate bounded chronological research evidence and challengers for 24h/7d signal quality.",
+      "signal_path": "research_runner/cross_asset_runner -> sealed evidence -> validation/OOS/robustness -> challenger/forward proof"
+    },
+    "cross_asset_rank_24h": {
+      "purpose": "Resolve ACC-002 24h cross-sectional signal evidence.",
+      "signal_path": "liquidity-safe universe -> chronological rank research -> untouched OOS when gates permit"
+    },
+    "cross_asset_rank_7d": {
+      "purpose": "Resolve ACC-002 7d cross-sectional signal evidence.",
+      "signal_path": "liquidity-safe universe -> chronological rank research -> untouched OOS when gates permit"
+    },
+    "learning_diagnostics": {
+      "purpose": "Turn genuinely resolved correct/error outcomes into falsifiable research questions.",
+      "signal_path": "resolved prediction errors -> grouped independent diagnostics -> hypothesis queue"
+    },
+    "experiment_factory": {
+      "purpose": "Convert diagnostic hypotheses into immutable bounded experiment contracts.",
+      "signal_path": "hypothesis -> predeclared validation/cost/falsification contract -> heavy scheduler"
+    },
+    "heavy_experiment_scheduler": {
+      "purpose": "Allocate scarce heavy compute to highest expected signal-information value without increasing concurrency.",
+      "signal_path": "priority formula -> one bounded heavy candidate -> canonical evidence gates"
+    },
+    "validation_workers": {
+      "purpose": "Protect signal-development claims from leakage, overlap, false discovery, cost illusion, and weak samples.",
+      "signal_path": "candidate evidence -> independent chronological/OOS/robustness checks -> accept/reject/unresolved"
+    },
+    "autonomous_cloud_specialist": {
+      "purpose": "Perform bounded reasoning/coding work on the highest-value READY signal-development task.",
+      "signal_path": "shared objective/coordination -> isolated candidate PR -> exact-head CI -> manual Lead review"
+    },
+    "lead_coordination": {
+      "purpose": "Keep all workers aligned to genuine forward signal quality and integrate only verified compatible improvements.",
+      "signal_path": "scorecard/bottlenecks -> deterministic task priority -> specialist/worker assignment -> integration"
+    },
+    "operational_security_workers": {
+      "purpose": "Preserve authenticity and availability of signal-development evidence; they do not claim alpha.",
+      "signal_path": "detect failures/tampering/staleness -> fail closed -> protect research and forward-proof validity"
+    }
+  }
+}
