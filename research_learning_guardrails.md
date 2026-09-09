@@ -1,0 +1,1 @@
+Guardrails: advisory only; no automatic strategy mutation; no production threshold selection from resolved outcomes; every proposed change requires fresh validation; no added paid compute; broker remains disconnected.
