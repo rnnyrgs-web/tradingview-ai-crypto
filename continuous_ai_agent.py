@@ -33,6 +33,10 @@ CONTINUOUS_AI_INTERVAL_SECONDS = max(
 CONTINUOUS_AI_TIMEOUT_SECONDS = max(
     10, min(int(os.getenv("CONTINUOUS_AI_TIMEOUT_SECONDS", "60")), 240)
 )
+MAX_RATE_LIMIT_BACKOFF_SECONDS = max(
+    CONTINUOUS_AI_INTERVAL_SECONDS,
+    min(int(os.getenv("CONTINUOUS_AI_MAX_RATE_LIMIT_BACKOFF_SECONDS", "3600")), 7200),
+)
 MAX_STATE_CHARS = 24000
 MAX_TEXT_CHARS = 1600
 
@@ -43,7 +47,10 @@ _status = {
     "model": CONTINUOUS_AI_MODEL or None,
     "interval_seconds": CONTINUOUS_AI_INTERVAL_SECONDS,
     "request_timeout_seconds": CONTINUOUS_AI_TIMEOUT_SECONDS,
+    "max_rate_limit_backoff_seconds": MAX_RATE_LIMIT_BACKOFF_SECONDS,
     "cycle_count": 0,
+    "failure_streak": 0,
+    "next_retry_seconds": CONTINUOUS_AI_INTERVAL_SECONDS,
     "last_cycle_at": None,
     "last_status": None,
     "last_priority": None,
@@ -95,6 +102,21 @@ def validate_assessment(payload: dict) -> dict:
     }
 
 
+def retry_delay_seconds(error_type: str, failure_streak: int) -> int:
+    """Return bounded retry delay without increasing normal successful cadence.
+
+    Rate limits receive exponential backoff because immediately repeating the same
+    paid API request is both wasteful and unlikely to recover quota. Other failures
+    retain the configured observer cadence so unrelated transient problems do not
+    silently disable operational observation.
+    """
+    if str(error_type) != "RateLimitError":
+        return CONTINUOUS_AI_INTERVAL_SECONDS
+    streak = max(1, int(failure_streak))
+    first_backoff = max(CONTINUOUS_AI_INTERVAL_SECONDS * 2, 600)
+    return min(first_backoff * (2 ** (streak - 1)), MAX_RATE_LIMIT_BACKOFF_SECONDS)
+
+
 def run_ai_cycle() -> dict:
     if not OPENAI_API_KEY or not CONTINUOUS_AI_MODEL:
         return {"configured": False, "error_type": "MissingAIConfiguration"}
@@ -137,10 +159,14 @@ def apply_result(result: dict) -> None:
         if not result.get("configured"):
             _status["configured"] = False
             _status["last_error_type"] = result.get("error_type") or "MissingAIConfiguration"
+            _status["failure_streak"] = 0
+            _status["next_retry_seconds"] = CONTINUOUS_AI_INTERVAL_SECONDS
             return
         assessment = result["assessment"]
         _status["configured"] = True
         _status["cycle_count"] += 1
+        _status["failure_streak"] = 0
+        _status["next_retry_seconds"] = CONTINUOUS_AI_INTERVAL_SECONDS
         _status["last_status"] = assessment["status"]
         _status["last_priority"] = assessment["priority"]
         _status["last_summary"] = assessment["summary"]
@@ -153,6 +179,17 @@ def apply_result(result: dict) -> None:
     )
 
 
+def record_failure(exc: BaseException) -> int:
+    error_type = type(exc).__name__
+    with _lock:
+        _status["last_cycle_at"] = _now()
+        _status["last_error_type"] = error_type
+        _status["failure_streak"] = int(_status.get("failure_streak") or 0) + 1
+        delay = retry_delay_seconds(error_type, _status["failure_streak"])
+        _status["next_retry_seconds"] = delay
+    return delay
+
+
 def status_snapshot() -> dict:
     with _lock:
         return dict(_status)
@@ -161,18 +198,23 @@ def status_snapshot() -> dict:
 async def continuous_ai_loop() -> None:
     while True:
         log.info("continuous AI observer cycle started")
+        delay = CONTINUOUS_AI_INTERVAL_SECONDS
         try:
             result = await asyncio.to_thread(run_ai_cycle)
             apply_result(result)
         except (httpx.HTTPError, ValueError, TypeError, json.JSONDecodeError) as exc:
-            with _lock:
-                _status["last_cycle_at"] = _now()
-                _status["last_error_type"] = type(exc).__name__
-            log.warning("continuous AI observer cycle failed: %s", type(exc).__name__)
+            delay = record_failure(exc)
+            log.warning(
+                "continuous AI observer cycle failed: %s; retry_in=%ss",
+                type(exc).__name__,
+                delay,
+            )
         except Exception as exc:
             # OpenAI SDK exceptions are deliberately reduced to type only in status/logs.
-            with _lock:
-                _status["last_cycle_at"] = _now()
-                _status["last_error_type"] = type(exc).__name__
-            log.warning("continuous AI observer cycle failed: %s", type(exc).__name__)
-        await asyncio.sleep(CONTINUOUS_AI_INTERVAL_SECONDS)
+            delay = record_failure(exc)
+            log.warning(
+                "continuous AI observer cycle failed: %s; retry_in=%ss",
+                type(exc).__name__,
+                delay,
+            )
+        await asyncio.sleep(delay)
