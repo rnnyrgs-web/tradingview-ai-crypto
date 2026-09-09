@@ -37,7 +37,7 @@ def test_legacy_autonomous_swarm_is_manual_only_and_cloud_runner_is_scheduled():
     assert 'cron: "17 * * * *"' not in legacy
     assert "max-parallel: 14" in legacy
     assert "workflow_dispatch:" in cloud
-    assert 'cron: "41 */3 * * *"' in cloud
+    assert 'cron: "41 * * * *"' in cloud
     assert "max-parallel" not in cloud
     assert "autonomous_cloud_runner.py plan" in cloud
     assert "runner_state.json" in cloud
