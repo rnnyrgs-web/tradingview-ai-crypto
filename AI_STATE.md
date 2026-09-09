@@ -32,28 +32,34 @@ Evidence score is not probability. Never choose a production threshold by lookin
 
 PR #116 fixed a material statistical-independence weakness in selective-precision observability: dense overlapping 15-minute forecast streams can no longer inflate confidence/readiness sample counts. Confidence and readiness now use only deterministic non-overlapping full-horizon rows reconstructed from immutable `due_at`, require `resolved_at >= due_at`, expose raw row counts separately, and fail closed on malformed/missing chronology. Exact tested head `59999f08640caa481a948a66c31985885d42b0b7` passed Security and Reliability run `34306896512` (#871) and was squash-merged as `85cafaec2f8d4c39f179b709f99fd68937a5be3b`.
 
+PR #122 extended the same independence protection to continuous research learning and experiment prioritization. Research-learning diagnostic readiness and priority scores now use conservative non-overlapping full-horizon forecast windows rather than raw overlapping scan rows; missing, malformed, or inverted forecast chronology cannot contribute to sample sufficiency. Raw precision remains descriptive only and every generated hypothesis remains research-only. PR #122 was recreated directly from post-PR-#116 main, exact head `0bdd45925ac0ac2b635ed4f38b1d20e97c62c699` passed Security and Reliability run `34310554965` (#930), and was squash-merged as `17cf8de392831ba6f76255c70d18e96b957fa3a2`. Stale PR #114 was closed as superseded.
+
 ## ACCURACY / RESEARCH PROGRAM
 - ACC-001 MARKET / EXECUTION REALISM — COMPLETE.
 - ACC-002 CROSS-ASSET RANK RESEARCH — IN PROGRESS. Dedicated 24h/7d workers continue genuine chronological/OOS/robustness evidence generation. No profitability claim authorized.
 - ACC-003 through ACC-014 safety/validation layers — COMPLETE as previously integrated, including regime gating, champion/challenger, data provenance, deterioration, robustness, genuine forward proof, portfolio/execution risk, size-aware execution, point-in-time universe safety, multiple-testing firewall, shadow champion/challenger and chaos/failure gates.
-- SELECTIVE PRECISION measurement — research-only. PRs #99/#101 created fixed-threshold descriptive measurement and protected observability; PR #116 now enforces non-overlapping full-horizon evidence for confidence/readiness.
-- CONTINUOUS RESEARCH LEARNING — PR #103 merged; resolved outcomes can generate bounded advisory lessons only.
-- CONTINUOUS EXPERIMENT FACTORY — PR #104 merged; immutable research hypotheses and prioritization are research-only.
+- SELECTIVE PRECISION measurement — research-only. PRs #99/#101 created fixed-threshold descriptive measurement and protected observability; PR #116 enforces non-overlapping full-horizon evidence for confidence/readiness.
+- CONTINUOUS RESEARCH LEARNING — PR #103 merged; PR #122 now requires independent full-horizon windows before diagnostic readiness or experiment-priority sample sufficiency. Advisory lessons remain research-only.
+- CONTINUOUS EXPERIMENT FACTORY — PR #104 merged; immutable research hypotheses and prioritization are research-only, with PR #122 preventing overlapping-row inflation of priority readiness.
 - BOUNDED HEAVY EXPERIMENT SCHEDULER — PR #107 merged; no heavy-concurrency increase and no trade/promotion authority.
 
 ## OPERATIONS / RELIABILITY
 Production persistence incident caused by nonexistent `prediction_ledger.created_at` was fixed in PR #98. Repeated post-fix `/scan` requests remain 200.
 
-Continuous AI observer rate-limit backoff from PR #100 remains active. Current live logs show bounded exponential retries (600s -> 1200s -> 2400s observed across failures) while production health remains unaffected.
+Continuous AI observer rate-limit backoff from PR #100 remains active. Fresh live logs on 2026-09-09 showed `retry_in=600s` followed by `retry_in=1200s`, while `/health` remained 200 and `/scan` completed 200 with explicit symbol-level collection errors.
 
-Latest live operational evidence before this state update:
-- production `/health`: repeated 200 responses;
-- production `/scan`: 200, with symbol-level collection errors remaining explicit/fail-closed rather than fabricated;
+Latest live operational evidence before PR #122 integration:
+- production and coordinator were both live on main commit `4f3939e6d20c7f86ac1f93694baad12913793138`;
+- production `/health`: repeated 200 responses through approximately 04:19 UTC;
+- production `/scan`: 200 at approximately 04:06 UTC; 3 symbol collection errors were reported explicitly rather than hidden;
+- cross-exchange batch collection had an explicit `HTTPStatusError` in one observed cycle and remained fail-closed;
 - coordinator supervisor: healthy, no stale/crashed workers or task restarts;
-- worker failures/timeouts: 0 in the observed current coordinator window;
-- cache hit rate: approximately 95% in current observations, with zero cache rejections and zero history failures;
-- deployment canary: healthy before cutover; after deploy it restarted in warming state with no rollback recommendation;
-- PR #116 exact merge commit `85cafaec2f8d4c39f179b709f99fd68937a5be3b` auto-deployed successfully to production and coordinator. Production application startup completed and root service returned 200.
+- worker failures/timeouts: 0 across 507 observed completed jobs in the latest window;
+- cache hit rate warmed from cold-start levels to approximately 94-95%, with zero cache rejections and zero history failures;
+- ACC-002 24h and 7d workers both continued exiting successfully in observed cycles, but no pass/profitability claim is authorized from those operational exits;
+- deployment canary: healthy with no rollback recommendation.
+
+After PR #122 merge, Render auto-deployment must be verified on the resulting main/state commits before treating the new research-learning independence behavior as live.
 
 Cross-exchange batch collection can occasionally be unavailable (`HTTPStatusError`); this remains explicit and fail-closed. Do not manufacture agreement data when source evidence is unavailable.
 
@@ -66,22 +72,20 @@ Hard recurring infrastructure ceiling: USD 30/month unless explicitly changed. P
 Preserve stable exact strategy fingerprints while genuine forward observations accumulate. Challengers may run in shadow. Never count overlapping forecasts as independent, lower forward-proof thresholds, reset paper history, raise heavy concurrency, stretch cache TTLs, change market-data source behavior, or cherry-pick confidence thresholds merely to accelerate results.
 
 ## CURRENT OPEN DEVELOPMENT
-Several specialist PRs were created from pre-PR-#116 main (`0eb01380742c1373129a4bfef979627d3c31c40b`). Because `main` advanced with PR #116, they must not be merged merely because an older exact-head CI run was green. Re-sync each candidate to current `main` and require fresh exact-head Security and Reliability before integration.
+Several specialist PRs were created from pre-PR-#116 main (`0eb01380742c1373129a4bfef979627d3c31c40b`). Because `main` advanced with PRs #116 and #122, they must not be merged merely because an older exact-head CI run was green. Re-sync each candidate to current `main` and require fresh exact-head Security and Reliability before integration.
 
 High-value candidates currently include:
-- PR #114 — require independent forward windows for research-learning priorities; this addresses the same overlapping-sample scientific risk in the continuous learning layer and is the highest-value next integration target after PR #116.
-- PR #119 — persist timestamp-safe future-only preforecast market-consensus provenance without historical backfill; important for genuinely independent future agreement research.
-- PR #118 — suppress same-symbol opposite-direction cross-horizon paper self-hedging; useful after-cost risk restriction, but requires refresh after `main` moved.
+- PR #119 — persist timestamp-safe future-only preforecast market-consensus provenance without historical backfill; highest-value next integration target because genuinely independent agreement evidence cannot be tested safely without timestamped future-only provenance.
 - PR #117 — fail closed on incomplete strategy fingerprints; high scientific identity-integrity value, requires refresh.
+- PR #118 — suppress same-symbol opposite-direction cross-horizon paper self-hedging; useful after-cost risk restriction, requires refresh.
 - PR #113 — timestamp-safe Kraken public-book microstructure research snapshot; research-only, future evidence only, requires refresh.
-- PR #115 — beta-neutral residual-momentum challenger; research-only and lower priority than fixing evidence integrity, requires refresh.
+- PR #115 — beta-neutral residual-momentum challenger; research-only and lower priority than evidence-integrity work, requires refresh.
 - PRs #120/#121 — specialist coordination/autonomous cloud specialist runner work; stacked/review separately and do not merge out of order. Preserve the $30/month ceiling and review-only/no-auto-merge safety model.
 - stale PR #105 is superseded by the merged current-main hardening in PR #109 and must not be merged.
 
 ## EXACT NEXT STEP
-1. Recreate/rebase PR #114 onto current `main` after PR #116, preserving its restrictive research-only semantics; run fresh exact-head Security and Reliability and merge only if green and compatible. This prevents overlapping forecast rows from inflating research-learning diagnostic readiness and experiment priorities.
-2. Then refresh PR #119 onto the resulting current `main` and require fresh exact-head CI before merge, so future-only timestamp-safe independent market-consensus evidence can accumulate without fabricating historical fields.
-3. Re-evaluate PRs #117 and #118 after those scientific-evidence fixes; integrate only after current-main refresh and fresh exact-head CI.
-4. Continue genuine ACC-002 24h/7d OOS/forward evidence and worker-health monitoring. No profitability or accuracy-improvement claim unless genuine independent evidence passes.
-5. Preserve empty `live_promotions.json`, unused signing keys, broker-disconnected state, immutable $100k paper ledger, bounded heavy concurrency and the USD 30/month ceiling.
-6. Optimize after-cost risk-adjusted realized performance with abstention and tail protection, not headline accuracy.
+1. Refresh PR #119 onto the post-PR-#122 current `main`; preserve future-only timestamp-safe preforecast provenance, prohibit historical backfill/fabrication, and require fresh exact-head Security and Reliability before merge.
+2. Re-evaluate PR #117 next for incomplete strategy-fingerprint fail-closed behavior, then PR #118 for same-symbol opposite-direction paper self-hedging; integrate only after current-main refresh and fresh exact-head CI.
+3. Continue genuine ACC-002 24h/7d OOS/forward evidence and worker-health monitoring. No profitability or accuracy-improvement claim unless genuine independent evidence passes.
+4. Preserve empty `live_promotions.json`, unused signing keys, broker-disconnected state, immutable $100k paper ledger, bounded heavy concurrency and the USD 30/month ceiling.
+5. Optimize after-cost risk-adjusted realized performance with abstention and tail protection, not headline accuracy.
