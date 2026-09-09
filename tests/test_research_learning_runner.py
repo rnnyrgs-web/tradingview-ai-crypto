@@ -4,7 +4,7 @@ import research_learning_state
 from research_learning_runner import build_learning_report
 
 
-def test_runner_report_combines_learning_selective_precision_and_meta_wait(tmp_path, monkeypatch):
+def test_runner_report_combines_learning_selective_precision_meta_wait_and_router(tmp_path, monkeypatch):
     monkeypatch.setattr(research_learning_state, "DEFAULT_PATH", tmp_path / "learning.json")
     rows = []
     start = datetime(2026, 8, 1, tzinfo=timezone.utc)
@@ -35,4 +35,7 @@ def test_runner_report_combines_learning_selective_precision_and_meta_wait(tmp_p
     assert report["meta_wait_economic_diagnostics"]["ok"] is True
     assert report["meta_wait_economic_diagnostics"]["trade_authority"] is False
     assert report["meta_wait_economic_diagnostics"]["independent_samples"] == 30
+    assert report["regime_strategy_router"]["ok"] is True
+    assert report["regime_strategy_router"]["untouched_oos_outcomes_scored"] is False
+    assert report["regime_strategy_router"]["trade_authority"] is False
     assert report["research_memory"]["lesson_count"] == 1
