@@ -90,12 +90,25 @@ def observability_log_payload(army: object) -> dict:
         supported_subsets = evidence.get("supported_liquidity_subsets")
         if not isinstance(supported_subsets, list):
             supported_subsets = None
+        raw_failure_counts = evidence.get("failure_type_counts")
+        if isinstance(raw_failure_counts, dict):
+            failure_types = {
+                key: value
+                for key, value in raw_failure_counts.items()
+                if isinstance(key, str)
+                and key
+                and isinstance(value, int)
+                and not isinstance(value, bool)
+                and value >= 0
+            }
+        else:
+            failures = evidence.get("failed_symbols") if isinstance(evidence.get("failed_symbols"), list) else []
+            failure_types = dict(Counter(
+                str(item.get("error_type"))
+                for item in failures
+                if isinstance(item, dict) and item.get("error_type")
+            ))
         failures = evidence.get("failed_symbols") if isinstance(evidence.get("failed_symbols"), list) else []
-        failure_types = Counter(
-            str(item.get("error_type"))
-            for item in failures
-            if isinstance(item, dict) and item.get("error_type")
-        )
         failed_symbol_count = evidence.get("failed_symbol_count")
         if not isinstance(failed_symbol_count, int) or isinstance(failed_symbol_count, bool):
             failed_symbol_count = len(failures)

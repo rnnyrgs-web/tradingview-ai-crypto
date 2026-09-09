@@ -30,4 +30,8 @@ def test_insufficient_liquidity_is_research_blocked_not_crash(monkeypatch):
     assert payload["parameter_stability"]["passes"] is False
     assert summary["research_blocked"] is True
     assert summary["research_blocked_reason"] == "insufficient_supported_liquidity_subsets"
+    assert summary["failed_symbol_count"] == 30
+    assert summary["failure_type_counts"] == {"InsufficientHistory": 30}
+    assert "failed_symbols" not in summary
+    assert "ASSET0-USDT" not in str(summary)
     assert summary["trade_authority"] is False
