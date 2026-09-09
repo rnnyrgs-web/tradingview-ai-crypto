@@ -1,6 +1,8 @@
 {
   "version": 1,
   "enabled": true,
+  "objective_id": "UNIVERSAL_SIGNAL_DEVELOPMENT_V1",
+  "primary_mission": "Continuously develop the highest achievable genuinely accurate 24h and 7d crypto BUY / SELL / WAIT signals with positive after-cost expectancy.",
   "autonomous_roles": ["data-market"],
   "policy": {
     "max_concurrent_agent_runs": 1,
@@ -60,7 +62,7 @@
         "tests/test_db*.py",
         "tests/test_prediction_ledger*.py"
       ],
-      "mission": "Improve timestamp-safe market information and point-in-time data quality for genuine forward 24h/7d BUY/SELL/WAIT research without fabricating history, introducing lookahead, changing production thresholds, or weakening fail-closed behavior."
+      "mission": "Apply UNIVERSAL_SIGNAL_DEVELOPMENT_V1 by resolving the highest-value timestamp-safe data/evidence bottleneck for genuine forward 24h/7d BUY/SELL/WAIT quality. ACC-002 is currently blocked by genuine InsufficientHistory (24h 6/6 unresolved histories; 7d 14/14), so do not repeatedly re-diagnose or weaken its 0.80/two-subset gate. Prefer other falsifiable point-in-time data improvements until coverage materially changes."
     }
   }
 }
