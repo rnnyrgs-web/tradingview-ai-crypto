@@ -1,0 +1,1 @@
+Adds a research-only continuous-learning core that analyzes genuine resolved prediction outcomes, clusters wrong-signal patterns, prioritizes falsifiable research questions, and stores bounded reusable lessons. No production strategy mutation or trade authority is introduced.
