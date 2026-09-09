@@ -11,10 +11,14 @@ HORIZON_MAP = {
     "30d": timedelta(days=30),
     "15m": timedelta(hours=24),  # compatibility with old rows
 }
+PREDICTION_OUTCOME_BAR = "1H"
+MAX_PREDICTION_OUTCOME_LAG_MS = int(timedelta(hours=2).total_seconds() * 1000)
+
 
 def directional_return(entry,future,direction):
     raw=(future/entry-1.0)*100.0
     return raw if direction=="LONG" else -raw
+
 
 def nearest_close(candles,target_ms):
     for c in candles:
@@ -22,11 +26,25 @@ def nearest_close(candles,target_ms):
             return c["close"]
     return candles[-1]["close"] if candles else None
 
-def close_at_or_after(candles,target_ms):
+
+def close_at_or_after(candles,target_ms,max_lag_ms=None):
+    """Return the first close at/after a deadline only when it is temporally valid.
+
+    A delayed evaluator must never turn a candle many hours or days after a
+    forecast deadline into the forecast's outcome. For prediction-ledger labels
+    the caller supplies a small tolerance appropriate to the 1H outcome bars;
+    missing coverage then fails closed and the row remains unresolved until a
+    trustworthy outcome can be obtained.
+    """
     for candle in candles:
-        if candle["ts"]>=target_ms:
-            return candle["close"]
+        ts = candle["ts"]
+        if ts < target_ms:
+            continue
+        if max_lag_ms is not None and ts - target_ms > max_lag_ms:
+            return None
+        return candle["close"]
     return None
+
 
 def run_evaluation():
     signals=fetch_recent(hours=24*35,limit=1000)
@@ -106,9 +124,13 @@ def run_evaluation():
     predictions_updated=0
     for prediction in predictions:
         try:
-            candles=get_candles(prediction["symbol"],"1H",300)
+            candles=get_candles(prediction["symbol"],PREDICTION_OUTCOME_BAR,300)
             due=parse_dt(prediction["due_at"])
-            outcome=close_at_or_after(candles,int(due.timestamp()*1000))
+            outcome=close_at_or_after(
+                candles,
+                int(due.timestamp()*1000),
+                max_lag_ms=MAX_PREDICTION_OUTCOME_LAG_MS,
+            )
             entry=f(prediction.get("entry_price"))
             direction=str(prediction.get("direction","")).upper()
             if outcome is None or entry<=0 or direction not in {"LONG","SHORT"}:
