@@ -12,6 +12,9 @@ def test_paper_constants_are_hypothetical_and_bounded():
     assert p.RISK_PER_TRADE_PCT <= 0.5
     assert p.MAX_OPEN_POSITIONS <= 5
     assert p.MAX_NOTIONAL_PCT <= 20.0
+    assert p.FEE_SCHEDULE_VERIFIED is True
+    assert p.FEE_BPS_ONE_WAY == 80.0
+    assert p.KRAKEN_FEE_TIER == "tier1"
 
 
 def test_directional_mark_pnl():
@@ -53,32 +56,28 @@ def test_close_decision_uses_intrabar_extremes_and_stop_wins_ambiguity():
     assert p._close_decision(expired, {"low": 100, "high": 104, "close": 102}) == (102, "TIME")
 
 
-def test_paper_fill_requires_current_size_aware_execution_evidence(monkeypatch):
-    monkeypatch.setattr(p, "_last_price", lambda symbol: 100.0)
-    monkeypatch.setattr(p, "get_order_book_intelligence", lambda base: {"reliable": True})
+def test_paper_fill_requires_current_kraken_execution_evidence(monkeypatch):
     simulation = SimpleNamespace(
         executable=True,
-        reason="ok_conservative_current_snapshot",
-        fill_price=100.25,
+        reason="ok_kraken_visible_depth_taker",
+        raw_vwap=100.0,
+        fill_price=100.8,
         supported_notional=5000.0,
         worst_slippage_bps=12.0,
-        source_count=2,
+        source_count=1,
+        fee_bps=80.0,
     )
-    monkeypatch.setattr(p, "simulate_market_fill", lambda book, direction, requested, fee: simulation)
+    monkeypatch.setattr(p, "simulate_kraken_market_fill", lambda symbol, direction, requested, tier: simulation)
     market, fill, evidence = p._paper_fill_price("BTC-USDT", "LONG", 4000.0)
     assert market == 100.0
-    assert fill == 100.25
-    assert evidence.source_count == 2
+    assert fill == 100.8
+    assert evidence.source_count == 1
+    assert evidence.fee_bps == 80.0
 
 
-def test_paper_fill_fails_closed_without_execution_evidence(monkeypatch):
-    monkeypatch.setattr(p, "_last_price", lambda symbol: 100.0)
-    monkeypatch.setattr(p, "get_order_book_intelligence", lambda base: {"reliable": False})
-    monkeypatch.setattr(
-        p,
-        "simulate_market_fill",
-        lambda *args: SimpleNamespace(executable=False, reason="insufficient_independent_visible_depth", fill_price=None),
-    )
+def test_paper_fill_fails_closed_without_kraken_execution_evidence(monkeypatch):
+    simulation = SimpleNamespace(executable=False, reason="kraken_pair_unavailable", raw_vwap=None, fill_price=None)
+    monkeypatch.setattr(p, "simulate_kraken_market_fill", lambda *args: simulation)
     with pytest.raises(RuntimeError, match="Execution evidence unavailable"):
         p._paper_fill_price("BTC-USDT", "LONG", 4000.0)
 
@@ -89,18 +88,18 @@ def test_liquidation_mark_uses_full_position_and_opposite_side(monkeypatch):
     monkeypatch.setattr(
         p,
         "_paper_fill_price",
-        lambda symbol, side, notional: calls.append((symbol, side, notional)) or (50.0, 49.5, SimpleNamespace(source_count=2, worst_slippage_bps=8.0)),
+        lambda symbol, side, notional: calls.append((symbol, side, notional)) or (50.0, 49.5, SimpleNamespace(source_count=1, worst_slippage_bps=8.0)),
     )
     fill, evidence = p._liquidation_mark({"symbol": "TEST-USDT", "direction": "LONG", "quantity": 20})
     assert fill == 49.5
     assert calls == [("TEST-USDT", "SHORT", 1000.0)]
-    assert evidence.source_count == 2
+    assert evidence.source_count == 1
 
 
 def test_v2_stop_fill_never_benefits_from_recovery(monkeypatch):
-    sim = SimpleNamespace(supported_notional=5000.0, worst_slippage_bps=5.0, source_count=2)
+    sim = SimpleNamespace(supported_notional=5000.0, worst_slippage_bps=5.0, source_count=1)
     monkeypatch.setattr(p, "_paper_fill_price", lambda *args: (102.0, 102.0, sim))
-    trade = {"symbol": "BTC-USDT", "direction": "LONG", "entry_price": 100.0, "stop_loss": 95.0, "target_price": 110.0, "quantity": 10.0, "fee_bps_one_way": 6.0}
+    trade = {"symbol": "BTC-USDT", "direction": "LONG", "entry_price": 100.0, "stop_loss": 95.0, "target_price": 110.0, "quantity": 10.0, "fee_bps_one_way": 80.0}
     _, fill, pnl, _ = p._v2_exit(trade, 95.0, "STOP")
     assert fill < 95.0
     assert pnl < -50.0
