@@ -5,6 +5,17 @@ def test_live_validation_rejects_missing_identity():
     decision = pv.validate_live_strategy("BTC-USDT", "24h", "")
     assert decision.approved is False
     assert decision.status == "RESEARCH_ONLY"
+    assert decision.identity["identity_complete"] is False
+    assert decision.identity["fingerprint"] == ""
+
+
+def test_live_validation_rejects_unsupported_family_without_fingerprint():
+    decision = pv.validate_live_strategy("BTC-USDT", "24h", "unknown_strategy")
+    assert decision.approved is False
+    assert decision.status == "RESEARCH_ONLY"
+    assert decision.reason == "Unsupported or incomplete exact strategy identity."
+    assert decision.identity["identity_complete"] is False
+    assert decision.identity["fingerprint"] == ""
 
 
 def test_live_validation_rejects_unpromoted_strategy():
@@ -42,11 +53,14 @@ def test_identity_is_exact_and_exposed_in_decision():
     assert identity["symbol"] == "ETH-USDT"
     assert identity["production_horizon"] == "24h"
     assert identity["timeframes"] == ["1H", "4H"]
+    assert identity["identity_complete"] is True
     assert len(identity["research_code_sha256"]) == 64
     assert len(identity["fingerprint"]) == 64
 
 
-def test_unknown_horizon_fails_closed():
+def test_unknown_horizon_fails_closed_without_fingerprint():
     decision = pv.validate_live_strategy("ETH-USDT", "2d", "trend")
     assert decision.approved is False
     assert decision.identity["timeframes"] == []
+    assert decision.identity["identity_complete"] is False
+    assert decision.identity["fingerprint"] == ""
