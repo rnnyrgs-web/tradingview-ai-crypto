@@ -24,6 +24,13 @@ METHOD_BY_DIMENSION = {
     "horizon": "horizon_specific_calibration",
 }
 
+DISPATCHABLE_METHODS = {
+    "selective_abstention_calibration",
+    "regime_conditioned_abstention",
+    "direction_specific_false_positive_filter",
+    "strategy_deterioration_challenger",
+}
+
 
 def _family_id(method: str, dimension: str, group: str, horizon: str) -> str:
     raw = f"{method}|{dimension}|{group}|{horizon}".encode("utf-8")
@@ -41,6 +48,7 @@ def _scientific_design(experiment: dict) -> dict:
         "direction_specific_false_positive_filter",
         "horizon_specific_calibration",
     }
+    dispatchable = method in DISPATCHABLE_METHODS
     return {
         "research_method": method,
         "hypothesis_family_id": _family_id(method, dimension, group, horizon),
@@ -61,8 +69,12 @@ def _scientific_design(experiment: dict) -> dict:
             "precision_absolute_improvement": 0.02,
             "after_cost_expectancy_must_be_positive": True,
         },
+        "minimum_evaluation_samples": 8,
+        "minimum_actionable_coverage": 0.25,
         "predeclared_search_budget": 1,
         "abstention_first": abstention_first,
+        "executor_kind": "restrictive_group_abstention_v1" if dispatchable else "design_only",
+        "dispatchable_now": dispatchable,
         "parameter_mining_allowed": False,
         "untouched_oos_reuse_allowed": False,
         "forward_evidence_pooled_with_oos": False,
@@ -112,8 +124,9 @@ def build_quant_science_queue(diagnostics: dict, memory: dict | None = None, *, 
         "max_per_method": MAX_PER_METHOD,
         "scientific_policy": (
             "Resolved errors generate predeclared restrictive hypotheses. Breadth is capped per method to reduce "
-            "parameter mining and multiple-testing burden. Primary decisions use untouched OOS after realistic "
-            "costs; forward evidence remains separate and production authority remains false."
+            "parameter mining and multiple-testing burden. Only explicitly supported restrictive executors may be "
+            "dispatched automatically for research; primary decisions use untouched OOS after realistic costs, "
+            "forward evidence remains separate and production authority remains false."
         ),
         "automatic_execution_authority": False,
         "strategy_mutation_authority": False,
