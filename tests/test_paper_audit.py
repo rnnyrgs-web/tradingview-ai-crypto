@@ -42,7 +42,7 @@ def test_v2_closed_trade_does_not_double_charge_fee_inclusive_fills():
         "entry_price": 99.94,
         "exit_price": 89.95,
         "quantity": 5.0,
-        "fee_bps_one_way": 6.0,
+        "fee_bps_one_way": 80.0,
         "notional_usd": 499.7,
         "pnl_usd": (99.94 - 89.95) * 5.0,
         "execution_model_version": audit.V2_EXECUTION_MODEL,
@@ -104,28 +104,28 @@ def test_signal_freshness_rejects_missing_stale_and_future_signals():
     assert p._signal_freshness(fresh, now) == (True, "fresh")
 
 
-def test_v2_exit_requires_current_size_aware_execution_and_caps_target(monkeypatch):
+def test_v2_exit_requires_current_kraken_depth_and_caps_target(monkeypatch):
     simulation = SimpleNamespace(
         executable=True,
-        reason="ok_conservative_current_snapshot",
-        fill_price=112.0,
+        reason="ok_kraken_visible_depth_taker",
+        raw_vwap=112.0,
+        fill_price=111.104,
         supported_notional=5000.0,
         worst_slippage_bps=9.0,
-        source_count=2,
+        source_count=1,
+        fee_bps=80.0,
     )
-    monkeypatch.setattr(p, "_last_price", lambda symbol: 112.0)
-    monkeypatch.setattr(p, "get_order_book_intelligence", lambda base: {"reliable": True})
-    monkeypatch.setattr(p, "simulate_market_fill", lambda *args: simulation)
+    monkeypatch.setattr(p, "simulate_kraken_market_fill", lambda *args: simulation)
     trade = {
         "symbol": "BTC-USDT",
         "direction": "LONG",
         "entry_price": 100.0,
         "target_price": 110.0,
         "quantity": 10.0,
-        "fee_bps_one_way": 6.0,
+        "fee_bps_one_way": 80.0,
     }
     _, fill, pnl, evidence = p._v2_exit(trade, 111.0, "TARGET")
     assert fill < 110.0
-    assert round(fill, 5) == round(110.0 * (1.0 - 6.0 / 10000.0), 5)
+    assert round(fill, 5) == round(110.0 * (1.0 - 80.0 / 10000.0), 5)
     assert pnl == (fill - 100.0) * 10.0
-    assert evidence["exit_source_count"] == 2
+    assert evidence["exit_source_count"] == 1
