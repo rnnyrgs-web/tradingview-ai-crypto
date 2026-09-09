@@ -38,7 +38,42 @@ class LogicalSpecialist:
 
 
 def _eq(field: str, value: str) -> Callable[[dict], bool]:
-    expected = value.upper()
+    """Match stable research concepts against the live ledger vocabulary.
+
+    The prediction ledger stores forecast direction as LONG/SHORT while the
+    research specialist vocabulary historically used BUY/SELL. Regime labels
+    similarly evolved to BULL_TREND/BEAR_TREND/RANGE_MIXED/TRANSITIONAL. Keep
+    the predeclared specialist names stable while accepting only these explicit,
+    non-outcome-derived aliases. WAIT is an action, not a forecast direction.
+    """
+    expected = str(value).upper()
+    if field == "direction":
+        aliases = {
+            "BUY": {"BUY", "LONG"},
+            "LONG": {"LONG", "BUY"},
+            "SELL": {"SELL", "SHORT"},
+            "SHORT": {"SHORT", "SELL"},
+        }
+        if expected == "WAIT":
+            return lambda row: (
+                str(row.get("direction") or "").upper() == "WAIT"
+                or str(row.get("action_at_forecast") or "").upper() == "WAIT"
+            )
+        accepted = aliases.get(expected, {expected})
+        return lambda row: str(row.get("direction") or "").upper() in accepted
+    if field == "market_regime":
+        aliases = {
+            "BULL": {"BULL", "BULL_TREND"},
+            "BULL_TREND": {"BULL_TREND", "BULL"},
+            "BEAR": {"BEAR", "BEAR_TREND"},
+            "BEAR_TREND": {"BEAR_TREND", "BEAR"},
+            "SIDEWAYS": {"SIDEWAYS", "RANGE_MIXED"},
+            "RANGE_MIXED": {"RANGE_MIXED", "SIDEWAYS"},
+            "UNKNOWN": {"UNKNOWN", "TRANSITIONAL"},
+            "TRANSITIONAL": {"TRANSITIONAL", "UNKNOWN"},
+        }
+        accepted = aliases.get(expected, {expected})
+        return lambda row: str(row.get("market_regime") or "").upper() in accepted
     return lambda row: str(row.get(field) or "").upper() == expected
 
 
