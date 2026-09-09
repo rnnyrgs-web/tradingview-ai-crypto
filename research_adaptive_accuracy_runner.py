@@ -11,6 +11,22 @@ from research_adaptive_accuracy import build_adaptive_accuracy_report
 from research_learning_state import append_lesson, load_state
 
 
+def _memory_summary(state):
+    value = state if isinstance(state, dict) else {}
+    try:
+        conclusive_trial_count = max(0, int(value.get("conclusive_trial_count") or 0))
+    except (TypeError, ValueError):
+        conclusive_trial_count = 0
+    return {
+        "lesson_count": len(value.get("lessons") or []),
+        "conclusive_trial_count": conclusive_trial_count,
+        "updated_at": value.get("updated_at"),
+        "research_only": True,
+        "trade_authority": False,
+        "promotion_authority": False,
+    }
+
+
 def build_runner_report(rows):
     memory = load_state()
     report = build_adaptive_accuracy_report(rows, memory)
@@ -18,15 +34,9 @@ def build_runner_report(rows):
     if isinstance(lesson, dict):
         append_lesson(lesson)
         refreshed = load_state()
-        report["research_memory"] = {
-            "lesson_count": len(refreshed.get("lessons") or []),
-            "updated_at": refreshed.get("updated_at"),
-        }
+        report["research_memory"] = _memory_summary(refreshed)
     else:
-        report["research_memory"] = {
-            "lesson_count": len(memory.get("lessons") or []),
-            "updated_at": memory.get("updated_at"),
-        }
+        report["research_memory"] = _memory_summary(memory)
     return report
 
 
