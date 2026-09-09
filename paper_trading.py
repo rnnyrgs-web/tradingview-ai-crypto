@@ -66,6 +66,27 @@ def _mark_pnl(direction, entry, price, quantity):
     return raw if direction == "LONG" else -raw
 
 
+def _has_opposing_symbol_exposure(open_trades, symbol, direction):
+    """Reject a new paper entry that would self-hedge the same asset.
+
+    This is restrictive-only: it never chooses which horizon is correct and never
+    closes, mutates, or rewrites an existing position. It only suppresses a new
+    opposite-direction paper entry for a symbol that already has open exposure.
+    Invalid candidate identity also fails closed.
+    """
+    symbol = str(symbol or "").upper()
+    direction = str(direction or "").upper()
+    if not symbol or direction not in {"LONG", "SHORT"}:
+        return True
+    for trade in open_trades or []:
+        if str(trade.get("symbol") or "").upper() != symbol:
+            continue
+        existing_direction = str(trade.get("direction") or "").upper()
+        if existing_direction in {"LONG", "SHORT"} and existing_direction != direction:
+            return True
+    return False
+
+
 def _close_decision(trade, price):
     """Conservative stop/target handling for observed forward prices.
 
@@ -189,6 +210,14 @@ def _run_paper_cycle_locked():
         if str(row.get("action") or "WAIT").upper() != "TRADE":
             continue
         if float(row.get("evidence_score") or 0) < MIN_EVIDENCE_SCORE or (symbol, horizon) in open_pairs:
+            continue
+        if _has_opposing_symbol_exposure(open_trades, symbol, direction):
+            log.info(
+                "Paper candidate WAIT cross_horizon_symbol_conflict symbol=%s horizon=%s direction=%s",
+                symbol,
+                horizon,
+                direction,
+            )
             continue
 
         signal_entry = float(row.get("entry_price") or 0)
