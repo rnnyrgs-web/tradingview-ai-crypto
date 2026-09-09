@@ -1,0 +1,1 @@
+Purpose: continuous research learning from genuine resolved outcomes with no production authority.
