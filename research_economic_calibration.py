@@ -137,6 +137,7 @@ def _candidates(dev_buckets, val_buckets):
         dev = dev_buckets.get(label) or _economic_metrics([], cost_pct=0.0)
         val = val_buckets.get(label) or _economic_metrics([], cost_pct=0.0)
         status = "INSUFFICIENT_EVIDENCE"
+        cost_robust = False
         if (
             dev["samples"] >= MIN_DEVELOPMENT_SAMPLES
             and val["samples"] >= MIN_VALIDATION_SAMPLES
@@ -147,11 +148,10 @@ def _candidates(dev_buckets, val_buckets):
             val_base = float(val["expected_value_after_cost_pct"])
             if _negative_at_base_cost(dev) and _negative_at_base_cost(val):
                 status = "RESTRICTIVE_WAIT_CANDIDATE"
+                cost_robust = True
             elif dev_base > 0.0 and val_base > 0.0:
-                if _positive_under_all_cost_stress(dev) and _positive_under_all_cost_stress(val):
-                    status = "ROBUST_POSITIVE_ECONOMIC_CALIBRATION_CANDIDATE"
-                else:
-                    status = "FRAGILE_POSITIVE_ECONOMIC_EVIDENCE"
+                cost_robust = _positive_under_all_cost_stress(dev) and _positive_under_all_cost_stress(val)
+                status = "POSITIVE_ECONOMIC_CALIBRATION_CANDIDATE" if cost_robust else "FRAGILE_POSITIVE_ECONOMIC_EVIDENCE"
             else:
                 status = "UNSTABLE_ECONOMIC_EVIDENCE"
         conservative_edge = None
@@ -165,8 +165,9 @@ def _candidates(dev_buckets, val_buckets):
             "development": dev,
             "validation": val,
             "candidate_status": status,
+            "cost_stress_robust": cost_robust,
             "conservative_edge_pct": conservative_edge,
-            "requires_untouched_oos": status in {"RESTRICTIVE_WAIT_CANDIDATE", "ROBUST_POSITIVE_ECONOMIC_CALIBRATION_CANDIDATE"},
+            "requires_untouched_oos": status in {"RESTRICTIVE_WAIT_CANDIDATE", "POSITIVE_ECONOMIC_CALIBRATION_CANDIDATE"},
             "trade_authority": False,
             "promotion_authority": False,
         })
