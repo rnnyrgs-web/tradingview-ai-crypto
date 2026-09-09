@@ -36,7 +36,7 @@ PRs #122/#124 apply the same independence discipline to continuous research lear
 
 PR #123 completed future-only market-consensus provenance. New prediction-ledger rows freeze timestamped preforecast consensus context inside existing calibration JSON. Historical rows are never backfilled or fabricated, and agreement evidence has no trade/promotion authority.
 
-PR #125 completed the current strategy-identity integrity hardening. Exact head `76818d665991d244b3f25df7b23829c94a32b225` passed Security and Reliability run `34318186208` (#951) and was squash-merged as `1f0cb1923b842861ac7a0d402ba594f1b67eb322`. Incomplete or unsupported strategy identities now set `identity_complete=false`, receive an empty fingerprint, and are rejected before promotion/forward-proof lookup. The identity policy itself is part of the research-code hash, intentionally creating fresh valid fingerprints after the policy change so old evidence cannot silently carry over. Stale PR #117 was closed as superseded.
+PR #125 completed strategy-identity integrity hardening. Exact head `76818d665991d244b3f25df7b23829c94a32b225` passed Security and Reliability run `34318186208` (#951) and was squash-merged as `1f0cb1923b842861ac7a0d402ba594f1b67eb322`. Incomplete or unsupported strategy identities receive no valid fingerprint and are rejected before promotion/forward-proof lookup.
 
 ## ACCURACY / RESEARCH PROGRAM
 - ACC-001 MARKET / EXECUTION REALISM — COMPLETE.
@@ -50,21 +50,23 @@ PR #125 completed the current strategy-identity integrity hardening. Exact head 
 ## OPERATIONS / RELIABILITY
 The earlier production persistence incident caused by nonexistent `prediction_ledger.created_at` was fixed in PR #98. Repeated post-fix `/scan` requests remain 200.
 
-Continuous AI observer rate-limit backoff from PR #100 remains active and does not affect scan/health availability.
+Continuous AI observer rate-limit backoff from PR #100 remains active and does not affect scan/health availability. Fresh post-PR #127 startup again showed the bounded `RateLimitError` path with `retry_in=600s` rather than a tight retry loop.
 
-Fresh live evidence after PR #124 and before PR #125 integration:
-- both production and coordinator were live on commit `f1c7cb36f988d35b47bbfdb7e8ca2e64f7ef5075`;
-- production `/health`, `/scan`, and `/evaluate` remained 200;
-- cross-exchange batch collection still occasionally reports explicit `HTTPStatusError`, and scans can complete with a small number of symbol-level collection errors; these remain fail-closed and are never fabricated away;
-- coordinator reached 2,748 completed worker jobs with 0 worker failures, 0 timeouts, 0 task restarts and about 95% cache hit rate;
-- transient stale-worker canary alerts occurred for major workers, but cleared without crashes/restarts; the latest observed coordinator cycle before PR #125 was healthy with no stale/crashed workers and rollback recommendation false.
+PR #127 rebuilt stale PR #118 directly from current main. Exact head `ac72113cf504bd7cb03c7596476d15bf6f537c07` passed Security and Reliability run `34320626916` (#960) and was squash-merged as `aa59e04317ea4f824c9e59fe27eb26dd1de67227`. The paper engine now suppresses only a new opposite-direction same-symbol entry across 24h/7d horizons; it does not close, mutate, reset, or rewrite existing paper positions. Same-direction cross-horizon agreement remains allowed. Invalid candidate symbol/direction fails closed. Stale PR #118 was closed as superseded.
 
-PR #125 auto-deployed successfully to both production and coordinator on exact merge `1f0cb1923b842861ac7a0d402ba594f1b67eb322`; both latest Render deploys were `live` after cutover. Verify a fresh post-deploy health/canary cycle before relying on the new identity policy operationally.
+Live verification after PR #127:
+- exact merge `aa59e04317ea4f824c9e59fe27eb26dd1de67227` auto-deployed successfully to both production and the continuous coordinator;
+- production application startup completed and `/health` returned 200 after cutover;
+- coordinator application startup completed, then a fresh canary cycle reached `healthy` with rollback recommendation false;
+- fresh coordinator observability showed 829 completed jobs, 0 worker failures, 0 timeouts, 0 task restarts, no stale/crashed workers, about 95.45% cache hits, and trade/promotion/signal authority false;
+- immediately before PR #127, a production `/scan` completed 200 with two explicit symbol-level collection errors after a cross-exchange `HTTPStatusError`; those errors remained visible and fail-closed rather than fabricated away.
 
 Cross-exchange batch collection can occasionally be unavailable. Never manufacture consensus/agreement data when source evidence is unavailable.
 
 ## AUTHENTIC PAPER TRADING STATE
 The continuous paper account remains forward-only and broker-disconnected. Authentic baseline is exactly `$100,000` from `2026-09-08T01:17:49Z`; never reset or rewrite it. Current account value = immutable starting capital plus realized/open P&L. Safety/execution gates may reject entries but never fabricate or reset history. Paper performance is evidence only.
+
+PR #127 is a restrictive after-cost paper-risk improvement only. It removes deterministic self-cancelling gross exposure/duplicate transaction-cost behavior when 24h and 7d signals disagree on the same asset. No profitability or signal-accuracy improvement is claimed until genuine forward paper evidence resolves.
 
 ## COST / SPEED POLICY
 Hard recurring infrastructure ceiling: USD 30/month unless explicitly changed. Prefer existing shared Render compute, deterministic Python, public/free defensible data, caching/reuse, early rejection and bounded concurrency. No paid feed/service/compute without approval.
@@ -73,16 +75,15 @@ Preserve stable exact strategy fingerprints while genuine forward observations a
 
 ## CURRENT OPEN DEVELOPMENT
 Highest-value remaining specialist candidates must be refreshed from current main and rerun through fresh exact-head Security and Reliability before integration:
-- PR #118 — suppress same-symbol opposite-direction cross-horizon paper self-hedging; next highest-value after-cost risk restriction.
-- PR #113 — timestamp-safe Kraken public-book microstructure research snapshot; research-only/future evidence only.
+- PR #113 — timestamp-safe Kraken public-book microstructure research snapshot; next highest-value prospective execution/microstructure evidence target.
 - PR #115 — beta-neutral residual-momentum challenger; research-only and lower priority than evidence/risk integrity.
 - PRs #120/#121 — coordination/autonomous cloud specialist runner work; review separately and preserve the $30/month ceiling and review-only/no-auto-merge safety model.
-- stale PRs #105, #114, #117 and #119 are superseded/closed and must not be merged.
+- stale PRs #105, #114, #117, #118 and #119 are superseded/closed and must not be merged.
 
 ## EXACT NEXT STEP
-1. Verify a fresh post-PR #125 production/coordinator cycle: production health/scan success, coordinator supervisor/canary healthy, and no new identity/persistence/chronology failures.
-2. Refresh PR #118 directly onto current `main`, re-review the restrictive same-symbol opposite-direction cross-horizon paper-entry suppression, add/retain regression coverage, and require fresh exact-head Security and Reliability before merge.
-3. Allow PR #123 future-only consensus provenance and new PR #125 strategy fingerprints to accumulate naturally. Do not backfill historical rows or claim improved precision/profitability until enough genuinely independent forward evidence resolves.
-4. Continue ACC-002 genuine 24h/7d OOS/forward evidence and worker-health monitoring.
+1. Refresh PR #113 directly onto current `main`, re-review timestamp-safe Kraken public-book microstructure capture as prospective research-only evidence, retain fail-closed stale/future/crossed/malformed-book tests, and require fresh exact-head Security and Reliability before merge.
+2. Let PR #123 future-only consensus provenance and PR #125 strategy fingerprints accumulate naturally. Do not backfill historical rows or claim improved precision/profitability until enough genuinely independent forward evidence resolves.
+3. Continue ACC-002 genuine 24h/7d OOS/forward evidence and worker-health monitoring.
+4. Monitor future paper cycles for `cross_horizon_symbol_conflict` suppression and compare genuine after-cost forward paper behavior without rewriting historical trades.
 5. Preserve empty `live_promotions.json`, unused signing keys, broker-disconnected state, immutable $100k paper ledger, bounded heavy concurrency, and the USD 30/month ceiling.
 6. Optimize after-cost risk-adjusted realized performance with abstention and tail protection, not headline accuracy.
