@@ -11,6 +11,7 @@ import asyncio
 import logging
 import os
 import time
+from collections import Counter
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from threading import Lock
@@ -85,6 +86,13 @@ def observability_log_payload(army: object) -> dict:
         row = acc002.get(name) if isinstance(acc002.get(name), dict) else {}
         evidence = row.get("latest_evidence") if isinstance(row.get("latest_evidence"), dict) else {}
         selected = evidence.get("selected_oos") if isinstance(evidence.get("selected_oos"), dict) else {}
+        liquidity = evidence.get("liquidity_stability_policy") if isinstance(evidence.get("liquidity_stability_policy"), dict) else {}
+        failures = evidence.get("failed_symbols") if isinstance(evidence.get("failed_symbols"), list) else []
+        failure_types = Counter(
+            str(item.get("error_type"))
+            for item in failures
+            if isinstance(item, dict) and item.get("error_type")
+        )
         return {
             "exit": row.get("last_exit_code"),
             "elapsed_s": row.get("elapsed_seconds"),
@@ -95,6 +103,12 @@ def observability_log_payload(army: object) -> dict:
             "acc002_pass": selected.get("acc002_research_pass"),
             "survivorship_pass": selected.get("acc011_survivorship_pass"),
             "promotion_review": selected.get("eligible_for_promotion_review"),
+            "universe_requested": evidence.get("universe_requested"),
+            "universe_resolved": evidence.get("universe_resolved"),
+            "supported_liquidity_subsets": liquidity.get("supported_subsets"),
+            "minimum_subset_coverage": liquidity.get("minimum_subset_coverage"),
+            "failed_symbol_count": len(failures),
+            "failure_type_counts": dict(sorted(failure_types.items())),
         }
 
     cache_latency = cache.get("read_latency_ms") if isinstance(cache.get("read_latency_ms"), dict) else {}
