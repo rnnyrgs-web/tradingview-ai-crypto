@@ -1,13 +1,13 @@
 {
   "active_task": {
-    "base_main_sha": "c2a193e599c56496d249695c769f020fa39b5cf3",
+    "base_main_sha": "d88fd9bc40b94fbe66e9c8d64eeb7b4ed828ce7d",
     "branch": "auto/data-market/coord-data-001",
     "phase": "RUNNING",
     "role": "data-market",
-    "started_at": "2026-09-09T20:49:08Z",
+    "started_at": "2026-09-09T22:48:12Z",
     "task_id": "COORD-DATA-001"
   },
-  "last_seen_main_sha": "c784a7c3f52a5223500ab019cef0ca07d20de3b7",
+  "last_seen_main_sha": "d88fd9bc40b94fbe66e9c8d64eeb7b4ed828ce7d",
   "next_eligible_at": null,
   "paused_reason": null,
   "runs": [],
