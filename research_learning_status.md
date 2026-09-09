@@ -1,0 +1,1 @@
+Initial continuous-learning core implemented; pending exact-head CI and integration review.
