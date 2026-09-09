@@ -100,8 +100,10 @@ def fetch_due_predictions(limit=500):
 def fetch_resolved_predictions(limit=5000):
     if not configured():
         return []
+    # Production prediction_ledger has no created_at column. resolved_at/due_at
+    # provide the chronology required by calibration and forward-proof logic.
     params={
-        "select":"created_at,due_at,resolved_at,horizon,score,market_regime,correct,directional_return_pct,strategy_identity,action_at_forecast",
+        "select":"due_at,resolved_at,horizon,score,market_regime,correct,directional_return_pct,strategy_identity,action_at_forecast",
         "resolved_at":"not.is.null","order":"resolved_at.desc","limit":str(max(1,min(int(limit),10000)))
     }
     r=http.get(f"{SUPABASE_URL}/rest/v1/prediction_ledger",headers=headers(),params=params)
@@ -114,7 +116,7 @@ def fetch_shadow_predictions(limit=10000):
     if not configured():
         return []
     params={
-        "select":"id,created_at,due_at,resolved_at,scan_id,symbol,horizon,direction,entry_price,score,market_regime,strategy_identity,action_at_forecast,directional_return_pct,correct",
+        "select":"id,due_at,resolved_at,scan_id,symbol,horizon,direction,entry_price,score,market_regime,strategy_identity,action_at_forecast,directional_return_pct,correct",
         "resolved_at":"not.is.null",
         "order":"resolved_at.asc",
         "limit":str(max(1,min(int(limit),10000))),
