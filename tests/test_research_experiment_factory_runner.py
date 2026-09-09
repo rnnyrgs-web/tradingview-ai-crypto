@@ -1,13 +1,20 @@
+from datetime import datetime, timedelta, timezone
+
 from research_experiment_factory_runner import build_factory_report
 
 
 def test_factory_runner_builds_research_only_queue(monkeypatch, tmp_path):
     monkeypatch.setenv("RESEARCH_LEARNING_STATE_PATH", str(tmp_path / "learning.json"))
     rows = []
+    start = datetime(2026, 8, 1, tzinfo=timezone.utc)
     for i in range(30):
+        forecast_at = start + timedelta(days=i)
+        due_at = forecast_at + timedelta(hours=24)
         rows.append(
             {
-                "resolved_at": "2026-09-09T00:00:00+00:00",
+                "forecast_at": forecast_at.isoformat(),
+                "due_at": due_at.isoformat(),
+                "resolved_at": (due_at + timedelta(minutes=1)).isoformat(),
                 "correct": i < 18,
                 "horizon": "24h",
                 "market_regime": "TREND",
