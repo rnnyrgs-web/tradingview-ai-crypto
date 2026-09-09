@@ -8,6 +8,7 @@ trade authority, or promotes a strategy.
 from __future__ import annotations
 
 from collections import defaultdict
+from datetime import datetime
 from math import isfinite
 
 MIN_GROUP_SAMPLES = 12
@@ -35,6 +36,43 @@ def _resolved_rows(rows):
     return [row for row in (rows or []) if row.get("resolved_at") and isinstance(row.get("correct"), bool)]
 
 
+def _timestamp(value):
+    if isinstance(value, datetime):
+        return value
+    if not isinstance(value, str) or not value.strip():
+        return None
+    text = value.strip().replace("Z", "+00:00")
+    try:
+        return datetime.fromisoformat(text)
+    except ValueError:
+        return None
+
+
+def _independent_window_count(rows):
+    """Count non-overlapping full-horizon forecast windows conservatively.
+
+    Rows without trustworthy forecast/due timestamps cannot contribute. Multiple
+    symbols or repeated scans inside the same full-horizon interval count as one
+    temporal window for sample-sufficiency gating, never as independent evidence.
+    """
+    intervals = []
+    for row in rows:
+        forecast_at = _timestamp(row.get("forecast_at"))
+        due_at = _timestamp(row.get("due_at"))
+        if forecast_at is None or due_at is None or due_at <= forecast_at:
+            continue
+        intervals.append((forecast_at, due_at))
+    intervals.sort(key=lambda item: (item[0], item[1]))
+    count = 0
+    covered_until = None
+    for forecast_at, due_at in intervals:
+        if covered_until is not None and forecast_at < covered_until:
+            continue
+        count += 1
+        covered_until = due_at
+    return count
+
+
 def _group_metrics(rows, key_fn, minimum_samples=MIN_GROUP_SAMPLES):
     buckets = defaultdict(list)
     for row in rows:
@@ -42,6 +80,7 @@ def _group_metrics(rows, key_fn, minimum_samples=MIN_GROUP_SAMPLES):
     out = []
     for key, group in buckets.items():
         total = len(group)
+        independent_samples = _independent_window_count(group)
         correct = sum(1 for row in group if row.get("correct") is True)
         wrong = total - correct
         returns = []
@@ -55,29 +94,33 @@ def _group_metrics(rows, key_fn, minimum_samples=MIN_GROUP_SAMPLES):
         out.append({
             "group": key,
             "samples": total,
+            "independent_samples": independent_samples,
             "correct": correct,
             "wrong": wrong,
             "precision": round(correct / total, 4) if total else None,
             "wrong_rate": round(wrong / total, 4) if total else None,
             "average_directional_return_pct": round(sum(returns) / len(returns), 4) if returns else None,
-            "ready_for_diagnostic": total >= int(minimum_samples),
+            "ready_for_diagnostic": independent_samples >= int(minimum_samples),
+            "raw_rows_are_independent": False,
         })
-    return sorted(out, key=lambda row: (-row["samples"], row["group"]))
+    return sorted(out, key=lambda row: (-row["independent_samples"], -row["samples"], row["group"]))
 
 
 def _priority(metric, dimension):
     if not metric.get("ready_for_diagnostic") or metric.get("wrong_rate") is None:
         return None
-    score = round(float(metric["wrong_rate"]) * min(int(metric["samples"]), 100), 4)
+    score = round(float(metric["wrong_rate"]) * min(int(metric["independent_samples"]), 100), 4)
     return {
         "dimension": dimension,
         "group": metric["group"],
         "samples": metric["samples"],
+        "independent_samples": metric["independent_samples"],
         "wrong_rate": metric["wrong_rate"],
         "priority_score": score,
         "research_question": (
-            f"Why does {dimension}={metric['group']} show a {metric['wrong_rate']:.1%} wrong-signal rate, "
-            "and can a predeclared restrictive filter or challenger improve after-cost OOS/forward results?"
+            f"Why does {dimension}={metric['group']} show a {metric['wrong_rate']:.1%} wrong-signal rate across "
+            f"{metric['independent_samples']} non-overlapping forecast windows, and can a predeclared restrictive filter "
+            "or challenger improve after-cost OOS/forward results?"
         ),
         "requires_new_validation": True,
         "trade_authority": False,
@@ -101,7 +144,15 @@ def learning_diagnostics(rows, *, minimum_samples=MIN_GROUP_SAMPLES):
             item = _priority(metric, dimension)
             if item:
                 priorities.append(item)
-    priorities.sort(key=lambda row: (-row["priority_score"], -row["samples"], row["dimension"], row["group"]))
+    priorities.sort(
+        key=lambda row: (
+            -row["priority_score"],
+            -row["independent_samples"],
+            -row["samples"],
+            row["dimension"],
+            row["group"],
+        )
+    )
     total = len(resolved)
     correct = sum(1 for row in resolved if row.get("correct") is True)
     return {
@@ -113,10 +164,13 @@ def learning_diagnostics(rows, *, minimum_samples=MIN_GROUP_SAMPLES):
         "resolved_samples": total,
         "baseline_precision": round(correct / total, 4) if total else None,
         "minimum_group_samples": int(minimum_samples),
+        "sample_sufficiency_basis": "non_overlapping_full_horizon_forecast_windows",
+        "raw_precision_descriptive_only": True,
         "diagnostics": dimensions,
         "research_priorities": priorities[:20],
         "learning_policy": (
-            "Resolved outcomes generate falsifiable research questions only. Production may not be tuned directly from these diagnostics; "
-            "every proposed change must be predeclared and pass fresh chronological/OOS/forward validation."
+            "Resolved outcomes generate falsifiable research questions only. Repeated scans and cross-sectional rows inside an overlapping full-horizon interval "
+            "do not increase sample sufficiency. Production may not be tuned directly from these diagnostics; every proposed change must be predeclared and pass "
+            "fresh chronological/OOS/forward validation."
         ),
     }
