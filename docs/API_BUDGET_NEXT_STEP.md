@@ -1,0 +1,1 @@
+Before merge, require exact-head Security and Reliability success. Then wire `api_budget_guard.py` into the paid autonomous model execution path so the 3x prospective-call reserve is enforced at runtime. Do not weaken the external USD 30 hard limit or the broker/live-trading safety gates.

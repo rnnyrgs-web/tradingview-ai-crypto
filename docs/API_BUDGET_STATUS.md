@@ -1,0 +1,1 @@
+Status: candidate branch `agent/api-budget-30-month` contains the USD 1/day target, USD 29/month internal model allowance, USD 1 project buffer, GPT-5.6 Luna default, Sol disabled in the bounded lane, and a tested 3x prospective-call budget guard. Runtime workflow wiring of the guard is still required before merge.

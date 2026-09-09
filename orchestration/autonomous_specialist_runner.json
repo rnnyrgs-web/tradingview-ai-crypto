@@ -25,10 +25,10 @@
   },
   "budget": {
     "project_monthly_ceiling_usd": 30.0,
-    "baseline_infrastructure_reserve_usd": 27.0,
-    "runner_monthly_api_budget_usd": 0.8,
-    "runner_daily_api_budget_usd": 0.05,
-    "pause_buffer_usd": 0.25,
+    "baseline_infrastructure_reserve_usd": 0.0,
+    "runner_monthly_api_budget_usd": 29.0,
+    "runner_daily_api_budget_usd": 1.0,
+    "pause_buffer_usd": 1.0,
     "provider_retry_safety_multiplier": 3.0
   },
   "models": {
@@ -62,7 +62,7 @@
         "tests/test_db*.py",
         "tests/test_prediction_ledger*.py"
       ],
-      "mission": "Apply UNIVERSAL_SIGNAL_DEVELOPMENT_V1 by resolving the highest-value timestamp-safe data/evidence bottleneck for genuine forward 24h/7d BUY/SELL/WAIT quality. ACC-002 is currently blocked by genuine InsufficientHistory (24h 6/6 unresolved histories; 7d 14/14), so do not repeatedly re-diagnose or weaken its 0.80/two-subset gate. Prefer other falsifiable point-in-time data improvements until coverage materially changes."
+      "mission": "Apply UNIVERSAL_SIGNAL_DEVELOPMENT_V1 by spending scarce API budget only on the highest expected signal-quality or information-gain work. Prioritize diagnosis of genuine resolved 24h/7d errors, timestamp-safe predictive data, selective WAIT/abstention evidence, calibration/regime evidence, and falsifiable hypotheses that can improve after-cost forward quality. Prefer deterministic Python, cached/reused evidence, and cheap rejection before model calls. Do not spend API budget merely to stay busy. ACC-002 is currently blocked by genuine InsufficientHistory, so do not repeatedly re-diagnose or weaken its 0.80/two-subset gate; wait for materially new history."
     }
   }
 }
