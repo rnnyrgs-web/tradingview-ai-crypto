@@ -268,7 +268,7 @@ def test_legacy_swarm_is_manual_only_and_new_workflow_cannot_merge_main_or_trade
     assert "workflow_dispatch:" in legacy
     assert "schedule:" not in legacy
     assert "17 * * * *" not in legacy
-    assert 'cron: "41 */3 * * *"' in cloud
+    assert 'cron: "41 * * * *"' in cloud
     assert "max-parallel" not in cloud
     assert "gh pr merge" not in cloud
     assert "enable-auto-merge" not in cloud
