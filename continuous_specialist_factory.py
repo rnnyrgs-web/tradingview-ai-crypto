@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import asyncio
 import os
-import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from threading import Lock
@@ -20,6 +19,11 @@ from typing import Callable
 from db import fetch_shadow_predictions
 from research_learning import learning_diagnostics
 from selective_precision import selective_precision_assessment
+from virtual_specialist_lattice import (
+    ACTIVE_SPECIALIST_TARGET,
+    VIRTUAL_HYPOTHESIS_ADDRESS_SPACE,
+    build_virtual_descriptors,
+)
 
 REFRESH_SECONDS = max(300, min(int(os.getenv("SPECIALIST_FACTORY_REFRESH_SECONDS", "900")), 3600))
 MAX_ROWS = max(1000, min(int(os.getenv("SPECIALIST_FACTORY_MAX_ROWS", "10000")), 20000))
@@ -61,7 +65,11 @@ def _all(_: dict) -> bool:
     return True
 
 
-SPECIALISTS = (
+def _and(*predicates: Callable[[dict], bool]) -> Callable[[dict], bool]:
+    return lambda row: all(predicate(row) for predicate in predicates)
+
+
+CORE_SPECIALISTS = (
     LogicalSpecialist("btc-diagnostics", "Diagnose recurring BTC forecast errors and falsifiable restrictive improvements.", _symbol("BTC")),
     LogicalSpecialist("eth-diagnostics", "Diagnose recurring ETH forecast errors and falsifiable restrictive improvements.", _symbol("ETH")),
     LogicalSpecialist("sol-diagnostics", "Diagnose recurring SOL forecast errors and falsifiable restrictive improvements.", _symbol("SOL")),
@@ -81,12 +89,12 @@ SPECIALISTS = (
     LogicalSpecialist("score-70-79", "Audit the 70-79 score band for calibration and false positives.", _score_band(70, 80)),
     LogicalSpecialist("score-60-69", "Audit the 60-69 score band for calibration and false positives.", _score_band(60, 70)),
     LogicalSpecialist("score-below-60", "Study low-score outcomes as evidence for WAIT/selective suppression.", _score_band(None, 60)),
-    LogicalSpecialist("24h-buy", "Diagnose 24h BUY mistakes separately from SELL and 7d evidence.", lambda r: _eq("horizon", "24h")(r) and _eq("direction", "BUY")(r), "24h"),
-    LogicalSpecialist("24h-sell", "Diagnose 24h SELL mistakes separately from BUY and 7d evidence.", lambda r: _eq("horizon", "24h")(r) and _eq("direction", "SELL")(r), "24h"),
-    LogicalSpecialist("7d-buy", "Diagnose 7d BUY mistakes separately from SELL and 24h evidence.", lambda r: _eq("horizon", "7d")(r) and _eq("direction", "BUY")(r), "7d"),
-    LogicalSpecialist("7d-sell", "Diagnose 7d SELL mistakes separately from BUY and 24h evidence.", lambda r: _eq("horizon", "7d")(r) and _eq("direction", "SELL")(r), "7d"),
-    LogicalSpecialist("24h-high-confidence", "Test predeclared high-score 24h selectivity without threshold mining.", lambda r: _eq("horizon", "24h")(r) and _score_band(80, None)(r), "24h"),
-    LogicalSpecialist("7d-high-confidence", "Test predeclared high-score 7d selectivity without threshold mining.", lambda r: _eq("horizon", "7d")(r) and _score_band(80, None)(r), "7d"),
+    LogicalSpecialist("24h-buy", "Diagnose 24h BUY mistakes separately from SELL and 7d evidence.", _and(_eq("horizon", "24h"), _eq("direction", "BUY")), "24h"),
+    LogicalSpecialist("24h-sell", "Diagnose 24h SELL mistakes separately from BUY and 7d evidence.", _and(_eq("horizon", "24h"), _eq("direction", "SELL")), "24h"),
+    LogicalSpecialist("7d-buy", "Diagnose 7d BUY mistakes separately from SELL and 24h evidence.", _and(_eq("horizon", "7d"), _eq("direction", "BUY")), "7d"),
+    LogicalSpecialist("7d-sell", "Diagnose 7d SELL mistakes separately from BUY and 24h evidence.", _and(_eq("horizon", "7d"), _eq("direction", "SELL")), "7d"),
+    LogicalSpecialist("24h-high-confidence", "Test predeclared high-score 24h selectivity without threshold mining.", _and(_eq("horizon", "24h"), _score_band(80, None)), "24h"),
+    LogicalSpecialist("7d-high-confidence", "Test predeclared high-score 7d selectivity without threshold mining.", _and(_eq("horizon", "7d"), _score_band(80, None)), "7d"),
     LogicalSpecialist("horizon-priority", "Rank horizon-specific resolved-error hypotheses by independent evidence.", _all),
     LogicalSpecialist("direction-priority", "Rank direction-specific resolved-error hypotheses by independent evidence.", _all),
     LogicalSpecialist("regime-priority", "Rank regime-specific resolved-error hypotheses by independent evidence.", _all),
@@ -95,6 +103,40 @@ SPECIALISTS = (
     LogicalSpecialist("selective-precision-24h", "Track fixed-threshold 24h selective precision on non-overlapping evidence.", _eq("horizon", "24h"), "24h"),
     LogicalSpecialist("selective-precision-7d", "Track fixed-threshold 7d selective precision on non-overlapping evidence.", _eq("horizon", "7d"), "7d"),
 )
+
+
+def _predicate_from_clauses(clauses: tuple) -> Callable[[dict], bool]:
+    predicates: list[Callable[[dict], bool]] = []
+    for kind, field, value in clauses:
+        if kind == "eq":
+            predicates.append(_eq(field, value))
+        elif kind == "symbol":
+            predicates.append(_symbol(value))
+        elif kind == "score":
+            low, high = value
+            predicates.append(_score_band(low, high))
+        else:
+            raise ValueError(f"unsupported virtual specialist clause: {kind}")
+    return _and(*predicates)
+
+
+def _virtual_specialists() -> tuple[LogicalSpecialist, ...]:
+    needed = max(0, ACTIVE_SPECIALIST_TARGET - len(CORE_SPECIALISTS))
+    descriptors = build_virtual_descriptors(target_generated=needed)
+    return tuple(
+        LogicalSpecialist(
+            row["name"],
+            row["mission"],
+            _predicate_from_clauses(tuple(row["clauses"])),
+            row.get("horizon"),
+        )
+        for row in descriptors
+    )
+
+
+SPECIALISTS = CORE_SPECIALISTS + _virtual_specialists()
+if len(SPECIALISTS) != ACTIVE_SPECIALIST_TARGET:
+    raise RuntimeError("virtual specialist lattice failed to materialize target worker count")
 
 _PRIORITY_DIMENSION = {
     "horizon-priority": "horizon",
@@ -112,10 +154,15 @@ _state: dict[str, object] = {
     "last_error_type": None,
     "refresh_seconds": REFRESH_SECONDS,
     "logical_worker_count": len(SPECIALISTS),
+    "core_worker_count": len(CORE_SPECIALISTS),
+    "virtual_materialized_worker_count": len(SPECIALISTS) - len(CORE_SPECIALISTS),
+    "virtual_hypothesis_address_space": VIRTUAL_HYPOTHESIS_ADDRESS_SPACE,
+    "virtual_materialization_policy": "fixed_predeclared_deterministic_slice_only",
     "ledger_reads_per_refresh": 1,
     "cycles_completed": 0,
     "workers": {},
     "ai_calls_normal_operation": 0,
+    "heavy_concurrency_increase": False,
     "trade_authority": False,
     "promotion_authority": False,
     "strategy_mutation_authority": False,
@@ -166,6 +213,7 @@ def build_specialist_snapshot(rows: list[dict]) -> dict[str, dict]:
             "status": "evidence_available" if subset else "awaiting_resolved_evidence",
             "raw_rows_are_independent": False,
             "independence_claims_use_full_horizon_deoverlap": True,
+            "predeclared_grouping": True,
             "automatic_tuning": False,
             "trade_authority": False,
             "promotion_authority": False,
@@ -205,4 +253,13 @@ async def run_factory() -> None:
         await asyncio.sleep(REFRESH_SECONDS)
 
 
-__all__ = ["SPECIALISTS", "build_specialist_snapshot", "refresh_once", "run_factory", "snapshot"]
+__all__ = [
+    "ACTIVE_SPECIALIST_TARGET",
+    "CORE_SPECIALISTS",
+    "SPECIALISTS",
+    "VIRTUAL_HYPOTHESIS_ADDRESS_SPACE",
+    "build_specialist_snapshot",
+    "refresh_once",
+    "run_factory",
+    "snapshot",
+]
