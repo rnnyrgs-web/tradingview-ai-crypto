@@ -31,6 +31,16 @@ def test_observability_log_payload_uses_producer_contract_and_is_non_authoritati
                         "research_blocked": False,
                         "research_blocked_reason": None,
                         "untouched_oos_opened": True,
+                        "universe_requested": 30,
+                        "universe_resolved": 27,
+                        "failed_symbols": [
+                            {"symbol": "AAA-USDT", "error_type": "InsufficientHistory"},
+                            {"symbol": "BBB-USDT", "error_type": "HTTPStatusError"},
+                        ],
+                        "liquidity_stability_policy": {
+                            "supported_subsets": [15, 30],
+                            "minimum_subset_coverage": 0.8,
+                        },
                         "selected_oos": {
                             "acc002_research_pass": False,
                             "acc011_survivorship_pass": False,
@@ -47,6 +57,16 @@ def test_observability_log_payload_uses_producer_contract_and_is_non_authoritati
                         "research_blocked": True,
                         "research_blocked_reason": "insufficient_supported_liquidity_subsets",
                         "untouched_oos_opened": False,
+                        "universe_requested": 30,
+                        "universe_resolved": 18,
+                        "failed_symbols": [
+                            {"symbol": "CCC-USDT", "error_type": "InsufficientHistory"},
+                            {"symbol": "DDD-USDT", "error_type": "InsufficientHistory"},
+                        ],
+                        "liquidity_stability_policy": {
+                            "supported_subsets": [15],
+                            "minimum_subset_coverage": 0.8,
+                        },
                         "selected_oos": None,
                     },
                 },
@@ -63,11 +83,21 @@ def test_observability_log_payload_uses_producer_contract_and_is_non_authoritati
     assert payload["acc002_24h"]["acc002_pass"] is False
     assert payload["acc002_24h"]["survivorship_pass"] is False
     assert payload["acc002_24h"]["promotion_review"] is False
+    assert payload["acc002_24h"]["universe_requested"] == 30
+    assert payload["acc002_24h"]["universe_resolved"] == 27
+    assert payload["acc002_24h"]["supported_liquidity_subsets"] == [15, 30]
+    assert payload["acc002_24h"]["failed_symbol_count"] == 2
+    assert payload["acc002_24h"]["failure_type_counts"] == {"HTTPStatusError": 1, "InsufficientHistory": 1}
     assert payload["acc002_7d"]["research_blocked"] is True
     assert payload["acc002_7d"]["research_blocked_reason"] == "insufficient_supported_liquidity_subsets"
     assert payload["acc002_7d"]["untouched_oos_opened"] is False
     assert payload["acc002_7d"]["acc002_pass"] is None
+    assert payload["acc002_7d"]["universe_resolved"] == 18
+    assert payload["acc002_7d"]["supported_liquidity_subsets"] == [15]
+    assert payload["acc002_7d"]["failure_type_counts"] == {"InsufficientHistory": 2}
     assert "raw_bootstrap_samples" not in str(payload)
+    assert "AAA-USDT" not in str(payload)
+    assert "CCC-USDT" not in str(payload)
     assert payload["trade_authority"] is False
     assert payload["promotion_authority"] is False
     assert payload["signal_authority"] is False
@@ -79,4 +109,8 @@ def test_observability_log_payload_handles_missing_state():
     assert payload["worker_completed"] is None
     assert payload["acc002_24h"]["research_blocked"] is None
     assert payload["acc002_24h"]["promotion_review"] is None
+    assert payload["acc002_24h"]["universe_resolved"] is None
+    assert payload["acc002_24h"]["supported_liquidity_subsets"] is None
+    assert payload["acc002_24h"]["failed_symbol_count"] == 0
+    assert payload["acc002_24h"]["failure_type_counts"] == {}
     assert payload["trade_authority"] is False
