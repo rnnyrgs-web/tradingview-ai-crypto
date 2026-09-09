@@ -87,3 +87,28 @@ def test_retry_delay_grows_on_failures_and_is_bounded():
 
 def test_success_resets_retry_delay_to_fast_cycle():
     assert army._retry_delay_seconds(0) < army._retry_delay_seconds(4)
+
+
+def test_reentry_waiting_for_heavy_lane_is_explicitly_queued_and_healthy():
+    spec = next(worker for worker in army.WORKERS if worker.name == "major-eth")
+    previous_workers = army._status["workers"]
+    previous_active = army._status["active_jobs"]
+    army._status["workers"] = {spec.name: army._initial_worker_state(spec)}
+    army._status["workers"][spec.name]["state"] = "resting"
+    semaphore = asyncio.Semaphore(0)
+
+    async def scenario():
+        task = asyncio.create_task(army._run_once(spec, semaphore))
+        await asyncio.sleep(0)
+        snap = army.snapshot()
+        assert snap["workers"][spec.name]["state"] == "queued"
+        assert snap["workers"][spec.name]["health"]["healthy"] is True
+        assert snap["active_jobs"] == previous_active
+        task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+
+    try:
+        asyncio.run(scenario())
+    finally:
+        army._status["workers"] = previous_workers
+        army._status["active_jobs"] = previous_active
