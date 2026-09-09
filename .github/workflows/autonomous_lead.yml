@@ -10,24 +10,27 @@ on:
   schedule:
     - cron: "47 * * * *"
 
+# SAFETY: the hourly lead is deliberately review-only. It may inspect and
+# report candidates, but its workflow token cannot modify repository contents.
 permissions:
-  contents: write
+  contents: read
   issues: write
+  actions: read
 
 concurrency:
   group: autonomous-lead-integrator
   cancel-in-progress: false
 
 jobs:
-  review-and-integrate:
+  review-only:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       OPENAI_AGENT_MODEL: gpt-5.6-sol
-      # Explicitly enabled by the repository owner. Every merge still requires
-      # exact-SHA Security CI plus independent Security and Lead approval.
-      AUTONOMOUS_MERGE_ENABLED: "true"
+      # Defense in depth: automatic integration is hard-disabled. Do not change
+      # this to true without an explicit repository-owner decision and protected-main gates.
+      AUTONOMOUS_MERGE_ENABLED: "false"
       GH_TOKEN: ${{ github.token }}
       PYTHONPATH: ${{ github.workspace }}
     steps:
@@ -48,6 +51,7 @@ jobs:
         run: |
           test -n "$OPENAI_API_KEY" || { echo "OPENAI_API_KEY missing"; exit 1; }
           test -n "$OPENAI_AGENT_MODEL" || { echo "OPENAI_AGENT_MODEL missing"; exit 1; }
+          test "$AUTONOMOUS_MERGE_ENABLED" = "false" || { echo "Autonomous merge must remain disabled"; exit 1; }
       - name: Select oldest current-base autonomous candidate
         id: select
         run: |
@@ -63,10 +67,8 @@ jobs:
             MERGE_BASE="$(git merge-base origin/main "$REF" 2>/dev/null || true)"
             [ "$MERGE_BASE" = "$BASE_SHA" ] || continue
             HEAD_SHA="$(git rev-parse "$REF")"
-            if [ "$AUTONOMOUS_MERGE_ENABLED" != "true" ]; then
-              ALREADY="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "$HEAD_SHA in:title" --limit 10 --json number --jq '.[0].number // empty' || true)"
-              [ -z "$ALREADY" ] || continue
-            fi
+            ALREADY="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "$HEAD_SHA in:title" --limit 10 --json number --jq '.[0].number // empty' || true)"
+            [ -z "$ALREADY" ] || continue
             SELECTED="${REF#origin/}"
             SELECTED_SHA="$HEAD_SHA"
             break
@@ -115,7 +117,7 @@ jobs:
           test "$BYTES" -gt 0
           test "$BYTES" -le 80000 || { echo "Diff too large; fail closed."; exit 1; }
           if grep -Eq '^diff --git a/(AI_STATE\.md|agents/|\.github/workflows/|requirements\.txt|Dockerfile)' /tmp/candidate.diff; then
-            echo "Protected path changed; refusing autonomous integration."
+            echo "Protected path changed; refusing autonomous approval."
             exit 1
           fi
       - name: Independent security review
@@ -131,51 +133,28 @@ jobs:
           jq -e '.approve == true' /tmp/lead-review.json
           echo "Security review:" && cat /tmp/security-review.json
           echo "Lead review:" && cat /tmp/lead-review.json
-      - name: Record approved dry-run review
-        if: steps.select.outputs.branch != '' && env.AUTONOMOUS_MERGE_ENABLED != 'true'
+      - name: Verify main did not move during review
+        if: steps.select.outputs.branch != ''
+        run: |
+          START_MAIN="$(git rev-parse origin/main)"
+          git fetch origin main
+          NOW_MAIN="$(git rev-parse origin/main)"
+          [ "$START_MAIN" = "$NOW_MAIN" ] || { echo "main changed during review; discard stale approval and fail closed."; exit 1; }
+      - name: Record approved review without merging
+        if: steps.select.outputs.branch != ''
         env:
           BRANCH: ${{ steps.select.outputs.branch }}
           HEAD_SHA: ${{ steps.select.outputs.sha }}
         run: |
-          BODY="$(printf 'Candidate branch: `%s`\nExact reviewed SHA: `%s`\n\nSecurity and Reliability: PASS on exact candidate SHA.\n\nAutonomous Security review:\n```json\n%s\n```\n\nAutonomous Lead review:\n```json\n%s\n```\n\n`AUTONOMOUS_MERGE_ENABLED` is not true, so this candidate remains unmerged.' "$BRANCH" "$HEAD_SHA" "$(cat /tmp/security-review.json)" "$(cat /tmp/lead-review.json)")"
+          BODY="$(printf 'Candidate branch: `%s`\nExact reviewed SHA: `%s`\n\nSecurity and Reliability: PASS on exact candidate SHA.\n\nAutonomous Security review:\n```json\n%s\n```\n\nAutonomous Lead review:\n```json\n%s\n```\n\n**MERGE: HARD-DISABLED.** This hourly workflow has `contents: read` and cannot push to `main`. Integration requires a separate explicit reviewed action.' "$BRANCH" "$HEAD_SHA" "$(cat /tmp/security-review.json)" "$(cat /tmp/lead-review.json)")"
           gh issue create --repo "$GITHUB_REPOSITORY" --title "autonomous-review: $HEAD_SHA" --body "$BODY"
           {
-            echo "### Autonomous candidate approved in dry-run mode"
+            echo "### Autonomous candidate approved for human/lead integration review"
             echo "- Branch: $BRANCH"
             echo "- SHA: $HEAD_SHA"
             echo "- Security CI: PASS"
             echo "- Security AI: APPROVE"
             echo "- Lead AI: APPROVE"
-            echo "- Merge: DISABLED"
+            echo "- Automatic merge: HARD-DISABLED"
+            echo "- Repository contents permission: READ ONLY"
           } >> "$GITHUB_STEP_SUMMARY"
-      - name: Prepare verified candidate integration
-        if: steps.select.outputs.branch != '' && env.AUTONOMOUS_MERGE_ENABLED == 'true'
-        env:
-          BRANCH: ${{ steps.select.outputs.branch }}
-          HEAD_SHA: ${{ steps.select.outputs.sha }}
-        run: |
-          python - <<'PY'
-          import json, os
-          from pathlib import Path
-          context = {
-              "candidate_branch": os.environ["BRANCH"],
-              "candidate_head_sha": os.environ["HEAD_SHA"],
-              "security_ci": "PASS on exact candidate SHA",
-              "security_review": json.loads(Path("/tmp/security-review.json").read_text()),
-              "lead_review": json.loads(Path("/tmp/lead-review.json").read_text()),
-          }
-          text = json.dumps(context, indent=2) + "\n\nDIFF:\n" + Path("/tmp/candidate.diff").read_text()
-          Path("/tmp/candidate-context.txt").write_text(text, encoding="utf-8")
-          PY
-          git config user.name "autonomous-lead-integrator"
-          git config user.email "actions@users.noreply.github.com"
-          git checkout -B main origin/main
-          git merge --squash "origin/$BRANCH"
-          git diff --cached --check
-          pytest -q
-          python agents/lead_state.py --pr-context /tmp/candidate-context.txt
-          git add -A
-          git diff --cached --check
-          git commit -m "autonomous lead: integrate $HEAD_SHA"
-          git push origin main
-          git push origin --delete "$BRANCH"
