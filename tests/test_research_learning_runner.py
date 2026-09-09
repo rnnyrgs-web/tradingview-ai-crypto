@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 import research_learning_state
 from research_learning_runner import build_learning_report
 
@@ -5,9 +7,14 @@ from research_learning_runner import build_learning_report
 def test_runner_report_combines_learning_and_selective_precision(tmp_path, monkeypatch):
     monkeypatch.setattr(research_learning_state, "DEFAULT_PATH", tmp_path / "learning.json")
     rows = []
+    start = datetime(2026, 8, 1, tzinfo=timezone.utc)
     for i in range(30):
+        forecast_at = start + timedelta(days=i)
+        due_at = forecast_at + timedelta(hours=24)
         rows.append({
-            "resolved_at": "2026-09-09T00:00:00+00:00",
+            "forecast_at": forecast_at.isoformat(),
+            "due_at": due_at.isoformat(),
+            "resolved_at": (due_at + timedelta(minutes=1)).isoformat(),
             "correct": i < 18,
             "horizon": "24h",
             "market_regime": "TREND",
@@ -23,5 +30,6 @@ def test_runner_report_combines_learning_and_selective_precision(tmp_path, monke
     assert report["promotion_authority"] is False
     assert report["automatic_strategy_mutation"] is False
     assert report["diagnostics"]["resolved_samples"] == 30
+    assert report["diagnostics"]["diagnostics"]["direction"][0]["independent_samples"] == 30
     assert report["selective_precision"]["ok"] is True
     assert report["research_memory"]["lesson_count"] == 1
