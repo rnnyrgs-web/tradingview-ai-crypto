@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import math
-import os
 import threading
 from datetime import datetime, timedelta, timezone
 
@@ -20,8 +19,8 @@ from paper_db import (
     insert_paper_trade,
     update_paper_account,
 )
-from execution_simulator import simulate_market_fill
-from market_data import get_candles, get_order_book_intelligence
+from kraken_execution import KRAKEN_FEE_SCHEDULE_AS_OF, kraken_taker_fee_bps, simulate_kraken_market_fill
+from market_data import get_candles
 from production_risk_gate import assess_portfolio_risk
 from utils import iso, now_utc
 
@@ -31,8 +30,10 @@ INITIAL_CASH = 100000.0
 RISK_PER_TRADE_PCT = 0.50
 MAX_OPEN_POSITIONS = 5
 MAX_NOTIONAL_PCT = 20.0
-FEE_BPS_ONE_WAY = float(os.getenv("PAPER_TAKER_FEE_BPS", "6.0"))
-FEE_SCHEDULE_VERIFIED = os.getenv("PAPER_FEE_SCHEDULE_VERIFIED", "").strip().lower() in {"1", "true", "yes"}
+KRAKEN_FEE_TIER = "tier1"
+FEE_BPS_ONE_WAY = kraken_taker_fee_bps("BTC-USDT", KRAKEN_FEE_TIER)
+FEE_SCHEDULE_VERIFIED = True
+FEE_MODEL = "KRAKEN_PRO_TIER1_CONSERVATIVE"
 MIN_EVIDENCE_SCORE = 60.0
 MAX_SIGNAL_AGE_SECONDS = 30 * 60
 PAPER_INTERVAL_SECONDS = 15 * 60
@@ -61,13 +62,11 @@ def _last_price(symbol):
 
 
 def _paper_fill_price(symbol, direction, requested_notional):
-    """Create a size-aware forward-only fill from current independent order books."""
-    market_price = _last_price(symbol)
-    base = str(symbol).upper().split("-")[0]
-    book = get_order_book_intelligence(base)
-    simulation = simulate_market_fill(book, direction, requested_notional, FEE_BPS_ONE_WAY)
+    """Create a forward-only Kraken Pro taker fill from current Kraken depth."""
+    simulation = simulate_kraken_market_fill(symbol, direction, requested_notional, KRAKEN_FEE_TIER)
     if not simulation.executable or simulation.fill_price is None:
         raise RuntimeError(f"Execution evidence unavailable: {simulation.reason}")
+    market_price = float(simulation.raw_vwap) if simulation.raw_vwap is not None else _last_price(symbol)
     return market_price, float(simulation.fill_price), simulation
 
 
@@ -75,8 +74,8 @@ def _liquidation_mark(trade):
     """Price the whole position at a currently executable after-cost liquidation fill.
 
     This is deliberately not midpoint, candle close, or top-of-book. The requested
-    notional is the full position at the current observable price and requires the
-    same independent visible-depth evidence as a simulated exit.
+    notional is the full position at the current observable price and requires a
+    real Kraken Pro public order-book snapshot for that exact pair.
     """
     direction = str(trade.get("direction") or "").upper()
     if direction not in {"LONG", "SHORT"}:
@@ -299,7 +298,7 @@ def _run_paper_cycle_locked():
     open_trades = [t for t in all_trades if str(t.get("status") or "").upper() == "OPEN"]
 
     # Equity is what the whole open position could be liquidated for now after
-    # visible-depth/fee friction. Missing execution evidence aborts the cycle.
+    # Kraken visible-depth/taker-fee friction. Missing evidence aborts the cycle.
     marks = _marks_for_open_trades(open_trades)
     ledger = reconcile_paper_ledger(account, all_trades, marks, INITIAL_CASH, compare_persisted=False)
     if not ledger.verified:
@@ -362,12 +361,7 @@ def _run_paper_cycle_locked():
         if not fresh:
             _record_decision(row, "REJECTED", freshness_reason)
             continue
-        if not FEE_SCHEDULE_VERIFIED:
-            _record_decision(row, "REJECTED", "fee_schedule_unverified")
-            continue
         if direction == "SHORT":
-            # No short is allowed to look profitable without a venue-specific,
-            # timestamped borrow/funding/carry model.
             _record_decision(row, "REJECTED", "short_carry_unverified")
             continue
         if float(row.get("evidence_score") or 0) < MIN_EVIDENCE_SCORE:
@@ -404,8 +398,8 @@ def _run_paper_cycle_locked():
         try:
             observed_market, entry, execution = _paper_fill_price(symbol, direction, desired_notional)
         except Exception as exc:
-            _record_decision(row, "REJECTED", "execution_evidence_unavailable")
-            log.warning("Paper execution unavailable for %s: %s", symbol, str(exc)[:160])
+            _record_decision(row, "REJECTED", "kraken_execution_evidence_unavailable")
+            log.warning("Kraken paper execution unavailable for %s: %s", symbol, str(exc)[:160])
             continue
 
         stop = entry * (1.0 - stop_distance_pct)
@@ -421,10 +415,10 @@ def _run_paper_cycle_locked():
             continue
         notional = quantity * entry
         if notional > cash or (execution.supported_notional is not None and notional > execution.supported_notional + 1e-6):
-            _record_decision(row, "REJECTED", "unsupported_notional")
+            _record_decision(row, "REJECTED", "unsupported_kraken_notional")
             continue
 
-        if not _record_decision(row, "ACCEPTED", "fresh_size_aware_forward_fill"):
+        if not _record_decision(row, "ACCEPTED", "fresh_kraken_visible_depth_taker_fill"):
             continue
         decision_at = iso(now_utc())
         if insert_paper_trade({
@@ -441,7 +435,7 @@ def _run_paper_cycle_locked():
             "quantity": quantity,
             "notional_usd": notional,
             "risk_usd": risk_usd,
-            "fee_bps_one_way": FEE_BPS_ONE_WAY,
+            "fee_bps_one_way": execution.fee_bps,
             "evidence_score": float(row.get("evidence_score") or 0),
             "research_only": True,
             "signal_generated_at": row.get("generated_at"),
@@ -454,9 +448,9 @@ def _run_paper_cycle_locked():
             "execution_model_version": V2_EXECUTION_MODEL,
         }):
             log.info(
-                "Paper trade opened audited symbol=%s market=%s fill=%s notional=%.2f supported_tier=%s slippage_bps=%s sources=%s",
-                symbol, observed_market, entry, notional, execution.supported_notional,
-                execution.worst_slippage_bps, execution.source_count,
+                "Kraken paper trade opened symbol=%s market=%s fill=%s notional=%.2f visible=%.2f slippage_bps=%s fee_bps=%s",
+                symbol, observed_market, entry, notional, float(execution.supported_notional or 0),
+                execution.worst_slippage_bps, execution.fee_bps,
             )
             cash -= notional
             open_trades = fetch_open_paper_trades(ACCOUNT_ID)
@@ -513,9 +507,7 @@ def paper_status():
     max_dd = max(float(account["max_drawdown_pct"]), stats["max_drawdown_pct"])
     portfolio_risk = assess_portfolio_risk(account, open_trades, stats)
     reconciliation = fetch_latest_paper_reconciliation(ACCOUNT_ID)
-    execution_status = "STRICT_FORWARD_MODEL_READY" if FEE_SCHEDULE_VERIFIED and not legacy_rows else (
-        "PARTIAL_LEGACY_HISTORY" if legacy_rows else "FEE_SCHEDULE_UNVERIFIED"
-    )
+    execution_status = "KRAKEN_PRO_TIER1_FORWARD_MODEL_READY" if not legacy_rows else "PARTIAL_LEGACY_HISTORY"
     return {
         "configured": True,
         "research_only": True,
@@ -524,7 +516,9 @@ def paper_status():
         "trade_authority": False,
         "forward_fill_only": True,
         "size_aware_execution": True,
-        "requires_two_reliable_books": True,
+        "execution_venue": "Kraken Pro spot",
+        "order_book_source": "Kraken public Depth",
+        "requires_two_reliable_books": False,
         "immutable_closed_trade_ledger": True,
         "decision_journal": True,
         "liquidation_value_marks": True,
@@ -533,7 +527,12 @@ def paper_status():
         "shorts_require_verified_carry": True,
         "short_entries_enabled": False,
         "fee_schedule_verified": FEE_SCHEDULE_VERIFIED,
+        "fee_schedule_as_of": KRAKEN_FEE_SCHEDULE_AS_OF,
+        "fee_model": FEE_MODEL,
+        "fee_tier": KRAKEN_FEE_TIER,
         "fee_bps_one_way": FEE_BPS_ONE_WAY,
+        "fee_tier_account_verified": False,
+        "fee_tier_note": "Tier 1 taker is intentionally conservative until the actual Kraken account tier is independently verified.",
         "execution_authenticity_status": execution_status,
         "legacy_execution_rows": len(legacy_rows),
         "real_execution_verified": False,
