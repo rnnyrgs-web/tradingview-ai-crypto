@@ -1,0 +1,1 @@
+Scope: resolved-outcome diagnostics, reusable lessons, experiment prioritization, and safer/faster hypothesis generation. Out of scope: autonomous production parameter tuning, model promotion, broker activity, credential use, or validation bypass.
