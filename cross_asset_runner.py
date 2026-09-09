@@ -369,6 +369,14 @@ def summarize_evidence(envelope: dict) -> dict:
             "acc011_survivorship_pass": selected["acc011_survivorship_pass"],
             "eligible_for_promotion_review": selected["eligible_for_promotion_review"],
         }
+    failure_type_counts = {}
+    for failure in payload["failed_symbols"]:
+        if not isinstance(failure, dict):
+            continue
+        error_type = failure.get("error_type")
+        if not isinstance(error_type, str) or not error_type:
+            continue
+        failure_type_counts[error_type] = failure_type_counts.get(error_type, 0) + 1
     return {
         "generated_at": payload["generated_at"],
         "horizon": payload["horizon"],
@@ -384,6 +392,7 @@ def summarize_evidence(envelope: dict) -> dict:
         "universe_requested": payload["universe_requested"],
         "universe_resolved": payload["universe_resolved"],
         "failed_symbol_count": len(payload["failed_symbols"]),
+        "failure_type_counts": dict(sorted(failure_type_counts.items())),
         "research_only": True,
         "live_approved": False,
         "trade_authority": False,
