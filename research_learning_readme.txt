@@ -1,0 +1,1 @@
+Research learning layer is advisory-only. It cannot authorize trades, promote strategies, change production parameters, reset paper history, or bypass validation. It exists to improve research efficiency and hypothesis quality from genuine resolved evidence.
