@@ -1,0 +1,1 @@
+The branch intentionally does not alter production signal selection. Integration into continuous workers must preserve existing bounded heavy concurrency and run as a light advisory research task.
