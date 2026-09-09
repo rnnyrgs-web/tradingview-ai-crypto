@@ -1,9 +1,7 @@
-name: Autonomous Specialist Agents
+name: Legacy Autonomous Specialist Agents (Manual Only)
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "17 * * * *"
 
 permissions:
   contents: write

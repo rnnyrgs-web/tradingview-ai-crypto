@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "enabled": true,
+  "autonomous_roles": ["data-market"],
+  "policy": {
+    "max_concurrent_agent_runs": 1,
+    "max_agent_runs_per_invocation": 1,
+    "schedule_check_hours": 3,
+    "successful_run_cooldown_hours": 12,
+    "max_retries": 0,
+    "task_retry_limit": 2,
+    "retry_base_seconds": 30,
+    "retry_cap_seconds": 300,
+    "specialists_write_main": false,
+    "specialists_merge_own_prs": false,
+    "automatic_merge": false,
+    "trade_authority": false,
+    "broker_connected": false,
+    "insufficient_evidence": "WAIT_RESEARCH_ONLY",
+    "state_branch": "automation/specialist-runner-state",
+    "task_branch_prefix": "auto/",
+    "coordination_updates": "LEAD_ONLY"
+  },
+  "budget": {
+    "project_monthly_ceiling_usd": 30.0,
+    "baseline_infrastructure_reserve_usd": 27.0,
+    "runner_monthly_api_budget_usd": 0.8,
+    "runner_daily_api_budget_usd": 0.05,
+    "pause_buffer_usd": 0.25,
+    "provider_retry_safety_multiplier": 3.0
+  },
+  "models": {
+    "gpt-5.6-luna": {
+      "input_usd_per_million": 0.2,
+      "cached_input_usd_per_million": 0.02,
+      "output_usd_per_million": 1.2,
+      "enabled": true
+    },
+    "gpt-5.6-sol": {
+      "input_usd_per_million": 4.0,
+      "cached_input_usd_per_million": 0.4,
+      "output_usd_per_million": 20.0,
+      "enabled": false
+    }
+  },
+  "roles": {
+    "data-market": {
+      "model": "gpt-5.6-luna",
+      "max_turns": 4,
+      "max_output_tokens_per_turn": 2000,
+      "reserved_max_input_tokens_per_run": 160000,
+      "reserved_max_output_tokens_per_run": 8000,
+      "max_file_read_bytes": 12000,
+      "max_file_write_bytes": 40000,
+      "allowed_paths": [
+        "market_data.py",
+        "db.py",
+        "tests/test_market_data.py",
+        "tests/test_data_market*.py",
+        "tests/test_db*.py",
+        "tests/test_prediction_ledger*.py"
+      ],
+      "mission": "Improve timestamp-safe market information and point-in-time data quality for genuine forward 24h/7d BUY/SELL/WAIT research without fabricating history, introducing lookahead, changing production thresholds, or weakening fail-closed behavior."
+    }
+  }
+}

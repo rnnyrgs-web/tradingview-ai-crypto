@@ -155,16 +155,22 @@ def test_retry_delay_honors_and_caps_retry_after():
     assert _retry_delay(_HeadersOnlyResponse("invalid"), 1) == 10.0
 
 
-def test_hourly_workflows_keep_cost_routing_and_lead_review_only():
+def test_legacy_specialist_workflow_is_manual_and_lead_remains_review_only():
     specialist_workflow = open(
         ".github/workflows/autonomous_agents.yml", encoding="utf-8"
     ).read()
+    cloud_workflow = open(
+        ".github/workflows/autonomous_cloud_specialist.yml", encoding="utf-8"
+    ).read()
     lead_workflow = open(".github/workflows/autonomous_lead.yml", encoding="utf-8").read()
 
-    assert 'cron: "17 * * * *"' in specialist_workflow
+    assert "workflow_dispatch:" in specialist_workflow
+    assert "schedule:" not in specialist_workflow
+    assert 'cron: "17 * * * *"' not in specialist_workflow
     assert "max-parallel: 14" in specialist_workflow
     assert "OPENAI_AGENT_MODEL: gpt-5.6-luna" in specialist_workflow
     assert "'gpt-5.6-sol' || 'gpt-5.6-luna'" in specialist_workflow
+    assert 'cron: "41 */3 * * *"' in cloud_workflow
     assert "OPENAI_AGENT_MODEL: gpt-5.6-sol" in lead_workflow
     assert 'AUTONOMOUS_MERGE_ENABLED: "false"' in lead_workflow
     assert "contents: read" in lead_workflow

@@ -1,0 +1,277 @@
+name: Cost-Bounded Autonomous Cloud Specialist
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 */3 * * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: autonomous-cloud-specialist-runner
+  cancel-in-progress: false
+
+jobs:
+  specialist-cycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      PYTHONPATH: ${{ github.workspace }}
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - id: meta
+        name: Resolve fail-closed runner metadata
+        run: |
+          python agents/autonomous_cloud_runner.py validate
+          MAIN_SHA="$(git rev-parse HEAD)"
+          STATE_BRANCH="$(python - <<'PY'
+          import json
+          print(json.load(open('orchestration/autonomous_specialist_runner.json'))['policy']['state_branch'])
+          PY
+          )"
+          test "$STATE_BRANCH" != "main" -a "$STATE_BRANCH" != "master"
+          echo "main_sha=$MAIN_SHA" >> "$GITHUB_OUTPUT"
+          echo "state_branch=$STATE_BRANCH" >> "$GITHUB_OUTPUT"
+
+      - id: load_state
+        name: Load durable non-main runner state
+        env:
+          STATE_BRANCH: ${{ steps.meta.outputs.state_branch }}
+        run: |
+          if git ls-remote --exit-code --heads origin "refs/heads/$STATE_BRANCH" >/dev/null 2>&1; then
+            if gh api "repos/$GITHUB_REPOSITORY/contents/runner_state.json?ref=$STATE_BRANCH" --jq .content >/tmp/state.b64 2>/dev/null; then
+              tr -d '\n' </tmp/state.b64 | base64 -d >/tmp/runner_state.json
+            else
+              python - <<'PY'
+          import json
+          from agents.autonomous_cloud_runner import default_state
+          json.dump(default_state(), open('/tmp/runner_state.json', 'w'), indent=2)
+          PY
+            fi
+          else
+            python - <<'PY'
+          import json
+          from agents.autonomous_cloud_runner import default_state
+          json.dump(default_state(), open('/tmp/runner_state.json', 'w'), indent=2)
+          PY
+          fi
+          python agents/autonomous_cloud_state.py show --state /tmp/runner_state.json >/tmp/state-summary.json
+
+      - id: reconcile
+        name: Reconcile exact-head Security and Reliability state
+        run: |
+          PHASE="$(python - <<'PY'
+          import json
+          s=json.load(open('/tmp/runner_state.json'))
+          a=s.get('active_task') or {}
+          print(a.get('phase',''))
+          PY
+          )"
+          if [ "$PHASE" != "WAITING_CI" ]; then
+            echo "reconciled=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          BRANCH="$(python - <<'PY'
+          import json
+          a=(json.load(open('/tmp/runner_state.json')).get('active_task') or {})
+          print(a.get('branch',''))
+          PY
+          )"
+          HEAD_SHA="$(python - <<'PY'
+          import json
+          a=(json.load(open('/tmp/runner_state.json')).get('active_task') or {})
+          print(a.get('head_sha',''))
+          PY
+          )"
+          test -n "$BRANCH" -a -n "$HEAD_SHA"
+          RUN="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow security.yml --branch "$BRANCH" --limit 20 --json headSha,status,conclusion --jq "[.[] | select(.headSha == \"$HEAD_SHA\")][0] // {}")"
+          STATUS="$(printf '%s' "$RUN" | jq -r '.status // "missing"')"
+          CONCLUSION="$(printf '%s' "$RUN" | jq -r '.conclusion // "pending"')"
+          if [ "$STATUS" = "completed" ]; then
+            python agents/autonomous_cloud_state.py mark-ci --state /tmp/runner_state.json --conclusion "$CONCLUSION" --head-sha "$HEAD_SHA"
+            echo "reconciled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Security and Reliability still pending or missing for exact candidate head; no model run."
+            echo "reconciled=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - id: plan
+        name: Select at most one READY autonomous task
+        run: |
+          python agents/autonomous_cloud_runner.py plan \
+            --state /tmp/runner_state.json \
+            --main-sha '${{ steps.meta.outputs.main_sha }}' \
+            --output /tmp/decision.json
+          RUN="$(jq -r '.run' /tmp/decision.json)"
+          echo "run=$RUN" >> "$GITHUB_OUTPUT"
+          echo "role=$(jq -r '.role // ""' /tmp/decision.json)" >> "$GITHUB_OUTPUT"
+          echo "task_id=$(jq -r '.task_id // ""' /tmp/decision.json)" >> "$GITHUB_OUTPUT"
+          echo "branch=$(jq -r '.branch // ""' /tmp/decision.json)" >> "$GITHUB_OUTPUT"
+          echo "reason=$(jq -r '.reason' /tmp/decision.json)" >> "$GITHUB_OUTPUT"
+
+      - id: credential_gate
+        name: Fail closed when API credential is unavailable
+        if: steps.plan.outputs.run == 'true'
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            python - <<'PY'
+          import json
+          p='/tmp/runner_state.json'
+          s=json.load(open(p)); s['paused_reason']='MISSING_OPENAI_API_KEY'
+          json.dump(s, open(p,'w'), indent=2, sort_keys=True)
+          PY
+            echo "execute=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "execute=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - id: branch
+        name: Create isolated task branch from exact current main
+        if: steps.credential_gate.outputs.execute == 'true'
+        env:
+          BRANCH: ${{ steps.plan.outputs.branch }}
+          MAIN_SHA: ${{ steps.meta.outputs.main_sha }}
+        run: |
+          test "$BRANCH" != "main" -a "$BRANCH" != "master"
+          if git ls-remote --exit-code --heads origin "refs/heads/$BRANCH" >/dev/null 2>&1; then
+            echo "Existing task branch detected; refusing to overwrite autonomous work."
+            exit 1
+          fi
+          git config user.name "autonomous-cloud-specialist"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout -b "$BRANCH" "$MAIN_SHA"
+
+      - name: Install bounded Agents SDK runtime
+        if: steps.credential_gate.outputs.execute == 'true'
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest 'openai-agents==0.22.1'
+
+      - id: agent
+        name: Run one bounded specialist Agents SDK cycle
+        if: steps.credential_gate.outputs.execute == 'true'
+        continue-on-error: true
+        run: |
+          python agents/autonomous_cloud_runner.py execute \
+            --state /tmp/runner_state.json \
+            --decision /tmp/decision.json \
+            --output /tmp/agent_result.json
+
+      - name: Account conservatively for failed model execution
+        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'failure'
+        run: |
+          python agents/autonomous_cloud_state.py mark-failure \
+            --state /tmp/runner_state.json \
+            --reason-code MODEL_EXECUTION_FAILURE
+
+      - id: result
+        name: Read structured agent outcome
+        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'success'
+        run: |
+          STATUS="$(jq -r '.outcome.status' /tmp/agent_result.json)"
+          test "$STATUS" = "READY_FOR_PR" -o "$STATUS" = "NO_CHANGE" -o "$STATUS" = "BLOCKED"
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+
+      - name: Enforce full repository tests before publication
+        if: steps.result.outputs.status == 'READY_FOR_PR'
+        run: |
+          if ! pytest -q; then
+            python agents/autonomous_cloud_state.py mark-failure \
+              --state /tmp/runner_state.json \
+              --reason-code FULL_TEST_FAILURE
+            exit 1
+          fi
+
+      - name: Reject any actual change outside the role allowlist
+        if: steps.result.outputs.status == 'READY_FOR_PR'
+        env:
+          ROLE: ${{ steps.plan.outputs.role }}
+        run: |
+          python - <<'PY'
+          import os, subprocess
+          from agents.autonomous_cloud_runner import load_config, path_allowed
+          cfg=load_config(); role=os.environ['ROLE']
+          raw=subprocess.check_output(['git','status','--porcelain','-z'])
+          entries=[e.decode('utf-8','strict') for e in raw.split(b'\0') if e]
+          if not entries:
+              raise SystemExit('READY_FOR_PR without repository changes')
+          bad=[]
+          for entry in entries:
+              path=entry[3:]
+              if ' -> ' in path:
+                  path=path.split(' -> ',1)[1]
+              if not path_allowed(cfg, role, path):
+                  bad.append(path)
+          if bad:
+              raise SystemExit('Autonomous change escaped role allowlist: '+', '.join(sorted(bad)))
+          PY
+
+      - id: publish
+        name: Commit candidate branch and open PR without merge authority
+        if: steps.result.outputs.status == 'READY_FOR_PR'
+        env:
+          BRANCH: ${{ steps.plan.outputs.branch }}
+          ROLE: ${{ steps.plan.outputs.role }}
+          TASK_ID: ${{ steps.plan.outputs.task_id }}
+        run: |
+          git add -A
+          git diff --cached --check
+          git commit -m "autonomous($ROLE): $TASK_ID bounded candidate"
+          HEAD_SHA="$(git rev-parse HEAD)"
+          git push origin "$BRANCH"
+          PR_URL="$(gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$BRANCH" \
+            --title "autonomous($ROLE): $TASK_ID candidate" \
+            --body "Autonomous cost-bounded specialist candidate for $TASK_ID. No merge or live-trading authority. Requires exact-head Security and Reliability plus manual Lead Integrator review. Insufficient evidence remains WAIT / RESEARCH_ONLY.")"
+          PR_NUMBER="${PR_URL##*/}"
+          gh workflow run security.yml --repo "$GITHUB_REPOSITORY" --ref "$BRANCH"
+          python agents/autonomous_cloud_state.py mark-pr \
+            --state /tmp/runner_state.json \
+            --branch "$BRANCH" \
+            --pr-number "$PR_NUMBER" \
+            --head-sha "$HEAD_SHA"
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Persist sanitized durable state to non-main branch
+        if: always()
+        env:
+          STATE_BRANCH: ${{ steps.meta.outputs.state_branch }}
+        run: |
+          test -f /tmp/runner_state.json || exit 0
+          test "$STATE_BRANCH" != "main" -a "$STATE_BRANCH" != "master"
+          if ! git ls-remote --exit-code --heads origin "refs/heads/$STATE_BRANCH" >/dev/null 2>&1; then
+            git push origin '${{ steps.meta.outputs.main_sha }}':"refs/heads/$STATE_BRANCH"
+          fi
+          CONTENT="$(base64 -w0 /tmp/runner_state.json)"
+          EXISTING_SHA="$(gh api "repos/$GITHUB_REPOSITORY/contents/runner_state.json?ref=$STATE_BRANCH" --jq .sha 2>/dev/null || true)"
+          if [ -n "$EXISTING_SHA" ]; then
+            gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/runner_state.json" \
+              -f message='Update autonomous specialist runner state' \
+              -f content="$CONTENT" \
+              -f branch="$STATE_BRANCH" \
+              -f sha="$EXISTING_SHA" >/dev/null
+          else
+            gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/runner_state.json" \
+              -f message='Initialize autonomous specialist runner state' \
+              -f content="$CONTENT" \
+              -f branch="$STATE_BRANCH" >/dev/null
+          fi
+
+      - name: Fail workflow after bounded agent failure
+        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'failure'
+        run: exit 1
