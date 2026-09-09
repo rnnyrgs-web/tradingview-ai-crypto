@@ -155,7 +155,7 @@ def test_retry_delay_honors_and_caps_retry_after():
     assert _retry_delay(_HeadersOnlyResponse("invalid"), 1) == 10.0
 
 
-def test_hourly_workflows_keep_cost_routing_and_verified_auto_merge_enabled():
+def test_hourly_workflows_keep_cost_routing_and_lead_review_only():
     specialist_workflow = open(
         ".github/workflows/autonomous_agents.yml", encoding="utf-8"
     ).read()
@@ -166,6 +166,10 @@ def test_hourly_workflows_keep_cost_routing_and_verified_auto_merge_enabled():
     assert "OPENAI_AGENT_MODEL: gpt-5.6-luna" in specialist_workflow
     assert "'gpt-5.6-sol' || 'gpt-5.6-luna'" in specialist_workflow
     assert "OPENAI_AGENT_MODEL: gpt-5.6-sol" in lead_workflow
-    assert 'AUTONOMOUS_MERGE_ENABLED: "true"' in lead_workflow
+    assert 'AUTONOMOUS_MERGE_ENABLED: "false"' in lead_workflow
+    assert "contents: read" in lead_workflow
+    assert "contents: write" not in lead_workflow
+    assert "git push origin main" not in lead_workflow
     assert "Require exact candidate Security and Reliability success" in lead_workflow
     assert "Require both AI reviewers to approve" in lead_workflow
+    assert "MANUAL LEAD INTEGRATION REQUIRED" in lead_workflow
