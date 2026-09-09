@@ -11,10 +11,12 @@ from research_heavy_experiment_scheduler import build_heavy_dispatch_plan
 from research_learning import learning_diagnostics
 from research_learning_state import load_state
 from research_quant_science_factory import build_quant_science_queue
+from research_specialist_bridge import enrich_diagnostics_with_specialists
 
 
 def build_factory_report(rows):
     diagnostics = learning_diagnostics(rows)
+    diagnostics, specialist_bridge = enrich_diagnostics_with_specialists(rows, diagnostics)
     memory = load_state()
     queue = build_quant_science_queue(diagnostics, memory)
     heavy_dispatch_plan = build_heavy_dispatch_plan(queue)
@@ -28,6 +30,7 @@ def build_factory_report(rows):
         "resolved_samples": diagnostics.get("resolved_samples"),
         "baseline_precision": diagnostics.get("baseline_precision"),
         "research_priorities": (diagnostics.get("research_priorities") or [])[:10],
+        "specialist_bridge": specialist_bridge,
         "quant_science_queue": queue,
         "experiment_queue": queue,
         "heavy_dispatch_plan": heavy_dispatch_plan,
