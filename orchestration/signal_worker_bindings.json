@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "objective_id": "UNIVERSAL_SIGNAL_DEVELOPMENT_V1",
+  "worker_army": {
+    "major-btc": {"class": "python_research_workers", "signal_role": "bounded BTC chronological strategy research"},
+    "major-eth": {"class": "python_research_workers", "signal_role": "bounded ETH chronological strategy research"},
+    "major-sol": {"class": "python_research_workers", "signal_role": "bounded SOL chronological strategy research"},
+    "major-xrp": {"class": "python_research_workers", "signal_role": "bounded XRP chronological strategy research"},
+    "major-link": {"class": "python_research_workers", "signal_role": "bounded LINK chronological strategy research"},
+    "pons": {"class": "python_research_workers", "signal_role": "bounded PONS research that must fail closed when history is insufficient"},
+    "universe-0": {"class": "python_research_workers", "signal_role": "liquid-universe research shard 0"},
+    "universe-1": {"class": "python_research_workers", "signal_role": "liquid-universe research shard 1"},
+    "universe-2": {"class": "python_research_workers", "signal_role": "liquid-universe research shard 2"},
+    "universe-3": {"class": "python_research_workers", "signal_role": "liquid-universe research shard 3"},
+    "universe-4": {"class": "python_research_workers", "signal_role": "liquid-universe research shard 4"},
+    "universe-5": {"class": "python_research_workers", "signal_role": "liquid-universe research shard 5"},
+    "universe-6": {"class": "python_research_workers", "signal_role": "liquid-universe research shard 6"},
+    "universe-7": {"class": "python_research_workers", "signal_role": "liquid-universe research shard 7"},
+    "swing-majors": {"class": "python_research_workers", "signal_role": "multi-day major-asset research supporting 7d signal development"},
+    "cross-asset-rank-24h": {"class": "cross_asset_rank_24h", "signal_role": "ACC-002 24h liquidity-safe cross-sectional evidence"},
+    "cross-asset-rank-7d": {"class": "cross_asset_rank_7d", "signal_role": "ACC-002 7d liquidity-safe cross-sectional evidence"},
+    "learning-diagnostics": {"class": "learning_diagnostics", "signal_role": "convert resolved correct/error outcomes into falsifiable hypotheses"},
+    "experiment-factory": {"class": "experiment_factory", "signal_role": "convert error hypotheses into bounded predeclared experiments"}
+  },
+  "ai_and_coordination": {
+    "autonomous-cloud-data-market": {"class": "autonomous_cloud_specialist", "signal_role": "resolve highest-value timestamp-safe data/evidence bottleneck, currently ACC-002 liquidity coverage"},
+    "quant-research": {"class": "lead_coordination", "signal_role": "discover and falsify genuine forward quantitative edge"},
+    "signal-accuracy": {"class": "validation_workers", "signal_role": "validate precision, calibration, selectivity, sample sufficiency and deterioration"},
+    "data-market": {"class": "python_research_workers", "signal_role": "protect and improve point-in-time signal inputs and coverage"},
+    "regime-selection": {"class": "validation_workers", "signal_role": "validate when strategies should be trusted or abstain by regime"},
+    "execution-microstructure": {"class": "validation_workers", "signal_role": "test whether apparent signal edge survives realistic execution costs"},
+    "production-risk": {"class": "validation_workers", "signal_role": "protect realized signal quality from concentration, contradiction and weak expectancy"},
+    "testing-security": {"class": "operational_security_workers", "signal_role": "protect validity and authenticity of signal-development evidence; no alpha claim"},
+    "lead-integrator": {"class": "lead_coordination", "signal_role": "prioritize signal-development work and integrate only verified improvements"}
+  },
+  "binding_policy": {
+    "all_outputs_must_trace_to_objective": true,
+    "operational_security_may_claim_alpha": false,
+    "cosmetic_work_may_displace_signal_research": false,
+    "exception": "Safety/reliability work may preempt only when necessary to protect evidence validity, availability, authenticity, or fail-closed operation."
+  }
+}
