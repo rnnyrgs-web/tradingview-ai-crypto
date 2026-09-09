@@ -55,11 +55,31 @@ def _eligible(experiment: dict) -> bool:
         return False
     design = _science_design(experiment)
     if design:
+        if design.get("research_only") is not True:
+            return False
         if design.get("parameter_mining_allowed") is not False:
             return False
         if design.get("untouched_oos_reuse_allowed") is not False:
             return False
         if design.get("forward_evidence_pooled_with_oos") is not False:
+            return False
+        if design.get("predeclared_search_budget") != 1:
+            return False
+        if design.get("max_candidate_mutations") != 1:
+            return False
+        if design.get("multiple_testing_firewall_required") is not True:
+            return False
+        if design.get("independent_replication_required") is not True:
+            return False
+        if design.get("genuine_forward_replication_required") is not True:
+            return False
+        if design.get("duplicate_hypothesis_research_penalty_required") is not True:
+            return False
+        if design.get("paid_compute_escalation_allowed") is not False:
+            return False
+        if design.get("idea_generation_counts_as_evidence") is not False:
+            return False
+        if int(experiment.get("source_independent_samples") or 0) < int(design.get("minimum_evaluation_samples") or 0):
             return False
         # New quant-science designs must explicitly identify an implemented,
         # research-only executor before they can consume scarce heavy compute.
@@ -135,7 +155,7 @@ def build_heavy_dispatch_plan(experiment_queue: dict, *, running_experiment_ids=
         "blocked_candidate_count": blocked_count,
         "selected_count": len(selected),
         "selected": selected,
-        "priority_policy": "expected genuine signal-quality impact x information/falsification value x probability of actionable evidence / compute/API cost; blocked natural-history or unsupported-executor work is deferred; ties prefer restrictive abstention-first science",
+        "priority_policy": "expected genuine signal-quality impact x information/falsification value x probability of actionable evidence / compute/API cost; blocked natural-history or unsupported-executor work is deferred; every admitted science design must be one-search, one-mutation, no-mining, no-OOS-reuse, multiple-testing protected, replication-required and no-paid-compute-escalation; ties prefer restrictive abstention-first science",
         "trade_authority": False,
         "promotion_authority": False,
         "strategy_mutation_authority": False,
