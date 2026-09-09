@@ -104,6 +104,7 @@ def insert_paper_signal_decision(row):
     r = http.post(
         f"{SUPABASE_URL}/rest/v1/paper_signal_decisions",
         headers=headers("resolution=ignore-duplicates,return=representation"),
+        params={"on_conflict":"signal_key"},
         json=payload,
     )
     if r.status_code >= 300:
