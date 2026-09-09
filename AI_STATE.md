@@ -72,6 +72,11 @@ PR #99 `Measure selective high-confidence signal precision on current main` was 
 
 The module measures resolved 24h/7d precision for fixed, predeclared evidence-score cutoffs 60/70/80/90, minimum samples >=30, Wilson 95% lower bounds, and excludes observations explicitly recorded with unreliable market consensus. Missing historical consensus fields are not fabricated. Output is descriptive research only with `trade_authority=false`, `promotion_authority=false`, and `probability_claim=false`. No production signal gate or strategy fingerprint changed. No accuracy improvement claim is authorized until genuine resolved evidence supports one.
 
+## RESOLVED SELECTIVE-PRECISION OBSERVABILITY — COMPLETE
+PR #101 `Expose resolved selective precision observability` exact tested head `cd9a8a07f8244c521e6cab4eeb7a33b16c8cac92` passed Security and Reliability run `34299614199` (#766) and was squash-merged as `e1d1a2309a84c9760c90b93172f4c3b0f7214859`.
+
+A protected read-only `/selective-precision` endpoint now feeds only genuinely resolved prediction-ledger rows into the fixed-threshold PR #99 measurement. It explicitly reports `research_only=true`, `trade_authority=false`, `promotion_authority=false`, and `threshold_selection_authority=false`. No threshold selection, production strategy behavior, broker connectivity, paper-ledger behavior, market-data source, or cost policy changed. No accuracy or profitability improvement claim is authorized from this observability layer alone.
+
 ## CONTINUOUS AI OBSERVER RATE-LIMIT BACKOFF — COMPLETE AND LIVE
 Fresh production logs on 2026-09-09 showed the read-only continuous AI observer repeatedly failing with `RateLimitError` roughly every configured 300 seconds while `/health`, `/scan`, and paper risk behavior remained healthy. This was a cost/reliability inefficiency, not a trading-strategy failure.
 
@@ -102,7 +107,7 @@ Preserve stable exact strategy fingerprints while genuine forward observations a
 Current old open PRs #34, #33 and #13 predate the current architecture. Do not merge them merely because they are open or historically green. Re-evaluate against current main, current invariants and exact-head CI first; close/supersede when appropriate.
 
 ## EXACT NEXT STEP
-1. Wire the PR #99 selective-precision measurement into a read-only research/observability path using genuinely resolved prediction-ledger rows, without creating production trade authority or selecting a winner from forward/untouched outcomes.
+1. Verify PR #101 auto-deploy and protected `/selective-precision` endpoint health; treat output as descriptive research only.
 2. Enrich only future prediction-ledger records with timestamp-safe pre-forecast agreement/provenance fields needed to test genuinely independent signal agreement (for example reliable market-consensus state). Never retroactively fabricate those fields for historical rows.
 3. Continue ACC-002 genuine 24h/7d OOS/forward evidence and worker-health monitoring. No profitability or accuracy-improvement claim unless genuine evidence passes.
 4. Verify subsequent live cycles honor the new continuous-AI rate-limit backoff (no repeated 5-minute retry loop while quota remains exhausted) and that normal cadence resumes after a successful cycle.
