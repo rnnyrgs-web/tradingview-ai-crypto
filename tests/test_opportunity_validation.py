@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 import opportunity_engine as oe
 
 
@@ -13,6 +15,24 @@ def _allow_execution(monkeypatch):
         "assess_execution_risk",
         lambda *_args, **_kwargs: type("R", (), {"blocked": False, "reasons": ()})(),
     )
+
+
+def _independent_calibration_rows(count=30):
+    start = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    rows = []
+    for i in range(count):
+        due = start + timedelta(days=i + 1)
+        rows.append({
+            "scan_id": f"cal-{i}",
+            "symbol": "ETH-USDT",
+            "horizon": "24h",
+            "score": 90,
+            "market_regime": "BULL_TREND",
+            "correct": True,
+            "due_at": due.isoformat(),
+            "resolved_at": due.isoformat(),
+        })
+    return rows
 
 
 def test_ai_trade_is_downgraded_without_full_research_validation(monkeypatch):
@@ -47,10 +67,7 @@ def test_exact_promoted_strategy_can_preserve_trade(monkeypatch):
     persisted = []
     monkeypatch.setattr(oe, "replace_opportunities", lambda scan_id, horizon, rows: persisted.extend(rows))
     monkeypatch.setattr(oe, "insert_prediction_ledger", lambda rows: None)
-    monkeypatch.setattr(oe, "fetch_resolved_predictions", lambda: [
-        {"horizon":"24h","score":90,"market_regime":"BULL_TREND","correct":True}
-        for _ in range(30)
-    ])
+    monkeypatch.setattr(oe, "fetch_resolved_predictions", _independent_calibration_rows)
     monkeypatch.setattr(
         oe,
         "validate_live_strategy",
@@ -86,10 +103,7 @@ def test_exact_promoted_strategy_can_preserve_trade(monkeypatch):
 def test_unreliable_market_consensus_blocks_otherwise_promoted_trade(monkeypatch):
     monkeypatch.setattr(oe, "replace_opportunities", lambda *args: None)
     monkeypatch.setattr(oe, "insert_prediction_ledger", lambda rows: None)
-    monkeypatch.setattr(oe, "fetch_resolved_predictions", lambda: [
-        {"horizon":"24h","score":90,"market_regime":"BULL_TREND","correct":True}
-        for _ in range(30)
-    ])
+    monkeypatch.setattr(oe, "fetch_resolved_predictions", _independent_calibration_rows)
     monkeypatch.setattr(
         oe, "validate_live_strategy",
         lambda *args: type("D", (), {
