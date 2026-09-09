@@ -10,10 +10,11 @@ from __future__ import annotations
 
 import hashlib
 import math
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 
 MIN_MATCHED_PERIODS = {"24h": 20, "7d": 12}
+HORIZON_SPAN = {"24h": timedelta(hours=24), "7d": timedelta(days=7)}
 BOOTSTRAP_RESAMPLES = 500
 MIN_PAIRWISE_WIN_RATE = 0.55
 
@@ -44,17 +45,32 @@ def _cost_pct(identity):
     return bps * 3.0 / 100.0
 
 
-def _bucket_seconds(horizon):
-    return 7 * 24 * 3600 if horizon == "7d" else 24 * 3600
+def _stable_identity(row):
+    return (
+        str(row.get("scan_id") or ""),
+        str(row.get("symbol") or ""),
+        str(row.get("direction") or ""),
+        str(row.get("score") or ""),
+    )
 
 
 def _independent_map(predictions, identity, horizon):
+    """Return exact due-time keyed, full-horizon non-overlapping evidence.
+
+    Fixed UTC day/week buckets can falsely label nearly identical forecast
+    windows as independent when they straddle a calendar boundary. We instead
+    reconstruct each immutable forecast window as ``due_at - horizon -> due_at``
+    and greedily de-overlap without inspecting its outcome. Exact ``due_at`` is
+    used as the matching key so champion and challenger are compared on the same
+    future endpoint rather than merely the same calendar bucket.
+    """
     fp = _fingerprint(identity)
     cost = _cost_pct(identity)
-    if len(fp) != 64 or cost is None:
+    span = HORIZON_SPAN.get(horizon)
+    if len(fp) != 64 or cost is None or span is None:
         return {}
-    buckets = {}
-    seconds = _bucket_seconds(horizon)
+
+    valid = []
     for row in predictions or []:
         if str(row.get("horizon") or "") != horizon:
             continue
@@ -62,8 +78,9 @@ def _independent_map(predictions, identity, horizon):
             continue
         if row.get("correct") is None:
             continue
-        dt = _parse_dt(row.get("due_at") or row.get("resolved_at"))
-        if dt is None:
+        due = _parse_dt(row.get("due_at"))
+        resolved = _parse_dt(row.get("resolved_at"))
+        if due is None or resolved is None or resolved < due:
             continue
         try:
             ret = float(row.get("directional_return_pct"))
@@ -71,12 +88,18 @@ def _independent_map(predictions, identity, horizon):
             continue
         if not math.isfinite(ret):
             continue
-        bucket = int(dt.timestamp()) // seconds
-        net = ret - cost
-        current = buckets.get(bucket)
-        if current is None or dt > current["dt"]:
-            buckets[bucket] = {"dt": dt, "net_return_pct": net}
-    return buckets
+        origin = due - span
+        valid.append((origin, due, _stable_identity(row), ret - cost))
+
+    valid.sort(key=lambda item: (item[0], item[1], item[2]))
+    selected = {}
+    covered_until = None
+    for origin, due, _stable, net in valid:
+        if covered_until is not None and origin < covered_until:
+            continue
+        selected[due.isoformat()] = {"dt": due, "net_return_pct": net}
+        covered_until = due
+    return selected
 
 
 def _bootstrap_mean_lower(values, seed_material):
@@ -147,7 +170,7 @@ def compare_challenger(predictions, champion_identity, challenger_identity, hori
         "challenger_fingerprint": challenger_fp,
         "matched_independent_periods": total,
         "minimum_matched_periods": required,
-        "independence_policy": "matched_horizon_sized_due_at_buckets_only",
+        "independence_policy": "matched_exact_due_at_full_horizon_non_overlapping_windows_only",
         "cost_policy": "subtract_3x_each_strategy_backtest_cost_before_pairwise_comparison",
         "champion_after_cost_mean_pct": round(champion_avg, 6),
         "challenger_after_cost_mean_pct": round(challenger_avg, 6),
