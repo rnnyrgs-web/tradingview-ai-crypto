@@ -58,17 +58,22 @@ def summarize_kraken_microstructure(
     if not isinstance(book, dict):
         return _base_result(pair, "missing_public_book")
 
-    now_ms = int(now_ms if now_ms is not None else time.time() * 1000)
+    try:
+        now_ms = int(now_ms if now_ms is not None else time.time() * 1000)
+    except (TypeError, ValueError, OverflowError):
+        return _base_result(pair, "invalid_observation_clock")
     try:
         observed_ms = int(book.get("observed_ms"))
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return _base_result(pair, "missing_book_timestamp")
 
     try:
         age_seconds = (now_ms - observed_ms) / 1000.0
         max_age = float(max_age_seconds)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return _base_result(pair, "invalid_age_policy", observed_ms)
+    if not math.isfinite(age_seconds):
+        return _base_result(pair, "invalid_book_timestamp", observed_ms)
     if not math.isfinite(max_age) or max_age < 0:
         return _base_result(pair, "invalid_age_policy", observed_ms)
     if age_seconds < -MAX_FUTURE_SKEW_SECONDS:
@@ -78,7 +83,7 @@ def summarize_kraken_microstructure(
 
     try:
         levels_wanted = int(depth_levels)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return _base_result(pair, "invalid_depth_levels", observed_ms)
     if levels_wanted < 1 or levels_wanted > 100:
         return _base_result(pair, "invalid_depth_levels", observed_ms)
