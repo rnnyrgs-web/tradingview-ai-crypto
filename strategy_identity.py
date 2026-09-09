@@ -15,8 +15,17 @@ IDENTITY_SOURCE_FILES = (
     "features.py",
     "robustness.py",
     "strategy_families.py",
+    "strategy_identity.py",
 )
 FAMILY_ALIASES = {"relative_strength_btc": "relative_strength"}
+SUPPORTED_STRATEGY_FAMILIES = frozenset({
+    "trend",
+    "breakout",
+    "momentum",
+    "mean_reversion",
+    "volatility_expansion",
+    "relative_strength",
+})
 
 
 def normalize_family(value: str) -> str:
@@ -36,18 +45,30 @@ def research_code_sha256() -> str:
 
 
 def build_strategy_identity(symbol: str, horizon: str, strategy_family: str) -> dict:
+    normalized_symbol = str(symbol or "").strip().upper()
     normalized_horizon = str(horizon or "").strip()
     family = normalize_family(strategy_family)
     bars = tuple(HORIZONS.get(normalized_horizon, {}).get("bars", ()))
+    identity_complete = bool(
+        normalized_symbol
+        and bars
+        and family in SUPPORTED_STRATEGY_FAMILIES
+    )
     identity = {
-        "symbol": str(symbol or "").strip().upper(),
+        "symbol": normalized_symbol,
         "production_horizon": normalized_horizon,
         "strategy_family": family,
         "timeframes": list(bars),
         "strategy_version": STRATEGY_VERSION,
         "backtest_cost_bps": float(BACKTEST_COST_BPS),
         "research_code_sha256": research_code_sha256(),
+        "identity_complete": identity_complete,
     }
-    canonical = json.dumps(identity, sort_keys=True, separators=(",", ":"))
-    identity["fingerprint"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    if identity_complete:
+        canonical = json.dumps(identity, sort_keys=True, separators=(",", ":"))
+        identity["fingerprint"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    else:
+        # Missing/unsupported strategy attribution must never look like a valid
+        # immutable strategy fingerprint or accumulate genuine-forward proof.
+        identity["fingerprint"] = ""
     return identity
