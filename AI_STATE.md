@@ -5,7 +5,7 @@ Last updated: 2026-09-09
 Authoritative continuation state for `rnnyrgs-web/tradingview-ai-crypto`. Read this file from current `main` in full before development. Never infer project state only from ChatGPT memory. Update this file after every completed development/integration cycle.
 
 ## CURRENT MAIN / ARCHITECTURE
-Current runtime integration baseline after PR #149: `87ddac3364452eeb5bdfc46262976f96c5e57af7`.
+Current runtime integration baseline after PR #151: `015e6f034c88f703995426406cbd345cf28c6e3b`.
 
 Production: GitHub -> Render -> Python/FastAPI V3 -> Supabase. Production scans run about every 15 minutes and produce separate 24h/7d Top-20 rankings. Continuous research/backtesting runs on the existing Render coordinator with bounded heavy concurrency under the USD 30/month ceiling.
 
@@ -76,6 +76,10 @@ PR #147 (`6d23e70b8d87ffdcd469bc64546c8505df7f8e79`) integrated conservative Kra
 
 PR #149 exact candidate head `3f28245707b303ddcce5b3a744c83c77fe65b9a6` passed Security and Reliability run `34365409917` (#1110), including unit tests, dependency vulnerability audit, static security scan and committed-secret scan, before squash merge as `87ddac3364452eeb5bdfc46262976f96c5e57af7`.
 
+PR #151 fixed a confirmed coordinator-supervision false positive. With the default single general-heavy semaphore lane, logical workers can legitimately remain in `starting` while queued longer than the normal stale-heartbeat threshold; the prior supervisor therefore intermittently marked healthy queued workers stale and emitted rollback recommendations despite continued completions and zero worker failures/timeouts/restarts. Exact head `635af4f5f96aed418d0fcc902ae2bd3db5b88b70` passed Security and Reliability run `34374345543` (#1119) before squash merge as `015e6f034c88f703995426406cbd345cf28c6e3b`. `starting` queue wait is no longer treated as stale; running/resting/error workers remain heartbeat-supervised, crashed loop tasks remain fail-closed and independently restarted. No concurrency, cost, signal, broker, promotion, OOS, chronology or paper-ledger behavior changed.
+
+Pre-#151 live evidence showed intermittent stale-worker rollback recommendations while completed jobs continued increasing with `worker_failed=0`, `worker_timeouts=0`, `task_restarts=0` and no crashed workers. The same live window also showed ACC-002 still fail-closed with aggregate failures exclusively `InsufficientHistory`; do not infer a signal-quality change from this reliability fix. Post-deployment canary evidence must be monitored prospectively before declaring the false-positive symptom eliminated in live operation.
+
 Stale PR #142 was closed as superseded after #149 passed exact-head CI and merged. Temporary isolated-branch integration PR #148 was used only to place the change set onto the latest main baseline; it did not merge directly to main.
 
 GitHub currently reports `main` branch protection disabled. Workflow-level exact-head/manual-review controls remain mandatory. Enable branch/ruleset protection for defense in depth when repository-admin access is available; do not weaken current controls in the meantime.
@@ -90,14 +94,15 @@ Preserve exact strategy fingerprints while genuine forward observations accumula
 ## CURRENT OPEN DEVELOPMENT
 Persistent specialist priorities live in `orchestration/specialist_coordination.json`. Specialists must follow current-main queue ownership/dependencies and may not use coordination state to bypass evidence gates.
 
-PRs #120/#121/#141/#147/#149 are integrated and must not be re-applied. PR #142 is closed/superseded. Old PRs #105, #34, #33 and #13 remain stale/non-mergeable and must not be merged as-is. Any other open PR must be rechecked against current `main`, exact-head Security and Reliability, and current safety invariants before integration.
+PRs #120/#121/#141/#147/#149/#151 are integrated and must not be re-applied. PR #142 is closed/superseded. Old PRs #105, #34, #33 and #13 remain stale/non-mergeable and must not be merged as-is. PR #140 is stale against current main and must not be merged as-is. Any other open PR must be rechecked against current `main`, exact-head Security and Reliability, and current safety invariants before integration.
 
 ## EXACT NEXT STEP
-1. Treat ACC-002 as a natural-history accumulation blocker while aggregate failures remain purely `InsufficientHistory`. Keep `minimum_subset_coverage=0.80`, the two-supported-subset requirement, Top-N ordering and untouched OOS unchanged. Re-check only when genuine coverage materially changes.
-2. Use the PR #149 learning/experiment contract to inspect genuinely resolved independent prediction errors and select the highest-information READY challenger by expected after-cost signal-quality impact, falsification value, actionable-evidence probability, compute/API cost and overfitting risk. Do not repeat a prior disproven experiment unless its conditions materially changed.
-3. Prefer restrictive hypotheses that can plausibly improve genuine signal quality after costs: stricter WAIT/abstention, regime conditioning, cross-sectional/residual information, calibration, execution/microstructure filtering, or a predeclared challenger. Every candidate must keep chronology, untouched OOS, multiple-testing, point-in-time universe, cost stress, robustness and genuine-forward proof intact.
-4. Allow PR #129 microstructure and PR #123 future-only consensus evidence to accumulate naturally. Do not reconstruct historical order books, infer hidden liquidity, or backfill consensus.
-5. Monitor the authentic paper ledger under the PR #147 Kraken execution model and PR #127 cross-horizon conflict suppression without rewriting history. Paper results remain evidence only.
-6. Preserve empty `live_promotions.json`, unused signing keys, broker-disconnected state, immutable $100k paper ledger, bounded heavy concurrency and the USD 30/month ceiling.
-7. Keep exact-head Security and Reliability/manual compatibility review mandatory for every merge. Enable GitHub main branch/ruleset protection separately when repository-admin access is available.
-8. Optimize genuine after-cost risk-adjusted realized performance with abstention and tail protection, never headline accuracy alone.
+1. Verify PR #151 prospectively in coordinator canary/observability: queued `starting` workers must no longer trigger stale-worker rollback recommendations, while genuinely stale running/resting/error or crashed workers must remain fail-closed. Do not weaken watchdog semantics to make the canary green.
+2. Treat ACC-002 as a natural-history accumulation blocker while aggregate failures remain purely `InsufficientHistory`. Keep `minimum_subset_coverage=0.80`, the two-supported-subset requirement, Top-N ordering and untouched OOS unchanged. Re-check only when genuine coverage materially changes.
+3. Use the PR #149 learning/experiment contract to inspect genuinely resolved independent prediction errors and select the highest-information READY challenger by expected after-cost signal-quality impact, falsification value, actionable-evidence probability, compute/API cost and overfitting risk. Do not repeat a prior disproven experiment unless its conditions materially changed.
+4. Prefer restrictive hypotheses that can plausibly improve genuine signal quality after costs: stricter WAIT/abstention, regime conditioning, cross-sectional/residual information, calibration, execution/microstructure filtering, or a predeclared challenger. Every candidate must keep chronology, untouched OOS, multiple-testing, point-in-time universe, cost stress, robustness and genuine-forward proof intact.
+5. Allow PR #129 microstructure and PR #123 future-only consensus evidence to accumulate naturally. Do not reconstruct historical order books, infer hidden liquidity, or backfill consensus.
+6. Monitor the authentic paper ledger under the PR #147 Kraken execution model and PR #127 cross-horizon conflict suppression without rewriting history. Paper results remain evidence only.
+7. Preserve empty `live_promotions.json`, unused signing keys, broker-disconnected state, immutable $100k paper ledger, bounded heavy concurrency and the USD 30/month ceiling.
+8. Keep exact-head Security and Reliability/manual compatibility review mandatory for every merge. Enable GitHub main branch/ruleset protection separately when repository-admin access is available.
+9. Optimize genuine after-cost risk-adjusted realized performance with abstention and tail protection, never headline accuracy alone.
