@@ -60,6 +60,36 @@ def risk_plan(features, direction, horizon):
     validate_risk(direction,entry,stop,t1,t2)
     return {"entry":entry,"stop":stop,"t1":t1,"t2":t2,"rr":1.9}
 
+def _preflight_opportunity_risk(candidates):
+    """Remove only horizons whose current ATR risk geometry is not representable.
+
+    A very volatile low-priced asset can legitimately imply a negative target or
+    stop under the fixed ATR geometry. We must not clamp or manufacture a valid
+    looking plan. Instead that symbol/horizon fails closed to WAIT by being
+    omitted from the opportunity builder for this scan. Other horizons for the
+    same asset remain eligible.
+    """
+    eligible=[]
+    rejected=[]
+    for candidate in candidates:
+        horizons=dict(candidate.get("horizons") or {})
+        for horizon in ("24h","7d"):
+            hv=horizons.get(horizon)
+            if not isinstance(hv,dict):
+                continue
+            score=float(hv.get("score") or 0.0)
+            direction="LONG" if score>=0 else "SHORT"
+            try:
+                risk_plan(hv.get("features") or {},direction,horizon)
+            except (SafetyError, KeyError, StopIteration, TypeError, ValueError):
+                horizons.pop(horizon,None)
+                rejected.append({"symbol":candidate.get("symbol"),"horizon":horizon})
+        if horizons:
+            eligible.append({**candidate,"horizons":horizons})
+    if rejected:
+        log.info("Opportunity risk preflight safely suppressed %s unrepresentable symbol/horizon plans",len(rejected))
+    return eligible,rejected
+
 def compact(c):
     return {
         "symbol":c["symbol"],
@@ -174,8 +204,9 @@ def run_scan():
     opportunity_error=None
     opportunity_failure=None
     opportunities={"24h":[],"7d":[]}
+    opportunity_candidates,risk_preflight_rejections=_preflight_opportunity_risk(deep)
     try:
-        opportunities=build_opportunities(scan_id,deep,signals,regime,risk_plan)
+        opportunities=build_opportunities(scan_id,opportunity_candidates,signals,regime,risk_plan)
     except Exception as e:
         opportunity_error=type(e).__name__
         opportunity_failure=safe_failure("opportunity_persistence", e)
@@ -194,7 +225,11 @@ def run_scan():
         if not c or horizon not in HORIZONS or direction not in {"LONG","SHORT"}:
             continue
 
-        plan=risk_plan(c["horizons"][horizon]["features"],direction,horizon)
+        try:
+            plan=risk_plan(c["horizons"][horizon]["features"],direction,horizon)
+        except (SafetyError, KeyError, StopIteration, TypeError, ValueError):
+            log.info("AI signal safely skipped because risk geometry is unrepresentable: symbol=%s horizon=%s",symbol,horizon)
+            continue
         validation=validate_live_strategy(symbol,horizon,strategy_family)
         consensus=c.get("market_consensus", {})
         execution_risk=assess_execution_risk(c,direction)
@@ -251,6 +286,7 @@ def run_scan():
         "scan_errors":errors[:20],"ai_error":ai_error,
         "opportunities_saved":{"24h":len(opportunities.get("24h",[])),"7d":len(opportunities.get("7d",[]))},
         "opportunity_error":opportunity_error,"opportunity_failure":opportunity_failure,
+        "risk_preflight_rejection_count":len(risk_preflight_rejections),
         "global_risk_wait":global_risk.blocked,
         "global_risk_reasons":list(global_risk.reasons),
     }
