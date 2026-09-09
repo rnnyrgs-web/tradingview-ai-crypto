@@ -5,6 +5,7 @@ on:
   workflow_run:
     workflows:
       - Autonomous Specialist Agents
+      - Cost-Bounded Autonomous Cloud Specialist
     types:
       - completed
   schedule:
