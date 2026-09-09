@@ -166,7 +166,7 @@ def _multiple_testing_policy(memory):
         "alpha_this_trial": round(alpha_this_trial, 10),
         "validation_confidence_z": round(z, 6),
         "requires_adjusted_lower_above_baseline_precision": True,
-        "oos_remains_sealed_until_pass": True,
+        "oos_sealed_pending_gate": True,
     }
 
 
