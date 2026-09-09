@@ -8,6 +8,7 @@ from pathlib import Path
 
 from db import fetch_shadow_predictions
 from research_experiment_factory import build_experiment_queue
+from research_heavy_experiment_scheduler import build_heavy_dispatch_plan
 from research_learning import learning_diagnostics
 from research_learning_state import load_state
 
@@ -16,6 +17,7 @@ def build_factory_report(rows):
     diagnostics = learning_diagnostics(rows)
     memory = load_state()
     queue = build_experiment_queue(diagnostics, memory)
+    heavy_dispatch_plan = build_heavy_dispatch_plan(queue)
     return {
         "ok": True,
         "research_only": True,
@@ -27,6 +29,7 @@ def build_factory_report(rows):
         "baseline_precision": diagnostics.get("baseline_precision"),
         "research_priorities": (diagnostics.get("research_priorities") or [])[:10],
         "experiment_queue": queue,
+        "heavy_dispatch_plan": heavy_dispatch_plan,
     }
 
 
