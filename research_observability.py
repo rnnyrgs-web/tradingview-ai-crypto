@@ -221,6 +221,16 @@ def _latency_summary(values) -> dict[str, Any]:
     }
 
 
+def _worker_evidence(by_name: dict, name: str) -> dict[str, Any]:
+    row = by_name.get(name) if isinstance(by_name.get(name), dict) else {}
+    return {
+        "last_exit_code": row.get("last_exit_code"),
+        "elapsed_seconds": row.get("elapsed_seconds"),
+        "updated_at_ms": row.get("updated_at_ms"),
+        "latest_evidence": row.get("latest_evidence") if isinstance(row.get("latest_evidence"), dict) else None,
+    }
+
+
 def snapshot(*, metrics_dir=None) -> dict[str, Any]:
     root, state_path, lock_path = _paths(metrics_dir)
     root.mkdir(parents=True, exist_ok=True)
@@ -247,15 +257,11 @@ def snapshot(*, metrics_dir=None) -> dict[str, Any]:
     completed = max(0, int(workers.get("completed") or 0))
     failed = max(0, int(workers.get("failed") or 0))
     by_name = workers.get("by_name") if isinstance(workers.get("by_name"), dict) else {}
-    acc002 = {}
-    for name in ("cross-asset-rank-24h", "cross-asset-rank-7d"):
-        row = by_name.get(name) if isinstance(by_name.get(name), dict) else {}
-        acc002[name] = {
-            "last_exit_code": row.get("last_exit_code"),
-            "elapsed_seconds": row.get("elapsed_seconds"),
-            "updated_at_ms": row.get("updated_at_ms"),
-            "latest_evidence": row.get("latest_evidence") if isinstance(row.get("latest_evidence"), dict) else None,
-        }
+    acc002 = {
+        name: _worker_evidence(by_name, name)
+        for name in ("cross-asset-rank-24h", "cross-asset-rank-7d")
+    }
+    adaptive_accuracy = _worker_evidence(by_name, "adaptive-accuracy")
 
     return {
         "research_only": True,
@@ -294,4 +300,5 @@ def snapshot(*, metrics_dir=None) -> dict[str, Any]:
             "last_event_at_ms": workers.get("last_event_at_ms"),
         },
         "acc002": acc002,
+        "adaptive_accuracy": adaptive_accuracy,
     }
