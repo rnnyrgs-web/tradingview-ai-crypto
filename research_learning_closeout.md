@@ -1,0 +1,1 @@
+Initial implementation complete on branch; exact-head CI and worker integration remain required before merge.
