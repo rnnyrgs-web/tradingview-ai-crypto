@@ -25,7 +25,8 @@ def build_selective_wait_fusion(*, meta_wait, regime_strategy, economic_calibrat
     for row in (meta_wait or {}).get("groups") or []:
         expectancy = row.get("after_cost_expectancy_pct")
         if row.get("ready_for_research") and expectancy is not None and float(expectancy) <= 0.0:
-            key = f"meta_wait:{row.get('dimension')}={row.get('group')}"
+            horizon = str(row.get("horizon") or "unknown")
+            key = f"meta_wait:{horizon}:{row.get('dimension')}={row.get('group')}"
             _add(votes, key, "meta_wait", row.get("samples"), row)
 
     for horizon, report in ((regime_strategy or {}).get("horizons") or {}).items():
@@ -80,7 +81,7 @@ def build_selective_wait_fusion(*, meta_wait, regime_strategy, economic_calibrat
         "research_only": True,
         "objective": objective_reference("selective-wait-fusion", "learning_diagnostics"),
         "restrictive_hypotheses": hypotheses,
-        "policy": "Fusion ranks abstention experiments only. Agreement between diagnostics is not proof and cannot alter production without the canonical validation chain.",
+        "policy": "Fusion ranks abstention experiments only. Agreement between diagnostics is not proof and cannot alter production without the canonical validation chain. Horizon-specific evidence is never pooled across 24h and 7d.",
         "untouched_oos_opened": False,
         "trade_authority": False,
         "promotion_authority": False,
