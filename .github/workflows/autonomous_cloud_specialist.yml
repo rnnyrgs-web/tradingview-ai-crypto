@@ -3,7 +3,7 @@ name: Cost-Bounded Autonomous Cloud Specialist
 on:
   workflow_dispatch:
   schedule:
-    - cron: "41 */3 * * *"
+    - cron: "41 * * * *"
 
 permissions:
   contents: write
