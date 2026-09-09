@@ -84,18 +84,21 @@ def observability_log_payload(army: object) -> dict:
     def compact_acc(name: str) -> dict:
         row = acc002.get(name) if isinstance(acc002.get(name), dict) else {}
         evidence = row.get("latest_evidence") if isinstance(row.get("latest_evidence"), dict) else {}
-        selected = evidence.get("selected_evaluation") if isinstance(evidence.get("selected_evaluation"), dict) else {}
+        selected = evidence.get("selected_oos") if isinstance(evidence.get("selected_oos"), dict) else {}
         return {
             "exit": row.get("last_exit_code"),
             "elapsed_s": row.get("elapsed_seconds"),
             "updated_at_ms": row.get("updated_at_ms"),
+            "research_blocked": evidence.get("research_blocked"),
+            "research_blocked_reason": evidence.get("research_blocked_reason"),
+            "untouched_oos_opened": evidence.get("untouched_oos_opened"),
             "acc002_pass": selected.get("acc002_research_pass"),
             "survivorship_pass": selected.get("acc011_survivorship_pass"),
             "promotion_review": selected.get("eligible_for_promotion_review"),
         }
 
     cache_latency = cache.get("read_latency_ms") if isinstance(cache.get("read_latency_ms"), dict) else {}
-    network_latency = network.get("latency_ms") if isinstance(network.get("latency_ms"), dict) else {}
+    network_latency = network.get("network_latency_ms") if isinstance(network.get("network_latency_ms"), dict) else {}
     return {
         "cache_reads": cache.get("reads_observed"),
         "cache_hit_rate": cache.get("hit_rate"),
