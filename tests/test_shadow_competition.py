@@ -14,6 +14,7 @@ def _rows(identity, horizon, returns, start=None):
     for i, ret in enumerate(returns):
         due = start + i * step
         out.append({
+            "scan_id": f"scan-{i}",
             "horizon": horizon,
             "strategy_identity": identity,
             "correct": ret > 0,
@@ -72,6 +73,7 @@ def test_overlapping_intraday_rows_cannot_inflate_24h_sample_count():
         for i in range(96):
             due = start + timedelta(minutes=15 * i)
             predictions.append({
+                "scan_id": f"{identity['fingerprint'][0]}-{i}",
                 "horizon": "24h",
                 "strategy_identity": identity,
                 "correct": True,
@@ -80,7 +82,43 @@ def test_overlapping_intraday_rows_cannot_inflate_24h_sample_count():
                 "resolved_at": due.isoformat(),
             })
     result = compare_challenger(predictions, champion, challenger, "24h")
-    assert result["matched_independent_periods"] <= 2
+    assert result["matched_independent_periods"] <= 1
+    assert not result["passed"]
+
+
+def test_midnight_boundary_cannot_create_fake_matched_independent_periods():
+    champion = _identity("a")
+    challenger = _identity("b")
+    due_times = [
+        datetime(2026, 1, 2, 23, 59, tzinfo=timezone.utc),
+        datetime(2026, 1, 3, 0, 1, tzinfo=timezone.utc),
+    ]
+    predictions = []
+    for identity, ret in ((champion, 1.0), (challenger, 2.0)):
+        for i, due in enumerate(due_times):
+            predictions.append({
+                "scan_id": f"{identity['fingerprint'][0]}-{i}",
+                "horizon": "24h",
+                "strategy_identity": identity,
+                "correct": True,
+                "directional_return_pct": ret,
+                "due_at": due.isoformat(),
+                "resolved_at": due.isoformat(),
+            })
+    result = compare_challenger(predictions, champion, challenger, "24h")
+    assert result["matched_independent_periods"] == 1
+    assert result["independence_policy"] == "matched_exact_due_at_full_horizon_non_overlapping_windows_only"
+    assert not result["passed"]
+
+
+def test_different_due_endpoints_do_not_count_as_matched_periods():
+    champion = _identity("a")
+    challenger = _identity("b")
+    start = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    champion_rows = _rows(champion, "24h", [1.0] * 20, start)
+    challenger_rows = _rows(challenger, "24h", [2.0] * 20, start + timedelta(minutes=5))
+    result = compare_challenger(champion_rows + challenger_rows, champion, challenger, "24h")
+    assert result["matched_independent_periods"] == 0
     assert not result["passed"]
 
 
