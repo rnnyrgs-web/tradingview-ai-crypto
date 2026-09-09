@@ -12,6 +12,9 @@ from utils import iso, now_utc
 log = logging.getLogger(__name__)
 
 
+PREFLIGHT_CONTEXT_SCHEMA_VERSION = 1
+
+
 def _entry_zone(plan):
     risk = abs(plan["entry"] - plan["stop"])
     pad = risk * 0.10
@@ -23,6 +26,58 @@ def _bounded_multiplier(value, default=0.0):
         return min(1.0, max(0.0, float(value)))
     except (TypeError, ValueError):
         return default
+
+
+def _preforecast_market_context(candidate, captured_at):
+    """Freeze only market evidence that already existed before forecast creation.
+
+    Historical rows are intentionally untouched. This snapshot is embedded only
+    in newly-created prediction-ledger calibration JSON, avoiding any claim that
+    the same fields existed for older forecasts. Quote timestamps are retained so
+    later research can verify chronology instead of trusting a derived flag alone.
+    """
+    consensus = candidate.get("market_consensus") if isinstance(candidate, dict) else None
+    if not isinstance(consensus, dict):
+        return {
+            "schema_version": PREFLIGHT_CONTEXT_SCHEMA_VERSION,
+            "captured_at": captured_at,
+            "market_consensus": {"recorded": False},
+        }
+
+    observations = []
+    for quote in consensus.get("quotes") or []:
+        if not isinstance(quote, dict):
+            continue
+        exchange = str(quote.get("exchange") or "").strip().lower()
+        try:
+            observed_ms = int(quote.get("observed_ms") or 0)
+        except (TypeError, ValueError):
+            observed_ms = 0
+        if exchange and observed_ms > 0:
+            observations.append({"exchange": exchange, "observed_ms": observed_ms})
+
+    provenance = consensus.get("provenance") if isinstance(consensus.get("provenance"), dict) else {}
+    accepted_names = provenance.get("accepted_exchange_names") or []
+    accepted_names = sorted({str(name).strip().lower() for name in accepted_names if str(name).strip()})
+    source_count = int(consensus.get("source_count") or 0)
+    required_source_count = int(consensus.get("required_source_count") or 0)
+
+    return {
+        "schema_version": PREFLIGHT_CONTEXT_SCHEMA_VERSION,
+        "captured_at": captured_at,
+        "market_consensus": {
+            "recorded": True,
+            "reliable_at_forecast": consensus.get("reliable") is True,
+            "reason": str(consensus.get("reason") or "missing"),
+            "independent_source_count": source_count,
+            "required_source_count": required_source_count,
+            "price_range_bps": consensus.get("price_range_bps"),
+            "max_quote_age_seconds": consensus.get("max_quote_age_seconds"),
+            "confidence_multiplier": _bounded_multiplier(consensus.get("confidence_multiplier")),
+            "accepted_exchange_names": accepted_names,
+            "accepted_observations": sorted(observations, key=lambda row: (row["exchange"], row["observed_ms"])),
+        },
+    }
 
 
 def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
@@ -102,6 +157,7 @@ def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
                 "target_1": plan["t1"],"target_2": plan["t2"],"risk_reward": plan["rr"],"quant_score": q,
                 "evidence_score": evidence,"market_regime": regime,"reasoning": base_reason[:4000],"strategy_version": STRATEGY_VERSION,
                 "strategy_identity": validation.identity,"calibration": calibration,"_rank_score": rank_score,
+                "_preforecast_market_context": _preforecast_market_context(c, iso(now_utc())),
             })
         ranked.sort(key=lambda x: x["_rank_score"], reverse=True)
         rows = ranked[:20]
@@ -111,10 +167,12 @@ def build_opportunities(scan_id, candidates, ai_signals, regime, risk_plan_fn):
         replace_opportunities(scan_id, horizon, rows)
         due_at = now_utc() + (timedelta(hours=24) if horizon == "24h" else timedelta(days=7))
         for row in rows:
+            ledger_calibration = dict(row["calibration"])
+            ledger_calibration["preforecast_market_context"] = row.pop("_preforecast_market_context")
             ledger_rows.append({
                 "scan_id": scan_id,"symbol": row["symbol"],"horizon": horizon,"direction": row["direction"],"entry_price": row["entry_price"],
                 "score": row["evidence_score"],"market_regime": regime,"strategy_identity": row["strategy_identity"],
-                "action_at_forecast": row["action"],"due_at": iso(due_at),"calibration": row["calibration"],
+                "action_at_forecast": row["action"],"due_at": iso(due_at),"calibration": ledger_calibration,
             })
         saved[horizon] = rows
     insert_prediction_ledger(ledger_rows)
