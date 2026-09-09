@@ -1,7 +1,7 @@
 import continuous_coordinator as coordinator
 
 
-def test_observability_log_payload_is_bounded_and_non_authoritative():
+def test_observability_log_payload_uses_producer_contract_and_is_non_authoritative():
     army = {
         "observability": {
             "cache": {
@@ -13,7 +13,7 @@ def test_observability_log_payload_is_bounded_and_non_authoritative():
             "history_network": {
                 "fetches": 5,
                 "failures": 1,
-                "latency_ms": {"p50": 800.0, "p95": 2400.0},
+                "network_latency_ms": {"p50": 800.0, "p95": 2400.0},
                 "avg_requests_per_fetch": 12.0,
             },
             "workers": {
@@ -28,15 +28,28 @@ def test_observability_log_payload_is_bounded_and_non_authoritative():
                     "elapsed_seconds": 42.5,
                     "updated_at_ms": 123,
                     "latest_evidence": {
-                        "selected_evaluation": {
+                        "research_blocked": False,
+                        "research_blocked_reason": None,
+                        "untouched_oos_opened": True,
+                        "selected_oos": {
                             "acc002_research_pass": False,
                             "acc011_survivorship_pass": False,
                             "eligible_for_promotion_review": False,
                             "raw_bootstrap_samples": [1, 2, 3],
-                        }
+                        },
                     },
                 },
-                "cross-asset-rank-7d": {},
+                "cross-asset-rank-7d": {
+                    "last_exit_code": 0,
+                    "elapsed_seconds": 3.0,
+                    "updated_at_ms": 124,
+                    "latest_evidence": {
+                        "research_blocked": True,
+                        "research_blocked_reason": "insufficient_supported_liquidity_subsets",
+                        "untouched_oos_opened": False,
+                        "selected_oos": None,
+                    },
+                },
             },
         }
     }
@@ -45,7 +58,15 @@ def test_observability_log_payload_is_bounded_and_non_authoritative():
     assert payload["network_p50_ms"] == 800.0
     assert payload["network_p95_ms"] == 2400.0
     assert payload["acc002_24h"]["elapsed_s"] == 42.5
+    assert payload["acc002_24h"]["research_blocked"] is False
+    assert payload["acc002_24h"]["untouched_oos_opened"] is True
     assert payload["acc002_24h"]["acc002_pass"] is False
+    assert payload["acc002_24h"]["survivorship_pass"] is False
+    assert payload["acc002_24h"]["promotion_review"] is False
+    assert payload["acc002_7d"]["research_blocked"] is True
+    assert payload["acc002_7d"]["research_blocked_reason"] == "insufficient_supported_liquidity_subsets"
+    assert payload["acc002_7d"]["untouched_oos_opened"] is False
+    assert payload["acc002_7d"]["acc002_pass"] is None
     assert "raw_bootstrap_samples" not in str(payload)
     assert payload["trade_authority"] is False
     assert payload["promotion_authority"] is False
@@ -56,5 +77,6 @@ def test_observability_log_payload_handles_missing_state():
     payload = coordinator.observability_log_payload(None)
     assert payload["network_p50_ms"] is None
     assert payload["worker_completed"] is None
+    assert payload["acc002_24h"]["research_blocked"] is None
     assert payload["acc002_24h"]["promotion_review"] is None
     assert payload["trade_authority"] is False
