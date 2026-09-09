@@ -7,7 +7,7 @@ from research_adaptive_accuracy import (
 )
 
 
-def _rows(horizon="24h", count=60, *, start=None, validation_helpful=True):
+def _rows(horizon="24h", count=90, *, start=None, validation_helpful=True):
     span = timedelta(hours=24) if horizon == "24h" else timedelta(days=7)
     start = start or datetime(2024, 1, 1, tzinfo=timezone.utc)
     rows = []
@@ -45,8 +45,8 @@ def _rows(horizon="24h", count=60, *, start=None, validation_helpful=True):
 def _dataset(validation_helpful=True):
     # Keep horizon calendars separated so global diagnostic independence is
     # deterministic and does not accidentally overlap 24h and 7d windows.
-    return _rows("24h", 60, start=datetime(2024, 1, 1, tzinfo=timezone.utc), validation_helpful=validation_helpful) + _rows(
-        "7d", 60, start=datetime(2019, 1, 1, tzinfo=timezone.utc), validation_helpful=validation_helpful
+    return _rows("24h", 90, start=datetime(2024, 1, 1, tzinfo=timezone.utc), validation_helpful=validation_helpful) + _rows(
+        "7d", 90, start=datetime(2019, 1, 1, tzinfo=timezone.utc), validation_helpful=validation_helpful
     )
 
 
