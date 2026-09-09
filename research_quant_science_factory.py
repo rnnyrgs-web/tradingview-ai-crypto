@@ -105,7 +105,7 @@ def build_quant_science_queue(diagnostics: dict, memory: dict | None = None, *, 
     return {
         "ok": True,
         "research_only": True,
-        "objective": objective_reference("quant-science-factory", "quant_science_factory"),
+        "objective": objective_reference("quant-science-factory", "experiment_factory"),
         "experiment_count": len(selected),
         "experiments": selected,
         "method_counts": dict(sorted(method_counts.items())),
