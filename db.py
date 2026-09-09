@@ -1,5 +1,5 @@
 import httpx
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 from config import SUPABASE_URL, SUPABASE_SECRET_KEY
 from utils import iso, now_utc
@@ -97,19 +97,73 @@ def fetch_due_predictions(limit=500):
         raise RuntimeError(f"Supabase due prediction fetch failed: {r.status_code} {r.text}")
     return r.json()
 
+
+def _iso_to_epoch_ms(value):
+    if not value:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return int(dt.astimezone(timezone.utc).timestamp() * 1000)
+
+
+def _expose_preforecast_market_fields(row):
+    """Expose prospective ledger provenance without fabricating historical fields."""
+    if not isinstance(row, dict):
+        return row
+    calibration = row.get("calibration")
+    if not isinstance(calibration, dict):
+        return row
+    context = calibration.get("preforecast_market_context")
+    if not isinstance(context, dict):
+        return row
+    market = context.get("market_consensus")
+    if not isinstance(market, dict) or market.get("recorded") is not True:
+        return row
+
+    captured_ms = _iso_to_epoch_ms(context.get("captured_at"))
+    observations = market.get("accepted_observations") or []
+    observed_ms = []
+    for observation in observations:
+        if not isinstance(observation, dict):
+            continue
+        try:
+            value = int(observation.get("observed_ms") or 0)
+        except (TypeError, ValueError):
+            value = 0
+        if value > 0:
+            observed_ms.append(value)
+    timestamp_safe = bool(captured_ms and observed_ms and max(observed_ms) <= captured_ms)
+
+    # If a prospective context exists but cannot prove that every accepted quote
+    # was observed by capture time, fail closed for agreement research.
+    row["market_consensus_reliable"] = bool(market.get("reliable_at_forecast") is True and timestamp_safe)
+    row["market_consensus_timestamp_safe"] = timestamp_safe
+    row["market_consensus_source_count"] = int(market.get("independent_source_count") or 0)
+    row["market_consensus_required_source_count"] = int(market.get("required_source_count") or 0)
+    row["market_consensus_price_range_bps"] = market.get("price_range_bps")
+    row["market_consensus_max_quote_age_seconds"] = market.get("max_quote_age_seconds")
+    row["market_consensus_accepted_exchange_names"] = list(market.get("accepted_exchange_names") or [])
+    row["preforecast_market_context_captured_at"] = context.get("captured_at")
+    return row
+
+
 def fetch_resolved_predictions(limit=5000):
     if not configured():
         return []
     # Production prediction_ledger has no created_at column. resolved_at/due_at
     # provide the chronology required by calibration and forward-proof logic.
     params={
-        "select":"due_at,resolved_at,horizon,score,market_regime,correct,directional_return_pct,strategy_identity,action_at_forecast",
+        "select":"due_at,resolved_at,horizon,score,market_regime,correct,directional_return_pct,strategy_identity,action_at_forecast,calibration",
         "resolved_at":"not.is.null","order":"resolved_at.desc","limit":str(max(1,min(int(limit),10000)))
     }
     r=http.get(f"{SUPABASE_URL}/rest/v1/prediction_ledger",headers=headers(),params=params)
     if r.status_code>=300:
         raise RuntimeError(f"Supabase resolved prediction fetch failed: {r.status_code} {r.text}")
-    return r.json()
+    return [_expose_preforecast_market_fields(row) for row in r.json()]
 
 def fetch_shadow_predictions(limit=10000):
     """Read immutable resolved forward forecasts for shadow-readiness analysis."""
