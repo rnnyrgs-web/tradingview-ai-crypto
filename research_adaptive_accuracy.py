@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import hashlib
 from math import isfinite
+from statistics import NormalDist
 
 from calibration import wilson_lower_bound
 from research_heavy_experiment_scheduler import build_heavy_dispatch_plan
@@ -22,6 +23,7 @@ MIN_VALIDATION_SAMPLES = 8
 MIN_ACTIONABLE_COVERAGE = 0.25
 MATERIAL_SAMPLE_GROWTH_MIN = 4
 MATERIAL_SAMPLE_GROWTH_RATIO = 1.25
+FAMILYWISE_ALPHA = 0.05
 
 
 def _finite(value):
@@ -137,7 +139,38 @@ def _effective_horizon(experiment, development_rows):
     return sorted(counts, key=lambda horizon: (-counts[horizon], horizon))[0]
 
 
-def _metrics(rows, *, cost_pct):
+def _nonnegative_int(value):
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return 0
+    return max(0, parsed)
+
+
+def _multiple_testing_policy(memory):
+    """Spend a bounded global alpha budget across an unbounded sequence of tests.
+
+    alpha_i = alpha / (i * (i + 1)) and sum_i alpha_i <= alpha. This makes
+    later OOS-opening decisions progressively harder rather than letting a huge
+    hypothesis factory accumulate false discoveries by repeated testing.
+    """
+    prior_trials = _nonnegative_int((memory or {}).get("conclusive_trial_count"))
+    trial_index = prior_trials + 1
+    alpha_this_trial = FAMILYWISE_ALPHA / (trial_index * (trial_index + 1))
+    z = NormalDist().inv_cdf(1.0 - alpha_this_trial / 2.0)
+    return {
+        "method": "sequential_alpha_spending_bonferroni_wilson",
+        "familywise_alpha": FAMILYWISE_ALPHA,
+        "prior_conclusive_trials": prior_trials,
+        "trial_index": trial_index,
+        "alpha_this_trial": round(alpha_this_trial, 10),
+        "validation_confidence_z": round(z, 6),
+        "requires_adjusted_lower_above_baseline_precision": True,
+        "oos_sealed_pending_gate": True,
+    }
+
+
+def _metrics(rows, *, cost_pct, adjusted_z=1.96):
     total = len(rows)
     correct = sum(1 for row in rows if row.get("correct") is True)
     returns = []
@@ -150,18 +183,20 @@ def _metrics(rows, *, cost_pct):
         "correct": correct,
         "precision": round(correct / total, 4) if total else None,
         "precision_95pct_lower": round(wilson_lower_bound(correct, total), 4) if total else None,
+        "precision_multiple_testing_lower": round(wilson_lower_bound(correct, total, z=float(adjusted_z)), 4) if total else None,
+        "multiple_testing_z": round(float(adjusted_z), 6),
         "after_cost_expectancy_pct": round(sum(returns) / len(returns), 4) if len(returns) == total and total else None,
         "expectancy_sample_complete": bool(total and len(returns) == total),
     }
 
 
-def _evaluate_frozen_filter(experiment, rows, horizon, *, cost_pct):
+def _evaluate_frozen_filter(experiment, rows, horizon, *, cost_pct, adjusted_z=1.96):
     horizon_rows = [row for row in rows if row.get("horizon") == horizon]
     dimension = str(experiment.get("dimension") or "unknown")
     group = str(experiment.get("group") or "unknown")
     retained = [row for row in horizon_rows if _group_value(row, dimension) != group]
-    baseline = _metrics(horizon_rows, cost_pct=cost_pct)
-    filtered = _metrics(retained, cost_pct=cost_pct)
+    baseline = _metrics(horizon_rows, cost_pct=cost_pct, adjusted_z=adjusted_z)
+    filtered = _metrics(retained, cost_pct=cost_pct, adjusted_z=adjusted_z)
     coverage = round(len(retained) / len(horizon_rows), 4) if horizon_rows else 0.0
     lift = None
     if baseline["precision"] is not None and filtered["precision"] is not None:
@@ -180,15 +215,24 @@ def _passes_validation(evaluation, science_design):
     min_lift = float(minimum_effect.get("precision_absolute_improvement") or 0.02)
     min_samples = int((science_design or {}).get("minimum_evaluation_samples") or MIN_VALIDATION_SAMPLES)
     min_coverage = float((science_design or {}).get("minimum_actionable_coverage") or MIN_ACTIONABLE_COVERAGE)
+    baseline = evaluation.get("baseline") or {}
     filtered = evaluation.get("filtered") or {}
     lift = evaluation.get("precision_lift")
     expectancy = filtered.get("after_cost_expectancy_pct")
+    adjusted_lower = filtered.get("precision_multiple_testing_lower")
+    baseline_precision = baseline.get("precision")
+    confidence_pass = (
+        adjusted_lower is not None
+        and baseline_precision is not None
+        and float(adjusted_lower) > float(baseline_precision)
+    )
     return (
         int(filtered.get("samples") or 0) >= min_samples
         and lift is not None and float(lift) >= min_lift
         and float(evaluation.get("actionable_coverage") or 0.0) >= min_coverage
         and filtered.get("expectancy_sample_complete") is True
         and expectancy is not None and float(expectancy) > 0.0
+        and confidence_pass
     )
 
 
@@ -198,6 +242,7 @@ def build_adaptive_accuracy_report(rows, memory=None, *, cost_pct=DEFAULT_ROUND_
     queue = build_quant_science_queue(diagnostics, memory)
     plan = build_heavy_dispatch_plan(queue)
     selected = (plan.get("selected") or [])[:1]
+    multiple_testing = _multiple_testing_policy(memory)
     report = {
         "ok": True,
         "research_only": True,
@@ -207,6 +252,7 @@ def build_adaptive_accuracy_report(rows, memory=None, *, cost_pct=DEFAULT_ROUND_
         "automatic_execution_authority": False,
         "round_trip_cost_pct": float(cost_pct),
         "split_policy": "60% development / 20% validation / 20% untouched OOS within each horizon using non-overlapping full-horizon resolved rows",
+        "multiple_testing_policy": multiple_testing,
         "development_samples": len(development),
         "validation_samples_sealed": len(validation),
         "untouched_oos_samples_sealed": len(untouched_oos),
@@ -235,7 +281,8 @@ def build_adaptive_accuracy_report(rows, memory=None, *, cost_pct=DEFAULT_ROUND_
         return report
 
     horizon = _effective_horizon(experiment, development)
-    validation_eval = _evaluate_frozen_filter(experiment, validation, horizon, cost_pct=cost_pct)
+    adjusted_z = float(multiple_testing["validation_confidence_z"])
+    validation_eval = _evaluate_frozen_filter(experiment, validation, horizon, cost_pct=cost_pct, adjusted_z=adjusted_z)
     validation_passed = _passes_validation(validation_eval, experiment.get("science_design") or {})
     result = {
         "experiment_id": experiment_id,
@@ -244,6 +291,7 @@ def build_adaptive_accuracy_report(rows, memory=None, *, cost_pct=DEFAULT_ROUND_
         "effective_horizon": horizon,
         "hypothesis": experiment.get("hypothesis"),
         "science_design": experiment.get("science_design"),
+        "multiple_testing_policy": multiple_testing,
         "validation": validation_eval,
         "validation_passed": validation_passed,
         "untouched_oos": None,
@@ -261,15 +309,16 @@ def build_adaptive_accuracy_report(rows, memory=None, *, cost_pct=DEFAULT_ROUND_
                 "experiment_id": experiment_id,
                 "effective_horizon": horizon,
                 "independent_samples_at_test": experiment.get("source_independent_samples"),
+                "multiple_testing_policy": multiple_testing,
                 "validation": validation_eval,
             },
             "recommended_next_test": "Do not repeat until materially more independent evidence exists or the hypothesis mechanism materially changes.",
-            "reason_not_to_repeat": "Predeclared validation gate failed; untouched OOS remained sealed.",
+            "reason_not_to_repeat": "Predeclared validation and sequential multiple-testing gate failed; untouched OOS remained sealed.",
         }
         return report
 
     # Only after validation passes may untouched OOS correctness/returns be inspected.
-    oos_eval = _evaluate_frozen_filter(experiment, untouched_oos, horizon, cost_pct=cost_pct)
+    oos_eval = _evaluate_frozen_filter(experiment, untouched_oos, horizon, cost_pct=cost_pct, adjusted_z=adjusted_z)
     result["untouched_oos"] = oos_eval
     report["experiment"] = result
     report["oos_opened"] = True
@@ -282,6 +331,7 @@ def build_adaptive_accuracy_report(rows, memory=None, *, cost_pct=DEFAULT_ROUND_
             "experiment_id": experiment_id,
             "effective_horizon": horizon,
             "independent_samples_at_test": experiment.get("source_independent_samples"),
+            "multiple_testing_policy": multiple_testing,
             "validation": validation_eval,
             "untouched_oos": oos_eval,
         },

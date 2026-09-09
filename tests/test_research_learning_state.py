@@ -7,6 +7,7 @@ def test_memory_is_bounded_and_research_only(tmp_path):
         append_lesson({"fingerprint": f"f{i}", "hypothesis": f"h{i}", "outcome": "tested"}, path=path)
     state = load_state(path)
     assert len(state["lessons"]) == 200
+    assert state["conclusive_trial_count"] == 0
     assert state["lessons"][-1]["research_only"] is True
     assert state["lessons"][-1]["trade_authority"] is False
     assert state["lessons"][-1]["promotion_authority"] is False
@@ -19,9 +20,19 @@ def test_duplicate_fingerprint_is_replaced(tmp_path):
     state = load_state(path)
     assert len(state["lessons"]) == 1
     assert state["lessons"][0]["hypothesis"] == "new"
+    assert state["conclusive_trial_count"] == 0
+
+
+def test_conclusive_trial_count_is_monotonic_even_when_lesson_is_replaced(tmp_path):
+    path = tmp_path / "learning.json"
+    append_lesson({"fingerprint": "same", "hypothesis": "first", "outcome": "validation_failed"}, path=path)
+    append_lesson({"fingerprint": "same", "hypothesis": "retest", "outcome": "oos_evaluated"}, path=path)
+    state = load_state(path)
+    assert len(state["lessons"]) == 1
+    assert state["conclusive_trial_count"] == 2
 
 
 def test_invalid_state_fails_closed(tmp_path):
     path = tmp_path / "learning.json"
     path.write_text("not-json", encoding="utf-8")
-    assert load_state(path) == {"lessons": [], "updated_at": None}
+    assert load_state(path) == {"lessons": [], "updated_at": None, "conclusive_trial_count": 0}
