@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import math
+import os
 import threading
 from datetime import datetime, timedelta, timezone
 
@@ -30,22 +31,33 @@ INITIAL_CASH = 100000.0
 RISK_PER_TRADE_PCT = 0.50
 MAX_OPEN_POSITIONS = 5
 MAX_NOTIONAL_PCT = 20.0
-FEE_BPS_ONE_WAY = 6.0
+FEE_BPS_ONE_WAY = float(os.getenv("PAPER_TAKER_FEE_BPS", "6.0"))
+FEE_SCHEDULE_VERIFIED = os.getenv("PAPER_FEE_SCHEDULE_VERIFIED", "").strip().lower() in {"1", "true", "yes"}
 MIN_EVIDENCE_SCORE = 60.0
 MAX_SIGNAL_AGE_SECONDS = 30 * 60
 PAPER_INTERVAL_SECONDS = 15 * 60
 _cycle_lock = threading.Lock()
 
 
-def _last_price(symbol):
-    """Return the latest observable market close used at this paper-cycle instant."""
+def _latest_candle(symbol):
     candles = get_candles(symbol, "15m", 3)
     if not candles:
         raise RuntimeError(f"No paper price for {symbol}")
-    price = float(candles[-1]["close"])
-    if not math.isfinite(price) or price <= 0:
-        raise RuntimeError(f"Invalid paper price for {symbol}")
-    return price
+    candle = candles[-1]
+    try:
+        close = float(candle["close"])
+        high = float(candle.get("high", close))
+        low = float(candle.get("low", close))
+    except (KeyError, TypeError, ValueError):
+        raise RuntimeError(f"Malformed paper candle for {symbol}")
+    if not all(math.isfinite(v) and v > 0 for v in (close, high, low)) or low > high:
+        raise RuntimeError(f"Invalid paper candle for {symbol}")
+    return {**candle, "close": close, "high": high, "low": low}
+
+
+def _last_price(symbol):
+    """Latest observable close. Never used as an executable liquidation mark."""
+    return float(_latest_candle(symbol)["close"])
 
 
 def _paper_fill_price(symbol, direction, requested_notional):
@@ -57,6 +69,26 @@ def _paper_fill_price(symbol, direction, requested_notional):
     if not simulation.executable or simulation.fill_price is None:
         raise RuntimeError(f"Execution evidence unavailable: {simulation.reason}")
     return market_price, float(simulation.fill_price), simulation
+
+
+def _liquidation_mark(trade):
+    """Price the whole position at a currently executable after-cost liquidation fill.
+
+    This is deliberately not midpoint, candle close, or top-of-book. The requested
+    notional is the full position at the current observable price and requires the
+    same independent visible-depth evidence as a simulated exit.
+    """
+    direction = str(trade.get("direction") or "").upper()
+    if direction not in {"LONG", "SHORT"}:
+        raise RuntimeError("Invalid paper direction for liquidation mark")
+    quantity = float(trade.get("quantity") or 0)
+    if not math.isfinite(quantity) or quantity <= 0:
+        raise RuntimeError("Invalid paper quantity for liquidation mark")
+    observed = _last_price(str(trade.get("symbol") or ""))
+    requested_notional = observed * quantity
+    exit_side = "SHORT" if direction == "LONG" else "LONG"
+    _, fill, execution = _paper_fill_price(str(trade.get("symbol") or ""), exit_side, requested_notional)
+    return float(fill), execution
 
 
 def _signal_key(row):
@@ -126,27 +158,45 @@ def _has_opposing_symbol_exposure(open_trades, symbol, direction):
     return False
 
 
-def _close_decision(trade, price):
-    """Conservative stop/target trigger logic from observed forward prices."""
+def _close_decision(trade, observation):
+    """Conservative 15m trigger logic.
+
+    High/low are used so a stop touched intrabar cannot disappear because the bar
+    later recovered. If both stop and target are observed in the same bar and
+    ordering is unknowable, STOP wins.
+    """
+    if isinstance(observation, dict):
+        close = float(observation["close"])
+        high = float(observation.get("high", close))
+        low = float(observation.get("low", close))
+    else:
+        close = high = low = float(observation)
     stop = float(trade["stop_loss"])
     target = float(trade["target_price"])
-    if trade["direction"] == "LONG":
-        if price <= stop:
-            return price, "STOP"
-        if price >= target:
+    direction = str(trade.get("direction") or "").upper()
+    if direction == "LONG":
+        stop_hit = low <= stop
+        target_hit = high >= target
+        if stop_hit:
+            return stop, "STOP"
+        if target_hit:
+            return target, "TARGET"
+    elif direction == "SHORT":
+        stop_hit = high >= stop
+        target_hit = low <= target
+        if stop_hit:
+            return stop, "STOP"
+        if target_hit:
             return target, "TARGET"
     else:
-        if price >= stop:
-            return price, "STOP"
-        if price <= target:
-            return target, "TARGET"
+        return None, None
     opened = _parse_utc(trade.get("opened_at"))
     if opened is None:
         log.warning("Invalid paper trade opened_at for id=%s", trade.get("id"))
     else:
         hours = 24 if trade["horizon"] == "24h" else 168
         if now_utc() >= opened + timedelta(hours=hours):
-            return price, "TIME"
+            return close, "TIME"
     return None, None
 
 
@@ -164,14 +214,23 @@ def _v2_exit(trade, trigger_price, reason):
     exit_side = "SHORT" if str(trade["direction"]).upper() == "LONG" else "LONG"
     observed_market, executable_fill, execution = _paper_fill_price(trade["symbol"], exit_side, requested_notional)
     final_fill = executable_fill
+    fee = float(trade.get("fee_bps_one_way") or FEE_BPS_ONE_WAY) / 10000.0
+    direction = str(trade["direction"]).upper()
     if reason == "TARGET":
         target = float(trade["target_price"])
-        fee = float(trade.get("fee_bps_one_way") or FEE_BPS_ONE_WAY) / 10000.0
-        if str(trade["direction"]).upper() == "LONG":
+        if direction == "LONG":
             final_fill = min(final_fill, target * (1.0 - fee))
         else:
             final_fill = max(final_fill, target * (1.0 + fee))
-    pnl = _mark_pnl(str(trade["direction"]).upper(), float(trade["entry_price"]), final_fill, quantity)
+    elif reason == "STOP":
+        stop = float(trade["stop_loss"])
+        # Never allow a delayed cycle to turn an already-hit stop into a better
+        # fill merely because price recovered before the worker ran.
+        if direction == "LONG":
+            final_fill = min(final_fill, stop * (1.0 - fee))
+        else:
+            final_fill = max(final_fill, stop * (1.0 + fee))
+    pnl = _mark_pnl(direction, float(trade["entry_price"]), final_fill, quantity)
     audit = {
         "exit_trigger_observed_price": float(trigger_price),
         "exit_fill_observed_at": iso(now_utc()),
@@ -207,11 +266,12 @@ def _validate_persistent_account(account):
 def _marks_for_open_trades(open_trades):
     marks = {}
     for trade in open_trades:
-        symbol = str(trade.get("symbol") or "").upper()
-        if not symbol:
-            raise RuntimeError("Open paper trade missing symbol")
-        if symbol not in marks:
-            marks[symbol] = _last_price(symbol)
+        try:
+            trade_id = int(trade["id"])
+        except (KeyError, TypeError, ValueError):
+            raise RuntimeError("Open paper trade missing id")
+        fill, _ = _liquidation_mark(trade)
+        marks[trade_id] = fill
     return marks
 
 
@@ -238,8 +298,8 @@ def _run_paper_cycle_locked():
     all_trades = fetch_all_paper_trades(ACCOUNT_ID)
     open_trades = [t for t in all_trades if str(t.get("status") or "").upper() == "OPEN"]
 
-    # Acquire every mark before mutating the ledger. Missing current market data
-    # aborts the cycle rather than silently marking a position back to entry.
+    # Equity is what the whole open position could be liquidated for now after
+    # visible-depth/fee friction. Missing execution evidence aborts the cycle.
     marks = _marks_for_open_trades(open_trades)
     ledger = reconcile_paper_ledger(account, all_trades, marks, INITIAL_CASH, compare_persisted=False)
     if not ledger.verified:
@@ -251,8 +311,8 @@ def _run_paper_cycle_locked():
     working_equity = float(ledger.expected_equity)
 
     for trade in list(open_trades):
-        price = marks[str(trade["symbol"]).upper()]
-        trigger_price, reason = _close_decision(trade, price)
+        candle = _latest_candle(trade["symbol"])
+        trigger_price, reason = _close_decision(trade, candle)
         if trigger_price is None:
             continue
         audit = None
@@ -263,6 +323,8 @@ def _run_paper_cycle_locked():
                 log.warning("Paper exit execution unavailable for %s: %s", trade.get("symbol"), str(exc)[:160])
                 continue
         else:
+            # Existing legacy trades are preserved exactly; they are explicitly
+            # labelled unverified rather than retroactively rewriting history.
             exit_price = float(trigger_price)
             pnl = _legacy_net_pnl(trade, exit_price)
         pnl_pct = pnl / float(trade["notional_usd"]) * 100.0 if float(trade["notional_usd"]) > 0 else 0.0
@@ -300,6 +362,14 @@ def _run_paper_cycle_locked():
         if not fresh:
             _record_decision(row, "REJECTED", freshness_reason)
             continue
+        if not FEE_SCHEDULE_VERIFIED:
+            _record_decision(row, "REJECTED", "fee_schedule_unverified")
+            continue
+        if direction == "SHORT":
+            # No short is allowed to look profitable without a venue-specific,
+            # timestamped borrow/funding/carry model.
+            _record_decision(row, "REJECTED", "short_carry_unverified")
+            continue
         if float(row.get("evidence_score") or 0) < MIN_EVIDENCE_SCORE:
             _record_decision(row, "REJECTED", "below_paper_evidence_floor")
             continue
@@ -317,12 +387,8 @@ def _run_paper_cycle_locked():
             _record_decision(row, "REJECTED", "invalid_signal_prices")
             continue
 
-        if direction == "LONG":
-            stop_distance_pct = max(0.0, (signal_entry - signal_stop) / signal_entry)
-            target_distance_pct = max(0.0, (signal_target - signal_entry) / signal_entry)
-        else:
-            stop_distance_pct = max(0.0, (signal_stop - signal_entry) / signal_entry)
-            target_distance_pct = max(0.0, (signal_entry - signal_target) / signal_entry)
+        stop_distance_pct = max(0.0, (signal_entry - signal_stop) / signal_entry)
+        target_distance_pct = max(0.0, (signal_target - signal_entry) / signal_entry)
         if stop_distance_pct <= 0 or target_distance_pct <= 0:
             _record_decision(row, "REJECTED", "invalid_signal_geometry")
             continue
@@ -342,12 +408,8 @@ def _run_paper_cycle_locked():
             log.warning("Paper execution unavailable for %s: %s", symbol, str(exc)[:160])
             continue
 
-        if direction == "LONG":
-            stop = entry * (1.0 - stop_distance_pct)
-            target = entry * (1.0 + target_distance_pct)
-        else:
-            stop = entry * (1.0 + stop_distance_pct)
-            target = entry * (1.0 - target_distance_pct)
+        stop = entry * (1.0 - stop_distance_pct)
+        target = entry * (1.0 + target_distance_pct)
         risk_per_unit = abs(entry - stop)
         if min(entry, stop, target, risk_per_unit) <= 0:
             _record_decision(row, "REJECTED", "invalid_fill_geometry")
@@ -362,8 +424,6 @@ def _run_paper_cycle_locked():
             _record_decision(row, "REJECTED", "unsupported_notional")
             continue
 
-        # First-seen decision is immutable. If this signal was already rejected in
-        # an earlier cycle, the unique signal_key prevents it becoming a late fill.
         if not _record_decision(row, "ACCEPTED", "fresh_size_aware_forward_fill"):
             continue
         decision_at = iso(now_utc())
@@ -399,7 +459,6 @@ def _run_paper_cycle_locked():
                 execution.worst_slippage_bps, execution.source_count,
             )
             cash -= notional
-            marks[symbol] = observed_market
             open_trades = fetch_open_paper_trades(ACCOUNT_ID)
             open_pairs.add((symbol, horizon))
             risk_account = {**risk_account, "cash": cash}
@@ -410,11 +469,7 @@ def _run_paper_cycle_locked():
 
     all_trades = fetch_all_paper_trades(ACCOUNT_ID)
     open_trades = [t for t in all_trades if str(t.get("status") or "").upper() == "OPEN"]
-    # Every remaining open symbol must have a genuine current-cycle mark.
-    for trade in open_trades:
-        symbol = str(trade.get("symbol") or "").upper()
-        if symbol not in marks:
-            marks[symbol] = _last_price(symbol)
+    marks = _marks_for_open_trades(open_trades)
 
     derived = reconcile_paper_ledger(account, all_trades, marks, INITIAL_CASH, compare_persisted=False)
     if not derived.verified:
@@ -453,9 +508,14 @@ def paper_status():
         return {"configured": False, "research_only": True, "real_money": False, "trade_authority": False}
     stats = fetch_paper_trade_stats(ACCOUNT_ID, INITIAL_CASH)
     open_trades = fetch_open_paper_trades(ACCOUNT_ID)
+    all_trades = fetch_all_paper_trades(ACCOUNT_ID)
+    legacy_rows = [t for t in all_trades if str(t.get("execution_model_version") or "legacy_v1") != V2_EXECUTION_MODEL]
     max_dd = max(float(account["max_drawdown_pct"]), stats["max_drawdown_pct"])
     portfolio_risk = assess_portfolio_risk(account, open_trades, stats)
     reconciliation = fetch_latest_paper_reconciliation(ACCOUNT_ID)
+    execution_status = "STRICT_FORWARD_MODEL_READY" if FEE_SCHEDULE_VERIFIED and not legacy_rows else (
+        "PARTIAL_LEGACY_HISTORY" if legacy_rows else "FEE_SCHEDULE_UNVERIFIED"
+    )
     return {
         "configured": True,
         "research_only": True,
@@ -467,6 +527,16 @@ def paper_status():
         "requires_two_reliable_books": True,
         "immutable_closed_trade_ledger": True,
         "decision_journal": True,
+        "liquidation_value_marks": True,
+        "intrabar_stop_detection": True,
+        "ambiguous_intrabar_outcome": "STOP",
+        "shorts_require_verified_carry": True,
+        "short_entries_enabled": False,
+        "fee_schedule_verified": FEE_SCHEDULE_VERIFIED,
+        "fee_bps_one_way": FEE_BPS_ONE_WAY,
+        "execution_authenticity_status": execution_status,
+        "legacy_execution_rows": len(legacy_rows),
+        "real_execution_verified": False,
         "max_signal_age_seconds": MAX_SIGNAL_AGE_SECONDS,
         "starting_capital_usd": INITIAL_CASH,
         "equity_usd": round(float(account["equity"]), 2),

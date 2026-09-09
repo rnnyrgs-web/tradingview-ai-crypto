@@ -1,8 +1,14 @@
+from types import SimpleNamespace
+
 import paper_dashboard as d
 
 
-def test_live_position_matches_equity_mark_without_double_counting_entry_fee(monkeypatch):
-    monkeypatch.setattr(d, "_last_price", lambda symbol: 99.0)
+def test_live_position_uses_full_liquidation_fill(monkeypatch):
+    monkeypatch.setattr(
+        d,
+        "_liquidation_mark",
+        lambda trade: (99.0, SimpleNamespace(source_count=2, worst_slippage_bps=7.0)),
+    )
     trade = {
         "symbol": "TEST-USDT",
         "direction": "LONG",
@@ -12,8 +18,10 @@ def test_live_position_matches_equity_mark_without_double_counting_entry_fee(mon
         "fee_bps_one_way": 6.0,
     }
     marked = d._live_position(trade)
+    assert marked["last_price"] == 99.0
     assert marked["live_pnl"] == -10.0
     assert marked["live_pnl_pct"] == -1.0
+    assert marked["liquidation_source_count"] == 2
 
 
 def test_reconciled_totals_are_exact_identity():
@@ -28,7 +36,7 @@ def test_reconciled_totals_are_exact_identity():
     assert round(equity, 2) == round(initial + total_pnl, 2)
 
 
-def test_missing_live_mark_never_fabricates_zero_open_pnl():
+def test_missing_liquidation_mark_hides_account_value_instead_of_reusing_stale_equity():
     status = {
         "starting_capital_usd": 100000.0,
         "realized_pnl_usd": 2500.0,
@@ -39,7 +47,7 @@ def test_missing_live_mark_never_fabricates_zero_open_pnl():
     )
     assert complete is False
     assert open_pnl is None
-    assert equity == 101750.0
-    assert total_pnl == 1750.0
+    assert total_pnl is None
+    assert equity is None
     assert initial == 100000.0
     assert realized == 2500.0
