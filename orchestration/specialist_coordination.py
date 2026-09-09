@@ -4,6 +4,8 @@ import argparse
 import json
 from pathlib import Path
 
+from signal_development import load_objective
+
 ROOT = Path(__file__).resolve().parents[1]
 STATE_PATH = ROOT / "orchestration" / "specialist_coordination.json"
 
@@ -20,6 +22,7 @@ REQUIRED_ROLES = {
 
 
 def load_state(path: Path = STATE_PATH) -> dict:
+    load_objective()
     payload = json.loads(path.read_text(encoding="utf-8"))
     validate_state(payload)
     return payload
@@ -113,7 +116,11 @@ def next_task(payload: dict, role: str) -> dict | None:
 
 
 def compact_snapshot(payload: dict) -> dict:
+    objective = load_objective()
     return {
+        "objective_id": objective["objective_id"],
+        "primary_mission": objective["primary_mission"],
+        "current_signal_bottleneck": objective["current_bottleneck"],
         "objective": payload["objective"],
         "policy": payload["policy"],
         "roles": {
@@ -137,7 +144,8 @@ def main() -> int:
         print("specialist coordination: valid")
         return 0
     if args.role:
-        print(json.dumps({"role": args.role, "queue": role_queue(payload, args.role), "next": next_task(payload, args.role)}, indent=2))
+        objective = load_objective()
+        print(json.dumps({"objective_id": objective["objective_id"], "primary_mission": objective["primary_mission"], "role": args.role, "queue": role_queue(payload, args.role), "next": next_task(payload, args.role)}, indent=2))
         return 0
     print(json.dumps(compact_snapshot(payload) if args.compact else payload, indent=2))
     return 0
