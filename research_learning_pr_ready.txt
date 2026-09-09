@@ -1,0 +1,1 @@
+Continuous-learning core is ready for exact-head CI review before worker-army scheduling integration.
