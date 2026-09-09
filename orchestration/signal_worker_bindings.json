@@ -19,6 +19,7 @@
     "swing-majors": {"class": "python_research_workers", "signal_role": "multi-day major-asset research supporting 7d signal development"},
     "cross-asset-rank-24h": {"class": "cross_asset_rank_24h", "signal_role": "ACC-002 24h liquidity-safe cross-sectional evidence"},
     "cross-asset-rank-7d": {"class": "cross_asset_rank_7d", "signal_role": "ACC-002 7d liquidity-safe cross-sectional evidence"},
+    "adaptive-accuracy": {"class": "experiment_factory", "signal_role": "execute the top predeclared restrictive accuracy experiment while preserving chronological validation and sealed OOS"},
     "learning-diagnostics": {"class": "learning_diagnostics", "signal_role": "convert resolved correct/error outcomes into falsifiable hypotheses"},
     "experiment-factory": {"class": "experiment_factory", "signal_role": "convert error hypotheses into bounded predeclared experiments"}
   },

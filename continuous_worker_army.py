@@ -33,6 +33,8 @@ MAX_ERROR_BACKOFF_SECONDS = max(30, min(int(os.getenv("WORKER_ARMY_MAX_ERROR_BAC
 HEARTBEAT_SECONDS = max(15, min(int(os.getenv("WORKER_ARMY_HEARTBEAT_SECONDS", "30")), 120))
 SUPERVISOR_INTERVAL_SECONDS = max(10, min(int(os.getenv("WORKER_ARMY_SUPERVISOR_INTERVAL_SECONDS", "30")), 120))
 TASK_RESTART_DELAY_SECONDS = max(5, min(int(os.getenv("WORKER_ARMY_TASK_RESTART_DELAY_SECONDS", "15")), 300))
+NATURAL_HISTORY_RECHECK_SECONDS = max(300, min(int(os.getenv("WORKER_ARMY_NATURAL_HISTORY_RECHECK_SECONDS", "21600")), 86400))
+ADAPTIVE_IDLE_RECHECK_SECONDS = max(60, min(int(os.getenv("WORKER_ARMY_ADAPTIVE_IDLE_RECHECK_SECONDS", "300")), 3600))
 log = logging.getLogger("uvicorn.error")
 
 
@@ -70,12 +72,14 @@ WORKERS = (
         {"CROSS_ASSET_HORIZON": "7d", "CROSS_ASSET_UNIVERSE_SIZE": "30", "CROSS_ASSET_BARS": "5000", "CROSS_ASSET_ROUND_TRIP_COST_BPS": "12"},
         script="cross_asset_runner.py",
     ),
+    WorkerSpec("adaptive-accuracy", {}, script="research_adaptive_accuracy_runner.py"),
     WorkerSpec("learning-diagnostics", {}, script="research_learning_runner.py", compute_class="lightweight"),
     WorkerSpec("experiment-factory", {}, script="research_experiment_factory_runner.py", compute_class="lightweight"),
 )
 
 SUMMARY_ENV_BY_SCRIPT = {
     "cross_asset_runner.py": "CROSS_ASSET_SUMMARY_PATH",
+    "research_adaptive_accuracy_runner.py": "RESEARCH_ADAPTIVE_ACCURACY_SUMMARY_PATH",
     "research_learning_runner.py": "RESEARCH_LEARNING_SUMMARY_PATH",
     "research_experiment_factory_runner.py": "RESEARCH_EXPERIMENT_SUMMARY_PATH",
 }
@@ -91,6 +95,8 @@ _status: dict[str, object] = {
     "heartbeat_seconds": HEARTBEAT_SECONDS,
     "supervisor_interval_seconds": SUPERVISOR_INTERVAL_SECONDS,
     "max_error_backoff_seconds": MAX_ERROR_BACKOFF_SECONDS,
+    "natural_history_recheck_seconds": NATURAL_HISTORY_RECHECK_SECONDS,
+    "adaptive_idle_recheck_seconds": ADAPTIVE_IDLE_RECHECK_SECONDS,
     "worker_count": len(WORKERS),
     "heavy_worker_count": sum(1 for spec in WORKERS if spec.compute_class == "heavy"),
     "lightweight_worker_count": sum(1 for spec in WORKERS if spec.compute_class == "lightweight"),
@@ -172,7 +178,7 @@ def _worker_env(spec: WorkerSpec, summary_path: str | None = None) -> dict[str, 
 
 
 def _is_accuracy_worker(spec: WorkerSpec) -> bool:
-    return spec.script == "cross_asset_runner.py"
+    return spec.script in {"cross_asset_runner.py", "research_adaptive_accuracy_runner.py"}
 
 
 def _is_lightweight_worker(spec: WorkerSpec) -> bool:
@@ -185,6 +191,33 @@ def _retry_delay_seconds(consecutive_failures: int) -> int:
         return REST_SECONDS
     multiplier = 2 ** min(failures, 6)
     return min(MAX_ERROR_BACKOFF_SECONDS, max(REST_SECONDS, REST_SECONDS * multiplier))
+
+
+def _success_recheck_delay_seconds(spec: WorkerSpec, evidence) -> int:
+    """Slow only evidence-blocked loops; never disguise software/source failures."""
+    if not isinstance(evidence, dict):
+        return REST_SECONDS
+    if spec.script == "cross_asset_runner.py":
+        failure_types = evidence.get("failure_type_counts") or {}
+        pure_history_block = (
+            evidence.get("research_blocked") is True
+            and evidence.get("research_blocked_reason") == "insufficient_supported_liquidity_subsets"
+            and int(evidence.get("failed_symbol_count") or 0) > 0
+            and isinstance(failure_types, dict)
+            and bool(failure_types)
+            and set(failure_types) == {"InsufficientHistory"}
+        )
+        if pure_history_block:
+            return NATURAL_HISTORY_RECHECK_SECONDS
+    if spec.script == "research_adaptive_accuracy_runner.py":
+        conclusion = str(evidence.get("evidence_conclusion") or "")
+        if conclusion in {
+            "no_dispatchable_hypothesis",
+            "deferred_repeat_no_material_new_evidence",
+            "pending_validation",
+        }:
+            return ADAPTIVE_IDLE_RECHECK_SECONDS
+    return REST_SECONDS
 
 
 def _read_diagnostic_tail(path: Path) -> str:
@@ -336,6 +369,10 @@ async def _worker_loop(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> None:
         exit_code = await _run_once(spec, semaphore)
         consecutive_failures = 0 if exit_code == 0 else consecutive_failures + 1
         delay = _retry_delay_seconds(consecutive_failures)
+        if exit_code == 0:
+            with _lock:
+                evidence = (_status["workers"].get(spec.name) or {}).get("latest_evidence")
+            delay = max(delay, _success_recheck_delay_seconds(spec, evidence))
         with _lock:
             row = _status["workers"].get(spec.name, {})
             if isinstance(row, dict):

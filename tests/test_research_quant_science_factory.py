@@ -23,12 +23,24 @@ def test_quant_science_factory_predeclares_safe_scientific_design():
     assert design["research_method"] == "selective_abstention_calibration"
     assert design["primary_endpoint"] == "after_cost_selective_precision_on_untouched_oos"
     assert design["predeclared_search_budget"] == 1
+    assert design["minimum_evaluation_samples"] == 8
+    assert design["minimum_actionable_coverage"] == 0.25
+    assert design["executor_kind"] == "restrictive_group_abstention_v1"
+    assert design["dispatchable_now"] is True
     assert design["parameter_mining_allowed"] is False
     assert design["untouched_oos_reuse_allowed"] is False
     assert design["forward_evidence_pooled_with_oos"] is False
     assert design["abstention_first"] is True
     assert experiment["trade_authority"] is False
     assert experiment["promotion_authority"] is False
+
+
+def test_horizon_calibration_is_design_only_until_executor_exists():
+    queue = build_quant_science_queue({"research_priorities": [_priority("horizon", "24h")]})
+    design = queue["experiments"][0]["science_design"]
+    assert design["dispatchable_now"] is False
+    assert design["executor_kind"] == "design_only"
+    assert build_heavy_dispatch_plan(queue)["selected_count"] == 0
 
 
 def test_quant_science_factory_caps_hypothesis_family_breadth():
@@ -57,6 +69,7 @@ def test_scheduler_defers_blocked_natural_history_candidate():
     assert plan["blocked_candidate_count"] == 1
     assert plan["selected_count"] == 1
     assert plan["selected"][0]["experiment_id"] != blocked["experiment_id"]
+    assert plan["selected"][0]["executor_kind"] == "restrictive_group_abstention_v1"
     assert plan["raises_heavy_concurrency"] is False
 
 

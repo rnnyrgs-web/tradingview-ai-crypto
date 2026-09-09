@@ -61,6 +61,12 @@ def _eligible(experiment: dict) -> bool:
             return False
         if design.get("forward_evidence_pooled_with_oos") is not False:
             return False
+        # New quant-science designs must explicitly identify an implemented,
+        # research-only executor before they can consume scarce heavy compute.
+        if design.get("dispatchable_now") is False:
+            return False
+        if "dispatchable_now" in design and not design.get("executor_kind"):
+            return False
     return True
 
 
@@ -109,6 +115,7 @@ def build_heavy_dispatch_plan(experiment_queue: dict, *, running_experiment_ids=
             "target_horizon": row.get("target_horizon"),
             "hypothesis": row.get("hypothesis"),
             "research_method": design.get("research_method"),
+            "executor_kind": design.get("executor_kind"),
             "primary_endpoint": design.get("primary_endpoint"),
             "abstention_first": bool(design.get("abstention_first")),
             "falsification_criteria": list(row.get("falsification_criteria") or []),
@@ -128,7 +135,7 @@ def build_heavy_dispatch_plan(experiment_queue: dict, *, running_experiment_ids=
         "blocked_candidate_count": blocked_count,
         "selected_count": len(selected),
         "selected": selected,
-        "priority_policy": "expected genuine signal-quality impact x information/falsification value x probability of actionable evidence / compute/API cost; blocked natural-history work is deferred; ties prefer restrictive abstention-first science",
+        "priority_policy": "expected genuine signal-quality impact x information/falsification value x probability of actionable evidence / compute/API cost; blocked natural-history or unsupported-executor work is deferred; ties prefer restrictive abstention-first science",
         "trade_authority": False,
         "promotion_authority": False,
         "strategy_mutation_authority": False,

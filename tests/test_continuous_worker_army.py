@@ -4,11 +4,11 @@ import continuous_worker_army as army
 
 
 def test_worker_army_is_bounded_and_research_only():
-    assert len(army.WORKERS) == 19
+    assert len(army.WORKERS) == 20
     assert 1 <= army.MAX_CONCURRENT <= 4
     assert 1 <= army.LIGHTWEIGHT_MAX_CONCURRENT <= 4
     snap = army.snapshot()
-    assert snap["heavy_worker_count"] == 17
+    assert snap["heavy_worker_count"] == 18
     assert snap["lightweight_worker_count"] == 2
     assert snap["trade_authority"] is False
     assert snap["write_authority"] is False
@@ -17,24 +17,27 @@ def test_worker_army_is_bounded_and_research_only():
     assert snap["research_only"] is True
 
 
-def test_worker_mix_has_major_pons_universe_swing_cross_asset_and_learning_roles():
+def test_worker_mix_has_major_pons_universe_swing_cross_asset_learning_and_adaptive_roles():
     names = {worker.name for worker in army.WORKERS}
     assert {"major-btc", "major-eth", "major-sol", "major-xrp", "major-link"} <= names
     assert "pons" in names
     assert "swing-majors" in names
     assert {"cross-asset-rank-24h", "cross-asset-rank-7d"} <= names
-    assert {"learning-diagnostics", "experiment-factory"} <= names
+    assert {"learning-diagnostics", "experiment-factory", "adaptive-accuracy"} <= names
     assert {f"universe-{idx}" for idx in range(8)} <= names
     cross_24h = next(worker for worker in army.WORKERS if worker.name == "cross-asset-rank-24h")
     cross_7d = next(worker for worker in army.WORKERS if worker.name == "cross-asset-rank-7d")
+    adaptive = next(worker for worker in army.WORKERS if worker.name == "adaptive-accuracy")
     learning = next(worker for worker in army.WORKERS if worker.name == "learning-diagnostics")
     factory = next(worker for worker in army.WORKERS if worker.name == "experiment-factory")
     assert cross_24h.script == cross_7d.script == "cross_asset_runner.py"
+    assert adaptive.script == "research_adaptive_accuracy_runner.py"
     assert army._is_accuracy_worker(cross_24h)
     assert army._is_accuracy_worker(cross_7d)
+    assert army._is_accuracy_worker(adaptive)
     assert army._is_lightweight_worker(learning)
     assert army._is_lightweight_worker(factory)
-    assert not army._is_lightweight_worker(cross_24h)
+    assert not army._is_lightweight_worker(adaptive)
     assert cross_24h.env["CROSS_ASSET_HORIZON"] == "24h"
     assert cross_7d.env["CROSS_ASSET_HORIZON"] == "7d"
 
@@ -44,9 +47,11 @@ def test_summary_paths_are_routed_per_worker_script():
     learning = next(worker for worker in army.WORKERS if worker.name == "learning-diagnostics")
     factory = next(worker for worker in army.WORKERS if worker.name == "experiment-factory")
     cross = next(worker for worker in army.WORKERS if worker.name == "cross-asset-rank-24h")
+    adaptive = next(worker for worker in army.WORKERS if worker.name == "adaptive-accuracy")
     assert army._worker_env(learning, path)["RESEARCH_LEARNING_SUMMARY_PATH"] == path
     assert army._worker_env(factory, path)["RESEARCH_EXPERIMENT_SUMMARY_PATH"] == path
     assert army._worker_env(cross, path)["CROSS_ASSET_SUMMARY_PATH"] == path
+    assert army._worker_env(adaptive, path)["RESEARCH_ADAPTIVE_ACCURACY_SUMMARY_PATH"] == path
 
 
 def test_lightweight_workers_do_not_consume_heavy_semaphore_lane():
@@ -54,9 +59,32 @@ def test_lightweight_workers_do_not_consume_heavy_semaphore_lane():
     learning = next(worker for worker in army.WORKERS if worker.name == "learning-diagnostics")
     factory = next(worker for worker in army.WORKERS if worker.name == "experiment-factory")
     btc = next(worker for worker in army.WORKERS if worker.name == "major-btc")
+    adaptive = next(worker for worker in army.WORKERS if worker.name == "adaptive-accuracy")
+    cross = next(worker for worker in army.WORKERS if worker.name == "cross-asset-rank-24h")
     assert lanes[learning.name] is lanes[factory.name]
     assert lanes[learning.name] is not lanes[btc.name]
+    assert lanes[adaptive.name] is lanes[cross.name]
+    assert lanes[adaptive.name] is not lanes[btc.name]
     assert isinstance(lanes[learning.name], asyncio.Semaphore)
+
+
+def test_pure_acc002_insufficient_history_gets_long_recheck_without_masking_other_failures():
+    cross = next(worker for worker in army.WORKERS if worker.name == "cross-asset-rank-24h")
+    pure_history = {
+        "research_blocked": True,
+        "research_blocked_reason": "insufficient_supported_liquidity_subsets",
+        "failed_symbol_count": 4,
+        "failure_type_counts": {"InsufficientHistory": 4},
+    }
+    mixed = {**pure_history, "failure_type_counts": {"InsufficientHistory": 3, "RequestError": 1}}
+    assert army._success_recheck_delay_seconds(cross, pure_history) == army.NATURAL_HISTORY_RECHECK_SECONDS
+    assert army._success_recheck_delay_seconds(cross, mixed) == army.REST_SECONDS
+
+
+def test_adaptive_idle_state_uses_bounded_recheck_delay():
+    adaptive = next(worker for worker in army.WORKERS if worker.name == "adaptive-accuracy")
+    evidence = {"evidence_conclusion": "deferred_repeat_no_material_new_evidence"}
+    assert army._success_recheck_delay_seconds(adaptive, evidence) == army.ADAPTIVE_IDLE_RECHECK_SECONDS
 
 
 def test_explicit_symbol_workers_disable_forced_symbol_duplication(monkeypatch):
