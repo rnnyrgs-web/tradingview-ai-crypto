@@ -34,33 +34,51 @@ def _fingerprint(row):
     return str(identity.get("fingerprint", "")) if isinstance(identity, dict) else ""
 
 
+def _stable_identity(row):
+    return (
+        str(row.get("scan_id") or ""),
+        str(row.get("symbol") or ""),
+        _fingerprint(row),
+        str(row.get("direction") or ""),
+        str(row.get("score") or ""),
+    )
+
+
 def _independent_rows(rows, horizon):
-    """Keep chronological non-overlapping forecasts only."""
+    """Keep deterministic non-overlapping forecasts using production ledger chronology.
+
+    The production ``prediction_ledger`` has no ``created_at`` column. ``due_at``
+    is immutable forecast-time metadata written as ``forecast_origin + horizon``;
+    reconstructing ``origin = due_at - horizon`` therefore preserves chronology
+    without fabricating historical fields. Missing/malformed chronology fails
+    closed and contributes no forward evidence.
+    """
     span = HORIZON_SPAN.get(horizon)
     if span is None:
         return []
     valid = []
     for row in rows:
-        if not row.get("created_at") or not row.get("resolved_at"):
+        if not row.get("due_at") or not row.get("resolved_at"):
             continue
         try:
-            created = parse_dt(row["created_at"])
+            due = parse_dt(row["due_at"])
             resolved = parse_dt(row["resolved_at"])
         except (TypeError, ValueError, OverflowError):
             continue
         directional = _finite(row.get("directional_return_pct"))
-        if directional is None or resolved < created + span:
+        if directional is None or resolved < due:
             continue
-        valid.append((created, row, directional))
-    valid.sort(key=lambda item: item[0])
+        origin = due - span
+        valid.append((origin, due, _stable_identity(row), row, directional))
+    valid.sort(key=lambda item: (item[0], item[1], item[2]))
 
     selected = []
     next_allowed = None
-    for created, row, directional in valid:
-        if next_allowed is not None and created < next_allowed:
+    for origin, due, _identity, row, directional in valid:
+        if next_allowed is not None and origin < next_allowed:
             continue
         selected.append((row, directional))
-        next_allowed = created + span
+        next_allowed = due
     return selected
 
 
@@ -140,8 +158,10 @@ def assess_forward_proof(identity, horizon, resolved_rows):
         "status": "FORWARD_PROOF_PASSED" if passed else "FORWARD_PROOF_BLOCKED",
         "reason": reason,
         "horizon": horizon,
+        "raw_matching_rows": len(matching),
         "independent_samples": sample_count,
         "minimum_independent_samples": minimum,
+        "sample_sufficiency_basis": "non_overlapping_full_horizon_forecasts_reconstructed_from_due_at",
         "after_cost_successes": successes,
         "after_cost_precision": round(precision, 4) if sample_count else None,
         "after_cost_precision_95pct_lower": round(lower, 4) if sample_count else None,
@@ -151,6 +171,7 @@ def assess_forward_proof(identity, horizon, resolved_rows):
         "deterioration": deterioration,
         "policy": {
             "non_overlapping_samples_only": True,
+            "chronology_source": "due_at_minus_horizon",
             "precision_95pct_lower_gte": MIN_FORWARD_PRECISION_LOWER,
             "expectancy_after_cost_gt_pct": 0.0,
             "max_drawdown_lte_pct": MAX_FORWARD_DRAWDOWN_PCT,
