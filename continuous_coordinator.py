@@ -285,14 +285,12 @@ def health() -> dict:
     director_state = research_director_snapshot()
     supervisor = army.get("supervisor") if isinstance(army.get("supervisor"), dict) else {}
     supervisor_ok = supervisor.get("healthy") is True if WORKER_ARMY_ENABLED else True
-    factory_ok = factory_state.get("last_error_type") is None if SPECIALIST_FACTORY_ENABLED else True
     canary = canary_snapshot(army)
     healthy = (
         snapshot["production_ok"]
         and snapshot["state_ok"]
         and snapshot["consecutive_failures"] < 3
         and supervisor_ok
-        and factory_ok
         and canary.get("rollback_recommended") is not True
     )
     return {
