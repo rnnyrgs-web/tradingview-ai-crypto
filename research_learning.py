@@ -11,6 +11,8 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from math import isfinite
 
+from signal_development import build_signal_quality_scorecard, objective_reference
+
 MIN_GROUP_SAMPLES = 12
 HORIZON_SPAN = {"24h": timedelta(hours=24), "7d": timedelta(days=7)}
 
@@ -50,13 +52,6 @@ def _timestamp(value):
 
 
 def _independent_window_count(rows):
-    """Count conservative non-overlapping full-horizon windows from ledger chronology.
-
-    Production prediction_ledger has no forecast_at/created_at column. due_at is
-    immutable and written as forecast origin + horizon, so origin is reconstructed
-    as due_at - the row's declared 24h/7d span. Rows that are unresolved before
-    due time, malformed, or have an unknown horizon cannot contribute.
-    """
     intervals = []
     for row in rows:
         span = HORIZON_SPAN.get(row.get("horizon"))
@@ -114,6 +109,12 @@ def _priority(metric, dimension):
     if not metric.get("ready_for_diagnostic") or metric.get("wrong_rate") is None:
         return None
     score = round(float(metric["wrong_rate"]) * min(int(metric["independent_samples"]), 100), 4)
+    horizon = metric["group"] if dimension == "horizon" and metric["group"] in HORIZON_SPAN else "both"
+    question = (
+        f"Why does {dimension}={metric['group']} show a {metric['wrong_rate']:.1%} wrong-signal rate across "
+        f"{metric['independent_samples']} non-overlapping forecast windows, and can a predeclared restrictive filter "
+        "or challenger improve after-cost OOS/forward results?"
+    )
     return {
         "dimension": dimension,
         "group": metric["group"],
@@ -121,11 +122,19 @@ def _priority(metric, dimension):
         "independent_samples": metric["independent_samples"],
         "wrong_rate": metric["wrong_rate"],
         "priority_score": score,
-        "research_question": (
-            f"Why does {dimension}={metric['group']} show a {metric['wrong_rate']:.1%} wrong-signal rate across "
-            f"{metric['independent_samples']} non-overlapping forecast windows, and can a predeclared restrictive filter "
-            "or challenger improve after-cost OOS/forward results?"
-        ),
+        "research_question": question,
+        "hypothesis": question,
+        "predicted_mechanism": f"A repeatable error condition in {dimension}={metric['group']} may identify a restrictive abstention rule or independent challenger signal.",
+        "target_horizon": horizon,
+        "expected_signal_quality_effect": "Reduce false BUY/SELL decisions or improve WAIT selectivity while preserving after-cost expectancy.",
+        "evidence_needed": ["independent non-overlapping resolved forecasts", "chronological backtest", "untouched OOS", "genuine forward challenger evidence"],
+        "falsification_criteria": ["no stable improvement after costs", "effect disappears under robustness or independent OOS", "benefit requires post-outcome threshold selection"],
+        "chronological_oos_requirements": ["purged chronological train/validation", "untouched OOS not used for tuning", "genuine forward confirmation separated from historical/OOS"],
+        "realistic_cost_treatment": ["fees, spread and slippage applied before expectancy claim"],
+        "independent_sample_requirements": [f"at least {MIN_GROUP_SAMPLES} non-overlapping full-horizon windows before diagnostic readiness"],
+        "status": "HYPOTHESIS_FROM_RESOLVED_ERROR",
+        "result": None,
+        "evidence_conclusion": "unresolved",
         "requires_new_validation": True,
         "trade_authority": False,
         "promotion_authority": False,
@@ -148,20 +157,14 @@ def learning_diagnostics(rows, *, minimum_samples=MIN_GROUP_SAMPLES):
             item = _priority(metric, dimension)
             if item:
                 priorities.append(item)
-    priorities.sort(
-        key=lambda row: (
-            -row["priority_score"],
-            -row["independent_samples"],
-            -row["samples"],
-            row["dimension"],
-            row["group"],
-        )
-    )
+    priorities.sort(key=lambda row: (-row["priority_score"], -row["independent_samples"], -row["samples"], row["dimension"], row["group"]))
     total = len(resolved)
     correct = sum(1 for row in resolved if row.get("correct") is True)
     return {
         "ok": True,
         "research_only": True,
+        "objective": objective_reference("learning-diagnostics", "learning_diagnostics"),
+        "signal_quality_scorecard": build_signal_quality_scorecard(resolved),
         "trade_authority": False,
         "promotion_authority": False,
         "automatic_strategy_mutation": False,
