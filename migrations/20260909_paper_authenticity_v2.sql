@@ -110,3 +110,8 @@ drop trigger if exists paper_trades_append_only_guard on public.paper_trades;
 create trigger paper_trades_append_only_guard
 before update or delete on public.paper_trades
 for each row execute function public.enforce_paper_trade_append_only();
+
+grant select, insert on table public.paper_signal_decisions to service_role;
+grant select, insert on table public.paper_reconciliation_snapshots to service_role;
+grant usage, select on sequence public.paper_signal_decisions_id_seq to service_role;
+grant usage, select on sequence public.paper_reconciliation_snapshots_id_seq to service_role;
