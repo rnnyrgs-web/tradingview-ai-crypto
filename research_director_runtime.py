@@ -207,9 +207,14 @@ def refresh_director(army: dict[str, Any]) -> dict[str, Any]:
             claims.append(claim_mission(mission, worker_id=name, owner_lane=mission.lane).to_dict())
     claimed_ids = {claim["mission_id"] for claim in claims}
     next_missions = [m for m in rank_missions(missions) if not m.blocker and m.mission_id not in claimed_ids][:5]
+    visible_missions = sorted(
+        missions,
+        key=lambda m: (m.priority, m.expected_information_gain, m.expected_signal_impact, m.mission_id),
+        reverse=True,
+    )
     payload = {
         "updated_at": _now(),
-        "missions": [m.to_dict() for m in rank_missions(missions)],
+        "missions": [m.to_dict() for m in visible_missions],
         "claims": claims,
         "next_missions": [m.to_dict() for m in next_missions],
         "daily_lead_report": _daily_report(army, missions),
