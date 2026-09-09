@@ -11,7 +11,10 @@ SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
 SUPABASE_SECRET_KEY = os.getenv("SUPABASE_SECRET_KEY", "")
 
 OKX_BASE = "https://www.okx.com"
-BINANCE_SPOT_BASE = "https://api.binance.com"
+# Binance documents data-api.binance.vision as the public market-data-only base.
+# Prefer it for spot ticker/depth collection so Render does not depend on the
+# trading API hostname, while retaining an env override for controlled fallback.
+BINANCE_SPOT_BASE = os.getenv("BINANCE_SPOT_BASE", "https://data-api.binance.vision").rstrip("/")
 BINANCE_FUTURES_BASE = "https://fapi.binance.com"
 
 PRICE_CONSENSUS_MIN_SOURCES = int(os.getenv("PRICE_CONSENSUS_MIN_SOURCES", "2"))
