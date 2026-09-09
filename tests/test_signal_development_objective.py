@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from continuous_worker_army import WORKERS
 from research_artifact import seal_research_payload, verify_research_envelope
 from research_experiment_factory import build_experiment_queue
 from research_heavy_experiment_scheduler import build_heavy_dispatch_plan
@@ -81,6 +82,37 @@ def test_every_worker_class_has_explicit_signal_development_path():
     assert set(registry) == required
     assert all(row["purpose"] and row["signal_path"] for row in registry.values())
     assert "do not claim alpha" in registry["operational_security_workers"]["purpose"]
+
+
+def test_every_current_worker_army_process_is_explicitly_bound_to_objective():
+    bindings = json.loads(Path("orchestration/signal_worker_bindings.json").read_text(encoding="utf-8"))
+    assert bindings["objective_id"] == PRIMARY_OBJECTIVE_ID
+    configured = {spec.name for spec in WORKERS}
+    assert configured == set(bindings["worker_army"])
+    registry = load_objective()["worker_registry"]
+    for row in bindings["worker_army"].values():
+        assert row["class"] in registry
+        assert row["signal_role"]
+    assert bindings["binding_policy"]["all_outputs_must_trace_to_objective"] is True
+    assert bindings["binding_policy"]["operational_security_may_claim_alpha"] is False
+    assert bindings["binding_policy"]["cosmetic_work_may_displace_signal_research"] is False
+
+
+def test_ai_specialists_and_lead_have_explicit_signal_paths():
+    bindings = json.loads(Path("orchestration/signal_worker_bindings.json").read_text(encoding="utf-8"))
+    required = {
+        "autonomous-cloud-data-market",
+        "quant-research",
+        "signal-accuracy",
+        "data-market",
+        "regime-selection",
+        "execution-microstructure",
+        "production-risk",
+        "testing-security",
+        "lead-integrator",
+    }
+    assert set(bindings["ai_and_coordination"]) == required
+    assert "no alpha claim" in bindings["ai_and_coordination"]["testing-security"]["signal_role"]
 
 
 def test_task_contract_requires_falsifiable_measurable_fields():
