@@ -41,6 +41,13 @@ def validate_live_strategy(symbol: str, horizon: str, strategy_family: str, reso
             reason="Missing exact research-validated strategy identity.",
             identity=identity,
         )
+    if not identity.get("identity_complete"):
+        return LiveValidationDecision(
+            approved=False,
+            status="RESEARCH_ONLY",
+            reason="Unsupported or incomplete exact strategy identity.",
+            identity=identity,
+        )
     if not identity["timeframes"]:
         return LiveValidationDecision(
             approved=False,
