@@ -7,7 +7,7 @@ import json
 from typing import Any, Iterable
 
 
-DIRECTOR_VERSION = "v1"
+DIRECTOR_VERSION = "v2"
 DEFAULT_LEASE_MINUTES = 45
 NATURAL_HISTORY_RECHECK_HOURS = 6
 
@@ -25,6 +25,10 @@ class ResearchMission:
     expected_signal_impact: float
     sample_readiness: float
     novelty: float
+    falsification_value: float = 0.5
+    actionable_evidence_probability: float = 0.5
+    compute_cost: float = 0.5
+    redundancy_risk: float = 0.0
     blocker: str | None = None
     recheck_after: str | None = None
     experiment_id: str | None = None
@@ -70,30 +74,34 @@ def mission_priority(
     expected_signal_impact: float,
     sample_readiness: float,
     novelty: float,
+    falsification_value: float = 0.5,
+    actionable_evidence_probability: float = 0.5,
     compute_cost: float = 0.5,
     redundancy_risk: float = 0.0,
     blocker: str | None = None,
 ) -> float:
-    """Deterministic, inspectable scheduler score.
+    """Score scarce research by after-cost impact and evidence value per cost.
 
-    Blocked work is heavily discounted instead of consuming scarce heavy lanes.
-    Natural-history blockers should additionally carry a future recheck time.
+    The multiplicative core prevents a flashy but non-falsifiable, evidence-poor,
+    or very expensive hypothesis from outranking a test that can actually teach
+    the system something. Readiness/novelty are small tie-breakers only.
+    Blocked work is heavily discounted and never claims the heavy lane.
     """
     info = _clamp01(expected_information_gain)
     impact = _clamp01(expected_signal_impact)
     samples = _clamp01(sample_readiness)
     novel = _clamp01(novelty)
+    falsify = _clamp01(falsification_value)
+    actionable = _clamp01(actionable_evidence_probability)
     cost = _clamp01(compute_cost)
     redundant = _clamp01(redundancy_risk)
 
-    score = (
-        0.34 * info
-        + 0.30 * impact
-        + 0.16 * samples
-        + 0.12 * novel
-        + 0.08 * (1.0 - cost)
-        - 0.20 * redundant
-    )
+    evidence_value = (0.45 * info + 0.35 * falsify + 0.20 * samples)
+    impact_value = (0.80 * impact + 0.20 * actionable)
+    cost_efficiency = 1.0 / (0.25 + 0.75 * cost)
+    score = evidence_value * impact_value * (0.35 + 0.65 * actionable) * cost_efficiency
+    score += 0.04 * novel
+    score *= 1.0 - 0.75 * redundant
     if blocker:
         score *= 0.08 if blocker == "InsufficientHistory" else 0.02
     return round(max(0.0, score), 6)
@@ -110,6 +118,8 @@ def build_mission(
     expected_signal_impact: float,
     sample_readiness: float,
     novelty: float,
+    falsification_value: float = 0.5,
+    actionable_evidence_probability: float = 0.5,
     compute_cost: float = 0.5,
     redundancy_risk: float = 0.0,
     blocker: str | None = None,
@@ -133,6 +143,8 @@ def build_mission(
             expected_signal_impact=expected_signal_impact,
             sample_readiness=sample_readiness,
             novelty=novelty,
+            falsification_value=falsification_value,
+            actionable_evidence_probability=actionable_evidence_probability,
             compute_cost=compute_cost,
             redundancy_risk=redundancy_risk,
             blocker=blocker,
@@ -141,6 +153,10 @@ def build_mission(
         expected_signal_impact=_clamp01(expected_signal_impact),
         sample_readiness=_clamp01(sample_readiness),
         novelty=_clamp01(novelty),
+        falsification_value=_clamp01(falsification_value),
+        actionable_evidence_probability=_clamp01(actionable_evidence_probability),
+        compute_cost=_clamp01(compute_cost),
+        redundancy_risk=_clamp01(redundancy_risk),
         blocker=blocker,
         recheck_after=recheck_after,
         experiment_id=experiment_id,
@@ -160,7 +176,14 @@ def rank_missions(missions: Iterable[ResearchMission], now: datetime | None = No
 
     return sorted(
         (m for m in missions if eligible(m)),
-        key=lambda m: (m.priority, m.expected_information_gain, m.expected_signal_impact, m.mission_id),
+        key=lambda m: (
+            m.priority,
+            m.falsification_value,
+            m.actionable_evidence_probability,
+            m.expected_information_gain,
+            m.expected_signal_impact,
+            m.mission_id,
+        ),
         reverse=True,
     )
 
