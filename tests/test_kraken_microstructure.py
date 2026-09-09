@@ -56,6 +56,10 @@ def test_summary_fails_closed_for_stale_future_crossed_or_one_sided_books():
 def test_summary_rejects_invalid_policy_and_depth_without_repairing_data():
     assert summarize_kraken_microstructure("", _book(), now_ms=NOW)["reason"] == "invalid_pair"
     assert summarize_kraken_microstructure("BTC/USD", {}, now_ms=NOW)["reason"] == "missing_book_timestamp"
+    assert summarize_kraken_microstructure("BTC/USD", _book(), now_ms="not-a-clock")["reason"] == "invalid_observation_clock"
+    malformed_ts = _book()
+    malformed_ts["observed_ms"] = float("inf")
+    assert summarize_kraken_microstructure("BTC/USD", malformed_ts, now_ms=NOW)["reason"] == "missing_book_timestamp"
     assert summarize_kraken_microstructure("BTC/USD", _book(), now_ms=NOW, max_age_seconds=-1)["reason"] == "invalid_age_policy"
     assert summarize_kraken_microstructure("BTC/USD", _book(), now_ms=NOW, depth_levels=0)["reason"] == "invalid_depth_levels"
     assert summarize_kraken_microstructure("BTC/USD", _book(), now_ms=NOW, depth_levels=101)["reason"] == "invalid_depth_levels"
