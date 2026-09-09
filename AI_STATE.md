@@ -5,7 +5,7 @@ Last updated: 2026-09-09
 Authoritative continuation state for `rnnyrgs-web/tradingview-ai-crypto`. Read this file from current `main` in full before development. Never infer project state only from ChatGPT memory. Update this file after each completed integration cycle.
 
 ## CURRENT MAIN / ARCHITECTURE
-Current tested integration baseline after PR #185: `8dde2417d8f0dbf0c4782bb71047afedd8403adb`.
+Current tested integration baseline after PR #186: `f0d6681294a13c7d26a2ab7a0962407c0fab7366`. This includes the immediately preceding PR #185 regime×strategy research integration.
 
 Production: GitHub -> Render -> Python/FastAPI V3 -> Supabase. Production scans run about every 15 minutes and produce separate 24h/7d Top-20 rankings. Continuous research/backtesting runs on the existing Render coordinator with bounded heavy concurrency under the USD 30/month recurring-infrastructure ceiling.
 
@@ -140,8 +140,11 @@ PR #179 exact head `9755aea5e44b5becf9af81c616cf79e4147ca818` passed Security an
 PR #181 exact head `7e26f6ae6fe9de5afb075c5fb58a32ea4e172048` passed Security and Reliability #1326 before squash merge as `15d40568a250b3d6ac5d71e19bc1a1bf25e91c20`.
 PR #183 exact final head `2aeeb099be9be2006982cff0bf490477c68ac8f8` passed Security and Reliability #1346 before squash merge as `8db0bbd6a1601f0bcfc00dbefb3fdf0490c87f25`. The prior candidate failed one regression because canonical ACC-002 wording had been removed; the wording was restored without weakening the guard and the new exact head passed all checks.
 PR #185 exact head `7daca2531b5e74edd102a6147a9d26c04ca9c76c` passed Security and Reliability #1361 before squash merge as `8dde2417d8f0dbf0c4782bb71047afedd8403adb`.
+PR #186 exact head `9b400265a505798649f8ac0cf8e808a6d726370c` passed Security and Reliability #1364 before merge as `f0d6681294a13c7d26a2ab7a0962407c0fab7366`.
 
-PR #185 deployed successfully to both production and the continuous coordinator. Both Render deploys for merged commit `8dde2417d8f0dbf0c4782bb71047afedd8403adb` reached `live`. The coordinator service answered HTTP 200 during startup; prior post-#184 observability had shown the supervisor healthy, zero worker failures/timeouts, 256 specialist cycles with zero AI calls, and trade/promotion/signal authority false. Continue monitoring the post-#185 learning-worker cycle for actual regime×strategy diagnostic evidence; deployment alone is not a signal-quality claim.
+PR #186 fixes three recurring operational stalls without weakening research/trading gates: impossible low-price/high-ATR risk geometry now fails closed for the affected symbol/horizon instead of aborting the scan; cross-exchange spot data defaults to Binance's public market-data-only host; and the read-only production AI observer interval is six hours so rate-limit/quota failures do not hammer the API while deterministic research continues. It adds no broker connection, live promotion, paper rewrite, heavy-concurrency increase, paid service, or validation weakening.
+
+The current combined main `f0d6681294a13c7d26a2ab7a0962407c0fab7366` deployed successfully to both production and the continuous coordinator. Both Render deployments reached `live`. PR #185's regime×strategy code therefore remains present under the PR #186 main commit. Continue monitoring the learning-worker cycle for actual regime×strategy diagnostic evidence; deployment alone is not a signal-quality claim.
 
 The prior live paper-cycle defect was a repeated decision write hitting Supabase unique constraint `paper_signal_decisions_signal_key_key`. PR #181 changed those writes to explicit idempotent conflict handling. No recurrence was observed in the checked post-#181 windows; continue monitoring without rewriting paper history.
 
@@ -165,18 +168,19 @@ Preserve exact strategy fingerprints while genuine forward observations accumula
 Blind RSI/MACD/EMA or similar parameter permutations without a diagnosed resolved-error mechanism are explicitly deprioritized. Redundant ensemble members, repeated falsified hypotheses without materially new evidence, and worker-count expansion without demonstrated information-value benefit are also deprioritized.
 
 ## CURRENT OPEN DEVELOPMENT
-PRs #160/#163/#164/#165/#167/#168/#170/#172/#173/#175/#176/#177/#178/#179/#181/#183/#185 are integrated and must not be re-applied. PR #180 was a state-only sync branch superseded by later current-main syncs and must not be merged. PR #166 is stale/superseded and must not be merged as-is. PR #140 was closed as superseded by integrated PR #170. Older PRs #34, #33 and #13 are stale against current main and must not be merged as-is without a fresh compatibility/relevance review.
+PRs #160/#163/#164/#165/#167/#168/#170/#172/#173/#175/#176/#177/#178/#179/#181/#183/#185/#186 are integrated and must not be re-applied. PR #180 was a state-only sync branch superseded by later current-main syncs and must not be merged. PR #166 is stale/superseded and must not be merged as-is. PR #140 was closed as superseded by integrated PR #170. Older PRs #34, #33 and #13 are stale against current main and must not be merged as-is without a fresh compatibility/relevance review.
 
 Persistent specialist priorities live in `orchestration/specialist_coordination.json`. The accuracy/profitability add/remove roadmap lives in `orchestration/accuracy_profitability_roadmap.json`. Specialists may create isolated candidate work only and may not bypass the canonical evidence gates or recurring-cost ceiling.
 
 ## EXACT NEXT STEP
 1. Inspect the first naturally completed post-#185 learning-worker regime×strategy report. Confirm it uses independent full-horizon rows, keeps untouched OOS sealed, and produces no authority changes. Do not promote any pair from development/validation diagnostics alone.
-2. Inspect naturally completed adaptive-accuracy and meta-WAIT evidence. Confirm the durable Supabase trial counter changes only for genuinely conclusive `validation_failed` or `oos_evaluated` lessons and that untouched OOS remains sealed unless the sequential adjusted validation gate passes.
-3. Audit prediction-ledger outcomes for temporal integrity after PR #179: stale delayed candles should remain unresolved, while valid first-at/after-deadline 1H candles within the explicit tolerance should resolve normally. Do not backfill invalid historical labels merely to increase sample count.
-4. Preserve the ACC-002 natural-history blocker while aggregate failures remain `InsufficientHistory`; never weaken the 80% coverage, two-supported-subset, Top-N ordering or untouched-OOS rules.
-5. After regime×strategy diagnostic coverage is measured, select the next highest-information roadmap item based on defensible evidence readiness: cross-sectional/residual challengers, economic calibration, prospective microstructure vetoes, or ensemble-diversity penalties. Prefer restrictive WAIT/falsification work over trade-count expansion.
-6. At every hourly autonomous eligibility review ask what should be added, removed, simplified, combined, deprioritized or tested next, but do not force paid work or weaken the 12-hour model cooldown/$1-day budget/$30-month ceiling.
-7. Keep prospective microstructure/consensus evidence accumulating naturally; never reconstruct unavailable historical order books or backfill future-only provenance.
-8. Monitor the authentic append-only paper ledger without rewriting history. Paper results remain evidence only.
-9. Keep `live_promotions.json` empty, broker disconnected, signing keys unused, paper baseline immutable, heavy concurrency bounded, and recurring infrastructure within USD 30/month until genuine governed evidence justifies any separately approved change.
-10. Keep exact-head Security and Reliability plus current-main compatibility review mandatory for every integration.
+2. Verify the PR #186 stall fixes in live operation: impossible risk geometry should skip only the affected symbol/horizon, public Binance market-data collection should no longer depend on the trading API hostname, and observer quota/rate limits should not create frequent retry noise.
+3. Inspect naturally completed adaptive-accuracy and meta-WAIT evidence. Confirm the durable Supabase trial counter changes only for genuinely conclusive `validation_failed` or `oos_evaluated` lessons and that untouched OOS remains sealed unless the sequential adjusted validation gate passes.
+4. Audit prediction-ledger outcomes for temporal integrity after PR #179: stale delayed candles should remain unresolved, while valid first-at/after-deadline 1H candles within the explicit tolerance should resolve normally. Do not backfill invalid historical labels merely to increase sample count.
+5. Preserve the ACC-002 natural-history blocker while aggregate failures remain `InsufficientHistory`; never weaken the 80% coverage, two-supported-subset, Top-N ordering or untouched-OOS rules.
+6. After regime×strategy diagnostic coverage is measured, select the next highest-information roadmap item based on defensible evidence readiness: cross-sectional/residual challengers, economic calibration, prospective microstructure vetoes, or ensemble-diversity penalties. Prefer restrictive WAIT/falsification work over trade-count expansion.
+7. At every hourly autonomous eligibility review ask what should be added, removed, simplified, combined, deprioritized or tested next, but do not force paid work or weaken the 12-hour model cooldown/$1-day budget/$30-month ceiling.
+8. Keep prospective microstructure/consensus evidence accumulating naturally; never reconstruct unavailable historical order books or backfill future-only provenance.
+9. Monitor the authentic append-only paper ledger without rewriting history. Paper results remain evidence only.
+10. Keep `live_promotions.json` empty, broker disconnected, signing keys unused, paper baseline immutable, heavy concurrency bounded, and recurring infrastructure within USD 30/month until genuine governed evidence justifies any separately approved change.
+11. Keep exact-head Security and Reliability plus current-main compatibility review mandatory for every integration.
