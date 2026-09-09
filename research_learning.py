@@ -8,10 +8,11 @@ trade authority, or promotes a strategy.
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from math import isfinite
 
 MIN_GROUP_SAMPLES = 12
+HORIZON_SPAN = {"24h": timedelta(hours=24), "7d": timedelta(days=7)}
 
 
 def _score_band(value):
@@ -49,24 +50,27 @@ def _timestamp(value):
 
 
 def _independent_window_count(rows):
-    """Count non-overlapping full-horizon forecast windows conservatively.
+    """Count conservative non-overlapping full-horizon windows from ledger chronology.
 
-    Rows without trustworthy forecast/due timestamps cannot contribute. Multiple
-    symbols or repeated scans inside the same full-horizon interval count as one
-    temporal window for sample-sufficiency gating, never as independent evidence.
+    Production prediction_ledger has no forecast_at/created_at column. due_at is
+    immutable and written as forecast origin + horizon, so origin is reconstructed
+    as due_at - the row's declared 24h/7d span. Rows that are unresolved before
+    due time, malformed, or have an unknown horizon cannot contribute.
     """
     intervals = []
     for row in rows:
-        forecast_at = _timestamp(row.get("forecast_at"))
+        span = HORIZON_SPAN.get(row.get("horizon"))
         due_at = _timestamp(row.get("due_at"))
-        if forecast_at is None or due_at is None or due_at <= forecast_at:
+        resolved_at = _timestamp(row.get("resolved_at"))
+        if span is None or due_at is None or resolved_at is None or resolved_at < due_at:
             continue
-        intervals.append((forecast_at, due_at))
+        origin = due_at - span
+        intervals.append((origin, due_at))
     intervals.sort(key=lambda item: (item[0], item[1]))
     count = 0
     covered_until = None
-    for forecast_at, due_at in intervals:
-        if covered_until is not None and forecast_at < covered_until:
+    for origin, due_at in intervals:
+        if covered_until is not None and origin < covered_until:
             continue
         count += 1
         covered_until = due_at
@@ -164,7 +168,7 @@ def learning_diagnostics(rows, *, minimum_samples=MIN_GROUP_SAMPLES):
         "resolved_samples": total,
         "baseline_precision": round(correct / total, 4) if total else None,
         "minimum_group_samples": int(minimum_samples),
-        "sample_sufficiency_basis": "non_overlapping_full_horizon_forecast_windows",
+        "sample_sufficiency_basis": "non_overlapping_full_horizon_windows_reconstructed_from_due_at",
         "raw_precision_descriptive_only": True,
         "diagnostics": dimensions,
         "research_priorities": priorities[:20],
