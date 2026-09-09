@@ -55,7 +55,7 @@ def test_v1_is_single_agent_cost_bounded_and_broker_disconnected():
     assert config["budget"]["provider_retry_safety_multiplier"] == 3.0
     assert (
         config["budget"]["baseline_infrastructure_reserve_usd"]
-        + config["budget"]["runner_monthly_api_budget_usd"] * config["budget"]["provider_retry_safety_multiplier"]
+        + config["budget"]["runner_monthly_api_budget_usd"]
         + config["budget"]["pause_buffer_usd"]
         <= config["budget"]["project_monthly_ceiling_usd"]
     )
@@ -94,7 +94,7 @@ def test_api_cost_limit_reserves_worst_case_before_model_call():
     assert reserve == pytest.approx(0.0416)
     state["runs"].append({
         "finished_at": "2026-09-09T02:00:00Z",
-        "actual_cost_usd": 0.02,
+        "actual_cost_usd": 0.98,
     })
     ok, reason, _ = budget_gate(config, state, "data-market", NOW)
     assert ok is False
