@@ -7,7 +7,7 @@
   "policy": {
     "max_concurrent_agent_runs": 1,
     "max_agent_runs_per_invocation": 1,
-    "schedule_check_hours": 3,
+    "schedule_check_hours": 1,
     "successful_run_cooldown_hours": 12,
     "max_retries": 0,
     "task_retry_limit": 2,
