@@ -11,6 +11,7 @@ from db import fetch_shadow_predictions
 from research_learning import learning_diagnostics
 from research_learning_state import append_lesson, load_state
 from research_meta_wait import build_meta_wait_diagnostics
+from research_regime_strategy_router import build_regime_strategy_router
 from selective_precision import selective_precision_summary
 
 
@@ -40,6 +41,7 @@ def build_learning_report(rows):
     diagnostics = learning_diagnostics(rows)
     selective = selective_precision_summary(rows)
     meta_wait = build_meta_wait_diagnostics(rows)
+    regime_strategy = build_regime_strategy_router(rows)
     lesson = _priority_lesson(diagnostics)
     if lesson:
         append_lesson(lesson)
@@ -53,6 +55,7 @@ def build_learning_report(rows):
         "diagnostics": diagnostics,
         "selective_precision": selective,
         "meta_wait_economic_diagnostics": meta_wait,
+        "regime_strategy_router": regime_strategy,
         "research_memory": {
             "lesson_count": len(memory.get("lessons") or []),
             "updated_at": memory.get("updated_at"),
