@@ -20,6 +20,7 @@ import httpx
 from fastapi import FastAPI
 
 from continuous_worker_army import run_army, snapshot as worker_army_snapshot
+from cross_asset_runner import MIN_LIQUIDITY_SUBSET_COVERAGE
 from deployment_canary import evaluate_canary
 
 
@@ -86,13 +87,18 @@ def observability_log_payload(army: object) -> dict:
         row = acc002.get(name) if isinstance(acc002.get(name), dict) else {}
         evidence = row.get("latest_evidence") if isinstance(row.get("latest_evidence"), dict) else {}
         selected = evidence.get("selected_oos") if isinstance(evidence.get("selected_oos"), dict) else {}
-        liquidity = evidence.get("liquidity_stability_policy") if isinstance(evidence.get("liquidity_stability_policy"), dict) else {}
+        supported_subsets = evidence.get("supported_liquidity_subsets")
+        if not isinstance(supported_subsets, list):
+            supported_subsets = None
         failures = evidence.get("failed_symbols") if isinstance(evidence.get("failed_symbols"), list) else []
         failure_types = Counter(
             str(item.get("error_type"))
             for item in failures
             if isinstance(item, dict) and item.get("error_type")
         )
+        failed_symbol_count = evidence.get("failed_symbol_count")
+        if not isinstance(failed_symbol_count, int) or isinstance(failed_symbol_count, bool):
+            failed_symbol_count = len(failures)
         return {
             "exit": row.get("last_exit_code"),
             "elapsed_s": row.get("elapsed_seconds"),
@@ -105,9 +111,9 @@ def observability_log_payload(army: object) -> dict:
             "promotion_review": selected.get("eligible_for_promotion_review"),
             "universe_requested": evidence.get("universe_requested"),
             "universe_resolved": evidence.get("universe_resolved"),
-            "supported_liquidity_subsets": liquidity.get("supported_subsets"),
-            "minimum_subset_coverage": liquidity.get("minimum_subset_coverage"),
-            "failed_symbol_count": len(failures),
+            "supported_liquidity_subsets": supported_subsets,
+            "minimum_subset_coverage": MIN_LIQUIDITY_SUBSET_COVERAGE if supported_subsets is not None else None,
+            "failed_symbol_count": failed_symbol_count,
             "failure_type_counts": dict(sorted(failure_types.items())),
         }
 
@@ -256,13 +262,3 @@ def health() -> dict:
         "worker_army": army,
         **snapshot,
     }
-
-
-@app.get("/workers")
-def workers() -> dict:
-    return worker_army_snapshot() if WORKER_ARMY_ENABLED else {"enabled": False}
-
-
-@app.get("/deployment-canary")
-def deployment_canary() -> dict:
-    return canary_snapshot()
