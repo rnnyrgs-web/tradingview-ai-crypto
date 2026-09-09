@@ -42,6 +42,37 @@ def test_overlapping_forecasts_do_not_inflate_independent_evidence():
     assert result["eligible_for_tiny_canary_review"] is False
 
 
+def test_midnight_bucket_boundary_cannot_make_overlapping_windows_independent():
+    first_due = datetime(2026, 1, 2, 23, 59, tzinfo=timezone.utc)
+    second_due = datetime(2026, 1, 3, 0, 1, tzinfo=timezone.utc)
+    rows = []
+    for index, due in enumerate((first_due, second_due)):
+        rows.append({
+            "scan_id": f"scan-{index}",
+            "symbol": "BTC-USDT",
+            "horizon": "24h",
+            "due_at": due.isoformat(),
+            "resolved_at": (due + timedelta(minutes=1)).isoformat(),
+            "directional_return_pct": 1.0,
+            "correct": True,
+            "strategy_identity": identity(),
+        })
+    result = assess_shadow_readiness(rows, target_identity=identity(), horizon="24h")
+    assert result["raw_resolved_forecasts"] == 2
+    assert result["independent_periods"] == 1
+    assert result["independence_policy"] == "deterministic_non_overlapping_full_horizon_windows_from_due_at"
+
+
+def test_missing_due_at_fails_closed_instead_of_using_resolved_bucket():
+    rows = [row(i, 1.0) for i in range(10)]
+    for item in rows:
+        item.pop("due_at")
+    result = assess_shadow_readiness(rows, target_identity=identity(), horizon="24h")
+    assert result["raw_resolved_forecasts"] == 10
+    assert result["independent_periods"] == 0
+    assert result["eligible_for_tiny_canary_review"] is False
+
+
 def test_exact_strategy_fingerprint_is_required():
     rows = [row(0, 1.0)]
     target = identity()
