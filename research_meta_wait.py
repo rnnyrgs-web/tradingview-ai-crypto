@@ -20,6 +20,7 @@ from selective_precision import _independent_rows
 from signal_development import objective_reference
 
 DEFAULT_ROUND_TRIP_COST_PCT = 0.12
+COST_STRESS_MULTIPLIERS = (1.0, 1.5, 2.0, 3.0)
 MIN_GROUP_SAMPLES = 12
 
 
@@ -65,37 +66,44 @@ def _resolved(rows):
     ]
 
 
-def _independent(rows):
-    selected = []
+def _independent_by_horizon(rows):
+    out = {}
     for horizon in ("24h", "7d"):
-        selected.extend(_independent_rows(
+        out[horizon] = _independent_rows(
             [row for row in _resolved(rows) if row.get("horizon") == horizon],
             horizon,
-        ))
-    return selected
+        )
+    return out
 
 
 def _economic_metrics(rows, *, cost_pct):
-    after_cost = []
+    raw_returns = []
     correct = 0
     for row in rows:
         if row.get("correct") is True:
             correct += 1
         directional_return = _finite(row.get("directional_return_pct"))
         if directional_return is not None:
-            after_cost.append(directional_return - float(cost_pct))
+            raw_returns.append(directional_return)
     total = len(rows)
-    complete = bool(total and len(after_cost) == total)
-    wins = sum(1 for value in after_cost if value > 0.0)
-    losses = [value for value in after_cost if value <= 0.0]
-    positive = [value for value in after_cost if value > 0.0]
+    complete = bool(total and len(raw_returns) == total)
+    base_after_cost = [value - float(cost_pct) for value in raw_returns] if complete else []
+    wins = sum(1 for value in base_after_cost if value > 0.0)
+    losses = [value for value in base_after_cost if value <= 0.0]
+    positive = [value for value in base_after_cost if value > 0.0]
+    stress = {}
+    if complete:
+        for multiplier in COST_STRESS_MULTIPLIERS:
+            stressed = [value - float(cost_pct) * multiplier for value in raw_returns]
+            stress[f"{multiplier:g}x"] = round(sum(stressed) / total, 4)
     return {
         "samples": total,
         "directional_precision": round(correct / total, 4) if total else None,
-        "after_cost_expectancy_pct": round(sum(after_cost) / total, 4) if complete else None,
+        "after_cost_expectancy_pct": stress.get("1x") if complete else None,
         "after_cost_win_rate": round(wins / total, 4) if complete else None,
         "average_after_cost_win_pct": round(sum(positive) / len(positive), 4) if positive else None,
         "average_after_cost_loss_pct": round(sum(losses) / len(losses), 4) if losses else None,
+        "cost_stress_expectancy_pct": stress,
         "economic_evidence_complete": complete,
     }
 
@@ -104,49 +112,53 @@ def build_meta_wait_diagnostics(rows, *, cost_pct=DEFAULT_ROUND_TRIP_COST_PCT, m
     """Return timestamp-safe, independent economic error groups for research discovery.
 
     Only non-overlapping full-horizon resolved rows contribute to diagnostics.
+    Horizons are never pooled: 24h and 7d economic behavior can differ materially.
     The output proposes restrictive WAIT hypotheses; it does not decide or execute
     any production action.
     """
-    independent = _independent(rows)
+    by_horizon = _independent_by_horizon(rows)
     dimensions = ("score_band", "market_regime", "direction", "strategy_identity")
     groups = []
-    for dimension in dimensions:
-        buckets = defaultdict(list)
-        for row in independent:
-            buckets[_group_value(row, dimension)].append(row)
-        for group, bucket in buckets.items():
-            metrics = _economic_metrics(bucket, cost_pct=cost_pct)
-            ready = metrics["samples"] >= int(minimum_samples) and metrics["economic_evidence_complete"]
-            expectancy = metrics["after_cost_expectancy_pct"]
-            economic_harm = max(0.0, -float(expectancy)) if expectancy is not None else 0.0
-            error_rate = 1.0 - float(metrics["directional_precision"] or 0.0)
-            # Ranking only affects which research question is tested first. It has
-            # no production authority and uses fixed, predeclared economics.
-            priority = round(metrics["samples"] * (0.6 * error_rate + 0.4 * min(economic_harm, 1.0)), 4)
-            groups.append({
-                "dimension": dimension,
-                "group": group,
-                **metrics,
-                "ready_for_research": ready,
-                "economic_harm_pct": round(economic_harm, 4),
-                "information_priority": priority if ready else 0.0,
-                "hypothesis": (
-                    f"Predeclared restrictive WAIT for {dimension}={group} may improve independent "
-                    "after-cost precision/expectancy if this condition remains weak on validation."
-                ),
-                "requires_fresh_validation": True,
-                "untouched_oos_reuse_allowed": False,
-                "trade_authority": False,
-                "promotion_authority": False,
-            })
-    groups.sort(key=lambda row: (-float(row["information_priority"]), -int(row["samples"]), row["dimension"], row["group"]))
+    for horizon, independent in by_horizon.items():
+        for dimension in dimensions:
+            buckets = defaultdict(list)
+            for row in independent:
+                buckets[_group_value(row, dimension)].append(row)
+            for group, bucket in buckets.items():
+                metrics = _economic_metrics(bucket, cost_pct=cost_pct)
+                ready = metrics["samples"] >= int(minimum_samples) and metrics["economic_evidence_complete"]
+                expectancy = metrics["after_cost_expectancy_pct"]
+                economic_harm = max(0.0, -float(expectancy)) if expectancy is not None else 0.0
+                error_rate = 1.0 - float(metrics["directional_precision"] or 0.0)
+                priority = round(metrics["samples"] * (0.6 * error_rate + 0.4 * min(economic_harm, 1.0)), 4)
+                groups.append({
+                    "horizon": horizon,
+                    "dimension": dimension,
+                    "group": group,
+                    **metrics,
+                    "ready_for_research": ready,
+                    "economic_harm_pct": round(economic_harm, 4),
+                    "information_priority": priority if ready else 0.0,
+                    "hypothesis": (
+                        f"Predeclared restrictive WAIT for {horizon} {dimension}={group} may improve independent "
+                        "after-cost precision/expectancy if this condition remains weak on validation."
+                    ),
+                    "requires_fresh_validation": True,
+                    "untouched_oos_reuse_allowed": False,
+                    "trade_authority": False,
+                    "promotion_authority": False,
+                })
+    groups.sort(key=lambda row: (-float(row["information_priority"]), -int(row["samples"]), row["horizon"], row["dimension"], row["group"]))
+    independent_total = sum(len(items) for items in by_horizon.values())
     return {
         "ok": True,
         "research_only": True,
         "objective": objective_reference("meta-wait-economic-diagnostics", "learning_diagnostics"),
         "round_trip_cost_pct": float(cost_pct),
-        "independent_samples": len(independent),
-        "sample_policy": "non_overlapping_full_horizon_resolved_rows_only",
+        "cost_stress_multipliers": list(COST_STRESS_MULTIPLIERS),
+        "independent_samples": independent_total,
+        "independent_samples_by_horizon": {horizon: len(items) for horizon, items in by_horizon.items()},
+        "sample_policy": "non_overlapping_full_horizon_resolved_rows_separate_by_horizon",
         "meta_label": "directional_return_pct_minus_fixed_round_trip_cost_gt_0",
         "groups": groups,
         "research_priorities": [row for row in groups if row["ready_for_research"]][:20],
