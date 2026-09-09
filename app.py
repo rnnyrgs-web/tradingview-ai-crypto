@@ -12,7 +12,7 @@ from evaluator import run_evaluation
 from backtest import run_backtest, walk_forward
 from market_data import build_universe
 from dashboard import login_page, handle_login, dashboard_page, signal_detail_page, signal_chart_data
-from paper_dashboard import paper_portfolio_page
+from paper_dashboard import paper_audit_page, paper_portfolio_page
 from combined_dashboard import combined_dashboard_page
 from operational_monitor import health_snapshot, record_error
 from calibration import calibration_summary
@@ -62,6 +62,7 @@ def root():
         "version":STRATEGY_VERSION,
         "dashboard":"/dashboard",
         "paper_portfolio":"/dashboard/paper",
+        "paper_audit":"/dashboard/paper/audit",
         "endpoints":["/health","/research-observability","/selective-precision","/paper","/paper/run","/scan","/evaluate","/calibration","/shadow-readiness","/backtest","/walkforward","/universe","/signals","/signals/cursor"]
     }
 
@@ -138,6 +139,13 @@ def dashboard_paper(request:Request):
         return paper_portfolio_page(request)
     except Exception as e:
         internal_error("dashboard_paper", e, "Paper portfolio unavailable")
+
+@app.get("/dashboard/paper/audit")
+def dashboard_paper_audit(request:Request):
+    try:
+        return paper_audit_page(request)
+    except Exception as e:
+        internal_error("dashboard_paper_audit", e, "Paper audit unavailable")
 
 @app.get("/dashboard/signal/{signal_id}")
 def dashboard_signal(request:Request,signal_id:int):

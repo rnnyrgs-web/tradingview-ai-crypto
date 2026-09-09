@@ -19,9 +19,27 @@ def test_live_position_matches_equity_mark_without_double_counting_entry_fee(mon
 def test_reconciled_totals_are_exact_identity():
     status = {"starting_capital_usd": 100000.0, "realized_pnl_usd": 2628.40}
     positions = [{"live_pnl": -357.33}, {"live_pnl": -186.68}, {"live_pnl": -5.76}, {"live_pnl": -140.71}, {"live_pnl": -418.21}]
-    initial, realized, open_pnl, total_pnl, equity = d._reconciled_totals(status, positions)
+    initial, realized, open_pnl, total_pnl, equity, complete = d._reconciled_totals(status, positions)
+    assert complete is True
     assert round(open_pnl, 2) == -1108.69
     assert round(total_pnl, 2) == 1519.71
     assert round(equity, 2) == 101519.71
     assert round(total_pnl, 2) == round(realized + open_pnl, 2)
     assert round(equity, 2) == round(initial + total_pnl, 2)
+
+
+def test_missing_live_mark_never_fabricates_zero_open_pnl():
+    status = {
+        "starting_capital_usd": 100000.0,
+        "realized_pnl_usd": 2500.0,
+        "equity_usd": 101750.0,
+    }
+    initial, realized, open_pnl, total_pnl, equity, complete = d._reconciled_totals(
+        status, [{"live_pnl": None}]
+    )
+    assert complete is False
+    assert open_pnl is None
+    assert equity == 101750.0
+    assert total_pnl == 1750.0
+    assert initial == 100000.0
+    assert realized == 2500.0

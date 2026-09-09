@@ -51,6 +51,17 @@ def fetch_open_paper_trades(account_id="default"):
     return r.json()
 
 
+def fetch_all_paper_trades(account_id="default", limit=10000):
+    if not _configured():
+        return []
+    r = http.get(f"{SUPABASE_URL}/rest/v1/paper_trades", headers=headers(), params={
+        "select":"*","account_id":f"eq.{account_id}","order":"opened_at.asc","limit":str(max(1, min(int(limit), 10000)))
+    })
+    if r.status_code >= 300:
+        raise RuntimeError(f"Paper trade ledger fetch failed: {r.status_code} {r.text}")
+    return r.json()
+
+
 def insert_paper_trade(row):
     if not _configured():
         return False
@@ -60,7 +71,7 @@ def insert_paper_trade(row):
     return bool(r.json())
 
 
-def close_paper_trade(trade_id, exit_price, exit_reason, pnl_usd, pnl_pct):
+def close_paper_trade(trade_id, exit_price, exit_reason, pnl_usd, pnl_pct, audit=None):
     if not _configured():
         return False
     stamp = iso(now_utc())
@@ -68,10 +79,83 @@ def close_paper_trade(trade_id, exit_price, exit_reason, pnl_usd, pnl_pct):
         "status":"CLOSED","closed_at":stamp,"exit_price":exit_price,"exit_reason":exit_reason,
         "pnl_usd":pnl_usd,"pnl_pct":pnl_pct,"updated_at":stamp
     }
+    if isinstance(audit, dict):
+        for key in (
+            "exit_trigger_observed_price","exit_fill_observed_at","exit_supported_notional",
+            "exit_slippage_bps","exit_source_count"
+        ):
+            if key in audit:
+                payload[key] = audit[key]
     r = http.patch(f"{SUPABASE_URL}/rest/v1/paper_trades", headers=headers("return=representation"), params={"id":f"eq.{int(trade_id)}","status":"eq.OPEN"}, json=payload)
     if r.status_code >= 300:
         raise RuntimeError(f"Paper trade close failed: {r.status_code} {r.text}")
     return bool(r.json())
+
+
+def insert_paper_signal_decision(row):
+    if not _configured():
+        return False
+    allowed = {
+        "account_id","signal_key","scan_id","symbol","horizon","direction","action",
+        "evidence_score","decision","reason","signal_generated_at","decided_at"
+    }
+    payload = {k: v for k, v in row.items() if k in allowed}
+    payload.setdefault("decided_at", iso(now_utc()))
+    r = http.post(
+        f"{SUPABASE_URL}/rest/v1/paper_signal_decisions",
+        headers=headers("resolution=ignore-duplicates,return=representation"),
+        json=payload,
+    )
+    if r.status_code >= 300:
+        raise RuntimeError(f"Paper signal decision insert failed: {r.status_code} {r.text}")
+    return bool(r.json())
+
+
+def fetch_paper_signal_decisions(account_id="default", limit=200):
+    if not _configured():
+        return []
+    r = http.get(f"{SUPABASE_URL}/rest/v1/paper_signal_decisions", headers=headers(), params={
+        "select":"*","account_id":f"eq.{account_id}","order":"decided_at.desc","limit":str(max(1, min(int(limit), 1000)))
+    })
+    if r.status_code >= 300:
+        raise RuntimeError(f"Paper signal decisions fetch failed: {r.status_code} {r.text}")
+    return r.json()
+
+
+def insert_paper_reconciliation_snapshot(account_id, reconciliation):
+    if not _configured():
+        return
+    data = reconciliation.as_dict() if hasattr(reconciliation, "as_dict") else dict(reconciliation or {})
+    payload = {
+        "account_id": account_id,
+        "verified": bool(data.get("verified")),
+        "status": str(data.get("status") or "RECONCILIATION_FAILED"),
+        "expected_cash": data.get("expected_cash"),
+        "expected_equity": data.get("expected_equity"),
+        "expected_realized_pnl": data.get("expected_realized_pnl"),
+        "open_pnl": data.get("open_pnl"),
+        "open_notional": data.get("open_notional"),
+        "cash_delta": data.get("cash_delta"),
+        "equity_delta": data.get("equity_delta"),
+        "realized_delta": data.get("realized_delta"),
+        "trade_mismatch_ids": data.get("trade_mismatch_ids") or [],
+        "reasons": data.get("reasons") or [],
+    }
+    r = http.post(f"{SUPABASE_URL}/rest/v1/paper_reconciliation_snapshots", headers=headers("return=minimal"), json=payload)
+    if r.status_code >= 300:
+        raise RuntimeError(f"Paper reconciliation insert failed: {r.status_code} {r.text}")
+
+
+def fetch_latest_paper_reconciliation(account_id="default"):
+    if not _configured():
+        return None
+    r = http.get(f"{SUPABASE_URL}/rest/v1/paper_reconciliation_snapshots", headers=headers(), params={
+        "select":"*","account_id":f"eq.{account_id}","order":"created_at.desc","limit":"1"
+    })
+    if r.status_code >= 300:
+        raise RuntimeError(f"Paper reconciliation fetch failed: {r.status_code} {r.text}")
+    rows = r.json()
+    return rows[0] if rows else None
 
 
 def insert_paper_equity_snapshot(account_id, equity, cash, open_positions, realized_pnl):
@@ -125,5 +209,7 @@ def fetch_paper_trade_stats(account_id="default", initial_cash=100000.0):
 
 __all__ = [
     "fetch_ranked_opportunities","fetch_paper_account","update_paper_account","fetch_open_paper_trades",
-    "insert_paper_trade","close_paper_trade","insert_paper_equity_snapshot","fetch_paper_trade_stats"
+    "fetch_all_paper_trades","insert_paper_trade","close_paper_trade","insert_paper_signal_decision",
+    "fetch_paper_signal_decisions","insert_paper_reconciliation_snapshot","fetch_latest_paper_reconciliation",
+    "insert_paper_equity_snapshot","fetch_paper_trade_stats"
 ]
