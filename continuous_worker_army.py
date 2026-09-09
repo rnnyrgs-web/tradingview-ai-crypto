@@ -1,8 +1,10 @@
 """Bounded always-on Python worker army for continuous crypto research.
 
-The army runs persistent logical worker loops on one Render service while
-strictly limiting simultaneous heavy subprocesses. Workers are research-only:
-they have no broker, promotion, GitHub-write, or live-trade authority.
+Heavy research remains strictly bounded by the existing compute ceiling. Cheap
+learning/diagnostic roles run in separate lightweight lanes so they can keep
+analyzing resolved outcomes and preparing experiments without stealing heavy
+backtest capacity. All workers remain research-only with no broker, promotion,
+GitHub-write, deployment, or live-trade authority.
 """
 
 from __future__ import annotations
@@ -20,16 +22,11 @@ from pathlib import Path
 from threading import Lock
 
 from research_observability import record_worker_result, snapshot as research_metrics_snapshot
-from worker_supervisor import (
-    infer_error_type,
-    record_incident,
-    sanitize_diagnostic,
-    supervisor_summary,
-)
-
+from worker_supervisor import infer_error_type, record_incident, sanitize_diagnostic, supervisor_summary
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 MAX_CONCURRENT = max(1, min(int(os.getenv("WORKER_ARMY_MAX_CONCURRENT", "2")), 4))
+LIGHTWEIGHT_MAX_CONCURRENT = max(1, min(int(os.getenv("WORKER_ARMY_LIGHTWEIGHT_MAX_CONCURRENT", "2")), 4))
 JOB_TIMEOUT_SECONDS = max(300, min(int(os.getenv("WORKER_ARMY_JOB_TIMEOUT_SECONDS", "2700")), 3600))
 REST_SECONDS = max(5, min(int(os.getenv("WORKER_ARMY_REST_SECONDS", "5")), 300))
 MAX_ERROR_BACKOFF_SECONDS = max(30, min(int(os.getenv("WORKER_ARMY_MAX_ERROR_BACKOFF_SECONDS", "300")), 900))
@@ -44,6 +41,7 @@ class WorkerSpec:
     name: str
     env: dict[str, str]
     script: str = "research_runner.py"
+    compute_class: str = "heavy"
 
 
 WORKERS = (
@@ -64,37 +62,38 @@ WORKERS = (
     WorkerSpec("swing-majors", {"RESEARCH_SYMBOLS": "BTC-USDT,ETH-USDT,SOL-USDT,XRP-USDT,LINK-USDT", "RESEARCH_TIMEFRAMES": "4H,1D"}),
     WorkerSpec(
         "cross-asset-rank-24h",
-        {
-            "CROSS_ASSET_HORIZON": "24h",
-            "CROSS_ASSET_UNIVERSE_SIZE": "30",
-            "CROSS_ASSET_BARS": "3000",
-            "CROSS_ASSET_ROUND_TRIP_COST_BPS": "12",
-        },
+        {"CROSS_ASSET_HORIZON": "24h", "CROSS_ASSET_UNIVERSE_SIZE": "30", "CROSS_ASSET_BARS": "3000", "CROSS_ASSET_ROUND_TRIP_COST_BPS": "12"},
         script="cross_asset_runner.py",
     ),
     WorkerSpec(
         "cross-asset-rank-7d",
-        {
-            "CROSS_ASSET_HORIZON": "7d",
-            "CROSS_ASSET_UNIVERSE_SIZE": "30",
-            "CROSS_ASSET_BARS": "5000",
-            "CROSS_ASSET_ROUND_TRIP_COST_BPS": "12",
-        },
+        {"CROSS_ASSET_HORIZON": "7d", "CROSS_ASSET_UNIVERSE_SIZE": "30", "CROSS_ASSET_BARS": "5000", "CROSS_ASSET_ROUND_TRIP_COST_BPS": "12"},
         script="cross_asset_runner.py",
     ),
+    WorkerSpec("learning-diagnostics", {}, script="research_learning_runner.py", compute_class="lightweight"),
+    WorkerSpec("experiment-factory", {}, script="research_experiment_factory_runner.py", compute_class="lightweight"),
 )
+
+SUMMARY_ENV_BY_SCRIPT = {
+    "cross_asset_runner.py": "CROSS_ASSET_SUMMARY_PATH",
+    "research_learning_runner.py": "RESEARCH_LEARNING_SUMMARY_PATH",
+    "research_experiment_factory_runner.py": "RESEARCH_EXPERIMENT_SUMMARY_PATH",
+}
 
 _lock = Lock()
 _status: dict[str, object] = {
     "enabled": True,
     "started_at": None,
     "max_concurrent": MAX_CONCURRENT,
+    "lightweight_max_concurrent": LIGHTWEIGHT_MAX_CONCURRENT,
     "accuracy_reserved_slots": 1 if MAX_CONCURRENT >= 2 else 0,
     "job_timeout_seconds": JOB_TIMEOUT_SECONDS,
     "heartbeat_seconds": HEARTBEAT_SECONDS,
     "supervisor_interval_seconds": SUPERVISOR_INTERVAL_SECONDS,
     "max_error_backoff_seconds": MAX_ERROR_BACKOFF_SECONDS,
     "worker_count": len(WORKERS),
+    "heavy_worker_count": sum(1 for spec in WORKERS if spec.compute_class == "heavy"),
+    "lightweight_worker_count": sum(1 for spec in WORKERS if spec.compute_class == "lightweight"),
     "active_jobs": 0,
     "completed_jobs": 0,
     "failed_jobs": 0,
@@ -162,8 +161,9 @@ def _worker_env(spec: WorkerSpec, summary_path: str | None = None) -> dict[str, 
         }
     )
     env.update(spec.env)
-    if summary_path and spec.script == "cross_asset_runner.py":
-        env["CROSS_ASSET_SUMMARY_PATH"] = summary_path
+    summary_env = SUMMARY_ENV_BY_SCRIPT.get(spec.script)
+    if summary_path and summary_env:
+        env[summary_env] = summary_path
     if "RESEARCH_SYMBOLS" in spec.env:
         env["RESEARCH_SHARD_INDEX"] = "0"
         env["RESEARCH_SHARD_COUNT"] = "1"
@@ -173,6 +173,10 @@ def _worker_env(spec: WorkerSpec, summary_path: str | None = None) -> dict[str, 
 
 def _is_accuracy_worker(spec: WorkerSpec) -> bool:
     return spec.script == "cross_asset_runner.py"
+
+
+def _is_lightweight_worker(spec: WorkerSpec) -> bool:
+    return spec.compute_class == "lightweight"
 
 
 def _retry_delay_seconds(consecutive_failures: int) -> int:
@@ -212,10 +216,10 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> int:
             _status["active_jobs"] = int(_status["active_jobs"]) + 1
             workers = _status["workers"]
             previous = workers.get(spec.name, {})
-            now_mono = time.monotonic()
             workers[spec.name] = {
                 "state": "running",
                 "script": spec.script,
+                "compute_class": spec.compute_class,
                 "last_started_at": _now(),
                 "last_finished_at": previous.get("last_finished_at"),
                 "last_exit_code": previous.get("last_exit_code"),
@@ -224,7 +228,7 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> int:
                 "consecutive_failures": int(previous.get("consecutive_failures") or 0),
                 "next_retry_delay_seconds": 0,
                 "heartbeat_at": _now(),
-                "heartbeat_monotonic": now_mono,
+                "heartbeat_monotonic": time.monotonic(),
             }
 
         started = time.monotonic()
@@ -249,13 +253,13 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> int:
                 if exit_code != 0:
                     diagnostic = _read_diagnostic_tail(stderr_path)
                     error_type = infer_error_type(diagnostic, error_type)
-                if exit_code == 0 and spec.script == "cross_asset_runner.py":
+                if exit_code == 0 and spec.script in SUMMARY_ENV_BY_SCRIPT:
                     try:
                         evidence = json.loads(Path(summary_path).read_text(encoding="utf-8"))
                     except (OSError, ValueError, TypeError) as exc:
                         exit_code = -1
                         error_type = "EvidenceSummaryError"
-                        diagnostic = sanitize_diagnostic(f"{type(exc).__name__}: failed to read cross-asset evidence summary")
+                        diagnostic = sanitize_diagnostic(f"{type(exc).__name__}: failed to read worker evidence summary")
         except asyncio.CancelledError:
             raise
         except Exception as exc:
@@ -292,6 +296,7 @@ async def _run_once(spec: WorkerSpec, semaphore: asyncio.Semaphore) -> int:
             _status["workers"][spec.name] = {
                 "state": "resting" if exit_code == 0 else "error_backoff",
                 "script": spec.script,
+                "compute_class": spec.compute_class,
                 "last_started_at": _status["workers"][spec.name].get("last_started_at"),
                 "last_finished_at": _now(),
                 "last_exit_code": exit_code,
@@ -336,6 +341,7 @@ def _initial_worker_state(spec: WorkerSpec) -> dict:
     return {
         "state": "starting",
         "script": spec.script,
+        "compute_class": spec.compute_class,
         "last_started_at": None,
         "last_finished_at": None,
         "last_exit_code": None,
@@ -348,28 +354,37 @@ def _initial_worker_state(spec: WorkerSpec) -> dict:
     }
 
 
+def _build_lanes() -> dict[str, asyncio.Semaphore]:
+    lightweight_lane = asyncio.Semaphore(LIGHTWEIGHT_MAX_CONCURRENT)
+    heavy_specs = [spec for spec in WORKERS if not _is_lightweight_worker(spec)]
+    if MAX_CONCURRENT == 1:
+        heavy_shared = asyncio.Semaphore(1)
+        return {spec.name: (lightweight_lane if _is_lightweight_worker(spec) else heavy_shared) for spec in WORKERS}
+    accuracy_lane = asyncio.Semaphore(1)
+    general_lane = asyncio.Semaphore(MAX_CONCURRENT - 1)
+    lanes = {}
+    for spec in WORKERS:
+        if _is_lightweight_worker(spec):
+            lanes[spec.name] = lightweight_lane
+        elif _is_accuracy_worker(spec):
+            lanes[spec.name] = accuracy_lane
+        else:
+            lanes[spec.name] = general_lane
+    assert len(heavy_specs) >= 1
+    return lanes
+
+
 async def run_army() -> None:
     with _lock:
         _status["started_at"] = _now()
         _status["workers"] = {spec.name: _initial_worker_state(spec) for spec in WORKERS}
-    if MAX_CONCURRENT == 1:
-        shared = asyncio.Semaphore(1)
-        lanes = {spec.name: shared for spec in WORKERS}
-    else:
-        accuracy_lane = asyncio.Semaphore(1)
-        general_lane = asyncio.Semaphore(MAX_CONCURRENT - 1)
-        lanes = {spec.name: accuracy_lane if _is_accuracy_worker(spec) else general_lane for spec in WORKERS}
-
+    lanes = _build_lanes()
     specs = {spec.name: spec for spec in WORKERS}
     tasks = {name: asyncio.create_task(_worker_loop(spec, lanes[name]), name=name) for name, spec in specs.items()}
     shutting_down = False
     try:
         while True:
-            done, _ = await asyncio.wait(
-                list(tasks.values()),
-                timeout=SUPERVISOR_INTERVAL_SECONDS,
-                return_when=asyncio.FIRST_COMPLETED,
-            )
+            done, _ = await asyncio.wait(list(tasks.values()), timeout=SUPERVISOR_INTERVAL_SECONDS, return_when=asyncio.FIRST_COMPLETED)
             with _lock:
                 _status["last_supervisor_check_at"] = _now()
             for task in done:
