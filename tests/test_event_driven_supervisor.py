@@ -28,16 +28,19 @@ def test_supervisor_snapshot_is_compact_and_contains_handoff_and_queue(monkeypat
     assert len(json.dumps(snapshot)) < 20000
 
 
-def test_autonomous_workflow_is_hourly_manual_and_quota_safe():
-    workflow = Path(".github/workflows/autonomous_agents.yml").read_text(encoding="utf-8")
-    assert "workflow_dispatch:" in workflow
-    assert "workflow_run:" not in workflow
-    assert 'cron: "17 * * * *"' in workflow
-    assert "safely skipping this cycle" in workflow
-    assert "active_roles=[]" in workflow
-    assert "python agents/supervisor_snapshot.py" in workflow
-    assert "orchestration/" in workflow
-    assert "max-parallel: 14" in workflow
+def test_legacy_autonomous_swarm_is_manual_only_and_cloud_runner_is_scheduled():
+    legacy = Path(".github/workflows/autonomous_agents.yml").read_text(encoding="utf-8")
+    cloud = Path(".github/workflows/autonomous_cloud_specialist.yml").read_text(encoding="utf-8")
+    assert "workflow_dispatch:" in legacy
+    assert "workflow_run:" not in legacy
+    assert "schedule:" not in legacy
+    assert 'cron: "17 * * * *"' not in legacy
+    assert "max-parallel: 14" in legacy
+    assert "workflow_dispatch:" in cloud
+    assert 'cron: "41 */3 * * *"' in cloud
+    assert "max-parallel" not in cloud
+    assert "autonomous_cloud_runner.py plan" in cloud
+    assert "runner_state.json" in cloud
 
 
 def test_backlog_cannot_directly_authorize_live_promotion():
