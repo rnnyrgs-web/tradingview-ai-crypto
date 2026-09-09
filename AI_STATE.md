@@ -42,9 +42,11 @@ PR #131 completed a fresh current-main rebuild of the beta-neutral residual-mome
 
 PR #133 fixed a confirmed research-observability contract defect without changing strategy behavior. Exact head `7d3a3e20fc543444bd5d6dd99912a04f0416538b` passed Security and Reliability run `34341508345` (#988) and was squash-merged as `deb312d4721976c19deec533615eb8c4538ef0e4`. The ACC-002 producer emits bounded `selected_oos` evidence and `history_network.network_latency_ms`; the coordinator had been reading nonexistent legacy keys, causing successful worker runs to appear as unknown and network latency to remain hidden. The coordinator now consumes the producer-shaped contract, distinguishes blocked research from missing telemetry, and still exposes no trade/promotion authority.
 
+PR #135 completed bounded ACC-002 blocker diagnostics after genuine live evidence showed both 24h and 7d workers were repeatedly blocked before untouched OOS. Exact head `7acb9a2108d084ed3dd79d7734fa79eec9050573` passed Security and Reliability run `34346028939` (#998) and was squash-merged as `4c617cca60544010bb179c9c7b489fbb7791afc6`. Private coordinator logs now expose only bounded already-produced evidence needed to diagnose the blocker: requested/resolved universe counts, supported predeclared liquidity subsets, minimum subset coverage, failed-symbol count and aggregate failure-type counts. Symbol identities and raw bootstrap/sample arrays remain excluded. No research threshold, OOS gate, worker allocation, data source, strategy behavior, paper state, broker state, promotion authority or production signal behavior changed.
+
 ## ACCURACY / RESEARCH PROGRAM
 - ACC-001 MARKET / EXECUTION REALISM — COMPLETE.
-- ACC-002 CROSS-ASSET RANK RESEARCH — IN PROGRESS. Dedicated 24h/7d workers continue genuine chronological/OOS/robustness evidence generation. The beta-neutral residual-momentum challenger from PR #131 is now available as one predeclared research-only feature family; it has no production authority and requires real canonical evidence before any improvement claim. PR #133 restores visibility into whether each worker is genuinely blocked, opened untouched OOS, or produced a pass/fail result; it does not itself improve signal quality.
+- ACC-002 CROSS-ASSET RANK RESEARCH — IN PROGRESS and currently FAIL-CLOSED before untouched OOS. Genuine fresh 24h and 7d summaries after PR #133 both report `research_blocked=true`, reason `insufficient_supported_liquidity_subsets`, and `untouched_oos_opened=false`; therefore there is no ACC-002 pass/fail, survivorship pass/fail or promotion conclusion yet. The beta-neutral residual-momentum challenger from PR #131 remains a predeclared research-only feature family and must not bypass this blocker or any canonical gate. PR #135 adds bounded diagnostics to identify the evidence/data-coverage cause without weakening liquidity-stability requirements.
 - ACC-003 through ACC-014 safety/validation layers — COMPLETE, including regime gating, champion/challenger, data provenance, deterioration, robustness, genuine forward proof, portfolio/execution risk, size-aware execution, point-in-time universe safety, multiple-testing firewall, shadow champion/challenger, and chaos/failure gates.
 - SELECTIVE PRECISION — research-only; non-overlapping full-horizon evidence required.
 - CONTINUOUS RESEARCH LEARNING / EXPERIMENT FACTORY — research-only; independent full-horizon windows required before diagnostic readiness or experiment-priority sample sufficiency.
@@ -65,12 +67,19 @@ PR #131 rebuilt stale PR #115 directly from current main. Exact head `67b867929b
 
 PR #133 repaired coordinator-only observability for genuine ACC-002 worker evidence and deep-history network latency. Regression coverage uses the exact producer field names, checks both selected-OOS and fail-closed blocked evidence, and confirms raw bootstrap/sample arrays are not copied into bounded private logs. No research thresholds, OOS gates, worker allocation, execution behavior, paper state, broker state, or production signals changed.
 
-Live verification after PR #133:
-- exact merge `deb312d4721976c19deec533615eb8c4538ef0e4` auto-deployed successfully to the continuous coordinator and reached `live`;
-- fresh application startup completed normally and the service became live;
-- the first fresh observability cycles immediately restored real deep-history network latency telemetry (for example p50 about 4.03s and p95 about 6.14s on 9 fetches, then p50 about 3.93s and p95 about 6.50s on 22 fetches), proving the corrected producer/consumer network contract is active;
-- fresh worker samples showed 0 failures/timeouts/restarts, supervisor healthy, no stale/crashed workers, and trade/promotion/signal authority false;
-- the first observed post-deploy cycles had not yet completed a fresh 24h/7d ACC-002 worker on the new instance, so no ACC-002 pass/fail or blocked conclusion is recorded yet. Remain fail-closed until a genuine fresh summary appears.
+PR #135 is an observability-only follow-up to a genuine blocker, not a strategy change. Regression coverage verifies aggregate failure-type counting, requested/resolved universe and supported-subset fields, missing-state behavior, exclusion of symbol identities/raw samples, and false authority flags. The exact tested head was green before merge.
+
+Live evidence after PR #133 and before PR #135:
+- both genuine 24h and 7d ACC-002 workers repeatedly exited successfully but reported `research_blocked=true`, `research_blocked_reason=insufficient_supported_liquidity_subsets`, `untouched_oos_opened=false`, with ACC-002/survivorship/promotion fields unset rather than fabricated;
+- this is a data/evidence-coverage blocker, not a failed untouched-OOS strategy result;
+- at 2026-09-09T11:28Z the coordinator showed 1,028 completed jobs, 0 worker failures, 0 timeouts, 0 task restarts, no stale/crashed workers, supervisor healthy, about 93.7% cache hits, 336 deep-history fetches and 0 recorded deep-history network failures; trade/promotion/signal authority remained false;
+- repeated healthy canary samples had rollback recommendation false.
+
+Live verification after PR #135:
+- exact merge `4c617cca60544010bb179c9c7b489fbb7791afc6` auto-deployed to the continuous coordinator and Render deploy `dep-dagk7ruk1f9s73ajopa0` reached `live`;
+- fresh application startup emitted the new bounded ACC-002 diagnostic fields with empty values during warm-up, proving the deployed coordinator contains the new contract without inventing evidence;
+- the pre-cutover/previous instance remained healthy with 0 worker failures/timeouts/restarts while the new instance warmed;
+- the next safe evidence step is to wait for genuine 24h/7d workers on the new instance and inspect only their real bounded universe/subset/failure aggregates before diagnosing or changing anything.
 
 Live verification after PR #129:
 - exact merge `ff979ff61afa37409dec5bb5c78fdca2a2c716f4` auto-deployed successfully to both production and the continuous coordinator;
@@ -103,12 +112,13 @@ Highest-value remaining specialist candidates must be refreshed from current mai
 - stale PRs #105, #113, #114, #115, #117, #118 and #119 are superseded/closed or otherwise stale and must not be merged as-is.
 
 ## EXACT NEXT STEP
-1. Inspect the first genuine fresh 24h and 7d ACC-002 worker summaries through the corrected PR #133 telemetry. Record whether research is blocked, whether untouched OOS opened, and any actual ACC-002/survivorship result. Do not convert missing or blocked evidence into a pass.
-2. Run the PR #131 beta-neutral residual-momentum challenger only as a predeclared ACC-002 research experiment against the canonical control. Preserve the untouched-OOS seal unless fixed train/validation criteria pass, retain non-overlapping evaluation, cost stress, bootstrap robustness, point-in-time universe safety, multiple-testing accounting, and genuine forward proof. Do not tune beta-window/clipping after seeing OOS without declaring a new experiment.
-3. Allow PR #129 prospective timestamped microstructure measurements to accumulate only from genuine available public-book snapshots. Do not reconstruct historical books or infer hidden liquidity. Before any production use, predeclare a research hypothesis and test whether spread/depth imbalance/microprice information improves after-cost 24h/7d OOS/forward results with multiple-testing and execution controls intact.
-4. Let PR #123 future-only consensus provenance and PR #125 strategy fingerprints accumulate naturally. Do not backfill historical rows or claim improved precision/profitability until enough genuinely independent forward evidence resolves.
-5. Continue ACC-002 genuine 24h/7d OOS/forward evidence and worker-health monitoring.
-6. Monitor future paper cycles for `cross_horizon_symbol_conflict` suppression and compare genuine after-cost forward paper behavior without rewriting historical trades.
-7. Review PRs #120/#121 separately for coordination value versus added complexity/cost; preserve no-auto-merge and the $30/month ceiling.
-8. Preserve empty `live_promotions.json`, unused signing keys, broker-disconnected state, immutable $100k paper ledger, bounded heavy concurrency, and the USD 30/month ceiling.
-9. Optimize after-cost risk-adjusted realized performance with abstention and tail protection, not headline accuracy.
+1. Inspect the first genuine post-PR-#135 24h and 7d ACC-002 worker summaries. Use only bounded `universe_requested`, `universe_resolved`, `supported_liquidity_subsets`, `minimum_subset_coverage`, `failed_symbol_count`, and aggregate `failure_type_counts` to determine whether the current `insufficient_supported_liquidity_subsets` block is caused by insufficient history, transient source failures, or genuine top-N coverage. Do not lower the 80% coverage or two-subset requirement merely to open OOS.
+2. If the blocker is a confirmed data-collection defect that can be repaired without historical fabrication, fix it on an isolated branch with regression tests and exact-head Security and Reliability. If the evidence is genuinely insufficient, remain fail-closed and let defensible data accumulate rather than substituting lower-ranked assets or fabricating history.
+3. Run the PR #131 beta-neutral residual-momentum challenger only as a predeclared ACC-002 research experiment against the canonical control after the canonical ACC-002 data/evidence preconditions are actually satisfied. Preserve the untouched-OOS seal unless fixed train/validation criteria pass, retain non-overlapping evaluation, cost stress, bootstrap robustness, point-in-time universe safety, multiple-testing accounting, and genuine forward proof. Do not tune beta-window/clipping after seeing OOS without declaring a new experiment.
+4. Allow PR #129 prospective timestamped microstructure measurements to accumulate only from genuine available public-book snapshots. Do not reconstruct historical books or infer hidden liquidity. Before any production use, predeclare a research hypothesis and test whether spread/depth imbalance/microprice information improves after-cost 24h/7d OOS/forward results with multiple-testing and execution controls intact.
+5. Let PR #123 future-only consensus provenance and PR #125 strategy fingerprints accumulate naturally. Do not backfill historical rows or claim improved precision/profitability until enough genuinely independent forward evidence resolves.
+6. Continue ACC-002 genuine 24h/7d OOS/forward evidence and worker-health monitoring.
+7. Monitor future paper cycles for `cross_horizon_symbol_conflict` suppression and compare genuine after-cost forward paper behavior without rewriting historical trades.
+8. Review PRs #120/#121 separately for coordination value versus added complexity/cost; preserve no-auto-merge and the $30/month ceiling.
+9. Preserve empty `live_promotions.json`, unused signing keys, broker-disconnected state, immutable $100k paper ledger, bounded heavy concurrency, and the USD 30/month ceiling.
+10. Optimize after-cost risk-adjusted realized performance with abstention and tail protection, not headline accuracy.
