@@ -1,4 +1,6 @@
 import json
+import threading
+import time
 from pathlib import Path
 
 import historical_cache as cache
@@ -98,3 +100,70 @@ def test_existing_valid_object_is_not_overwritten_in_same_bucket(tmp_path):
     changed[-1]["close"] = 102.5
     assert cache.write_history("BTC-USDT", "1H", 100, 50000, changed, now_ms=now_ms + 1_000, cache_dir=tmp_path)
     assert path.read_bytes() == before
+
+
+def test_exact_request_singleflight_waiter_reuses_first_writer(tmp_path):
+    now_ms = 2_000_000_000_000
+    rows = _rows(now_ms)
+    # First reader owns the exact-key fetch claim and proceeds to the network.
+    assert cache.read_history(
+        "BTC-USDT", "1H", 100, 50000,
+        now_ms=now_ms, ttl_seconds=900, cache_dir=tmp_path,
+        singleflight_wait_seconds=2,
+    ) is None
+
+    result = {}
+
+    def waiter():
+        result["rows"] = cache.read_history(
+            "BTC-USDT", "1H", 100, 50000,
+            now_ms=now_ms, ttl_seconds=900, cache_dir=tmp_path,
+            singleflight_wait_seconds=2,
+        )
+
+    thread = threading.Thread(target=waiter)
+    thread.start()
+    time.sleep(0.15)
+    assert thread.is_alive()
+    assert cache.write_history(
+        "BTC-USDT", "1H", 100, 50000, rows,
+        now_ms=now_ms, ttl_seconds=900, cache_dir=tmp_path,
+    )
+    thread.join(timeout=2)
+    assert not thread.is_alive()
+    assert result["rows"] == rows
+
+
+def test_singleflight_never_crosses_request_identity(tmp_path):
+    now_ms = 2_000_000_000_000
+    assert cache.read_history(
+        "BTC-USDT", "1H", 100, 50000,
+        now_ms=now_ms, ttl_seconds=900, cache_dir=tmp_path,
+        singleflight_wait_seconds=1,
+    ) is None
+    started = time.monotonic()
+    # Different wanted count has a different immutable identity and therefore
+    # owns a separate claim rather than waiting for the 100-bar request.
+    assert cache.read_history(
+        "BTC-USDT", "1H", 200, 50000,
+        now_ms=now_ms, ttl_seconds=900, cache_dir=tmp_path,
+        singleflight_wait_seconds=1,
+    ) is None
+    assert time.monotonic() - started < 0.5
+
+
+def test_singleflight_wait_is_bounded_and_falls_back(tmp_path):
+    now_ms = 2_000_000_000_000
+    assert cache.read_history(
+        "ETH-USDT", "4H", 100, 50000,
+        now_ms=now_ms, ttl_seconds=900, cache_dir=tmp_path,
+        singleflight_wait_seconds=1,
+    ) is None
+    started = time.monotonic()
+    assert cache.read_history(
+        "ETH-USDT", "4H", 100, 50000,
+        now_ms=now_ms, ttl_seconds=900, cache_dir=tmp_path,
+        singleflight_wait_seconds=1,
+    ) is None
+    elapsed = time.monotonic() - started
+    assert 0.8 <= elapsed < 1.8
