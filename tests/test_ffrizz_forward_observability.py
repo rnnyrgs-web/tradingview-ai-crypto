@@ -63,6 +63,7 @@ def test_observability_log_payload_exposes_bounded_ffrizz_collection_summary():
             "unexpected_wait_state": 0,
         },
         "available_family_count_distribution": {"3": 48, "4": 24},
+        "oi_source_diagnostics": None,
         "v2_oi_alignment_feature_availability": None,
         "v3_oi_causal_asof_feature_availability": None,
         "trade_authority": False,
@@ -107,6 +108,7 @@ def test_observability_log_payload_handles_missing_ffrizz_evidence():
     assert ffrizz["signals_scored"] is None
     assert ffrizz["action_counts"] == {}
     assert ffrizz["wait_gate_counts"] == {}
+    assert ffrizz["oi_source_diagnostics"] is None
     assert ffrizz["v2_oi_alignment_feature_availability"] is None
     assert ffrizz["v3_oi_causal_asof_feature_availability"] is None
     assert ffrizz["trade_authority"] is False
@@ -138,6 +140,7 @@ def test_observability_log_payload_rejects_malformed_ffrizz_count_and_unlisted_d
     assert ffrizz["action_counts"] == {"WAIT": 4}
     assert ffrizz["wait_gate_counts"] == {"unexpected_wait_state": 0}
     assert ffrizz["available_family_count_distribution"] == {"3": 4}
+    assert ffrizz["oi_source_diagnostics"] is None
     assert ffrizz["v2_oi_alignment_feature_availability"] is None
     assert ffrizz["v3_oi_causal_asof_feature_availability"] is None
     assert "secret" not in str(ffrizz)
