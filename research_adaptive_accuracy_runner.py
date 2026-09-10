@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 
 from db import fetch_shadow_predictions
+from ffrizz_secondary_runner import run as run_ffrizz_secondary
 from research_adaptive_accuracy import build_adaptive_accuracy_report
 from research_learning_state import append_lesson, load_state
 
@@ -40,9 +41,42 @@ def build_runner_report(rows):
     return report
 
 
+def _ffrizz_forward_collection():
+    """Collect FFriZz forward evidence inside the already-bounded heavy lane.
+
+    This deliberately does not create another worker, Render service, concurrency
+    slot, or production authority. Failures remain observable but cannot mutate
+    the primary strategy or suppress the adaptive report.
+    """
+    try:
+        report = run_ffrizz_secondary(persist=True)
+    except Exception as exc:
+        return {
+            "ok": False,
+            "research_only": True,
+            "error_type": type(exc).__name__,
+            "trade_authority": False,
+            "promotion_authority": False,
+        }
+    forward = report.get("forward_evidence") if isinstance(report, dict) else {}
+    return {
+        "ok": True,
+        "research_only": True,
+        "system": report.get("system"),
+        "generated_at": report.get("generated_at"),
+        "eligible_shadow_forecasts": int((forward or {}).get("eligible_shadow_forecasts") or 0),
+        "non_overlapping_full_horizon_buckets": (forward or {}).get("non_overlapping_full_horizon_buckets") is True,
+        "wait_rows_persisted": (forward or {}).get("wait_rows_persisted") is True,
+        "historical_oi_backfill_used": (forward or {}).get("historical_oi_backfill_used") is True,
+        "trade_authority": False,
+        "promotion_authority": False,
+    }
+
+
 def main():
     rows = fetch_shadow_predictions(limit=10000)
     report = build_runner_report(rows)
+    report["ffrizz_forward_collection"] = _ffrizz_forward_collection()
     summary_path = os.getenv("RESEARCH_ADAPTIVE_ACCURACY_SUMMARY_PATH", "").strip()
     if summary_path:
         target = Path(summary_path)
