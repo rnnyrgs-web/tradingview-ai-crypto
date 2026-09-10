@@ -26,13 +26,51 @@ TECHNICAL_PAPER_REJECTION_REASONS = {
     "kraken_perp_execution_evidence_unavailable",
 }
 
+# Opportunity rows are fetched immediately before paper decisions are recorded. Keep
+# a bounded, in-process mapping from the immutable signal key to the structured
+# restrictive gate that made an opportunity WAIT. This avoids extra database reads and
+# changes observability only: no action, threshold, risk gate, sizing, or authority is
+# modified.
+_ACTIONABILITY_REASON_CACHE = {}
+_ACTIONABILITY_REASON_CACHE_MAX = 512
+
 
 def _configured():
     return bool(SUPABASE_URL and SUPABASE_SECRET_KEY)
 
 
+def _opportunity_signal_key(row):
+    return f"{row.get('scan_id')}:{row.get('horizon')}:{str(row.get('symbol') or '').upper()}:{str(row.get('direction') or '').upper()}"
+
+
+def _structured_not_actionable_reason(row):
+    calibration = row.get("calibration") if isinstance(row, dict) else None
+    diagnostics = calibration.get("action_diagnostics") if isinstance(calibration, dict) else None
+    if not isinstance(diagnostics, dict) or diagnostics.get("blocked") is not True:
+        return None
+    category = str(diagnostics.get("primary_category") or "").strip()
+    reason = str(diagnostics.get("primary_reason") or "").strip()
+    if category not in {
+        "technical_data_infrastructure", "market_liquidity", "strategy_evidence", "portfolio_risk"
+    } or not reason:
+        return None
+    return f"not_actionable:{category}:{reason}"
+
+
+def _cache_actionability_reason(row):
+    reason = _structured_not_actionable_reason(row)
+    if not reason:
+        return
+    key = _opportunity_signal_key(row)
+    _ACTIONABILITY_REASON_CACHE[key] = reason
+    while len(_ACTIONABILITY_REASON_CACHE) > _ACTIONABILITY_REASON_CACHE_MAX:
+        _ACTIONABILITY_REASON_CACHE.pop(next(iter(_ACTIONABILITY_REASON_CACHE)))
+
+
 def fetch_ranked_opportunities(horizon="24h", hours=None, limit=20):
     rows = fetch_production_ranked_opportunities(horizon=horizon, hours=hours, limit=limit)
+    for row in rows:
+        _cache_actionability_reason(row)
     if horizon != "7d":
         return rows
 
@@ -153,6 +191,11 @@ def _prepare_paper_signal_decision(row):
     payload.setdefault("decided_at", iso(now_utc()))
     decision = str(payload.get("decision") or "").upper()
     reason = str(payload.get("reason") or "")
+    if decision == "REJECTED" and reason == "not_actionable":
+        granular = _ACTIONABILITY_REASON_CACHE.get(str(payload.get("signal_key") or ""))
+        if granular:
+            reason = granular
+            payload["reason"] = granular
     technical = decision == "REJECTED" and (
         reason in TECHNICAL_PAPER_REJECTION_REASONS or reason.startswith("technical:")
     )
@@ -285,5 +328,6 @@ __all__ = [
     "fetch_ranked_opportunities","fetch_paper_account","update_paper_account","fetch_open_paper_trades",
     "fetch_all_paper_trades","insert_paper_trade","close_paper_trade","insert_paper_signal_decision",
     "fetch_paper_signal_decisions","insert_paper_reconciliation_snapshot","fetch_latest_paper_reconciliation",
-    "insert_paper_equity_snapshot","fetch_paper_trade_stats","_prepare_paper_signal_decision"
+    "insert_paper_equity_snapshot","fetch_paper_trade_stats","_prepare_paper_signal_decision",
+    "_structured_not_actionable_reason"
 ]

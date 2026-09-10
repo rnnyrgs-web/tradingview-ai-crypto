@@ -12,6 +12,7 @@ from utils import iso, now_utc
 log = logging.getLogger(__name__)
 
 PREFLIGHT_CONTEXT_SCHEMA_VERSION = 1
+ACTION_DIAGNOSTICS_SCHEMA_VERSION = 1
 
 
 def _entry_zone(plan):
@@ -48,6 +49,62 @@ def _preforecast_market_context(candidate, captured_at):
         "accepted_observations":sorted(observations,key=lambda r:(r["exchange"],r["observed_ms"]))}}
 
 
+def _diagnostic(category, code, detail=None):
+    item={"category":category,"code":code}
+    if detail:
+        item["detail"]=str(detail)[:240]
+    return item
+
+
+def _market_consensus_category(reason):
+    reason=str(reason or "missing")
+    if reason in {"exchange_price_disagreement"}:
+        return "market_liquidity"
+    return "technical_data_infrastructure"
+
+
+def _global_risk_category(reason):
+    if reason in {"broad_market_volatility_shock","broad_liquidity_stress"}:
+        return "market_liquidity"
+    return "technical_data_infrastructure"
+
+
+def _execution_risk_category(reason):
+    if reason in {"spread_too_wide","insufficient_visible_depth","visible_slippage_too_high","cross_exchange_book_disagreement"}:
+        return "market_liquidity"
+    return "technical_data_infrastructure"
+
+
+def _action_diagnostics(reviewed_present, reviewed_direction, direction, reviewed_action, validation, consensus, global_risk, execution_risk, calibration, pre_calibration_action):
+    reasons=[]
+    if not reviewed_present:
+        reasons.append(_diagnostic("strategy_evidence","upstream_review_missing","candidate was not returned by the bounded AI review"))
+    elif reviewed_direction != direction:
+        reasons.append(_diagnostic("strategy_evidence","review_direction_mismatch",f"reviewed={reviewed_direction or 'missing'} quant={direction}"))
+    if reviewed_present and reviewed_action != "TRADE":
+        reasons.append(_diagnostic("strategy_evidence","upstream_review_wait",f"reviewed_action={reviewed_action or 'WAIT'}"))
+    if not validation.approved:
+        reasons.append(_diagnostic("strategy_evidence","strategy_validation_blocked",f"{validation.status}: {validation.reason}"))
+    if consensus.get("reliable") is not True:
+        consensus_reason=str(consensus.get("reason") or "missing")
+        reasons.append(_diagnostic(_market_consensus_category(consensus_reason),"market_consensus_unreliable",consensus_reason))
+    for reason in global_risk.reasons:
+        reasons.append(_diagnostic(_global_risk_category(reason),f"global_risk_{reason}"))
+    for reason in execution_risk.reasons:
+        reasons.append(_diagnostic(_execution_risk_category(reason),f"execution_risk_{reason}"))
+    if pre_calibration_action == "TRADE" and not calibration["allows_live_action"]:
+        reasons.append(_diagnostic("strategy_evidence","calibration_pending_or_weak"))
+    return {
+        "schema_version":ACTION_DIAGNOSTICS_SCHEMA_VERSION,
+        "blocked":bool(reasons),
+        "primary_category":reasons[0]["category"] if reasons else None,
+        "primary_reason":reasons[0]["code"] if reasons else None,
+        "reasons":reasons,
+        "thresholds_unchanged":True,
+        "trade_authority_added":False,
+    }
+
+
 def build_opportunities(scan_id,candidates,ai_signals,regime,risk_plan_fn):
     ai_map={}
     for s in ai_signals or []:
@@ -66,7 +123,7 @@ def build_opportunities(scan_id,candidates,ai_signals,regime,risk_plan_fn):
             except Exception as exc:
                 log.warning("Opportunity rejected because risk plan failed: symbol=%s horizon=%s error=%s",c.get("symbol"),horizon,type(exc).__name__); continue
             entry_low,entry_high=_entry_zone(plan)
-            reviewed=ai_map.get((c["symbol"],horizon),{}); reviewed_direction=str(reviewed.get("direction","")).upper(); action=str(reviewed.get("action","WAIT")).upper()
+            reviewed=ai_map.get((c["symbol"],horizon),{}); reviewed_present=bool(reviewed); reviewed_direction=str(reviewed.get("direction","")).upper(); reviewed_action=str(reviewed.get("action","WAIT")).upper(); action=reviewed_action
             strategy_family=str(reviewed.get("strategy_family","")); validation=validate_live_strategy(c["symbol"],horizon,strategy_family,resolved_predictions)
             consensus=c.get("market_consensus",{}); consensus_reliable=consensus.get("reliable") is True
             data_multiplier=_bounded_multiplier(consensus.get("confidence_multiplier"),1.0 if consensus_reliable else 0.0)
@@ -74,7 +131,10 @@ def build_opportunities(scan_id,candidates,ai_signals,regime,risk_plan_fn):
             if reviewed_direction!=direction or action!="TRADE" or not validation.approved or not consensus_reliable or global_risk.blocked or execution_risk.blocked: action="WAIT"
             raw_evidence=float(reviewed.get("evidence_score") or min(99.0,abs(q)/5.5*100.0)); evidence=raw_evidence*data_multiplier
             calibration=calibration_assessment(evidence,horizon,resolved_predictions,regime)
+            pre_calibration_action=action
             if action=="TRADE" and not calibration["allows_live_action"]: action="WAIT"
+            action_diagnostics=_action_diagnostics(reviewed_present,reviewed_direction,direction,reviewed_action,validation,consensus,global_risk,execution_risk,calibration,pre_calibration_action)
+            calibration=dict(calibration); calibration["action_diagnostics"]=action_diagnostics
             liquidity_bonus=min(15.0,max(0.0,c.get("activity_score",0.0))); spread_penalty=min(20.0,float(c.get("spread_bps") or 0.0)*0.35)
             rank_score=max(0.0,abs(q)*20.0+liquidity_bonus-spread_penalty)*data_multiplier
             base_reason=str(reviewed.get("reasoning") or f"Quant rank from multi-timeframe {horizon} evidence; not AI-approved for trade.")
