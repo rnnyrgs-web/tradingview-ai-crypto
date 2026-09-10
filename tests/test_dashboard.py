@@ -29,6 +29,38 @@ def test_expired_dashboard_session_rejected(monkeypatch):
     assert not dashboard._valid_session(dashboard._session_token(exp))
 
 
+def test_dashboard_supports_all_predeclared_trade_horizons():
+    assert dashboard.DASHBOARD_HORIZONS == ("6h","12h","24h","48h","72h","7d")
+    for horizon in dashboard.DASHBOARD_HORIZONS:
+        assert dashboard._duration({"horizon":horizon}) == horizon
+        assert dashboard._dashboard_view(horizon) == horizon
+    assert dashboard._dashboard_view("all") == "all"
+    assert dashboard._dashboard_view("nonsense") == "all"
+
+
+def test_research_only_horizon_does_not_fabricate_rows(monkeypatch):
+    called=[]
+    monkeypatch.setattr(dashboard,"fetch_ranked_opportunities",lambda **kwargs: called.append(kwargs) or [{"symbol":"SHOULD-NOT-APPEAR"}])
+    assert dashboard._rows_for_dashboard("6h") == []
+    assert dashboard._rows_for_dashboard("12h") == []
+    assert dashboard._rows_for_dashboard("48h") == []
+    assert dashboard._rows_for_dashboard("72h") == []
+    assert called == []
+
+
+def test_all_view_combines_persisted_horizons_and_keeps_duration(monkeypatch):
+    def fake_fetch(horizon,limit):
+        if horizon=="24h":
+            return [{"symbol":"BTC-USDT","horizon":"24h","rank":1,"evidence_score":81}]
+        if horizon=="7d":
+            return [{"symbol":"ETH-USDT","horizon":"7d","rank":1,"evidence_score":92}]
+        raise AssertionError("unexpected horizon")
+    monkeypatch.setattr(dashboard,"fetch_ranked_opportunities",fake_fetch)
+    rows=dashboard._rows_for_dashboard("all")
+    assert [row["symbol"] for row in rows]==["ETH-USDT","BTC-USDT"]
+    assert [dashboard._duration(row) for row in rows]==["7d","24h"]
+
+
 def test_calibration_metrics_show_forward_accuracy_floor_and_independent_n():
     metrics=dashboard._calibration_metrics({
         "calibration":{
