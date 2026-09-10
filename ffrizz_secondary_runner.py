@@ -81,17 +81,36 @@ def _oi_points(base):
 
 
 def _aggregate_backtests(rows):
+    """Return descriptive pooled diagnostics, never independent evidence.
+
+    Symbol-level backtests are non-overlapping within each symbol, but observations
+    across crypto symbols can share the same market interval and common risk factor.
+    Therefore pooled counts/accuracy must not be treated as independent samples or
+    canonical validation evidence.
+    """
     usable = [row for row in rows if int(row.get("signals") or 0) > 0]
     total = sum(int(row.get("signals") or 0) for row in usable)
+    base = {
+        "signals": total,
+        "accuracy": None,
+        "mean_net_pct": None,
+        "descriptive_only": True,
+        "cross_symbol_independence_proven": False,
+        "independent_sample_count": None,
+        "eligible_for_validation_evidence": False,
+        "historical_oi_included": False,
+        "strategy_fingerprint_matches_forward": False,
+        "reason": "cross_symbol_dependence_and_historical_oi_absence",
+    }
     if not usable or total <= 0:
-        return {"signals": 0, "accuracy": None, "mean_net_pct": None}
+        return base
     weighted_wins = sum(float(row.get("accuracy") or 0.0) * int(row.get("signals") or 0) for row in usable)
     weighted_net = sum(float(row.get("mean_net_pct") or 0.0) * int(row.get("signals") or 0) for row in usable)
-    return {
-        "signals": total,
+    base.update({
         "accuracy": weighted_wins / total,
         "mean_net_pct": weighted_net / total,
-    }
+    })
+    return base
 
 
 def build_forward_ledger_rows(report, *, generated_at=None):
@@ -129,12 +148,14 @@ def build_forward_ledger_rows(report, *, generated_at=None):
                 "promotion_authority": False,
                 "bar": signal.get("bar"),
                 "raw_score": signal.get("score"),
-                "independent_family_agreement": signal.get("independent_family_agreement"),
+                "family_agreement_count": signal.get("independent_family_agreement"),
+                "family_agreement_independence_proven": False,
                 "available_family_count": signal.get("available_family_count"),
                 "families": families,
                 "forecast_bucket_started_at": _iso(bucket),
                 "forecast_generated_at": _iso(now),
                 "historical_oi_backfill_used": False,
+                "historical_diagnostic_matches_forward_fingerprint": False,
             }
             rows.append({
                 "scan_id": scan_id,
@@ -202,7 +223,15 @@ def run(*, persist=True, generated_at=None):
             "current_shadow_signals": current,
             "diagnostic_backtest": aggregate,
             "symbol_diagnostics": [
-                {"symbol": item["symbol"], "signals": item["signals"], "accuracy": item["accuracy"], "mean_net_pct": item["mean_net_pct"]}
+                {
+                    "symbol": item["symbol"],
+                    "signals": item["signals"],
+                    "accuracy": item["accuracy"],
+                    "mean_net_pct": item["mean_net_pct"],
+                    "historical_oi_included": False,
+                    "strategy_fingerprint_matches_forward": False,
+                    "eligible_for_validation_evidence": False,
+                }
                 for item in diagnostics
             ],
         })
@@ -223,7 +252,7 @@ def run(*, persist=True, generated_at=None):
         "concept_families": ["pb_ema_200_high_close_channel", "fair_value_gap", "inside_bar", "price_open_interest_correlation"],
         "source_policy": "Public FFriZz indicator concepts only; protected Pine source is not copied. Open-interest history is timestamp-aligned and remains missing when unavailable.",
         "horizon_results": results,
-        "evidence_warning": "Diagnostic backtests are not promotion evidence. Any apparent edge must enter the canonical chronological development/validation/untouched-OOS, robustness, multiple-testing and genuine-forward chain before production consideration.",
+        "evidence_warning": "Historical OHLC-only diagnostics are descriptive and do not match the prospective FFriZz fingerprint when OI is available. Cross-symbol pooled outcomes are not independent evidence. Only canonical prospective non-overlapping resolved forecasts may enter governed validation.",
     }
     ledger_rows = build_forward_ledger_rows(report, generated_at=generated_at)
     if persist and ledger_rows:
@@ -234,6 +263,8 @@ def run(*, persist=True, generated_at=None):
         "non_overlapping_full_horizon_buckets": True,
         "wait_rows_persisted": False,
         "historical_oi_backfill_used": False,
+        "historical_diagnostic_matches_forward_fingerprint": False,
+        "cross_symbol_independence_assumed": False,
         "prediction_ledger_rows": ledger_rows,
         "trade_authority": False,
         "promotion_authority": False,
