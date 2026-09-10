@@ -288,7 +288,8 @@ def insert_paper_equity_snapshot(account_id, equity, cash, open_positions, reali
 def fetch_paper_trade_stats(account_id="default", initial_cash=100000.0):
     empty = {
         "closed_trades":0,"wins":0,"losses":0,"net_pnl_usd":0.0,"profit_factor":0.0,
-        "last_20_pnl_usd":0.0,"max_drawdown_pct":0.0,"consecutive_losses":0,"recent_pnls":[]
+        "last_20_pnl_usd":0.0,"max_drawdown_pct":0.0,"consecutive_losses":0,"recent_pnls":[],
+        "last_closed_at":None,
     }
     if not _configured():
         return empty
@@ -297,7 +298,8 @@ def fetch_paper_trade_stats(account_id="default", initial_cash=100000.0):
     })
     if r.status_code >= 300:
         raise RuntimeError(f"Paper stats fetch failed: {r.status_code} {r.text}")
-    pnl = [float(x.get("pnl_usd") or 0) for x in r.json()]
+    rows = r.json()
+    pnl = [float(x.get("pnl_usd") or 0) for x in rows]
     wins = [x for x in pnl if x > 0]
     losses = [x for x in pnl if x < 0]
     gross_profit = sum(wins)
@@ -317,10 +319,11 @@ def fetch_paper_trade_stats(account_id="default", initial_cash=100000.0):
             loss_streak += 1
         else:
             break
+    last_closed_at = rows[-1].get("closed_at") if rows else None
     return {
         "closed_trades":len(pnl),"wins":len(wins),"losses":len(losses),"net_pnl_usd":sum(pnl),
         "profit_factor":pf,"last_20_pnl_usd":sum(pnl[-20:]),"max_drawdown_pct":max_dd,
-        "consecutive_losses":loss_streak,"recent_pnls":pnl[-20:]
+        "consecutive_losses":loss_streak,"recent_pnls":pnl[-20:],"last_closed_at":last_closed_at,
     }
 
 
