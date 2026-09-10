@@ -17,7 +17,14 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from db import insert_prediction_ledger
-from ffrizz_secondary_signals import HORIZON_ORDER, HORIZON_PROFILES, chronological_backtest, score_shadow_signal
+from ffrizz_secondary_signals import (
+    FIXED_SIGNAL_THRESHOLD,
+    FIXED_STRONG_THRESHOLD,
+    HORIZON_ORDER,
+    HORIZON_PROFILES,
+    chronological_backtest,
+    score_shadow_signal,
+)
 from market_data import build_universe, get_derivatives_history, get_history
 
 
@@ -49,6 +56,16 @@ def _finite_positive(value):
     return value if value > 0 else None
 
 
+def _finite_number(value, default=0.0):
+    try:
+        value = float(value)
+    except (TypeError, ValueError):
+        return default
+    if value != value or value in {float("inf"), float("-inf")}:
+        return default
+    return value
+
+
 def _ledger_strength_score(value):
     """Map the signed FFriZz research score to the ledger's 0..100 strength field.
 
@@ -56,13 +73,7 @@ def _ledger_strength_score(value):
     signed value is preserved separately in calibration.raw_score, so this mapping
     changes no signal decision, threshold, strategy fingerprint, or trade authority.
     """
-    try:
-        value = float(value)
-    except (TypeError, ValueError):
-        value = 0.0
-    if value != value or value in {float("inf"), float("-inf")}:
-        value = 0.0
-    return min(100.0, abs(value))
+    return min(100.0, abs(_finite_number(value)))
 
 
 def _iso(dt):
@@ -136,6 +147,79 @@ def _aggregate_backtests(rows):
         "mean_net_pct": weighted_net / total,
     })
     return base
+
+
+def _forward_abstention_diagnostics(horizon_results):
+    """Explain fixed-gate WAIT outcomes without changing the strategy.
+
+    Categories are deterministic observations of the already-predeclared decision
+    rule. They are diagnostics only: no threshold is tuned, no unavailable feature
+    is backfilled, and no category can authorize trading or promotion.
+    """
+    action_counts = {"WAIT": 0, "SHADOW_BUY": 0, "SHADOW_SELL": 0}
+    wait_gate_counts = {
+        "insufficient_directional_agreement": 0,
+        "score_below_predeclared_threshold": 0,
+        "unexpected_wait_state": 0,
+    }
+    family_unavailable_counts = {}
+    available_family_count_distribution = {}
+    horizon_counts = {}
+    signals_scored = 0
+
+    for horizon_result in horizon_results or []:
+        horizon = str(horizon_result.get("horizon") or "unknown")
+        h_counts = {"scored": 0, "WAIT": 0, "SHADOW_BUY": 0, "SHADOW_SELL": 0}
+        for signal in horizon_result.get("current_shadow_signals") or []:
+            signals_scored += 1
+            h_counts["scored"] += 1
+            action = str(signal.get("action") or "WAIT").upper()
+            if action not in action_counts:
+                action = "WAIT"
+            action_counts[action] += 1
+            h_counts[action] += 1
+
+            available_count = max(0, int(signal.get("available_family_count") or 0))
+            key = str(available_count)
+            available_family_count_distribution[key] = available_family_count_distribution.get(key, 0) + 1
+            for family in signal.get("families") or []:
+                if not isinstance(family, dict) or family.get("available", True) is not False:
+                    continue
+                family_name = str(family.get("family") or "unknown")
+                reason = str(family.get("reason") or "unavailable")
+                family_key = f"{family_name}:{reason}"
+                family_unavailable_counts[family_key] = family_unavailable_counts.get(family_key, 0) + 1
+
+            if action != "WAIT":
+                continue
+            agreement = max(0, int(signal.get("independent_family_agreement") or 0))
+            raw_score = abs(_finite_number(signal.get("score")))
+            required_threshold = FIXED_STRONG_THRESHOLD if agreement < 3 else FIXED_SIGNAL_THRESHOLD
+            if agreement < 2:
+                wait_gate_counts["insufficient_directional_agreement"] += 1
+            elif raw_score < required_threshold:
+                wait_gate_counts["score_below_predeclared_threshold"] += 1
+            else:
+                # This bucket should stay zero under the current scorer. Keeping it
+                # visible makes future scorer/diagnostic drift fail conspicuously.
+                wait_gate_counts["unexpected_wait_state"] += 1
+        horizon_counts[horizon] = h_counts
+
+    return {
+        "diagnostic_only": True,
+        "thresholds_unchanged": True,
+        "backfill_used": False,
+        "signals_scored": signals_scored,
+        "action_counts": action_counts,
+        "wait_gate_counts": wait_gate_counts,
+        "family_unavailable_counts": dict(sorted(family_unavailable_counts.items())),
+        "available_family_count_distribution": dict(sorted(available_family_count_distribution.items())),
+        "horizon_counts": horizon_counts,
+        "fixed_signal_threshold": float(FIXED_SIGNAL_THRESHOLD),
+        "fixed_strong_threshold": float(FIXED_STRONG_THRESHOLD),
+        "trade_authority": False,
+        "promotion_authority": False,
+    }
 
 
 def build_forward_ledger_rows(report, *, generated_at=None):
@@ -285,6 +369,7 @@ def run(*, persist=True, generated_at=None):
         "horizon_results": results,
         "evidence_warning": "Historical OHLC-only diagnostics are descriptive and do not match the prospective FFriZz fingerprint when OI is available. Cross-symbol pooled outcomes are not independent evidence. Only canonical prospective non-overlapping resolved forecasts may enter governed validation.",
     }
+    report["forward_abstention_diagnostics"] = _forward_abstention_diagnostics(results)
     ledger_rows = build_forward_ledger_rows(report, generated_at=generated_at)
     if persist and ledger_rows:
         insert_prediction_ledger(ledger_rows)
@@ -296,6 +381,7 @@ def run(*, persist=True, generated_at=None):
         "historical_oi_backfill_used": False,
         "historical_diagnostic_matches_forward_fingerprint": False,
         "cross_symbol_independence_assumed": False,
+        "abstention_diagnostics": report["forward_abstention_diagnostics"],
         "prediction_ledger_rows": ledger_rows,
         "trade_authority": False,
         "promotion_authority": False,
