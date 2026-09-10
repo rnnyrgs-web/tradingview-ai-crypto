@@ -1,14 +1,53 @@
 import httpx
 
 from config import SUPABASE_URL, SUPABASE_SECRET_KEY
-from db import fetch_ranked_opportunities, headers
+from db import fetch_ranked_opportunities as fetch_production_ranked_opportunities, headers
 from utils import iso, now_utc
 
 http = httpx.Client(timeout=25.0, follow_redirects=True)
 
+# Research-only paper shadow policy. This does not mutate production opportunities,
+# live signal authority, strategy fingerprints, or broker connectivity. It only
+# allows the authentic paper simulator to test the strongest 7d LONG forecasts
+# that production correctly keeps at WAIT while forward evidence accumulates.
+PAPER_7D_LONG_SHADOW_MIN_EVIDENCE = 80.0
+PAPER_7D_LONG_SHADOW_MAX_RANK = 5
+
 
 def _configured():
     return bool(SUPABASE_URL and SUPABASE_SECRET_KEY)
+
+
+def fetch_ranked_opportunities(horizon="24h", hours=None, limit=20):
+    rows = fetch_production_ranked_opportunities(horizon=horizon, hours=hours, limit=limit)
+    if horizon != "7d":
+        return rows
+
+    paper_rows = []
+    for source in rows:
+        row = dict(source)
+        direction = str(row.get("direction") or "").upper()
+        action = str(row.get("action") or "WAIT").upper()
+        try:
+            evidence = float(row.get("evidence_score") or 0)
+            rank = int(row.get("rank") or 0)
+        except (TypeError, ValueError):
+            evidence = 0.0
+            rank = 0
+        if (
+            direction == "LONG"
+            and action == "WAIT"
+            and 1 <= rank <= PAPER_7D_LONG_SHADOW_MAX_RANK
+            and evidence >= PAPER_7D_LONG_SHADOW_MIN_EVIDENCE
+        ):
+            # Copy-only override for the paper simulator. The persisted production
+            # opportunity remains WAIT. Existing paper risk, freshness, sizing,
+            # visible-depth execution, stop, target, and 168h time-exit rules still apply.
+            row["action"] = "TRADE"
+            row["paper_shadow"] = True
+            row["paper_source_action"] = action
+        paper_rows.append(row)
+    return paper_rows
 
 
 def fetch_paper_account(account_id="default"):
