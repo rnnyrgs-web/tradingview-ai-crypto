@@ -35,8 +35,10 @@ def test_forward_rows_use_exact_horizon_deadline_and_ffrizz_identity():
     row = rows[0]
     assert datetime.fromisoformat(row["due_at"]) == now + timedelta(hours=6)
     assert row["strategy_identity"]["system"] == "FFRIZZ_SECONDARY_V1"
-    assert row["action_at_forecast"] == "SHADOW_BUY"
+    assert row["action_at_forecast"] == "WAIT"
     assert row["direction"] == "LONG"
+    assert row["calibration"]["shadow_action"] == "SHADOW_BUY"
+    assert row["calibration"]["production_action_semantics"] == "WAIT"
     assert row["calibration"]["research_only"] is True
     assert row["calibration"]["trade_authority"] is False
     assert row["calibration"]["historical_oi_backfill_used"] is False
@@ -81,6 +83,8 @@ def test_runner_persists_only_eligible_rows(monkeypatch):
     assert len(captured) == 6
     assert {row["horizon"] for row in captured} == {"6h", "12h", "24h", "48h", "72h", "7d"}
     assert all(str(uuid.UUID(row["scan_id"])) == row["scan_id"] for row in captured)
+    assert all(row["action_at_forecast"] == "WAIT" for row in captured)
+    assert all(row["calibration"]["shadow_action"] == "SHADOW_BUY" for row in captured)
     assert report["forward_evidence"]["wait_rows_persisted"] is False
     assert report["trade_authority"] is False
     assert report["paper_trade_authority"] is False

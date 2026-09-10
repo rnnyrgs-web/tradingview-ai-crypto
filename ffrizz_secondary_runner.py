@@ -3,8 +3,9 @@
 The runner intentionally remains separate from production opportunities and paper
 trading. It scans a bounded liquid universe, computes current shadow signals,
 performs fixed-rule chronological diagnostics, and can persist only genuine
-SHADOW_BUY/SHADOW_SELL forecasts to the canonical prediction ledger so their
-future outcomes can be resolved without granting any trade authority.
+SHADOW_BUY/SHADOW_SELL research forecasts to the canonical prediction ledger while
+keeping the canonical production action explicitly WAIT so no trade authority is
+created by shadow research.
 """
 
 from __future__ import annotations
@@ -124,10 +125,12 @@ def _aggregate_backtests(rows):
 def build_forward_ledger_rows(report, *, generated_at=None):
     """Build one eligible forecast per symbol/horizon/full-horizon bucket.
 
-    WAIT rows are deliberately excluded. Re-running inside the same full-horizon
-    bucket produces the same UUID scan_id, allowing the canonical ledger's duplicate
-    protection to prevent overlapping pseudo-independent evidence. The deadline
-    is always one exact full horizon after the first forecast observation.
+    Source WAIT rows are deliberately excluded. Re-running inside the same full-
+    horizon bucket produces the same UUID scan_id, allowing the canonical ledger's
+    duplicate protection to prevent overlapping pseudo-independent evidence. The
+    shadow BUY/SELL decision is preserved only as research metadata; the canonical
+    production action remains WAIT, matching the ledger contract and preventing a
+    shadow forecast from acquiring trade authority.
     """
     now = generated_at or datetime.now(timezone.utc)
     if now.tzinfo is None:
@@ -154,6 +157,8 @@ def build_forward_ledger_rows(report, *, generated_at=None):
                 "shadow_only": True,
                 "trade_authority": False,
                 "promotion_authority": False,
+                "shadow_action": action,
+                "production_action_semantics": "WAIT",
                 "bar": signal.get("bar"),
                 "raw_score": signal.get("score"),
                 "family_agreement_count": signal.get("independent_family_agreement"),
@@ -174,7 +179,7 @@ def build_forward_ledger_rows(report, *, generated_at=None):
                 "score": float(signal.get("score") or 0.0),
                 "market_regime": None,
                 "strategy_identity": _strategy_identity(horizon),
-                "action_at_forecast": action,
+                "action_at_forecast": "WAIT",
                 "due_at": _iso(due_at),
                 "calibration": calibration,
             })
