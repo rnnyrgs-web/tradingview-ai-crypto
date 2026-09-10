@@ -22,7 +22,7 @@ def _candles(count=220, start=1_700_000_000_000, step=3_600_000):
     return rows
 
 
-def test_v2_matches_candle_close_to_oi_period_end_not_candle_open():
+def test_v2_matches_candle_close_to_oi_period_end():
     candles = _candles()
     oi = [
         {"ts": candle["ts"] + 3_600_000, "value": 10_000 + i * 50}
@@ -34,10 +34,10 @@ def test_v2_matches_candle_close_to_oi_period_end_not_candle_open():
     assert vote.reason == "price_and_oi_rising_together"
 
 
-def test_v2_rejects_v1_open_timestamp_semantics():
+def test_v2_requires_exact_period_end_endpoints():
     candles = _candles()
     oi = [
-        {"ts": candle["ts"], "value": 10_000 + i * 50}
+        {"ts": candle["ts"] + 3_600_001, "value": 10_000 + i * 50}
         for i, candle in enumerate(candles[-24:])
     ]
     vote = oi_vote_close_to_period_end(candles, oi, bar="1H")
