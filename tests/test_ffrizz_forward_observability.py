@@ -16,6 +16,20 @@ def test_observability_log_payload_exposes_bounded_ffrizz_collection_summary():
                         "non_overlapping_full_horizon_buckets": True,
                         "wait_rows_persisted": False,
                         "historical_oi_backfill_used": False,
+                        "abstention_diagnostics": {
+                            "diagnostic_only": True,
+                            "thresholds_unchanged": True,
+                            "backfill_used": False,
+                            "signals_scored": 72,
+                            "action_counts": {"WAIT": 68, "SHADOW_BUY": 3, "SHADOW_SELL": 1},
+                            "wait_gate_counts": {
+                                "insufficient_directional_agreement": 50,
+                                "score_below_predeclared_threshold": 18,
+                                "unexpected_wait_state": 0,
+                            },
+                            "available_family_count_distribution": {"3": 48, "4": 24},
+                            "family_unavailable_counts": {"price_oi_correlation:oi_unavailable": 24},
+                        },
                         "prediction_ledger_rows": [{"sensitive": "must-not-leak"}],
                         "trade_authority": False,
                         "promotion_authority": False,
@@ -38,10 +52,22 @@ def test_observability_log_payload_exposes_bounded_ffrizz_collection_summary():
         "non_overlapping_full_horizon_buckets": True,
         "wait_rows_persisted": False,
         "historical_oi_backfill_used": False,
+        "abstention_diagnostic_only": True,
+        "abstention_thresholds_unchanged": True,
+        "abstention_backfill_used": False,
+        "signals_scored": 72,
+        "action_counts": {"WAIT": 68, "SHADOW_BUY": 3, "SHADOW_SELL": 1},
+        "wait_gate_counts": {
+            "insufficient_directional_agreement": 50,
+            "score_below_predeclared_threshold": 18,
+            "unexpected_wait_state": 0,
+        },
+        "available_family_count_distribution": {"3": 48, "4": 24},
         "trade_authority": False,
         "promotion_authority": False,
     }
     assert "prediction_ledger_rows" not in str(ffrizz)
+    assert "family_unavailable_counts" not in str(ffrizz)
     assert "sensitive" not in str(ffrizz)
     assert payload["trade_authority"] is False
     assert payload["promotion_authority"] is False
@@ -76,11 +102,14 @@ def test_observability_log_payload_handles_missing_ffrizz_evidence():
     assert ffrizz["worker_exit"] is None
     assert ffrizz["collection_ok"] is None
     assert ffrizz["eligible_shadow_forecasts"] is None
+    assert ffrizz["signals_scored"] is None
+    assert ffrizz["action_counts"] == {}
+    assert ffrizz["wait_gate_counts"] == {}
     assert ffrizz["trade_authority"] is False
     assert ffrizz["promotion_authority"] is False
 
 
-def test_observability_log_payload_rejects_malformed_ffrizz_count():
+def test_observability_log_payload_rejects_malformed_ffrizz_count_and_unlisted_diagnostic_keys():
     army = {
         "observability": {
             "adaptive_accuracy": {
@@ -88,6 +117,12 @@ def test_observability_log_payload_rejects_malformed_ffrizz_count():
                     "ffrizz_forward_collection": {
                         "ok": True,
                         "eligible_shadow_forecasts": True,
+                        "abstention_diagnostics": {
+                            "signals_scored": "72",
+                            "action_counts": {"WAIT": 4, "secret_action": 99},
+                            "wait_gate_counts": {"unexpected_wait_state": 0, "raw_error_secret": 8},
+                            "available_family_count_distribution": {"3": 4, "secret": 100},
+                        },
                     }
                 }
             }
@@ -95,3 +130,9 @@ def test_observability_log_payload_rejects_malformed_ffrizz_count():
     }
     ffrizz = coordinator.observability_log_payload(army)["ffrizz_forward"]
     assert ffrizz["eligible_shadow_forecasts"] is None
+    assert ffrizz["signals_scored"] is None
+    assert ffrizz["action_counts"] == {"WAIT": 4}
+    assert ffrizz["wait_gate_counts"] == {"unexpected_wait_state": 0}
+    assert ffrizz["available_family_count_distribution"] == {"3": 4}
+    assert "secret" not in str(ffrizz)
+    assert "raw_error" not in str(ffrizz)
