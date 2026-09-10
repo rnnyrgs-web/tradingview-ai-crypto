@@ -2,7 +2,8 @@
 
 Public market data only. No credentials, private endpoints, order placement, or
 broker authority. If the requested market or visible depth is unavailable, the
-caller must fail closed rather than substitute another venue.
+caller must fail closed unless a fully visible two-leg Kraken USD route can be
+verified on both legs.
 """
 
 from __future__ import annotations
@@ -16,10 +17,6 @@ import httpx
 KRAKEN_API_BASE = "https://api.kraken.com"
 KRAKEN_FEE_SCHEDULE_AS_OF = "2026-09-05"
 
-# Official Kraken Pro spot taker schedule, expressed in basis points. Paper
-# trading defaults to Tier 1 unless an account-specific tier is explicitly and
-# independently verified. Using Tier 1 is conservative: it cannot make P&L look
-# better merely because the real account may qualify for a lower fee.
 SPOT_TAKER_BPS = {
     "tier1": 80.0,
     "tier2": 60.0,
@@ -40,9 +37,6 @@ SPOT_TAKER_BPS = {
     "pro5": 5.0,
 }
 
-# Stablecoin/pegged/FX schedule applies when the stablecoin is the base asset,
-# to stablecoin-stablecoin/FX/pegged markets. The production universe currently
-# excludes stable bases, but the classification is kept explicit and testable.
 STABLE_FX_TAKER_BPS_TIER1 = 20.0
 STABLE_BASES = {"USDT", "USDC", "DAI", "PYUSD", "EURT", "USDG", "USDE"}
 FIAT_BASES = {"USD", "EUR", "GBP", "CAD", "AUD", "JPY", "CHF"}
@@ -78,8 +72,6 @@ def _split_symbol(symbol: str):
 def kraken_taker_fee_bps(symbol: str, tier: str = "tier1") -> float:
     base, quote = _split_symbol(symbol)
     if base in STABLE_BASES or (base in FIAT_BASES and quote in FIAT_BASES):
-        # Conservative base schedule for stablecoin/FX markets. We intentionally
-        # do not infer a lower volume tier without account-specific evidence.
         return STABLE_FX_TAKER_BPS_TIER1
     key = str(tier or "tier1").lower().replace("_", "")
     if key not in SPOT_TAKER_BPS:
@@ -169,14 +161,72 @@ def _slippage_bps(raw_vwap, top):
     return abs(float(raw_vwap) / float(top) - 1.0) * 10000.0
 
 
-def _simulate_usd_bridge_long_liquidation(symbol: str, requested: float, base: str, quote: str, fee_tier: str):
-    """Sell a crypto into USD, then convert USD proceeds into the requested stable quote.
+def _simulate_usd_bridge_long_entry(symbol: str, requested: float, base: str, quote: str, fee_tier: str):
+    """Buy crypto using a visible quote->USD->crypto route on Kraken.
 
-    This fallback is intentionally liquidation-only (SHORT action). It is used when
-    Kraken exposes a direct spot order book such as FET/USD but no FET/USDT order
-    book. Both legs must have sufficient visible Kraken depth; otherwise it fails
-    closed. No synthetic candle or midpoint is used as an executable price.
+    This is used only when Kraken has no direct BASE/USDT or BASE/USDC book.
+    Both public order books must exist and have enough visible depth. The returned
+    effective fill includes taker fees on both legs and therefore cannot make the
+    paper result look better than the observable two-leg route.
     """
+    if quote not in USD_BRIDGE_QUOTES or base in STABLE_BASES or base in FIAT_BASES:
+        return None
+    try:
+        _, stable_usd_book = _fetch_depth(quote, "USD")
+        _, base_usd_book = _fetch_depth(base, "USD")
+    except RuntimeError as exc:
+        return KrakenExecution(False, f"usd_bridge_unavailable:{exc}", symbol, requested, None, None, 0.0, 0.0, 0, int(time.time() * 1000), source_count=2)
+
+    stable_bid = _top_price(stable_usd_book, "bids")
+    if stable_bid is None:
+        return KrakenExecution(False, "invalid_usd_bridge_quote_book", symbol, requested, None, None, 0.0, 0.0, 0, int(time.time() * 1000), source_count=2)
+
+    # requested is denominated in the stable quote. Convert that quantity into an
+    # approximate USD notional for the depth walker using the observable best bid.
+    stable_target_usd = requested * stable_bid
+    raw_stable_usd, stable_visible_usd, stable_levels = _walk(stable_usd_book.get("bids"), stable_target_usd)
+    if raw_stable_usd is None:
+        return KrakenExecution(False, "insufficient_kraken_visible_depth_usd_bridge_leg1", symbol, requested, None, None, 0.0, stable_visible_usd, stable_levels, int(time.time() * 1000), source_count=2)
+
+    stable_fee_bps = kraken_taker_fee_bps(f"{quote}-USD", fee_tier)
+    usd_per_quote_after_fee = raw_stable_usd * (1.0 - stable_fee_bps / 10000.0)
+    if usd_per_quote_after_fee <= 0:
+        return KrakenExecution(False, "invalid_usd_bridge_price", symbol, requested, None, None, 0.0, 0.0, 0, int(time.time() * 1000), source_count=2)
+
+    available_usd = requested * usd_per_quote_after_fee
+    raw_base_usd, base_visible_usd, base_levels = _walk(base_usd_book.get("asks"), available_usd)
+    if raw_base_usd is None:
+        supported_quote = min(stable_visible_usd, base_visible_usd) / max(raw_stable_usd, 1e-12)
+        return KrakenExecution(False, "insufficient_kraken_visible_depth_usd_bridge_leg2", symbol, requested, None, None, 0.0, min(stable_visible_usd, base_visible_usd), stable_levels + base_levels, int(time.time() * 1000), source_count=2, supported_notional=supported_quote)
+
+    base_fee_bps = kraken_taker_fee_bps(f"{base}-USD", fee_tier)
+    raw_effective = raw_base_usd / raw_stable_usd
+    fill_effective = raw_base_usd * (1.0 + base_fee_bps / 10000.0) / usd_per_quote_after_fee
+    top_base = _top_price(base_usd_book, "asks")
+    slip1 = _slippage_bps(raw_stable_usd, stable_bid)
+    slip2 = _slippage_bps(raw_base_usd, top_base)
+    combined_slip = sum(x for x in (slip1, slip2) if x is not None)
+    supported_quote = min(stable_visible_usd, base_visible_usd) / max(raw_stable_usd, 1e-12)
+    observed_ms = int(time.time() * 1000)
+    return KrakenExecution(
+        True,
+        "ok_kraken_usd_bridge_visible_depth_taker_entry",
+        symbol,
+        requested,
+        raw_effective,
+        fill_effective,
+        stable_fee_bps + base_fee_bps,
+        min(stable_visible_usd, base_visible_usd),
+        stable_levels + base_levels,
+        observed_ms,
+        source_count=2,
+        worst_slippage_bps=combined_slip,
+        supported_notional=supported_quote,
+    )
+
+
+def _simulate_usd_bridge_long_liquidation(symbol: str, requested: float, base: str, quote: str, fee_tier: str):
+    """Sell a crypto into USD, then convert USD proceeds into the requested stable quote."""
     if quote not in USD_BRIDGE_QUOTES or base in STABLE_BASES or base in FIAT_BASES:
         return None
     try:
@@ -185,10 +235,6 @@ def _simulate_usd_bridge_long_liquidation(symbol: str, requested: float, base: s
     except RuntimeError as exc:
         return KrakenExecution(False, f"usd_bridge_unavailable:{exc}", symbol, requested, None, None, 0.0, 0.0, 0, int(time.time() * 1000), source_count=2)
 
-    # Leg 1: sell the crypto into USD. requested is approximately the whole
-    # position quote notional supplied by the caller, and the walked VWAP is used
-    # only to derive the per-unit executable price. The final P&L still multiplies
-    # that price by the exact paper quantity.
     raw_base_usd, base_visible, base_levels = _walk(base_usd_book.get("bids"), requested)
     if raw_base_usd is None:
         return KrakenExecution(False, "insufficient_kraken_visible_depth_usd_bridge_leg1", symbol, requested, None, None, 0.0, base_visible, base_levels, int(time.time() * 1000), source_count=2)
@@ -196,8 +242,6 @@ def _simulate_usd_bridge_long_liquidation(symbol: str, requested: float, base: s
     base_fee_bps = kraken_taker_fee_bps(f"{base}-USD", fee_tier)
     base_net_usd = raw_base_usd * (1.0 - base_fee_bps / 10000.0)
 
-    # Leg 2: buy the requested stablecoin with the USD proceeds. Buying USDT/USD
-    # or USDC/USD consumes asks, and the stable/FX fee schedule is included.
     raw_stable_usd, bridge_visible, bridge_levels = _walk(stable_usd_book.get("asks"), requested)
     if raw_stable_usd is None:
         return KrakenExecution(False, "insufficient_kraken_visible_depth_usd_bridge_leg2", symbol, requested, None, None, 0.0, min(base_visible, bridge_visible), base_levels + bridge_levels, int(time.time() * 1000), source_count=2)
@@ -246,16 +290,15 @@ def simulate_kraken_market_fill(symbol: str, direction: str, requested_notional:
     try:
         _, book = _fetch_depth(base, quote)
     except RuntimeError as exc:
-        # Some Kraken Convert combinations do not expose a direct spot order book
-        # even though both assets are individually tradable. For long-position
-        # liquidation only, allow a fully visible two-leg Kraken route through USD.
-        if direction == "SHORT":
+        bridged = None
+        if direction == "LONG":
+            bridged = _simulate_usd_bridge_long_entry(str(symbol), requested, base, quote, fee_tier)
+        elif direction == "SHORT":
             bridged = _simulate_usd_bridge_long_liquidation(str(symbol), requested, base, quote, fee_tier)
-            if bridged is not None:
-                return bridged
+        if bridged is not None:
+            return bridged
         return KrakenExecution(False, str(exc), str(symbol), requested, None, None, fee_bps, 0.0, 0, int(time.time() * 1000))
 
-    # A LONG entry consumes asks. A SHORT action/long liquidation consumes bids.
     side_key = "asks" if direction == "LONG" else "bids"
     raw_vwap, visible, levels_used = _walk(book.get(side_key), requested)
     observed_ms = int(time.time() * 1000)
