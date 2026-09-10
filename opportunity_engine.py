@@ -75,11 +75,13 @@ def _execution_risk_category(reason):
     return "technical_data_infrastructure"
 
 
-def _action_diagnostics(reviewed_direction, direction, reviewed_action, validation, consensus, global_risk, execution_risk, calibration, pre_calibration_action):
+def _action_diagnostics(reviewed_present, reviewed_direction, direction, reviewed_action, validation, consensus, global_risk, execution_risk, calibration, pre_calibration_action):
     reasons=[]
-    if reviewed_direction != direction:
+    if not reviewed_present:
+        reasons.append(_diagnostic("strategy_evidence","upstream_review_missing","candidate was not returned by the bounded AI review"))
+    elif reviewed_direction != direction:
         reasons.append(_diagnostic("strategy_evidence","review_direction_mismatch",f"reviewed={reviewed_direction or 'missing'} quant={direction}"))
-    if reviewed_action != "TRADE":
+    if reviewed_present and reviewed_action != "TRADE":
         reasons.append(_diagnostic("strategy_evidence","upstream_review_wait",f"reviewed_action={reviewed_action or 'WAIT'}"))
     if not validation.approved:
         reasons.append(_diagnostic("strategy_evidence","strategy_validation_blocked",f"{validation.status}: {validation.reason}"))
@@ -121,7 +123,7 @@ def build_opportunities(scan_id,candidates,ai_signals,regime,risk_plan_fn):
             except Exception as exc:
                 log.warning("Opportunity rejected because risk plan failed: symbol=%s horizon=%s error=%s",c.get("symbol"),horizon,type(exc).__name__); continue
             entry_low,entry_high=_entry_zone(plan)
-            reviewed=ai_map.get((c["symbol"],horizon),{}); reviewed_direction=str(reviewed.get("direction","")).upper(); reviewed_action=str(reviewed.get("action","WAIT")).upper(); action=reviewed_action
+            reviewed=ai_map.get((c["symbol"],horizon),{}); reviewed_present=bool(reviewed); reviewed_direction=str(reviewed.get("direction","")).upper(); reviewed_action=str(reviewed.get("action","WAIT")).upper(); action=reviewed_action
             strategy_family=str(reviewed.get("strategy_family","")); validation=validate_live_strategy(c["symbol"],horizon,strategy_family,resolved_predictions)
             consensus=c.get("market_consensus",{}); consensus_reliable=consensus.get("reliable") is True
             data_multiplier=_bounded_multiplier(consensus.get("confidence_multiplier"),1.0 if consensus_reliable else 0.0)
@@ -131,7 +133,7 @@ def build_opportunities(scan_id,candidates,ai_signals,regime,risk_plan_fn):
             calibration=calibration_assessment(evidence,horizon,resolved_predictions,regime)
             pre_calibration_action=action
             if action=="TRADE" and not calibration["allows_live_action"]: action="WAIT"
-            action_diagnostics=_action_diagnostics(reviewed_direction,direction,reviewed_action,validation,consensus,global_risk,execution_risk,calibration,pre_calibration_action)
+            action_diagnostics=_action_diagnostics(reviewed_present,reviewed_direction,direction,reviewed_action,validation,consensus,global_risk,execution_risk,calibration,pre_calibration_action)
             calibration=dict(calibration); calibration["action_diagnostics"]=action_diagnostics
             liquidity_bonus=min(15.0,max(0.0,c.get("activity_score",0.0))); spread_penalty=min(20.0,float(c.get("spread_bps") or 0.0)*0.35)
             rank_score=max(0.0,abs(q)*20.0+liquidity_bonus-spread_penalty)*data_multiplier
