@@ -41,6 +41,63 @@ def build_runner_report(rows):
     return report
 
 
+def _nonnegative_int(value):
+    return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else None
+
+
+def _bounded_abstention_diagnostics(value):
+    """Keep only small deterministic counts from FFriZz abstention diagnostics."""
+    if not isinstance(value, dict):
+        return None
+
+    def bounded_counts(raw, allowed_keys=None, max_items=24):
+        if not isinstance(raw, dict):
+            return {}
+        output = {}
+        for key, count in raw.items():
+            if len(output) >= max_items:
+                break
+            if not isinstance(key, str) or not key:
+                continue
+            if allowed_keys is not None and key not in allowed_keys:
+                continue
+            clean = _nonnegative_int(count)
+            if clean is not None:
+                output[key] = clean
+        return dict(sorted(output.items()))
+
+    actions = bounded_counts(value.get("action_counts"), {"WAIT", "SHADOW_BUY", "SHADOW_SELL"}, 3)
+    wait_gates = bounded_counts(
+        value.get("wait_gate_counts"),
+        {"insufficient_directional_agreement", "score_below_predeclared_threshold", "unexpected_wait_state"},
+        3,
+    )
+    unavailable = bounded_counts(value.get("family_unavailable_counts"), max_items=16)
+    family_distribution = bounded_counts(value.get("available_family_count_distribution"), max_items=8)
+    horizon_counts = {}
+    raw_horizons = value.get("horizon_counts")
+    if isinstance(raw_horizons, dict):
+        for horizon in ("6h", "12h", "24h", "48h", "72h", "7d"):
+            row = raw_horizons.get(horizon)
+            if not isinstance(row, dict):
+                continue
+            horizon_counts[horizon] = bounded_counts(row, {"scored", "WAIT", "SHADOW_BUY", "SHADOW_SELL"}, 4)
+
+    return {
+        "diagnostic_only": value.get("diagnostic_only") is True,
+        "thresholds_unchanged": value.get("thresholds_unchanged") is True,
+        "backfill_used": value.get("backfill_used") is True,
+        "signals_scored": _nonnegative_int(value.get("signals_scored")),
+        "action_counts": actions,
+        "wait_gate_counts": wait_gates,
+        "family_unavailable_counts": unavailable,
+        "available_family_count_distribution": family_distribution,
+        "horizon_counts": horizon_counts,
+        "trade_authority": False,
+        "promotion_authority": False,
+    }
+
+
 def _ffrizz_forward_collection():
     """Collect FFriZz forward evidence inside the already-bounded heavy lane.
 
@@ -62,22 +119,8 @@ def _ffrizz_forward_collection():
         }
     forward = report.get("forward_evidence") if isinstance(report, dict) else {}
     eligible = int((forward or {}).get("eligible_shadow_forecasts") or 0)
-    if eligible > 0 and not prediction_ledger_configured():
-        return {
-            "ok": False,
-            "research_only": True,
-            "system": report.get("system"),
-            "generated_at": report.get("generated_at"),
-            "eligible_shadow_forecasts": eligible,
-            "error_type": "PredictionLedgerNotConfigured",
-            "non_overlapping_full_horizon_buckets": (forward or {}).get("non_overlapping_full_horizon_buckets") is True,
-            "wait_rows_persisted": (forward or {}).get("wait_rows_persisted") is True,
-            "historical_oi_backfill_used": (forward or {}).get("historical_oi_backfill_used") is True,
-            "trade_authority": False,
-            "promotion_authority": False,
-        }
-    return {
-        "ok": True,
+    abstention = _bounded_abstention_diagnostics((forward or {}).get("abstention_diagnostics"))
+    common = {
         "research_only": True,
         "system": report.get("system"),
         "generated_at": report.get("generated_at"),
@@ -85,8 +128,19 @@ def _ffrizz_forward_collection():
         "non_overlapping_full_horizon_buckets": (forward or {}).get("non_overlapping_full_horizon_buckets") is True,
         "wait_rows_persisted": (forward or {}).get("wait_rows_persisted") is True,
         "historical_oi_backfill_used": (forward or {}).get("historical_oi_backfill_used") is True,
+        "abstention_diagnostics": abstention,
         "trade_authority": False,
         "promotion_authority": False,
+    }
+    if eligible > 0 and not prediction_ledger_configured():
+        return {
+            **common,
+            "ok": False,
+            "error_type": "PredictionLedgerNotConfigured",
+        }
+    return {
+        **common,
+        "ok": True,
     }
 
 
