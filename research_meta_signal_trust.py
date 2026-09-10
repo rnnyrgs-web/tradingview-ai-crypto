@@ -10,6 +10,12 @@ primary score and future-only cross-exchange market-consensus provenance. Other
 evidence families (regime routing, ensemble diversity, microstructure) are
 reported as readiness/supporting diagnostics but never treated as independent
 confirmation unless their evidence is aligned and separately validated.
+
+Important: research eligibility is based on the immutable shadow forecast
+direction (LONG/SHORT), not on production action_at_forecast. Production is
+intentionally fail-closed and may remain WAIT while the research layer learns
+whether any directional subset deserves later canonical validation. A WAIT row
+used here remains WAIT in production and receives no trade authority.
 """
 
 from __future__ import annotations
@@ -51,8 +57,9 @@ def _split(rows):
     return rows[:dev_end], rows[dev_end:val_end], rows[val_end:]
 
 
-def _actionable(row):
-    return str(row.get("action_at_forecast") or "").upper() not in {"WAIT", "NO_TRADE", "RESEARCH_ONLY"}
+def _research_directional(row):
+    """Use immutable shadow direction as research eligibility, never trade authority."""
+    return str(row.get("direction") or "").upper() in {"LONG", "SHORT"}
 
 
 def _high_confidence(row):
@@ -72,13 +79,13 @@ def _consensus_reliable(row):
 
 
 def _profile_rows(rows, profile):
-    actionable = [row for row in rows if _actionable(row)]
+    directional = [row for row in rows if _research_directional(row)]
     if profile == "BASE_ACTIONABLE":
-        return actionable
+        return directional
     if profile == "HIGH_CONFIDENCE":
-        return [row for row in actionable if _high_confidence(row)]
+        return [row for row in directional if _high_confidence(row)]
     if profile == "HIGH_CONFIDENCE_CONSENSUS":
-        return [row for row in actionable if _high_confidence(row) and _consensus_reliable(row)]
+        return [row for row in directional if _high_confidence(row) and _consensus_reliable(row)]
     raise ValueError(f"unknown trust profile: {profile}")
 
 
@@ -87,12 +94,21 @@ def _metrics(rows, *, cost_pct=ROUND_TRIP_COST_PCT):
     returns = [_finite(row.get("directional_return_pct")) for row in rows]
     complete = bool(total and all(value is not None for value in returns))
     precision = sum(1 for row in rows if row.get("correct") is True) / total if total else None
+    production_wait_rows = sum(1 for row in rows if str(row.get("action_at_forecast") or "").upper() in {"WAIT", "NO_TRADE", "RESEARCH_ONLY"})
     stress = {}
     if complete:
         gross = sum(float(value) for value in returns) / total
         for multiplier in COST_STRESS_MULTIPLIERS:
             stress[f"{multiplier:g}x"] = round(gross - float(cost_pct) * multiplier, 4)
-    return {"samples": total, "directional_precision": round(precision, 4) if precision is not None else None, "economic_evidence_complete": complete, "cost_stress_expected_value_pct": stress, "base_after_cost_expectancy_pct": stress.get("1x"), "worst_case_after_cost_expectancy_pct": stress.get("3x")}
+    return {
+        "samples": total,
+        "production_wait_rows_evaluated_research_only": production_wait_rows,
+        "directional_precision": round(precision, 4) if precision is not None else None,
+        "economic_evidence_complete": complete,
+        "cost_stress_expected_value_pct": stress,
+        "base_after_cost_expectancy_pct": stress.get("1x"),
+        "worst_case_after_cost_expectancy_pct": stress.get("3x"),
+    }
 
 
 def _precision_lift(profile_metrics, baseline_metrics):
@@ -130,7 +146,13 @@ def _supporting_readiness(regime_strategy, ensemble_diversity, microstructure_ve
             status = row.get("candidate_status")
             regime_candidates += int(status == "PROSPECTIVE_SHADOW_ROUTER_CANDIDATE")
             regime_waits += int(status == "RESTRICTIVE_WAIT_CANDIDATE")
-    return {"regime_router_candidates": regime_candidates, "regime_restrictive_wait_candidates": regime_waits, "ensemble_diversity_pairs_measured": len((ensemble_diversity or {}).get("pairs") or []), "prospective_microstructure_samples": int((microstructure_veto or {}).get("samples_with_microstructure") or 0), "policy": "These families are supporting readiness only and are not counted as independent confirmation by this version of the trust layer."}
+    return {
+        "regime_router_candidates": regime_candidates,
+        "regime_restrictive_wait_candidates": regime_waits,
+        "ensemble_diversity_pairs_measured": len((ensemble_diversity or {}).get("pairs") or []),
+        "prospective_microstructure_samples": int((microstructure_veto or {}).get("samples_with_microstructure") or 0),
+        "policy": "These families are supporting readiness only and are not counted as independent confirmation by this version of the trust layer.",
+    }
 
 
 def build_meta_signal_trust(rows, *, regime_strategy=None, ensemble_diversity=None, microstructure_veto=None, cost_pct=ROUND_TRIP_COST_PCT):
@@ -148,6 +170,50 @@ def build_meta_signal_trust(rows, *, regime_strategy=None, ensemble_diversity=No
             dev = _metrics(_profile_rows(development, profile), cost_pct=cost_pct)
             val = _metrics(_profile_rows(validation, profile), cost_pct=cost_pct)
             status = "BASELINE_REFERENCE" if profile == "BASE_ACTIONABLE" else _status(profile, dev, val, dev_base, val_base)
-            reports.append({"profile": profile, "development": dev, "validation": val, "development_precision_lift_vs_actionable": _precision_lift(dev, dev_base), "validation_precision_lift_vs_actionable": _precision_lift(val, val_base), "candidate_status": status, "requires_untouched_oos": status in {"A_PROFILE_RESEARCH_CANDIDATE", "A_PLUS_PROFILE_RESEARCH_CANDIDATE", "RESTRICTIVE_WAIT_CANDIDATE"}, "requires_robustness": status in {"A_PROFILE_RESEARCH_CANDIDATE", "A_PLUS_PROFILE_RESEARCH_CANDIDATE", "RESTRICTIVE_WAIT_CANDIDATE"}, "requires_genuine_forward_replication": True, "trade_authority": False, "promotion_authority": False})
-        horizons[horizon] = {"independent_samples": len(independent), "development_samples": len(development), "validation_samples": len(validation), "untouched_oos_samples_sealed": len(untouched_oos), "profiles": reports}
-    return {"ok": True, "research_only": True, "objective": objective_reference("a-plus-meta-signal-trust", "learning_diagnostics"), "predeclared_high_confidence_cutoff": HIGH_CONFIDENCE_CUTOFF, "minimum_precision_lift": MIN_PRECISION_LIFT, "minimum_development_samples": MIN_DEVELOPMENT_SAMPLES, "minimum_validation_samples": MIN_VALIDATION_SAMPLES, "cost_stress_multipliers": list(COST_STRESS_MULTIPLIERS), "a_plus_definition": "High-confidence + timestamp-safe multi-source market consensus; >=2pp precision lift in development and validation; positive expectancy through 3x fixed cost stress. Research candidate only.", "untouched_oos_outcomes_scored": False, "untouched_oos_samples_sealed": sealed, "supporting_evidence_readiness": _supporting_readiness(regime_strategy, ensemble_diversity, microstructure_veto), "horizons": horizons, "trade_authority": False, "promotion_authority": False, "strategy_mutation_authority": False, "automatic_execution_authority": False, "live_label_allowed": False}
+            lift_dev = _precision_lift(dev, dev_base)
+            lift_val = _precision_lift(val, val_base)
+            reports.append({
+                "profile": profile,
+                "development": dev,
+                "validation": val,
+                "development_precision_lift_vs_directional_baseline": lift_dev,
+                "validation_precision_lift_vs_directional_baseline": lift_val,
+                "development_precision_lift_vs_actionable": lift_dev,
+                "validation_precision_lift_vs_actionable": lift_val,
+                "candidate_status": status,
+                "requires_untouched_oos": status in {"A_PROFILE_RESEARCH_CANDIDATE", "A_PLUS_PROFILE_RESEARCH_CANDIDATE", "RESTRICTIVE_WAIT_CANDIDATE"},
+                "requires_robustness": status in {"A_PROFILE_RESEARCH_CANDIDATE", "A_PLUS_PROFILE_RESEARCH_CANDIDATE", "RESTRICTIVE_WAIT_CANDIDATE"},
+                "requires_genuine_forward_replication": True,
+                "trade_authority": False,
+                "promotion_authority": False,
+            })
+        horizons[horizon] = {
+            "independent_samples": len(independent),
+            "development_samples": len(development),
+            "validation_samples": len(validation),
+            "untouched_oos_samples_sealed": len(untouched_oos),
+            "profiles": reports,
+        }
+    return {
+        "ok": True,
+        "research_only": True,
+        "objective": objective_reference("a-plus-meta-signal-trust", "learning_diagnostics"),
+        "research_eligibility_basis": "immutable LONG/SHORT shadow direction; production action_at_forecast is intentionally not an eligibility gate",
+        "production_wait_rows_may_be_evaluated": True,
+        "production_wait_mutation_allowed": False,
+        "predeclared_high_confidence_cutoff": HIGH_CONFIDENCE_CUTOFF,
+        "minimum_precision_lift": MIN_PRECISION_LIFT,
+        "minimum_development_samples": MIN_DEVELOPMENT_SAMPLES,
+        "minimum_validation_samples": MIN_VALIDATION_SAMPLES,
+        "cost_stress_multipliers": list(COST_STRESS_MULTIPLIERS),
+        "a_plus_definition": "High-confidence shadow direction + timestamp-safe multi-source market consensus; >=2pp precision lift in development and validation; positive expectancy through 3x fixed cost stress. Research candidate only.",
+        "untouched_oos_outcomes_scored": False,
+        "untouched_oos_samples_sealed": sealed,
+        "supporting_evidence_readiness": _supporting_readiness(regime_strategy, ensemble_diversity, microstructure_veto),
+        "horizons": horizons,
+        "trade_authority": False,
+        "promotion_authority": False,
+        "strategy_mutation_authority": False,
+        "automatic_execution_authority": False,
+        "live_label_allowed": False,
+    }
