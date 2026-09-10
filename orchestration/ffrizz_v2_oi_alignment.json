@@ -1,0 +1,16 @@
+{
+  "id": "FFRIZZ_SECONDARY_V2_OI_CLOSE_END",
+  "status": "research_only",
+  "parent": "FFRIZZ_SECONDARY_V1",
+  "change": "exact completed 1H candle close endpoint to Binance OI period-end alignment",
+  "horizons": ["6h", "12h", "24h"],
+  "thresholds_changed": false,
+  "interpolation_allowed": false,
+  "historical_backfill_allowed": false,
+  "pool_with_v1_evidence": false,
+  "trade_authority": false,
+  "paper_trade_authority": false,
+  "promotion_authority": false,
+  "broker_authority": false,
+  "next_gate": "prospective_feature_availability_then_non_overlapping_forward_evidence"
+}
