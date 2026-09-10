@@ -37,6 +37,8 @@ FEE_MODEL = "KRAKEN_PRO_TIER1_CONSERVATIVE"
 MIN_EVIDENCE_SCORE = 60.0
 MAX_SIGNAL_AGE_SECONDS = 30 * 60
 PAPER_INTERVAL_SECONDS = 15 * 60
+PAPER_7D_REVERSAL_MIN_EVIDENCE = 80.0
+PAPER_7D_REVERSAL_MAX_RANK = 5
 _cycle_lock = threading.Lock()
 
 
@@ -71,12 +73,7 @@ def _paper_fill_price(symbol, direction, requested_notional):
 
 
 def _liquidation_mark(trade):
-    """Price the whole position at a currently executable after-cost liquidation fill.
-
-    This is deliberately not midpoint, candle close, or top-of-book. The requested
-    notional is the full position at the current observable price and requires a
-    real Kraken Pro public order-book snapshot for that exact pair.
-    """
+    """Price the whole position at a currently executable after-cost liquidation fill."""
     direction = str(trade.get("direction") or "").upper()
     if direction not in {"LONG", "SHORT"}:
         raise RuntimeError("Invalid paper direction for liquidation mark")
@@ -157,6 +154,33 @@ def _has_opposing_symbol_exposure(open_trades, symbol, direction):
     return False
 
 
+def _strong_opposite_7d_signal(trade, rows, now=None):
+    """Return a fresh, top-ranked bearish reversal signal for an open 7d LONG.
+
+    This is paper-only exit logic. It cannot mutate production WAIT/action state and
+    never opens a short. It only permits selling an already-held simulated LONG at
+    a currently executable Kraken liquidation fill.
+    """
+    if str(trade.get("horizon") or "") != "7d" or str(trade.get("direction") or "").upper() != "LONG":
+        return None
+    symbol = str(trade.get("symbol") or "").upper()
+    matches = [r for r in rows or [] if str(r.get("symbol") or "").upper() == symbol]
+    if not matches:
+        return None
+    row = max(matches, key=lambda r: _parse_utc(r.get("generated_at")) or datetime.min.replace(tzinfo=timezone.utc))
+    if str(row.get("direction") or "").upper() != "SHORT":
+        return None
+    try:
+        evidence = float(row.get("evidence_score") or 0)
+        rank = int(row.get("rank") or 0)
+    except (TypeError, ValueError):
+        return None
+    if evidence < PAPER_7D_REVERSAL_MIN_EVIDENCE or not (1 <= rank <= PAPER_7D_REVERSAL_MAX_RANK):
+        return None
+    fresh, _ = _signal_freshness(row, now=now)
+    return row if fresh else None
+
+
 def _close_decision(trade, observation):
     """Conservative 15m trigger logic.
 
@@ -223,8 +247,6 @@ def _v2_exit(trade, trigger_price, reason):
             final_fill = max(final_fill, target * (1.0 + fee))
     elif reason == "STOP":
         stop = float(trade["stop_loss"])
-        # Never allow a delayed cycle to turn an already-hit stop into a better
-        # fill merely because price recovered before the worker ran.
         if direction == "LONG":
             final_fill = min(final_fill, stop * (1.0 - fee))
         else:
@@ -297,8 +319,6 @@ def _run_paper_cycle_locked():
     all_trades = fetch_all_paper_trades(ACCOUNT_ID)
     open_trades = [t for t in all_trades if str(t.get("status") or "").upper() == "OPEN"]
 
-    # Equity is what the whole open position could be liquidated for now after
-    # Kraken visible-depth/taker-fee friction. Missing evidence aborts the cycle.
     marks = _marks_for_open_trades(open_trades)
     ledger = reconcile_paper_ledger(account, all_trades, marks, INITIAL_CASH, compare_persisted=False)
     if not ledger.verified:
@@ -309,9 +329,20 @@ def _run_paper_cycle_locked():
     realized = float(ledger.expected_realized_pnl)
     working_equity = float(ledger.expected_equity)
 
+    reversal_rows = fetch_ranked_opportunities(horizon="7d", limit=20) if open_trades else []
     for trade in list(open_trades):
         candle = _latest_candle(trade["symbol"])
         trigger_price, reason = _close_decision(trade, candle)
+        reversal = None
+        if trigger_price is None:
+            reversal = _strong_opposite_7d_signal(trade, reversal_rows)
+            if reversal is not None:
+                trigger_price = float(candle["close"])
+                reason = "SIGNAL_REVERSAL"
+                log.warning(
+                    "Paper SELL triggered by bearish 7d reversal symbol=%s evidence=%s rank=%s",
+                    trade.get("symbol"), reversal.get("evidence_score"), reversal.get("rank"),
+                )
         if trigger_price is None:
             continue
         audit = None
@@ -322,8 +353,6 @@ def _run_paper_cycle_locked():
                 log.warning("Paper exit execution unavailable for %s: %s", trade.get("symbol"), str(exc)[:160])
                 continue
         else:
-            # Existing legacy trades are preserved exactly; they are explicitly
-            # labelled unverified rather than retroactively rewriting history.
             exit_price = float(trigger_price)
             pnl = _legacy_net_pnl(trade, exit_price)
         pnl_pct = pnl / float(trade["notional_usd"]) * 100.0 if float(trade["notional_usd"]) > 0 else 0.0
@@ -524,6 +553,8 @@ def paper_status():
         "liquidation_value_marks": True,
         "intrabar_stop_detection": True,
         "ambiguous_intrabar_outcome": "STOP",
+        "signal_reversal_sell_enabled": True,
+        "signal_reversal_sell_policy": "7d LONG exits on fresh rank<=5 SHORT with evidence>=80",
         "shorts_require_verified_carry": True,
         "short_entries_enabled": False,
         "fee_schedule_verified": FEE_SCHEDULE_VERIFIED,
