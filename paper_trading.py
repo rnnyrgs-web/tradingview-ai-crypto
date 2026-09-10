@@ -20,6 +20,12 @@ from paper_db import (
     update_paper_account,
 )
 from kraken_execution import KRAKEN_FEE_SCHEDULE_AS_OF, kraken_taker_fee_bps, simulate_kraken_market_fill
+from kraken_futures_execution import (
+    FUTURES_FEE_MODEL,
+    FUTURES_TAKER_FEE_BPS,
+    latest_perp_mark_candle,
+    simulate_kraken_perp_fill,
+)
 from market_data import get_candles
 from production_risk_gate import assess_portfolio_risk
 from utils import iso, now_utc
@@ -58,13 +64,17 @@ def _latest_candle(symbol):
     return {**candle, "close": close, "high": high, "low": low}
 
 
+def _trade_observation(trade):
+    if str(trade.get("direction") or "").upper() == "SHORT":
+        return latest_perp_mark_candle(str(trade.get("symbol") or ""))
+    return _latest_candle(str(trade.get("symbol") or ""))
+
+
 def _last_price(symbol):
-    """Latest observable close. Never used as an executable liquidation mark."""
     return float(_latest_candle(symbol)["close"])
 
 
 def _paper_fill_price(symbol, direction, requested_notional):
-    """Create a forward-only Kraken Pro taker fill from current Kraken depth."""
     simulation = simulate_kraken_market_fill(symbol, direction, requested_notional, KRAKEN_FEE_TIER)
     if not simulation.executable or simulation.fill_price is None:
         raise RuntimeError(f"Execution evidence unavailable: {simulation.reason}")
@@ -72,18 +82,34 @@ def _paper_fill_price(symbol, direction, requested_notional):
     return market_price, float(simulation.fill_price), simulation
 
 
+def _perp_fill_price(symbol, direction, requested_notional, reserve_full_horizon_funding=False):
+    simulation = simulate_kraken_perp_fill(
+        symbol,
+        direction,
+        requested_notional,
+        reserve_full_horizon_funding=reserve_full_horizon_funding,
+    )
+    if not simulation.executable or simulation.fill_price is None:
+        raise RuntimeError(f"Perpetual execution evidence unavailable: {simulation.reason}")
+    market_price = float(simulation.raw_vwap)
+    return market_price, float(simulation.fill_price), simulation
+
+
 def _liquidation_mark(trade):
-    """Price the whole position at a currently executable after-cost liquidation fill."""
     direction = str(trade.get("direction") or "").upper()
     if direction not in {"LONG", "SHORT"}:
         raise RuntimeError("Invalid paper direction for liquidation mark")
     quantity = float(trade.get("quantity") or 0)
     if not math.isfinite(quantity) or quantity <= 0:
         raise RuntimeError("Invalid paper quantity for liquidation mark")
+    if direction == "SHORT":
+        observed = float(latest_perp_mark_candle(str(trade.get("symbol") or ""))["close"])
+        _, fill, execution = _perp_fill_price(
+            str(trade.get("symbol") or ""), "LONG", observed * quantity, False
+        )
+        return float(fill), execution
     observed = _last_price(str(trade.get("symbol") or ""))
-    requested_notional = observed * quantity
-    exit_side = "SHORT" if direction == "LONG" else "LONG"
-    _, fill, execution = _paper_fill_price(str(trade.get("symbol") or ""), exit_side, requested_notional)
+    _, fill, execution = _paper_fill_price(str(trade.get("symbol") or ""), "SHORT", observed * quantity)
     return float(fill), execution
 
 
@@ -140,7 +166,6 @@ def _record_decision(row, decision, reason):
 
 
 def _has_opposing_symbol_exposure(open_trades, symbol, direction):
-    """Reject a new paper entry that would self-hedge the same asset."""
     symbol = str(symbol or "").upper()
     direction = str(direction or "").upper()
     if not symbol or direction not in {"LONG", "SHORT"}:
@@ -155,12 +180,6 @@ def _has_opposing_symbol_exposure(open_trades, symbol, direction):
 
 
 def _strong_opposite_7d_signal(trade, rows, now=None):
-    """Return a fresh, top-ranked bearish reversal signal for an open 7d LONG.
-
-    This is paper-only exit logic. It cannot mutate production WAIT/action state and
-    never opens a short. It only permits selling an already-held simulated LONG at
-    a currently executable Kraken liquidation fill.
-    """
     if str(trade.get("horizon") or "") != "7d" or str(trade.get("direction") or "").upper() != "LONG":
         return None
     symbol = str(trade.get("symbol") or "").upper()
@@ -182,12 +201,6 @@ def _strong_opposite_7d_signal(trade, rows, now=None):
 
 
 def _close_decision(trade, observation):
-    """Conservative 15m trigger logic.
-
-    High/low are used so a stop touched intrabar cannot disappear because the bar
-    later recovered. If both stop and target are observed in the same bar and
-    ordering is unknowable, STOP wins.
-    """
     if isinstance(observation, dict):
         close = float(observation["close"])
         high = float(observation.get("high", close))
@@ -198,18 +211,14 @@ def _close_decision(trade, observation):
     target = float(trade["target_price"])
     direction = str(trade.get("direction") or "").upper()
     if direction == "LONG":
-        stop_hit = low <= stop
-        target_hit = high >= target
-        if stop_hit:
+        if low <= stop:
             return stop, "STOP"
-        if target_hit:
+        if high >= target:
             return target, "TARGET"
     elif direction == "SHORT":
-        stop_hit = high >= stop
-        target_hit = low <= target
-        if stop_hit:
+        if high >= stop:
             return stop, "STOP"
-        if target_hit:
+        if low <= target:
             return target, "TARGET"
     else:
         return None, None
@@ -234,11 +243,18 @@ def _legacy_net_pnl(trade, exit_price):
 def _v2_exit(trade, trigger_price, reason):
     quantity = float(trade["quantity"])
     requested_notional = max(float(trigger_price) * quantity, 1e-9)
-    exit_side = "SHORT" if str(trade["direction"]).upper() == "LONG" else "LONG"
-    observed_market, executable_fill, execution = _paper_fill_price(trade["symbol"], exit_side, requested_notional)
-    final_fill = executable_fill
-    fee = float(trade.get("fee_bps_one_way") or FEE_BPS_ONE_WAY) / 10000.0
     direction = str(trade["direction"]).upper()
+    if direction == "SHORT":
+        observed_market, executable_fill, execution = _perp_fill_price(
+            trade["symbol"], "LONG", requested_notional, False
+        )
+    else:
+        observed_market, executable_fill, execution = _paper_fill_price(
+            trade["symbol"], "SHORT", requested_notional
+        )
+    final_fill = executable_fill
+    fee_bps = FUTURES_TAKER_FEE_BPS if direction == "SHORT" else float(trade.get("fee_bps_one_way") or FEE_BPS_ONE_WAY)
+    fee = fee_bps / 10000.0
     if reason == "TARGET":
         target = float(trade["target_price"])
         if direction == "LONG":
@@ -275,8 +291,7 @@ def _consistent(stats, max_drawdown_pct):
 def _validate_persistent_account(account):
     if not account:
         raise RuntimeError("Paper account creation did not persist")
-    initial_cash = float(account.get("initial_cash") or 0)
-    if initial_cash != INITIAL_CASH:
+    if float(account.get("initial_cash") or 0) != INITIAL_CASH:
         raise RuntimeError("Paper account initial_cash is immutable and must remain $100,000")
     for field in ("cash", "equity", "realized_pnl", "peak_equity", "max_drawdown_pct"):
         value = float(account.get(field))
@@ -331,9 +346,8 @@ def _run_paper_cycle_locked():
 
     reversal_rows = fetch_ranked_opportunities(horizon="7d", limit=20) if open_trades else []
     for trade in list(open_trades):
-        candle = _latest_candle(trade["symbol"])
+        candle = _trade_observation(trade)
         trigger_price, reason = _close_decision(trade, candle)
-        reversal = None
         if trigger_price is None:
             reversal = _strong_opposite_7d_signal(trade, reversal_rows)
             if reversal is not None:
@@ -390,8 +404,8 @@ def _run_paper_cycle_locked():
         if not fresh:
             _record_decision(row, "REJECTED", freshness_reason)
             continue
-        if direction == "SHORT":
-            _record_decision(row, "REJECTED", "short_carry_unverified")
+        if direction == "SHORT" and horizon != "7d":
+            _record_decision(row, "REJECTED", "short_shadow_7d_only")
             continue
         if float(row.get("evidence_score") or 0) < MIN_EVIDENCE_SCORE:
             _record_decision(row, "REJECTED", "below_paper_evidence_floor")
@@ -410,8 +424,12 @@ def _run_paper_cycle_locked():
             _record_decision(row, "REJECTED", "invalid_signal_prices")
             continue
 
-        stop_distance_pct = max(0.0, (signal_entry - signal_stop) / signal_entry)
-        target_distance_pct = max(0.0, (signal_target - signal_entry) / signal_entry)
+        if direction == "LONG":
+            stop_distance_pct = max(0.0, (signal_entry - signal_stop) / signal_entry)
+            target_distance_pct = max(0.0, (signal_target - signal_entry) / signal_entry)
+        else:
+            stop_distance_pct = max(0.0, (signal_stop - signal_entry) / signal_entry)
+            target_distance_pct = max(0.0, (signal_entry - signal_target) / signal_entry)
         if stop_distance_pct <= 0 or target_distance_pct <= 0:
             _record_decision(row, "REJECTED", "invalid_signal_geometry")
             continue
@@ -425,14 +443,24 @@ def _run_paper_cycle_locked():
             continue
 
         try:
-            observed_market, entry, execution = _paper_fill_price(symbol, direction, desired_notional)
+            if direction == "SHORT":
+                observed_market, entry, execution = _perp_fill_price(
+                    symbol, "SHORT", desired_notional, reserve_full_horizon_funding=True
+                )
+            else:
+                observed_market, entry, execution = _paper_fill_price(symbol, "LONG", desired_notional)
         except Exception as exc:
-            _record_decision(row, "REJECTED", "kraken_execution_evidence_unavailable")
-            log.warning("Kraken paper execution unavailable for %s: %s", symbol, str(exc)[:160])
+            reason = "kraken_perp_execution_evidence_unavailable" if direction == "SHORT" else "kraken_execution_evidence_unavailable"
+            _record_decision(row, "REJECTED", reason)
+            log.warning("Kraken paper execution unavailable for %s direction=%s: %s", symbol, direction, str(exc)[:160])
             continue
 
-        stop = entry * (1.0 - stop_distance_pct)
-        target = entry * (1.0 + target_distance_pct)
+        if direction == "LONG":
+            stop = entry * (1.0 - stop_distance_pct)
+            target = entry * (1.0 + target_distance_pct)
+        else:
+            stop = entry * (1.0 + stop_distance_pct)
+            target = entry * (1.0 - target_distance_pct)
         risk_per_unit = abs(entry - stop)
         if min(entry, stop, target, risk_per_unit) <= 0:
             _record_decision(row, "REJECTED", "invalid_fill_geometry")
@@ -447,7 +475,8 @@ def _run_paper_cycle_locked():
             _record_decision(row, "REJECTED", "unsupported_kraken_notional")
             continue
 
-        if not _record_decision(row, "ACCEPTED", "fresh_kraken_visible_depth_taker_fill"):
+        accept_reason = "fresh_kraken_perp_visible_depth_funding_reserved" if direction == "SHORT" else "fresh_kraken_visible_depth_taker_fill"
+        if not _record_decision(row, "ACCEPTED", accept_reason):
             continue
         decision_at = iso(now_utc())
         if insert_paper_trade({
@@ -477,10 +506,16 @@ def _run_paper_cycle_locked():
             "execution_model_version": V2_EXECUTION_MODEL,
         }):
             log.info(
-                "Kraken paper trade opened symbol=%s market=%s fill=%s notional=%.2f visible=%.2f slippage_bps=%s fee_bps=%s",
-                symbol, observed_market, entry, notional, float(execution.supported_notional or 0),
+                "Kraken paper trade opened symbol=%s direction=%s market=%s fill=%s notional=%.2f visible=%.2f slippage_bps=%s fee_bps=%s",
+                symbol, direction, observed_market, entry, notional, float(execution.supported_notional or 0),
                 execution.worst_slippage_bps, execution.fee_bps,
             )
+            if direction == "SHORT":
+                log.info(
+                    "Paper perpetual SHORT funding reserve symbol=%s perp=%s hourly_rate=%s reserve_bps=%s model=%s",
+                    symbol, getattr(execution, "perp_symbol", None), getattr(execution, "funding_rate_hourly", None),
+                    getattr(execution, "funding_reserve_bps", None), FUTURES_FEE_MODEL,
+                )
             cash -= notional
             open_trades = fetch_open_paper_trades(ACCOUNT_ID)
             open_pairs.add((symbol, horizon))
@@ -536,7 +571,7 @@ def paper_status():
     max_dd = max(float(account["max_drawdown_pct"]), stats["max_drawdown_pct"])
     portfolio_risk = assess_portfolio_risk(account, open_trades, stats)
     reconciliation = fetch_latest_paper_reconciliation(ACCOUNT_ID)
-    execution_status = "KRAKEN_PRO_TIER1_FORWARD_MODEL_READY" if not legacy_rows else "PARTIAL_LEGACY_HISTORY"
+    execution_status = "KRAKEN_SPOT_AND_PERP_FORWARD_MODEL_READY" if not legacy_rows else "PARTIAL_LEGACY_HISTORY"
     return {
         "configured": True,
         "research_only": True,
@@ -545,8 +580,8 @@ def paper_status():
         "trade_authority": False,
         "forward_fill_only": True,
         "size_aware_execution": True,
-        "execution_venue": "Kraken Pro spot",
-        "order_book_source": "Kraken public Depth",
+        "execution_venue": "Kraken Pro spot + Kraken Futures perpetuals",
+        "order_book_source": "Kraken public spot Depth + Futures REST orderbook",
         "requires_two_reliable_books": False,
         "immutable_closed_trade_ledger": True,
         "decision_journal": True,
@@ -556,7 +591,11 @@ def paper_status():
         "signal_reversal_sell_enabled": True,
         "signal_reversal_sell_policy": "7d LONG exits on fresh rank<=5 SHORT with evidence>=80",
         "shorts_require_verified_carry": True,
-        "short_entries_enabled": False,
+        "short_entries_enabled": True,
+        "short_entry_policy": "7d paper shadow only; rank<=5; evidence>=80; Kraken perpetual + current funding required",
+        "short_funding_model": "reserve absolute current hourly funding across full 168h; never assume funding income",
+        "short_fee_model": FUTURES_FEE_MODEL,
+        "short_fee_bps_one_way": FUTURES_TAKER_FEE_BPS,
         "fee_schedule_verified": FEE_SCHEDULE_VERIFIED,
         "fee_schedule_as_of": KRAKEN_FEE_SCHEDULE_AS_OF,
         "fee_model": FEE_MODEL,
