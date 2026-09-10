@@ -98,6 +98,47 @@ def _bounded_abstention_diagnostics(value):
     }
 
 
+def _bounded_v2_feature_availability(value):
+    """Keep only predeclared horizon/family counts from the V2 challenger."""
+    if not isinstance(value, dict):
+        return None
+    allowed_families = {
+        "pb_ema:available",
+        "pb_ema:unavailable",
+        "fvg:available",
+        "fvg:unavailable",
+        "inside_bar:available",
+        "inside_bar:unavailable",
+        "price_oi_correlation_v2:available",
+        "price_oi_correlation_v2:unavailable",
+    }
+    horizons = {}
+    raw_horizons = value.get("horizons")
+    if isinstance(raw_horizons, dict):
+        for horizon in ("6h", "12h", "24h"):
+            row = raw_horizons.get(horizon)
+            if not isinstance(row, dict):
+                continue
+            counts = row.get("family_counts") if isinstance(row.get("family_counts"), dict) else {}
+            clean_counts = {}
+            for key in sorted(allowed_families):
+                clean = _nonnegative_int(counts.get(key))
+                if clean is not None:
+                    clean_counts[key] = clean
+            horizons[horizon] = {
+                "signals_scored": _nonnegative_int(row.get("signals_scored")),
+                "family_counts": clean_counts,
+            }
+    return {
+        "system": "FFRIZZ_SECONDARY_V2_OI_CLOSE_END",
+        "diagnostic_only": value.get("diagnostic_only") is True,
+        "symbol_level_data_exposed": False,
+        "horizons": horizons,
+        "trade_authority": False,
+        "promotion_authority": False,
+    }
+
+
 def _ffrizz_forward_collection():
     """Collect FFriZz forward evidence inside the already-bounded heavy lane.
 
@@ -120,6 +161,9 @@ def _ffrizz_forward_collection():
     forward = report.get("forward_evidence") if isinstance(report, dict) else {}
     eligible = int((forward or {}).get("eligible_shadow_forecasts") or 0)
     abstention = _bounded_abstention_diagnostics((forward or {}).get("abstention_diagnostics"))
+    v2_availability = _bounded_v2_feature_availability(
+        report.get("v2_oi_alignment_feature_availability") if isinstance(report, dict) else None
+    )
     common = {
         "research_only": True,
         "system": report.get("system"),
@@ -129,6 +173,7 @@ def _ffrizz_forward_collection():
         "wait_rows_persisted": (forward or {}).get("wait_rows_persisted") is True,
         "historical_oi_backfill_used": (forward or {}).get("historical_oi_backfill_used") is True,
         "abstention_diagnostics": abstention,
+        "v2_oi_alignment_feature_availability": v2_availability,
         "trade_authority": False,
         "promotion_authority": False,
     }
