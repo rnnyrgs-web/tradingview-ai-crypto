@@ -6,7 +6,7 @@ import json
 import os
 from pathlib import Path
 
-from db import fetch_shadow_predictions
+from db import configured as prediction_ledger_configured, fetch_shadow_predictions
 from ffrizz_secondary_runner import run as run_ffrizz_secondary
 from research_adaptive_accuracy import build_adaptive_accuracy_report
 from research_learning_state import append_lesson, load_state
@@ -45,8 +45,10 @@ def _ffrizz_forward_collection():
     """Collect FFriZz forward evidence inside the already-bounded heavy lane.
 
     This deliberately does not create another worker, Render service, concurrency
-    slot, or production authority. Failures remain observable but cannot mutate
-    the primary strategy or suppress the adaptive report.
+    slot, or production authority. A generated eligible forecast is not reported
+    as successfully collected unless the canonical prediction-ledger connection is
+    configured; otherwise db.insert_prediction_ledger would intentionally no-op and
+    observability could falsely report collection success while preserving no row.
     """
     try:
         report = run_ffrizz_secondary(persist=True)
@@ -59,12 +61,27 @@ def _ffrizz_forward_collection():
             "promotion_authority": False,
         }
     forward = report.get("forward_evidence") if isinstance(report, dict) else {}
+    eligible = int((forward or {}).get("eligible_shadow_forecasts") or 0)
+    if eligible > 0 and not prediction_ledger_configured():
+        return {
+            "ok": False,
+            "research_only": True,
+            "system": report.get("system"),
+            "generated_at": report.get("generated_at"),
+            "eligible_shadow_forecasts": eligible,
+            "error_type": "PredictionLedgerNotConfigured",
+            "non_overlapping_full_horizon_buckets": (forward or {}).get("non_overlapping_full_horizon_buckets") is True,
+            "wait_rows_persisted": (forward or {}).get("wait_rows_persisted") is True,
+            "historical_oi_backfill_used": (forward or {}).get("historical_oi_backfill_used") is True,
+            "trade_authority": False,
+            "promotion_authority": False,
+        }
     return {
         "ok": True,
         "research_only": True,
         "system": report.get("system"),
         "generated_at": report.get("generated_at"),
-        "eligible_shadow_forecasts": int((forward or {}).get("eligible_shadow_forecasts") or 0),
+        "eligible_shadow_forecasts": eligible,
         "non_overlapping_full_horizon_buckets": (forward or {}).get("non_overlapping_full_horizon_buckets") is True,
         "wait_rows_persisted": (forward or {}).get("wait_rows_persisted") is True,
         "historical_oi_backfill_used": (forward or {}).get("historical_oi_backfill_used") is True,
