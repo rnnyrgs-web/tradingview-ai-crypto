@@ -1,11 +1,11 @@
 # AI DEVELOPMENT STATE
-Last updated: 2026-09-09
+Last updated: 2026-09-10
 
 ## PURPOSE
 Authoritative continuation state for `rnnyrgs-web/tradingview-ai-crypto`. Read this file from current `main` in full before development. Never infer project state only from ChatGPT memory. Update this file after each completed integration cycle.
 
 ## CURRENT MAIN / ARCHITECTURE
-Current tested integration baseline after PR #188: `3fa7d2ae3e134c6823a7c9577e37d468854a3de9`. This includes PR #185 regime×strategy research, PR #186 reliability fixes, PR #187 state synchronization, and PR #188 accuracy/profitability research diagnostics.
+Current tested integration baseline after PR #191: `c9fb1980cfb0319645a7ec2cbaa6f8a55e16f04a`. This includes PR #190 economic-calibration/meta-WAIT hardening and PR #191 evidence-value research scheduling on top of the PR #188 accuracy/profitability research stack.
 
 Production: GitHub -> Render -> Python/FastAPI V3 -> Supabase. Production scans run about every 15 minutes and produce separate 24h/7d Top-20 rankings. Continuous research/backtesting runs on the existing Render coordinator with bounded heavy concurrency under the USD 30/month recurring-infrastructure ceiling.
 
@@ -23,14 +23,15 @@ The always-on research architecture includes:
 - 256 active token-free logical specialists per refresh from a much larger deterministic virtual namespace;
 - durable research memory in Supabase;
 - live read-only adaptive evidence observability including the durable conclusive-trial counter;
-- research-only economic meta-WAIT diagnostics over independent non-overlapping full-horizon outcomes;
+- research-only economic meta-WAIT diagnostics over independent non-overlapping full-horizon outcomes, kept horizon-specific rather than pooled;
 - research-only resolved-forward regime×strategy diagnostics that reuse the learning worker's single ledger read, split each horizon chronologically 60/20/20, score development and validation only, and keep untouched OOS sealed;
-- research-only economic calibration using probability-weighted win/loss payoffs net of fixed conservative research costs, with chronological development/validation and sealed untouched OOS;
+- research-only economic calibration using probability-weighted win/loss payoffs net of conservative execution costs, with predeclared 1x/1.5x/2x/3x cost stress, chronological development/validation and sealed untouched OOS;
 - research-only cross-sectional/residual diagnostics that use only already-persisted point-in-time fields and explicitly refuse historical feature backfill;
 - prospective microstructure-veto diagnostics that use only timestamped persisted order-book evidence and never reconstruct unavailable history;
 - ensemble-diversity diagnostics that measure matched strategy error agreement so redundant mechanisms are not treated as independent confirmation;
 - resolved-error attribution that converts observed failures into falsifiable research buckets without fabricating explanations;
 - selective-WAIT fusion that ranks restrictive abstention experiments from the above diagnostics but cannot itself alter production or open untouched OOS;
+- an evidence-value research scheduler that prioritizes scarce experiment capacity by expected signal impact, information/falsification value, actionable-evidence probability, sample readiness, compute cost and redundancy risk while keeping blocked work visible but unclaimable;
 - a governed accuracy/profitability roadmap that prioritizes selective WAIT, regime×strategy routing, cross-sectional/residual signals, economic calibration, prospective microstructure vetoes and ensemble diversity while explicitly deprioritizing duplicate or low-information research.
 
 Logical scale must never be confused with physical compute scale. Heavy experiment concurrency remains capped at one admitted heavy experiment at a time unless a separately reviewed change explicitly proves a safe/cost-valid reason to alter it.
@@ -64,12 +65,14 @@ Core invariants:
 - overlapping forecasts must never be treated as independent observations;
 - malformed, missing, or delayed outcome chronology must fail closed instead of fabricating labels or sample independence;
 - economic meta-label discovery may only use defensible resolved independent evidence and cannot itself open untouched OOS or mutate production;
+- meta-WAIT evidence must stay separated by horizon so 24h and 7d economics are not pooled into artificial support;
 - regime×strategy discovery may score development/validation evidence only; its untouched OOS partition stays sealed and candidate status creates no production authority;
-- economic calibration may nominate positive or restrictive research candidates from development/validation only, while untouched OOS stays sealed;
+- economic calibration may nominate positive or restrictive research candidates from development/validation only, while untouched OOS stays sealed; apparent edge that survives only base-cost assumptions is not robust evidence;
 - missing cross-sectional, microstructure, leadership, breadth, sector or residual fields must remain missing; do not reconstruct or backfill unavailable point-in-time evidence;
 - ensemble model count is not independent evidence; redundant matched error behavior must be treated as potential duplication, not confidence amplification;
 - error attribution proposes falsifiable research questions only; ambiguous errors remain unexplained rather than receiving invented causes;
 - selective-WAIT fusion is hypothesis prioritization only and cannot bypass fresh validation, untouched OOS, multiple-testing, robustness or genuine-forward proof;
+- research scheduling must prefer falsifiable, actionable, evidence-efficient experiments and penalize blocked/redundant/expensive low-information work without weakening any scientific gate;
 - hourly self-improvement review must not force paid model calls, bypass the 12-hour successful-run cooldown, exceed the $1/day API budget, increase physical concurrency, or change production authority.
 
 PR #149 introduced `UNIVERSAL_SIGNAL_DEVELOPMENT_V1`, the canonical machine-readable objective: optimize genuine forward 24h/7d BUY/SELL/WAIT quality and positive after-cost expectancy, not headline historical accuracy.
@@ -94,6 +97,8 @@ PR #183 adds research-only economic meta-WAIT diagnostics that use non-overlappi
 PR #185 adds resolved-forward regime×strategy routing diagnostics to the existing learning worker. It uses only non-overlapping full-horizon resolved rows, creates deterministic 60/20/20 chronological partitions separately for 24h and 7d, scores development and validation only, leaves untouched OOS outcomes sealed, and classifies sufficiently supported pairs only as prospective shadow-router or restrictive-WAIT research candidates. It adds no worker, market-data call, paid service, AI call, production threshold, strategy fingerprint, trade authority, promotion authority, or paper-ledger mutation.
 PR #186 fixes three recurring operational stalls without weakening research/trading gates: impossible low-price/high-ATR risk geometry fails closed for the affected symbol/horizon instead of aborting a scan; cross-exchange spot data defaults to Binance's public market-data-only host; and the read-only production AI observer interval is six hours so quota/rate-limit failures do not hammer the API while deterministic research continues.
 PR #188 adds the requested research-only accuracy/profitability stack: economic calibration, cross-sectional/residual diagnostics, prospective microstructure veto diagnostics, ensemble-diversity diagnostics, resolved-error attribution, and selective-WAIT fusion. All reuse existing resolved-ledger evidence and the learning worker; no worker count, paid service, physical heavy concurrency, production threshold, strategy fingerprint, promotion authority, broker capability, or paper history changed.
+PR #190 hardens economic calibration with predeclared 1x/1.5x/2x/3x execution-cost stress, prevents base-cost-only positive edge from being treated as robust, separates meta-WAIT evidence by 24h/7d horizon, and keeps selective-WAIT hypotheses horizon-specific. It changes no production threshold, strategy fingerprint, worker count, paid service, broker connectivity, paper history, or live authority.
+PR #191 upgrades the research-director scheduler from additive headline scoring to evidence-value scheduling. It prioritizes expected signal impact, information/falsification value, actionable-evidence probability, sample readiness and compute efficiency, penalizes redundancy, and keeps natural-history-blocked missions visible but unable to consume scarce experiment capacity. It adds no workers, paid services, concurrency, trade authority or production behavior.
 
 No accuracy or profitability improvement is claimed merely because these infrastructure/scientific changes exist. Any such claim still requires independent evidence through the canonical chain.
 
@@ -102,10 +107,10 @@ No accuracy or profitability improvement is claimed merely because these infrast
 - ACC-002 CROSS-ASSET RANK RESEARCH — FAIL-CLOSED before untouched OOS because the second predeclared liquidity subset is not yet defensibly supported.
 - ACC-003 through ACC-014 safety/validation layers — COMPLETE, including regime gating, champion/challenger, provenance, deterioration, robustness, genuine forward proof, portfolio/execution risk, size-aware execution, point-in-time universe safety, multiple-testing firewall, shadow comparison and chaos/failure gates.
 - SELECTIVE PRECISION — research-only; independent non-overlapping full-horizon evidence required.
-- ECONOMIC META-WAIT — research-only diagnostic active; prioritizes potentially harmful primary signal conditions using independent non-overlapping outcomes after fixed conservative research cost. It cannot change production and still requires fresh governed validation/OOS/forward proof.
+- ECONOMIC META-WAIT — research-only diagnostic active; horizon-specific and based on independent non-overlapping outcomes after conservative research cost. It cannot change production and still requires fresh governed validation/OOS/forward proof.
 - REGIME × STRATEGY ROUTER — research-only resolved-forward diagnostic active. It reuses the learning-worker ledger read, separately evaluates 24h/7d development and validation evidence, keeps untouched OOS sealed, and can only nominate shadow-router or restrictive-WAIT candidates for later canonical testing.
-- ECONOMIC CALIBRATION — research-only diagnostic active. It evaluates `P(win)*E(win) - P(loss)*E(loss) - round_trip_cost` in fixed confidence bands using chronological development/validation evidence; untouched OOS remains sealed.
-- SELECTIVE-WAIT FUSION — research-only diagnostic active. It combines restrictive meta-WAIT, regime×strategy, economic-calibration, prospective microstructure and error-attribution hypotheses only to prioritize fresh abstention experiments.
+- ECONOMIC CALIBRATION — research-only diagnostic active. It evaluates probability-weighted payoff after costs in fixed confidence bands using chronological development/validation evidence and predeclared multi-level cost stress; untouched OOS remains sealed.
+- SELECTIVE-WAIT FUSION — research-only diagnostic active. It combines restrictive meta-WAIT, regime×strategy, economic-calibration, prospective microstructure and error-attribution hypotheses only to prioritize fresh abstention experiments, horizon-specifically where required.
 - CROSS-SECTIONAL / RESIDUAL SIGNAL SCIENCE — research-only diagnostics active for persisted point-in-time rank, residual momentum, relative strength, breadth, beta and leadership/sector fields. Missing fields are reported rather than backfilled. Existing beta-neutral residual momentum remains a challenger.
 - MICROSTRUCTURE VETO — research-only prospective diagnostic active using timestamped persisted spread, visible depth and imbalance evidence only; no historical order-book reconstruction.
 - ENSEMBLE DIVERSITY — research-only diagnostic active. Matched strategy error agreement may nominate redundant-mechanism research candidates; redundant model count is not independent evidence.
@@ -115,13 +120,14 @@ No accuracy or profitability improvement is claimed merely because these infrast
 - BETA-NEUTRAL RESIDUAL MOMENTUM — challenger only; cannot bypass canonical validation gates.
 - UNIVERSAL SIGNAL-DEVELOPMENT / LEARNING LOOP — active; research-only and information-gain aware.
 - QUANT-SCIENCE RESEARCH FACTORY — active; predeclared science, bounded executable breadth and blocker-aware scheduling.
+- EVIDENCE-VALUE RESEARCH SCHEDULER — active; scarce experiment capacity is ranked by falsifiability, actionable evidence probability, expected signal impact, sample readiness, compute cost and redundancy risk while blocked work remains fail-closed.
 - ADAPTIVE ACCURACY EXPERIMENT LANE — active; protected by durable trial memory and sequential multiple-testing-adjusted OOS admission.
 - TOKEN-FREE SPECIALIST FACTORY — 256 active deterministic logical specialists per refresh, zero normal-operation AI calls, research-only. Do not increase specialist count without measured information-value evidence.
 
 ### ACC-002 genuine bounded evidence
 The blocker remains natural history, not a strategy pass/fail result. Do not lower `minimum_subset_coverage=0.80`, remove the two-supported-subset requirement, substitute lower-ranked assets, shorten required history merely to pass, fabricate/backfill history, or repeatedly spend scarce cycles re-diagnosing pure `InsufficientHistory` outcomes.
 
-Post-PR #188 live coordinator observability showed only the Top-15 subset defensibly supported for ACC-002. The 24h worker resolved 26/30 symbols and the 7d worker resolved 18/30, with remaining failures classified exclusively as `InsufficientHistory`; both remained `insufficient_supported_liquidity_subsets`, untouched OOS stayed closed, and authority flags remained false. These counts are operational snapshots and will change naturally; use live observability for current values.
+Post-PR #191 live coordinator observability at 2026-09-10T00:07Z showed only the Top-15 subset defensibly supported. The 24h worker resolved 28/30 symbols with 2 pure `InsufficientHistory` failures; the 7d worker resolved 15/30 with 15 pure `InsufficientHistory` failures. Both remained `insufficient_supported_liquidity_subsets`, untouched OOS stayed closed, and trade/promotion/signal authority remained false. These counts are operational snapshots and will change naturally; use live observability for current values.
 
 Pure ACC-002 `InsufficientHistory` outcomes use the bounded recheck delay so the shared accuracy lane can spend more time on falsifiable adaptive research. Mixed request/source/software failures must not receive that exemption.
 
@@ -139,8 +145,12 @@ PR #185 exact head `7daca2531b5e74edd102a6147a9d26c04ca9c76c` passed Security an
 PR #186 exact head `9b400265a505798649f8ac0cf8e808a6d726370c` passed Security and Reliability #1364 before merge as `f0d6681294a13c7d26a2ab7a0962407c0fab7366`.
 PR #187 state synchronization passed Security and Reliability #1371 before merge as `956c22a616f95d4eab8b77d8768677c3fe6e5130`.
 PR #188 exact head `7e22f805fe0159fd017d2c0f47355f163c984770` passed Security and Reliability #1383 before squash merge as `3fa7d2ae3e134c6823a7c9577e37d468854a3de9`.
+PR #190 exact head `7c0188d740acdb3233f10e74e8d8a21f2107f5ef` passed Security and Reliability #1396 before squash merge as `d88fd9bc40b94fbe66e9c8d64eeb7b4ed828ce7d`.
+PR #191 exact final head `b3aaa4cac1fd0fa5a5113498cff51b41d43ee0af` passed Security and Reliability #1404 before squash merge as `c9fb1980cfb0319645a7ec2cbaa6f8a55e16f04a`. An earlier #191 candidate exposed a regression in blocked-mission observability; the regression was fixed without weakening the natural-history guard before the final exact head passed.
 
-PR #188 deployed successfully to both production and the continuous coordinator. Both Render deployments for merged commit `3fa7d2ae3e134c6823a7c9577e37d468854a3de9` reached `live`. The coordinator answered HTTP 200, the deployment canary reached `healthy` with 201 worker samples, the supervisor reported healthy with zero worker failures/timeouts/stale/crashed workers, the 256-specialist factory reported zero normal-operation AI calls/errors, and trade/promotion/signal authority remained false. Deployment is operational evidence only; it is not a signal-quality or profitability claim.
+PR #191 is live on both production and the continuous coordinator. Both Render services auto-deployed merged commit `c9fb1980cfb0319645a7ec2cbaa6f8a55e16f04a` successfully. Post-deploy coordinator evidence through 2026-09-10T00:07Z showed a healthy deployment canary with 957 worker samples, 957 completed workers, zero worker failures/timeouts, no stale or crashed workers, zero task restarts, 256 logical specialists with zero normal-operation AI calls/errors, 20 research-director missions and no production promotion. Trade/promotion/signal authority remained false. Deployment is operational evidence only; it is not a signal-quality or profitability claim.
+
+Observed shared-history cache hit rate in the same post-#191 window remained low (about 7.5%) while history network fetches were failure-free but relatively expensive (roughly 6.5s median in coordinator observability). Treat this as a research-throughput optimization candidate only: do not stretch TTLs, alter completed-candle semantics, weaken provenance identity, or reuse stale snapshots merely to improve cache metrics. First identify whether misses are legitimate request diversity versus safely reusable identical history requests.
 
 The prior live paper-cycle defect was a repeated decision write hitting Supabase unique constraint `paper_signal_decisions_signal_key_key`. PR #181 changed those writes to explicit idempotent conflict handling. No recurrence was observed in the checked post-#181 windows; continue monitoring without rewriting paper history.
 
@@ -164,18 +174,18 @@ Preserve exact strategy fingerprints while genuine forward observations accumula
 Blind RSI/MACD/EMA or similar parameter permutations without a diagnosed resolved-error mechanism are explicitly deprioritized. Redundant ensemble members, repeated falsified hypotheses without materially new evidence, repeated ACC-002 investigation while failures are purely `InsufficientHistory`, and worker-count expansion without demonstrated information-value benefit are also deprioritized. Features whose apparent edge disappears after realistic costs should be retired or deprioritized rather than optimized to historical noise.
 
 ## CURRENT OPEN DEVELOPMENT
-PRs #160/#163/#164/#165/#167/#168/#170/#172/#173/#175/#176/#177/#178/#179/#181/#183/#185/#186/#187/#188 are integrated and must not be re-applied. PR #180 was a state-only sync branch superseded by later current-main syncs and must not be merged. PR #166 is stale/superseded and must not be merged as-is. PR #140 was closed as superseded by integrated PR #170. Older PRs #34, #33 and #13 are stale against current main and must not be merged as-is without a fresh compatibility/relevance review.
+PRs #160/#163/#164/#165/#167/#168/#170/#172/#173/#175/#176/#177/#178/#179/#181/#183/#185/#186/#187/#188/#190/#191 are integrated and must not be re-applied. PR #180 was a state-only sync branch superseded by later current-main syncs and must not be merged. PR #166 is stale/superseded and must not be merged as-is. PR #140 was closed as superseded by integrated PR #170. Older PRs #34, #33 and #13 are stale against current main and must not be merged as-is without a fresh compatibility/relevance review.
 
 Persistent specialist priorities live in `orchestration/specialist_coordination.json`. The accuracy/profitability add/remove roadmap lives in `orchestration/accuracy_profitability_roadmap.json`. Specialists may create isolated candidate work only and may not bypass the canonical evidence gates or recurring-cost ceiling.
 
 ## EXACT NEXT STEP
-1. Inspect the first naturally completed post-#188 learning-worker report. Measure actual independent coverage for economic calibration, cross-sectional/residual fields, prospective microstructure, ensemble matching, error attribution and selective-WAIT fusion. Missing evidence is a blocker, not permission to backfill or lower gates.
-2. Convert only the highest-information restrictive hypotheses with defensible development/validation support into predeclared experiments. Prefer hypotheses that can reduce false positives and improve after-cost expectancy without increasing trade count.
-3. Keep untouched OOS sealed until each candidate passes its predeclared validation and sequential multiple-testing gate. Do not inspect OOS merely because a diagnostic looks promising.
-4. Continue natural prospective accumulation of Kraken microstructure, consensus and cross-sectional provenance; never reconstruct historical order books or fabricate point-in-time fields.
-5. Preserve the ACC-002 natural-history blocker while aggregate failures remain `InsufficientHistory`; never weaken the 80% coverage, two-supported-subset, Top-N ordering or untouched-OOS rules.
-6. Audit prediction-ledger outcomes for temporal integrity after PR #179 and continue monitoring the authentic append-only paper ledger. Invalid/stale labels stay unresolved; paper history is never rewritten.
-7. Use ensemble-diversity evidence to deprioritize genuinely redundant mechanisms only after sufficient matched samples; do not treat diagnostic correlation as authority to delete a strategy automatically.
-8. At every hourly autonomous eligibility review ask what should be added, removed, simplified, combined, deprioritized or tested next, but do not force paid work or weaken the 12-hour model cooldown/$1-day budget/$30-month ceiling.
+1. Inspect naturally completed post-#191 learning-worker reports. Measure actual independent coverage for economic calibration under cost stress, horizon-specific meta-WAIT, cross-sectional/residual fields, prospective microstructure, ensemble matching, error attribution and selective-WAIT fusion. Missing evidence is a blocker, not permission to backfill or lower gates.
+2. Verify that evidence-value scheduling actually directs scarce capacity toward falsifiable/actionable experiments rather than merely changing ranking metadata. Preserve reusable outcomes in durable research memory and penalize duplicate/disproven hypotheses unless conditions materially change.
+3. Investigate the low shared-history cache hit rate as a throughput question: determine whether misses reflect legitimate request diversity or exact repeated immutable history requests that can safely reuse provenance-identical completed-candle snapshots. Make no TTL/freshness change without exact-identity and chronology proof.
+4. Convert only the highest-information restrictive hypotheses with defensible development/validation support into predeclared experiments. Prefer hypotheses that can reduce false positives and improve after-cost expectancy without increasing trade count.
+5. Keep untouched OOS sealed until each candidate passes its predeclared validation and sequential multiple-testing gate. Do not inspect OOS merely because a diagnostic looks promising.
+6. Continue natural prospective accumulation of Kraken microstructure, consensus and cross-sectional provenance; never reconstruct historical order books or fabricate point-in-time fields.
+7. Preserve the ACC-002 natural-history blocker while aggregate failures remain `InsufficientHistory`; never weaken the 80% coverage, two-supported-subset, Top-N ordering or untouched-OOS rules.
+8. Audit prediction-ledger outcomes for temporal integrity after PR #179 and continue monitoring the authentic append-only paper ledger. Invalid/stale labels stay unresolved; paper history is never rewritten.
 9. Keep `live_promotions.json` empty, broker disconnected, signing keys unused, paper baseline immutable, heavy concurrency bounded, and recurring infrastructure within USD 30/month until genuine governed evidence justifies any separately approved change.
 10. Keep exact-head Security and Reliability plus current-main compatibility review mandatory for every integration.
