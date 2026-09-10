@@ -134,12 +134,32 @@ def observability_log_payload(army: object) -> dict:
             "failure_type_counts": dict(sorted(failure_types.items())),
         }
 
+    def safe_nonnegative_int(value):
+        return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else None
+
+    def selected_counts(raw, allowed):
+        if not isinstance(raw, dict):
+            return {}
+        return {
+            key: raw[key]
+            for key in allowed
+            if key in raw and safe_nonnegative_int(raw[key]) is not None
+        }
+
     def compact_ffrizz() -> dict:
         evidence = adaptive.get("latest_evidence") if isinstance(adaptive.get("latest_evidence"), dict) else {}
         forward = evidence.get("ffrizz_forward_collection") if isinstance(evidence.get("ffrizz_forward_collection"), dict) else {}
-        eligible = forward.get("eligible_shadow_forecasts")
-        if not isinstance(eligible, int) or isinstance(eligible, bool) or eligible < 0:
-            eligible = None
+        eligible = safe_nonnegative_int(forward.get("eligible_shadow_forecasts"))
+        abstention = forward.get("abstention_diagnostics") if isinstance(forward.get("abstention_diagnostics"), dict) else {}
+        action_counts = selected_counts(abstention.get("action_counts"), ("WAIT", "SHADOW_BUY", "SHADOW_SELL"))
+        wait_gate_counts = selected_counts(
+            abstention.get("wait_gate_counts"),
+            ("insufficient_directional_agreement", "score_below_predeclared_threshold", "unexpected_wait_state"),
+        )
+        family_distribution = selected_counts(
+            abstention.get("available_family_count_distribution"),
+            ("0", "1", "2", "3", "4"),
+        )
         return {
             "worker_exit": adaptive.get("last_exit_code"),
             "worker_elapsed_s": adaptive.get("elapsed_seconds"),
@@ -151,6 +171,13 @@ def observability_log_payload(army: object) -> dict:
             "non_overlapping_full_horizon_buckets": forward.get("non_overlapping_full_horizon_buckets") is True,
             "wait_rows_persisted": forward.get("wait_rows_persisted") is True,
             "historical_oi_backfill_used": forward.get("historical_oi_backfill_used") is True,
+            "abstention_diagnostic_only": abstention.get("diagnostic_only") is True,
+            "abstention_thresholds_unchanged": abstention.get("thresholds_unchanged") is True,
+            "abstention_backfill_used": abstention.get("backfill_used") is True,
+            "signals_scored": safe_nonnegative_int(abstention.get("signals_scored")),
+            "action_counts": action_counts,
+            "wait_gate_counts": wait_gate_counts,
+            "available_family_count_distribution": family_distribution,
             "trade_authority": False,
             "promotion_authority": False,
         }
