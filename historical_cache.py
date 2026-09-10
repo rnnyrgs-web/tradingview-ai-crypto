@@ -186,6 +186,7 @@ def read_history(
     singleflight_wait_seconds=None,
 ):
     started = time.perf_counter()
+    use_live_clock = now_ms is None
     now_ms = int(now_ms if now_ms is not None else time.time() * 1000)
     ttl_seconds = int(ttl_seconds or DEFAULT_TTL_SECONDS)
     cache_dir = Path(cache_dir or DEFAULT_CACHE_DIR)
@@ -230,7 +231,7 @@ def read_history(
     deadline = time.monotonic() + max(1, wait_seconds)
     while time.monotonic() < deadline:
         time.sleep(SINGLEFLIGHT_POLL_SECONDS)
-        check_now_ms = int(time.time() * 1000) if now_ms is None else now_ms
+        check_now_ms = int(time.time() * 1000) if use_live_clock else now_ms
         status, rows = _read_bucket(symbol, bar, wanted, max_bars, current_bucket, check_now_ms, ttl_seconds, cache_dir)
         if status == "hit":
             return finish("hit", rows)
