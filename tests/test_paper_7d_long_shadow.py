@@ -25,7 +25,7 @@ def test_strong_7d_long_wait_becomes_paper_shadow_trade_without_mutating_source(
     assert rows[0]["paper_source_action"] == "WAIT"
 
 
-def test_7d_shadow_policy_is_restrictive_and_horizon_specific(monkeypatch):
+def test_7d_shadow_policy_is_restrictive_symmetric_and_horizon_specific(monkeypatch):
     source = [
         _row(rank=1, evidence=79.99),
         _row(rank=6, evidence=99.0),
@@ -36,8 +36,13 @@ def test_7d_shadow_policy_is_restrictive_and_horizon_specific(monkeypatch):
 
     rows = p.fetch_ranked_opportunities(horizon="7d", limit=20)
 
-    assert [row["action"] for row in rows] == ["WAIT", "WAIT", "WAIT", "TRADE"]
-    assert not any(row.get("paper_shadow") for row in rows)
+    assert [row["action"] for row in rows] == ["WAIT", "WAIT", "TRADE", "TRADE"]
+    assert rows[2]["paper_shadow"] is True
+    assert rows[2]["paper_source_action"] == "WAIT"
+    assert source[2]["action"] == "WAIT"
+    assert not rows[0].get("paper_shadow")
+    assert not rows[1].get("paper_shadow")
+    assert not rows[3].get("paper_shadow")
 
 
 def test_24h_wait_is_never_upgraded_by_paper_shadow_policy(monkeypatch):
@@ -52,5 +57,5 @@ def test_24h_wait_is_never_upgraded_by_paper_shadow_policy(monkeypatch):
 
 
 def test_shadow_thresholds_remain_selective():
-    assert p.PAPER_7D_LONG_SHADOW_MIN_EVIDENCE >= 80.0
-    assert 1 <= p.PAPER_7D_LONG_SHADOW_MAX_RANK <= 5
+    assert p.PAPER_7D_SHADOW_MIN_EVIDENCE >= 80.0
+    assert 1 <= p.PAPER_7D_SHADOW_MAX_RANK <= 5
