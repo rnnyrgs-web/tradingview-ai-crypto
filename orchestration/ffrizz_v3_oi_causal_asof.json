@@ -1,0 +1,22 @@
+{
+  "experiment_id": "FFRIZZ_SECONDARY_V3_OI_CAUSAL_ASOF",
+  "status": "predeclared_research_challenger",
+  "supersedes_hypothesis": "FFRIZZ_SECONDARY_V2_OI_CLOSE_END_exact_timestamp_equality",
+  "change_scope": "open_interest_price_timestamp_alignment_only",
+  "bar": "1H",
+  "initial_diagnostic_horizons": ["6h", "12h", "24h"],
+  "alignment": "latest_completed_candle_close_at_or_before_oi_period_end",
+  "max_price_staleness_ms_exclusive": 3600000,
+  "future_price_allowed": false,
+  "nearest_neighbor_allowed": false,
+  "interpolation_allowed": false,
+  "duplicate_price_endpoint_reuse_allowed": false,
+  "minimum_overlap": 6,
+  "thresholds_changed": false,
+  "forward_persistence": false,
+  "research_only": true,
+  "trade_authority": false,
+  "paper_trade_authority": false,
+  "promotion_authority": false,
+  "broker_authority": false
+}
