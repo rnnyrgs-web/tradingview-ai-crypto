@@ -98,8 +98,8 @@ def _bounded_abstention_diagnostics(value):
     }
 
 
-def _bounded_v2_feature_availability(value):
-    """Keep only predeclared horizon/family counts from the V2 challenger."""
+def _bounded_feature_availability(value, *, system, oi_family, include_reasons=False):
+    """Keep only predeclared horizon/family counts from an OI challenger."""
     if not isinstance(value, dict):
         return None
     allowed_families = {
@@ -109,8 +109,18 @@ def _bounded_v2_feature_availability(value):
         "fvg:unavailable",
         "inside_bar:available",
         "inside_bar:unavailable",
-        "price_oi_correlation_v2:available",
-        "price_oi_correlation_v2:unavailable",
+        f"{oi_family}:available",
+        f"{oi_family}:unavailable",
+    }
+    allowed_reasons = {
+        "oi_unavailable",
+        "unsupported_bar",
+        "ambiguous_duplicate_candle_close",
+        "price_unavailable",
+        "ambiguous_duplicate_oi_period_end",
+        "ambiguous_reused_price_endpoint",
+        "insufficient_causal_asof_overlap",
+        "correlation_undefined",
     }
     horizons = {}
     raw_horizons = value.get("horizons")
@@ -125,18 +135,53 @@ def _bounded_v2_feature_availability(value):
                 clean = _nonnegative_int(counts.get(key))
                 if clean is not None:
                     clean_counts[key] = clean
-            horizons[horizon] = {
+            bounded = {
                 "signals_scored": _nonnegative_int(row.get("signals_scored")),
                 "family_counts": clean_counts,
             }
+            if include_reasons:
+                reasons = row.get("oi_unavailable_reason_counts") if isinstance(row.get("oi_unavailable_reason_counts"), dict) else {}
+                bounded["oi_unavailable_reason_counts"] = {
+                    reason: clean
+                    for reason in sorted(allowed_reasons)
+                    if (clean := _nonnegative_int(reasons.get(reason))) is not None
+                }
+            horizons[horizon] = bounded
     return {
-        "system": "FFRIZZ_SECONDARY_V2_OI_CLOSE_END",
+        "system": system,
         "diagnostic_only": value.get("diagnostic_only") is True,
         "symbol_level_data_exposed": False,
         "horizons": horizons,
         "trade_authority": False,
         "promotion_authority": False,
     }
+
+
+def _bounded_v2_feature_availability(value):
+    return _bounded_feature_availability(
+        value,
+        system="FFRIZZ_SECONDARY_V2_OI_CLOSE_END",
+        oi_family="price_oi_correlation_v2",
+    )
+
+
+def _bounded_v3_feature_availability(value):
+    bounded = _bounded_feature_availability(
+        value,
+        system="FFRIZZ_SECONDARY_V3_OI_CAUSAL_ASOF",
+        oi_family="price_oi_correlation_v3",
+        include_reasons=True,
+    )
+    if bounded is None:
+        return None
+    bounded.update({
+        "causal_asof_only": True,
+        "future_price_used": False,
+        "nearest_neighbor_used": False,
+        "interpolation_used": False,
+        "max_price_staleness_ms_exclusive": 3_600_000,
+    })
+    return bounded
 
 
 def _ffrizz_forward_collection():
@@ -164,6 +209,9 @@ def _ffrizz_forward_collection():
     v2_availability = _bounded_v2_feature_availability(
         report.get("v2_oi_alignment_feature_availability") if isinstance(report, dict) else None
     )
+    v3_availability = _bounded_v3_feature_availability(
+        report.get("v3_oi_causal_asof_feature_availability") if isinstance(report, dict) else None
+    )
     common = {
         "research_only": True,
         "system": report.get("system"),
@@ -174,6 +222,7 @@ def _ffrizz_forward_collection():
         "historical_oi_backfill_used": (forward or {}).get("historical_oi_backfill_used") is True,
         "abstention_diagnostics": abstention,
         "v2_oi_alignment_feature_availability": v2_availability,
+        "v3_oi_causal_asof_feature_availability": v3_availability,
         "trade_authority": False,
         "promotion_authority": False,
     }
