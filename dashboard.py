@@ -13,6 +13,9 @@ from market_data import get_candles
 
 SESSION_COOKIE = "crypto_dashboard_session"
 SESSION_TTL_SECONDS = 12 * 60 * 60
+DASHBOARD_HORIZONS = ("6h", "12h", "24h", "48h", "72h", "7d")
+PERSISTED_SIGNAL_HORIZONS = ("24h", "7d")
+DASHBOARD_VIEWS = ("all",) + DASHBOARD_HORIZONS
 
 
 def _b64(data: bytes) -> str:
@@ -93,7 +96,33 @@ def _pct_text(value):
 
 
 def _duration(row):
-    return "7d" if str(row.get("timeframe") or row.get("horizon") or "24h") == "7d" else "24h"
+    raw = str(row.get("timeframe") or row.get("horizon") or "24h").strip().lower()
+    return raw if raw in DASHBOARD_HORIZONS else "24h"
+
+
+def _dashboard_view(value):
+    raw = str(value or "all").strip().lower()
+    return raw if raw in DASHBOARD_VIEWS else "all"
+
+
+def _rows_for_dashboard(view, limit_per_horizon=20):
+    """Return only persisted signal rows; never invent rows for research-only horizons."""
+    view = _dashboard_view(view)
+    if view == "all":
+        rows = []
+        for horizon in PERSISTED_SIGNAL_HORIZONS:
+            rows.extend(fetch_ranked_opportunities(horizon=horizon, limit=limit_per_horizon))
+        rows.sort(
+            key=lambda row: (
+                -float(row.get("evidence_score") or 0.0),
+                DASHBOARD_HORIZONS.index(_duration(row)),
+                int(row.get("rank") or 999),
+            )
+        )
+        return rows
+    if view not in PERSISTED_SIGNAL_HORIZONS:
+        return []
+    return fetch_ranked_opportunities(horizon=view, limit=limit_per_horizon)
 
 
 def _calibration_metrics(row):
@@ -152,7 +181,7 @@ input,button{{box-sizing:border-box;width:100%;padding:13px;border-radius:10px;b
 input{{background:#0b0f14;color:white;margin:12px 0}}button{{background:#edf2f7;color:#0b0f14;font-weight:bold;cursor:pointer}}button:disabled{{opacity:.45;cursor:not-allowed}}
 small{{color:#93a4b8}}.error{{background:#4a1c1c;padding:10px;border-radius:8px;margin:10px 0}}
 </style></head><body><div class="box"><h2>Crypto Signal Dashboard</h2>
-<p>Private dashboard for ranked 24h and 7d signal candidates.</p>{err}
+<p>Private dashboard for ranked crypto signals across short, medium and swing horizons.</p>{err}
 <form method="post" action="/dashboard/login"><input name="secret" type="password" autocomplete="current-password" placeholder="Private dashboard password" required{disabled}><button{disabled}>Unlock dashboard</button></form>
 <p><small>The password is submitted only to your Render service over HTTPS and replaced by a signed HttpOnly session cookie. Do not paste it into chat.</small></p>
 </div></body></html>""")
@@ -167,7 +196,7 @@ async def handle_login(request: Request):
     if not hmac.compare_digest(supplied, DASHBOARD_SECRET):
         return login_page("Incorrect password.")
     expires = int(time.time()) + SESSION_TTL_SECONDS
-    response = RedirectResponse("/dashboard?horizon=24h", status_code=303)
+    response = RedirectResponse("/dashboard?horizon=all", status_code=303)
     response.set_cookie(
         SESSION_COOKIE,
         _session_token(expires),
@@ -180,11 +209,19 @@ async def handle_login(request: Request):
     return response
 
 
-def dashboard_page(request: Request, horizon="24h"):
+def _nav(view):
+    labels = (("all", "ALL"), ("6h", "6h"), ("12h", "12h"), ("24h", "24h"), ("48h", "48h"), ("72h", "72h"), ("7d", "7d"))
+    return "".join(
+        f'<a class="{"active" if view == value else ""}" href="/dashboard?horizon={value}">{label}</a>'
+        for value, label in labels
+    )
+
+
+def dashboard_page(request: Request, horizon="all"):
     if not _authorized(request):
         return RedirectResponse("/dashboard/login", status_code=303)
-    horizon = "7d" if horizon == "7d" else "24h"
-    rows = fetch_ranked_opportunities(horizon=horizon, limit=20)
+    view = _dashboard_view(horizon)
+    rows = _rows_for_dashboard(view, limit_per_horizon=20)
     table_rows = []
     for rank, row in enumerate(rows, 1):
         lo, hi = _entry_zone(row)
@@ -205,7 +242,7 @@ def dashboard_page(request: Request, horizon="24h"):
 <td class="rank">{rank}</td>
 <td class="symbol">{symbol}</td>
 <td><span class="pill {cls}">{label}</span></td>
-<td>{html.escape(_duration(row))}</td>
+<td><span class="duration">{html.escape(_duration(row))}</span></td>
 <td class="num {accuracy_cls}">{calibration['accuracy']}<small>forward</small></td>
 <td class="num">{calibration['floor']}<small>95% floor</small></td>
 <td class="num">{calibration['n']}<small>independent</small></td>
@@ -217,16 +254,24 @@ def dashboard_page(request: Request, horizon="24h"):
 <td class="num">{score:.0f}<small>strength</small></td>
 <td><a class="tv" href="{detail}">VIEW CHART</a></td>
 </tr>""")
-    empty = '<div class="empty">No recent candidates for this horizon yet. The engine will not invent trades to fill the list.</div>' if not table_rows else ""
+
+    if table_rows:
+        empty = ""
+    elif view in DASHBOARD_HORIZONS and view not in PERSISTED_SIGNAL_HORIZONS:
+        empty = f'<div class="empty"><b>{html.escape(view)} research is active, but no production-grade {html.escape(view)} trade rows are persisted yet.</b><br>The dashboard will show them here once the governed research/validation pipeline produces real candidates. It will not manufacture placeholder trades.</div>'
+    else:
+        empty = '<div class="empty">No recent candidates for this view yet. The engine will not invent trades to fill the list.</div>'
+
     table = "" if not table_rows else f"""
 <div class="tablewrap"><table><thead><tr>
 <th>#</th><th>CRYPTO</th><th>SIGNAL</th><th>DURATION</th><th>ACCURACY</th><th>95% FLOOR</th><th>SAMPLE</th><th>ENTRY AREA</th><th>STOP LOSS</th><th>EXPECTED T1</th><th>EXPECTED T2</th><th>R:R</th><th>EVIDENCE</th><th>CHART</th>
 </tr></thead><tbody>{''.join(table_rows)}</tbody></table></div>"""
+
     return HTMLResponse(f"""<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="60">
 <title>Crypto Signals</title><style>
-*{{box-sizing:border-box}}body{{margin:0;background:#081018;color:#eaf1f8;font-family:Arial,sans-serif}}.wrap{{max-width:1800px;margin:auto;padding:18px}}header{{display:flex;justify-content:space-between;gap:16px;align-items:end;flex-wrap:wrap}}h1{{margin:0 0 4px;font-size:24px}}.sub{{color:#91a4b7;font-size:13px}}nav a{{color:#eaf1f8;text-decoration:none;border:1px solid #32465a;border-radius:8px;padding:8px 11px;margin-left:6px;display:inline-block}}nav a.active{{background:#eaf1f8;color:#081018}}.note{{background:#0d1823;border-left:3px solid #405a72;padding:9px 12px;margin:12px 0;color:#aebdca;font-size:12px}}.tablewrap{{overflow-x:auto;border:1px solid #213244;border-radius:10px;background:#0c1620}}table{{width:100%;border-collapse:collapse;min-width:1480px}}thead{{background:#111c27;position:sticky;top:0}}th{{font-size:10px;letter-spacing:.04em;color:#7f94a8;text-align:left;padding:9px 8px;border-bottom:1px solid #26394c;white-space:nowrap}}td{{padding:8px;border-bottom:1px solid #172635;font-size:12px;white-space:nowrap;vertical-align:middle}}tbody tr{{cursor:pointer}}tbody tr:hover{{background:#101d29}}.rank{{color:#60778d;width:34px}}.symbol{{color:#f0f6fb;font-weight:800;font-size:13px}}.num{{font-variant-numeric:tabular-nums}}td small{{display:block;color:#8296a9;font-size:10px;margin-top:2px}}.pill{{font-weight:800;padding:4px 7px;border-radius:999px;font-size:10px}}.buy{{background:#123c2c;color:#9ee6c2}}.sell{{background:#482020;color:#ffb2b2}}.wait{{background:#403815;color:#eadb93}}.stop small{{color:#e0a0a0}}.target small{{color:#99d6b5}}.accuracy-ready{{font-weight:900;color:#9ee6c2}}.accuracy-learning{{font-weight:800;color:#eadb93}}.tv{{background:#2962ff;color:white;text-decoration:none;font-weight:800;border-radius:7px;padding:7px 9px;display:inline-block}}.empty{{padding:24px;background:#111c27;border-radius:10px;margin-top:14px}}@media(max-width:720px){{.wrap{{padding:10px}}h1{{font-size:20px}}th,td{{padding:7px 6px}}}}
-</style></head><body><div class="wrap"><header><div><h1>Crypto signals</h1><div class="sub">Latest researched 24h/7d signal stream. Refreshes every 60 seconds.</div></div><nav><a class="{'active' if horizon=='24h' else ''}" href="/dashboard?horizon=24h">24h</a><a class="{'active' if horizon=='7d' else ''}" href="/dashboard?horizon=7d">7d</a></nav></header>
-<div class="note"><b>Accuracy</b> is empirical forward hit rate from genuinely resolved, non-overlapping comparable forecasts. <b>95% Floor</b> is the conservative Wilson lower bound. <b>N</b> is the number of independent forecasts. Until the required sample is reached, Accuracy shows LEARNING. <b>Evidence</b> remains current signal strength, not a probability of being correct.</div>{table}{empty}</div></body></html>""")
+*{{box-sizing:border-box}}body{{margin:0;background:#081018;color:#eaf1f8;font-family:Arial,sans-serif}}.wrap{{max-width:1800px;margin:auto;padding:18px}}header{{display:flex;justify-content:space-between;gap:16px;align-items:end;flex-wrap:wrap}}h1{{margin:0 0 4px;font-size:24px}}.sub{{color:#91a4b7;font-size:13px}}nav{{display:flex;gap:6px;flex-wrap:wrap}}nav a{{color:#eaf1f8;text-decoration:none;border:1px solid #32465a;border-radius:8px;padding:8px 11px;display:inline-block}}nav a.active{{background:#eaf1f8;color:#081018}}.note{{background:#0d1823;border-left:3px solid #405a72;padding:9px 12px;margin:12px 0;color:#aebdca;font-size:12px}}.tablewrap{{overflow-x:auto;border:1px solid #213244;border-radius:10px;background:#0c1620}}table{{width:100%;border-collapse:collapse;min-width:1480px}}thead{{background:#111c27;position:sticky;top:0}}th{{font-size:10px;letter-spacing:.04em;color:#7f94a8;text-align:left;padding:9px 8px;border-bottom:1px solid #26394c;white-space:nowrap}}td{{padding:8px;border-bottom:1px solid #172635;font-size:12px;white-space:nowrap;vertical-align:middle}}tbody tr{{cursor:pointer}}tbody tr:hover{{background:#101d29}}.rank{{color:#60778d;width:34px}}.symbol{{color:#f0f6fb;font-weight:800;font-size:13px}}.duration{{font-weight:800;color:#b9d3ea;background:#162737;border:1px solid #29445c;border-radius:999px;padding:4px 7px}}.num{{font-variant-numeric:tabular-nums}}td small{{display:block;color:#8296a9;font-size:10px;margin-top:2px}}.pill{{font-weight:800;padding:4px 7px;border-radius:999px;font-size:10px}}.buy{{background:#123c2c;color:#9ee6c2}}.sell{{background:#482020;color:#ffb2b2}}.wait{{background:#403815;color:#eadb93}}.stop small{{color:#e0a0a0}}.target small{{color:#99d6b5}}.accuracy-ready{{font-weight:900;color:#9ee6c2}}.accuracy-learning{{font-weight:800;color:#eadb93}}.tv{{background:#2962ff;color:white;text-decoration:none;font-weight:800;border-radius:7px;padding:7px 9px;display:inline-block}}.empty{{padding:24px;background:#111c27;border-radius:10px;margin-top:14px;color:#aebdca;line-height:1.5}}@media(max-width:720px){{.wrap{{padding:10px}}h1{{font-size:20px}}th,td{{padding:7px 6px}}}}
+</style></head><body><div class="wrap"><header><div><h1>Crypto signals</h1><div class="sub">All trade horizons in one dashboard: 6h · 12h · 24h · 48h · 72h · 7d. Refreshes every 60 seconds.</div></div><nav>{_nav(view)}</nav></header>
+<div class="note"><b>ALL</b> combines every currently persisted production signal horizon. 6h/12h/48h/72h are visible now as dedicated research-horizon tabs and will populate only when real validated opportunity rows exist. <b>Accuracy</b> is empirical forward hit rate from genuinely resolved, non-overlapping comparable forecasts. <b>95% Floor</b> is the conservative Wilson lower bound. <b>N</b> is independent forecasts. <b>Evidence</b> is signal strength, not probability.</div>{table}{empty}</div></body></html>""")
 
 
 def signal_chart_data(request: Request, signal_id: int):
@@ -236,7 +281,8 @@ def signal_chart_data(request: Request, signal_id: int):
     if not row:
         return JSONResponse({"ok": False, "error": "signal_not_found"}, status_code=404)
     symbol = str(row.get("symbol") or "BTC-USDT")
-    bar = "4H" if _duration(row) == "7d" else "1H"
+    duration = _duration(row)
+    bar = "4H" if duration in {"48h", "72h", "7d"} else "1H"
     candles = get_candles(symbol, bar=bar, limit=240)
     return JSONResponse({
         "ok": True,
