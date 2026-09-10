@@ -93,7 +93,49 @@ def _pct_text(value):
 
 
 def _duration(row):
-    return "7d" if str(row.get("timeframe") or "24h") == "7d" else "24h"
+    return "7d" if str(row.get("timeframe") or row.get("horizon") or "24h") == "7d" else "24h"
+
+
+def _calibration_metrics(row):
+    """Expose only genuine empirical forward calibration; never synthesize accuracy."""
+    calibration = row.get("calibration") if isinstance(row, dict) else None
+    if not isinstance(calibration, dict):
+        return {
+            "accuracy": "LEARNING",
+            "floor": "—",
+            "n": "N=0/30",
+            "samples": 0,
+            "minimum_samples": 30,
+            "ready": False,
+        }
+    try:
+        samples = max(0, int(calibration.get("independent_samples") or calibration.get("samples") or 0))
+    except (TypeError, ValueError):
+        samples = 0
+    try:
+        minimum = max(1, int(calibration.get("minimum_samples") or 30))
+    except (TypeError, ValueError):
+        minimum = 30
+    ready = bool(calibration.get("ready"))
+    precision = calibration.get("empirical_precision") if ready else None
+    floor = calibration.get("precision_95pct_lower") if ready else None
+    try:
+        accuracy_text = f"{float(precision) * 100.0:.0f}%" if precision is not None else "LEARNING"
+    except (TypeError, ValueError):
+        accuracy_text = "LEARNING"
+    try:
+        floor_text = f"{float(floor) * 100.0:.0f}%" if floor is not None else "—"
+    except (TypeError, ValueError):
+        floor_text = "—"
+    n_text = f"N={samples}" if ready else f"N={samples}/{minimum}"
+    return {
+        "accuracy": accuracy_text,
+        "floor": floor_text,
+        "n": n_text,
+        "samples": samples,
+        "minimum_samples": minimum,
+        "ready": ready,
+    }
 
 
 def login_page(error=""):
@@ -150,36 +192,41 @@ def dashboard_page(request: Request, horizon="24h"):
         cls = label.lower()
         score = float(row.get("evidence_score") or 0)
         rr = float(row.get("risk_reward") or 0)
+        calibration = _calibration_metrics(row)
         stop_pct = _signed_pct(row, "stop_loss")
         t1_pct = _signed_pct(row, "target_1")
         t2_pct = _signed_pct(row, "target_2")
         symbol = html.escape(str(row.get("symbol") or ""))
         signal_id = int(row.get("id") or 0)
         detail = f"/dashboard/signal/{signal_id}"
+        accuracy_cls = "accuracy-ready" if calibration["ready"] else "accuracy-learning"
         table_rows.append(f"""
 <tr onclick="location.href='{detail}'">
 <td class="rank">{rank}</td>
 <td class="symbol">{symbol}</td>
 <td><span class="pill {cls}">{label}</span></td>
 <td>{html.escape(_duration(row))}</td>
+<td class="num {accuracy_cls}">{calibration['accuracy']}<small>forward</small></td>
+<td class="num">{calibration['floor']}<small>95% floor</small></td>
+<td class="num">{calibration['n']}<small>independent</small></td>
 <td class="num">{_price(lo)}–{_price(hi)}</td>
 <td class="num stop">{_price(row.get('stop_loss'))}<small>{_pct_text(stop_pct)}</small></td>
 <td class="num target">{_price(row.get('target_1'))}<small>{_pct_text(t1_pct)}</small></td>
 <td class="num target">{_price(row.get('target_2'))}<small>{_pct_text(t2_pct)}</small></td>
 <td class="num">{rr:.2f}</td>
-<td class="num">{score:.0f}</td>
+<td class="num">{score:.0f}<small>strength</small></td>
 <td><a class="tv" href="{detail}">VIEW CHART</a></td>
 </tr>""")
     empty = '<div class="empty">No recent candidates for this horizon yet. The engine will not invent trades to fill the list.</div>' if not table_rows else ""
     table = "" if not table_rows else f"""
 <div class="tablewrap"><table><thead><tr>
-<th>#</th><th>CRYPTO</th><th>SIGNAL</th><th>DURATION</th><th>ENTRY AREA</th><th>STOP LOSS</th><th>EXPECTED T1</th><th>EXPECTED T2</th><th>R:R</th><th>EVIDENCE</th><th>CHART</th>
+<th>#</th><th>CRYPTO</th><th>SIGNAL</th><th>DURATION</th><th>ACCURACY</th><th>95% FLOOR</th><th>SAMPLE</th><th>ENTRY AREA</th><th>STOP LOSS</th><th>EXPECTED T1</th><th>EXPECTED T2</th><th>R:R</th><th>EVIDENCE</th><th>CHART</th>
 </tr></thead><tbody>{''.join(table_rows)}</tbody></table></div>"""
     return HTMLResponse(f"""<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="60">
 <title>Crypto Signals</title><style>
-*{{box-sizing:border-box}}body{{margin:0;background:#081018;color:#eaf1f8;font-family:Arial,sans-serif}}.wrap{{max-width:1600px;margin:auto;padding:18px}}header{{display:flex;justify-content:space-between;gap:16px;align-items:end;flex-wrap:wrap}}h1{{margin:0 0 4px;font-size:24px}}.sub{{color:#91a4b7;font-size:13px}}nav a{{color:#eaf1f8;text-decoration:none;border:1px solid #32465a;border-radius:8px;padding:8px 11px;margin-left:6px;display:inline-block}}nav a.active{{background:#eaf1f8;color:#081018}}.note{{background:#0d1823;border-left:3px solid #405a72;padding:9px 12px;margin:12px 0;color:#aebdca;font-size:12px}}.tablewrap{{overflow-x:auto;border:1px solid #213244;border-radius:10px;background:#0c1620}}table{{width:100%;border-collapse:collapse;min-width:1180px}}thead{{background:#111c27;position:sticky;top:0}}th{{font-size:10px;letter-spacing:.04em;color:#7f94a8;text-align:left;padding:9px 8px;border-bottom:1px solid #26394c;white-space:nowrap}}td{{padding:8px;border-bottom:1px solid #172635;font-size:12px;white-space:nowrap;vertical-align:middle}}tbody tr{{cursor:pointer}}tbody tr:hover{{background:#101d29}}.rank{{color:#60778d;width:34px}}.symbol{{color:#f0f6fb;font-weight:800;font-size:13px}}.num{{font-variant-numeric:tabular-nums}}td small{{display:block;color:#8296a9;font-size:10px;margin-top:2px}}.pill{{font-weight:800;padding:4px 7px;border-radius:999px;font-size:10px}}.buy{{background:#123c2c;color:#9ee6c2}}.sell{{background:#482020;color:#ffb2b2}}.wait{{background:#403815;color:#eadb93}}.stop small{{color:#e0a0a0}}.target small{{color:#99d6b5}}.tv{{background:#2962ff;color:white;text-decoration:none;font-weight:800;border-radius:7px;padding:7px 9px;display:inline-block}}.empty{{padding:24px;background:#111c27;border-radius:10px;margin-top:14px}}@media(max-width:720px){{.wrap{{padding:10px}}h1{{font-size:20px}}th,td{{padding:7px 6px}}}}
-</style></head><body><div class="wrap"><header><div><h1>Crypto signals</h1><div class="sub">Compact ranked view. Refreshes every 60 seconds.</div></div><nav><a class="{'active' if horizon=='24h' else ''}" href="/dashboard?horizon=24h">24h</a><a class="{'active' if horizon=='7d' else ''}" href="/dashboard?horizon=7d">7d</a></nav></header>
-<div class="note">Click any row to open the chart with the signal, entry zone, stop loss, targets, expected move %, duration and evidence drawn directly on it.</div>{table}{empty}</div></body></html>""")
+*{{box-sizing:border-box}}body{{margin:0;background:#081018;color:#eaf1f8;font-family:Arial,sans-serif}}.wrap{{max-width:1800px;margin:auto;padding:18px}}header{{display:flex;justify-content:space-between;gap:16px;align-items:end;flex-wrap:wrap}}h1{{margin:0 0 4px;font-size:24px}}.sub{{color:#91a4b7;font-size:13px}}nav a{{color:#eaf1f8;text-decoration:none;border:1px solid #32465a;border-radius:8px;padding:8px 11px;margin-left:6px;display:inline-block}}nav a.active{{background:#eaf1f8;color:#081018}}.note{{background:#0d1823;border-left:3px solid #405a72;padding:9px 12px;margin:12px 0;color:#aebdca;font-size:12px}}.tablewrap{{overflow-x:auto;border:1px solid #213244;border-radius:10px;background:#0c1620}}table{{width:100%;border-collapse:collapse;min-width:1480px}}thead{{background:#111c27;position:sticky;top:0}}th{{font-size:10px;letter-spacing:.04em;color:#7f94a8;text-align:left;padding:9px 8px;border-bottom:1px solid #26394c;white-space:nowrap}}td{{padding:8px;border-bottom:1px solid #172635;font-size:12px;white-space:nowrap;vertical-align:middle}}tbody tr{{cursor:pointer}}tbody tr:hover{{background:#101d29}}.rank{{color:#60778d;width:34px}}.symbol{{color:#f0f6fb;font-weight:800;font-size:13px}}.num{{font-variant-numeric:tabular-nums}}td small{{display:block;color:#8296a9;font-size:10px;margin-top:2px}}.pill{{font-weight:800;padding:4px 7px;border-radius:999px;font-size:10px}}.buy{{background:#123c2c;color:#9ee6c2}}.sell{{background:#482020;color:#ffb2b2}}.wait{{background:#403815;color:#eadb93}}.stop small{{color:#e0a0a0}}.target small{{color:#99d6b5}}.accuracy-ready{{font-weight:900;color:#9ee6c2}}.accuracy-learning{{font-weight:800;color:#eadb93}}.tv{{background:#2962ff;color:white;text-decoration:none;font-weight:800;border-radius:7px;padding:7px 9px;display:inline-block}}.empty{{padding:24px;background:#111c27;border-radius:10px;margin-top:14px}}@media(max-width:720px){{.wrap{{padding:10px}}h1{{font-size:20px}}th,td{{padding:7px 6px}}}}
+</style></head><body><div class="wrap"><header><div><h1>Crypto signals</h1><div class="sub">Latest researched 24h/7d signal stream. Refreshes every 60 seconds.</div></div><nav><a class="{'active' if horizon=='24h' else ''}" href="/dashboard?horizon=24h">24h</a><a class="{'active' if horizon=='7d' else ''}" href="/dashboard?horizon=7d">7d</a></nav></header>
+<div class="note"><b>Accuracy</b> is empirical forward hit rate from genuinely resolved, non-overlapping comparable forecasts. <b>95% Floor</b> is the conservative Wilson lower bound. <b>N</b> is the number of independent forecasts. Until the required sample is reached, Accuracy shows LEARNING. <b>Evidence</b> remains current signal strength, not a probability of being correct.</div>{table}{empty}</div></body></html>""")
 
 
 def signal_chart_data(request: Request, signal_id: int):
@@ -220,6 +267,7 @@ def signal_detail_page(request: Request, signal_id: int):
     symbol = html.escape(str(row.get("symbol") or ""))
     duration = html.escape(_duration(row))
     score = float(row.get("evidence_score") or 0)
+    calibration = _calibration_metrics(row)
     rr = float(row.get("risk_reward") or 0)
     entry = float(row.get("entry_price") or 0)
     stop = float(row.get("stop_loss") or 0)
@@ -237,12 +285,12 @@ def signal_detail_page(request: Request, signal_id: int):
 <title>{symbol} signal chart</title>
 <script src="https://unpkg.com/lightweight-charts@4.2.2/dist/lightweight-charts.standalone.production.js"></script>
 <style>
-*{{box-sizing:border-box}}body{{margin:0;background:#081018;color:#edf2f7;font-family:Arial,sans-serif}}.wrap{{max-width:1500px;margin:auto;padding:14px}}.top{{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:10px}}h1{{font-size:22px;margin:0}}.badge{{font-size:20px;font-weight:900;color:{marker_color}}}.back{{color:white;text-decoration:none;background:#26394c;padding:9px 12px;border-radius:8px}}.chartbox{{position:relative;background:#0b1118;border:1px solid #26394c;border-radius:12px;overflow:hidden}}#chart{{width:100%;height:70vh;min-height:520px}}.hud{{position:absolute;left:14px;top:12px;z-index:5;background:rgba(8,16,24,.88);border:1px solid #26394c;border-radius:9px;padding:9px 11px;font-size:12px;pointer-events:none}}.hud b{{font-size:14px}}.legend{{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}}.chip{{background:#111c27;border:1px solid #26394c;padding:8px 10px;border-radius:8px;font-size:12px}}.stop{{color:#ff9a9a}}.target{{color:#91e8b7}}.entry{{color:#8cb5ff}}.note{{color:#8397aa;font-size:11px;margin-top:10px}}@media(max-width:700px){{#chart{{height:62vh;min-height:430px}}.hud{{font-size:10px}}}}
+*{{box-sizing:border-box}}body{{margin:0;background:#081018;color:#edf2f7;font-family:Arial,sans-serif}}.wrap{{max-width:1500px;margin:auto;padding:14px}}.top{{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:10px}}h1{{font-size:22px;margin:0}}.badge{{font-size:20px;font-weight:900;color:{marker_color}}}.back{{color:white;text-decoration:none;background:#26394c;padding:9px 12px;border-radius:8px}}.chartbox{{position:relative;background:#0b1118;border:1px solid #26394c;border-radius:12px;overflow:hidden}}#chart{{width:100%;height:70vh;min-height:520px}}.hud{{position:absolute;left:14px;top:12px;z-index:5;background:rgba(8,16,24,.88);border:1px solid #26394c;border-radius:9px;padding:9px 11px;font-size:12px;pointer-events:none}}.hud b{{font-size:14px}}.legend{{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}}.chip{{background:#111c27;border:1px solid #26394c;padding:8px 10px;border-radius:8px;font-size:12px}}.stop{{color:#ff9a9a}}.target{{color:#91e8b7}}.entry{{color:#8cb5ff}}.accuracy{{color:#9ee6c2}}.note{{color:#8397aa;font-size:11px;margin-top:10px}}@media(max-width:700px){{#chart{{height:62vh;min-height:430px}}.hud{{font-size:10px}}}}
 </style></head><body><div class="wrap">
 <div class="top"><div><h1>{symbol} · {duration}</h1><div class="badge">{label} {direction}</div></div><a class="back" href="/dashboard?horizon={duration}">← Back to signals</a></div>
-<div class="chartbox"><div class="hud"><b>{label} · {duration}</b><br>Expected T1 {_pct_text(t1_pct)} · T2 {_pct_text(t2_pct)}<br>Stop {_pct_text(stop_pct)} · R:R {rr:.2f} · Evidence {score:.0f}</div><div id="chart"></div></div>
-<div class="legend"><span class="chip entry">ENTRY {_price(entry)} · zone {_price(lo)}–{_price(hi)}</span><span class="chip stop">STOP {_price(stop)} ({_pct_text(stop_pct)})</span><span class="chip target">T1 {_price(t1)} ({_pct_text(t1_pct)})</span><span class="chip target">T2 {_price(t2)} ({_pct_text(t2_pct)})</span></div>
-<div class="note">The chart uses TradingView Lightweight Charts with live OKX candle data. Signal levels come from the system's stored signal record; visualization does not create trade authority.</div>
+<div class="chartbox"><div class="hud"><b>{label} · {duration}</b><br>Forward accuracy {calibration['accuracy']} · 95% floor {calibration['floor']} · {calibration['n']}<br>Expected T1 {_pct_text(t1_pct)} · T2 {_pct_text(t2_pct)}<br>Stop {_pct_text(stop_pct)} · R:R {rr:.2f} · Evidence {score:.0f}</div><div id="chart"></div></div>
+<div class="legend"><span class="chip accuracy">ACCURACY {calibration['accuracy']} · FLOOR {calibration['floor']} · {calibration['n']}</span><span class="chip entry">ENTRY {_price(entry)} · zone {_price(lo)}–{_price(hi)}</span><span class="chip stop">STOP {_price(stop)} ({_pct_text(stop_pct)})</span><span class="chip target">T1 {_price(t1)} ({_pct_text(t1_pct)})</span><span class="chip target">T2 {_price(t2)} ({_pct_text(t2_pct)})</span></div>
+<div class="note">Accuracy is measured forward calibration from independent resolved forecasts; Evidence is current signal strength. The chart uses TradingView Lightweight Charts with live market candles. Signal levels come from the system's stored researched signal record; visualization does not create trade authority.</div>
 </div>
 <script>
 (async function() {{
