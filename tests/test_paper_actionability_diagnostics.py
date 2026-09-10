@@ -14,6 +14,7 @@ def _validation(approved=True, status="APPROVED", reason="ok"):
 
 def test_action_diagnostics_preserve_primary_strategy_blocker():
     diagnostics = _action_diagnostics(
+        reviewed_present=True,
         reviewed_direction="LONG",
         direction="LONG",
         reviewed_action="WAIT",
@@ -32,8 +33,27 @@ def test_action_diagnostics_preserve_primary_strategy_blocker():
     assert diagnostics["trade_authority_added"] is False
 
 
+def test_missing_bounded_review_is_not_mislabeled_as_direction_mismatch():
+    diagnostics = _action_diagnostics(
+        reviewed_present=False,
+        reviewed_direction="",
+        direction="LONG",
+        reviewed_action="WAIT",
+        validation=_validation(),
+        consensus={"reliable": True},
+        global_risk=_risk(),
+        execution_risk=_risk(),
+        calibration={"allows_live_action": True},
+        pre_calibration_action="WAIT",
+    )
+    assert diagnostics["primary_category"] == "strategy_evidence"
+    assert diagnostics["primary_reason"] == "upstream_review_missing"
+    assert all(item["code"] != "review_direction_mismatch" for item in diagnostics["reasons"])
+
+
 def test_action_diagnostics_distinguish_market_liquidity_from_data_failure():
     market = _action_diagnostics(
+        reviewed_present=True,
         reviewed_direction="LONG",
         direction="LONG",
         reviewed_action="TRADE",
@@ -48,6 +68,7 @@ def test_action_diagnostics_distinguish_market_liquidity_from_data_failure():
     assert market["primary_reason"] == "execution_risk_spread_too_wide"
 
     data = _action_diagnostics(
+        reviewed_present=True,
         reviewed_direction="LONG",
         direction="LONG",
         reviewed_action="TRADE",
