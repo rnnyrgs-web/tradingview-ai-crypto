@@ -146,6 +146,31 @@ def observability_log_payload(army: object) -> dict:
             if key in raw and safe_nonnegative_int(raw[key]) is not None
         }
 
+    def compact_oi_source_diagnostics(raw: object) -> dict | None:
+        """Re-allowlist only fixed aggregate OI acquisition outcomes."""
+        if not isinstance(raw, dict):
+            return None
+        allowed_statuses = (
+            "available",
+            "valid_empty",
+            "http_error",
+            "timeout",
+            "network_error",
+            "invalid_payload",
+            "source_error",
+            "unclassified",
+        )
+        return {
+            "diagnostic_only": raw.get("diagnostic_only") is True,
+            "source": "binance_open_interest_history",
+            "acquisition_attempts": safe_nonnegative_int(raw.get("acquisition_attempts")),
+            "status_counts": selected_counts(raw.get("status_counts"), allowed_statuses),
+            "extra_requests_added": 0,
+            "symbol_level_data_exposed": False,
+            "trade_authority": False,
+            "promotion_authority": False,
+        }
+
     def compact_v2_feature_availability(raw: object) -> dict | None:
         """Re-allowlist the already-bounded V2 counts at the final log boundary."""
         if not isinstance(raw, dict):
@@ -242,6 +267,7 @@ def observability_log_payload(army: object) -> dict:
             abstention.get("available_family_count_distribution"),
             ("0", "1", "2", "3", "4"),
         )
+        oi_source = compact_oi_source_diagnostics(forward.get("oi_source_diagnostics"))
         v2_availability = compact_v2_feature_availability(forward.get("v2_oi_alignment_feature_availability"))
         v3_availability = compact_v3_feature_availability(forward.get("v3_oi_causal_asof_feature_availability"))
         return {
@@ -262,6 +288,7 @@ def observability_log_payload(army: object) -> dict:
             "action_counts": action_counts,
             "wait_gate_counts": wait_gate_counts,
             "available_family_count_distribution": family_distribution,
+            "oi_source_diagnostics": oi_source,
             "v2_oi_alignment_feature_availability": v2_availability,
             "v3_oi_causal_asof_feature_availability": v3_availability,
             "trade_authority": False,
