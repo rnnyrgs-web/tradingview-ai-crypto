@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import os
+import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -32,6 +33,7 @@ HORIZON_DELTAS = {
 }
 PERSIST_ACTIONS = {"SHADOW_BUY", "SHADOW_SELL"}
 SYSTEM_ID = "FFRIZZ_SECONDARY_V1"
+FFRIZZ_SCAN_NAMESPACE = uuid.UUID("339a39c5-0d99-55f4-82d5-54b9c1cda1de")
 
 
 def _int_env(name, default, low, high):
@@ -56,6 +58,12 @@ def _bucket_start(now, horizon):
     epoch = int(now.astimezone(timezone.utc).timestamp())
     floored = epoch - (epoch % seconds)
     return datetime.fromtimestamp(floored, tz=timezone.utc)
+
+
+def _scan_id(horizon, bucket):
+    """Return a deterministic UUID accepted by prediction_ledger.scan_id."""
+    identity = f"{SYSTEM_ID}:{horizon}:{int(bucket.timestamp())}"
+    return str(uuid.uuid5(FFRIZZ_SCAN_NAMESPACE, identity))
 
 
 def _strategy_identity(horizon):
@@ -117,7 +125,7 @@ def build_forward_ledger_rows(report, *, generated_at=None):
     """Build one eligible forecast per symbol/horizon/full-horizon bucket.
 
     WAIT rows are deliberately excluded. Re-running inside the same full-horizon
-    bucket produces the same scan_id, allowing the canonical ledger's duplicate
+    bucket produces the same UUID scan_id, allowing the canonical ledger's duplicate
     protection to prevent overlapping pseudo-independent evidence. The deadline
     is always one exact full horizon after the first forecast observation.
     """
@@ -130,7 +138,7 @@ def build_forward_ledger_rows(report, *, generated_at=None):
         if horizon not in HORIZON_DELTAS:
             continue
         bucket = _bucket_start(now, horizon)
-        scan_id = f"ffrizz:{SYSTEM_ID}:{horizon}:{int(bucket.timestamp())}"
+        scan_id = _scan_id(horizon, bucket)
         due_at = now + HORIZON_DELTAS[horizon]
         for signal in horizon_result.get("current_shadow_signals") or []:
             action = str(signal.get("action") or "WAIT").upper()

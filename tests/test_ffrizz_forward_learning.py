@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timedelta, timezone
 
 import ffrizz_secondary_runner as runner
@@ -46,13 +47,14 @@ def test_wait_rows_are_never_persistable_forward_evidence():
     assert runner.build_forward_ledger_rows(_report(action="WAIT"), generated_at=now) == []
 
 
-def test_same_full_horizon_bucket_has_stable_scan_id_but_next_bucket_changes():
+def test_same_full_horizon_bucket_has_stable_uuid_scan_id_but_next_bucket_changes():
     first = datetime(2026, 9, 10, 1, 0, tzinfo=timezone.utc)
     same_bucket = datetime(2026, 9, 10, 5, 59, tzinfo=timezone.utc)
     next_bucket = datetime(2026, 9, 10, 6, 1, tzinfo=timezone.utc)
     a = runner.build_forward_ledger_rows(_report(), generated_at=first)[0]
     b = runner.build_forward_ledger_rows(_report(), generated_at=same_bucket)[0]
     c = runner.build_forward_ledger_rows(_report(), generated_at=next_bucket)[0]
+    assert str(uuid.UUID(a["scan_id"])) == a["scan_id"]
     assert a["scan_id"] == b["scan_id"]
     assert c["scan_id"] != a["scan_id"]
 
@@ -78,6 +80,7 @@ def test_runner_persists_only_eligible_rows(monkeypatch):
     report = runner.run(persist=True, generated_at=datetime(2026, 9, 10, 3, 0, tzinfo=timezone.utc))
     assert len(captured) == 6
     assert {row["horizon"] for row in captured} == {"6h", "12h", "24h", "48h", "72h", "7d"}
+    assert all(str(uuid.UUID(row["scan_id"])) == row["scan_id"] for row in captured)
     assert report["forward_evidence"]["wait_rows_persisted"] is False
     assert report["trade_authority"] is False
     assert report["paper_trade_authority"] is False
