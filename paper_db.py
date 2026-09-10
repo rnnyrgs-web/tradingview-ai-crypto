@@ -12,10 +12,10 @@ log = logging.getLogger(__name__)
 
 # Research-only paper shadow policy. This does not mutate production opportunities,
 # live signal authority, strategy fingerprints, or broker connectivity. It only
-# allows the authentic paper simulator to test the strongest 7d LONG forecasts
+# allows the authentic paper simulator to test the strongest 7d directional forecasts
 # that production correctly keeps at WAIT while forward evidence accumulates.
-PAPER_7D_LONG_SHADOW_MIN_EVIDENCE = 80.0
-PAPER_7D_LONG_SHADOW_MAX_RANK = 5
+PAPER_7D_SHADOW_MIN_EVIDENCE = 80.0
+PAPER_7D_SHADOW_MAX_RANK = 5
 
 # These are infrastructure/data-availability failures, not strategy/risk verdicts.
 # They must remain visible in the audit trail while leaving the canonical signal key
@@ -23,6 +23,7 @@ PAPER_7D_LONG_SHADOW_MAX_RANK = 5
 # becomes available. Genuine risk/liquidity/strategy rejects keep their normal key.
 TECHNICAL_PAPER_REJECTION_REASONS = {
     "kraken_execution_evidence_unavailable",
+    "kraken_perp_execution_evidence_unavailable",
 }
 
 
@@ -47,14 +48,14 @@ def fetch_ranked_opportunities(horizon="24h", hours=None, limit=20):
             evidence = 0.0
             rank = 0
         if (
-            direction == "LONG"
+            direction in {"LONG", "SHORT"}
             and action == "WAIT"
-            and 1 <= rank <= PAPER_7D_LONG_SHADOW_MAX_RANK
-            and evidence >= PAPER_7D_LONG_SHADOW_MIN_EVIDENCE
+            and 1 <= rank <= PAPER_7D_SHADOW_MAX_RANK
+            and evidence >= PAPER_7D_SHADOW_MIN_EVIDENCE
         ):
             # Copy-only override for the paper simulator. The persisted production
             # opportunity remains WAIT. Existing paper risk, freshness, sizing,
-            # visible-depth execution, stop, target, and 168h time-exit rules still apply.
+            # execution, stop, target, and 168h time-exit rules still apply.
             row["action"] = "TRADE"
             row["paper_shadow"] = True
             row["paper_source_action"] = action
@@ -156,9 +157,6 @@ def _prepare_paper_signal_decision(row):
         reason in TECHNICAL_PAPER_REJECTION_REASONS or reason.startswith("technical:")
     )
     if technical:
-        # Never consume the canonical signal key for a technical incident. The
-        # incident remains append-only/auditable, while a later retry can still
-        # record ACCEPTED on the original key if evidence becomes available.
         canonical_key = str(payload.get("signal_key") or "unknown")
         payload["signal_key"] = f"{canonical_key}:technical:{time.time_ns()}"
         payload["decision"] = "TECHNICAL_BLOCKED"
