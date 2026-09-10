@@ -2,17 +2,19 @@
 
 The runner intentionally remains separate from production opportunities and paper
 trading. It scans a bounded liquid universe, computes current shadow signals,
-and performs fixed-rule chronological diagnostics so the research factory can
-learn which FFriZz-derived concepts deserve deeper canonical validation.
+performs fixed-rule chronological diagnostics, and can persist only genuine
+SHADOW_BUY/SHADOW_SELL forecasts to the canonical prediction ledger so their
+future outcomes can be resolved without granting any trade authority.
 """
 
 from __future__ import annotations
 
 import json
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from db import insert_prediction_ledger
 from ffrizz_secondary_signals import HORIZON_ORDER, HORIZON_PROFILES, chronological_backtest, score_shadow_signal
 from market_data import build_universe, get_derivatives_history, get_history
 
@@ -20,10 +22,51 @@ from market_data import build_universe, get_derivatives_history, get_history
 MAX_UNIVERSE_SIZE = 20
 DEFAULT_UNIVERSE_SIZE = 12
 HISTORY_BARS = {"1H": 900, "4H": 900}
+HORIZON_DELTAS = {
+    "6h": timedelta(hours=6),
+    "12h": timedelta(hours=12),
+    "24h": timedelta(hours=24),
+    "48h": timedelta(hours=48),
+    "72h": timedelta(hours=72),
+    "7d": timedelta(days=7),
+}
+PERSIST_ACTIONS = {"SHADOW_BUY", "SHADOW_SELL"}
+SYSTEM_ID = "FFRIZZ_SECONDARY_V1"
 
 
 def _int_env(name, default, low, high):
     return max(low, min(int(os.getenv(name, str(default))), high))
+
+
+def _finite_positive(value):
+    try:
+        value = float(value)
+    except (TypeError, ValueError):
+        return None
+    return value if value > 0 else None
+
+
+def _iso(dt):
+    return dt.astimezone(timezone.utc).isoformat()
+
+
+def _bucket_start(now, horizon):
+    """Return an immutable full-horizon UTC bucket start for non-overlap."""
+    seconds = int(HORIZON_DELTAS[horizon].total_seconds())
+    epoch = int(now.astimezone(timezone.utc).timestamp())
+    floored = epoch - (epoch % seconds)
+    return datetime.fromtimestamp(floored, tz=timezone.utc)
+
+
+def _strategy_identity(horizon):
+    return {
+        "system": SYSTEM_ID,
+        "version": 1,
+        "horizon": horizon,
+        "concept_families": ["pb_ema", "fvg", "inside_bar", "price_oi_correlation"],
+        "fixed_rules": True,
+        "research_only": True,
+    }
 
 
 def _oi_points(base):
@@ -51,7 +94,67 @@ def _aggregate_backtests(rows):
     }
 
 
-def run():
+def build_forward_ledger_rows(report, *, generated_at=None):
+    """Build one eligible forecast per symbol/horizon/full-horizon bucket.
+
+    WAIT rows are deliberately excluded. Re-running inside the same full-horizon
+    bucket produces the same scan_id, allowing the canonical ledger's duplicate
+    protection to prevent overlapping pseudo-independent evidence.
+    """
+    now = generated_at or datetime.now(timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    rows = []
+    for horizon_result in report.get("horizon_results") or []:
+        horizon = str(horizon_result.get("horizon") or "")
+        if horizon not in HORIZON_DELTAS:
+            continue
+        bucket = _bucket_start(now, horizon)
+        scan_id = f"ffrizz:{SYSTEM_ID}:{horizon}:{int(bucket.timestamp())}"
+        due_at = bucket + HORIZON_DELTAS[horizon]
+        for signal in horizon_result.get("current_shadow_signals") or []:
+            action = str(signal.get("action") or "WAIT").upper()
+            direction = str(signal.get("direction") or "").upper()
+            entry = _finite_positive(signal.get("entry_price"))
+            symbol = str(signal.get("symbol") or "").strip()
+            if action not in PERSIST_ACTIONS or direction not in {"LONG", "SHORT"} or not symbol or entry is None:
+                continue
+            families = signal.get("families") if isinstance(signal.get("families"), list) else []
+            calibration = {
+                "source_system": SYSTEM_ID,
+                "research_only": True,
+                "shadow_only": True,
+                "trade_authority": False,
+                "promotion_authority": False,
+                "bar": signal.get("bar"),
+                "raw_score": signal.get("score"),
+                "independent_family_agreement": signal.get("independent_family_agreement"),
+                "available_family_count": signal.get("available_family_count"),
+                "families": families,
+                "forecast_bucket_started_at": _iso(bucket),
+                "forecast_generated_at": _iso(now),
+                "historical_oi_backfill_used": False,
+            }
+            rows.append({
+                "scan_id": scan_id,
+                "symbol": symbol,
+                "horizon": horizon,
+                "direction": direction,
+                "entry_price": entry,
+                "score": float(signal.get("score") or 0.0),
+                "market_regime": None,
+                "strategy_identity": _strategy_identity(horizon),
+                "action_at_forecast": action,
+                "due_at": _iso(due_at),
+                "calibration": calibration,
+            })
+    return rows
+
+
+def run(*, persist=True, generated_at=None):
+    generated_at = generated_at or datetime.now(timezone.utc)
+    if generated_at.tzinfo is None:
+        generated_at = generated_at.replace(tzinfo=timezone.utc)
     universe_size = _int_env("FFRIZZ_UNIVERSE_SIZE", DEFAULT_UNIVERSE_SIZE, 4, MAX_UNIVERSE_SIZE)
     universe = build_universe()[:universe_size]
     by_bar = {}
@@ -86,7 +189,8 @@ def run():
                     oi_cache[base] = _oi_points(base)
                 oi = oi_cache[base]
             signal = score_shadow_signal(candles, oi, horizon=horizon)
-            signal.update({"symbol": symbol, "base": base})
+            entry_price = _finite_positive((candles[-1] or {}).get("close")) if candles else None
+            signal.update({"symbol": symbol, "base": base, "entry_price": entry_price})
             current.append(signal)
             diagnostics.append({"symbol": symbol, **chronological_backtest(candles, horizon=horizon)})
         current.sort(key=lambda item: abs(float(item.get("score") or 0.0)), reverse=True)
@@ -102,9 +206,9 @@ def run():
             ],
         })
 
-    return {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-        "system": "FFRIZZ_SECONDARY_V1",
+    report = {
+        "generated_at": _iso(generated_at),
+        "system": SYSTEM_ID,
         "research_only": True,
         "shadow_only": True,
         "trade_authority": False,
@@ -120,10 +224,24 @@ def run():
         "horizon_results": results,
         "evidence_warning": "Diagnostic backtests are not promotion evidence. Any apparent edge must enter the canonical chronological development/validation/untouched-OOS, robustness, multiple-testing and genuine-forward chain before production consideration.",
     }
+    ledger_rows = build_forward_ledger_rows(report, generated_at=generated_at)
+    if persist and ledger_rows:
+        insert_prediction_ledger(ledger_rows)
+    report["forward_evidence"] = {
+        "persistence_requested": bool(persist),
+        "eligible_shadow_forecasts": len(ledger_rows),
+        "non_overlapping_full_horizon_buckets": True,
+        "wait_rows_persisted": False,
+        "historical_oi_backfill_used": False,
+        "prediction_ledger_rows": ledger_rows,
+        "trade_authority": False,
+        "promotion_authority": False,
+    }
+    return report
 
 
 def main():
-    report = run()
+    report = run(persist=True)
     path = os.getenv("FFRIZZ_SECONDARY_SUMMARY_PATH", "").strip()
     if path:
         target = Path(path)
