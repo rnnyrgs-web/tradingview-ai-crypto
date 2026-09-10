@@ -1,3 +1,6 @@
+import logging
+import time
+
 import httpx
 
 from config import SUPABASE_URL, SUPABASE_SECRET_KEY
@@ -5,6 +8,7 @@ from db import fetch_ranked_opportunities as fetch_production_ranked_opportuniti
 from utils import iso, now_utc
 
 http = httpx.Client(timeout=25.0, follow_redirects=True)
+log = logging.getLogger(__name__)
 
 # Research-only paper shadow policy. This does not mutate production opportunities,
 # live signal authority, strategy fingerprints, or broker connectivity. It only
@@ -12,6 +16,14 @@ http = httpx.Client(timeout=25.0, follow_redirects=True)
 # that production correctly keeps at WAIT while forward evidence accumulates.
 PAPER_7D_LONG_SHADOW_MIN_EVIDENCE = 80.0
 PAPER_7D_LONG_SHADOW_MAX_RANK = 5
+
+# These are infrastructure/data-availability failures, not strategy/risk verdicts.
+# They must remain visible in the audit trail while leaving the canonical signal key
+# unused so the same signal can be retried and later accepted if execution evidence
+# becomes available. Genuine risk/liquidity/strategy rejects keep their normal key.
+TECHNICAL_PAPER_REJECTION_REASONS = {
+    "kraken_execution_evidence_unavailable",
+}
 
 
 def _configured():
@@ -131,15 +143,33 @@ def close_paper_trade(trade_id, exit_price, exit_reason, pnl_usd, pnl_pct, audit
     return bool(r.json())
 
 
-def insert_paper_signal_decision(row):
-    if not _configured():
-        return False
+def _prepare_paper_signal_decision(row):
     allowed = {
         "account_id","signal_key","scan_id","symbol","horizon","direction","action",
         "evidence_score","decision","reason","signal_generated_at","decided_at"
     }
     payload = {k: v for k, v in row.items() if k in allowed}
     payload.setdefault("decided_at", iso(now_utc()))
+    decision = str(payload.get("decision") or "").upper()
+    reason = str(payload.get("reason") or "")
+    technical = decision == "REJECTED" and (
+        reason in TECHNICAL_PAPER_REJECTION_REASONS or reason.startswith("technical:")
+    )
+    if technical:
+        # Never consume the canonical signal key for a technical incident. The
+        # incident remains append-only/auditable, while a later retry can still
+        # record ACCEPTED on the original key if evidence becomes available.
+        canonical_key = str(payload.get("signal_key") or "unknown")
+        payload["signal_key"] = f"{canonical_key}:technical:{time.time_ns()}"
+        payload["decision"] = "TECHNICAL_BLOCKED"
+        payload["reason"] = reason if reason.startswith("technical:") else f"technical:{reason}"
+    return payload
+
+
+def insert_paper_signal_decision(row):
+    if not _configured():
+        return False
+    payload = _prepare_paper_signal_decision(row)
     r = http.post(
         f"{SUPABASE_URL}/rest/v1/paper_signal_decisions",
         headers=headers("resolution=ignore-duplicates,return=representation"),
@@ -148,7 +178,13 @@ def insert_paper_signal_decision(row):
     )
     if r.status_code >= 300:
         raise RuntimeError(f"Paper signal decision insert failed: {r.status_code} {r.text}")
-    return bool(r.json())
+    inserted = bool(r.json())
+    if inserted and str(payload.get("decision") or "").upper() != "ACCEPTED":
+        log.warning(
+            "Paper decision flagged decision=%s symbol=%s horizon=%s reason=%s",
+            payload.get("decision"), payload.get("symbol"), payload.get("horizon"), payload.get("reason"),
+        )
+    return inserted
 
 
 def fetch_paper_signal_decisions(account_id="default", limit=200):
@@ -251,5 +287,5 @@ __all__ = [
     "fetch_ranked_opportunities","fetch_paper_account","update_paper_account","fetch_open_paper_trades",
     "fetch_all_paper_trades","insert_paper_trade","close_paper_trade","insert_paper_signal_decision",
     "fetch_paper_signal_decisions","insert_paper_reconciliation_snapshot","fetch_latest_paper_reconciliation",
-    "insert_paper_equity_snapshot","fetch_paper_trade_stats"
+    "insert_paper_equity_snapshot","fetch_paper_trade_stats","_prepare_paper_signal_decision"
 ]
