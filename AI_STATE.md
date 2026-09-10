@@ -5,7 +5,7 @@ Last updated: 2026-09-10
 Authoritative continuation state for `rnnyrgs-web/tradingview-ai-crypto`. Read this file from current `main` in full before development. Never infer project state only from ChatGPT memory. Update this file after each completed integration cycle.
 
 ## CURRENT MAIN / ARCHITECTURE
-Current tested functional integration baseline after PR #225: `d6505d0ccf79e86da96b30c224ac7edf6dd47641`.
+Current tested functional integration baseline after PR #227: `6fc6f9ad16bd4e89ec93aa3ce93d12e9ec085a54`.
 
 Recent integrated sequence relevant to current architecture:
 - #210/#211/#213 established governed persisted 6h/12h/24h/48h/72h/7d opportunity generation, exact-horizon deadlines, horizon-specific calibration/genuine-forward chronology, and all-horizon dashboard reads while new horizons remain WAIT/LEARNING.
@@ -14,120 +14,95 @@ Recent integrated sequence relevant to current architecture:
 - #217 hardened FFriZz scientific semantics: cross-symbol pooled diagnostics are descriptive/non-independent, OHLC-only historical diagnostics do not match the prospective OI-capable fingerprint, and feature-family agreement is not treated as proven independence.
 - #219 fixed FFriZz `scan_id` persistence to deterministic UUIDv5 keyed by system+horizon+full-horizon bucket.
 - #221 fixed the canonical action contract: FFriZz shadow action remains research metadata, immutable direction remains LONG/SHORT, and `action_at_forecast` remains WAIT.
-- #223 exact head `d5b3c353ff54d73a8673c1026cbc522a5d0ebc40` passed Security and Reliability #1619 and merged as `14318165650e2c9ca46146347c40dec2a252506c`. A live Supabase schema audit showed `prediction_ledger.score` is constrained to 0..100 while FFriZz raw scores are signed. Eligible SHORT rows therefore carried negative ledger scores and could reject the entire insert batch. #223 maps only the persisted ledger score to absolute shadow strength and preserves the signed raw score in calibration metadata.
-- #225 exact head `d947496c9af5f4502c9f3fe471445df2385dacdf` passed Security and Reliability #1628 and merged as `d6505d0ccf79e86da96b30c224ac7edf6dd47641`. It exposes a bounded read-only `ffrizz_forward` summary from already-recorded adaptive-worker evidence in the private coordinator observability log. This makes legitimate all-WAIT source output distinguishable from FFriZz collection/persistence failure without exposing raw ledger rows or changing research/trading behavior.
+- #223 maps the persisted FFriZz ledger score to nonnegative absolute shadow strength because `prediction_ledger.score` is constrained to 0..100; signed raw score remains immutable research metadata.
+- #225 added bounded read-only `ffrizz_forward` coordinator observability so all-WAIT source output can be distinguished from collection failure without exposing raw rows or changing authority.
+- #227 exact head `0f25610245cdd3baa0dd0f5871b9e2931ef905ef` passed Security and Reliability #1639 before squash merge as `6fc6f9ad16bd4e89ec93aa3ce93d12e9ec085a54`. Live evidence had shown repeated FFriZz cycles reporting `collection_ok=true` with 3-6 eligible forecasts while the canonical ledger contained zero FFriZz rows. Because `db.insert_prediction_ledger()` intentionally no-ops when Supabase is unconfigured, the adaptive lane could falsely report successful collection. #227 now reports `PredictionLedgerNotConfigured` and `ok=false` whenever an eligible FFriZz cycle lacks the canonical ledger connection. Zero-eligible/all-WAIT cycles remain successful because no write is required. This is observability/research-integrity hardening only.
 
 Production: GitHub -> Render -> Python/FastAPI V3 -> Supabase. Production scans run about every 15 minutes. The governed opportunity stream supports 6h, 12h, 24h, 48h, 72h and 7d. Continuous research/backtesting runs on the existing Render coordinator with bounded heavy concurrency under the USD 30/month recurring-infrastructure ceiling.
 
 Primary production Render service: `srv-dadliegu01pc73bc7t50` (`tradingview-ai-crypto`).
 Continuous research coordinator: `srv-dafgtead0e5s73cc7ekg`.
 Supabase project: `dxgksvzibucwuzmppoqy`.
-Hard recurring infrastructure ceiling: USD 30/month unless explicitly changed.
+Hard recurring infrastructure ceiling: USD 30/month unless explicitly approved otherwise.
 
-Always-on research architecture includes bounded Python workers, autonomous research-director coordination, deterministic quant-science experiment factory, fail-closed heavy-experiment admission firewall, adaptive-accuracy lane sharing the existing heavy slot, 256 active token-free logical specialists per refresh, durable research memory in Supabase, non-overlapping full-horizon calibration/forward-proof logic, research-only meta-WAIT/regime×strategy/economic-calibration/cross-sectional/residual/prospective-microstructure/ensemble-diversity/error-attribution/selective-WAIT/A+ meta-signal diagnostics, exact-key single-flight historical-data coordination without freshness relaxation, authentic paper LONG and paper-only Kraken perpetual SHORT execution with conservative visible-depth/fee/slippage/funding assumptions, retryable `TECHNICAL_BLOCKED` incidents, and FFriZz prospective shadow evidence collection inside existing bounded compute only.
-
-Logical scale must never be confused with physical compute scale. Heavy experiment concurrency remains capped at one admitted heavy experiment at a time unless a separately reviewed change proves a safe/cost-valid reason to alter it.
+The always-on research architecture includes bounded Python workers, an autonomous research director, deterministic quant-science experiment factory, fail-closed heavy-experiment admission, adaptive-accuracy lane, 256 token-free logical specialists per refresh, durable research-memory support, economic calibration/meta-WAIT, regime×strategy diagnostics, cross-sectional/residual diagnostics, prospective microstructure vetoes, ensemble-diversity/error-attribution diagnostics, selective-WAIT fusion, and evidence-value scheduling. Logical specialist scale is not physical compute scale. Heavy experiment concurrency remains capped at one admitted heavy experiment at a time unless separately reviewed and cost-approved.
 
 ## SAFETY INVARIANTS
-No AI opinion, ranking score, evidence score, order-book snapshot, paper P&L, ensemble weight, historical diagnostic, single OOS result, research-memory lesson, experiment priority, market-consensus provenance, microstructure snapshot, FFriZz diagnostic, FFriZz forward row, FFriZz observability summary, or paper result by itself may authorize live BUY/SELL.
+No AI opinion, ranking score, evidence score, dashboard value, paper P&L, model count, ensemble weight, current order-book snapshot, historical diagnostic, research-memory lesson, experiment priority, FFriZz shadow signal, prospective FFriZz row, or single OOS/forward result may authorize live BUY/SELL by itself.
 
 Mandatory chain:
 RESEARCH -> BACKTEST -> VALIDATION -> UNTOUCHED OOS -> ROBUSTNESS/STABILITY -> MULTIPLE-TESTING FIREWALL -> POINT-IN-TIME UNIVERSE SAFETY -> STRATEGY-REGISTRY APPROVAL -> PRODUCTION-RISK APPROVAL -> GENUINE FORWARD PROOF -> GLOBAL/EXECUTION RISK CLEAR -> LIVE BUY/SELL.
 
-Every later stage is restrictive-only. Missing, stale, contradictory, malformed, overlapping-only, insufficient, illiquid, execution-unsafe, portfolio-unsafe, statistically weak, survivorship-unsafe, identity-incomplete, persistence-unsafe, label-unsafe, chronology-unsafe, or system-unsafe evidence means `WAIT / NO TRADE / RESEARCH_ONLY`.
+Every later stage is restrictive-only. Missing, stale, contradictory, malformed, overlapping-only, insufficient, illiquid, execution-unsafe, portfolio-unsafe, statistically weak, survivorship-unsafe, persistence-unsafe, label-unsafe, chronology-unsafe, or system-unsafe evidence means `WAIT / NO TRADE / RESEARCH_ONLY`.
 
 `live_promotions.json` remains empty. Signing keys remain unused. Broker remains disconnected. Do not add credentials or real-order capability without explicit user approval plus all canonical evidence gates.
 
 Authentic paper account baseline remains exactly `$100,000` from `2026-09-08T01:17:49Z`. Never reset, rewrite, replace, or manufacture its history. Paper performance is evidence only.
 
 ## SCIENTIFIC RESEARCH DISCIPLINE
-Chronological validation remains development -> validation -> untouched holdout/OOS. Robustness includes deterministic bootstrap/Monte Carlo resampling, parameter perturbation, regime stability, conservative execution-cost stress, search-breadth protection, and genuine forward confirmation. Forward proof counts only non-overlapping full-horizon resolved forecasts for the exact immutable strategy fingerprint.
+Chronological validation remains development -> validation -> untouched holdout/OOS. Robustness includes deterministic resampling, parameter perturbation, regime stability, conservative execution-cost stress, search-breadth protection, and genuine forward confirmation. Genuine forward proof counts only non-overlapping full-horizon resolved forecasts for the exact immutable strategy fingerprint.
 
 Core invariants:
 - no lookahead or leakage;
-- no threshold/parameter mining against untouched OOS;
+- no threshold or parameter mining against untouched OOS;
 - no OOS reuse as fresh confirmation;
 - no pooling historical/OOS evidence with genuine-forward evidence to inflate confidence;
 - no survivorship substitution for missing point-in-time universe evidence;
-- no backfilling prospective order-book/consensus/cross-sectional/OI evidence;
+- no historical backfill of prospective order-book, consensus, cross-sectional, leadership, funding, OI, or other timestamp-sensitive fields;
 - realistic fees, spread, slippage, funding/carry and execution assumptions remain mandatory;
-- repeated/disproven hypotheses receive research-memory penalties rather than blind recycling;
+- repeated/disproven hypotheses receive a research-memory penalty rather than blind recycling;
 - idea generation is not evidence;
-- missing durable research memory fails the adaptive lane closed;
 - overlapping forecasts are never independent observations;
-- cross-symbol observations sharing market intervals/common factors are not independent merely because symbols differ;
-- feature families must not be called independent unless independence is demonstrated;
-- historical FFriZz OHLC-only diagnostics are descriptive because historical OI is intentionally not backfilled and therefore do not match the prospective OI-capable fingerprint;
-- prospective FFriZz SHADOW_BUY/SHADOW_SELL remains research metadata only; canonical `action_at_forecast` stays WAIT;
-- FFriZz direction is encoded in immutable LONG/SHORT. The ledger `score` is a nonnegative 0..100 strength field; the signed FFriZz research score remains separately in `calibration.raw_score`;
-- FFriZz operational observability is diagnosis only: raw ledger rows/error detail are not logged and `ffrizz_forward` has no trade, signal, paper, promotion, or strategy authority;
-- malformed, missing, or delayed outcome chronology fails closed;
-- diagnostics cannot open untouched OOS, mutate production action, or grant trade/promotion authority;
-- ensemble member count is not independent evidence;
-- ambiguous errors remain unexplained rather than receiving invented causes;
-- new 6h/12h/48h/72h horizons accumulate their own independent forward proof and may not borrow evidence from 24h/7d;
-- hourly self-improvement review must not force paid model calls, bypass the successful-run cooldown, exceed the $1/day API budget, increase physical concurrency, or change production authority.
-
-Existing 24h/7d forward thresholds are unchanged. Newer 6h and 12h horizons require at least 30 independent forward samples, 48h at least 20, and 72h at least 16 before forward-proof sample sufficiency. Forward proof remains restrictive-only and cannot authorize a trade by itself.
+- simultaneous cross-symbol crypto outcomes are not automatically independent;
+- feature-family agreement is not statistical independence unless demonstrated;
+- malformed, missing or delayed outcome chronology fails closed rather than fabricating labels;
+- research scheduling must prefer falsifiable, actionable, evidence-efficient experiments and penalize blocked/redundant/expensive low-information work;
+- untouched OOS remains sealed until predeclared validation admission passes;
+- production WAIT rows may be studied through immutable shadow direction but research may not mutate production action;
+- FFriZz historical OHLC-only diagnostics are descriptive because historical OI is unavailable; they do not match the prospective OI-capable fingerprint and cannot be counted as validation evidence for that fingerprint;
+- FFriZz prospective source action remains research metadata, canonical `action_at_forecast` remains WAIT, direction remains LONG/SHORT, and ledger score is nonnegative strength while signed raw score remains separately preserved;
+- FFriZz eligible collection is not successful evidence collection unless the canonical prediction-ledger persistence path is configured and the write can be attempted; absent persistence must report fail-closed rather than false success;
+- paper technical/data failures remain retryable and must never become fabricated fills;
+- hourly self-improvement review must not force paid model calls, bypass successful-run cooldowns/budgets, raise physical concurrency, or change production authority.
 
 ## ACCURACY / RESEARCH PROGRAM
 - ACC-001 MARKET / EXECUTION REALISM — COMPLETE.
-- ACC-002 CROSS-ASSET RANK RESEARCH — FAIL-CLOSED before untouched OOS because the second predeclared liquidity subset is not yet defensibly supported.
+- ACC-002 CROSS-ASSET RANK RESEARCH — FAIL-CLOSED before untouched OOS because required historical coverage remains insufficient. Do not lower `minimum_subset_coverage=0.80`, remove the two-supported-subset requirement, substitute lower-ranked assets, shorten required history merely to pass, fabricate/backfill history, or repeatedly spend scarce cycles re-diagnosing pure `InsufficientHistory` outcomes.
 - ACC-003 through ACC-014 safety/validation layers — COMPLETE.
-- SELECTIVE PRECISION — research-only; independent non-overlapping full-horizon evidence required.
-- ECONOMIC META-WAIT — active research-only, horizon-specific.
-- REGIME × STRATEGY ROUTER — active research-only; untouched OOS sealed.
-- ECONOMIC CALIBRATION — active research-only with multi-level cost stress; untouched OOS sealed.
-- SELECTIVE-WAIT FUSION — active research-only experiment prioritization.
-- A+ META-SIGNAL TRUST — active research-only using immutable shadow direction and timestamp-safe future-only consensus.
-- CROSS-SECTIONAL / RESIDUAL SIGNAL SCIENCE — active research-only; missing point-in-time fields stay missing.
-- MICROSTRUCTURE VETO — active prospective research-only; no historical order-book reconstruction.
-- ENSEMBLE DIVERSITY — active research-only.
-- RESOLVED ERROR ATTRIBUTION — active research-only.
-- BETA-NEUTRAL RESIDUAL MOMENTUM — challenger only.
-- QUANT-SCIENCE / ADAPTIVE ACCURACY / EVIDENCE-VALUE SCHEDULER — active under durable sequential multiple-testing protection.
-- TOKEN-FREE SPECIALIST FACTORY — 256 active deterministic logical specialists; do not raise the count without measured information-value evidence.
-- MULTI-HORIZON OPPORTUNITY LEARNING — active for all six horizons; new horizons remain WAIT/LEARNING until their own canonical gates pass.
-- FFRIZZ SECONDARY V1 — prospective research/shadow challenger only. Historical pooled diagnostics are descriptive and ineligible as validation evidence. #219, #221, and #223 fixed UUID, action-enum, and score-range persistence contracts; #225 adds bounded collection observability so absence of rows can be diagnosed without weakening abstention. No edge is claimed until genuine resolved non-overlapping evidence accumulates.
+- SELECTIVE PRECISION / ECONOMIC META-WAIT / REGIME×STRATEGY / ECONOMIC CALIBRATION / SELECTIVE-WAIT FUSION / A+ META-SIGNAL TRUST / CROSS-SECTIONAL-RESIDUAL / MICROSTRUCTURE VETO / ENSEMBLE DIVERSITY / ERROR ATTRIBUTION — research-only governed diagnostics. None creates production authority.
+- FFriZz secondary family — research/shadow only. Historical diagnostics are descriptive; prospective immutable forward evidence is the only route toward later governed validation. No tuning, promotion, or accuracy claim may be made from unresolved rows or pooled descriptive history.
+- New-horizon genuine-forward sample sufficiency remains restrictive-only. Existing thresholds are not lowered; 6h/12h require at least 30 independent forward samples, 48h requires at least 20, and 72h requires at least 16 before sample sufficiency, with all later gates still mandatory.
 
-### ACC-002 bounded evidence policy
-Recent live coordinator evidence remains dominated by `InsufficientHistory`; untouched OOS stays closed. Do not lower `minimum_subset_coverage=0.80`, remove the two-supported-subset requirement, substitute lower-ranked assets, shorten required history, fabricate/backfill history, or repeatedly spend scarce cycles re-diagnosing pure `InsufficientHistory` outcomes. Natural history accumulation is the blocker unless live evidence materially changes.
+## CURRENT LIVE EVIDENCE / OPERATIONS
+Immediately before #227, the coordinator repeatedly completed FFriZz cycles with worker exit 0, `collection_ok=true`, 3-6 eligible source shadow forecasts, full-horizon non-overlap enabled, WAIT rows not persisted, historical OI backfill disabled, and zero worker failures/timeouts. A direct read-only Supabase audit nevertheless found zero FFriZz rows in `prediction_ledger`. This contradiction is a material persistence/configuration issue, not signal-performance evidence. #227 makes the next natural cycle report the missing-ledger configuration explicitly instead of false success when that is the cause.
 
-## LIVE OPERATIONAL EVIDENCE
-PR #225 exact-head Security and Reliability #1628 completed successfully, including unit tests, dependency vulnerability audit, static security scan, and committed-secret checks. Current main had not moved relative to the branch base while the PR was tested, so #225 merged only after exact-head compatibility was confirmed.
+Current ACC-002 samples remain naturally blocked by `InsufficientHistory`; untouched OOS stays closed. Do not convert this into a software failure unless failure types change.
 
-Both production and the research coordinator reached `live` on merge commit `d6505d0ccf79e86da96b30c224ac7edf6dd47641`. The first post-deploy coordinator log included the new bounded `ffrizz_forward` object with authority fields false. At initial startup its worker evidence fields were naturally null because no adaptive worker result had completed on the new process yet.
+The coordinator has otherwise remained healthy, with zero observed worker failures/timeouts in the sampled window and no reason to increase worker count or heavy concurrency. Network history latency can vary; optimize only from measured bottlenecks without stretching freshness/provenance semantics.
 
-A read-only Supabase query during the #225 cycle still found zero rows containing `ffrizz` in `prediction_ledger.strategy_identity` or `calibration`. This is now a live diagnostic question rather than evidence of another schema defect: wait for the next adaptive FFriZz collection result and use `ffrizz_forward.collection_ok`, `eligible_shadow_forecasts`, and `error_type` to distinguish all-WAIT source behavior from collection failure. Never create a synthetic signal merely to prove persistence.
+GitHub `main` branch protection has previously been reported disabled. Exact-head Security and Reliability, expected-head merge protection, isolated branches and current-main compatibility review remain mandatory operational controls.
 
-Read-only research-memory inspection showed zero stored lessons and zero conclusive adaptive trials at the sampled time. This is not a reason to lower validation thresholds or manufacture evidence; it means the durable adaptive lane has not yet produced a conclusive result worth recording under its existing rules.
-
-Coordinator evidence immediately before #225 remained healthy: sampled logs showed zero worker failures/timeouts, no history-fetch failures, a healthy supervisor, 256 logical specialists with zero normal-operation AI calls, and ACC-002 still blocked only by insufficient supported liquidity subsets. Recent ACC-002 snapshots had 24h resolve 28/30 with two `InsufficientHistory` failures and 7d resolve 15/30 with fifteen `InsufficientHistory` failures; untouched OOS remained closed and trade/promotion/signal authority false.
-
-Recent raw overlapping production prediction rows must not be treated as independent accuracy evidence. Only canonical de-overlapped diagnostics may support inference.
+Cross-exchange/public-data collection may be unavailable at times. Never manufacture consensus, microstructure, history, agreement data, outcome labels, cross-sectional fields, funding, perpetual contract metadata, OI, or error causes when source evidence is unavailable or temporally invalid.
 
 ## COST / SPEED POLICY
-Hard recurring infrastructure ceiling: USD 30/month unless explicitly changed. Prefer existing shared Render compute, deterministic Python, free/public defensible data, caching/reuse, early rejection, and bounded concurrency. No paid feed/service/compute without explicit approval.
+Hard recurring infrastructure ceiling: USD 30/month unless explicitly changed by the user. Prefer existing shared Render compute, deterministic Python, free/public defensible data, caching/reuse, early rejection and bounded concurrency. No paid feed/service/compute without explicit approval.
 
-The token-free specialist factory uses zero normal-operation AI calls. Heavy experiment admission remains capped at one. API/model spending remains separately budget-gated.
+The token-free specialist factory uses zero normal-operation AI calls. Heavy experiment admission remains capped at one. API/model spending remains separately budget-gated. Do not increase logical workers merely for appearance; require measured information-value benefit.
 
-Preserve exact strategy fingerprints while genuine forward observations accumulate. Challengers may run in shadow. Never count overlapping forecasts as independent, lower forward-proof thresholds, reset paper history, raise heavy concurrency, stretch data freshness, change source behavior, or cherry-pick thresholds merely to accelerate results.
-
-Blind RSI/MACD/EMA parameter permutations without a diagnosed resolved-error mechanism are deprioritized. Redundant ensemble members, repeated falsified hypotheses without materially new evidence, repeated ACC-002 investigation while failures are purely `InsufficientHistory`, and worker-count expansion without measured information-value benefit are also deprioritized.
+Preserve exact strategy fingerprints while genuine forward observations accumulate. Challengers may run in shadow. Blind RSI/MACD/EMA parameter permutations, duplicate ensemble members, repeated falsified hypotheses without materially new evidence, repeated pure-InsufficientHistory ACC-002 cycles, and worker-count expansion without demonstrated information value are deprioritized.
 
 ## CURRENT OPEN DEVELOPMENT
-PR #225 is integrated and must not be re-applied. PRs #214/#216/#217/#219/#221/#223 are also integrated functional prerequisites. State-only sync PRs through #224 are integrated.
-PRs #34, #33 and #13 remain stale against current main and must not be merged as-is without a fresh compatibility/relevance review. #212 is superseded by #214; #205 by #207; #206 was branch reconciliation; #180 is stale state-only work; #166 and #140 are superseded.
+PR #227 is integrated and must not be re-applied. Older FFriZz PRs #214/#216/#217/#219/#221/#223/#225 are integrated. Stale PRs #34, #33 and #13 remain incompatible with current main and must not be merged as-is without fresh relevance/compatibility review. Superseded historical branches/PRs remain superseded unless current evidence independently justifies rebuilding them on current main.
 
 Persistent specialist priorities live in `orchestration/specialist_coordination.json`. The accuracy/profitability roadmap lives in `orchestration/accuracy_profitability_roadmap.json`.
 
 ## EXACT NEXT STEP
-1. Wait for the next natural adaptive/FFriZz worker result and inspect the bounded coordinator `ffrizz_forward` evidence.
-2. If `collection_ok=true` and `eligible_shadow_forecasts=0`, treat zero ledger rows as legitimate source abstention for that cycle; do not loosen FFriZz thresholds merely to create observations.
-3. If `collection_ok=false`, repair only the confirmed collection/data/persistence defect and add regression coverage; do not fabricate a row.
-4. If `collection_ok=true` and eligible forecasts are positive, query `prediction_ledger` read-only and validate deterministic UUID `scan_id`, immutable LONG/SHORT direction, canonical WAIT action, nonnegative bounded ledger strength, signed `calibration.raw_score`, preserved `shadow_action`, exact `due_at`, and full-horizon bucket identity.
-5. Let first valid FFriZz rows resolve naturally. Do not promote or tune from unresolved, overlapping, fingerprint-mismatched, or historically backfilled evidence.
-6. Continue normal resolved-error diagnostics, selective-WAIT, regime×strategy, economic calibration, cross-sectional/residual, prospective microstructure, and ensemble-diversity research using evidence-value scheduling.
-7. Preserve ACC-002 natural-history fail-closed behavior while failures remain pure `InsufficientHistory`.
-8. Keep `live_promotions.json` empty, broker disconnected, signing keys unused, authentic paper history immutable, heavy concurrency bounded, and recurring infrastructure under USD 30/month.
-9. Every future integration still requires an isolated branch, confirmed-defect regression tests where applicable, exact-head Security and Reliability, current-main compatibility review, and post-deploy health verification. No profitability or accuracy claim is justified by #225 itself.
+1. Wait for the first natural adaptive/FFriZz cycle after #227 deployment and inspect bounded `ffrizz_forward` observability.
+2. If eligible forecasts >0 and `error_type=PredictionLedgerNotConfigured`, treat the missing coordinator prediction-ledger configuration as confirmed. Do not weaken the code. Restoring the required Supabase connection requires the existing correct service credentials; never invent, expose, or copy secrets through chat. If credentials cannot be safely reused through the authorized service configuration, request explicit user action/approval rather than bypass persistence.
+3. If collection reports `ok=true` with eligible forecasts >0, immediately query `prediction_ledger` read-only and verify actual rows exist. Validate UUID scan identity, LONG/SHORT direction, canonical WAIT action, score within 0..100, signed `calibration.raw_score`, preserved `shadow_action`, exact due_at, and full-horizon bucket identity.
+4. If collection reports `ok=true` with eligible=0, treat it as legitimate source abstention; do not loosen FFriZz thresholds to create activity.
+5. Let valid prospective rows resolve naturally before any precision/expectancy comparison. Use only exact fingerprint, non-overlapping full-horizon evidence and realistic costs. No unresolved-row tuning or production promotion.
+6. Continue using resolved primary-system errors, calibration, regime behavior, cross-sectional information, microstructure, execution realism and research-memory outcomes to prioritize falsifiable high-information experiments. Prefer evidence generation over cosmetic changes.
+7. Keep ACC-002 blocked while failures remain pure `InsufficientHistory`; do not weaken history or coverage rules.
+8. Keep `live_promotions.json` empty, broker disconnected, signing keys unused, authentic paper baseline/history immutable, heavy concurrency bounded, and recurring infrastructure <= USD 30/month.
+9. For every future integration: isolated branch -> regression tests for confirmed defects -> exact-head Security and Reliability -> current-main compatibility -> expected-head merge -> AI_STATE.md synchronization -> post-deploy production/coordinator health verification.
