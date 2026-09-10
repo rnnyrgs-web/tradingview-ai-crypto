@@ -120,14 +120,14 @@ async def dashboard_login_post(request:Request):
     return await handle_login(request)
 
 @app.get("/dashboard")
-def dashboard(request:Request,horizon:str="24h"):
+def dashboard(request:Request,horizon:str="all"):
     try:
         return combined_dashboard_page(request,horizon)
     except Exception as e:
         internal_error("dashboard", e, "Dashboard unavailable")
 
 @app.get("/dashboard/signals")
-def dashboard_signals(request:Request,horizon:str="24h"):
+def dashboard_signals(request:Request,horizon:str="all"):
     try:
         return dashboard_page(request,horizon)
     except Exception as e:
