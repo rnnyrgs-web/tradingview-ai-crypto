@@ -81,3 +81,47 @@ def test_historical_rows_are_not_backfilled_with_missing_consensus():
     out = db._expose_preforecast_market_fields(historical)
     assert "market_consensus_reliable" not in out
     assert "market_consensus_timestamp_safe" not in out
+
+
+def test_shadow_learning_read_includes_calibration_and_exposes_safe_consensus(monkeypatch):
+    row = {
+        "horizon": "24h",
+        "resolved_at": "2023-11-15T22:13:21+00:00",
+        "correct": True,
+        "calibration": {
+            "preforecast_market_context": {
+                "captured_at": "2023-11-14T22:13:21+00:00",
+                "market_consensus": {
+                    "recorded": True,
+                    "reliable_at_forecast": True,
+                    "independent_source_count": 2,
+                    "required_source_count": 2,
+                    "accepted_observations": [
+                        {"exchange": "okx", "observed_ms": 1_700_000_000_000},
+                        {"exchange": "binance", "observed_ms": 1_700_000_000_500},
+                    ],
+                },
+            }
+        },
+    }
+
+    class Response:
+        status_code = 200
+        text = ""
+
+        def json(self):
+            return [row]
+
+    captured = {}
+
+    class HTTP:
+        def get(self, url, headers=None, params=None):
+            captured["params"] = params
+            return Response()
+
+    monkeypatch.setattr(db, "configured", lambda: True)
+    monkeypatch.setattr(db, "http", HTTP())
+    out = db.fetch_shadow_predictions(limit=10)
+    assert "calibration" in captured["params"]["select"].split(",")
+    assert out[0]["market_consensus_reliable"] is True
+    assert out[0]["market_consensus_timestamp_safe"] is True

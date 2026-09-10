@@ -168,7 +168,7 @@ def fetch_shadow_predictions(limit=10000):
     if not configured():
         return []
     params={
-        "select":"id,due_at,resolved_at,scan_id,symbol,horizon,direction,entry_price,score,market_regime,strategy_identity,action_at_forecast,directional_return_pct,correct",
+        "select":"id,due_at,resolved_at,scan_id,symbol,horizon,direction,entry_price,score,market_regime,strategy_identity,action_at_forecast,directional_return_pct,correct,calibration",
         "resolved_at":"not.is.null",
         "order":"resolved_at.asc",
         "limit":str(max(1,min(int(limit),10000))),
@@ -176,7 +176,7 @@ def fetch_shadow_predictions(limit=10000):
     r=http.get(f"{SUPABASE_URL}/rest/v1/prediction_ledger",headers=headers(),params=params)
     if r.status_code>=300:
         raise RuntimeError(f"Supabase shadow prediction fetch failed: {r.status_code} {r.text}")
-    return r.json()
+    return [_expose_preforecast_market_fields(row) for row in r.json()]
 
 def patch_prediction(prediction_id, fields):
     if not configured() or not fields:
