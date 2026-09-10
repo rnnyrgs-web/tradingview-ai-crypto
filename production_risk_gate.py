@@ -14,6 +14,7 @@ import math
 
 MAX_PORTFOLIO_DRAWDOWN_PCT = 10.0
 MAX_CONSECUTIVE_LOSSES = 4
+LOSS_STREAK_COOLDOWN_SECONDS = 24 * 60 * 60
 MAX_SAME_DIRECTION_POSITIONS = 3
 MAX_SINGLE_TRADE_SPREAD_BPS = 35.0
 MAX_VISIBLE_SLIPPAGE_BPS = 25.0
@@ -200,7 +201,13 @@ def assess_global_market_risk(candidates: list[dict], health: dict | None = None
 
 
 def assess_portfolio_risk(account: dict, open_trades: list[dict], stats: dict) -> RiskGateDecision:
-    """Fail closed on abnormal drawdown, repeated losses, or concentrated direction."""
+    """Fail closed on abnormal drawdown, active loss-streak cooldown, or concentrated direction.
+
+    A raw consecutive-loss count cannot be a permanent latch: if all new positions are
+    blocked, a future winning trade can never occur to reset that count. Therefore a
+    four-loss streak triggers a conservative 24-hour cooling-off period measured from
+    the most recently closed trade. Missing/malformed close chronology stays blocked.
+    """
     reasons = []
     metrics = {}
     required = ("initial_cash", "equity", "peak_equity", "max_drawdown_pct")
@@ -223,7 +230,20 @@ def assess_portfolio_risk(account: dict, open_trades: list[dict], stats: dict) -
     consecutive_losses = int(stats.get("consecutive_losses") or 0) if isinstance(stats, dict) else 0
     metrics["consecutive_losses"] = consecutive_losses
     if consecutive_losses >= MAX_CONSECUTIVE_LOSSES:
-        reasons.append("repeated_loss_streak")
+        last_closed = _parse_time(stats.get("last_closed_at") if isinstance(stats, dict) else None)
+        metrics["loss_streak_cooldown_seconds"] = LOSS_STREAK_COOLDOWN_SECONDS
+        if last_closed is None:
+            metrics["loss_streak_timestamp_valid"] = False
+            reasons.append("repeated_loss_streak")
+        else:
+            metrics["loss_streak_timestamp_valid"] = True
+            age_seconds = max(0.0, (datetime.now(timezone.utc) - last_closed).total_seconds())
+            remaining = max(0.0, LOSS_STREAK_COOLDOWN_SECONDS - age_seconds)
+            metrics["loss_streak_age_seconds"] = round(age_seconds, 3)
+            metrics["loss_streak_cooldown_remaining_seconds"] = round(remaining, 3)
+            metrics["loss_streak_cooldown_complete"] = remaining <= 0
+            if remaining > 0:
+                reasons.append("repeated_loss_streak")
 
     directions = [str(t.get("direction") or "").upper() for t in (open_trades or [])]
     long_count = sum(d == "LONG" for d in directions)
