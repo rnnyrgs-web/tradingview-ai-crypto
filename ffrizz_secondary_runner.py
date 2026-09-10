@@ -49,6 +49,22 @@ def _finite_positive(value):
     return value if value > 0 else None
 
 
+def _ledger_strength_score(value):
+    """Map the signed FFriZz research score to the ledger's 0..100 strength field.
+
+    Direction remains represented by the immutable LONG/SHORT field. The original
+    signed value is preserved separately in calibration.raw_score, so this mapping
+    changes no signal decision, threshold, strategy fingerprint, or trade authority.
+    """
+    try:
+        value = float(value)
+    except (TypeError, ValueError):
+        value = 0.0
+    if value != value or value in {float("inf"), float("-inf")}:
+        value = 0.0
+    return min(100.0, abs(value))
+
+
 def _iso(dt):
     return dt.astimezone(timezone.utc).isoformat()
 
@@ -150,6 +166,7 @@ def build_forward_ledger_rows(report, *, generated_at=None):
             symbol = str(signal.get("symbol") or "").strip()
             if action not in PERSIST_ACTIONS or direction not in {"LONG", "SHORT"} or not symbol or entry is None:
                 continue
+            raw_score = float(signal.get("score") or 0.0)
             families = signal.get("families") if isinstance(signal.get("families"), list) else []
             calibration = {
                 "source_system": SYSTEM_ID,
@@ -160,7 +177,8 @@ def build_forward_ledger_rows(report, *, generated_at=None):
                 "shadow_action": action,
                 "production_action_semantics": "WAIT",
                 "bar": signal.get("bar"),
-                "raw_score": signal.get("score"),
+                "raw_score": raw_score,
+                "ledger_score_semantics": "absolute_shadow_strength",
                 "family_agreement_count": signal.get("independent_family_agreement"),
                 "family_agreement_independence_proven": False,
                 "available_family_count": signal.get("available_family_count"),
@@ -176,7 +194,7 @@ def build_forward_ledger_rows(report, *, generated_at=None):
                 "horizon": horizon,
                 "direction": direction,
                 "entry_price": entry,
-                "score": float(signal.get("score") or 0.0),
+                "score": _ledger_strength_score(raw_score),
                 "market_regime": None,
                 "strategy_identity": _strategy_identity(horizon),
                 "action_at_forecast": "WAIT",
