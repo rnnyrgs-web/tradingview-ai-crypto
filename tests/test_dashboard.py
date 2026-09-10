@@ -27,3 +27,42 @@ def test_expired_dashboard_session_rejected(monkeypatch):
     monkeypatch.setattr(dashboard,"DASHBOARD_SECRET","test-only-secret")
     exp=int(time.time())-1
     assert not dashboard._valid_session(dashboard._session_token(exp))
+
+
+def test_calibration_metrics_show_forward_accuracy_floor_and_independent_n():
+    metrics=dashboard._calibration_metrics({
+        "calibration":{
+            "ready":True,
+            "empirical_precision":0.683,
+            "precision_95pct_lower":0.571,
+            "independent_samples":82,
+            "minimum_samples":30,
+        }
+    })
+    assert metrics["accuracy"]=="68%"
+    assert metrics["floor"]=="57%"
+    assert metrics["n"]=="N=82"
+    assert metrics["ready"] is True
+
+
+def test_calibration_metrics_fail_closed_while_learning():
+    metrics=dashboard._calibration_metrics({
+        "calibration":{
+            "ready":False,
+            "independent_samples":12,
+            "minimum_samples":30,
+            "empirical_precision":0.99,
+            "precision_95pct_lower":0.98,
+        }
+    })
+    assert metrics["accuracy"]=="LEARNING"
+    assert metrics["floor"]=="—"
+    assert metrics["n"]=="N=12/30"
+    assert metrics["ready"] is False
+
+
+def test_calibration_metrics_never_invent_missing_accuracy():
+    metrics=dashboard._calibration_metrics({})
+    assert metrics["accuracy"]=="LEARNING"
+    assert metrics["floor"]=="—"
+    assert metrics["n"]=="N=0/30"
