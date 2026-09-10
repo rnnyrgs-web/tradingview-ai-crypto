@@ -11,6 +11,7 @@ FUTURES_FEE_MODEL = "KRAKEN_FUTURES_TIER1_CONSERVATIVE"
 PERP_HORIZON_HOURS = 168
 MAX_BOOK_AGE_MS = 30_000
 MAX_FUNDING_AGE_SECONDS = 2 * 3600
+MAX_MARK_CANDLE_AGE_SECONDS = 30 * 60
 
 http = httpx.Client(timeout=12.0, follow_redirects=True)
 
@@ -162,9 +163,35 @@ def _latest_funding_rate(perp_symbol):
             parsed.append(x)
     if not parsed:
         raise RuntimeError("Malformed Kraken Futures funding evidence")
-    # Funding analytics are hourly. Never assume a funding credit: reserve the
-    # largest absolute rate observed in the latest OHLC funding bucket.
     return max(parsed, key=abs)
+
+
+def latest_perp_mark_candle(spot_symbol):
+    perp_symbol, _ = resolve_perpetual(spot_symbol)
+    if not perp_symbol:
+        raise RuntimeError("No tradeable Kraken perpetual for mark candle")
+    now_s = int(time.time())
+    r = http.get(
+        f"{FUTURES_CHARTS}/mark/{perp_symbol}/15m",
+        headers={"Accept": "application/json"},
+        params={"from": now_s - 3600, "to": now_s, "count": 3},
+    )
+    r.raise_for_status()
+    rows = r.json().get("candles") or []
+    if not rows:
+        raise RuntimeError("Missing Kraken Futures mark candle")
+    row = rows[-1]
+    ts = int(row.get("time") or 0)
+    if ts > 10_000_000_000:
+        ts //= 1000
+    if ts <= 0 or now_s - ts > MAX_MARK_CANDLE_AGE_SECONDS:
+        raise RuntimeError("Stale Kraken Futures mark candle")
+    close = _finite_positive(row.get("close"))
+    high = _finite_positive(row.get("high"))
+    low = _finite_positive(row.get("low"))
+    if close is None or high is None or low is None or low > high:
+        raise RuntimeError("Malformed Kraken Futures mark candle")
+    return {"close": close, "high": high, "low": low, "time": ts, "perp_symbol": perp_symbol}
 
 
 def _walk_book(levels, contract_size, requested_notional):
