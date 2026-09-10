@@ -50,6 +50,24 @@ SYSTEM_ID = "FFRIZZ_SECONDARY_V1"
 FFRIZZ_SCAN_NAMESPACE = uuid.UUID("339a39c5-0d99-55f4-82d5-54b9c1cda1de")
 V2_DIAGNOSTIC_HORIZONS = ("6h", "12h", "24h")
 V3_DIAGNOSTIC_HORIZONS = ("6h", "12h", "24h")
+OI_SOURCE_STATUSES = {
+    "available",
+    "valid_empty",
+    "http_error",
+    "timeout",
+    "network_error",
+    "invalid_payload",
+    "source_error",
+    "unclassified",
+}
+
+
+class _OIHistory(list):
+    """List-compatible OI points carrying one bounded acquisition status."""
+
+    def __init__(self, values=(), *, source_status="unclassified"):
+        super().__init__(values)
+        self.source_status = source_status if source_status in OI_SOURCE_STATUSES else "unclassified"
 
 
 def _int_env(name, default, low, high):
@@ -113,15 +131,46 @@ def _strategy_identity(horizon):
     }
 
 
+def _classify_oi_source_error(error_type):
+    """Map exception class names to a fixed non-sensitive diagnostic vocabulary."""
+    name = str(error_type or "").strip().lower()
+    if "timeout" in name:
+        return "timeout"
+    if "httpstatus" in name:
+        return "http_error"
+    if any(token in name for token in ("network", "connect", "protocol", "transport")):
+        return "network_error"
+    if any(token in name for token in ("json", "decode", "validation", "typeerror", "valueerror")):
+        return "invalid_payload"
+    return "source_error"
+
+
 def _oi_points(base):
+    """Return OI points plus bounded source provenance without another request."""
     try:
         data = get_derivatives_history(base, limit=90)
-    except Exception:
-        return []
-    history = data.get("open_interest_history") if isinstance(data, dict) else None
+    except Exception as exc:
+        return _OIHistory([], source_status=_classify_oi_source_error(type(exc).__name__))
+    if not isinstance(data, dict):
+        return _OIHistory([], source_status="invalid_payload")
+    history = data.get("open_interest_history")
     history = history if isinstance(history, dict) else {}
     points = history.get("binance")
-    return points if isinstance(points, list) else []
+    source_errors = [
+        row
+        for row in (data.get("errors") or [])
+        if isinstance(row, dict) and row.get("source") == "binance_open_interest_history"
+    ]
+    if isinstance(points, list) and points:
+        return _OIHistory(points, source_status="available")
+    if source_errors:
+        return _OIHistory(
+            [],
+            source_status=_classify_oi_source_error(source_errors[0].get("error_type")),
+        )
+    if isinstance(points, list):
+        return _OIHistory([], source_status="valid_empty")
+    return _OIHistory([], source_status="invalid_payload")
 
 
 def _aggregate_backtests(rows):
@@ -354,6 +403,7 @@ def run(*, persist=True, generated_at=None):
                 by_bar[symbol][bar] = []
 
     oi_cache = {}
+    oi_source_status_counts = Counter()
     results = []
     v2_signals_by_horizon = {horizon: [] for horizon in V2_DIAGNOSTIC_HORIZONS}
     v3_signals_by_horizon = {horizon: [] for horizon in V3_DIAGNOSTIC_HORIZONS}
@@ -371,6 +421,10 @@ def run(*, persist=True, generated_at=None):
             if bar == "1H":
                 if base not in oi_cache:
                     oi_cache[base] = _oi_points(base)
+                    status = getattr(oi_cache[base], "source_status", "unclassified")
+                    if status not in OI_SOURCE_STATUSES:
+                        status = "unclassified"
+                    oi_source_status_counts[status] += 1
                 oi = oi_cache[base]
             signal = score_shadow_signal(candles, oi, horizon=horizon)
             entry_price = _finite_positive((candles[-1] or {}).get("close")) if candles else None
@@ -425,6 +479,16 @@ def run(*, persist=True, generated_at=None):
         "evidence_warning": "Historical OHLC-only diagnostics are descriptive and do not match the prospective FFriZz fingerprint when OI is available. Cross-symbol pooled outcomes are not independent evidence. Only canonical prospective non-overlapping resolved forecasts may enter governed validation.",
     }
     report["forward_abstention_diagnostics"] = _forward_abstention_diagnostics(results)
+    report["oi_source_diagnostics"] = {
+        "diagnostic_only": True,
+        "source": "binance_open_interest_history",
+        "acquisition_attempts": sum(oi_source_status_counts.values()),
+        "status_counts": dict(sorted(oi_source_status_counts.items())),
+        "extra_requests_added": 0,
+        "symbol_level_data_exposed": False,
+        "trade_authority": False,
+        "promotion_authority": False,
+    }
     report["v2_oi_alignment_feature_availability"] = v2_feature_availability_diagnostics(v2_signals_by_horizon)
     report["v3_oi_causal_asof_feature_availability"] = _v3_feature_availability_diagnostics(v3_signals_by_horizon)
     ledger_rows = build_forward_ledger_rows(report, generated_at=generated_at)
