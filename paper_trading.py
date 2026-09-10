@@ -179,6 +179,45 @@ def _has_opposing_symbol_exposure(open_trades, symbol, direction):
     return False
 
 
+def _net_directional_notional(open_trades):
+    total = 0.0
+    for trade in open_trades or []:
+        direction = str(trade.get("direction") or "").upper()
+        try:
+            notional = float(trade.get("notional_usd") or 0)
+        except (TypeError, ValueError):
+            continue
+        if not math.isfinite(notional) or notional <= 0:
+            continue
+        if direction == "LONG":
+            total += notional
+        elif direction == "SHORT":
+            total -= notional
+    return total
+
+
+def _concentration_only_block(portfolio_risk):
+    return bool(
+        portfolio_risk
+        and portfolio_risk.blocked
+        and set(portfolio_risk.reasons) == {"correlated_directional_concentration"}
+    )
+
+
+def _candidate_reduces_net_directional_exposure(open_trades, direction, notional):
+    direction = str(direction or "").upper()
+    try:
+        candidate_notional = float(notional)
+    except (TypeError, ValueError):
+        return False
+    if direction not in {"LONG", "SHORT"} or not math.isfinite(candidate_notional) or candidate_notional <= 0:
+        return False
+    before = _net_directional_notional(open_trades)
+    delta = candidate_notional if direction == "LONG" else -candidate_notional
+    after = before + delta
+    return abs(after) + 1e-6 < abs(before)
+
+
 def _strong_opposite_7d_signal(trade, rows, now=None):
     if str(trade.get("horizon") or "") != "7d" or str(trade.get("direction") or "").upper() != "LONG":
         return None
@@ -379,10 +418,13 @@ def _run_paper_cycle_locked():
     preopen_stats = fetch_paper_trade_stats(ACCOUNT_ID, INITIAL_CASH)
     risk_account = {**account, "cash": cash, "equity": working_equity, "realized_pnl": realized}
     portfolio_risk = assess_portfolio_risk(risk_account, open_trades, preopen_stats)
+    concentration_only = _concentration_only_block(portfolio_risk)
     candidates = []
-    if portfolio_risk.blocked:
+    if portfolio_risk.blocked and not concentration_only:
         log.warning("Global paper WAIT: %s", ",".join(portfolio_risk.reasons))
     else:
+        if concentration_only:
+            log.warning("Paper concentration WAIT allows only net-risk-reducing opposite-direction candidates")
         for horizon in ("24h", "7d"):
             candidates.extend(fetch_ranked_opportunities(horizon=horizon, limit=20))
         candidates.sort(key=lambda r: float(r.get("evidence_score") or 0), reverse=True)
@@ -440,6 +482,9 @@ def _run_paper_cycle_locked():
         desired_notional = min(risk_usd / stop_distance_pct, max_notional, cash)
         if desired_notional <= 0:
             _record_decision(row, "REJECTED", "insufficient_cash")
+            continue
+        if concentration_only and not _candidate_reduces_net_directional_exposure(open_trades, direction, desired_notional):
+            _record_decision(row, "REJECTED", "does_not_reduce_directional_concentration")
             continue
 
         try:
