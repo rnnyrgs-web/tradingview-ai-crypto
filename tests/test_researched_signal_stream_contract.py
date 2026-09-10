@@ -3,8 +3,13 @@ import paper_db
 import paper_trading
 
 
-def test_paper_trading_reads_same_ranked_research_stream_as_dashboard():
-    assert paper_db.fetch_ranked_opportunities is db.fetch_ranked_opportunities
+def test_paper_trading_reads_ranked_research_stream_from_db_contract():
+    # paper_db re-exports the canonical ranked opportunity reader from db.  Test
+    # provenance rather than Python object identity because some test modules
+    # reload db during collection, which legitimately creates a new function
+    # object while preserving the same canonical implementation.
+    assert paper_db.fetch_ranked_opportunities.__module__ == "db"
+    assert paper_db.fetch_ranked_opportunities.__name__ == db.fetch_ranked_opportunities.__name__
 
 
 def test_paper_trade_label_keeps_wait_non_actionable():
