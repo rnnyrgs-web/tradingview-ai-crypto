@@ -84,6 +84,7 @@ def observability_log_payload(army: object) -> dict:
     network = observed.get("history_network") if isinstance(observed.get("history_network"), dict) else {}
     workers = observed.get("workers") if isinstance(observed.get("workers"), dict) else {}
     acc002 = observed.get("acc002") if isinstance(observed.get("acc002"), dict) else {}
+    adaptive = observed.get("adaptive_accuracy") if isinstance(observed.get("adaptive_accuracy"), dict) else {}
     supervisor = army.get("supervisor") if isinstance(army.get("supervisor"), dict) else {}
 
     def compact_acc(name: str) -> dict:
@@ -133,6 +134,27 @@ def observability_log_payload(army: object) -> dict:
             "failure_type_counts": dict(sorted(failure_types.items())),
         }
 
+    def compact_ffrizz() -> dict:
+        evidence = adaptive.get("latest_evidence") if isinstance(adaptive.get("latest_evidence"), dict) else {}
+        forward = evidence.get("ffrizz_forward_collection") if isinstance(evidence.get("ffrizz_forward_collection"), dict) else {}
+        eligible = forward.get("eligible_shadow_forecasts")
+        if not isinstance(eligible, int) or isinstance(eligible, bool) or eligible < 0:
+            eligible = None
+        return {
+            "worker_exit": adaptive.get("last_exit_code"),
+            "worker_elapsed_s": adaptive.get("elapsed_seconds"),
+            "updated_at_ms": adaptive.get("updated_at_ms"),
+            "collection_ok": forward.get("ok") if isinstance(forward.get("ok"), bool) else None,
+            "error_type": str(forward.get("error_type")) if forward.get("error_type") else None,
+            "generated_at": str(forward.get("generated_at")) if forward.get("generated_at") else None,
+            "eligible_shadow_forecasts": eligible,
+            "non_overlapping_full_horizon_buckets": forward.get("non_overlapping_full_horizon_buckets") is True,
+            "wait_rows_persisted": forward.get("wait_rows_persisted") is True,
+            "historical_oi_backfill_used": forward.get("historical_oi_backfill_used") is True,
+            "trade_authority": False,
+            "promotion_authority": False,
+        }
+
     cache_latency = cache.get("read_latency_ms") if isinstance(cache.get("read_latency_ms"), dict) else {}
     network_latency = network.get("network_latency_ms") if isinstance(network.get("network_latency_ms"), dict) else {}
     return {
@@ -156,6 +178,7 @@ def observability_log_payload(army: object) -> dict:
         "task_restarts": supervisor.get("task_restarts"),
         "acc002_24h": compact_acc("cross-asset-rank-24h"),
         "acc002_7d": compact_acc("cross-asset-rank-7d"),
+        "ffrizz_forward": compact_ffrizz(),
         "trade_authority": False,
         "promotion_authority": False,
         "signal_authority": False,
