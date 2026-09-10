@@ -98,6 +98,38 @@ def _bounded_abstention_diagnostics(value):
     }
 
 
+def _bounded_oi_source_diagnostics(value):
+    """Keep only count-level OI acquisition outcomes from the existing requests."""
+    if not isinstance(value, dict):
+        return None
+    allowed = (
+        "available",
+        "valid_empty",
+        "http_error",
+        "timeout",
+        "network_error",
+        "invalid_payload",
+        "source_error",
+        "unclassified",
+    )
+    raw = value.get("status_counts") if isinstance(value.get("status_counts"), dict) else {}
+    counts = {
+        key: clean
+        for key in allowed
+        if (clean := _nonnegative_int(raw.get(key))) is not None
+    }
+    return {
+        "diagnostic_only": value.get("diagnostic_only") is True,
+        "source": "binance_open_interest_history",
+        "acquisition_attempts": _nonnegative_int(value.get("acquisition_attempts")),
+        "status_counts": counts,
+        "extra_requests_added": 0,
+        "symbol_level_data_exposed": False,
+        "trade_authority": False,
+        "promotion_authority": False,
+    }
+
+
 def _bounded_feature_availability(value, *, system, oi_family, include_reasons=False):
     """Keep only predeclared horizon/family counts from an OI challenger."""
     if not isinstance(value, dict):
@@ -206,6 +238,7 @@ def _ffrizz_forward_collection():
     forward = report.get("forward_evidence") if isinstance(report, dict) else {}
     eligible = int((forward or {}).get("eligible_shadow_forecasts") or 0)
     abstention = _bounded_abstention_diagnostics((forward or {}).get("abstention_diagnostics"))
+    oi_source = _bounded_oi_source_diagnostics(report.get("oi_source_diagnostics") if isinstance(report, dict) else None)
     v2_availability = _bounded_v2_feature_availability(
         report.get("v2_oi_alignment_feature_availability") if isinstance(report, dict) else None
     )
@@ -221,6 +254,7 @@ def _ffrizz_forward_collection():
         "wait_rows_persisted": (forward or {}).get("wait_rows_persisted") is True,
         "historical_oi_backfill_used": (forward or {}).get("historical_oi_backfill_used") is True,
         "abstention_diagnostics": abstention,
+        "oi_source_diagnostics": oi_source,
         "v2_oi_alignment_feature_availability": v2_availability,
         "v3_oi_causal_asof_feature_availability": v3_availability,
         "trade_authority": False,
