@@ -17,6 +17,10 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from db import insert_prediction_ledger
+from ffrizz_oi_alignment_challenger import (
+    feature_availability_diagnostics as v2_feature_availability_diagnostics,
+    score_shadow_signal_v2,
+)
 from ffrizz_secondary_signals import (
     FIXED_SIGNAL_THRESHOLD,
     FIXED_STRONG_THRESHOLD,
@@ -42,6 +46,7 @@ HORIZON_DELTAS = {
 PERSIST_ACTIONS = {"SHADOW_BUY", "SHADOW_SELL"}
 SYSTEM_ID = "FFRIZZ_SECONDARY_V1"
 FFRIZZ_SCAN_NAMESPACE = uuid.UUID("339a39c5-0d99-55f4-82d5-54b9c1cda1de")
+V2_DIAGNOSTIC_HORIZONS = ("6h", "12h", "24h")
 
 
 def _int_env(name, default, low, high):
@@ -310,6 +315,7 @@ def run(*, persist=True, generated_at=None):
 
     oi_cache = {}
     results = []
+    v2_signals_by_horizon = {horizon: [] for horizon in V2_DIAGNOSTIC_HORIZONS}
     for horizon in HORIZON_ORDER:
         bar = HORIZON_PROFILES[horizon]["bar"]
         current = []
@@ -329,6 +335,10 @@ def run(*, persist=True, generated_at=None):
             entry_price = _finite_positive((candles[-1] or {}).get("close")) if candles else None
             signal.update({"symbol": symbol, "base": base, "entry_price": entry_price})
             current.append(signal)
+            if horizon in v2_signals_by_horizon and bar == "1H":
+                v2_signals_by_horizon[horizon].append(
+                    score_shadow_signal_v2(candles, oi, horizon=horizon, bar=bar)
+                )
             diagnostics.append({"symbol": symbol, **chronological_backtest(candles, horizon=horizon)})
         current.sort(key=lambda item: abs(float(item.get("score") or 0.0)), reverse=True)
         aggregate = _aggregate_backtests(diagnostics)
@@ -370,6 +380,7 @@ def run(*, persist=True, generated_at=None):
         "evidence_warning": "Historical OHLC-only diagnostics are descriptive and do not match the prospective FFriZz fingerprint when OI is available. Cross-symbol pooled outcomes are not independent evidence. Only canonical prospective non-overlapping resolved forecasts may enter governed validation.",
     }
     report["forward_abstention_diagnostics"] = _forward_abstention_diagnostics(results)
+    report["v2_oi_alignment_feature_availability"] = v2_feature_availability_diagnostics(v2_signals_by_horizon)
     ledger_rows = build_forward_ledger_rows(report, generated_at=generated_at)
     if persist and ledger_rows:
         insert_prediction_ledger(ledger_rows)
