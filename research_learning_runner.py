@@ -14,6 +14,7 @@ from research_ensemble_diversity import build_ensemble_diversity
 from research_error_attribution import build_error_attribution
 from research_learning import learning_diagnostics
 from research_learning_state import append_lesson, load_state
+from research_meta_signal_trust import build_meta_signal_trust
 from research_meta_wait import build_meta_wait_diagnostics
 from research_microstructure_veto import build_microstructure_veto
 from research_regime_strategy_router import build_regime_strategy_router
@@ -60,6 +61,12 @@ def build_learning_report(rows):
         microstructure_veto=microstructure_veto,
         error_attribution=error_attribution,
     )
+    meta_signal_trust = build_meta_signal_trust(
+        rows,
+        regime_strategy=regime_strategy,
+        ensemble_diversity=ensemble_diversity,
+        microstructure_veto=microstructure_veto,
+    )
     lesson = _priority_lesson(diagnostics)
     if lesson:
         append_lesson(lesson)
@@ -80,6 +87,7 @@ def build_learning_report(rows):
         "ensemble_diversity": ensemble_diversity,
         "resolved_error_attribution": error_attribution,
         "selective_wait_fusion": selective_wait_fusion,
+        "meta_signal_trust": meta_signal_trust,
         "research_memory": {
             "lesson_count": len(memory.get("lessons") or []),
             "updated_at": memory.get("updated_at"),
