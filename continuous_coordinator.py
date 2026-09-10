@@ -179,6 +179,55 @@ def observability_log_payload(army: object) -> dict:
             "promotion_authority": False,
         }
 
+    def compact_v3_feature_availability(raw: object) -> dict | None:
+        """Re-allowlist V3 causal-as-of counts and fixed safety metadata."""
+        if not isinstance(raw, dict):
+            return None
+        allowed_families = (
+            "pb_ema:available",
+            "pb_ema:unavailable",
+            "fvg:available",
+            "fvg:unavailable",
+            "inside_bar:available",
+            "inside_bar:unavailable",
+            "price_oi_correlation_v3:available",
+            "price_oi_correlation_v3:unavailable",
+        )
+        allowed_reasons = (
+            "oi_unavailable",
+            "unsupported_bar",
+            "ambiguous_duplicate_candle_close",
+            "price_unavailable",
+            "ambiguous_duplicate_oi_period_end",
+            "ambiguous_reused_price_endpoint",
+            "insufficient_causal_asof_overlap",
+            "correlation_undefined",
+        )
+        horizons = {}
+        raw_horizons = raw.get("horizons") if isinstance(raw.get("horizons"), dict) else {}
+        for horizon in ("6h", "12h", "24h"):
+            row = raw_horizons.get(horizon)
+            if not isinstance(row, dict):
+                continue
+            horizons[horizon] = {
+                "signals_scored": safe_nonnegative_int(row.get("signals_scored")),
+                "family_counts": selected_counts(row.get("family_counts"), allowed_families),
+                "oi_unavailable_reason_counts": selected_counts(row.get("oi_unavailable_reason_counts"), allowed_reasons),
+            }
+        return {
+            "system": "FFRIZZ_SECONDARY_V3_OI_CAUSAL_ASOF",
+            "diagnostic_only": raw.get("diagnostic_only") is True,
+            "symbol_level_data_exposed": False,
+            "causal_asof_only": True,
+            "future_price_used": False,
+            "nearest_neighbor_used": False,
+            "interpolation_used": False,
+            "max_price_staleness_ms_exclusive": 3_600_000,
+            "horizons": horizons,
+            "trade_authority": False,
+            "promotion_authority": False,
+        }
+
     def compact_ffrizz() -> dict:
         evidence = adaptive.get("latest_evidence") if isinstance(adaptive.get("latest_evidence"), dict) else {}
         forward = evidence.get("ffrizz_forward_collection") if isinstance(evidence.get("ffrizz_forward_collection"), dict) else {}
@@ -194,6 +243,7 @@ def observability_log_payload(army: object) -> dict:
             ("0", "1", "2", "3", "4"),
         )
         v2_availability = compact_v2_feature_availability(forward.get("v2_oi_alignment_feature_availability"))
+        v3_availability = compact_v3_feature_availability(forward.get("v3_oi_causal_asof_feature_availability"))
         return {
             "worker_exit": adaptive.get("last_exit_code"),
             "worker_elapsed_s": adaptive.get("elapsed_seconds"),
@@ -213,6 +263,7 @@ def observability_log_payload(army: object) -> dict:
             "wait_gate_counts": wait_gate_counts,
             "available_family_count_distribution": family_distribution,
             "v2_oi_alignment_feature_availability": v2_availability,
+            "v3_oi_causal_asof_feature_availability": v3_availability,
             "trade_authority": False,
             "promotion_authority": False,
         }
