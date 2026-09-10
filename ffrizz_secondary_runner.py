@@ -99,7 +99,8 @@ def build_forward_ledger_rows(report, *, generated_at=None):
 
     WAIT rows are deliberately excluded. Re-running inside the same full-horizon
     bucket produces the same scan_id, allowing the canonical ledger's duplicate
-    protection to prevent overlapping pseudo-independent evidence.
+    protection to prevent overlapping pseudo-independent evidence. The deadline
+    is always one exact full horizon after the first forecast observation.
     """
     now = generated_at or datetime.now(timezone.utc)
     if now.tzinfo is None:
@@ -111,7 +112,7 @@ def build_forward_ledger_rows(report, *, generated_at=None):
             continue
         bucket = _bucket_start(now, horizon)
         scan_id = f"ffrizz:{SYSTEM_ID}:{horizon}:{int(bucket.timestamp())}"
-        due_at = bucket + HORIZON_DELTAS[horizon]
+        due_at = now + HORIZON_DELTAS[horizon]
         for signal in horizon_result.get("current_shadow_signals") or []:
             action = str(signal.get("action") or "WAIT").upper()
             direction = str(signal.get("direction") or "").upper()
