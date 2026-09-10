@@ -102,6 +102,7 @@ def test_adaptive_lane_collects_ffrizz_without_granting_authority(monkeypatch):
             "historical_oi_backfill_used": False,
         },
     })
+    monkeypatch.setattr(adaptive_runner, "prediction_ledger_configured", lambda: True)
     result = adaptive_runner._ffrizz_forward_collection()
     assert result["ok"] is True
     assert result["eligible_shadow_forecasts"] == 4
