@@ -146,6 +146,39 @@ def observability_log_payload(army: object) -> dict:
             if key in raw and safe_nonnegative_int(raw[key]) is not None
         }
 
+    def compact_v2_feature_availability(raw: object) -> dict | None:
+        """Re-allowlist the already-bounded V2 counts at the final log boundary."""
+        if not isinstance(raw, dict):
+            return None
+        allowed_families = (
+            "pb_ema:available",
+            "pb_ema:unavailable",
+            "fvg:available",
+            "fvg:unavailable",
+            "inside_bar:available",
+            "inside_bar:unavailable",
+            "price_oi_correlation_v2:available",
+            "price_oi_correlation_v2:unavailable",
+        )
+        horizons = {}
+        raw_horizons = raw.get("horizons") if isinstance(raw.get("horizons"), dict) else {}
+        for horizon in ("6h", "12h", "24h"):
+            row = raw_horizons.get(horizon)
+            if not isinstance(row, dict):
+                continue
+            horizons[horizon] = {
+                "signals_scored": safe_nonnegative_int(row.get("signals_scored")),
+                "family_counts": selected_counts(row.get("family_counts"), allowed_families),
+            }
+        return {
+            "system": "FFRIZZ_SECONDARY_V2_OI_CLOSE_END",
+            "diagnostic_only": raw.get("diagnostic_only") is True,
+            "symbol_level_data_exposed": False,
+            "horizons": horizons,
+            "trade_authority": False,
+            "promotion_authority": False,
+        }
+
     def compact_ffrizz() -> dict:
         evidence = adaptive.get("latest_evidence") if isinstance(adaptive.get("latest_evidence"), dict) else {}
         forward = evidence.get("ffrizz_forward_collection") if isinstance(evidence.get("ffrizz_forward_collection"), dict) else {}
@@ -160,6 +193,7 @@ def observability_log_payload(army: object) -> dict:
             abstention.get("available_family_count_distribution"),
             ("0", "1", "2", "3", "4"),
         )
+        v2_availability = compact_v2_feature_availability(forward.get("v2_oi_alignment_feature_availability"))
         return {
             "worker_exit": adaptive.get("last_exit_code"),
             "worker_elapsed_s": adaptive.get("elapsed_seconds"),
@@ -178,6 +212,7 @@ def observability_log_payload(army: object) -> dict:
             "action_counts": action_counts,
             "wait_gate_counts": wait_gate_counts,
             "available_family_count_distribution": family_distribution,
+            "v2_oi_alignment_feature_availability": v2_availability,
             "trade_authority": False,
             "promotion_authority": False,
         }
