@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import os
 import uuid
+from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -21,6 +22,7 @@ from ffrizz_oi_alignment_challenger import (
     feature_availability_diagnostics as v2_feature_availability_diagnostics,
     score_shadow_signal_v2,
 )
+from ffrizz_oi_causal_asof_challenger import score_shadow_signal_v3
 from ffrizz_secondary_signals import (
     FIXED_SIGNAL_THRESHOLD,
     FIXED_STRONG_THRESHOLD,
@@ -47,6 +49,7 @@ PERSIST_ACTIONS = {"SHADOW_BUY", "SHADOW_SELL"}
 SYSTEM_ID = "FFRIZZ_SECONDARY_V1"
 FFRIZZ_SCAN_NAMESPACE = uuid.UUID("339a39c5-0d99-55f4-82d5-54b9c1cda1de")
 V2_DIAGNOSTIC_HORIZONS = ("6h", "12h", "24h")
+V3_DIAGNOSTIC_HORIZONS = ("6h", "12h", "24h")
 
 
 def _int_env(name, default, low, high):
@@ -205,8 +208,6 @@ def _forward_abstention_diagnostics(horizon_results):
             elif raw_score < required_threshold:
                 wait_gate_counts["score_below_predeclared_threshold"] += 1
             else:
-                # This bucket should stay zero under the current scorer. Keeping it
-                # visible makes future scorer/diagnostic drift fail conspicuously.
                 wait_gate_counts["unexpected_wait_state"] += 1
         horizon_counts[horizon] = h_counts
 
@@ -222,6 +223,45 @@ def _forward_abstention_diagnostics(horizon_results):
         "horizon_counts": horizon_counts,
         "fixed_signal_threshold": float(FIXED_SIGNAL_THRESHOLD),
         "fixed_strong_threshold": float(FIXED_STRONG_THRESHOLD),
+        "trade_authority": False,
+        "promotion_authority": False,
+    }
+
+
+def _v3_feature_availability_diagnostics(signals_by_horizon):
+    """Return bounded count-only V3 diagnostics with no symbol-level data."""
+    output = {}
+    for horizon in V3_DIAGNOSTIC_HORIZONS:
+        signals = (signals_by_horizon or {}).get(horizon) or []
+        counts = Counter()
+        reason_counts = Counter()
+        scored = 0
+        for signal in signals:
+            scored += 1
+            for family in signal.get("families") or []:
+                if not isinstance(family, dict):
+                    continue
+                name = str(family.get("family") or "unknown")
+                available = family.get("available") is not False
+                counts[f"{name}:{'available' if available else 'unavailable'}"] += 1
+                if name == "price_oi_correlation_v3" and not available:
+                    reason = str(family.get("reason") or "unavailable")
+                    reason_counts[reason] += 1
+        output[horizon] = {
+            "signals_scored": scored,
+            "family_counts": dict(sorted(counts.items())),
+            "oi_unavailable_reason_counts": dict(sorted(reason_counts.items())),
+        }
+    return {
+        "system": "FFRIZZ_SECONDARY_V3_OI_CAUSAL_ASOF",
+        "diagnostic_only": True,
+        "symbol_level_data_exposed": False,
+        "causal_asof_only": True,
+        "future_price_used": False,
+        "nearest_neighbor_used": False,
+        "interpolation_used": False,
+        "max_price_staleness_ms_exclusive": 3_600_000,
+        "horizons": output,
         "trade_authority": False,
         "promotion_authority": False,
     }
@@ -316,6 +356,7 @@ def run(*, persist=True, generated_at=None):
     oi_cache = {}
     results = []
     v2_signals_by_horizon = {horizon: [] for horizon in V2_DIAGNOSTIC_HORIZONS}
+    v3_signals_by_horizon = {horizon: [] for horizon in V3_DIAGNOSTIC_HORIZONS}
     for horizon in HORIZON_ORDER:
         bar = HORIZON_PROFILES[horizon]["bar"]
         current = []
@@ -338,6 +379,10 @@ def run(*, persist=True, generated_at=None):
             if horizon in v2_signals_by_horizon and bar == "1H":
                 v2_signals_by_horizon[horizon].append(
                     score_shadow_signal_v2(candles, oi, horizon=horizon, bar=bar)
+                )
+            if horizon in v3_signals_by_horizon and bar == "1H":
+                v3_signals_by_horizon[horizon].append(
+                    score_shadow_signal_v3(candles, oi, horizon=horizon, bar=bar)
                 )
             diagnostics.append({"symbol": symbol, **chronological_backtest(candles, horizon=horizon)})
         current.sort(key=lambda item: abs(float(item.get("score") or 0.0)), reverse=True)
@@ -381,6 +426,7 @@ def run(*, persist=True, generated_at=None):
     }
     report["forward_abstention_diagnostics"] = _forward_abstention_diagnostics(results)
     report["v2_oi_alignment_feature_availability"] = v2_feature_availability_diagnostics(v2_signals_by_horizon)
+    report["v3_oi_causal_asof_feature_availability"] = _v3_feature_availability_diagnostics(v3_signals_by_horizon)
     ledger_rows = build_forward_ledger_rows(report, generated_at=generated_at)
     if persist and ledger_rows:
         insert_prediction_ledger(ledger_rows)
