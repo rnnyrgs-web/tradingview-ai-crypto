@@ -1,7 +1,7 @@
 import httpx
 from datetime import datetime, timedelta, timezone
 
-from config import SUPABASE_URL, SUPABASE_SECRET_KEY
+from config import OPPORTUNITY_HORIZONS, SUPABASE_URL, SUPABASE_SECRET_KEY
 from utils import iso, now_utc
 
 http = httpx.Client(timeout=25.0, follow_redirects=True)
@@ -60,7 +60,7 @@ def fetch_actionable_after(after_id=0, limit=20):
 def replace_opportunities(scan_id, horizon, rows):
     if not configured():
         return
-    if horizon not in {"24h","7d"}:
+    if horizon not in OPPORTUNITY_HORIZONS:
         raise ValueError("invalid opportunity horizon")
     if not rows:
         return
@@ -152,8 +152,6 @@ def _expose_preforecast_market_fields(row):
 def fetch_resolved_predictions(limit=5000):
     if not configured():
         return []
-    # Production prediction_ledger has no created_at column. resolved_at/due_at
-    # provide the chronology required by calibration and forward-proof logic.
     params={
         "select":"due_at,resolved_at,horizon,score,market_regime,correct,directional_return_pct,strategy_identity,action_at_forecast,calibration",
         "resolved_at":"not.is.null","order":"resolved_at.desc","limit":str(max(1,min(int(limit),10000)))
@@ -188,12 +186,15 @@ def patch_prediction(prediction_id, fields):
     if r.status_code>=300:
         raise RuntimeError(f"Supabase prediction update failed: {r.status_code} {r.text}")
 
+def _opportunity_lookback_hours(horizon):
+    return {"6h":3,"12h":4,"24h":6,"48h":8,"72h":10,"7d":12}.get(horizon,6)
+
 def fetch_ranked_opportunities(horizon="24h", hours=None, limit=20):
     if not configured():
         return []
-    if horizon not in {"24h","7d"}:
-        raise ValueError("horizon must be 24h or 7d")
-    lookback=int(hours if hours is not None else (6 if horizon=="24h" else 12))
+    if horizon not in OPPORTUNITY_HORIZONS:
+        raise ValueError(f"horizon must be one of: {', '.join(OPPORTUNITY_HORIZONS)}")
+    lookback=int(hours if hours is not None else _opportunity_lookback_hours(horizon))
     cutoff=iso(now_utc()-timedelta(hours=max(1,lookback)))
     latest_resp=http.get(
         f"{SUPABASE_URL}/rest/v1/crypto_opportunities",headers=headers(),

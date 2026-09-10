@@ -51,7 +51,7 @@ def risk_plan(features, direction, horizon):
     ft=next(iter(features.values()))
     entry=ft["last"]
     a=ft["atr"]
-    mult={"intraday":1.45,"24h":1.8,"7d":2.25,"30d":2.8}[horizon]
+    mult={"intraday":1.45,"6h":1.55,"12h":1.65,"24h":1.8,"48h":2.0,"72h":2.1,"7d":2.25,"30d":2.8}[horizon]
     risk=max(a*mult,entry*0.0035)
     if direction=="LONG":
         stop=entry-risk; t1=entry+risk*1.9; t2=entry+risk*3.0
@@ -61,19 +61,11 @@ def risk_plan(features, direction, horizon):
     return {"entry":entry,"stop":stop,"t1":t1,"t2":t2,"rr":1.9}
 
 def _preflight_opportunity_risk(candidates):
-    """Remove only horizons whose current ATR risk geometry is not representable.
-
-    A very volatile low-priced asset can legitimately imply a negative target or
-    stop under the fixed ATR geometry. We must not clamp or manufacture a valid
-    looking plan. Instead that symbol/horizon fails closed to WAIT by being
-    omitted from the opportunity builder for this scan. Other horizons for the
-    same asset remain eligible.
-    """
     eligible=[]
     rejected=[]
     for candidate in candidates:
         horizons=dict(candidate.get("horizons") or {})
-        for horizon in ("24h","7d"):
+        for horizon in OPPORTUNITY_HORIZONS:
             hv=horizons.get(horizon)
             if not isinstance(hv,dict):
                 continue
@@ -144,7 +136,7 @@ Return ONLY JSON:
  "signals":[
    {{
      "symbol":"BTC-USDT",
-     "horizon":"intraday|24h|7d|30d",
+     "horizon":"6h|12h|24h|48h|72h|7d",
      "direction":"LONG|SHORT",
      "strategy_family":"trend|breakout|momentum|mean_reversion|volatility_expansion|relative_strength_btc",
      "action":"TRADE|WAIT",
@@ -154,7 +146,7 @@ Return ONLY JSON:
    }}
  ]
 }}
-Maximum 6 signals total.
+Maximum 8 signals total.
 """
     r=client.responses.create(model=OPENAI_MODEL,input=prompt)
     return extract_json(r.output_text)
@@ -169,7 +161,7 @@ def run_scan():
     for item in pre:
         try:
             hs={}
-            for h in ("intraday","24h","7d","30d"):
+            for h in OPPORTUNITY_HORIZONS:
                 score, feats=horizon_score(item["symbol"],h)
                 hs[h]={"score":score,"features":feats}
             item={**item,"horizons":hs,"derivatives":get_derivatives(item["base"])}
@@ -203,7 +195,7 @@ def run_scan():
 
     opportunity_error=None
     opportunity_failure=None
-    opportunities={"24h":[],"7d":[]}
+    opportunities={h:[] for h in OPPORTUNITY_HORIZONS}
     opportunity_candidates,risk_preflight_rejections=_preflight_opportunity_risk(deep)
     try:
         opportunities=build_opportunities(scan_id,opportunity_candidates,signals,regime,risk_plan)
@@ -222,7 +214,7 @@ def run_scan():
         strategy_family=str(s.get("strategy_family","")).strip().lower()
 
         c=next((x for x in finalists if x["symbol"]==symbol),None)
-        if not c or horizon not in HORIZONS or direction not in {"LONG","SHORT"}:
+        if not c or horizon not in OPPORTUNITY_HORIZONS or direction not in {"LONG","SHORT"}:
             continue
 
         try:
@@ -284,7 +276,7 @@ def run_scan():
         "universe_count":len(universe),"deep_scanned":len(deep),"market_regime":regime,
         "signals_saved":len(saved),"signals":saved,"scan_error_count":len(errors),
         "scan_errors":errors[:20],"ai_error":ai_error,
-        "opportunities_saved":{"24h":len(opportunities.get("24h",[])),"7d":len(opportunities.get("7d",[]))},
+        "opportunities_saved":{h:len(opportunities.get(h,[])) for h in OPPORTUNITY_HORIZONS},
         "opportunity_error":opportunity_error,"opportunity_failure":opportunity_failure,
         "risk_preflight_rejection_count":len(risk_preflight_rejections),
         "global_risk_wait":global_risk.blocked,

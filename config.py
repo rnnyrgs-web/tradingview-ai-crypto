@@ -42,9 +42,21 @@ STABLE_BASES = {
     "EUR","EURT","USD","USDK","BUSD"
 }
 
+# Canonical production opportunity horizons. These are immutable forecast windows:
+# a row is created with its horizon fixed up front, then resolved only at due_at.
+OPPORTUNITY_HORIZONS = ("6h", "12h", "24h", "48h", "72h", "7d")
+
 HORIZONS = {
+    # Legacy signal horizons retained for old trading_signals rows.
     "intraday": {"bars": ["15m", "1H"], "hold_hours": 4},
+    # Multi-horizon opportunity stream. Repeated bars are served through the
+    # existing exact-key market-data cache, so adding horizons does not imply one
+    # network request per horizon when symbol/bar/limit are identical.
+    "6h": {"bars": ["15m", "1H"], "hold_hours": 6},
+    "12h": {"bars": ["1H", "4H"], "hold_hours": 12},
     "24h": {"bars": ["1H", "4H"], "hold_hours": 24},
+    "48h": {"bars": ["1H", "4H"], "hold_hours": 48},
+    "72h": {"bars": ["4H", "1D"], "hold_hours": 72},
     "7d": {"bars": ["4H", "1D"], "hold_hours": 24*7},
     "30d": {"bars": ["1D"], "hold_hours": 24*30},
 }

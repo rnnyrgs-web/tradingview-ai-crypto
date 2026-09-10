@@ -2,7 +2,7 @@
 
 Readiness, confidence bounds and deterioration checks use deterministic,
 full-horizon, non-overlapping resolved forecasts. Frequent scans inside the same
-24h/7d outcome window are correlated observations and may not inflate evidence.
+forecast outcome window are correlated observations and may not inflate evidence.
 """
 
 from __future__ import annotations
@@ -10,13 +10,22 @@ from __future__ import annotations
 import math
 from datetime import datetime, timedelta
 
+from config import OPPORTUNITY_HORIZONS
+
 MIN_CALIBRATION_SAMPLES = 30
 BIN_WIDTH = 10
 RECENT_DETERIORATION_SAMPLES = 20
 MIN_PRIOR_DETERIORATION_SAMPLES = 30
 MAX_PRECISION_DROP = 0.15
 MIN_RECENT_WILSON_LOWER = 0.45
-HORIZON_SPAN = {"24h": timedelta(hours=24), "7d": timedelta(days=7)}
+HORIZON_SPAN = {
+    "6h": timedelta(hours=6),
+    "12h": timedelta(hours=12),
+    "24h": timedelta(hours=24),
+    "48h": timedelta(hours=48),
+    "72h": timedelta(hours=72),
+    "7d": timedelta(days=7),
+}
 
 
 def score_bin(score: float) -> tuple[int, int]:
@@ -190,7 +199,7 @@ def calibration_assessment(score, horizon, resolved, regime=None, minimum_sample
 
 def calibration_summary(resolved):
     summaries = []
-    for horizon in ("24h", "7d"):
+    for horizon in OPPORTUNITY_HORIZONS:
         raw_rows = [row for row in resolved if row.get("horizon") == horizon and isinstance(row.get("correct"), bool)]
         rows = _independent_rows(raw_rows, horizon)
         successes = sum(1 for row in rows if row["correct"])

@@ -42,10 +42,7 @@ def test_calibration_fails_closed_without_enough_independent_samples():
 
 
 def test_many_overlapping_rows_do_not_fake_calibration_readiness():
-    rows = [
-        _resolved_row(i, correct=True, spacing=timedelta(minutes=15))
-        for i in range(120)
-    ]
+    rows = [_resolved_row(i, correct=True, spacing=timedelta(minutes=15)) for i in range(120)]
     result = calibration_assessment(75, "24h", rows, "BULL")
     assert result["raw_matching_rows"] == 120
     assert result["independent_samples"] < 30
@@ -54,10 +51,7 @@ def test_many_overlapping_rows_do_not_fake_calibration_readiness():
 
 
 def test_missing_chronology_cannot_count_toward_live_calibration():
-    rows = [
-        {"horizon": "24h", "score": 75, "market_regime": "BULL", "correct": True}
-        for _ in range(100)
-    ]
+    rows = [{"horizon": "24h", "score": 75, "market_regime": "BULL", "correct": True} for _ in range(100)]
     result = calibration_assessment(75, "24h", rows, "BULL")
     assert result["raw_matching_rows"] == 100
     assert result["independent_samples"] == 0
@@ -113,9 +107,10 @@ def test_summary_reports_raw_and_independent_counts_separately():
         _resolved_row(0, horizon="7d", correct=True),
     ]
     summary = calibration_summary(rows)
-    assert summary["horizons"][0]["precision"] == 0.5
-    assert summary["horizons"][0]["raw_resolved_rows"] == 2
-    assert summary["horizons"][0]["independent_samples"] == 2
-    assert summary["horizons"][1]["precision"] == 1.0
-    assert summary["horizons"][1]["independent_samples"] == 1
-    assert summary["horizons"][0]["deterioration"]["ready"] is False
+    by_horizon = {item["horizon"]: item for item in summary["horizons"]}
+    assert by_horizon["24h"]["precision"] == 0.5
+    assert by_horizon["24h"]["raw_resolved_rows"] == 2
+    assert by_horizon["24h"]["independent_samples"] == 2
+    assert by_horizon["7d"]["precision"] == 1.0
+    assert by_horizon["7d"]["independent_samples"] == 1
+    assert by_horizon["24h"]["deterioration"]["ready"] is False

@@ -31,6 +31,7 @@ def test_expired_dashboard_session_rejected(monkeypatch):
 
 def test_dashboard_supports_all_predeclared_trade_horizons():
     assert dashboard.DASHBOARD_HORIZONS == ("6h","12h","24h","48h","72h","7d")
+    assert dashboard.PERSISTED_SIGNAL_HORIZONS == dashboard.DASHBOARD_HORIZONS
     for horizon in dashboard.DASHBOARD_HORIZONS:
         assert dashboard._duration({"horizon":horizon}) == horizon
         assert dashboard._dashboard_view(horizon) == horizon
@@ -38,39 +39,26 @@ def test_dashboard_supports_all_predeclared_trade_horizons():
     assert dashboard._dashboard_view("nonsense") == "all"
 
 
-def test_research_only_horizon_does_not_fabricate_rows(monkeypatch):
+def test_each_horizon_reads_real_persisted_rows(monkeypatch):
     called=[]
-    monkeypatch.setattr(dashboard,"fetch_ranked_opportunities",lambda **kwargs: called.append(kwargs) or [{"symbol":"SHOULD-NOT-APPEAR"}])
-    assert dashboard._rows_for_dashboard("6h") == []
-    assert dashboard._rows_for_dashboard("12h") == []
-    assert dashboard._rows_for_dashboard("48h") == []
-    assert dashboard._rows_for_dashboard("72h") == []
-    assert called == []
+    monkeypatch.setattr(dashboard,"fetch_ranked_opportunities",lambda **kwargs: called.append(kwargs) or [{"symbol":"REAL","horizon":kwargs["horizon"]}])
+    for horizon in dashboard.DASHBOARD_HORIZONS:
+        rows=dashboard._rows_for_dashboard(horizon)
+        assert rows[0]["horizon"]==horizon
+    assert [item["horizon"] for item in called] == list(dashboard.DASHBOARD_HORIZONS)
 
 
-def test_all_view_combines_persisted_horizons_and_keeps_duration(monkeypatch):
+def test_all_view_combines_all_persisted_horizons(monkeypatch):
     def fake_fetch(horizon,limit):
-        if horizon=="24h":
-            return [{"symbol":"BTC-USDT","horizon":"24h","rank":1,"evidence_score":81}]
-        if horizon=="7d":
-            return [{"symbol":"ETH-USDT","horizon":"7d","rank":1,"evidence_score":92}]
-        raise AssertionError("unexpected horizon")
+        return [{"symbol":horizon,"horizon":horizon,"rank":1,"evidence_score":80+dashboard.DASHBOARD_HORIZONS.index(horizon)}]
     monkeypatch.setattr(dashboard,"fetch_ranked_opportunities",fake_fetch)
     rows=dashboard._rows_for_dashboard("all")
-    assert [row["symbol"] for row in rows]==["ETH-USDT","BTC-USDT"]
-    assert [dashboard._duration(row) for row in rows]==["7d","24h"]
+    assert {row["horizon"] for row in rows}==set(dashboard.DASHBOARD_HORIZONS)
+    assert len(rows)==len(dashboard.DASHBOARD_HORIZONS)
 
 
 def test_calibration_metrics_show_forward_accuracy_floor_and_independent_n():
-    metrics=dashboard._calibration_metrics({
-        "calibration":{
-            "ready":True,
-            "empirical_precision":0.683,
-            "precision_95pct_lower":0.571,
-            "independent_samples":82,
-            "minimum_samples":30,
-        }
-    })
+    metrics=dashboard._calibration_metrics({"calibration":{"ready":True,"empirical_precision":0.683,"precision_95pct_lower":0.571,"independent_samples":82,"minimum_samples":30}})
     assert metrics["accuracy"]=="68%"
     assert metrics["floor"]=="57%"
     assert metrics["n"]=="N=82"
@@ -78,15 +66,7 @@ def test_calibration_metrics_show_forward_accuracy_floor_and_independent_n():
 
 
 def test_calibration_metrics_fail_closed_while_learning():
-    metrics=dashboard._calibration_metrics({
-        "calibration":{
-            "ready":False,
-            "independent_samples":12,
-            "minimum_samples":30,
-            "empirical_precision":0.99,
-            "precision_95pct_lower":0.98,
-        }
-    })
+    metrics=dashboard._calibration_metrics({"calibration":{"ready":False,"independent_samples":12,"minimum_samples":30,"empirical_precision":0.99,"precision_95pct_lower":0.98}})
     assert metrics["accuracy"]=="LEARNING"
     assert metrics["floor"]=="—"
     assert metrics["n"]=="N=12/30"
