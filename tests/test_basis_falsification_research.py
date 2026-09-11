@@ -29,19 +29,44 @@ def test_exact_horizon_examples_are_non_overlapping():
 
 
 def test_direction_is_learned_from_training_only_and_frozen_oos():
-    # At each 24h sample, positive basis predicts a positive next-24h move.
-    basis = [1.0] * 241
-    index = [100.0 + i for i in range(241)]
+    basis = [1.0] * 721
+    index = [100.0 + i for i in range(721)]
     out = bfr.evaluate_basis_horizon(
         _dataset(basis, index), 24, cost_bps=0.0, min_total_samples=8
     )
 
-    # Constant basis has no covariance, so no direction may be invented.
     assert out["available"] is False
     assert out["reason"] == "no_training_only_directional_association"
 
 
 def test_training_association_can_score_later_oos_without_threshold_search():
+    hours = 24 * 30
+    index = []
+    basis = []
+    level = 1000.0
+    for i in range(hours + 1):
+        block = min(i // 24, 29)
+        sign = 1 if block % 2 == 0 else -1
+        basis.append(float(sign))
+        if i > 0 and i % 24 == 0:
+            level += 20.0 * sign
+        index.append(level)
+
+    out = bfr.evaluate_basis_horizon(
+        _dataset(basis, index), 24, cost_bps=0.0, min_total_samples=8
+    )
+
+    assert out["available"] is True
+    assert out["training_only_direction"] in (-1, 1)
+    assert out["threshold_tuning"] is False
+    assert out["chronological"] is True
+    assert out["non_overlapping"] is True
+    assert out["oos_samples"] >= bfr.DEFAULT_MIN_OOS_SAMPLES
+    assert out["minimum_oos_samples"] == bfr.DEFAULT_MIN_OOS_SAMPLES
+    assert out["promotion_authority"] is False
+
+
+def test_small_oos_segment_fails_closed_before_scoring():
     hours = 24 * 12
     index = []
     basis = []
@@ -58,12 +83,10 @@ def test_training_association_can_score_later_oos_without_threshold_search():
         _dataset(basis, index), 24, cost_bps=0.0, min_total_samples=8
     )
 
-    assert out["available"] is True
-    assert out["training_only_direction"] in (-1, 1)
-    assert out["threshold_tuning"] is False
-    assert out["chronological"] is True
-    assert out["non_overlapping"] is True
-    assert out["promotion_authority"] is False
+    assert out["available"] is False
+    assert out["reason"] == "insufficient_oos_samples_before_scoring"
+    assert out["oos_samples"] < bfr.DEFAULT_MIN_OOS_SAMPLES
+    assert out["minimum_oos_samples"] == bfr.DEFAULT_MIN_OOS_SAMPLES
 
 
 def test_future_label_requires_exact_timestamp():
