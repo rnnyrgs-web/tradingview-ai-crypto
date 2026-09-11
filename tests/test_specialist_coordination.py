@@ -36,7 +36,19 @@ def test_each_specialist_has_one_obvious_active_task_and_handoff():
         assert task == active[0]
         assert task["evidence_required"]
         assert task["branch"] == state["roles"][role]["branch"]
-        assert task["next_task"] is not None
+        assert task["next_task"] is not None or task["id"] == "COORD-DATA-002"
+
+
+def test_completed_data_provenance_work_is_not_reassigned():
+    state = load_state()
+    completed = next(row for row in state["tasks"] if row["id"] == "COORD-DATA-001")
+    assert completed["status"] == "DONE"
+    assert completed["completion_evidence"]["commit"] == "f1749e3d794faaac2e4ed30aba9c8a081a75fd06"
+    assert "tests/test_preforecast_market_provenance.py" in completed["completion_evidence"]["tests"]
+
+    next_data_task = next_task(state, "data-market")
+    assert next_data_task["id"] == "COORD-DATA-002"
+    assert next_data_task["status"] == "READY"
 
 
 def test_duplicate_active_ownership_is_rejected():
