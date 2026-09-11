@@ -1,0 +1,49 @@
+{
+  "task_id": "COORD-DATA-003",
+  "candidate_id": "DATA-BASIS-001",
+  "status": "ENABLED_FOR_RESEARCH_COLLECTION",
+  "purpose": "Make the already-frozen basis candidate falsifiable with sufficient bounded historical coverage; do not change any production decision.",
+  "collector": {
+    "module": "basis_history_research.py",
+    "venue": "OKX",
+    "mark_endpoint": "/api/v5/market/history-mark-price-candles",
+    "index_endpoint": "/api/v5/market/history-index-candles",
+    "bar": "1H",
+    "pagination": "bounded older-only after cursor",
+    "maximum_pages_per_source": 50,
+    "maximum_target_points": 5000,
+    "completed_candles_only": true,
+    "alignment": "exact_shared_timestamp_only",
+    "interpolation": false,
+    "nearest_neighbor_matching": false,
+    "forward_fill": false
+  },
+  "scientific_constraints": {
+    "primary_horizons": ["24h", "7d"],
+    "secondary_horizons": ["6h", "12h", "48h", "72h"],
+    "chronological_non_overlap_required": true,
+    "candidate_definition_frozen_before_outcome_inspection": true,
+    "multiple_testing_accounting_required": true,
+    "realistic_after_cost_comparison_required": true,
+    "regime_and_liquidity_stability_required": true,
+    "untouched_oos_required_before_any_promotion_review": true,
+    "genuine_forward_evidence_required_before_any_promotion_review": true,
+    "retroactive_prediction_ledger_enrichment_forbidden": true
+  },
+  "rejection_rules": [
+    "reject if exact-timestamp coverage is insufficient or unstable",
+    "reject if timestamp/provenance safety cannot be defended",
+    "reject if chronological incremental value versus the existing evidence set is unstable",
+    "reject if apparent edge disappears after realistic execution costs",
+    "reject if the feature is redundant with existing evidence",
+    "reject if robustness or multiple-testing controls fail"
+  ],
+  "authority": {
+    "research_only": true,
+    "signal_authority": false,
+    "paper_authority": false,
+    "broker_authority": false,
+    "promotion_authority": false,
+    "threshold_changes": false
+  }
+}
