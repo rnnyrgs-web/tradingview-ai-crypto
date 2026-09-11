@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from market_data import _aligned_basis_history
 
 
@@ -59,8 +61,8 @@ def test_basis_alignment_uses_only_exact_shared_timestamps_without_interpolation
     aligned = _aligned_basis_history(marks, indexes)
 
     assert [row["ts"] for row in aligned] == [1_000, 4_000]
-    assert aligned[0]["basis_bps"] == 100.0
-    assert aligned[1]["basis_bps"] == 400.0
+    assert aligned[0]["basis_bps"] == pytest.approx(100.0)
+    assert aligned[1]["basis_bps"] == pytest.approx(400.0)
     assert all(row["ts"] not in {2_000, 3_000} for row in aligned)
 
 
