@@ -118,7 +118,19 @@ def test_run_opens_source_level_circuit_after_first_http_451(monkeypatch):
         calls.append(base)
         return runner._OIHistory([], source_status="http_451")
 
+    def fake_v3(candles, oi, *, horizon, bar):
+        return {
+            "families": [
+                {
+                    "family": "price_oi_correlation_v3",
+                    "available": bool(oi),
+                    "reason": None if oi else "oi_unavailable",
+                }
+            ]
+        }
+
     monkeypatch.setattr(runner, "_oi_points", fake_oi)
+    monkeypatch.setattr(runner, "score_shadow_signal_v3", fake_v3)
 
     report = runner.run(persist=False)
     diagnostic = report["oi_source_diagnostics"]
