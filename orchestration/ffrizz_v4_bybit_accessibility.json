@@ -1,0 +1,34 @@
+{
+  "experiment_id": "FFRIZZ_SECONDARY_V4_BYBIT_OI_ACCESS_PROBE",
+  "kind": "source_accessibility_negative_result",
+  "status": "blocked_current_render_environment",
+  "observed_at_utc": "2026-09-11T07:03:15Z",
+  "venue": "bybit",
+  "data_family": "historical_open_interest",
+  "runtime_environment": "current_render_research_coordinator",
+  "requests_attempted": 1,
+  "bounded_http_result": "http_403",
+  "points_observed": 0,
+  "scientific_interpretation": "The current Render environment cannot establish structural accessibility to the tested public Bybit historical-open-interest route. This is an infrastructure/source-access result only, not an alpha result and not evidence against causal OI alignment itself.",
+  "do_not_do": [
+    "do not silently substitute Bybit data into Binance V1/V2/V3 fingerprints",
+    "do not proxy around or spoof geography to bypass source restrictions",
+    "do not tune signal thresholds from this result",
+    "do not repeatedly probe this source without a material environment or source-policy change",
+    "do not pool this accessibility result with predictive/OOS/forward evidence"
+  ],
+  "retry_only_if": [
+    "the deployment region or network environment materially changes",
+    "Bybit access policy materially changes",
+    "the tested endpoint or documented request contract materially changes"
+  ],
+  "next_research_direction": "Prefer already-accessible, public, timestamp-defensible data sources and high-information experiments that do not require bypassing source restrictions. Any alternative OI venue requires its own bounded accessibility check and separately predeclared immutable venue/timestamp/provenance fingerprint before predictive testing.",
+  "authority": {
+    "signal_scoring": false,
+    "persistence": false,
+    "paper_trade": false,
+    "promotion": false,
+    "broker": false,
+    "live_trade": false
+  }
+}
