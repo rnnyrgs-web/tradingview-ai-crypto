@@ -200,7 +200,7 @@
       "id": "COORD-DATA-002",
       "priority": 20,
       "owner": "data-market",
-      "status": "READY",
+      "status": "DONE",
       "title": "Evaluate next highest-value timestamp-safe market input after provenance capture",
       "dependencies": ["COORD-DATA-001"],
       "blockers": [],
@@ -209,6 +209,13 @@
       "pr": null,
       "evidence_required": ["pre-forecast availability", "point-in-time safety", "measurable incremental predictive value before production use"],
       "completion_rule": "Prefer funding/open-interest/basis/liquidity inputs only when provenance and timestamp safety are defensible.",
+      "completion_evidence": {
+        "candidate_id": "DATA-BASIS-001",
+        "selection_pr": 273,
+        "history_collector_pr": 275,
+        "stage1_falsification_pr": 277,
+        "note": "Exact-shared-timestamp completed-candle OKX mark/index basis was selected and frozen before outcome inspection; stage-1 chronological falsification is integrated but does not establish incremental value or promotion eligibility."
+      },
       "next_task": "COORD-DATA-003"
     },
     {
@@ -305,8 +312,8 @@
       "id": "COORD-DATA-003",
       "priority": 27,
       "owner": "data-market",
-      "status": "QUEUED",
-      "title": "Falsify incremental value of the selected timestamp-safe market input",
+      "status": "READY",
+      "title": "Falsify incremental value of DATA-BASIS-001",
       "dependencies": ["COORD-DATA-002"],
       "blockers": [],
       "issue": null,
@@ -319,7 +326,7 @@
         "missing/stale/malformed input fails closed",
         "no production use without canonical gates"
       ],
-      "completion_rule": "Reject the input if it adds no stable timestamp-safe predictive value; do not keep it merely because it increases feature count.",
+      "completion_rule": "Reject DATA-BASIS-001 if it adds no stable timestamp-safe predictive value; do not keep it merely because it increases feature count.",
       "next_task": null
     }
   ]
