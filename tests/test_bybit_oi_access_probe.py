@@ -59,6 +59,22 @@ def test_probe_classifies_geographic_http_block_without_leaking_details():
     assert FORBIDDEN_KEYS.isdisjoint(result)
 
 
+def test_probe_distinguishes_common_4xx_without_leaking_response_details():
+    for status_code, expected in ((400, "http_400"), (401, "http_401"), (403, "http_403"), (404, "http_404"), (429, "http_429")):
+        def handler(request, status_code=status_code):
+            return httpx.Response(status_code, text="sensitive upstream detail", request=request)
+
+        with _client(handler) as client:
+            result = probe(client=client)
+
+        assert result["status"] == expected
+        assert result["points_observed"] == 0
+        assert result["requests_attempted"] == 1
+        assert FORBIDDEN_KEYS.isdisjoint(result)
+        assert result["used_for_signal_scoring"] is False
+        assert result["trade_authority"] is False
+
+
 def test_probe_fails_closed_on_application_error_or_malformed_rows():
     def app_error(request):
         return httpx.Response(200, json={"retCode": 10001, "retMsg": "bad"}, request=request)
