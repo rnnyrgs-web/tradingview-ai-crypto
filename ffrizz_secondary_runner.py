@@ -54,6 +54,11 @@ OI_SOURCE_STATUSES = {
     "available",
     "valid_empty",
     "http_error",
+    "http_451",
+    "http_429",
+    "http_other_4xx",
+    "http_5xx",
+    "http_other",
     "timeout",
     "network_error",
     "invalid_payload",
@@ -164,6 +169,9 @@ def _oi_points(base):
     if isinstance(points, list) and points:
         return _OIHistory(points, source_status="available")
     if source_errors:
+        bucket = str(source_errors[0].get("http_status_bucket") or "")
+        if bucket in OI_SOURCE_STATUSES:
+            return _OIHistory([], source_status=bucket)
         return _OIHistory(
             [],
             source_status=_classify_oi_source_error(source_errors[0].get("error_type")),
