@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import tempfile
 from datetime import datetime, timezone
@@ -13,6 +14,7 @@ from research_director import build_daily_lead_report, build_mission, claim_miss
 
 _STATE_PATH = Path(os.getenv("RESEARCH_DIRECTOR_STATE_PATH", str(Path(tempfile.gettempdir()) / "tradingview-ai-research-director.json")))
 _lock = Lock()
+log = logging.getLogger(__name__)
 _state: dict[str, Any] = {"updated_at": None, "missions": [], "claims": [], "next_missions": [], "daily_lead_report": {}, "research_only": True, "trade_authority": False, "promotion_authority": False, "write_authority": False}
 _bybit_probe_ran = False
 _bybit_probe_result: dict[str, Any] | None = None
@@ -48,6 +50,7 @@ def _ensure_bybit_probe() -> dict[str, Any]:
     except Exception: raw = {"status": "source_error", "points_observed": 0}
     result = _compact_bybit_probe(raw)
     with _lock: _bybit_probe_result = result
+    log.info("bybit_oi_access_probe %s", result)
     return dict(result)
 
 
