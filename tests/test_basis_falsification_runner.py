@@ -1,6 +1,11 @@
 import basis_falsification_runner as runner
 
 
+def test_runner_uses_larger_bounded_window_for_7d_rejection_power():
+    assert runner.DEFAULT_TARGET_POINTS == 8000
+    assert runner.DEFAULT_MAX_PAGES == 85
+
+
 def test_runner_is_research_only_and_never_exposes_raw_points(monkeypatch):
     monkeypatch.setattr(
         runner,
