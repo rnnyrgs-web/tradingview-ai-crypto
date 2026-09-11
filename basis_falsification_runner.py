@@ -18,10 +18,11 @@ from basis_profitability_robustness import evaluate_primary_profitability_robust
 
 SUMMARY_ENV = "BASIS_FALSIFICATION_SUMMARY_PATH"
 DEFAULT_BASE = "BTC"
-# 4,000 hourly observations give the frozen 7d non-overlap split enough room to
-# reach the predeclared 8-sample OOS floor without changing that floor.
-DEFAULT_TARGET_POINTS = 4000
-DEFAULT_MAX_PAGES = 40
+# The current 7d result has only 10 non-overlapping OOS observations. 8,000
+# hourly observations should produce roughly 19 OOS 7d samples under the frozen
+# 60/40 split, materially increasing rejection power without tuning the feature.
+DEFAULT_TARGET_POINTS = 8000
+DEFAULT_MAX_PAGES = 85
 
 
 def run() -> dict:
