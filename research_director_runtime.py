@@ -8,11 +8,14 @@ from pathlib import Path
 from threading import Lock
 from typing import Any
 
+from bybit_oi_access_probe import ALLOWED_STATUSES as BYBIT_OI_ALLOWED_STATUSES, SOURCE_ID as BYBIT_OI_SOURCE_ID, SYSTEM_ID as BYBIT_OI_SYSTEM_ID, probe as probe_bybit_oi_access
 from research_director import build_daily_lead_report, build_mission, claim_mission, rank_missions
 
 _STATE_PATH = Path(os.getenv("RESEARCH_DIRECTOR_STATE_PATH", str(Path(tempfile.gettempdir()) / "tradingview-ai-research-director.json")))
 _lock = Lock()
 _state: dict[str, Any] = {"updated_at": None, "missions": [], "claims": [], "next_missions": [], "daily_lead_report": {}, "research_only": True, "trade_authority": False, "promotion_authority": False, "write_authority": False}
+_bybit_probe_ran = False
+_bybit_probe_result: dict[str, Any] | None = None
 
 
 def _now() -> str: return datetime.now(timezone.utc).isoformat()
@@ -27,6 +30,25 @@ def _evidence_probability(evidence: dict[str, Any], fallback: float) -> float:
     if conclusion in {"no_dispatchable_hypothesis", "insufficient_evidence", "insufficient_history"}: return 0.25
     if evidence.get("research_blocked") is True: return 0.15
     return fallback
+
+
+def _compact_bybit_probe(raw: object) -> dict[str, Any]:
+    row = raw if isinstance(raw, dict) else {}; status = row.get("status")
+    if status not in BYBIT_OI_ALLOWED_STATUSES: status = "source_error"
+    points = row.get("points_observed"); points = points if isinstance(points, int) and not isinstance(points, bool) else 0
+    return {"system": BYBIT_OI_SYSTEM_ID, "diagnostic_only": True, "source": BYBIT_OI_SOURCE_ID, "status": status, "points_observed": max(0, min(points, 5)), "requests_attempted": 1, "symbol_level_data_exposed": False, "raw_payload_exposed": False, "venue_substitution": False, "used_for_signal_scoring": False, "persistence_authority": False, "paper_trade_authority": False, "trade_authority": False, "promotion_authority": False, "broker_authority": False}
+
+
+def _ensure_bybit_probe() -> dict[str, Any]:
+    global _bybit_probe_ran, _bybit_probe_result
+    with _lock:
+        if _bybit_probe_ran: return dict(_bybit_probe_result or _compact_bybit_probe({}))
+        _bybit_probe_ran = True
+    try: raw = probe_bybit_oi_access()
+    except Exception: raw = {"status": "source_error", "points_observed": 0}
+    result = _compact_bybit_probe(raw)
+    with _lock: _bybit_probe_result = result
+    return dict(result)
 
 
 def _mission_for_worker(name: str, row: dict[str, Any]):
@@ -62,7 +84,7 @@ def _write_state(payload: dict[str, Any]) -> None:
 
 
 def refresh_director(army: dict[str, Any]) -> dict[str, Any]:
-    workers = army.get("workers") if isinstance(army.get("workers"), dict) else {}; missions = [_mission_for_worker(name, row if isinstance(row, dict) else {}) for name, row in sorted(workers.items())]; claims=[]
+    bybit_probe = _ensure_bybit_probe(); workers = army.get("workers") if isinstance(army.get("workers"), dict) else {}; missions = [_mission_for_worker(name, row if isinstance(row, dict) else {}) for name, row in sorted(workers.items())]; claims=[]
     for name, row in sorted(workers.items()):
         if not isinstance(row, dict) or row.get("state") not in {"queued", "running"}: continue
         mission = next((item for item in missions if item.theme == name or item.lane == name), None)
@@ -70,7 +92,7 @@ def refresh_director(army: dict[str, Any]) -> dict[str, Any]:
         if mission is not None: claims.append(claim_mission(mission, worker_id=name, owner_lane=mission.lane).to_dict())
     claimed_ids={claim["mission_id"] for claim in claims}; next_missions=[m for m in rank_missions(missions) if not m.blocker and m.mission_id not in claimed_ids][:5]
     visible_missions=sorted(missions, key=lambda m:(m.priority,m.falsification_value,m.actionable_evidence_probability,m.expected_information_gain,m.expected_signal_impact,m.mission_id), reverse=True)
-    payload={"updated_at":_now(),"missions":[m.to_dict() for m in visible_missions],"claims":claims,"next_missions":[m.to_dict() for m in next_missions],"daily_lead_report":_daily_report(army,missions),"research_only":True,"trade_authority":False,"promotion_authority":False,"write_authority":False,"broker_connected":False,"automatic_strategy_promotion":False}
+    payload={"updated_at":_now(),"missions":[m.to_dict() for m in visible_missions],"claims":claims,"next_missions":[m.to_dict() for m in next_missions],"daily_lead_report":_daily_report(army,missions),"bybit_oi_access_probe":bybit_probe,"research_only":True,"trade_authority":False,"promotion_authority":False,"write_authority":False,"broker_connected":False,"automatic_strategy_promotion":False}
     with _lock: _state.clear(); _state.update(payload)
     _write_state(payload); return payload
 
