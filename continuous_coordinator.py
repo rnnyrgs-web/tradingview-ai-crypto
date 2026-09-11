@@ -19,6 +19,7 @@ from threading import Lock
 import httpx
 from fastapi import FastAPI
 
+from basis_observability import compact_basis_falsification
 from continuous_specialist_factory import run_factory, snapshot as specialist_factory_snapshot
 from continuous_worker_army import run_army, snapshot as worker_army_snapshot
 from cross_asset_runner import MIN_LIQUIDITY_SUBSET_COVERAGE
@@ -323,6 +324,7 @@ def observability_log_payload(army: object) -> dict:
         "task_restarts": supervisor.get("task_restarts"),
         "acc002_24h": compact_acc("cross-asset-rank-24h"),
         "acc002_7d": compact_acc("cross-asset-rank-7d"),
+        "basis_falsification": compact_basis_falsification(army),
         "ffrizz_forward": compact_ffrizz(),
         "trade_authority": False,
         "promotion_authority": False,
