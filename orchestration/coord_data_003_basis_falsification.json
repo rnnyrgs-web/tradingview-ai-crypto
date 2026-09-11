@@ -47,6 +47,38 @@
     "promotion_authority": false,
     "purpose": "Falsify whether Stage-1 basis profitability is merely unconditional market direction or disappears under conservative cost/subperiod stress."
   },
+  "latest_live_falsification_evidence": {
+    "captured_at": "2026-09-11T21:01:37Z",
+    "source_merge": "6e9884d060467686c015e93f5b9cbecd83e2dd81",
+    "stage": "stage1_and_stage2_evaluated",
+    "24h": {
+      "status": "REJECTED_CURRENT_FINGERPRINT",
+      "oos_samples": 67,
+      "stage1_avg_net_bps": -40.04052591975271,
+      "stage1_hit_rate": 0.5074626865671642,
+      "incremental_vs_training_only_constant_avg_net_bps": 4.297920330112952,
+      "cost_stress_2x_avg_net_bps": -52.04052591975271,
+      "cost_stress_3x_avg_net_bps": -64.04052591975271,
+      "first_half_avg_net_bps": -22.035603760435038,
+      "second_half_avg_net_bps": -57.51589154497281,
+      "training_direction_stable": true,
+      "reason": "Current chronological OOS expectancy is negative after canonical costs, both OOS halves are negative, higher cost stress worsens losses, and the rolling result reversed the earlier positive Stage-1 reading. Do not tune or rescue this 24h fingerprint."
+    },
+    "7d": {
+      "status": "CONTINUE_FALSIFICATION_NOT_PROMOTION_ELIGIBLE",
+      "oos_samples": 10,
+      "stage1_avg_net_bps": 242.46573387949078,
+      "stage1_hit_rate": 0.6,
+      "incremental_vs_training_only_constant_avg_net_bps": 563.5785180751835,
+      "cost_stress_2x_avg_net_bps": 230.46573387949078,
+      "cost_stress_3x_avg_net_bps": 218.46573387949078,
+      "first_half_avg_net_bps": 103.23970001075989,
+      "second_half_avg_net_bps": 381.69176774822165,
+      "training_direction_stable": false,
+      "reason": "Economically strong current OOS evidence survives fixed cost stress and beats the training-only constant-direction baseline, but only 10 OOS samples exist and the training association changes sign across checkpoints. Require additional independent stability, regime/liquidity, multiple-testing and genuine-forward evidence before untouched OOS or any promotion review."
+    }
+  },
+  "next_research_action": "Do not spend research cycles rescuing the rejected 24h fingerprint. Continue rejection-oriented 7d evidence accumulation and stability testing without threshold tuning or opening untouched OOS; reject 7d if the association or after-cost edge does not remain stable under independent evidence.",
   "rejection_rules": [
     "reject if exact-timestamp coverage is insufficient or unstable",
     "reject if fewer than 8 non-overlapping OOS samples remain for a primary-horizon stage-1 score",
