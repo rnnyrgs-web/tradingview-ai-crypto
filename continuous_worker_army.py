@@ -73,6 +73,11 @@ WORKERS = (
         script="cross_asset_runner.py",
     ),
     WorkerSpec("adaptive-accuracy", {}, script="research_adaptive_accuracy_runner.py"),
+    WorkerSpec(
+        "basis-falsification-btc",
+        {"BASIS_RESEARCH_BASE": "BTC", "BASIS_RESEARCH_TARGET_POINTS": "4000", "BASIS_RESEARCH_MAX_PAGES": "40"},
+        script="basis_falsification_runner.py",
+    ),
     WorkerSpec("learning-diagnostics", {}, script="research_learning_runner.py", compute_class="lightweight"),
     WorkerSpec("experiment-factory", {}, script="research_experiment_factory_runner.py", compute_class="lightweight"),
 )
@@ -80,6 +85,7 @@ WORKERS = (
 SUMMARY_ENV_BY_SCRIPT = {
     "cross_asset_runner.py": "CROSS_ASSET_SUMMARY_PATH",
     "research_adaptive_accuracy_runner.py": "RESEARCH_ADAPTIVE_ACCURACY_SUMMARY_PATH",
+    "basis_falsification_runner.py": "BASIS_FALSIFICATION_SUMMARY_PATH",
     "research_learning_runner.py": "RESEARCH_LEARNING_SUMMARY_PATH",
     "research_experiment_factory_runner.py": "RESEARCH_EXPERIMENT_SUMMARY_PATH",
 }
@@ -197,6 +203,8 @@ def _success_recheck_delay_seconds(spec: WorkerSpec, evidence) -> int:
     """Slow only evidence-blocked loops; never disguise software/source failures."""
     if not isinstance(evidence, dict):
         return REST_SECONDS
+    if spec.script == "basis_falsification_runner.py":
+        return NATURAL_HISTORY_RECHECK_SECONDS
     if spec.script == "cross_asset_runner.py":
         failure_types = evidence.get("failure_type_counts") or {}
         pure_history_block = (
