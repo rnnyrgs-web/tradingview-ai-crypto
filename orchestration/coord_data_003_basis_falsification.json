@@ -33,6 +33,20 @@
     "genuine_forward_evidence_required_before_any_promotion_review": true,
     "retroactive_prediction_ledger_enrichment_forbidden": true
   },
+  "stage2_profitability_robustness": {
+    "trigger": "stage1_available_result_only",
+    "training_only_constant_direction_baseline": true,
+    "baseline_and_basis_use_same_chronological_split": true,
+    "basis_direction_frozen_from_training_only": true,
+    "constant_direction_frozen_from_training_only": true,
+    "fixed_cost_stress_multipliers": [1.0, 2.0, 3.0],
+    "oos_threshold_tuning": false,
+    "oos_subperiod_halves_are_diagnostic_only": true,
+    "training_direction_checkpoints": [0.5, 0.75, 1.0],
+    "untouched_oos_opened": false,
+    "promotion_authority": false,
+    "purpose": "Falsify whether Stage-1 basis profitability is merely unconditional market direction or disappears under conservative cost/subperiod stress."
+  },
   "rejection_rules": [
     "reject if exact-timestamp coverage is insufficient or unstable",
     "reject if fewer than 8 non-overlapping OOS samples remain for a primary-horizon stage-1 score",
