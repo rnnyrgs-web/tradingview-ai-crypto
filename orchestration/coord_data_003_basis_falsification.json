@@ -23,6 +23,9 @@
     "secondary_horizons": ["6h", "12h", "48h", "72h"],
     "chronological_non_overlap_required": true,
     "candidate_definition_frozen_before_outcome_inspection": true,
+    "minimum_oos_samples_per_primary_horizon": 8,
+    "minimum_oos_rule_frozen_before_outcome_inspection": true,
+    "minimum_oos_sufficiency_is_not_promotion_evidence": true,
     "multiple_testing_accounting_required": true,
     "realistic_after_cost_comparison_required": true,
     "regime_and_liquidity_stability_required": true,
@@ -32,6 +35,7 @@
   },
   "rejection_rules": [
     "reject if exact-timestamp coverage is insufficient or unstable",
+    "reject if fewer than 8 non-overlapping OOS samples remain for a primary-horizon stage-1 score",
     "reject if timestamp/provenance safety cannot be defended",
     "reject if chronological incremental value versus the existing evidence set is unstable",
     "reject if apparent edge disappears after realistic execution costs",
