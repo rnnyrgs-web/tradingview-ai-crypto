@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "task_id": "COORD-DATA-002",
+  "experiment_id": "DATA-BASIS-001",
+  "status": "PREDECLARED_RESEARCH_ONLY",
+  "candidate": {
+    "name": "okx_mark_index_basis_1h",
+    "source": "okx_public_mark_and_index_history",
+    "bar": "1H",
+    "definition": "basis_bps = 10000 * (mark_close / index_close - 1)",
+    "timestamp_alignment": "exact_shared_timestamp_only",
+    "completed_candles_only": true,
+    "interpolation_allowed": false,
+    "nearest_neighbor_allowed": false,
+    "forward_fill_allowed": false,
+    "historical_oi_dependency": false
+  },
+  "selection_rationale": {
+    "blocked_oi_routes_reused": false,
+    "already_supported_by_existing_public_data_path": true,
+    "new_paid_service_required": false,
+    "expected_information_gain": "medium_high",
+    "expected_after_cost_signal_impact": "unknown_until_falsified",
+    "compute_cost": "low",
+    "overfitting_risk": "controlled_by_single_frozen_candidate_and_chronological_falsification"
+  },
+  "evaluation_plan": {
+    "primary_horizons": ["24h", "7d"],
+    "secondary_horizons": ["6h", "12h", "48h", "72h"],
+    "required_checks": [
+      "preforecast_availability_and_timestamp_provenance",
+      "point_in_time_safety",
+      "missing_stale_malformed_fail_closed",
+      "chronological_non_overlapping_evaluation",
+      "incremental_value_vs_current_evidence",
+      "realistic_after_cost_expectancy",
+      "regime_and_liquidity_stability",
+      "multiple_testing_accounting",
+      "untouched_oos_and_forward_validation_before_any_promotion"
+    ],
+    "candidate_threshold_tuning_allowed": false,
+    "production_use_allowed": false,
+    "paper_trade_authority": false,
+    "broker_authority": false,
+    "promotion_authority": false
+  },
+  "falsification": {
+    "next_task": "COORD-DATA-003",
+    "reject_if": [
+      "timestamp_or_provenance_cannot_be_defended",
+      "coverage_is_too_sparse_or_unstable",
+      "incremental_oos_signal_quality_is_not_stable",
+      "apparent_edge_disappears_after_realistic_costs",
+      "benefit_is_redundant_with_existing_features",
+      "robustness_or_multiple_testing_controls_fail"
+    ],
+    "retain_merely_to_increase_feature_count": false
+  },
+  "safety": {
+    "research_only": true,
+    "changes_production_behavior": false,
+    "changes_signal_thresholds": false,
+    "changes_live_promotions": false,
+    "changes_paper_ledger": false,
+    "changes_broker_state": false,
+    "changes_worker_concurrency": false,
+    "adds_recurring_cost": false
+  }
+}
