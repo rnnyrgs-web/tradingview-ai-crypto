@@ -184,7 +184,11 @@ def _worker_env(spec: WorkerSpec, summary_path: str | None = None) -> dict[str, 
 
 
 def _is_accuracy_worker(spec: WorkerSpec) -> bool:
-    return spec.script in {"cross_asset_runner.py", "research_adaptive_accuracy_runner.py"}
+    return spec.script in {
+        "cross_asset_runner.py",
+        "research_adaptive_accuracy_runner.py",
+        "basis_falsification_runner.py",
+    }
 
 
 def _is_lightweight_worker(spec: WorkerSpec) -> bool:
