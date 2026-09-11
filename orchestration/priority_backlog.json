@@ -13,9 +13,11 @@
       "status": "READY",
       "owner": "market-microstructure",
       "title": "Execution-realism and market-state evidence",
-      "goal": "Extend research with timestamp-safe spread, slippage, funding history, basis, open-interest changes, liquidation context and execution-cost evidence without fabricating unavailable data.",
+      "goal": "Execute the frozen DATA-BASIS-001 research contract first: evaluate exact-timestamp OKX mark/index basis as the next timestamp-safe derivatives input, then falsify its incremental after-cost value before considering broader funding/OI/liquidation expansion. Do not re-probe unchanged blocked historical-OI routes.",
       "acceptance": [
+        "DATA-BASIS-001 remains research-only with exact shared-timestamp alignment and no interpolation",
         "new evidence is timestamp-safe and fail-closed",
+        "incremental value is tested chronologically against current evidence with realistic costs and multiple-testing accounting",
         "backtests model realistic costs and do not assume perfect fills",
         "research-only features cannot authorize live trades",
         "deterministic regression tests pass"
