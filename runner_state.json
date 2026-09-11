@@ -9,7 +9,7 @@
     "started_at": "2026-09-11T15:50:05Z",
     "task_id": "COORD-DATA-003"
   },
-  "last_seen_main_sha": "eaaa33317e5912ffebd829a00277f434ff618566",
+  "last_seen_main_sha": "3d5c8db135d79da2dc2f523f774edefbfae6aff3",
   "next_eligible_at": "2026-09-11T14:52:05Z",
   "paused_reason": "TASK_RETRY_LIMIT",
   "runs": [
