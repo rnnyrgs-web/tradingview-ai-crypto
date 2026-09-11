@@ -77,7 +77,7 @@ def test_duplicate_active_task_prevents_second_ownership():
     state = default_state()
     state["active_task"] = {
         "role": "data-market",
-        "task_id": "COORD-DATA-001",
+        "task_id": "COORD-DATA-002",
         "phase": "WAITING_CI",
         "base_main_sha": MAIN_SHA,
         "started_at": "2026-09-09T03:30:00Z",
@@ -126,7 +126,7 @@ def test_stale_main_blocks_active_work():
     state = default_state()
     state["active_task"] = {
         "role": "data-market",
-        "task_id": "COORD-DATA-001",
+        "task_id": "COORD-DATA-002",
         "phase": "WAITING_CI",
         "base_main_sha": "b" * 40,
         "started_at": "2026-09-09T03:30:00Z",
@@ -258,7 +258,7 @@ def test_shutdown_restart_recovers_abandoned_running_lease_without_losing_usage_
 
 def test_coordination_priority_selects_only_highest_ready_autonomous_role():
     task = highest_ready_task(_config(), _coord())
-    assert task["id"] == "COORD-DATA-001"
+    assert task["id"] == "COORD-DATA-002"
     assert task["owner"] == "data-market"
 
 

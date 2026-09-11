@@ -34,7 +34,7 @@
       "id": "COORD-DATA-001",
       "priority": 1,
       "owner": "data-market",
-      "status": "READY",
+      "status": "DONE",
       "title": "Future-only pre-forecast agreement provenance",
       "dependencies": [],
       "blockers": [],
@@ -50,6 +50,14 @@
         "exact-head Security and Reliability success"
       ],
       "completion_rule": "Data capture only; no production threshold or fingerprint change.",
+      "completion_evidence": {
+        "commit": "f1749e3d794faaac2e4ed30aba9c8a081a75fd06",
+        "tests": [
+          "tests/test_preforecast_market_provenance.py",
+          "tests/test_prediction_ledger_schema.py"
+        ],
+        "note": "Future-only timestamp-safe preforecast provenance is already integrated on main; historical rows are not retroactively enriched."
+      },
       "next_task": "COORD-DATA-002"
     },
     {
@@ -192,7 +200,7 @@
       "id": "COORD-DATA-002",
       "priority": 20,
       "owner": "data-market",
-      "status": "QUEUED",
+      "status": "READY",
       "title": "Evaluate next highest-value timestamp-safe market input after provenance capture",
       "dependencies": ["COORD-DATA-001"],
       "blockers": [],
@@ -201,7 +209,7 @@
       "pr": null,
       "evidence_required": ["pre-forecast availability", "point-in-time safety", "measurable incremental predictive value before production use"],
       "completion_rule": "Prefer funding/open-interest/basis/liquidity inputs only when provenance and timestamp safety are defensible.",
-      "next_task": null
+      "next_task": "COORD-DATA-003"
     },
     {
       "id": "COORD-VAL-002",
@@ -291,6 +299,27 @@
       "pr": null,
       "evidence_required": ["exact candidate SHA reviewed", "failure paths remain fail-closed", "no safety gate weakening"],
       "completion_rule": "Testing/Security remains independent of the authoring specialist.",
+      "next_task": null
+    },
+    {
+      "id": "COORD-DATA-003",
+      "priority": 27,
+      "owner": "data-market",
+      "status": "QUEUED",
+      "title": "Falsify incremental value of the selected timestamp-safe market input",
+      "dependencies": ["COORD-DATA-002"],
+      "blockers": [],
+      "issue": null,
+      "branch": "agent/data-market",
+      "pr": null,
+      "evidence_required": [
+        "candidate definition frozen before outcome inspection",
+        "chronological non-overlapping evaluation",
+        "incremental after-cost value versus current evidence set",
+        "missing/stale/malformed input fails closed",
+        "no production use without canonical gates"
+      ],
+      "completion_rule": "Reject the input if it adds no stable timestamp-safe predictive value; do not keep it merely because it increases feature count.",
       "next_task": null
     }
   ]
