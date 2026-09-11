@@ -6,17 +6,36 @@ import json
 from datetime import timedelta
 from pathlib import Path
 
-from agents.autonomous_cloud_runner import (
-    PolicyError,
-    apply_ci_status,
-    iso,
-    load_config,
-    load_state,
-    reserved_cost_usd,
-    retry_delay_seconds,
-    save_state,
-    utc_now,
-)
+# This helper is executed directly by the GitHub Actions workflow after the
+# openai-agents package is installed. That dependency owns a top-level
+# ``agents`` package, so importing our sibling through ``agents.*`` can resolve
+# to the dependency instead of this repository. Use a relative import when the
+# file is imported as a module and a direct sibling import when it is executed
+# as a script.
+if __package__:
+    from .autonomous_cloud_runner import (
+        PolicyError,
+        apply_ci_status,
+        iso,
+        load_config,
+        load_state,
+        reserved_cost_usd,
+        retry_delay_seconds,
+        save_state,
+        utc_now,
+    )
+else:
+    from autonomous_cloud_runner import (
+        PolicyError,
+        apply_ci_status,
+        iso,
+        load_config,
+        load_state,
+        reserved_cost_usd,
+        retry_delay_seconds,
+        save_state,
+        utc_now,
+    )
 
 
 def mark_waiting_ci(state: dict, *, branch: str, pr_number: int, head_sha: str) -> dict:
