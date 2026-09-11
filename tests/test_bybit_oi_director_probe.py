@@ -92,7 +92,7 @@ def test_director_logs_only_sanitized_probe_result(monkeypatch, caplog):
     )
     _reset_probe_state()
 
-    with caplog.at_level(logging.INFO, logger=runtime.__name__):
+    with caplog.at_level(logging.INFO, logger=runtime.log.name):
         runtime._ensure_bybit_probe()
 
     text = caplog.text
