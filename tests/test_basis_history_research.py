@@ -35,6 +35,39 @@ def test_paginated_basis_collection_uses_older_cursor_and_exact_overlap(monkeypa
     assert sum(1 for _, params in calls if params.get("after") == "300") == 2
 
 
+def test_basis_collection_uses_one_slack_page_when_open_candle_is_filtered(monkeypatch):
+    calls = []
+
+    def fake_okx_get(endpoint, params):
+        calls.append((endpoint, dict(params)))
+        is_mark = "mark-price" in endpoint
+        after = params.get("after")
+        if after is None:
+            return [
+                _row(500, 101 if is_mark else 100, confirm="0"),
+                _row(400, 100.4 if is_mark else 100),
+                _row(300, 100.3 if is_mark else 100),
+            ]
+        if after == "300":
+            return [_row(200, 100.2 if is_mark else 100)]
+        if after == "200":
+            return [_row(100, 100.1 if is_mark else 100)]
+        return []
+
+    monkeypatch.setattr(bhr, "okx_get", fake_okx_get)
+    out = bhr.collect_okx_basis_history("BTC", target_points=4, max_pages=2)
+
+    assert out["available"] is True
+    assert out["point_count"] == 4
+    assert out["mark_pages"] == 3
+    assert out["index_pages"] == 3
+    assert [p["ts"] for p in out["points"]] == [100, 200, 300, 400]
+    assert out["alignment"] == "exact_shared_timestamp_only"
+    assert out["completed_candles_only"] is True
+    assert out["interpolation_allowed"] is False
+    assert len(calls) == 6
+
+
 def test_basis_collection_rejects_sparse_or_unfinished_overlap(monkeypatch):
     def fake_okx_get(endpoint, params):
         if params.get("after") is not None:
