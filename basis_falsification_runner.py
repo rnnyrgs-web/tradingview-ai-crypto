@@ -1,8 +1,9 @@
 """Bounded research-only runtime for COORD-DATA-003 / DATA-BASIS-001.
 
-This runner makes the already-frozen stage-1 falsification executable inside the
-existing worker army. It has no signal, paper, promotion, broker, or live-trade
-authority and writes only a compact evidence summary for coordinator diagnostics.
+This runner executes the frozen stage-1 falsification plus a rejection-oriented
+stage-2 profitability robustness diagnostic inside the existing worker army. It
+has no signal, paper, promotion, broker, or live-trade authority and writes only
+a compact evidence summary for coordinator diagnostics.
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ from pathlib import Path
 
 from basis_falsification_research import evaluate_primary_horizons
 from basis_history_research import collect_okx_basis_history
+from basis_profitability_robustness import evaluate_primary_profitability_robustness
 
 SUMMARY_ENV = "BASIS_FALSIFICATION_SUMMARY_PATH"
 DEFAULT_BASE = "BTC"
@@ -32,12 +34,26 @@ def run() -> dict:
     results = evaluation.get("results") if isinstance(evaluation.get("results"), dict) else {}
     available_results = sum(1 for row in results.values() if isinstance(row, dict) and row.get("available") is True)
 
+    robustness_eval = evaluate_primary_profitability_robustness(dataset)
+    robustness_results = robustness_eval.get("results") if isinstance(robustness_eval.get("results"), dict) else {}
+    available_robustness = sum(
+        1 for row in robustness_results.values()
+        if isinstance(row, dict) and row.get("available") is True
+    )
+
+    if available_results and available_robustness:
+        evidence_conclusion = "stage1_and_stage2_evaluated"
+    elif available_results:
+        evidence_conclusion = "stage1_evaluated"
+    else:
+        evidence_conclusion = "insufficient_evidence"
+
     return {
         "research_only": True,
         "task_id": "COORD-DATA-003",
         "candidate_id": "DATA-BASIS-001",
         "base": base,
-        "evidence_conclusion": "stage1_evaluated" if available_results else "insufficient_evidence",
+        "evidence_conclusion": evidence_conclusion,
         "collection": {
             "available": dataset.get("available") is True,
             "reason": dataset.get("reason"),
@@ -53,6 +69,8 @@ def run() -> dict:
         },
         "results": results,
         "available_primary_results": available_results,
+        "profitability_robustness": robustness_results,
+        "available_robustness_results": available_robustness,
         "production_authority": False,
         "signal_authority": False,
         "paper_authority": False,

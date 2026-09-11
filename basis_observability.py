@@ -1,7 +1,7 @@
 """Bounded observability projection for research-only DATA-BASIS falsification.
 
-This module exposes only fixed, aggregate Stage-1 evidence needed to decide whether
-DATA-BASIS-001 should be rejected or advanced to additional research. Raw market
+This module exposes only fixed aggregate Stage-1 and Stage-2 evidence needed to
+decide whether DATA-BASIS-001 should be rejected or studied further. Raw market
 rows, timestamps, arbitrary upstream errors, and any trading authority are never
 projected.
 """
@@ -21,6 +21,16 @@ _ALLOWED_RESULT_REASONS = {
     "insufficient_non_overlapping_exact_horizon_samples",
     "insufficient_oos_samples_before_scoring",
     "no_training_only_directional_association",
+    "insufficient_oos_nonzero_feature_samples",
+}
+_ALLOWED_ROBUSTNESS_REASONS = {
+    "invalid_research_dataset",
+    "dataset_unavailable",
+    "source_error",
+    "insufficient_exact_timestamp_coverage",
+    "insufficient_non_overlapping_exact_horizon_samples",
+    "insufficient_oos_samples_before_robustness",
+    "training_direction_unavailable",
     "insufficient_oos_nonzero_feature_samples",
 }
 
@@ -72,6 +82,63 @@ def _compact_result(raw: object, expected_horizon: int) -> dict | None:
     }
 
 
+def _compact_stress(raw: object) -> dict | None:
+    if not isinstance(raw, dict):
+        return None
+    return {
+        "cost_bps_round_trip": _finite_number(raw.get("cost_bps_round_trip")),
+        "avg_net_bps": _finite_number(raw.get("avg_net_bps")),
+        "positive_after_cost": raw.get("positive_after_cost") is True,
+    }
+
+
+def _compact_robustness(raw: object, expected_horizon: int) -> dict | None:
+    if not isinstance(raw, dict):
+        return None
+    available = raw.get("available") is True
+    basis_direction = raw.get("training_only_basis_direction")
+    constant_direction = raw.get("training_only_constant_direction")
+    if basis_direction not in (-1, 1):
+        basis_direction = None
+    if constant_direction not in (-1, 1):
+        constant_direction = None
+    checkpoints = raw.get("training_direction_checkpoints")
+    if not isinstance(checkpoints, list) or len(checkpoints) != 3 or any(x not in (-1, 1, None) for x in checkpoints):
+        checkpoints = None
+    stress = raw.get("cost_stress") if isinstance(raw.get("cost_stress"), dict) else {}
+    return {
+        "available": available,
+        "reason": _reason(raw.get("reason"), _ALLOWED_ROBUSTNESS_REASONS),
+        "horizon_hours": expected_horizon,
+        "chronological": raw.get("chronological") is True,
+        "non_overlapping": raw.get("non_overlapping") is True,
+        "threshold_tuning": raw.get("threshold_tuning") is True,
+        "untouched_oos_opened": raw.get("untouched_oos_opened") is True,
+        "oos_samples": _nonnegative_int(raw.get("oos_samples")),
+        "training_only_basis_direction": basis_direction,
+        "training_only_constant_direction": constant_direction,
+        "training_direction_checkpoints": checkpoints,
+        "training_direction_stable": raw.get("training_direction_stable") is True,
+        "basis_oos_hit_rate": _finite_number(raw.get("basis_oos_hit_rate")),
+        "constant_baseline_oos_hit_rate": _finite_number(raw.get("constant_baseline_oos_hit_rate")),
+        "basis_oos_avg_net_bps": _finite_number(raw.get("basis_oos_avg_net_bps")),
+        "constant_baseline_oos_avg_net_bps": _finite_number(raw.get("constant_baseline_oos_avg_net_bps")),
+        "incremental_vs_constant_avg_net_bps": _finite_number(raw.get("incremental_vs_constant_avg_net_bps")),
+        "beats_training_only_constant_baseline": raw.get("beats_training_only_constant_baseline") is True,
+        "cost_stress": {
+            "1x": _compact_stress(stress.get("1x")),
+            "2x": _compact_stress(stress.get("2x")),
+            "3x": _compact_stress(stress.get("3x")),
+        },
+        "oos_half_minimum_met": raw.get("oos_half_minimum_met") is True,
+        "first_half_avg_net_bps": _finite_number(raw.get("first_half_avg_net_bps")),
+        "second_half_avg_net_bps": _finite_number(raw.get("second_half_avg_net_bps")),
+        "both_oos_halves_positive": raw.get("both_oos_halves_positive") if isinstance(raw.get("both_oos_halves_positive"), bool) else None,
+        "promotion_authority": False,
+        "production_authority": False,
+    }
+
+
 def compact_basis_falsification(army: object) -> dict:
     """Return a strict allowlist of the BTC basis worker's latest evidence."""
     if not isinstance(army, dict):
@@ -81,6 +148,7 @@ def compact_basis_falsification(army: object) -> dict:
     evidence = worker.get("latest_evidence") if isinstance(worker.get("latest_evidence"), dict) else {}
     collection = evidence.get("collection") if isinstance(evidence.get("collection"), dict) else {}
     raw_results = evidence.get("results") if isinstance(evidence.get("results"), dict) else {}
+    raw_robustness = evidence.get("profitability_robustness") if isinstance(evidence.get("profitability_robustness"), dict) else {}
 
     return {
         "worker_exit": worker.get("last_exit_code") if isinstance(worker.get("last_exit_code"), int) else None,
@@ -90,8 +158,9 @@ def compact_basis_falsification(army: object) -> dict:
         "task_id": "COORD-DATA-003",
         "candidate_id": "DATA-BASIS-001",
         "base": "BTC",
-        "evidence_conclusion": evidence.get("evidence_conclusion") if evidence.get("evidence_conclusion") in {"stage1_evaluated", "insufficient_evidence"} else None,
+        "evidence_conclusion": evidence.get("evidence_conclusion") if evidence.get("evidence_conclusion") in {"stage1_evaluated", "stage1_and_stage2_evaluated", "insufficient_evidence"} else None,
         "available_primary_results": _nonnegative_int(evidence.get("available_primary_results")),
+        "available_robustness_results": _nonnegative_int(evidence.get("available_robustness_results")),
         "collection": {
             "available": collection.get("available") is True,
             "reason": _reason(collection.get("reason"), _ALLOWED_COLLECTION_REASONS),
@@ -108,6 +177,10 @@ def compact_basis_falsification(army: object) -> dict:
         "results": {
             "24": _compact_result(raw_results.get("24"), 24),
             "168": _compact_result(raw_results.get("168"), 168),
+        },
+        "profitability_robustness": {
+            "24": _compact_robustness(raw_robustness.get("24"), 24),
+            "168": _compact_robustness(raw_robustness.get("168"), 168),
         },
         "production_authority": False,
         "signal_authority": False,
