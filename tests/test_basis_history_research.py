@@ -109,6 +109,8 @@ def test_basis_collection_bounds_requested_work(monkeypatch):
     monkeypatch.setattr(bhr, "okx_get", fake_okx_get)
     out = bhr.collect_okx_basis_history("XRP", target_points=999999, max_pages=999999)
 
+    assert bhr.MAX_TARGET_POINTS == 8000
+    assert bhr.MAX_PAGES == 85
     assert out["target_points"] == bhr.MAX_TARGET_POINTS
     assert out["mark_pages"] <= bhr.MAX_PAGES
     assert out["index_pages"] <= bhr.MAX_PAGES
