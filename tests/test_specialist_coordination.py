@@ -24,7 +24,7 @@ def test_coordination_state_has_exact_specialist_roster_and_safe_policy():
     assert state["policy"]["insufficient_evidence"] == "WAIT_RESEARCH_ONLY"
 
 
-def test_each_specialist_has_one_obvious_active_task_and_handoff():
+def test_each_specialist_has_one_obvious_active_task_and_safe_handoff_state():
     state = load_state()
     for role in REQUIRED_ROLES:
         active = [
@@ -36,7 +36,15 @@ def test_each_specialist_has_one_obvious_active_task_and_handoff():
         assert task == active[0]
         assert task["evidence_required"]
         assert task["branch"] == state["roles"][role]["branch"]
-        assert task["next_task"] is not None
+        # A READY falsification task may intentionally be terminal until its
+        # evidence determines whether the candidate is rejected or merits a
+        # separately predeclared follow-up. Other active tasks retain their
+        # already-declared handoffs.
+        if task["next_task"] is None:
+            assert task["id"] == "COORD-DATA-003"
+            assert "falsif" in task["title"].lower()
+        else:
+            assert task["next_task"]
 
 
 def test_completed_data_provenance_work_is_not_reassigned():
@@ -46,10 +54,15 @@ def test_completed_data_provenance_work_is_not_reassigned():
     assert completed["completion_evidence"]["commit"] == "f1749e3d794faaac2e4ed30aba9c8a081a75fd06"
     assert "tests/test_preforecast_market_provenance.py" in completed["completion_evidence"]["tests"]
 
+    selected = next(row for row in state["tasks"] if row["id"] == "COORD-DATA-002")
+    assert selected["status"] == "DONE"
+    assert selected["completion_evidence"]["candidate_id"] == "DATA-BASIS-001"
+    assert selected["next_task"] == "COORD-DATA-003"
+
     next_data_task = next_task(state, "data-market")
-    assert next_data_task["id"] == "COORD-DATA-002"
+    assert next_data_task["id"] == "COORD-DATA-003"
     assert next_data_task["status"] == "READY"
-    assert next_data_task["next_task"] == "COORD-DATA-003"
+    assert next_data_task["next_task"] is None
 
 
 def test_duplicate_active_ownership_is_rejected():
