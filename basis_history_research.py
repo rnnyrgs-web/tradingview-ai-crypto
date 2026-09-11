@@ -18,8 +18,9 @@ def _collect_completed_price_history(endpoint, inst_id, target_points, max_pages
     previous_oldest = None
     pages = 0
     error_type = None
+    completion_slack_pages = 0
 
-    while pages < max_pages and len(points_by_ts) < target_points:
+    while pages < min(MAX_PAGES, max_pages + completion_slack_pages) and len(points_by_ts) < target_points:
         params = {"instId": inst_id, "bar": "1H", "limit": "100"}
         if after is not None:
             params["after"] = str(after)
@@ -33,6 +34,14 @@ def _collect_completed_price_history(endpoint, inst_id, target_points, max_pages
         normalized = _normalized_price_candles(rows)
         if not normalized:
             break
+        # The newest OKX history page can contain the still-open 1H candle. Our
+        # normalizer correctly removes it, which otherwise leaves an exact
+        # N*100-page collection one completed candle short forever. Permit one
+        # additional bounded page only when source rows were filtered. This does
+        # not interpolate, forward-fill, relax exact timestamp matching, or alter
+        # the requested completed-point target.
+        if len(normalized) < len(rows):
+            completion_slack_pages = 1
         for point in normalized:
             points_by_ts[point["ts"]] = point["value"]
 
