@@ -34,7 +34,7 @@
       "id": "COORD-DATA-001",
       "priority": 1,
       "owner": "data-market",
-      "status": "READY",
+      "status": "DONE",
       "title": "Future-only pre-forecast agreement provenance",
       "dependencies": [],
       "blockers": [],
@@ -50,6 +50,14 @@
         "exact-head Security and Reliability success"
       ],
       "completion_rule": "Data capture only; no production threshold or fingerprint change.",
+      "completion_evidence": {
+        "commit": "f1749e3d794faaac2e4ed30aba9c8a081a75fd06",
+        "tests": [
+          "tests/test_preforecast_market_provenance.py",
+          "tests/test_prediction_ledger_schema.py"
+        ],
+        "note": "Future-only timestamp-safe preforecast provenance is already integrated on main; historical rows are not retroactively enriched."
+      },
       "next_task": "COORD-DATA-002"
     },
     {
@@ -192,7 +200,7 @@
       "id": "COORD-DATA-002",
       "priority": 20,
       "owner": "data-market",
-      "status": "QUEUED",
+      "status": "READY",
       "title": "Evaluate next highest-value timestamp-safe market input after provenance capture",
       "dependencies": ["COORD-DATA-001"],
       "blockers": [],
