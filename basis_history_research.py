@@ -8,8 +8,13 @@ or signal authority.
 from market_data import _aligned_basis_history, _normalized_price_candles, okx_get
 
 
-MAX_PAGES = 50
-MAX_TARGET_POINTS = 5000
+# The current 7d result has only 10 non-overlapping OOS samples. Permit a larger
+# but still hard-bounded window so the next rejection-oriented run can nearly
+# double independent 7d OOS evidence without changing the feature, split, or
+# thresholds. With OKX's 100-row pages, 85 pages safely covers an 8,000-point
+# target plus the existing one-page completed-candle slack.
+MAX_PAGES = 85
+MAX_TARGET_POINTS = 8000
 
 
 def _collect_completed_price_history(endpoint, inst_id, target_points, max_pages):
