@@ -38,7 +38,7 @@ def test_worker_mix_has_major_pons_universe_swing_cross_asset_learning_adaptive_
     assert army._is_accuracy_worker(cross_24h)
     assert army._is_accuracy_worker(cross_7d)
     assert army._is_accuracy_worker(adaptive)
-    assert not army._is_accuracy_worker(basis)
+    assert army._is_accuracy_worker(basis)
     assert army._is_lightweight_worker(learning)
     assert army._is_lightweight_worker(factory)
     assert not army._is_lightweight_worker(adaptive)
@@ -73,7 +73,8 @@ def test_lightweight_workers_do_not_consume_heavy_semaphore_lane():
     assert lanes[learning.name] is not lanes[btc.name]
     assert lanes[adaptive.name] is lanes[cross.name]
     assert lanes[adaptive.name] is not lanes[btc.name]
-    assert lanes[basis.name] is lanes[btc.name]
+    assert lanes[basis.name] is lanes[adaptive.name]
+    assert lanes[basis.name] is not lanes[btc.name]
     assert isinstance(lanes[learning.name], asyncio.Semaphore)
 
 
