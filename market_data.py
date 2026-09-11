@@ -62,6 +62,25 @@ def _binance_get(base_url, path, params=None):
     return r.json()
 
 
+def _http_status_bucket(exc):
+    """Return a fixed non-sensitive HTTP status class for diagnostics only."""
+    if not isinstance(exc, httpx.HTTPStatusError) or exc.response is None:
+        return None
+    try:
+        status = int(exc.response.status_code)
+    except (TypeError, ValueError):
+        return "http_other"
+    if status == 451:
+        return "http_451"
+    if status == 429:
+        return "http_429"
+    if 400 <= status < 500:
+        return "http_other_4xx"
+    if 500 <= status < 600:
+        return "http_5xx"
+    return "http_other"
+
+
 def get_binance_spot_prices():
     """One batch request keeps cross-exchange validation cheap for the universe."""
     rows = _binance_get(BINANCE_SPOT_BASE, "/api/v3/ticker/price")
@@ -305,7 +324,12 @@ def get_derivatives_history(base, limit=90):
         })
         oi_points = _normalized_history_points(rows, "timestamp", "sumOpenInterestValue")
     except Exception as exc:
-        errors.append({"source": "binance_open_interest_history", "error_type": type(exc).__name__})
+        error = {"source": "binance_open_interest_history", "error_type": type(exc).__name__}
+        status_bucket = _http_status_bucket(exc)
+        if status_bucket is not None:
+            error["http_status_bucket"] = status_bucket
+            log.info("Binance OI history unavailable: %s", status_bucket)
+        errors.append(error)
 
     mark_points = []
     index_points = []
