@@ -5,82 +5,174 @@ Last updated: 2026-09-11
 Authoritative continuation state for `rnnyrgs-web/tradingview-ai-crypto`. Read this file from current `main` in full before development. Never infer project state only from ChatGPT memory. Update this file after each completed integration cycle.
 
 ## CURRENT MAIN / ARCHITECTURE
-Current functional baseline through PR #269: merge commit `9e179015c443e9e8eb0467239f68b9a8ea81dffd`.
+Current tested functional baseline after PR #262: `96b5b1d73f28a4c9f6e699f842fcd7060f40ab90`. PR #262 exact head `c31c7c211b8bc27e6807f089781da840e1beefb8` passed Security and Reliability #1839 before expected-head squash merge. It adds a dormant, separately identified research-only `FFRIZZ_SECONDARY_V4_BYBIT_OI_ACCESS_PROBE` for one small public Bybit V5 open-interest accessibility request when explicitly invoked. The probe emits only bounded status/point-count metadata, exposes no symbol/URL/raw payload, and has no signal-scoring, persistence, paper, promotion, broker, or trading authority. It is not yet runtime-wired, so no existing V1/V2/V3 data source, fingerprint, signal, threshold, chronology, persistence, worker, concurrency, or recurring-cost behavior changed.
 
 Production is GitHub -> Render -> Python/FastAPI V3 -> Supabase. Governed horizons are 6h, 12h, 24h, 48h, 72h and 7d. New horizons remain WAIT/LEARNING unless every canonical gate is independently satisfied. Production scans run about every 15 minutes. Continuous research/backtesting uses the existing Render coordinator with bounded concurrency.
 
 Primary production service: `srv-dadliegu01pc73bc7t50` (`tradingview-ai-crypto`).
 Continuous research coordinator: `srv-dafgtead0e5s73cc7ekg`.
+Supabase project: `dxgksvzibucwuzmppoqy`.
 Recurring infrastructure ceiling: USD 30/month unless explicitly approved otherwise.
 
-The always-on research architecture includes bounded Python workers, deterministic experiment generation, adaptive-accuracy research, durable research memory, economic calibration/meta-WAIT, regime x strategy diagnostics, cross-sectional/residual diagnostics, microstructure/execution diagnostics, ensemble-diversity/error attribution, selective-WAIT research, and evidence-value scheduling. Logical specialist scale is not physical compute scale. Heavy experiment admission remains capped at one unless separately reviewed and cost-approved.
+Important integrated sequence:
+- #210/#211/#213: governed persisted multi-horizon opportunity generation, exact-horizon deadlines, horizon-specific calibration/genuine-forward chronology, all-horizon dashboard reads.
+- #214/#216: FFriZz-inspired six-horizon secondary family and prospective collection, strictly research/shadow only.
+- #217: FFriZz pooled cross-symbol diagnostics are descriptive/non-independent; OHLC-only historical diagnostics do not match the prospective OI-capable fingerprint; feature-family agreement is not assumed independent.
+- #219: deterministic UUIDv5 scan identity by system+horizon+full-horizon bucket.
+- #221: canonical FFriZz action remains WAIT; source SHADOW_BUY/SHADOW_SELL stays research metadata; immutable direction remains LONG/SHORT.
+- #223: persisted ledger score uses nonnegative absolute shadow strength while signed raw score remains research metadata.
+- #225: bounded read-only `ffrizz_forward` coordinator observability.
+- #227: eligible FFriZz collection fails closed as `PredictionLedgerNotConfigured` if canonical ledger persistence is unavailable; zero-eligible/all-WAIT cycles remain legitimate because no write is required.
+- #229/#231: fixed-gate FFriZz abstention diagnostics and bounded sanitized coordinator observability; no thresholds or authority changed.
+- #234: authoritative state recorded the canonical FFriZz ledger-configuration blocker and V1 OI timestamp-semantics risk.
+- #235: separately fingerprinted research-only `FFRIZZ_SECONDARY_V2_OI_CLOSE_END` challenger added with exact completed-candle-close endpoint = Binance OI period-end matching, no interpolation/backfill; registration review found runtime invocation was initially missing.
+- #236: V2 runtime invocation added only for 6h/12h/24h 1H research horizons, reusing existing candles/OI cache; no V2 persistence or authority.
+- #238: bounded paper WAIT/rejection actionability diagnostics; no decision, risk, fill, sizing, broker, schema, or cost change.
+- #239: production workflow reordered to evaluate due predictions before the next scan, eliminating a one-scan calibration lag without changing evaluation/threshold rules.
+- #242: final V2 count-only observability gap fixed; exact head `1abd76a6319ed7b495c9785e5006773cf6409a31` passed Security and Reliability #1732 and merged as `f1d451cd02cb5a4a04ba80d313cb4539e1ec24d7`; both Render services reached live.
+- #243: state synchronization through #242 merged as `2796586937dce6a761f054dd69d65e6ef84b4dfe`.
+- #244: live post-#242 V2 evidence was reconciled with Binance timestamp semantics. The exact-match hypothesis is now treated as disproven rather than loosened. A separately fingerprinted V3 causal-as-of challenger plus chronology regression tests and a durable research memo were added. Exact head `67646605e20af3c363ea69a39bc7e958b5f5b62c` passed Security and Reliability #1743 before expected-head squash merge as `99b5e1eb0639022a8d14ef728341517ba8d9cde4`.
+- #246: paper loss-streak risk gate no longer forms a permanent latch. Four consecutive authentic paper losses still trigger the gate, but eligibility can recover only after a 24-hour cooldown from the last closed paper trade; absent/malformed chronology remains blocked. Exact head `b132193fa62f4beb4d96aba14672430deb4588eb` passed Security and Reliability #1753 before merge as `a38d09429a711c20234b235a2bc38b58217c44e3`.
+- #248: V3 is now invoked only inside the existing bounded FFriZz 6h/12h/24h 1H research pass and reuses the exact already-fetched candle/OI objects. Only count-level family availability and allowlisted V3 OI-unavailability reasons cross adaptive/coordinator observability boundaries; symbols/raw rows/arbitrary keys remain excluded. The first exact-head CI exposed one strict observability-shape regression and failed closed; the contract was updated, and replacement exact head `080de5685b9388d54bd99fd73dad895799ec0bf7` passed all Security and Reliability #1766 checks before merge as `2b520237c410edb1d9d7907b2eb5f01c653dbec7`.
+- #250: the existing FFriZz OI fetch no longer collapses every upstream acquisition outcome into an indistinguishable empty list. It carries one internal list-compatible bounded source status, aggregates only fixed counts (`available`, `valid_empty`, `http_error`, `timeout`, `network_error`, `invalid_payload`, `source_error`, `unclassified`), makes no additional requests, and exposes no symbol/raw error/URL/payload data. Exact head `2c924b2f41ac52e02b04225abe14ef45e9dc4c7f` passed Security and Reliability #1777 before merge as `218a0aeda581504160eed720191d7841ae212745`.
+- #251: those already-bounded OI source counts are re-allowlisted at the final coordinator log boundary. Initial exact head failed closed on the strict complete-shape observability test; after updating that contract, exact head `0e1ac116b3670559b0c9f8992a47f849165a64b5` passed Security and Reliability #1784 and merged as `aafb06c0f78cc1d2c5ef5100988f3881f3720162`.
+- #253: repeated natural post-#251 cycles showed all 12 Binance OI-history acquisitions in `http_error` while coordinator health remained normal. Exact response status had been discarded upstream, so a bounded status classifier was added only on that existing exception path. Exact head `41c497a2f5f9d98073212ab65196d09ee7194089` passed Security and Reliability #1794 and merged as `ac6d1cbcc6c4ab3ac1879dfd0a86c9b8d9e58c40`; both Render services reached live.
+- #255: autonomous cloud failure accounting is robust to the `openai-agents` top-level `agents` package shadow. Exact head `a15eb231c3baf2ccc347d37bc655201b0d2f1e59` passed Security and Reliability #1803 before expected-head squash merge as `64c9a03856d8f0d9a585de24aed3beceb4481784`. The spend ceiling remains unchanged and model-budget exhaustion remains fail-closed.
+- #257: confirmed the remaining post-#253 generic-HTTP behavior was a two-boundary propagation defect rather than evidence about Binance itself. Exact head `3565444f8ae07774b076b17f31110c5a72c50dc1` passed Security and Reliability #1813 before expected-head squash merge as `5e154a6b0fb7b736528a78329691ecadcb1566d0`. Only the five predeclared HTTP buckets can propagate through FFriZz and the adaptive coordinator boundary; absent/unrecognized values remain generic and arbitrary symbol/URL/status detail is not exposed.
+- #259: fixed the final coordinator projection so the already-allowlisted HTTP status buckets survive end-to-end observability rather than collapsing back to generic HTTP. Subsequent natural cycles consistently identified Binance historical-OI acquisition as `http_451` across the sampled universe.
+- #260: repeated 451 requests are now circuit-broken within one FFriZz run after the first confirmed 451. Remaining bases fail closed with empty OI; the next natural run probes once again. The first exact-head CI #1828 correctly failed on an overreaching V3 test fixture; the fixture was corrected without weakening the assertion. Replacement exact head `9fdb05c94d223063e297d9b47b90196da9a2893c` passed all Security and Reliability #1830 checks before expected-head merge as `e7c5a063f33afbc98aabaa72efee270eac3508df`.
+- #262: added the dormant `FFRIZZ_SECONDARY_V4_BYBIT_OI_ACCESS_PROBE` plus regression tests after official Bybit V5 documentation identified a free/public 1h historical open-interest endpoint candidate. The module makes exactly one request only when explicitly invoked, validates only structural accessibility, emits a fixed bounded diagnostic vocabulary, and cannot score signals or authorize persistence/paper/promotion/broker/trading. Exact head `c31c7c211b8bc27e6807f089781da840e1beefb8` passed Security and Reliability #1839 before expected-head squash merge as `96b5b1d73f28a4c9f6e699f842fcd7060f40ab90`. It remains intentionally uninvoked at this state sync.
 
-## RECENT INTEGRATED EVIDENCE / CHANGES
-- Multi-horizon production and research remain governed by exact immutable horizons and chronology. Calibration evaluates due predictions before the next production scan.
-- FFriZz V1 is research/shadow only. Eligible prospective persistence remains blocked whenever the coordinator lacks the complete canonical prediction-ledger configuration. `PredictionLedgerNotConfigured` is fail-closed and must not be bypassed.
-- FFriZz V2 exact candle-end = Binance OI period-end matching is a durable negative timestamp-coverage result. Do not loosen matching or repeat it unless source timestamp semantics materially change.
-- FFriZz V3 causal-as-of remains a separately fingerprinted research-only data-semantics challenger: latest already-completed 1H price endpoint at or before the OI timestamp, staleness strictly below one hour, no future selection, no nearest-neighbour/interpolation, duplicate OI rejection, and ambiguous price-endpoint reuse rejection. It has no persistence or trading authority.
-- Binance historical OI from the present Render environment is consistently blocked by HTTP 451. Bounded diagnostics expose only allowlisted status buckets. PR #260 circuit-breaks redundant Binance OI calls after the first confirmed 451 in each research run; the next run probes once again so recovery can be detected. Missing OI remains fail-closed.
-- PRs #262 and #264-#268 added, runtime-wired, invoked, and hardened a strictly bounded research-only Bybit V5 historical-OI accessibility probe. It makes at most the predeclared small accessibility request, exposes only bounded aggregate status/point-count diagnostics, and has zero signal, persistence, paper, promotion, broker, or live authority.
-- Fresh live evidence from the current Render research environment: the Bybit historical-OI accessibility probe returned `http_403`, with one request and zero usable points. This is an infrastructure/source-access result only. It is not alpha evidence and does not falsify causal OI alignment itself.
-- PR #269 preserves that Bybit 403 result in `orchestration/ffrizz_v4_bybit_accessibility.json` as durable negative research memory. Exact head `c05404d0f23011747df7d1c19111fac05f09c701` passed Security and Reliability #1875 before expected-head merge as `9e179015c443e9e8eb0467239f68b9a8ea81dffd`.
-- The Bybit route must not be repeatedly re-probed unless the deployment/network environment, Bybit access policy, or documented request contract materially changes. Do not proxy around or spoof geography. Do not silently substitute Bybit into Binance V1/V2/V3 fingerprints.
+The always-on research architecture includes bounded Python workers, autonomous research-director coordination, deterministic quant-science experiment factory, fail-closed heavy-experiment admission, adaptive-accuracy research, 256 token-free logical specialists per refresh, durable research memory, economic calibration/meta-WAIT, regime×strategy diagnostics, cross-sectional/residual diagnostics, prospective microstructure vetoes, ensemble-diversity/error-attribution diagnostics, selective-WAIT fusion, and evidence-value scheduling. Logical specialist scale is not physical compute scale. Heavy experiment concurrency remains capped at one admitted heavy experiment at a time unless separately reviewed and cost-approved.
 
 ## SAFETY INVARIANTS
-No AI opinion, dashboard value, paper P&L, model count, ensemble weight, feature availability, OI status, accessibility probe, historical diagnostic, experiment priority, single OOS result, or single forward result may authorize live BUY/SELL by itself.
+No AI opinion, ranking/evidence score, dashboard value, paper P&L, model count, ensemble weight, order-book snapshot, historical diagnostic, research-memory lesson, experiment priority, FFriZz signal/abstention count, prospective row, V2/V3 feature-availability result, OI acquisition-status count, V4 accessibility-probe result, paper rejection diagnostic, or single OOS/forward result may authorize live BUY/SELL by itself.
 
 Mandatory chain:
 RESEARCH -> BACKTEST -> VALIDATION -> UNTOUCHED OOS -> ROBUSTNESS/STABILITY -> MULTIPLE-TESTING FIREWALL -> POINT-IN-TIME UNIVERSE SAFETY -> STRATEGY-REGISTRY APPROVAL -> PRODUCTION-RISK APPROVAL -> GENUINE FORWARD PROOF -> GLOBAL/EXECUTION RISK CLEAR -> LIVE BUY/SELL.
 
-Every later stage is restrictive-only. Missing, stale, contradictory, malformed, overlapping-only, insufficient, illiquid, execution-unsafe, portfolio-unsafe, statistically weak, survivorship-unsafe, persistence-unsafe, chronology-unsafe, or system-unsafe evidence means `WAIT / NO TRADE / RESEARCH_ONLY`.
+Every later stage is restrictive-only. Missing, stale, contradictory, malformed, overlapping-only, insufficient, illiquid, execution-unsafe, portfolio-unsafe, statistically weak, survivorship-unsafe, persistence-unsafe, label-unsafe, chronology-unsafe, or system-unsafe evidence means `WAIT / NO TRADE / RESEARCH_ONLY`.
 
 `live_promotions.json` remains empty. Signing keys remain unused. Broker remains disconnected. Do not add credentials or real-order capability without explicit user approval plus all canonical gates.
 
 Authentic paper account baseline remains exactly `$100,000` from `2026-09-08T01:17:49Z`. Never reset, rewrite, replace, or manufacture its history. Paper performance is evidence only.
 
 ## SCIENTIFIC RESEARCH DISCIPLINE
-- Chronological validation remains development -> validation -> untouched OOS. Genuine forward proof counts only non-overlapping full-horizon resolved forecasts for the exact immutable fingerprint.
-- Never improve headline accuracy through lookahead, leakage, threshold mining, OOS reuse, survivorship substitution, overlapping observations treated as independent, or fabricated evidence.
-- Simultaneous cross-symbol crypto outcomes are not automatically independent; family/model count is not independence.
-- Never backfill unavailable timestamp-sensitive OI, funding, order-flow, cross-sectional, leadership, or other prospective features merely to improve coverage.
-- Realistic fees, spread, slippage, funding/carry, liquidity, and execution assumptions remain mandatory.
-- Robustness requires parameter perturbation, regime stability, conservative execution-cost stress, search-breadth/multiple-testing protection, and genuine forward confirmation.
-- Repeated or disproven hypotheses receive research-memory penalties rather than blind recycling. Re-test only after a material premise/environment change.
-- Research scheduling should favor expected information gain and plausible after-cost signal-quality improvement, discounted for compute cost, redundancy, data weakness, and overfitting risk.
-- Production WAIT/abstention may be diagnosed but never weakened merely to generate more trades.
-- Accessibility/source diagnostics are infrastructure evidence only. Never reinterpret them as alpha, use them to tune thresholds, or pool them with predictive/OOS/forward evidence.
-- Every alternative OI venue requires its own bounded accessibility check and separately predeclared immutable venue/timestamp/provenance fingerprint before predictive testing.
-- No self-improvement cycle may force paid calls, bypass provider budget/cooldown controls, raise physical concurrency, or create production authority.
+Chronological validation remains development -> validation -> untouched holdout/OOS. Genuine forward proof counts only non-overlapping full-horizon resolved forecasts for the exact immutable strategy fingerprint. Robustness requires deterministic resampling, parameter perturbation, regime stability, conservative execution-cost stress, search-breadth protection, and genuine forward confirmation.
+
+Core invariants:
+- no lookahead/leakage, threshold mining, OOS reuse, survivorship substitution, or fabricated evidence;
+- never pool historical/OOS with genuine forward evidence to inflate confidence;
+- never backfill unavailable timestamp-sensitive order-book, consensus, cross-sectional, leadership, funding, OI, or other prospective fields merely to improve coverage;
+- overlapping forecasts are not independent; simultaneous cross-symbol crypto outcomes are not automatically independent; model/family count is not independence;
+- realistic fees, spread, slippage, funding/carry, and execution assumptions remain mandatory;
+- untouched OOS remains sealed until predeclared validation admission passes;
+- repeated/disproven hypotheses receive research-memory penalties instead of blind recycling;
+- malformed/missing/delayed outcome chronology fails closed;
+- research scheduling prioritizes falsifiable, actionable, high-information experiments by expected after-cost impact, sample readiness, compute cost, and redundancy/overfit risk;
+- production WAIT may be studied through immutable research direction but research never mutates production action;
+- FFriZz historical OHLC-only diagnostics are descriptive and do not validate a prospective OI-capable fingerprint;
+- FFriZz abstention diagnostics explain fixed existing gates only; they may not tune thresholds from unresolved observations or turn WAIT into a forecast;
+- FFriZz V1, V2, and V3 are separate research fingerprints and their evidence may not be pooled;
+- V2's exact endpoint equality hypothesis is now a recorded negative result. Do not retry it unless source timestamp semantics materially change;
+- V3 causal as-of alignment is a new data-semantics hypothesis, not an alpha claim. Its `<1H` staleness rule is predeclared, future price is forbidden, duplicate price-endpoint reuse is rejected, and no production/persistence authority exists;
+- the V4 Bybit accessibility probe is only a source-availability diagnostic, not a V4 predictive strategy. It may not be silently substituted into V1/V2/V3, compared as alpha, persisted as a forecast, or used to tune thresholds. Any actual V4 challenger requires a separately predeclared immutable venue/timestamp/provenance fingerprint before predictive testing;
+- OI source diagnostics are acquisition observability only. They may identify why OI is unavailable but may not be used to weaken timestamp alignment, backfill missing OI, tune thresholds, or infer predictive edge;
+- bounded OI HTTP diagnostics may expose only fixed status buckets from the existing request. Never log raw response bodies, request URLs, symbols, arbitrary status text, or use status information to bypass exchange restrictions;
+- a confirmed source-level 451 may suppress redundant requests only within the current run; the next run must probe again so recovery can be detected without creating a permanent availability assumption;
+- `unexpected_wait_state` is a rule-drift/integrity alarm, never permission to reinterpret the scorer;
+- bounded observability must not expose raw ledger rows, secrets, arbitrary error detail, or unbounded payloads;
+- paper technical/data failures remain retryable and may never become fabricated fills;
+- paper rejection/actionability diagnostics are explanatory only and may not mutate TRADE/WAIT decisions, thresholds, risk gates, execution semantics, fills, sizing, or authority;
+- a paper loss-streak cooldown may recover only from authentic closed-trade chronology. Missing or malformed chronology must fail closed, and cooldown completion does not bypass any independent strategy, drawdown, concentration, liquidity, execution, or validation gate;
+- no hourly self-improvement cycle may force paid model calls, bypass cooldown/budget controls, raise physical concurrency, or create production authority.
 
 ## ACCURACY / RESEARCH PROGRAM
 - ACC-001 market/execution realism: complete.
 - ACC-002 cross-asset rank research: fail-closed before untouched OOS because historical coverage remains insufficient. Never lower `minimum_subset_coverage=0.80`, the two-supported-subset requirement, Top-N ordering, required history, or untouched-OOS rules merely to pass.
 - ACC-003 through ACC-014 safety/validation layers: complete.
-- Selective precision, economic meta-WAIT, regime x strategy, calibration, selective-WAIT fusion, cross-sectional/residual, microstructure veto, ensemble diversity, and error attribution remain governed research-only diagnostics until their own evidence gates are satisfied.
-- FFriZz V1/V2/V3 evidence may not be pooled. V4 is not currently a predictive challenger; the tested Bybit source is inaccessible from the current environment and is recorded as such.
+- Selective precision, economic meta-WAIT, regime×strategy, economic calibration, selective-WAIT fusion, A+ meta-signal trust, cross-sectional/residual, microstructure veto, ensemble diversity, and error attribution remain governed research-only diagnostics.
+- FFriZz V1 remains research/shadow only. Prospective immutable forward evidence is the only route toward governed validation; no pooled history, unresolved row, or abstention count is promotion evidence.
+- FFriZz V2 exact-close-end challenger is a negative timestamp-coverage result: first live post-#242 observation had zero `price_oi_correlation_v2` availability across all 12 sampled symbols at 6h/12h/24h. Do not loosen exact matching and do not use this as profitability evidence.
+- FFriZz V3 causal-as-of challenger is runtime-wired only as bounded 6h/12h/24h diagnostics. It remains unavailable while the current Binance OI route is geographically blocked by confirmed HTTP 451. That source restriction does not falsify V3 alignment and must not be worked around by silently changing venue or timestamp semantics. V3 has no forward-ledger persistence or trading authority.
+- FFriZz V4 is not yet a predictive challenger. PR #262 provides only a dormant Bybit source-accessibility probe; accessibility, timestamp semantics, venue provenance, and defensible causal alignment must be established before a separately fingerprinted V4 experiment is predeclared.
+- New-horizon forward sample sufficiency remains restrictive-only: 6h/12h >=30 independent samples, 48h >=20, 72h >=16, with every later canonical gate still required.
 
-## CURRENT LIVE / OPERATIONAL FACTS
-- Binance historical OI: HTTP 451 from the current Render environment; per-run redundant-request circuit breaker is integrated.
-- Bybit historical OI accessibility probe: HTTP 403 from the current Render research environment; one bounded probe, zero points. Do not repeatedly probe without a material premise change.
-- FFriZz remains research/shadow only. Recent sampled all-WAIT cycles with `unexpected_wait_state=0` are legitimate abstention, not permission to loosen thresholds.
-- Eligible FFriZz V1 prospective persistence still requires the canonical privileged prediction-ledger configuration. Never commit credentials, substitute an anonymous key, weaken RLS, or create an unauthenticated bypass.
-- ACC-002 remains blocked by `InsufficientHistory`; untouched OOS remains unopened.
-- Provider/model budget exhaustion remains fail-closed and may not be bypassed by automated development.
-- GitHub branch protection is not relied upon as the safety mechanism: isolated branch, exact-head Security and Reliability, current-main compatibility review, and expected-head merge protection are mandatory.
+## CURRENT LIVE EVIDENCE / OPERATIONS
+A read-only Supabase audit during the #229 cycle found zero FFriZz rows in `prediction_ledger`. Repeated post-#227 live cycles with zero eligible shadow forecasts were genuine abstention, not persistence failure.
+
+The first complete post-#231 abstention diagnostic scored 72 FFriZz symbol/horizon observations: WAIT=72, SHADOW_BUY=0, SHADOW_SELL=0. Attribution reconciled exactly: 57 insufficient directional agreement, 15 enough agreement but score below the predeclared threshold, `unexpected_wait_state=0`. This explains abstention only; it does not support threshold reduction.
+
+A later natural live cycle produced three eligible SHADOW_SELL forecasts while `ffrizz_forward.collection_ok=false` with `error_type=PredictionLedgerNotConfigured`; the same cycle scored WAIT=69, SHADOW_SELL=3, SHADOW_BUY=0 with `unexpected_wait_state=0`. This proves eligible FFriZz V1 prospective persistence is blocked until the coordinator has the complete canonical Supabase ledger configuration. Later all-WAIT cycles do not clear that blocker because no write is attempted.
+
+Canonical persistence requires both `SUPABASE_URL` and `SUPABASE_SECRET_KEY`. Do not commit credentials, substitute a publishable/anonymous key for privileged research persistence, weaken RLS, or create an unauthenticated persistence bypass. The missing configuration must be supplied through the existing Render environment by an authorized operator.
+
+V1 OI timestamp semantics remain limited: V1 exact-matches Binance hourly OI `timestamp` to normalized OHLC candle OPEN timestamp. Binance defines OI `timestamp` as the period end, so V1 can systematically lose OI availability.
+
+V2 tested a cleaner exact hypothesis: completed 1H candle endpoint exactly equals Binance OI period-end timestamp. After #242 made V2-specific observability visible, multiple live coordinator samples showed `price_oi_correlation_v2` unavailable for all 12 symbols at 6h, 12h, and 24h. The V2 scorer was running and other health indicators were normal, so this is not evidence of a missing runtime invocation. Binance's current public Open Interest Statistics documentation calls the field the period end but shows an example timestamp that is not constrained to a canonical hourly wall-clock boundary. Therefore exact endpoint equality is not a valid general source assumption. This is now a durable negative research result.
+
+PR #244 responds without loosening V2. `FFRIZZ_SECONDARY_V3_OI_CAUSAL_ASOF` is separately fingerprinted. For each OI observation it selects only the latest already-completed 1H price endpoint at or before that OI timestamp, with staleness strictly below one hour. It rejects duplicate OI timestamps and ambiguous reuse of a price endpoint, forbids future price, nearest-neighbour, and interpolation semantics, retains fixed signal thresholds, and has no persistence/trading authority. Regression tests explicitly exercise non-boundary OI timestamps, no-future chronology, ambiguous reused endpoints, and no-authority metadata.
+
+Multiple natural post-#248 coordinator cycles remained healthy with zero worker failures/timeouts and showed V3 `price_oi_correlation_v3:unavailable` for all 12 sampled symbols at 6h/12h/24h with `oi_unavailable_reason_counts={'oi_unavailable': 12}` at each horizon. V2 remained unavailable across the same horizons. FFriZz remained all-WAIT in the sampled cycles with `unexpected_wait_state=0`. Because the V3 scorer was receiving no OI points, this is an upstream-data availability question rather than evidence against V3's causal-as-of timestamp rule.
+
+PR #250 added bounded acquisition provenance using the already-returned `get_derivatives_history()` error metadata and the exact existing fetch. PR #251 made those counts visible at the final coordinator log boundary. Repeated natural post-#251 cycles then established a stable operational fact: all 12 Binance OI-history acquisition attempts were `http_error` while the coordinator itself remained healthy with zero worker failures/timeouts.
+
+PR #253 safely narrowed that uncertainty at the acquisition layer. PR #257 and #259 then fixed the two downstream propagation boundaries. Multiple clean natural post-#259 live cycles consistently showed `http_451` for all 12 Binance OI-history acquisitions while the coordinator remained healthy. This is genuine operational evidence that the current Binance historical-OI route is unavailable from the present deployment; do not reinterpret it as alpha evidence or bypass the restriction.
+
+PR #260 reduces that known-useless repeated work without changing data semantics: after one actual `http_451` acquisition in a run, remaining bases receive missing OI fail-closed and no further Binance historical-OI request is issued in that run. The next natural run probes again. At the prior state sync, post-deployment runtime confirmation of `acquisition_attempts=1` was still pending; current Render log retrieval was temporarily unavailable during the #262 cycle, so do not replace that state with an unverified claim.
+
+PR #262 does not change live scoring or data acquisition. Both Render services were confirmed live on pre-#262 authoritative commit `ec79e9b7d697736401c1fd64bcbd8f5c141618fd` immediately before the PR; auto-deploy of #262 is operationally harmless because the probe remains uninvoked. Runtime Bybit accessibility has not yet been measured and must not be inferred from documentation or CI.
+
+The Cost-Bounded Autonomous Cloud Specialist run on current main failed at the provider spend/usage ceiling and then exposed a deterministic local reliability bug: after installing `openai-agents`, `python agents/autonomous_cloud_state.py mark-failure` could not import `agents.autonomous_cloud_runner` because the installed regular `agents` package shadowed the repository namespace directory. PR #255 fixes only that failure-accounting import path. It does not raise or bypass the USD 30/month ceiling, and paid model execution remains fail-closed when provider budget is unavailable.
+
+PR #239's calibration-freshness ordering has been observed in an actual scheduled workflow: `Evaluate previous signals` executes before `Run production market scan`.
+
+PR #246 repairs a confirmed paper-risk liveness defect without weakening the loss-streak trigger: after four consecutive authentic losses, the paper portfolio remains blocked for 24 hours from the latest authentic `closed_at`; absent/malformed chronology remains fail-closed. Cooldown completion only removes the permanent-latch condition and does not override any other risk or signal gate.
+
+History-network cost remains a throughput research topic rather than a confirmed correctness defect. Any cache/reuse change must preserve exact request identity, freshness, completed-candle semantics, chronology, provenance, and authoritative-source fallback.
+
+GitHub `main` branch protection remains disabled. Exact-head Security and Reliability, expected-head merge protection, isolated branches, and current-main compatibility review are mandatory operational controls.
 
 ## COST / SPEED POLICY
-Hard recurring infrastructure ceiling: USD 30/month unless explicitly changed. Prefer existing Render compute, deterministic Python, free/public defensible data, caching/reuse, early rejection, and bounded concurrency. No paid feed/service/compute without explicit approval.
+Hard recurring infrastructure ceiling: USD 30/month unless explicitly changed. Prefer existing shared Render compute, deterministic Python, free/public defensible data, caching/reuse, early rejection, and bounded concurrency. No paid feed/service/compute without explicit approval.
 
-Do not expand worker count merely for appearance. Prefer experiments that materially increase information value per unit of compute. Blind indicator permutations, duplicate ensemble members, pure repeat `InsufficientHistory` investigations, and repeated falsified hypotheses without changed premises remain deprioritized.
+The token-free specialist factory uses zero normal-operation AI calls. Heavy experiment admission remains capped at one. Do not expand workers merely for appearance; require measured information-value benefit.
 
-## CURRENT OPEN DEVELOPMENT / NEXT PRIORITIES
-1. Treat both tested OI routes as unavailable from the current Render environment: Binance = 451, Bybit = 403. Do not bypass restrictions, silently change venue, or repeatedly probe unchanged blocked routes.
-2. Do not change V3 causal timestamp semantics merely because OI is unavailable. Availability and predictive usefulness are separate questions.
-3. Before adding another OI venue, first determine whether an already-accessible, free/public, timestamp-defensible source or a non-OI feature experiment has higher expected information value. Any new venue must begin with a bounded accessibility/provenance test and separate fingerprint.
-4. Restore the coordinator's canonical prediction-ledger configuration through authorized environment configuration before treating FFriZz V1 prospective evidence accumulation as operational. Then verify eligible persisted rows read-only before drawing conclusions.
-5. Let valid prospective rows resolve naturally. Compare exact fingerprints using non-overlapping full-horizon evidence, realistic costs, calibration, multiple-testing protection, regime attribution, and untouched OOS. No unresolved-row tuning or promotion.
-6. Continue diagnosing resolved primary-system false positives/false negatives, calibration, regime behavior, cross-sectional information, execution realism, market-data failures, paper rejection attribution, and worker experiment outcomes. Rank new tests by expected information gain and expected after-cost improvement rather than novelty.
-7. Treat cache/network optimization as throughput research only; preserve exact request identity, freshness, completed-candle chronology, and provenance.
-8. Keep ACC-002 blocked while failures remain pure `InsufficientHistory`.
-9. Keep `live_promotions.json` empty, broker disconnected, signing keys unused, authentic paper baseline/history immutable, heavy concurrency bounded, and recurring infrastructure <= USD 30/month.
-10. Every integration remains: isolated branch -> regression tests where applicable -> exact-head Security and Reliability -> current-main compatibility -> expected-head merge -> AI_STATE.md synchronization -> post-deploy health verification when applicable.
+Blind RSI/MACD/EMA permutations, duplicate ensemble members, repeated falsified hypotheses without materially new evidence, repeated pure-InsufficientHistory ACC-002 investigation, and worker-count expansion without demonstrated information value remain deprioritized.
+
+## CURRENT OPEN DEVELOPMENT
+PR #262 is integrated and must not be re-applied. PR #260 is integrated and must not be re-applied. PR #259/#257/#255/#253 are integrated and must not be re-applied. PR #251 and PR #250 are integrated and must not be re-applied. PR #248 is integrated and must not be re-applied. PR #246 is integrated and must not be re-applied. PR #244 is integrated and must not be re-applied. #235/#236/#238/#239/#242 and older FFriZz PRs #214/#216/#217/#219/#221/#223/#225/#227/#229/#231 are integrated. #230/#232/#233/#234/#237/#240/#241/#243/#245/#247/#249/#252/#254/#256/#258/#261 are state-only/reconciliation work. Stale PRs #34, #33, and #13 remain incompatible with current main and must not be merged as-is without fresh relevance/compatibility review.
+
+Persistent specialist priorities live in `orchestration/specialist_coordination.json`. The accuracy/profitability roadmap lives in `orchestration/accuracy_profitability_roadmap.json`. The V2 negative result and V3 experiment contract are preserved in `docs/FFRIZZ_V3_OI_CAUSAL_ASOF.md` and `orchestration/ffrizz_v3_oi_causal_asof.json`.
+
+## EXACT NEXT STEP
+1. Verify a natural post-#260 coordinator cycle before further OI-source integration. Under persistent Binance 451, `oi_source_diagnostics.acquisition_attempts` should be 1 with `status_counts={'http_451': 1}` while V1/V2/V3 OI remains unavailable and the coordinator stays healthy. If that shape is not observed, diagnose before runtime-wiring the V4 accessibility probe.
+2. Keep Binance historical OI fail-closed from the current deployment. Do not proxy around, spoof location, or otherwise bypass the confirmed source restriction.
+3. The #262 Bybit probe is code-reviewed and CI-green but deliberately dormant. After step 1, wire it only into an existing bounded research cycle with at most one small public request per cycle and bounded observability. Its first purpose is only to establish Render-network accessibility and structural payload validity. Do not feed its values into V1/V2/V3, signal scoring, persistence, paper, promotion, or broker paths.
+4. If Bybit accessibility is genuinely confirmed, study its timestamp semantics and venue provenance and predeclare a separately fingerprinted V4 causal-alignment experiment before any predictive comparison. Never silently substitute or pool Binance and Bybit evidence. Accessibility alone is not alpha evidence.
+5. Do not change V3 timestamp alignment until genuine OI becomes available. Preserve `<1H` staleness, no-future selection, no nearest-neighbour/interpolation, duplicate OI rejection, and ambiguous price-endpoint reuse rejection. Availability alone is not predictive usefulness and must not trigger threshold tuning.
+6. Restore the coordinator's canonical prediction-ledger configuration before treating FFriZz V1 prospective evidence accumulation as operational. The proven `PredictionLedgerNotConfigured` eligible-write failure remains open.
+7. After V1 ledger configuration is restored, verify the first eligible persisted rows read-only: deterministic UUID scan identity, LONG/SHORT direction, canonical WAIT action, score 0..100, signed `calibration.raw_score`, preserved `shadow_action`, exact `due_at`, and full-horizon bucket identity.
+8. Let valid prospective rows resolve naturally before any precision/expectancy comparison. Use exact fingerprint, non-overlapping full-horizon evidence, realistic costs, multiple-testing controls, and untouched OOS. No unresolved-row tuning or production promotion.
+9. Continue using resolved primary-system errors, calibration, regime behavior, cross-sectional information, market microstructure, execution realism, paper rejection attribution, and research-memory outcomes to rank falsifiable experiments by expected information gain and after-cost impact. Any clock-phase/order-flow hypothesis remains hypothesis-generating until tested with defensible timestamped data, purged chronological validation, realistic costs, and multiple-testing protection.
+10. Observe paper/production rejection diagnostics and quantify whether WAIT/rejections are dominated by strategy evidence, market/liquidity, technical/data infrastructure, or portfolio risk. Treat the result as explanatory only.
+11. Treat cache/network optimization as throughput research only; never stretch freshness/TTL, merge distinct request identities, or weaken provenance/completed-candle semantics.
+12. Keep ACC-002 blocked while failures remain pure `InsufficientHistory`.
+13. Keep provider-budget failures fail-closed. No self-improvement cycle may increase the user-approved recurring ceiling or force paid calls.
+14. Keep `live_promotions.json` empty, broker disconnected, signing keys unused, authentic paper baseline/history immutable, heavy concurrency bounded, and recurring infrastructure <= USD 30/month.
+15. Every integration remains isolated branch -> regression tests -> exact-head Security and Reliability -> current-main compatibility -> expected-head merge -> AI_STATE.md synchronization -> post-deploy health verification when runtime code changes.
+
+## SUPERSEDING UPDATE THROUGH PR #269
+This section supersedes stale runtime-status statements above where they conflict, while preserving the historical audit trail.
+
+- PRs #264-#268 safely runtime-wired, invoked, and hardened the strictly bounded research-only Bybit historical-OI accessibility probe without giving it signal, persistence, paper, promotion, broker, or trading authority.
+- Repeated natural post-#260 FFriZz cycles now confirm the Binance circuit breaker works as designed: `acquisition_attempts=1`, `status_counts={'http_451': 1}`, V2/V3 OI remains unavailable, and sampled coordinator cycles remain healthy with zero worker failures/timeouts and `unexpected_wait_state=0`.
+- A clean Bybit accessibility probe from the current Render research environment returned `http_403`, `requests_attempted=1`, and `points_observed=0`. A later clean probe produced the same bounded `http_403` result. This is source/infrastructure evidence only; it is not alpha evidence and does not falsify causal OI alignment.
+- PR #269 records that Bybit result as durable negative research memory in `orchestration/ffrizz_v4_bybit_accessibility.json`. Exact head `c05404d0f23011747df7d1c19111fac05f09c701` passed Security and Reliability #1875 before expected-head merge as `9e179015c443e9e8eb0467239f68b9a8ea81dffd`.
+- Do not repeatedly probe the unchanged Bybit route unless the deployment/network environment, Bybit access policy, or documented endpoint contract materially changes. Do not proxy around or spoof geography. Never silently substitute Bybit into Binance V1/V2/V3 evidence.
+- Both currently tested historical-OI routes are unavailable from the present Render environment: Binance is confirmed `http_451`; Bybit is confirmed `http_403`. Before adding another OI venue, compare expected information value against already-accessible non-OI feature experiments. Any new venue requires its own bounded accessibility/provenance check and separately predeclared immutable venue/timestamp fingerprint.
+- ACC-002 remains fail-closed on genuine `InsufficientHistory`; untouched OOS remains unopened. Recent sampled 24h runs resolved 25/30 symbols with five `InsufficientHistory` failures and only the 15-name liquidity subset supported; sampled 7d runs resolved 16/30 with fourteen `InsufficientHistory` failures. Do not weaken coverage rules.
+- FFriZz sampled cycles remain legitimate all-WAIT abstention (72 WAIT / 0 BUY / 0 SELL, `unexpected_wait_state=0`). Do not lower thresholds merely to create trades.
+- The canonical FFriZz V1 prediction-ledger configuration blocker remains open for eligible prospective writes. Restore it only through authorized environment configuration; never commit secrets, substitute anonymous credentials, or weaken RLS.
+- Current highest-value research priority is to shift away from repeatedly testing unchanged blocked OI routes and toward accessible, timestamp-defensible, falsifiable experiments ranked by expected after-cost signal-quality gain, information value, compute cost, and overfitting risk.
+- All prior safety invariants remain unchanged: `live_promotions.json` empty, broker disconnected, authentic $100,000 paper history immutable, heavy concurrency bounded, and recurring infrastructure <= USD 30/month.
