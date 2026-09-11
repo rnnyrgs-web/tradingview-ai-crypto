@@ -15,6 +15,7 @@ from config import BACKTEST_COST_BPS
 
 HOUR_MS = 60 * 60 * 1000
 PRIMARY_HORIZONS = (24, 24 * 7)
+DEFAULT_MIN_OOS_SAMPLES = 8
 
 
 def _timestamp_exact_examples(dataset, horizon_hours):
@@ -56,8 +57,14 @@ def _training_direction(examples):
 
 
 def evaluate_basis_horizon(dataset, horizon_hours, cost_bps=BACKTEST_COST_BPS,
-                           train_fraction=0.6, min_total_samples=8):
-    """Score one frozen horizon without tuning on the OOS segment."""
+                           train_fraction=0.6, min_total_samples=8,
+                           min_oos_samples=DEFAULT_MIN_OOS_SAMPLES):
+    """Score one frozen horizon without tuning on the OOS segment.
+
+    A result is not exposed as available unless the frozen chronological split
+    leaves a predeclared minimum number of OOS samples. This is a research
+    adequacy guard only; satisfying it is never promotion evidence.
+    """
     if not dataset.get("research_only") or dataset.get("candidate_id") != "DATA-BASIS-001":
         return {"research_only": True, "available": False, "reason": "invalid_research_dataset"}
     if not dataset.get("available"):
@@ -76,6 +83,17 @@ def evaluate_basis_horizon(dataset, horizon_hours, cost_bps=BACKTEST_COST_BPS,
     split = max(2, min(split, len(examples) - 2))
     train = examples[:split]
     oos = examples[split:]
+    if len(oos) < int(min_oos_samples):
+        return {
+            "research_only": True,
+            "available": False,
+            "reason": "insufficient_oos_samples_before_scoring",
+            "sample_count": len(examples),
+            "train_samples": len(train),
+            "oos_samples": len(oos),
+            "minimum_oos_samples": int(min_oos_samples),
+        }
+
     direction = _training_direction(train)
     if direction is None:
         return {
@@ -102,8 +120,16 @@ def evaluate_basis_horizon(dataset, horizon_hours, cost_bps=BACKTEST_COST_BPS,
             "directionally_correct": gross_bps > 0,
         })
 
-    if len(scored) < 2:
-        return {"research_only": True, "available": False, "reason": "insufficient_oos_nonzero_feature_samples"}
+    if len(scored) < int(min_oos_samples):
+        return {
+            "research_only": True,
+            "available": False,
+            "reason": "insufficient_oos_nonzero_feature_samples",
+            "sample_count": len(examples),
+            "train_samples": len(train),
+            "oos_samples": len(scored),
+            "minimum_oos_samples": int(min_oos_samples),
+        }
 
     net = [x["net_bps"] for x in scored]
     gross = [x["gross_bps"] for x in scored]
@@ -121,6 +147,7 @@ def evaluate_basis_horizon(dataset, horizon_hours, cost_bps=BACKTEST_COST_BPS,
         "sample_count": len(examples),
         "train_samples": len(train),
         "oos_samples": len(scored),
+        "minimum_oos_samples": int(min_oos_samples),
         "cost_bps_round_trip": float(cost_bps),
         "oos_directional_hit_rate": hit_rate,
         "oos_avg_gross_bps": sum(gross) / len(gross),
