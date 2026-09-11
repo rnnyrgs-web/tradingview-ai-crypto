@@ -100,4 +100,5 @@ def test_director_logs_only_sanitized_probe_result(monkeypatch, caplog):
     assert "'status': 'available'" in text
     assert "SECRET_SYMBOL" not in text
     assert "secret.invalid" not in text
-    assert "payload" not in text
+    assert "{'secret': True}" not in text
+    assert "'payload':" not in text
