@@ -54,6 +54,10 @@ def collect_okx_basis_history(base, target_points=1000, max_pages=20):
     Pagination is bounded and uses OKX's ``after`` cursor to request older data.
     Mark and index candles are never interpolated, forward-filled, or nearest-
     neighbour matched. A source error or insufficient exact overlap fails closed.
+
+    ``index_points`` are returned only so a separate research-only falsifier can
+    form timestamp-exact future-return labels. They are targets, not features,
+    and this collector itself performs no outcome inspection or signal selection.
     """
     base = str(base or "").upper().strip()
     if not base or not base.replace("-", "").isalnum():
@@ -104,6 +108,7 @@ def collect_okx_basis_history(base, target_points=1000, max_pages=20):
             "index": index_error,
         },
         "points": basis_points,
+        "index_points": index_points,
         "alignment": "exact_shared_timestamp_only",
         "completed_candles_only": True,
         "interpolation_allowed": False,

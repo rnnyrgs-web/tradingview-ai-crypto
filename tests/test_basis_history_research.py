@@ -26,6 +26,7 @@ def test_paginated_basis_collection_uses_older_cursor_and_exact_overlap(monkeypa
     assert out["available"] is True
     assert out["point_count"] == 4
     assert [p["ts"] for p in out["points"]] == [100, 200, 300, 400]
+    assert [p["ts"] for p in out["index_points"]] == [100, 200, 300, 400]
     assert out["alignment"] == "exact_shared_timestamp_only"
     assert out["completed_candles_only"] is True
     assert out["interpolation_allowed"] is False
