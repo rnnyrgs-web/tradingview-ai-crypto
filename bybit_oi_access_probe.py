@@ -19,6 +19,10 @@ ENDPOINT = "https://api.bybit.com/v5/market/open-interest"
 ALLOWED_STATUSES = {
     "available",
     "valid_empty",
+    "http_400",
+    "http_401",
+    "http_403",
+    "http_404",
     "http_451",
     "http_429",
     "http_other_4xx",
@@ -35,10 +39,8 @@ def _http_status_bucket(exc: BaseException) -> str:
     if not isinstance(exc, httpx.HTTPStatusError) or exc.response is None:
         return "http_other"
     status = int(exc.response.status_code)
-    if status == 451:
-        return "http_451"
-    if status == 429:
-        return "http_429"
+    if status in {400, 401, 403, 404, 451, 429}:
+        return f"http_{status}"
     if 400 <= status < 500:
         return "http_other_4xx"
     if 500 <= status < 600:
