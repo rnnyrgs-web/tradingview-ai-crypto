@@ -53,17 +53,10 @@ def test_oi_points_distinguishes_available_empty_and_timeout(monkeypatch):
     assert runner._oi_points("BTC").source_status == "timeout"
 
 
-def test_run_counts_one_oi_acquisition_per_base_and_exposes_no_symbols(monkeypatch):
-    monkeypatch.setattr(runner, "build_universe", lambda: [{"symbol": "BTC-USD", "base": "BTC"}])
+def _patch_minimal_run_dependencies(monkeypatch, universe):
+    monkeypatch.setattr(runner, "build_universe", lambda: universe)
     candles = [{"ts": i * 3_600_000, "close": 100 + i} for i in range(1, 10)]
     monkeypatch.setattr(runner, "get_history", lambda *args, **kwargs: candles)
-    calls = []
-
-    def fake_oi(base):
-        calls.append(base)
-        return runner._OIHistory([], source_status="network_error")
-
-    monkeypatch.setattr(runner, "_oi_points", fake_oi)
     monkeypatch.setattr(
         runner,
         "score_shadow_signal",
@@ -86,6 +79,17 @@ def test_run_counts_one_oi_acquisition_per_base_and_exposes_no_symbols(monkeypat
     monkeypatch.setattr(runner, "score_shadow_signal_v2", lambda *args, **kwargs: {"families": []})
     monkeypatch.setattr(runner, "score_shadow_signal_v3", lambda *args, **kwargs: {"families": []})
 
+
+def test_run_counts_one_oi_acquisition_per_base_and_exposes_no_symbols(monkeypatch):
+    _patch_minimal_run_dependencies(monkeypatch, [{"symbol": "BTC-USD", "base": "BTC"}])
+    calls = []
+
+    def fake_oi(base):
+        calls.append(base)
+        return runner._OIHistory([], source_status="network_error")
+
+    monkeypatch.setattr(runner, "_oi_points", fake_oi)
+
     report = runner.run(persist=False)
     diagnostic = report["oi_source_diagnostics"]
 
@@ -97,6 +101,63 @@ def test_run_counts_one_oi_acquisition_per_base_and_exposes_no_symbols(monkeypat
     assert "BTC" not in repr(diagnostic)
     assert diagnostic["trade_authority"] is False
     assert diagnostic["promotion_authority"] is False
+
+
+def test_run_opens_source_level_circuit_after_first_http_451(monkeypatch):
+    _patch_minimal_run_dependencies(
+        monkeypatch,
+        [
+            {"symbol": "BTC-USD", "base": "BTC"},
+            {"symbol": "ETH-USD", "base": "ETH"},
+            {"symbol": "SOL-USD", "base": "SOL"},
+        ],
+    )
+    calls = []
+
+    def fake_oi(base):
+        calls.append(base)
+        return runner._OIHistory([], source_status="http_451")
+
+    monkeypatch.setattr(runner, "_oi_points", fake_oi)
+
+    report = runner.run(persist=False)
+    diagnostic = report["oi_source_diagnostics"]
+
+    # 451 is a source/region restriction. One real attempt is enough for this cycle;
+    # remaining bases fail closed without repeating the same blocked request.
+    assert calls == ["BTC"]
+    assert diagnostic["acquisition_attempts"] == 1
+    assert diagnostic["status_counts"] == {"http_451": 1}
+    assert diagnostic["extra_requests_added"] == 0
+    assert diagnostic["trade_authority"] is False
+    assert diagnostic["promotion_authority"] is False
+
+    v3 = report["v3_oi_causal_asof_feature_availability"]["horizons"]
+    for horizon in runner.V3_DIAGNOSTIC_HORIZONS:
+        assert v3[horizon]["oi_unavailable_reason_counts"].get("oi_unavailable") == 3
+
+
+def test_non_451_failures_do_not_open_source_level_circuit(monkeypatch):
+    _patch_minimal_run_dependencies(
+        monkeypatch,
+        [
+            {"symbol": "BTC-USD", "base": "BTC"},
+            {"symbol": "ETH-USD", "base": "ETH"},
+        ],
+    )
+    calls = []
+
+    def fake_oi(base):
+        calls.append(base)
+        return runner._OIHistory([], source_status="timeout")
+
+    monkeypatch.setattr(runner, "_oi_points", fake_oi)
+
+    report = runner.run(persist=False)
+
+    assert calls == ["BTC", "ETH"]
+    assert report["oi_source_diagnostics"]["acquisition_attempts"] == 2
+    assert report["oi_source_diagnostics"]["status_counts"] == {"timeout": 2}
 
 
 def test_adaptive_boundary_reallowlists_only_fixed_oi_source_categories(monkeypatch):
