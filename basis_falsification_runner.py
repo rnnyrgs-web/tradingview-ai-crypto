@@ -16,8 +16,10 @@ from basis_history_research import collect_okx_basis_history
 
 SUMMARY_ENV = "BASIS_FALSIFICATION_SUMMARY_PATH"
 DEFAULT_BASE = "BTC"
-DEFAULT_TARGET_POINTS = 1000
-DEFAULT_MAX_PAGES = 20
+# 4,000 hourly observations give the frozen 7d non-overlap split enough room to
+# reach the predeclared 8-sample OOS floor without changing that floor.
+DEFAULT_TARGET_POINTS = 4000
+DEFAULT_MAX_PAGES = 40
 
 
 def run() -> dict:
