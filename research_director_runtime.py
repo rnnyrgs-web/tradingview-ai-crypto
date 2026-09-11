@@ -14,7 +14,7 @@ from research_director import build_daily_lead_report, build_mission, claim_miss
 
 _STATE_PATH = Path(os.getenv("RESEARCH_DIRECTOR_STATE_PATH", str(Path(tempfile.gettempdir()) / "tradingview-ai-research-director.json")))
 _lock = Lock()
-log = logging.getLogger("continuous_coordinator")
+log = logging.getLogger("uvicorn.error")
 _state: dict[str, Any] = {"updated_at": None, "missions": [], "claims": [], "next_missions": [], "daily_lead_report": {}, "research_only": True, "trade_authority": False, "promotion_authority": False, "write_authority": False}
 _bybit_probe_ran = False
 _bybit_probe_result: dict[str, Any] | None = None
