@@ -412,6 +412,7 @@ def run(*, persist=True, generated_at=None):
 
     oi_cache = {}
     oi_source_status_counts = Counter()
+    oi_451_circuit_open = False
     results = []
     v2_signals_by_horizon = {horizon: [] for horizon in V2_DIAGNOSTIC_HORIZONS}
     v3_signals_by_horizon = {horizon: [] for horizon in V3_DIAGNOSTIC_HORIZONS}
@@ -428,11 +429,16 @@ def run(*, persist=True, generated_at=None):
             oi = []
             if bar == "1H":
                 if base not in oi_cache:
-                    oi_cache[base] = _oi_points(base)
-                    status = getattr(oi_cache[base], "source_status", "unclassified")
-                    if status not in OI_SOURCE_STATUSES:
-                        status = "unclassified"
-                    oi_source_status_counts[status] += 1
+                    if oi_451_circuit_open:
+                        oi_cache[base] = _OIHistory([], source_status="http_451")
+                    else:
+                        oi_cache[base] = _oi_points(base)
+                        status = getattr(oi_cache[base], "source_status", "unclassified")
+                        if status not in OI_SOURCE_STATUSES:
+                            status = "unclassified"
+                        oi_source_status_counts[status] += 1
+                        if status == "http_451":
+                            oi_451_circuit_open = True
                 oi = oi_cache[base]
             signal = score_shadow_signal(candles, oi, horizon=horizon)
             entry_price = _finite_positive((candles[-1] or {}).get("close")) if candles else None
