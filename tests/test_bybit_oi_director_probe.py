@@ -1,3 +1,5 @@
+import logging
+
 import research_director_runtime as runtime
 
 
@@ -74,3 +76,29 @@ def test_refresh_director_surfaces_only_bounded_probe_result(monkeypatch, tmp_pa
     assert payload["research_only"] is True
     assert payload["trade_authority"] is False
     assert payload["promotion_authority"] is False
+
+
+def test_director_logs_only_sanitized_probe_result(monkeypatch, caplog):
+    monkeypatch.setattr(
+        runtime,
+        "probe_bybit_oi_access",
+        lambda: {
+            "status": "available",
+            "points_observed": 5,
+            "symbol": "SECRET_SYMBOL",
+            "url": "https://secret.invalid/path",
+            "payload": {"secret": True},
+        },
+    )
+    _reset_probe_state()
+
+    with caplog.at_level(logging.INFO, logger=runtime.__name__):
+        runtime._ensure_bybit_probe()
+
+    text = caplog.text
+    assert "bybit_oi_access_probe" in text
+    assert "'status': 'available'" in text
+    assert "SECRET_SYMBOL" not in text
+    assert "secret.invalid" not in text
+    assert "{'secret': True}" not in text
+    assert "'payload':" not in text
