@@ -6,6 +6,12 @@ def test_runner_uses_larger_bounded_window_for_7d_rejection_power():
     assert runner.DEFAULT_MAX_PAGES == 85
 
 
+def test_runner_refuses_stale_smaller_orchestration_window(monkeypatch):
+    monkeypatch.setenv("BASIS_RESEARCH_TARGET_POINTS", "4000")
+    monkeypatch.setenv("BASIS_RESEARCH_MAX_PAGES", "40")
+    assert runner._configured_evidence_window() == (8000, 85)
+
+
 def test_runner_is_research_only_and_never_exposes_raw_points(monkeypatch):
     monkeypatch.setattr(
         runner,
