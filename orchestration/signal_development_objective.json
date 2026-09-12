@@ -82,23 +82,25 @@
   ],
   "current_bottleneck": {
     "id": "ACC-002-LIQUIDITY-COVERAGE",
-    "status": "BLOCKED_NATURAL_HISTORY_ACCUMULATION",
-    "reason": "insufficient_supported_liquidity_subsets",
-    "evidence": "Fresh bounded post-diagnostic evidence shows 24h resolves 24/30 histories with all 6 unresolved classified InsufficientHistory, while 7d resolves 16/30 with all 14 unresolved classified InsufficientHistory. Both support only the predeclared Top-15 subset. Untouched OOS remains closed until the unchanged two-subset/0.80 requirements are genuinely met.",
+    "status": "24H_DATA_READY_PRE_OOS_EDGE_NOT_ESTABLISHED",
+    "reason": "24h_pre_oos_profitability_gate_not_met",
+    "evidence": "Fresh live evidence shows the 24h ACC-002 lane resolves 28/30 histories and supports both predeclared Top-15 and Top-30 liquidity subsets, so 24h is no longer blocked by liquidity coverage. Untouched OOS nevertheless remains closed, which means the current fixed cross-sectional momentum candidates have not established sufficiently stable positive train/validation rank IC and worst-stress after-cost spread across the required subsets. The 7d lane remains history-limited and should receive low-priority rechecks only.",
     "minimum_subset_coverage": 0.8,
     "lower_requirement_allowed": false,
     "priority_factors": {
       "expected_genuine_signal_quality_impact": 1.0,
-      "expected_information_falsification_value": 0.2,
-      "probability_actionable_evidence": 0.15,
+      "expected_information_falsification_value": 0.95,
+      "probability_actionable_evidence": 0.9,
       "compute_api_cost_units": 0.5
     },
     "preferred_actions": [
-      "do not repeat source-error diagnostics unless failure types materially change",
-      "let genuine point-in-time history coverage accumulate without survivorship substitution",
-      "periodically re-check 24h and 7d supported subsets using the unchanged gate",
+      "prioritize data-ready 24h hypotheses that can demonstrate incremental positive after-cost expectancy before untouched OOS",
+      "diagnose which fixed train/validation profitability or rank-quality condition rejects the current 24h ACC-002 candidates before proposing a new challenger",
+      "prefer materially distinct economic mechanisms such as beta-neutral residual momentum or selective WAIT over blind indicator or parameter permutations",
+      "reject quickly when train/validation after-cost value is unstable or nonpositive rather than tuning to rescue a hypothesis",
+      "keep 7d insufficient-history work at low-priority recheck-only unless genuine coverage materially changes",
       "keep the 0.80 liquidity coverage requirement and two-subset requirement unchanged",
-      "allocate scarce heavy research to other falsifiable high-information signal-quality experiments while ACC-002 is naturally blocked"
+      "never open untouched OOS merely to search for a profitable configuration"
     ]
   },
   "worker_registry": {
