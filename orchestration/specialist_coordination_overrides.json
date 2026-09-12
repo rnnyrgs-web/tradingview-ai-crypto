@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "reason": "Reconcile canonical coordination with already-merged DATA-BREADTH-001 selection and evaluator without rewriting prior immutable completion evidence.",
+  "version": 2,
+  "reason": "Reconcile canonical coordination with integrated DATA-BREADTH-001 work and independently verified prospective point-in-time universe persistence without rewriting prior immutable completion evidence.",
   "task_updates": {
     "COORD-DATA-005": {
       "status": "DONE",
@@ -20,7 +20,7 @@
       "id": "COORD-DATA-006",
       "priority": 30,
       "owner": "data-market",
-      "status": "READY",
+      "status": "DONE",
       "title": "Capture prospective point-in-time universe snapshots for DATA-BREADTH-001 forward evidence",
       "dependencies": ["COORD-DATA-005"],
       "blockers": [],
@@ -39,6 +39,48 @@
         "exact-head Security and Reliability success"
       ],
       "completion_rule": "Start accumulating genuine forward point-in-time universe evidence using existing data paths only. This task may enable future research scoring but cannot itself establish alpha, alter live signals, backfill history, reset paper evidence, connect a broker, or authorize promotion.",
+      "completion_evidence": {
+        "integration_pr": 306,
+        "integration_merge": "718b8e4621f636d47b36695f586226438ffd7e4b",
+        "verified_scan_id": "7d886310-0854-41bf-b2b7-650a3c6f81c9",
+        "captured_at": "2026-09-12T14:07:50.146607+00:00",
+        "forecast_at": "2026-09-12T14:09:46.056333+00:00",
+        "member_count": 79,
+        "membership_stage": "post_liquidity_spread_prefilter_pre_deep_scan",
+        "historical_backfill": false,
+        "future_data_used": false,
+        "research_only": true,
+        "trade_authority_added": false,
+        "status": "PROSPECTIVE_PIT_CAPTURE_VERIFIED_LIVE",
+        "note": "Independent live-ledger verification confirmed real prospective universe snapshots persisted after PR #306 with capture time before forecast time, frozen eligibility/provenance, no backfill, and zero trading authority."
+      },
+      "next_task": "COORD-DATA-007"
+    },
+    {
+      "id": "COORD-DATA-007",
+      "priority": 31,
+      "owner": "data-market",
+      "status": "BLOCKED",
+      "title": "Falsify DATA-BREADTH-001 on matured prospective point-in-time cohorts",
+      "dependencies": ["COORD-DATA-006"],
+      "blockers": [
+        "requires genuinely prospective point-in-time universe cohorts to mature into sufficient non-overlapping 24h and 7d outcomes; do not backfill or reconstruct missing historical membership"
+      ],
+      "issue": null,
+      "branch": "agent/data-market",
+      "pr": null,
+      "evidence_required": [
+        "use only universe snapshots captured before the corresponding forecast",
+        "24h and 7d evaluated separately with non-overlapping full-horizon observations",
+        "minimum eight independent matured OOS observations per primary horizon before scoring",
+        "frozen DATA-BREADTH-001 feature definition and training-only sign/baseline",
+        "incremental after-cost expectancy versus frozen baseline must be positive and stable",
+        "1x/2x/3x realistic execution-cost stress",
+        "OOS-half, liquidity, and regime stability diagnostics",
+        "no threshold mining, survivor reconstruction, or untouched-OOS reuse",
+        "negative or insufficient evidence remains WAIT / RESEARCH_ONLY"
+      ],
+      "completion_rule": "Remain blocked until authentic prospective cohorts mature. Then reject DATA-BREADTH-001 quickly if incremental after-cost value is absent or unstable; do not tune it to survive.",
       "next_task": null
     }
   ]
