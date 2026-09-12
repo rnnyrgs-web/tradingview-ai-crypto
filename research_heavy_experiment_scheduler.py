@@ -90,14 +90,19 @@ def _eligible(experiment: dict) -> bool:
     return True
 
 
-def _signal_priority(row: dict) -> float:
+def _profitability_priority(row: dict) -> float:
     factors = row.get("priority_factors") or {}
     return priority_score(
-        expected_genuine_signal_quality_impact=factors.get("expected_genuine_signal_quality_impact", 0),
+        expected_incremental_after_cost_profitability_impact=factors.get("expected_incremental_after_cost_profitability_impact", 0),
         expected_information_falsification_value=factors.get("expected_information_falsification_value", 0),
         probability_actionable_evidence=factors.get("probability_actionable_evidence", 0),
         compute_api_cost_units=factors.get("compute_api_cost_units", 1),
     )
+
+
+def _signal_quality_secondary(row: dict) -> float:
+    factors = row.get("priority_factors") or {}
+    return max(0.0, min(1.0, _finite(factors.get("expected_genuine_signal_quality_impact"))))
 
 
 def _abstention_first(row: dict) -> int:
@@ -114,7 +119,8 @@ def build_heavy_dispatch_plan(experiment_queue: dict, *, running_experiment_ids=
     blocked_count = sum(1 for row in all_rows if isinstance(row, dict) and (row.get("blocked_reason") or str(row.get("evidence_readiness") or "") in BLOCKED_EVIDENCE_STATES))
     candidates.sort(
         key=lambda row: (
-            -_signal_priority(row),
+            -_profitability_priority(row),
+            -_signal_quality_secondary(row),
             -_abstention_first(row),
             -int(row.get("source_independent_samples") or 0),
             str(row.get("experiment_id")),
@@ -125,7 +131,8 @@ def build_heavy_dispatch_plan(experiment_queue: dict, *, running_experiment_ids=
         design = _science_design(row)
         selected.append({
             "experiment_id": str(row["experiment_id"]),
-            "signal_priority_score": _signal_priority(row),
+            "profitability_priority_score": _profitability_priority(row),
+            "signal_quality_secondary_score": _signal_quality_secondary(row),
             "priority_factors": dict(row.get("priority_factors") or {}),
             "information_priority": _finite(row.get("information_priority")),
             "source_samples": int(row.get("source_samples") or 0),
@@ -155,7 +162,7 @@ def build_heavy_dispatch_plan(experiment_queue: dict, *, running_experiment_ids=
         "blocked_candidate_count": blocked_count,
         "selected_count": len(selected),
         "selected": selected,
-        "priority_policy": "expected genuine signal-quality impact x information/falsification value x probability of actionable evidence / compute/API cost; blocked natural-history or unsupported-executor work is deferred; every admitted science design must be one-search, one-mutation, no-mining, no-OOS-reuse, multiple-testing protected, replication-required and no-paid-compute-escalation; ties prefer restrictive abstention-first science",
+        "priority_policy": "expected incremental after-cost profitability impact x information/falsification value x probability of actionable evidence / compute/API cost first; genuine forward signal-quality impact is a secondary tiebreaker; blocked natural-history or unsupported-executor work is deferred; every admitted science design must be one-search, one-mutation, no-mining, no-OOS-reuse, multiple-testing protected, replication-required and no-paid-compute-escalation; later ties prefer restrictive abstention-first science",
         "trade_authority": False,
         "promotion_authority": False,
         "strategy_mutation_authority": False,
