@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from signal_development import load_objective
+from orchestration.coordination_overrides import apply_coordination_overrides
 
 ROOT = Path(__file__).resolve().parents[1]
 STATE_PATH = ROOT / "orchestration" / "specialist_coordination.json"
@@ -24,6 +25,7 @@ REQUIRED_ROLES = {
 def load_state(path: Path = STATE_PATH) -> dict:
     load_objective()
     payload = json.loads(path.read_text(encoding="utf-8"))
+    payload = apply_coordination_overrides(payload)
     validate_state(payload)
     return payload
 
