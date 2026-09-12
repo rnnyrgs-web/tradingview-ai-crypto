@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "objective": "Improve genuine forward 24h/7d BUY/SELL/WAIT precision, after-cost expectancy, robustness and reliability without weakening canonical validation or increasing recurring cost.",
+  "objective": "Maximize genuine sustainable after-cost profitability and expected dollars earned per unit of risk first, then improve genuine forward 24h/7d BUY/SELL/WAIT accuracy/precision, without weakening canonical validation or increasing recurring cost.",
   "hourly_self_improvement_question": "What should be added, removed, simplified, combined, deprioritized, or tested next to improve genuine after-cost signal accuracy, profitability and reliability while reducing overfitting, duplicated research and wasted compute?",
   "constraints": {
     "research_only": true,
