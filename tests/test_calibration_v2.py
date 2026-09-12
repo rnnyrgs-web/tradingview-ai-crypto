@@ -115,8 +115,11 @@ def test_v2_never_authorizes_production_even_when_research_ready():
     symbols = [f"COIN{i}-USDT" for i in range(40)]
     for block in range(20):
         origin = start + timedelta(hours=6 * block)
+        # Vary the within-block success rate so the cluster-robust variance is
+        # estimable; a perfectly constant block rate correctly fails closed.
+        successes = 28 + (block % 5)
         for i, symbol in enumerate(symbols):
-            rows.append(row(symbol, origin, correct=((i + 2 * block) % 5 != 0)))
+            rows.append(row(symbol, origin, correct=(i < successes)))
 
     result = clustered_calibration_assessment(
         35,
