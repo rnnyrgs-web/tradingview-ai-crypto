@@ -7,7 +7,7 @@ import json
 from typing import Any, Iterable
 
 
-DIRECTOR_VERSION = "v2"
+DIRECTOR_VERSION = "v3"
 DEFAULT_LEASE_MINUTES = 45
 NATURAL_HISTORY_RECHECK_HOURS = 6
 
@@ -23,6 +23,7 @@ class ResearchMission:
     priority: float
     expected_information_gain: float
     expected_signal_impact: float
+    expected_profitability_impact: float
     sample_readiness: float
     novelty: float
     falsification_value: float = 0.5
@@ -74,21 +75,31 @@ def mission_priority(
     expected_signal_impact: float,
     sample_readiness: float,
     novelty: float,
+    expected_profitability_impact: float | None = None,
     falsification_value: float = 0.5,
     actionable_evidence_probability: float = 0.5,
     compute_cost: float = 0.5,
     redundancy_risk: float = 0.0,
     blocker: str | None = None,
 ) -> float:
-    """Score scarce research by after-cost impact and evidence value per cost.
+    """Rank scarce research by expected after-cost economic value first.
 
-    The multiplicative core prevents a flashy but non-falsifiable, evidence-poor,
-    or very expensive hypothesis from outranking a test that can actually teach
-    the system something. Readiness/novelty are small tie-breakers only.
-    Blocked work is heavily discounted and never claims the heavy lane.
+    `expected_profitability_impact` is the primary impact term. Callers that have
+    not yet emitted a separate economic estimate remain backward compatible by
+    falling back to `expected_signal_impact`, but a higher accuracy/precision
+    estimate cannot substitute for a lower explicitly supplied profitability
+    estimate. Information gain, falsifiability, sample readiness, actionable
+    evidence probability, compute cost, novelty and redundancy then decide how
+    efficiently that economic hypothesis can be tested. Blocked work remains
+    heavily discounted and cannot claim the heavy lane.
     """
     info = _clamp01(expected_information_gain)
-    impact = _clamp01(expected_signal_impact)
+    signal = _clamp01(expected_signal_impact)
+    profitability = _clamp01(
+        expected_signal_impact
+        if expected_profitability_impact is None
+        else expected_profitability_impact
+    )
     samples = _clamp01(sample_readiness)
     novel = _clamp01(novelty)
     falsify = _clamp01(falsification_value)
@@ -96,10 +107,12 @@ def mission_priority(
     cost = _clamp01(compute_cost)
     redundant = _clamp01(redundancy_risk)
 
-    evidence_value = (0.45 * info + 0.35 * falsify + 0.20 * samples)
-    impact_value = (0.80 * impact + 0.20 * actionable)
+    evidence_value = 0.45 * info + 0.35 * falsify + 0.20 * samples
+    economic_value = 0.90 * profitability + 0.10 * actionable
     cost_efficiency = 1.0 / (0.25 + 0.75 * cost)
-    score = evidence_value * impact_value * (0.35 + 0.65 * actionable) * cost_efficiency
+    score = evidence_value * economic_value * (0.35 + 0.65 * actionable) * cost_efficiency
+    # Genuine signal quality is deliberately only a secondary tie-breaker.
+    score += 0.025 * signal
     score += 0.04 * novel
     score *= 1.0 - 0.75 * redundant
     if blocker:
@@ -118,6 +131,7 @@ def build_mission(
     expected_signal_impact: float,
     sample_readiness: float,
     novelty: float,
+    expected_profitability_impact: float | None = None,
     falsification_value: float = 0.5,
     actionable_evidence_probability: float = 0.5,
     compute_cost: float = 0.5,
@@ -130,6 +144,11 @@ def build_mission(
     recheck_after = None
     if blocker == "InsufficientHistory":
         recheck_after = (current + timedelta(hours=NATURAL_HISTORY_RECHECK_HOURS)).isoformat()
+    profitability = _clamp01(
+        expected_signal_impact
+        if expected_profitability_impact is None
+        else expected_profitability_impact
+    )
     mission_id = stable_mission_id(horizon, direction, lane, theme, hypothesis)
     return ResearchMission(
         mission_id=mission_id,
@@ -141,6 +160,7 @@ def build_mission(
         priority=mission_priority(
             expected_information_gain=expected_information_gain,
             expected_signal_impact=expected_signal_impact,
+            expected_profitability_impact=profitability,
             sample_readiness=sample_readiness,
             novelty=novelty,
             falsification_value=falsification_value,
@@ -151,6 +171,7 @@ def build_mission(
         ),
         expected_information_gain=_clamp01(expected_information_gain),
         expected_signal_impact=_clamp01(expected_signal_impact),
+        expected_profitability_impact=profitability,
         sample_readiness=_clamp01(sample_readiness),
         novelty=_clamp01(novelty),
         falsification_value=_clamp01(falsification_value),
@@ -178,6 +199,7 @@ def rank_missions(missions: Iterable[ResearchMission], now: datetime | None = No
         (m for m in missions if eligible(m)),
         key=lambda m: (
             m.priority,
+            m.expected_profitability_impact,
             m.falsification_value,
             m.actionable_evidence_probability,
             m.expected_information_gain,
