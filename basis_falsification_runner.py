@@ -1,9 +1,12 @@
-"""Bounded research-only runtime for COORD-DATA-003 / DATA-BASIS-001.
+"""Compatibility runtime for the reserved profitability-falsification lane.
 
-This runner executes the frozen stage-1 falsification plus a rejection-oriented
-stage-2 profitability robustness diagnostic inside the existing worker army. It
-has no signal, paper, promotion, broker, or live-trade authority and writes only
-a compact evidence summary for coordinator diagnostics.
+DATA-BASIS-001 is permanently rejected.  The historical filename remains only
+so the existing bounded worker slot can be reused without adding concurrency or
+cost.  This runtime now executes frozen research-only DATA-FUNDING-001 using
+actual realized OKX funding timestamps plus completed OKX index candles.
+
+It has no signal, paper, promotion, broker, or live-trade authority and writes
+only a compact evidence summary.  Raw market/funding rows are never emitted.
 """
 
 from __future__ import annotations
@@ -12,72 +15,89 @@ import json
 import os
 from pathlib import Path
 
-from basis_falsification_research import evaluate_primary_horizons
-from basis_history_research import collect_okx_basis_history
-from basis_profitability_robustness import evaluate_primary_profitability_robustness
+from funding_falsification_research import evaluate_primary_horizons
+from funding_history_research import collect_okx_funding_history
 
+# Keep the existing transport variable so the worker army can consume the
+# summary without a new lane or concurrency change.  The payload itself is
+# explicitly DATA-FUNDING-001 and never masquerades as basis evidence.
 SUMMARY_ENV = "BASIS_FALSIFICATION_SUMMARY_PATH"
 DEFAULT_BASE = "BTC"
-# The current 7d result has only 10 non-overlapping OOS observations. 8,000
-# hourly observations should produce roughly 19 OOS 7d samples under the frozen
-# 60/40 split, materially increasing rejection power without tuning the feature.
-DEFAULT_TARGET_POINTS = 8000
-DEFAULT_MAX_PAGES = 85
+DEFAULT_FUNDING_TARGET_POINTS = 1200
+DEFAULT_INDEX_TARGET_POINTS = 5000
+DEFAULT_FUNDING_MAX_PAGES = 15
+DEFAULT_INDEX_MAX_PAGES = 50
 
 
-def _configured_evidence_window() -> tuple[int, int]:
-    """Never let stale orchestration overrides silently shrink the frozen window."""
-    configured_target = int(os.getenv("BASIS_RESEARCH_TARGET_POINTS", str(DEFAULT_TARGET_POINTS)))
-    configured_pages = int(os.getenv("BASIS_RESEARCH_MAX_PAGES", str(DEFAULT_MAX_PAGES)))
-    return max(DEFAULT_TARGET_POINTS, configured_target), max(DEFAULT_MAX_PAGES, configured_pages)
+def _bounded_int(name: str, default: int, minimum: int, maximum: int) -> int:
+    try:
+        value = int(os.getenv(name, str(default)))
+    except (TypeError, ValueError):
+        value = default
+    return max(minimum, min(value, maximum))
+
+
+def _configured_evidence_window() -> tuple[int, int, int, int]:
+    """Return bounded funding/index collection limits without tuning outcomes."""
+    return (
+        _bounded_int("FUNDING_RESEARCH_TARGET_POINTS", DEFAULT_FUNDING_TARGET_POINTS, 2, 2000),
+        _bounded_int("FUNDING_RESEARCH_INDEX_TARGET_POINTS", DEFAULT_INDEX_TARGET_POINTS, 2, 5000),
+        _bounded_int("FUNDING_RESEARCH_MAX_PAGES", DEFAULT_FUNDING_MAX_PAGES, 1, 20),
+        _bounded_int("FUNDING_RESEARCH_INDEX_MAX_PAGES", DEFAULT_INDEX_MAX_PAGES, 1, 50),
+    )
 
 
 def run() -> dict:
-    base = str(os.getenv("BASIS_RESEARCH_BASE", DEFAULT_BASE)).upper().strip()
-    target_points, max_pages = _configured_evidence_window()
+    base = str(os.getenv("FUNDING_RESEARCH_BASE", DEFAULT_BASE)).upper().strip()
+    funding_target, index_target, funding_pages, index_pages = _configured_evidence_window()
 
-    dataset = collect_okx_basis_history(base, target_points=target_points, max_pages=max_pages)
+    dataset = collect_okx_funding_history(
+        base,
+        funding_target_points=funding_target,
+        index_target_points=index_target,
+        funding_max_pages=funding_pages,
+        index_max_pages=index_pages,
+    )
     evaluation = evaluate_primary_horizons(dataset)
     results = evaluation.get("results") if isinstance(evaluation.get("results"), dict) else {}
-    available_results = sum(1 for row in results.values() if isinstance(row, dict) and row.get("available") is True)
-
-    robustness_eval = evaluate_primary_profitability_robustness(dataset)
-    robustness_results = robustness_eval.get("results") if isinstance(robustness_eval.get("results"), dict) else {}
-    available_robustness = sum(
-        1 for row in robustness_results.values()
+    available_results = sum(
+        1 for row in results.values()
         if isinstance(row, dict) and row.get("available") is True
     )
+    stage1_passes = sum(
+        1 for row in results.values()
+        if isinstance(row, dict) and row.get("stage1_pass") is True
+    )
 
-    if available_results and available_robustness:
-        evidence_conclusion = "stage1_and_stage2_evaluated"
-    elif available_results:
+    if available_results:
         evidence_conclusion = "stage1_evaluated"
     else:
         evidence_conclusion = "insufficient_evidence"
 
     return {
         "research_only": True,
-        "task_id": "COORD-DATA-003",
-        "candidate_id": "DATA-BASIS-001",
+        "task_id": "COORD-DATA-004",
+        "candidate_id": "DATA-FUNDING-001",
+        "legacy_runtime_filename": "basis_falsification_runner.py",
         "base": base,
         "evidence_conclusion": evidence_conclusion,
         "collection": {
             "available": dataset.get("available") is True,
             "reason": dataset.get("reason"),
-            "target_points": dataset.get("target_points"),
-            "point_count": dataset.get("point_count"),
-            "mark_point_count": dataset.get("mark_point_count"),
+            "funding_point_count": dataset.get("funding_point_count"),
             "index_point_count": dataset.get("index_point_count"),
-            "mark_pages": dataset.get("mark_pages"),
+            "funding_pages": dataset.get("funding_pages"),
             "index_pages": dataset.get("index_pages"),
-            "alignment": dataset.get("alignment"),
-            "completed_candles_only": dataset.get("completed_candles_only") is True,
+            "uses_actual_funding_timestamps": dataset.get("uses_actual_funding_timestamps") is True,
+            "assumed_fixed_funding_interval": dataset.get("assumed_fixed_funding_interval") is True,
+            "completed_price_candles_only": dataset.get("completed_price_candles_only") is True,
             "interpolation_allowed": dataset.get("interpolation_allowed") is True,
+            "forward_fill_allowed": dataset.get("forward_fill_allowed") is True,
+            "nearest_neighbor_matching": dataset.get("nearest_neighbor_matching") is True,
         },
         "results": results,
         "available_primary_results": available_results,
-        "profitability_robustness": robustness_results,
-        "available_robustness_results": available_robustness,
+        "stage1_pass_count": stage1_passes,
         "production_authority": False,
         "signal_authority": False,
         "paper_authority": False,
