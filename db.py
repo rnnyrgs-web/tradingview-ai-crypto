@@ -82,8 +82,12 @@ def insert_prediction_ledger(rows):
         "scan_id","symbol","horizon","direction","entry_price","score",
         "market_regime","strategy_identity","action_at_forecast","due_at","calibration"
     }} for row in rows]
-    r=http.post(f"{SUPABASE_URL}/rest/v1/prediction_ledger",
-        headers=headers("resolution=ignore-duplicates,return=minimal"),json=payload)
+    r=http.post(
+        f"{SUPABASE_URL}/rest/v1/prediction_ledger",
+        headers=headers("resolution=ignore-duplicates,return=minimal"),
+        params={"on_conflict":"scan_id,symbol,horizon"},
+        json=payload,
+    )
     if r.status_code>=300:
         raise RuntimeError(f"Supabase prediction ledger insert failed: {r.status_code} {r.text}")
 
