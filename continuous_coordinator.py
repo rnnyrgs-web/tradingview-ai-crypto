@@ -276,12 +276,24 @@ def observability_log_payload(army: object) -> dict:
         oi_source = compact_oi_source_diagnostics(forward.get("oi_source_diagnostics"))
         v2_availability = compact_v2_feature_availability(forward.get("v2_oi_alignment_feature_availability"))
         v3_availability = compact_v3_feature_availability(forward.get("v3_oi_causal_asof_feature_availability"))
+        error_stage = forward.get("error_stage")
+        if error_stage not in {
+            "prediction_ledger_persistence",
+            "prediction_ledger_configuration",
+            "ffrizz_collection_or_scoring",
+        }:
+            error_stage = None
+        http_status_class = forward.get("http_status_class")
+        if http_status_class not in {"http_4xx", "http_5xx", "http_other"}:
+            http_status_class = None
         return {
             "worker_exit": adaptive.get("last_exit_code"),
             "worker_elapsed_s": adaptive.get("elapsed_seconds"),
             "updated_at_ms": adaptive.get("updated_at_ms"),
             "collection_ok": forward.get("ok") if isinstance(forward.get("ok"), bool) else None,
             "error_type": str(forward.get("error_type")) if forward.get("error_type") else None,
+            "error_stage": error_stage,
+            "http_status_class": http_status_class,
             "generated_at": str(forward.get("generated_at")) if forward.get("generated_at") else None,
             "eligible_shadow_forecasts": eligible,
             "non_overlapping_full_horizon_buckets": forward.get("non_overlapping_full_horizon_buckets") is True,
