@@ -167,13 +167,36 @@ jobs:
         if: steps.credential_gate.outputs.execute == 'true'
         continue-on-error: true
         run: |
+          set +e
           python agents/autonomous_cloud_runner.py execute \
             --state /tmp/runner_state.json \
             --decision /tmp/decision.json \
-            --output /tmp/agent_result.json
+            --output /tmp/agent_result.json \
+            > >(tee /tmp/agent.log) 2> >(tee -a /tmp/agent.log >&2)
+          STATUS=$?
+          set -e
+          if grep -q 'organization_spend_limit_exceeded' /tmp/agent.log; then
+            echo "quota_exhausted=true" >> "$GITHUB_OUTPUT"
+            echo "OpenAI organization spend limit reached; pausing fail-closed without retry spam."
+            exit 0
+          fi
+          echo "quota_exhausted=false" >> "$GITHUB_OUTPUT"
+          exit "$STATUS"
+
+      - name: Pause cleanly when organization spend limit is exhausted
+        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outputs.quota_exhausted == 'true'
+        run: |
+          python - <<'PY'
+          import json
+          p='/tmp/runner_state.json'
+          s=json.load(open(p))
+          s['paused_reason']='OPENAI_ORGANIZATION_SPEND_LIMIT_EXCEEDED'
+          s['active_task']=None
+          json.dump(s, open(p,'w'), indent=2, sort_keys=True)
+          PY
 
       - name: Account conservatively for failed model execution
-        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'failure'
+        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'failure' && steps.agent.outputs.quota_exhausted != 'true'
         run: |
           python agents/autonomous_cloud_state.py mark-failure \
             --state /tmp/runner_state.json \
@@ -181,7 +204,7 @@ jobs:
 
       - id: result
         name: Read structured agent outcome
-        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'success'
+        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'success' && steps.agent.outputs.quota_exhausted != 'true'
         run: |
           STATUS="$(jq -r '.outcome.status' /tmp/agent_result.json)"
           test "$STATUS" = "READY_FOR_PR" -o "$STATUS" = "NO_CHANGE" -o "$STATUS" = "BLOCKED"
@@ -273,5 +296,5 @@ jobs:
           fi
 
       - name: Fail workflow after bounded agent failure
-        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'failure'
+        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'failure' && steps.agent.outputs.quota_exhausted != 'true'
         run: exit 1
