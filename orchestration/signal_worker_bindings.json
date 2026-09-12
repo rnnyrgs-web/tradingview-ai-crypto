@@ -20,7 +20,6 @@
     "cross-asset-rank-24h": {"class": "cross_asset_rank_24h", "signal_role": "ACC-002 24h liquidity-safe cross-sectional after-cost evidence"},
     "cross-asset-rank-7d": {"class": "cross_asset_rank_7d", "signal_role": "ACC-002 7d liquidity-safe cross-sectional after-cost evidence"},
     "adaptive-accuracy": {"class": "experiment_factory", "signal_role": "execute the top predeclared profitability-first restrictive experiment while preserving chronological validation and sealed OOS"},
-    "basis-falsification-btc": {"class": "python_research_workers", "signal_role": "falsify the frozen timestamp-safe BTC mark/index basis candidate for incremental after-cost predictive value without production authority"},
     "learning-diagnostics": {"class": "learning_diagnostics", "signal_role": "convert resolved economic losses and prediction errors into falsifiable hypotheses"},
     "experiment-factory": {"class": "experiment_factory", "signal_role": "convert profitability/error hypotheses into bounded predeclared experiments"}
   },

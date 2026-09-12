@@ -1,26 +1,17 @@
 import inspect
 
 import basis_falsification_runner
-from continuous_worker_army import (
-    NATURAL_HISTORY_RECHECK_SECONDS,
-    SUMMARY_ENV_BY_SCRIPT,
-    WORKERS,
-    _success_recheck_delay_seconds,
-)
+from continuous_worker_army import WORKERS
 
 
-def test_rejected_funding_compatibility_worker_is_zero_fetch_retired():
+def test_rejected_funding_compatibility_runtime_is_retired_and_not_scheduled():
     specs = [spec for spec in WORKERS if spec.name == "basis-falsification-btc"]
-    assert len(specs) == 1
-    spec = specs[0]
+    assert specs == []
+    assert all(spec.script != "basis_falsification_runner.py" for spec in WORKERS)
 
-    # Preserve the bounded compatibility lane for now, but make the actual job
-    # a zero-fetch sentinel instead of repeatedly re-running rejected alpha.
-    assert spec.script == "basis_falsification_runner.py"
-    assert spec.compute_class == "heavy"
-    assert SUMMARY_ENV_BY_SCRIPT[spec.script] == "BASIS_FALSIFICATION_SUMMARY_PATH"
-    assert _success_recheck_delay_seconds(spec, {"research_only": True}) == NATURAL_HISTORY_RECHECK_SECONDS
-
+    # Preserve the historical compatibility runtime for reproducible audit
+    # evidence, but never spend an always-on worker slot re-running a frozen
+    # candidate that has already failed falsification.
     evidence = basis_falsification_runner.run()
     assert evidence["candidate_id"] == "DATA-FUNDING-001"
     assert evidence["evidence_conclusion"] == "retired_rejected_fingerprint"
