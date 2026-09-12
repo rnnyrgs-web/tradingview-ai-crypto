@@ -90,15 +90,42 @@ def build_microstructure_veto(rows, *, cost_pct=0.12):
         if bucket is not None:
             observed += 1
             buckets[bucket].append(row)
+
+    computed = {name: _metrics(bucket, cost_pct=cost_pct) for name, bucket in buckets.items()}
+    normal = computed.get("normal")
+    baseline_ready = bool(
+        normal
+        and normal["samples"] >= MIN_SAMPLES
+        and normal["economic_evidence_complete"]
+        and normal["after_cost_expectancy_pct"] is not None
+    )
+    normal_expectancy = float(normal["after_cost_expectancy_pct"]) if baseline_ready else None
+
     groups = []
-    for name, bucket in sorted(buckets.items()):
-        metrics = _metrics(bucket, cost_pct=cost_pct)
+    for name in sorted(buckets):
+        metrics = computed[name]
+        incremental = None
+        if normal_expectancy is not None and metrics["after_cost_expectancy_pct"] is not None:
+            incremental = round(float(metrics["after_cost_expectancy_pct"]) - normal_expectancy, 4)
+
         status = "INSUFFICIENT_EVIDENCE"
-        if metrics["samples"] >= MIN_SAMPLES and metrics["economic_evidence_complete"]:
-            status = "RESTRICTIVE_VETO_CANDIDATE" if float(metrics["after_cost_expectancy_pct"]) <= 0.0 else "NO_VETO_EVIDENCE"
+        own_ready = metrics["samples"] >= MIN_SAMPLES and metrics["economic_evidence_complete"]
+        if name == "normal" and own_ready:
+            status = "BASELINE_REFERENCE"
+        elif own_ready and baseline_ready and incremental is not None:
+            # A restrictive execution hypothesis must be economically bad in
+            # absolute terms *and* worse than normal conditions. This prevents
+            # attributing a generally weak strategy/regime to microstructure.
+            if float(metrics["after_cost_expectancy_pct"]) <= 0.0 and incremental < 0.0:
+                status = "RESTRICTIVE_VETO_CANDIDATE"
+            else:
+                status = "NO_VETO_EVIDENCE"
+
         groups.append({
             "microstructure_state": name,
             **metrics,
+            "incremental_expectancy_vs_normal_pct": incremental,
+            "normal_baseline_ready": baseline_ready,
             "candidate_status": status,
             "requires_fresh_validation": True,
             "trade_authority": False,
@@ -110,6 +137,7 @@ def build_microstructure_veto(rows, *, cost_pct=0.12):
         "independent_samples": len(selected),
         "samples_with_microstructure": observed,
         "coverage": round(observed / len(selected), 4) if selected else None,
+        "normal_baseline_ready": baseline_ready,
         "groups": groups,
         "historical_orderbook_reconstruction_allowed": False,
         "missing_microstructure_policy": "insufficient_evidence",
