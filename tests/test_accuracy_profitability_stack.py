@@ -91,6 +91,44 @@ def test_microstructure_veto_requires_real_prospective_fields():
     assert report["broker_connected"] is False
 
 
+def test_microstructure_imbalance_is_relative_to_trade_direction():
+    long_rows = _rows(n=8, return_pct=-1.0, correct=False, symbol="LONG-USDT")
+    short_rows = _rows(n=8, return_pct=-1.0, correct=False, symbol="SHORT-USDT")
+    for row in long_rows:
+        row["microstructure"] = {
+            "reliable": True,
+            "spread_bps": 5.0,
+            "visible_quote_depth": 100000.0,
+            "depth_imbalance": -0.5,
+        }
+    for row in short_rows:
+        row["direction"] = "SHORT"
+        row["microstructure"] = {
+            "reliable": True,
+            "spread_bps": 5.0,
+            "visible_quote_depth": 100000.0,
+            "depth_imbalance": 0.5,
+        }
+    adverse = build_microstructure_veto(long_rows + short_rows)
+    adverse_group = next(x for x in adverse["groups"] if x["microstructure_state"] == "adverse_imbalance")
+    assert adverse_group["samples"] >= 8
+    assert adverse_group["candidate_status"] == "RESTRICTIVE_VETO_CANDIDATE"
+
+    favorable_rows = _rows(n=8, return_pct=1.0, correct=True, symbol="FAVORABLE-USDT")
+    for row in favorable_rows:
+        row["direction"] = "SHORT"
+        row["microstructure"] = {
+            "reliable": True,
+            "spread_bps": 5.0,
+            "visible_quote_depth": 100000.0,
+            "depth_imbalance": -0.5,
+        }
+    favorable = build_microstructure_veto(favorable_rows)
+    favorable_group = next(x for x in favorable["groups"] if x["microstructure_state"] == "favorable_imbalance")
+    assert favorable_group["candidate_status"] == "NO_VETO_EVIDENCE"
+    assert favorable["trade_authority"] is False
+
+
 def test_error_attribution_and_ensemble_diversity_are_research_only():
     errors = _rows(n=20, return_pct=-1.0, correct=False)
     for row in errors:
