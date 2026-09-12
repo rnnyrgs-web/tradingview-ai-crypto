@@ -404,6 +404,10 @@ def summarize_evidence(envelope: dict) -> dict:
         if not isinstance(error_type, str) or not error_type:
             continue
         failure_type_counts[error_type] = failure_type_counts.get(error_type, 0) + 1
+    coverage_summary = {
+        size: {key: value for key, value in item.items() if key != "missing_symbols"}
+        for size, item in payload["liquidity_stability_policy"].get("coverage_diagnostics", {}).items()
+    }
     return {
         "generated_at": payload["generated_at"],
         "horizon": payload["horizon"],
@@ -411,7 +415,7 @@ def summarize_evidence(envelope: dict) -> dict:
         "research_blocked": bool(payload.get("research_blocked")),
         "research_blocked_reason": payload.get("research_blocked_reason"),
         "supported_liquidity_subsets": payload["liquidity_stability_policy"]["supported_subsets"],
-        "liquidity_subset_coverage": payload["liquidity_stability_policy"].get("coverage_diagnostics", {}),
+        "liquidity_subset_coverage": coverage_summary,
         "parameter_stability": payload["parameter_stability"],
         "point_in_time_universe": payload["point_in_time_universe"],
         "untouched_oos_opened": selected is not None,
