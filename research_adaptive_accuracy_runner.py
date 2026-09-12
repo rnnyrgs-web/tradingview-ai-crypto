@@ -12,6 +12,11 @@ from research_adaptive_accuracy import build_adaptive_accuracy_report
 from research_learning_state import append_lesson, load_state
 
 
+_FFRIZZ_PERSISTENCE_PREFIX = "Supabase prediction ledger insert failed:"
+_FFRIZZ_ERROR_STAGES = {"prediction_ledger_persistence", "ffrizz_collection_or_scoring"}
+_FFRIZZ_HTTP_STATUS_CLASSES = {"http_4xx", "http_5xx", "http_other"}
+
+
 def _memory_summary(state):
     value = state if isinstance(state, dict) else {}
     try:
@@ -43,6 +48,34 @@ def build_runner_report(rows):
 
 def _nonnegative_int(value):
     return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else None
+
+
+def _bounded_ffrizz_failure(exc):
+    """Classify a FFriZz failure without exposing response bodies or arbitrary text."""
+    stage = "ffrizz_collection_or_scoring"
+    status_class = None
+    if isinstance(exc, RuntimeError):
+        message = str(exc)
+        if message.startswith(_FFRIZZ_PERSISTENCE_PREFIX):
+            stage = "prediction_ledger_persistence"
+            suffix = message[len(_FFRIZZ_PERSISTENCE_PREFIX):].strip()
+            token = suffix.split(maxsplit=1)[0] if suffix else ""
+            try:
+                status = int(token)
+            except (TypeError, ValueError):
+                status = None
+            if status is not None:
+                if 400 <= status < 500:
+                    status_class = "http_4xx"
+                elif 500 <= status < 600:
+                    status_class = "http_5xx"
+                else:
+                    status_class = "http_other"
+    return {
+        "error_type": type(exc).__name__,
+        "error_stage": stage if stage in _FFRIZZ_ERROR_STAGES else "ffrizz_collection_or_scoring",
+        "http_status_class": status_class if status_class in _FFRIZZ_HTTP_STATUS_CLASSES else None,
+    }
 
 
 def _bounded_abstention_diagnostics(value):
@@ -236,7 +269,7 @@ def _ffrizz_forward_collection():
         return {
             "ok": False,
             "research_only": True,
-            "error_type": type(exc).__name__,
+            **_bounded_ffrizz_failure(exc),
             "trade_authority": False,
             "promotion_authority": False,
         }
@@ -270,6 +303,8 @@ def _ffrizz_forward_collection():
             **common,
             "ok": False,
             "error_type": "PredictionLedgerNotConfigured",
+            "error_stage": "prediction_ledger_configuration",
+            "http_status_class": None,
         }
     return {
         **common,
