@@ -82,6 +82,28 @@ def _robust_selection_score(pre: dict) -> tuple[float, float]:
     return worst_net, worst_ic
 
 
+def _liquidity_subset_coverage(symbols: list[str], histories: dict[str, list[dict]]) -> dict[str, dict]:
+    """Describe exact Top-N history coverage without substituting lower ranks."""
+    diagnostics = {}
+    for requested in LIQUIDITY_SUBSETS:
+        if len(symbols) < requested:
+            continue
+        requested_symbols = symbols[:requested]
+        resolved_symbols = [symbol for symbol in requested_symbols if symbol in histories]
+        minimum = max(8, int(math.ceil(requested * MIN_LIQUIDITY_SUBSET_COVERAGE)))
+        diagnostics[str(requested)] = {
+            "requested_assets": requested,
+            "resolved_assets": len(resolved_symbols),
+            "minimum_required_assets": minimum,
+            "coverage": len(resolved_symbols) / requested,
+            "missing_assets": requested - len(resolved_symbols),
+            "blocking_deficit_to_minimum": max(0, minimum - len(resolved_symbols)),
+            "passes_coverage": len(resolved_symbols) >= minimum,
+            "missing_symbols": [symbol for symbol in requested_symbols if symbol not in histories],
+        }
+    return diagnostics
+
+
 def _build_liquidity_subsets(symbols: list[str], histories: dict[str, list[dict]]) -> dict[int, dict[str, list[dict]]]:
     """Return predeclared Top-N subsets only when enough of that Top-N resolved.
 
@@ -127,7 +149,7 @@ def _horizon_settings() -> tuple[str, str, int, tuple[tuple[int, ...], ...]]:
     return horizon, profile["bar"], profile["forward_bars"], profile["lookback_grid"]
 
 
-def _blocked_payload(*, horizon: str, bar: str, universe_size: int, requested_bars: int, bars: int, minimum_bars: int, histories: dict, failures: list, survivorship: dict, liquidity_histories: dict, reason: str) -> dict:
+def _blocked_payload(*, horizon: str, bar: str, universe_size: int, requested_bars: int, bars: int, minimum_bars: int, histories: dict, failures: list, survivorship: dict, liquidity_histories: dict, symbols: list[str], reason: str) -> dict:
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "acc": "ACC-002",
@@ -151,6 +173,7 @@ def _blocked_payload(*, horizon: str, bar: str, universe_size: int, requested_ba
             "minimum_passing_subsets_per_candidate": MIN_STABLE_LIQUIDITY_SUBSETS,
             "primary_oos_subset": None,
             "oos_subset_count": 0,
+            "coverage_diagnostics": _liquidity_subset_coverage(symbols, histories),
         },
         "untouched_oos_opened_for_candidate_count": 0,
         "candidate_count": 0,
@@ -199,8 +222,10 @@ def run() -> dict:
     manifest = load_manifest(os.getenv("POINT_IN_TIME_UNIVERSE_MANIFEST", "").strip() or None)
     research_histories, survivorship = filter_histories(manifest, histories)
 
-    research_symbols = [symbol for symbol in symbols if symbol in research_histories]
-    liquidity_histories = _build_liquidity_subsets(research_symbols, research_histories)
+    # Preserve the original ranked universe when enforcing Top-N coverage. Filtering
+    # the symbol list down to successful histories first would silently promote
+    # lower-ranked survivors into Top-15/30/45 and overstate coverage.
+    liquidity_histories = _build_liquidity_subsets(symbols, research_histories)
     if len(liquidity_histories) < MIN_STABLE_LIQUIDITY_SUBSETS:
         return _blocked_payload(
             horizon=horizon,
@@ -213,6 +238,7 @@ def run() -> dict:
             failures=failures,
             survivorship=survivorship,
             liquidity_histories=liquidity_histories,
+            symbols=symbols,
             reason="insufficient_supported_liquidity_subsets",
         )
     primary_subset_size = max(liquidity_histories)
@@ -302,6 +328,7 @@ def run() -> dict:
             "minimum_passing_subsets_per_candidate": MIN_STABLE_LIQUIDITY_SUBSETS,
             "primary_oos_subset": primary_subset_size,
             "oos_subset_count": 1,
+            "coverage_diagnostics": _liquidity_subset_coverage(symbols, research_histories),
         },
         "untouched_oos_opened_for_candidate_count": 1 if selected is not None else 0,
         "candidate_count": len(public_candidates),
@@ -384,6 +411,7 @@ def summarize_evidence(envelope: dict) -> dict:
         "research_blocked": bool(payload.get("research_blocked")),
         "research_blocked_reason": payload.get("research_blocked_reason"),
         "supported_liquidity_subsets": payload["liquidity_stability_policy"]["supported_subsets"],
+        "liquidity_subset_coverage": payload["liquidity_stability_policy"].get("coverage_diagnostics", {}),
         "parameter_stability": payload["parameter_stability"],
         "point_in_time_universe": payload["point_in_time_universe"],
         "untouched_oos_opened": selected is not None,
