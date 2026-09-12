@@ -1,6 +1,6 @@
 {
   "active_task": null,
-  "last_seen_main_sha": "40e9737e0e1dbdee7a25c48788b2d55b963db8d4",
+  "last_seen_main_sha": "cf4ac6bd8d98a28beb2f3deba9b88e8dc08f8b61",
   "next_eligible_at": "2026-09-12T02:50:53Z",
   "paused_reason": "OPENAI_ORGANIZATION_SPEND_LIMIT_EXCEEDED",
   "runs": [
