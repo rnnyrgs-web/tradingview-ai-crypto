@@ -19,6 +19,7 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
+from acc002_history_fallback import get_complete_bybit_spot_history
 from cross_asset_rank import (
     CrossAssetConfig,
     build_cross_section_panel,
@@ -123,6 +124,63 @@ def _build_liquidity_subsets(symbols: list[str], histories: dict[str, list[dict]
     return subsets
 
 
+def _recover_7d_history_deficit(*, symbols: list[str], histories: dict[str, list[dict]], primary_shortfalls: dict[str, dict], bar: str, bars: int, minimum_bars: int) -> tuple[dict, list[dict], dict]:
+    """Recover only the exact ranked assets needed to support Top-15 and Top-30.
+
+    The fallback is intentionally narrow: 7d/4H only, Bybit spot only, one complete
+    venue series per rescued asset, no stitching, no alternate asset substitution,
+    and no attempts after the existing two-subset gate is satisfied.
+    """
+    failures = []
+    provenance = {
+        "policy": "OKX primary; Bybit spot full-series fallback only for exact missing 7d Top-N assets",
+        "fallback_bar": "4H",
+        "no_venue_stitching": True,
+        "no_rank_substitution": True,
+        "fallback_attempts": 0,
+        "fallback_rescued_assets": 0,
+        "fallback_failed_assets": 0,
+    }
+    if bar != "4H" or len(_build_liquidity_subsets(symbols, histories)) >= MIN_STABLE_LIQUIDITY_SUBSETS:
+        failures.extend(primary_shortfalls.values())
+        return histories, failures, provenance
+
+    target_rank = min(30, len(symbols))
+    for symbol in symbols[:target_rank]:
+        if symbol in histories:
+            continue
+        primary_failure = primary_shortfalls.get(symbol, {
+            "symbol": symbol,
+            "error_type": "PrimaryHistoryUnavailable",
+            "bars_required": minimum_bars,
+        })
+        provenance["fallback_attempts"] += 1
+        try:
+            rows = get_complete_bybit_spot_history(symbol, bar=bar, bars=bars)
+        except Exception as exc:
+            failed = dict(primary_failure)
+            failed["fallback_error_type"] = type(exc).__name__
+            failures.append(failed)
+            provenance["fallback_failed_assets"] += 1
+            continue
+        if len(rows) < minimum_bars:
+            failed = dict(primary_failure)
+            failed["fallback_error_type"] = "InsufficientBybitHistory"
+            failed["fallback_bars_received"] = len(rows)
+            failures.append(failed)
+            provenance["fallback_failed_assets"] += 1
+            continue
+        histories[symbol] = rows
+        provenance["fallback_rescued_assets"] += 1
+        if len(_build_liquidity_subsets(symbols, histories)) >= MIN_STABLE_LIQUIDITY_SUBSETS:
+            break
+
+    for symbol, primary_failure in primary_shortfalls.items():
+        if symbol not in histories and not any(item.get("symbol") == symbol for item in failures):
+            failures.append(primary_failure)
+    return histories, failures, provenance
+
+
 def _candidate_selection_score(candidate: dict) -> tuple[float, float]:
     scores = [
         _robust_selection_score(item["pre_oos"])
@@ -149,7 +207,7 @@ def _horizon_settings() -> tuple[str, str, int, tuple[tuple[int, ...], ...]]:
     return horizon, profile["bar"], profile["forward_bars"], profile["lookback_grid"]
 
 
-def _blocked_payload(*, horizon: str, bar: str, universe_size: int, requested_bars: int, bars: int, minimum_bars: int, histories: dict, failures: list, survivorship: dict, liquidity_histories: dict, symbols: list[str], reason: str) -> dict:
+def _blocked_payload(*, horizon: str, bar: str, universe_size: int, requested_bars: int, bars: int, minimum_bars: int, histories: dict, failures: list, survivorship: dict, liquidity_histories: dict, symbols: list[str], reason: str, history_provenance: dict) -> dict:
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "acc": "ACC-002",
@@ -158,7 +216,8 @@ def _blocked_payload(*, horizon: str, bar: str, universe_size: int, requested_ba
         "research_blocked_reason": reason,
         "live_approved": False,
         "trade_authority": False,
-        "source": "OKX public historical API",
+        "source": "OKX public historical API with bounded Bybit spot full-series fallback for 7d only",
+        "history_provenance": history_provenance,
         "selection_policy": "fixed_grid_train_validation_parameter_and_liquidity_stability_then_open_one_untouched_oos",
         "survivorship_policy": (
             "Today's liquid universe is not historical membership evidence. Cross-sectional promotion review requires "
@@ -208,16 +267,36 @@ def run() -> dict:
     bars = max(requested_bars, minimum_bars)
 
     symbols = [row["symbol"] for row in build_universe()[:universe_size]]
-    histories, failures = {}, []
+    histories, primary_shortfalls = {}, {}
     for symbol in symbols:
         try:
             rows = get_history(symbol, bar=bar, bars=bars)
             if len(rows) >= minimum_bars:
                 histories[symbol] = rows
             else:
-                failures.append({"symbol": symbol, "error_type": "InsufficientHistory", "bars_received": len(rows), "bars_required": minimum_bars})
+                primary_shortfalls[symbol] = {"symbol": symbol, "error_type": "InsufficientHistory", "bars_received": len(rows), "bars_required": minimum_bars}
         except Exception as exc:
-            failures.append({"symbol": symbol, "error_type": type(exc).__name__})
+            primary_shortfalls[symbol] = {"symbol": symbol, "error_type": type(exc).__name__}
+
+    history_provenance = {
+        "policy": "OKX only",
+        "fallback_bar": None,
+        "no_venue_stitching": True,
+        "no_rank_substitution": True,
+        "fallback_attempts": 0,
+        "fallback_rescued_assets": 0,
+        "fallback_failed_assets": 0,
+    }
+    failures = list(primary_shortfalls.values())
+    if horizon == "7d":
+        histories, failures, history_provenance = _recover_7d_history_deficit(
+            symbols=symbols,
+            histories=histories,
+            primary_shortfalls=primary_shortfalls,
+            bar=bar,
+            bars=bars,
+            minimum_bars=minimum_bars,
+        )
 
     manifest = load_manifest(os.getenv("POINT_IN_TIME_UNIVERSE_MANIFEST", "").strip() or None)
     research_histories, survivorship = filter_histories(manifest, histories)
@@ -240,6 +319,7 @@ def run() -> dict:
             liquidity_histories=liquidity_histories,
             symbols=symbols,
             reason="insufficient_supported_liquidity_subsets",
+            history_provenance=history_provenance,
         )
     primary_subset_size = max(liquidity_histories)
 
@@ -313,7 +393,8 @@ def run() -> dict:
         "research_only": True,
         "live_approved": False,
         "trade_authority": False,
-        "source": "OKX public historical API",
+        "source": "OKX public historical API with bounded Bybit spot full-series fallback for 7d only",
+        "history_provenance": history_provenance,
         "selection_policy": "fixed_grid_train_validation_parameter_and_liquidity_stability_then_open_one_untouched_oos",
         "survivorship_policy": (
             "Today's liquid universe is not historical membership evidence. Cross-sectional promotion review requires "
@@ -408,6 +489,16 @@ def summarize_evidence(envelope: dict) -> dict:
         size: {key: value for key, value in item.items() if key != "missing_symbols"}
         for size, item in payload["liquidity_stability_policy"].get("coverage_diagnostics", {}).items()
     }
+    provenance = payload.get("history_provenance") if isinstance(payload.get("history_provenance"), dict) else {}
+    provenance_summary = {
+        "policy": provenance.get("policy"),
+        "fallback_bar": provenance.get("fallback_bar"),
+        "no_venue_stitching": provenance.get("no_venue_stitching") is True,
+        "no_rank_substitution": provenance.get("no_rank_substitution") is True,
+        "fallback_attempts": provenance.get("fallback_attempts", 0),
+        "fallback_rescued_assets": provenance.get("fallback_rescued_assets", 0),
+        "fallback_failed_assets": provenance.get("fallback_failed_assets", 0),
+    }
     return {
         "generated_at": payload["generated_at"],
         "horizon": payload["horizon"],
@@ -416,6 +507,7 @@ def summarize_evidence(envelope: dict) -> dict:
         "research_blocked_reason": payload.get("research_blocked_reason"),
         "supported_liquidity_subsets": payload["liquidity_stability_policy"]["supported_subsets"],
         "liquidity_subset_coverage": coverage_summary,
+        "history_provenance": provenance_summary,
         "parameter_stability": payload["parameter_stability"],
         "point_in_time_universe": payload["point_in_time_universe"],
         "untouched_oos_opened": selected is not None,
