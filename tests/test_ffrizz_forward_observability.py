@@ -47,6 +47,8 @@ def test_observability_log_payload_exposes_bounded_ffrizz_collection_summary():
         "updated_at_ms": 12345,
         "collection_ok": True,
         "error_type": None,
+        "error_stage": None,
+        "http_status_class": None,
         "generated_at": "2026-09-10T10:00:00+00:00",
         "eligible_shadow_forecasts": 4,
         "non_overlapping_full_horizon_buckets": True,
