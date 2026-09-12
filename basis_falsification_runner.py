@@ -25,10 +25,16 @@ DEFAULT_TARGET_POINTS = 8000
 DEFAULT_MAX_PAGES = 85
 
 
+def _configured_evidence_window() -> tuple[int, int]:
+    """Never let stale orchestration overrides silently shrink the frozen window."""
+    configured_target = int(os.getenv("BASIS_RESEARCH_TARGET_POINTS", str(DEFAULT_TARGET_POINTS)))
+    configured_pages = int(os.getenv("BASIS_RESEARCH_MAX_PAGES", str(DEFAULT_MAX_PAGES)))
+    return max(DEFAULT_TARGET_POINTS, configured_target), max(DEFAULT_MAX_PAGES, configured_pages)
+
+
 def run() -> dict:
     base = str(os.getenv("BASIS_RESEARCH_BASE", DEFAULT_BASE)).upper().strip()
-    target_points = int(os.getenv("BASIS_RESEARCH_TARGET_POINTS", str(DEFAULT_TARGET_POINTS)))
-    max_pages = int(os.getenv("BASIS_RESEARCH_MAX_PAGES", str(DEFAULT_MAX_PAGES)))
+    target_points, max_pages = _configured_evidence_window()
 
     dataset = collect_okx_basis_history(base, target_points=target_points, max_pages=max_pages)
     evaluation = evaluate_primary_horizons(dataset)
