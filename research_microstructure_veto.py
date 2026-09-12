@@ -55,10 +55,13 @@ def _bucket(row):
         return "wide_spread"
     if depth is not None and depth < 5000:
         return "thin_depth"
-    if imbalance is not None and imbalance <= -0.35:
-        return "ask_heavy"
-    if imbalance is not None and imbalance >= 0.35:
-        return "bid_heavy"
+    if imbalance is not None and abs(imbalance) >= 0.35:
+        direction = str(row.get("direction") or "").upper()
+        if direction == "LONG":
+            return "favorable_imbalance" if imbalance > 0 else "adverse_imbalance"
+        if direction == "SHORT":
+            return "favorable_imbalance" if imbalance < 0 else "adverse_imbalance"
+        return "direction_unknown_imbalance"
     return "normal"
 
 
