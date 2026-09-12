@@ -1,8 +1,8 @@
 {
   "active_task": null,
-  "last_seen_main_sha": "8d3644be9154fcabb956f21eb14a06f22753eed8",
+  "last_seen_main_sha": "1229b28fa05d5980605eabe332bf4c74f5b92a40",
   "next_eligible_at": "2026-09-12T02:50:53Z",
-  "paused_reason": "MODEL_EXECUTION_FAILURE",
+  "paused_reason": "OPENAI_ORGANIZATION_SPEND_LIMIT_EXCEEDED",
   "runs": [
     {
       "actual_cost_usd": 0.0416,
