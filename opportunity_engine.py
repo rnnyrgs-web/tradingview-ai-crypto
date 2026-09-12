@@ -49,6 +49,26 @@ def _preforecast_market_context(candidate, captured_at):
         "accepted_observations":sorted(observations,key=lambda r:(r["exchange"],r["observed_ms"]))}}
 
 
+def _attach_universe_snapshot(ledger_rows, scan_id, universe_snapshot):
+    """Attach one bounded pre-outcome universe snapshot per scan, never one copy per forecast."""
+    if not ledger_rows or not isinstance(universe_snapshot, dict):
+        return False
+    symbols=universe_snapshot.get("symbols")
+    if (
+        universe_snapshot.get("recorded") is not True
+        or str(universe_snapshot.get("scan_id") or "") != str(scan_id)
+        or not isinstance(symbols, list)
+        or not symbols
+    ):
+        return False
+    snapshot=dict(universe_snapshot)
+    snapshot["symbols"]=list(symbols)
+    calibration=dict(ledger_rows[0].get("calibration") or {})
+    calibration["preforecast_universe_snapshot"]=snapshot
+    ledger_rows[0]["calibration"]=calibration
+    return True
+
+
 def _diagnostic(category, code, detail=None):
     item={"category":category,"code":code}
     if detail:
@@ -105,7 +125,7 @@ def _action_diagnostics(reviewed_present, reviewed_direction, direction, reviewe
     }
 
 
-def build_opportunities(scan_id,candidates,ai_signals,regime,risk_plan_fn):
+def build_opportunities(scan_id,candidates,ai_signals,regime,risk_plan_fn,universe_snapshot=None):
     ai_map={}
     for s in ai_signals or []:
         symbol=str(s.get("symbol","")).upper(); horizon=str(s.get("horizon",""))
@@ -154,5 +174,6 @@ def build_opportunities(scan_id,candidates,ai_signals,regime,risk_plan_fn):
             ledger_calibration=dict(row["calibration"]); ledger_calibration["preforecast_market_context"]=row.pop("_preforecast_market_context")
             ledger_rows.append({"scan_id":scan_id,"symbol":row["symbol"],"horizon":horizon,"direction":row["direction"],"entry_price":row["entry_price"],"score":row["evidence_score"],"market_regime":regime,"strategy_identity":row["strategy_identity"],"action_at_forecast":row["action"],"due_at":iso(due_at),"calibration":ledger_calibration})
         saved[horizon]=rows
+    _attach_universe_snapshot(ledger_rows,scan_id,universe_snapshot)
     insert_prediction_ledger(ledger_rows)
     return saved
