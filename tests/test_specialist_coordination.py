@@ -15,7 +15,7 @@ from orchestration.specialist_coordination import (
 def test_coordination_state_has_exact_specialist_roster_and_safe_policy():
     state = load_state()
     assert set(state["roles"]) == REQUIRED_ROLES
-    assert state["policy"]["priority_basis"] == "expected_genuine_forward_signal_quality_impact"
+    assert state["policy"]["priority_basis"] == "expected_incremental_after_cost_profitability_impact_then_forward_signal_quality"
     assert state["policy"]["specialists_write_main"] is False
     assert state["policy"]["specialists_merge_own_prs"] is False
     assert state["policy"]["automatic_merge"] is False
@@ -40,7 +40,7 @@ def test_each_specialist_has_one_obvious_active_task_and_safe_handoff_state():
         # evidence determines the next separately predeclared step.
         if task["next_task"] is None:
             assert task["id"] in {
-                "COORD-DATA-004",
+                "COORD-DATA-005",
                 "COORD-QUANT-002",
                 "COORD-REGIME-002",
                 "COORD-EXEC-002",
@@ -64,17 +64,25 @@ def test_completed_data_provenance_work_is_not_reassigned():
     assert selected["completion_evidence"]["candidate_id"] == "DATA-BASIS-001"
     assert selected["next_task"] == "COORD-DATA-003"
 
-    rejected = next(row for row in state["tasks"] if row["id"] == "COORD-DATA-003")
-    assert rejected["status"] == "DONE"
-    assert rejected["completion_evidence"]["status"] == "REJECTED_CURRENT_FINGERPRINT"
-    assert rejected["completion_evidence"]["rejection_pr"] == 291
-    assert rejected["next_task"] == "COORD-DATA-004"
+    rejected_basis = next(row for row in state["tasks"] if row["id"] == "COORD-DATA-003")
+    assert rejected_basis["status"] == "DONE"
+    assert rejected_basis["completion_evidence"]["status"] == "REJECTED_CURRENT_FINGERPRINT"
+    assert rejected_basis["completion_evidence"]["rejection_pr"] == 291
+    assert rejected_basis["next_task"] == "COORD-DATA-004"
+
+    rejected_funding = next(row for row in state["tasks"] if row["id"] == "COORD-DATA-004")
+    assert rejected_funding["status"] == "DONE"
+    assert rejected_funding["completion_evidence"]["candidate_id"] == "DATA-FUNDING-001"
+    assert rejected_funding["completion_evidence"]["status"] == "REJECTED_CURRENT_FINGERPRINT"
+    assert rejected_funding["completion_evidence"]["rejection_pr"] == 298
+    assert rejected_funding["completion_evidence"]["24h_incremental_vs_training_only_baseline_bps"] == 0.0
+    assert rejected_funding["next_task"] == "COORD-DATA-005"
 
     next_data_task = next_task(state, "data-market")
-    assert next_data_task["id"] == "COORD-DATA-004"
+    assert next_data_task["id"] == "COORD-DATA-005"
     assert next_data_task["status"] == "READY"
     assert next_data_task["next_task"] is None
-    assert "DATA-BASIS" in next_data_task["title"]
+    assert "profitability candidate" in next_data_task["title"]
 
 
 def test_duplicate_active_ownership_is_rejected():
