@@ -1,8 +1,8 @@
 {
   "version": 1,
   "objective_id": "UNIVERSAL_SIGNAL_DEVELOPMENT_V1",
-  "primary_mission": "Continuously develop the highest achievable genuinely accurate 24h and 7d crypto BUY / SELL / WAIT signals with positive after-cost expectancy.",
-  "optimization_target": "genuine_forward_signal_quality",
+  "primary_mission": "Continuously maximize genuine sustainable after-cost profitability for 24h and 7d crypto BUY / SELL / WAIT signals, with genuine forward signal accuracy/precision as the secondary objective.",
+  "optimization_target": "genuine_after_cost_profitability_first_then_forward_signal_quality",
   "anti_objectives": [
     "historical_accuracy_maximization",
     "threshold_mining",
@@ -41,7 +41,7 @@
   "valid_horizons": ["24h", "7d", "both"],
   "valid_evidence_conclusions": ["supports", "rejects", "unresolved"],
   "priority_formula": {
-    "expression": "expected_genuine_signal_quality_impact * expected_information_falsification_value * probability_actionable_evidence / compute_api_cost_units",
+    "expression": "expected_incremental_after_cost_profitability_impact * expected_information_falsification_value * probability_actionable_evidence / compute_api_cost_units; genuine forward signal quality is a secondary tiebreaker and cannot compensate for weaker economic impact",
     "factor_range": [0.0, 1.0],
     "minimum_cost_units": 0.25,
     "safety_reliability_exception": "Operational/security work may outrank alpha research only when required to preserve validity, availability, authenticity, or fail-closed evidence collection."
@@ -88,6 +88,7 @@
     "minimum_subset_coverage": 0.8,
     "lower_requirement_allowed": false,
     "priority_factors": {
+      "expected_incremental_after_cost_profitability_impact": 1.0,
       "expected_genuine_signal_quality_impact": 1.0,
       "expected_information_falsification_value": 0.95,
       "probability_actionable_evidence": 0.9,
@@ -105,43 +106,43 @@
   },
   "worker_registry": {
     "python_research_workers": {
-      "purpose": "Generate bounded chronological research evidence and challengers for 24h/7d signal quality.",
+      "purpose": "Generate bounded chronological research evidence and challengers for genuine after-cost profitability and 24h/7d signal quality.",
       "signal_path": "research_runner/cross_asset_runner -> sealed evidence -> validation/OOS/robustness -> challenger/forward proof"
     },
     "cross_asset_rank_24h": {
-      "purpose": "Resolve ACC-002 24h cross-sectional signal evidence.",
+      "purpose": "Resolve ACC-002 24h cross-sectional profitability and signal evidence.",
       "signal_path": "liquidity-safe universe -> chronological rank research -> untouched OOS when gates permit"
     },
     "cross_asset_rank_7d": {
-      "purpose": "Resolve ACC-002 7d cross-sectional signal evidence.",
+      "purpose": "Resolve ACC-002 7d cross-sectional profitability and signal evidence.",
       "signal_path": "liquidity-safe universe -> chronological rank research -> untouched OOS when gates permit"
     },
     "learning_diagnostics": {
-      "purpose": "Turn genuinely resolved correct/error outcomes into falsifiable research questions.",
-      "signal_path": "resolved prediction errors -> grouped independent diagnostics -> hypothesis queue"
+      "purpose": "Turn genuinely resolved economic losses and prediction errors into falsifiable research questions.",
+      "signal_path": "resolved prediction economics/errors -> grouped independent diagnostics -> hypothesis queue"
     },
     "experiment_factory": {
-      "purpose": "Convert diagnostic hypotheses into immutable bounded experiment contracts.",
+      "purpose": "Convert diagnostic hypotheses into immutable bounded experiment contracts ranked by expected economic impact first.",
       "signal_path": "hypothesis -> predeclared validation/cost/falsification contract -> heavy scheduler"
     },
     "heavy_experiment_scheduler": {
-      "purpose": "Allocate scarce heavy compute to highest expected signal-information value without increasing concurrency.",
-      "signal_path": "priority formula -> one bounded heavy candidate -> canonical evidence gates"
+      "purpose": "Allocate scarce heavy compute to highest expected profitability/information value without increasing concurrency.",
+      "signal_path": "profitability-first priority formula -> one bounded heavy candidate -> canonical evidence gates"
     },
     "validation_workers": {
-      "purpose": "Protect signal-development claims from leakage, overlap, false discovery, cost illusion, and weak samples.",
+      "purpose": "Protect profitability and signal-development claims from leakage, overlap, false discovery, cost illusion, and weak samples.",
       "signal_path": "candidate evidence -> independent chronological/OOS/robustness checks -> accept/reject/unresolved"
     },
     "autonomous_cloud_specialist": {
-      "purpose": "Perform bounded reasoning/coding work on the highest-value READY signal-development task.",
+      "purpose": "Perform bounded reasoning/coding work on the highest-value READY profitability/signal-development task.",
       "signal_path": "shared objective/coordination -> isolated candidate PR -> exact-head CI -> manual Lead review"
     },
     "lead_coordination": {
-      "purpose": "Keep all workers aligned to genuine forward signal quality and integrate only verified compatible improvements.",
+      "purpose": "Keep all workers aligned to genuine after-cost profitability first and forward signal quality second, integrating only verified compatible improvements.",
       "signal_path": "scorecard/bottlenecks -> deterministic task priority -> specialist/worker assignment -> integration"
     },
     "operational_security_workers": {
-      "purpose": "Preserve authenticity and availability of signal-development evidence; they do not claim alpha.",
+      "purpose": "Preserve authenticity and availability of profitability/signal-development evidence; they do not claim alpha.",
       "signal_path": "detect failures/tampering/staleness -> fail closed -> protect research and forward-proof validity"
     }
   }

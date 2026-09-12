@@ -19,9 +19,10 @@ def test_default_api_work_uses_luna_and_keeps_sol_disabled():
     assert reserved_cost_usd(config, "data-market") < config["budget"]["runner_daily_api_budget_usd"]
 
 
-def test_budget_mission_prioritizes_signal_quality_and_avoids_waste():
+def test_budget_mission_prioritizes_profitability_and_avoids_waste():
     mission = load_config()["roles"]["data-market"]["mission"].lower()
-    assert "highest expected signal-quality" in mission
+    assert "highest expected incremental after-cost profitability" in mission
+    assert "accuracy/precision secondary" in mission
     assert "deterministic python" in mission
     assert "do not spend api budget merely to stay busy" in mission
     assert "insufficienthistory" in mission

@@ -51,7 +51,7 @@ def _timestamp(value):
         return None
 
 
-def _independent_window_count(rows):
+def _independent_window_rows(rows):
     intervals = []
     for row in rows:
         span = HORIZON_SPAN.get(row.get("horizon"))
@@ -60,16 +60,32 @@ def _independent_window_count(rows):
         if span is None or due_at is None or resolved_at is None or resolved_at < due_at:
             continue
         origin = due_at - span
-        intervals.append((origin, due_at))
+        intervals.append((origin, due_at, row))
     intervals.sort(key=lambda item: (item[0], item[1]))
-    count = 0
+    selected = []
     covered_until = None
-    for origin, due_at in intervals:
+    for origin, due_at, row in intervals:
         if covered_until is not None and origin < covered_until:
             continue
-        count += 1
+        selected.append(row)
         covered_until = due_at
-    return count
+    return selected
+
+
+def _independent_window_count(rows):
+    return len(_independent_window_rows(rows))
+
+
+def _finite_values(rows, field):
+    values = []
+    for row in rows:
+        try:
+            value = float(row.get(field))
+        except (TypeError, ValueError):
+            continue
+        if isfinite(value):
+            values.append(value)
+    return values
 
 
 def _group_metrics(rows, key_fn, minimum_samples=MIN_GROUP_SAMPLES):
@@ -79,17 +95,20 @@ def _group_metrics(rows, key_fn, minimum_samples=MIN_GROUP_SAMPLES):
     out = []
     for key, group in buckets.items():
         total = len(group)
-        independent_samples = _independent_window_count(group)
+        independent_rows = _independent_window_rows(group)
+        independent_samples = len(independent_rows)
         correct = sum(1 for row in group if row.get("correct") is True)
         wrong = total - correct
-        returns = []
-        for row in group:
-            try:
-                value = float(row.get("directional_return_pct"))
-            except (TypeError, ValueError):
-                continue
-            if isfinite(value):
-                returns.append(value)
+        directional_returns = _finite_values(group, "directional_return_pct")
+        after_cost_returns = _finite_values(independent_rows, "after_cost_return_pct")
+        average_after_cost = (
+            sum(after_cost_returns) / len(after_cost_returns) if after_cost_returns else None
+        )
+        economic_harm = (
+            max(0.0, -average_after_cost) * len(after_cost_returns)
+            if average_after_cost is not None
+            else 0.0
+        )
         out.append({
             "group": key,
             "samples": total,
@@ -98,9 +117,13 @@ def _group_metrics(rows, key_fn, minimum_samples=MIN_GROUP_SAMPLES):
             "wrong": wrong,
             "precision": round(correct / total, 4) if total else None,
             "wrong_rate": round(wrong / total, 4) if total else None,
-            "average_directional_return_pct": round(sum(returns) / len(returns), 4) if returns else None,
+            "average_directional_return_pct": round(sum(directional_returns) / len(directional_returns), 4) if directional_returns else None,
+            "average_after_cost_return_pct": round(average_after_cost, 4) if average_after_cost is not None else None,
+            "after_cost_independent_observations": len(after_cost_returns),
+            "economic_harm_score_pct": round(economic_harm, 4),
             "ready_for_diagnostic": independent_samples >= int(minimum_samples),
             "raw_rows_are_independent": False,
+            "economic_priority_uses_independent_rows": True,
         })
     return sorted(out, key=lambda row: (-row["independent_samples"], -row["samples"], row["group"]))
 
@@ -108,12 +131,13 @@ def _group_metrics(rows, key_fn, minimum_samples=MIN_GROUP_SAMPLES):
 def _priority(metric, dimension):
     if not metric.get("ready_for_diagnostic") or metric.get("wrong_rate") is None:
         return None
-    score = round(float(metric["wrong_rate"]) * min(int(metric["independent_samples"]), 100), 4)
+    accuracy_score = round(float(metric["wrong_rate"]) * min(int(metric["independent_samples"]), 100), 4)
+    economic_harm = float(metric.get("economic_harm_score_pct") or 0.0)
     horizon = metric["group"] if dimension == "horizon" and metric["group"] in HORIZON_SPAN else "both"
     question = (
         f"Why does {dimension}={metric['group']} show a {metric['wrong_rate']:.1%} wrong-signal rate across "
         f"{metric['independent_samples']} non-overlapping forecast windows, and can a predeclared restrictive filter "
-        "or challenger improve after-cost OOS/forward results?"
+        "or challenger improve genuine after-cost OOS/forward profitability?"
     )
     return {
         "dimension": dimension,
@@ -121,12 +145,15 @@ def _priority(metric, dimension):
         "samples": metric["samples"],
         "independent_samples": metric["independent_samples"],
         "wrong_rate": metric["wrong_rate"],
-        "priority_score": score,
+        "priority_score": accuracy_score,
+        "average_after_cost_return_pct": metric.get("average_after_cost_return_pct"),
+        "after_cost_independent_observations": metric.get("after_cost_independent_observations", 0),
+        "economic_harm_score_pct": economic_harm,
         "research_question": question,
         "hypothesis": question,
-        "predicted_mechanism": f"A repeatable error condition in {dimension}={metric['group']} may identify a restrictive abstention rule or independent challenger signal.",
+        "predicted_mechanism": f"A repeatable economic-loss or error condition in {dimension}={metric['group']} may identify a restrictive abstention rule or independent challenger signal.",
         "target_horizon": horizon,
-        "expected_signal_quality_effect": "Reduce false BUY/SELL decisions or improve WAIT selectivity while preserving after-cost expectancy.",
+        "expected_signal_quality_effect": "Increase after-cost expectancy first; improve genuine BUY/SELL precision or WAIT quality second.",
         "evidence_needed": ["independent non-overlapping resolved forecasts", "chronological backtest", "untouched OOS", "genuine forward challenger evidence"],
         "falsification_criteria": ["no stable improvement after costs", "effect disappears under robustness or independent OOS", "benefit requires post-outcome threshold selection"],
         "chronological_oos_requirements": ["purged chronological train/validation", "untouched OOS not used for tuning", "genuine forward confirmation separated from historical/OOS"],
@@ -142,7 +169,7 @@ def _priority(metric, dimension):
 
 
 def learning_diagnostics(rows, *, minimum_samples=MIN_GROUP_SAMPLES):
-    """Build reusable error diagnostics from genuine resolved prediction rows."""
+    """Build reusable profitability-first diagnostics from genuine resolved prediction rows."""
     resolved = _resolved_rows(rows)
     dimensions = {
         "horizon": _group_metrics(resolved, lambda r: r.get("horizon"), minimum_samples),
@@ -157,7 +184,16 @@ def learning_diagnostics(rows, *, minimum_samples=MIN_GROUP_SAMPLES):
             item = _priority(metric, dimension)
             if item:
                 priorities.append(item)
-    priorities.sort(key=lambda row: (-row["priority_score"], -row["independent_samples"], -row["samples"], row["dimension"], row["group"]))
+    priorities.sort(
+        key=lambda row: (
+            -float(row.get("economic_harm_score_pct") or 0.0),
+            -row["priority_score"],
+            -row["independent_samples"],
+            -row["samples"],
+            row["dimension"],
+            row["group"],
+        )
+    )
     total = len(resolved)
     correct = sum(1 for row in resolved if row.get("correct") is True)
     return {
@@ -173,11 +209,10 @@ def learning_diagnostics(rows, *, minimum_samples=MIN_GROUP_SAMPLES):
         "minimum_group_samples": int(minimum_samples),
         "sample_sufficiency_basis": "non_overlapping_full_horizon_windows_reconstructed_from_due_at",
         "raw_precision_descriptive_only": True,
+        "economic_priority_basis": "independent_after_cost_expectancy_loss_first_then_wrong_signal_rate",
         "diagnostics": dimensions,
         "research_priorities": priorities[:20],
         "learning_policy": (
-            "Resolved outcomes generate falsifiable research questions only. Repeated scans and cross-sectional rows inside an overlapping full-horizon interval "
-            "do not increase sample sufficiency. Production may not be tuned directly from these diagnostics; every proposed change must be predeclared and pass "
-            "fresh chronological/OOS/forward validation."
+            "Resolved outcomes generate falsifiable research questions only. Economic-loss severity from independent non-overlapping full-horizon rows ranks diagnostics before wrong-signal rate, so accuracy cannot outrank known after-cost losses. Repeated scans and overlapping rows do not increase economic sample sufficiency. Production may not be tuned directly from these diagnostics; every proposed change must be predeclared and pass fresh chronological/OOS/forward validation."
         ),
     }
