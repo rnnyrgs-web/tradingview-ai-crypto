@@ -86,6 +86,58 @@ def test_liquidity_subsets_keep_top_n_provenance_and_require_80pct_coverage():
     assert all(symbol in symbols[:30] for symbol in subsets[30])
 
 
+def test_liquidity_coverage_reports_exact_ranked_deficit_without_substitution():
+    symbols = [f"S{i}" for i in range(45)]
+    histories = {symbol: [{"ts": 1, "close": 1.0}] for symbol in symbols}
+    for symbol in symbols[:4]:
+        histories.pop(symbol)
+
+    coverage = runner._liquidity_subset_coverage(symbols, histories)
+    assert coverage["15"]["resolved_assets"] == 11
+    assert coverage["15"]["minimum_required_assets"] == 12
+    assert coverage["15"]["blocking_deficit_to_minimum"] == 1
+    assert coverage["15"]["passes_coverage"] is False
+    assert coverage["15"]["missing_symbols"] == symbols[:4]
+    assert coverage["30"]["resolved_assets"] == 26
+    assert coverage["30"]["passes_coverage"] is True
+
+
+def test_run_preserves_original_ranked_universe_for_coverage(monkeypatch):
+    symbols = [f"S{i}" for i in range(45)]
+    monkeypatch.setattr(runner, "build_universe", lambda: [{"symbol": symbol} for symbol in symbols])
+    monkeypatch.setattr(runner, "load_manifest", lambda _path: None)
+    monkeypatch.setattr(
+        runner,
+        "filter_histories",
+        lambda _manifest, histories: (histories, {"promotion_allowed": False}),
+    )
+    minimum = max(
+        runner.required_history_bars(CrossAssetConfig(lookbacks=lookbacks, forward_bars=24))
+        for lookbacks in runner.FIXED_LOOKBACK_GRID
+    )
+
+    def fake_history(symbol, *, bar, bars):
+        if symbol == "S0":
+            raise RuntimeError("missing")
+        return [None] * max(minimum, bars)
+
+    captured = {}
+
+    def capture_subsets(ranked_symbols, histories):
+        captured["symbols"] = list(ranked_symbols)
+        captured["histories"] = dict(histories)
+        return {}
+
+    monkeypatch.setattr(runner, "get_history", fake_history)
+    monkeypatch.setattr(runner, "_build_liquidity_subsets", capture_subsets)
+    monkeypatch.setattr(runner, "_blocked_payload", lambda **kwargs: kwargs)
+
+    result = runner.run()
+    assert captured["symbols"] == symbols
+    assert "S0" not in captured["histories"]
+    assert result["symbols"] == symbols
+
+
 def test_candidate_selection_uses_worst_passing_liquidity_subset():
     strong = {"train": _segment(worst_net=0.02), "validation": _segment(worst_net=0.02)}
     weaker = {"train": _segment(worst_net=0.004), "validation": _segment(worst_net=0.005)}
