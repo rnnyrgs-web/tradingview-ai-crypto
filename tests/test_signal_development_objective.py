@@ -208,7 +208,7 @@ def test_all_sealed_research_artifacts_are_bound_to_primary_objective():
         seal_research_payload({"signal_development_objective": "OTHER"})
 
 
-def test_autonomous_cloud_runner_is_bound_to_same_objective_and_acc002_is_deprioritized_when_naturally_blocked():
+def test_autonomous_cloud_runner_is_bound_to_same_objective_and_current_acc002_state():
     config = json.loads(Path("orchestration/autonomous_specialist_runner.json").read_text(encoding="utf-8"))
     assert config["objective_id"] == PRIMARY_OBJECTIVE_ID
     assert config["primary_mission"] == PRIMARY_MISSION
@@ -217,4 +217,6 @@ def test_autonomous_cloud_runner_is_bound_to_same_objective_and_acc002_is_deprio
     mission = config["roles"]["data-market"]["mission"]
     assert "ACC-002" in mission
     assert "0.80" in mission
-    assert "do not repeatedly re-diagnose" in mission
+    assert "Top-15" in mission and "Top-30" in mission
+    assert "pre-OOS after-cost edge" in mission
+    assert "7d insufficient-history work low priority" in mission
