@@ -49,7 +49,7 @@ def test_primary_signal_objective_cannot_be_silently_replaced():
             validate_objective(bad)
 
 
-def test_canonical_safety_and_acc002_liquidity_blocker_are_fail_closed():
+def test_canonical_safety_and_acc002_gate_remain_fail_closed_while_profitability_is_prioritized():
     objective = load_objective()
     inv = objective["hard_invariants"]
     assert inv["monthly_recurring_ceiling_usd"] == 30
@@ -60,11 +60,13 @@ def test_canonical_safety_and_acc002_liquidity_blocker_are_fail_closed():
     assert inv["fabricate_historical_data"] is False
     assert inv["weaken_validation_gates"] is False
     blocker = objective["current_bottleneck"]
-    assert blocker["reason"] == "insufficient_supported_liquidity_subsets"
+    assert blocker["reason"] == "24h_pre_oos_profitability_gate_not_met"
     assert blocker["minimum_subset_coverage"] == 0.8
     assert blocker["lower_requirement_allowed"] is False
-    assert blocker["status"] == "BLOCKED_NATURAL_HISTORY_ACCUMULATION"
-    assert blocker["priority_factors"]["probability_actionable_evidence"] < 0.5
+    assert blocker["status"] == "24H_DATA_READY_PRE_OOS_EDGE_NOT_ESTABLISHED"
+    assert blocker["priority_factors"]["probability_actionable_evidence"] >= 0.8
+    assert any("positive after-cost expectancy" in action for action in blocker["preferred_actions"])
+    assert any("7d" in action and "low-priority" in action for action in blocker["preferred_actions"])
 
 
 def test_every_worker_class_has_explicit_signal_development_path():
