@@ -40,7 +40,7 @@ def test_each_specialist_has_one_obvious_active_task_and_safe_handoff_state():
         # evidence determines the next separately predeclared step.
         if task["next_task"] is None:
             assert task["id"] in {
-                "COORD-DATA-005",
+                "COORD-DATA-006",
                 "COORD-QUANT-002",
                 "COORD-REGIME-002",
                 "COORD-EXEC-002",
@@ -78,11 +78,23 @@ def test_completed_data_provenance_work_is_not_reassigned():
     assert rejected_funding["completion_evidence"]["24h_incremental_vs_training_only_baseline_bps"] == 0.0
     assert rejected_funding["next_task"] == "COORD-DATA-005"
 
+    breadth = next(row for row in state["tasks"] if row["id"] == "COORD-DATA-005")
+    assert breadth["status"] == "DONE"
+    assert breadth["completion_evidence"]["candidate_id"] == "DATA-BREADTH-001"
+    assert breadth["completion_evidence"]["selection_pr"] == 300
+    assert breadth["completion_evidence"]["evaluator_pr"] == 301
+    assert breadth["completion_evidence"]["status"] == "EVALUATOR_INTEGRATED_POINT_IN_TIME_HISTORY_BLOCKED"
+    assert breadth["next_task"] == "COORD-DATA-006"
+
     next_data_task = next_task(state, "data-market")
-    assert next_data_task["id"] == "COORD-DATA-005"
+    assert next_data_task["id"] == "COORD-DATA-006"
     assert next_data_task["status"] == "READY"
     assert next_data_task["next_task"] is None
-    assert "profitability candidate" in next_data_task["title"]
+    assert "prospective point-in-time universe snapshots" in next_data_task["title"]
+    requirements = " ".join(next_data_task["evidence_required"]).lower()
+    assert "never retroactively backfill" in requirements
+    assert "no signal threshold" in requirements
+    assert "zero new paid services" in requirements
 
 
 def test_duplicate_active_ownership_is_rejected():
