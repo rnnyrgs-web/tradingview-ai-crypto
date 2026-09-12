@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from openai import OpenAI
 
 from config import *
-from utils import clamp
+from utils import clamp, iso, now_utc
 from market_data import build_universe, get_candles, get_derivatives, get_order_book_intelligence
 from features import timeframe_features
 from safety import validate_candles, validate_risk, SafetyError
@@ -18,6 +18,43 @@ from scan_failure_diagnostics import safe_failure
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 log = logging.getLogger(__name__)
+UNIVERSE_SNAPSHOT_SCHEMA_VERSION = 1
+
+
+def _prospective_universe_snapshot(scan_id, universe):
+    """Freeze authentic post-liquidity-filter membership before deep-scan survivorship."""
+    symbols=sorted({str(row.get("symbol") or "").strip().upper() for row in (universe or []) if isinstance(row,dict) and str(row.get("symbol") or "").strip()})
+    captured_at=iso(now_utc())
+    snapshot={
+        "schema_version":UNIVERSE_SNAPSHOT_SCHEMA_VERSION,
+        "recorded":bool(symbols),
+        "captured_at":captured_at,
+        "scan_id":str(scan_id),
+        "membership_stage":"post_liquidity_spread_prefilter_pre_deep_scan",
+        "symbols":symbols,
+        "member_count":len(symbols),
+        "eligibility":{
+            "quote_asset":"USDT",
+            "excluded_stable_bases":sorted(STABLE_BASES),
+            "min_quote_volume_24h":float(MIN_QUOTE_VOLUME),
+            "max_spread_bps":float(MAX_SPREAD_BPS),
+            "universe_size_cap":int(UNIVERSE_SIZE),
+        },
+        "provenance":{
+            "membership_source":"okx_spot_tickers",
+            "cross_exchange_price_source":"binance_spot_ticker_price",
+            "capture_boundary":"build_universe_return_before_deep_scan",
+            "prospective_only":True,
+            "historical_backfill":False,
+            "future_data_used":False,
+        },
+        "research_only":True,
+        "trade_authority_added":False,
+    }
+    if not symbols:
+        snapshot["reason"]="empty_authentic_universe"
+    return snapshot
+
 
 def horizon_score(symbol, horizon):
     cfg=HORIZONS[horizon]
@@ -154,6 +191,7 @@ Maximum 8 signals total.
 def run_scan():
     scan_id=str(uuid.uuid4())
     universe=build_universe()
+    universe_snapshot=_prospective_universe_snapshot(scan_id,universe)
     pre=universe[:DEEP_SCAN_SIZE]
     deep=[]
     errors=[]
@@ -198,7 +236,7 @@ def run_scan():
     opportunities={h:[] for h in OPPORTUNITY_HORIZONS}
     opportunity_candidates,risk_preflight_rejections=_preflight_opportunity_risk(deep)
     try:
-        opportunities=build_opportunities(scan_id,opportunity_candidates,signals,regime,risk_plan)
+        opportunities=build_opportunities(scan_id,opportunity_candidates,signals,regime,risk_plan,universe_snapshot=universe_snapshot)
     except Exception as e:
         opportunity_error=type(e).__name__
         opportunity_failure=safe_failure("opportunity_persistence", e)
