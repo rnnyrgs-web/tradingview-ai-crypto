@@ -77,7 +77,7 @@ def test_duplicate_active_task_prevents_second_ownership():
     state = default_state()
     state["active_task"] = {
         "role": "data-market",
-        "task_id": "COORD-DATA-003",
+        "task_id": "COORD-DATA-004",
         "phase": "WAITING_CI",
         "base_main_sha": MAIN_SHA,
         "started_at": "2026-09-09T03:30:00Z",
@@ -126,7 +126,7 @@ def test_stale_main_blocks_active_work():
     state = default_state()
     state["active_task"] = {
         "role": "data-market",
-        "task_id": "COORD-DATA-003",
+        "task_id": "COORD-DATA-004",
         "phase": "WAITING_CI",
         "base_main_sha": "b" * 40,
         "started_at": "2026-09-09T03:30:00Z",
@@ -223,14 +223,14 @@ def test_malformed_agent_output_fails_closed():
 def test_completion_handoff_selects_next_ready_task_after_lead_updates_queue():
     coordination = copy.deepcopy(_coord())
     for task in coordination["tasks"]:
-        if task["id"] == "COORD-DATA-001":
+        if task["id"] == "COORD-DATA-003":
             task["status"] = "DONE"
-        if task["id"] == "COORD-DATA-002":
+        if task["id"] == "COORD-DATA-004":
             task["status"] = "READY"
     state = default_state()
     state["active_task"] = {
         "role": "data-market",
-        "task_id": "COORD-DATA-001",
+        "task_id": "COORD-DATA-003",
         "phase": "WAITING_LEAD",
         "base_main_sha": MAIN_SHA,
         "started_at": "2026-09-08T20:00:00Z",
@@ -238,7 +238,7 @@ def test_completion_handoff_selects_next_ready_task_after_lead_updates_queue():
     recovered = recover_state(state, coordination, NOW)
     assert recovered["active_task"] is None
     task = highest_ready_task(_config(), coordination)
-    assert task["id"] == "COORD-DATA-002"
+    assert task["id"] == "COORD-DATA-004"
 
 
 def test_shutdown_restart_recovers_abandoned_running_lease_without_losing_usage_history():
@@ -246,7 +246,7 @@ def test_shutdown_restart_recovers_abandoned_running_lease_without_losing_usage_
     state["runs"].append({"finished_at": "2026-09-08T20:00:00Z", "actual_cost_usd": 0.02})
     state["active_task"] = {
         "role": "data-market",
-        "task_id": "COORD-DATA-001",
+        "task_id": "COORD-DATA-004",
         "phase": "RUNNING",
         "base_main_sha": MAIN_SHA,
         "started_at": "2026-09-09T01:00:00Z",
@@ -256,18 +256,21 @@ def test_shutdown_restart_recovers_abandoned_running_lease_without_losing_usage_
     assert recovered["runs"] == state["runs"]
 
 
-def test_current_data_coordination_advances_to_basis_falsification():
+def test_current_data_coordination_retires_rejected_basis_and_advances():
     coordination = _coord()
     tasks = {task["id"]: task for task in coordination["tasks"]}
     assert tasks["COORD-DATA-002"]["status"] == "DONE"
     assert tasks["COORD-DATA-002"]["completion_evidence"]["candidate_id"] == "DATA-BASIS-001"
-    assert tasks["COORD-DATA-003"]["status"] == "READY"
-    assert "DATA-BASIS-001" in tasks["COORD-DATA-003"]["title"]
+    assert tasks["COORD-DATA-003"]["status"] == "DONE"
+    assert tasks["COORD-DATA-003"]["completion_evidence"]["status"] == "REJECTED_CURRENT_FINGERPRINT"
+    assert tasks["COORD-DATA-003"]["completion_evidence"]["rejection_pr"] == 291
+    assert tasks["COORD-DATA-004"]["status"] == "READY"
+    assert "timestamp-safe candidate" in tasks["COORD-DATA-004"]["title"]
 
 
 def test_coordination_priority_selects_only_highest_ready_autonomous_role():
     task = highest_ready_task(_config(), _coord())
-    assert task["id"] == "COORD-DATA-003"
+    assert task["id"] == "COORD-DATA-004"
     assert task["owner"] == "data-market"
 
 
