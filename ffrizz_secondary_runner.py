@@ -47,6 +47,7 @@ HORIZON_DELTAS = {
 }
 PERSIST_ACTIONS = {"SHADOW_BUY", "SHADOW_SELL"}
 SYSTEM_ID = "FFRIZZ_SECONDARY_V1"
+UNCLASSIFIED_MARKET_REGIME = "UNCLASSIFIED"
 FFRIZZ_SCAN_NAMESPACE = uuid.UUID("339a39c5-0d99-55f4-82d5-54b9c1cda1de")
 V2_DIAGNOSTIC_HORIZONS = ("6h", "12h", "24h")
 V3_DIAGNOSTIC_HORIZONS = ("6h", "12h", "24h")
@@ -373,6 +374,7 @@ def build_forward_ledger_rows(report, *, generated_at=None):
                 "forecast_generated_at": _iso(now),
                 "historical_oi_backfill_used": False,
                 "historical_diagnostic_matches_forward_fingerprint": False,
+                "market_regime_source": "unavailable_at_forecast",
             }
             rows.append({
                 "scan_id": scan_id,
@@ -381,7 +383,7 @@ def build_forward_ledger_rows(report, *, generated_at=None):
                 "direction": direction,
                 "entry_price": entry,
                 "score": _ledger_strength_score(raw_score),
-                "market_regime": None,
+                "market_regime": UNCLASSIFIED_MARKET_REGIME,
                 "strategy_identity": _strategy_identity(horizon),
                 "action_at_forecast": "WAIT",
                 "due_at": _iso(due_at),
