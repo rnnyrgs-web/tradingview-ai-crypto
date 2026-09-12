@@ -1,8 +1,8 @@
 {
   "task_id": "COORD-DATA-003",
   "candidate_id": "DATA-BASIS-001",
-  "status": "ENABLED_FOR_RESEARCH_COLLECTION",
-  "purpose": "Make the already-frozen basis candidate falsifiable with sufficient bounded historical coverage; do not change any production decision.",
+  "status": "REJECTED_CURRENT_FINGERPRINT",
+  "purpose": "Preserve the frozen basis falsification audit trail and prevent autonomous workers from tuning or rescuing a rejected fingerprint.",
   "collector": {
     "module": "basis_history_research.py",
     "venue": "OKX",
@@ -10,8 +10,8 @@
     "index_endpoint": "/api/v5/market/history-index-candles",
     "bar": "1H",
     "pagination": "bounded older-only after cursor",
-    "maximum_pages_per_source": 50,
-    "maximum_target_points": 5000,
+    "maximum_pages_per_source": 85,
+    "maximum_target_points": 8000,
     "completed_candles_only": true,
     "alignment": "exact_shared_timestamp_only",
     "interpolation": false,
@@ -45,40 +45,46 @@
     "training_direction_checkpoints": [0.5, 0.75, 1.0],
     "untouched_oos_opened": false,
     "promotion_authority": false,
-    "purpose": "Falsify whether Stage-1 basis profitability is merely unconditional market direction or disappears under conservative cost/subperiod stress."
+    "purpose": "Falsify whether apparent basis profitability is merely unconditional market direction or disappears under conservative cost/subperiod stress."
   },
   "latest_live_falsification_evidence": {
-    "captured_at": "2026-09-11T21:01:37Z",
-    "source_merge": "6e9884d060467686c015e93f5b9cbecd83e2dd81",
+    "captured_at": "2026-09-12T01:03:58Z",
+    "source_merge": "7ad04d97e0460acd021a9d89aa28611631aa2b9d",
     "stage": "stage1_and_stage2_evaluated",
+    "collection": {
+      "target_points": 8000,
+      "point_count": 8000,
+      "mark_pages": 81,
+      "index_pages": 81
+    },
     "24h": {
       "status": "REJECTED_CURRENT_FINGERPRINT",
-      "oos_samples": 67,
-      "stage1_avg_net_bps": -40.04052591975271,
-      "stage1_hit_rate": 0.5074626865671642,
-      "incremental_vs_training_only_constant_avg_net_bps": 4.297920330112952,
-      "cost_stress_2x_avg_net_bps": -52.04052591975271,
-      "cost_stress_3x_avg_net_bps": -64.04052591975271,
-      "first_half_avg_net_bps": -22.035603760435038,
-      "second_half_avg_net_bps": -57.51589154497281,
-      "training_direction_stable": true,
-      "reason": "Current chronological OOS expectancy is negative after canonical costs, both OOS halves are negative, higher cost stress worsens losses, and the rolling result reversed the earlier positive Stage-1 reading. Do not tune or rescue this 24h fingerprint."
+      "oos_samples": 134,
+      "stage1_avg_net_bps": -8.490253160921695,
+      "stage1_hit_rate": 0.5746268656716418,
+      "incremental_vs_training_only_constant_avg_net_bps": 6.838522708063371,
+      "cost_stress_2x_avg_net_bps": -20.490253160921693,
+      "cost_stress_3x_avg_net_bps": -32.4902531609217,
+      "first_half_avg_net_bps": -36.826426623904396,
+      "second_half_avg_net_bps": 19.84592030206101,
+      "training_direction_stable": false,
+      "reason": "After expanding to 8,000 exact-timestamp completed hourly observations, canonical after-cost OOS expectancy is negative, all fixed cost stresses are negative, the OOS halves disagree, and training-direction stability fails. Do not tune or rescue this 24h fingerprint."
     },
     "7d": {
-      "status": "CONTINUE_FALSIFICATION_NOT_PROMOTION_ELIGIBLE",
-      "oos_samples": 10,
-      "stage1_avg_net_bps": 242.46573387949078,
-      "stage1_hit_rate": 0.6,
-      "incremental_vs_training_only_constant_avg_net_bps": 563.5785180751835,
-      "cost_stress_2x_avg_net_bps": 230.46573387949078,
-      "cost_stress_3x_avg_net_bps": 218.46573387949078,
-      "first_half_avg_net_bps": 103.23970001075989,
-      "second_half_avg_net_bps": 381.69176774822165,
-      "training_direction_stable": false,
-      "reason": "Economically strong current OOS evidence survives fixed cost stress and beats the training-only constant-direction baseline, but only 10 OOS samples exist and the training association changes sign across checkpoints. Require additional independent stability, regime/liquidity, multiple-testing and genuine-forward evidence before untouched OOS or any promotion review."
+      "status": "REJECTED_CURRENT_FINGERPRINT",
+      "oos_samples": 19,
+      "stage1_avg_net_bps": -51.210226000078,
+      "stage1_hit_rate": 0.42105263157894735,
+      "incremental_vs_training_only_constant_avg_net_bps": 0.0,
+      "cost_stress_2x_avg_net_bps": -63.210226000078,
+      "cost_stress_3x_avg_net_bps": -75.21022600007801,
+      "first_half_avg_net_bps": 234.39497299259725,
+      "second_half_avg_net_bps": -308.2549050934857,
+      "training_direction_stable": true,
+      "reason": "The previously promising 7d result did not survive the predeclared evidence-window expansion. With 19 non-overlapping OOS samples it is negative after canonical costs, adds zero incremental expectancy versus the training-only constant-direction baseline, remains negative at 2x/3x costs, and reverses sharply across OOS halves. Reject rather than tune or rescue."
     }
   },
-  "next_research_action": "Do not spend research cycles rescuing the rejected 24h fingerprint. Continue rejection-oriented 7d evidence accumulation and stability testing without threshold tuning or opening untouched OOS; reject 7d if the association or after-cost edge does not remain stable under independent evidence.",
+  "next_research_action": "Stop spending research cycles on DATA-BASIS-001 for both primary horizons. Do not tune thresholds, alter the frozen feature, open untouched OOS, or reinterpret the failed evidence. Move the data-market lane to a separately predeclared timestamp-safe candidate with a new immutable fingerprint and test it for incremental after-cost value.",
   "rejection_rules": [
     "reject if exact-timestamp coverage is insufficient or unstable",
     "reject if fewer than 8 non-overlapping OOS samples remain for a primary-horizon stage-1 score",
