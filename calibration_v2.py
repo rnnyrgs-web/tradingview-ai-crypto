@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import hashlib
 import math
-import random
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
@@ -160,21 +159,27 @@ def _bootstrap_seed(clusters, horizon, offset_fraction):
     material = [horizon, f"{offset_fraction:.3f}"]
     for cluster in clusters:
         material.extend("|".join(_stable_key(row)) for row in cluster)
-    digest = hashlib.sha256("\n".join(material).encode("utf-8")).hexdigest()
-    return int(digest[:16], 16)
+    return hashlib.sha256("\n".join(material).encode("utf-8")).hexdigest()
+
+
+def _deterministic_cluster_index(seed, replicate, draw, cluster_count):
+    material = f"{seed}:{replicate}:{draw}".encode("utf-8")
+    digest = hashlib.sha256(material).digest()
+    return int.from_bytes(digest[:8], "big") % cluster_count
 
 
 def _bootstrap_lower(clusters, horizon, offset_fraction, replicates=BOOTSTRAP_REPLICATES):
     g = len(clusters)
     if g < 2:
         return 0.0
-    rng = random.Random(_bootstrap_seed(clusters, horizon, offset_fraction))
+    seed = _bootstrap_seed(clusters, horizon, offset_fraction)
     estimates = []
-    for _ in range(max(200, int(replicates))):
+    for replicate in range(max(200, int(replicates))):
         successes = 0
         total = 0
-        for _j in range(g):
-            cluster = clusters[rng.randrange(g)]
+        for draw in range(g):
+            index = _deterministic_cluster_index(seed, replicate, draw, g)
+            cluster = clusters[index]
             total += len(cluster)
             successes += sum(1 for row in cluster if row["correct"])
         estimates.append(successes / total if total else 0.0)
