@@ -1,5 +1,8 @@
+import inspect
+
 import db
-from opportunity_engine import _preforecast_market_context
+import engine
+from opportunity_engine import _attach_universe_snapshot, _preforecast_market_context
 
 
 def test_preforecast_context_preserves_independent_quote_timestamps():
@@ -125,3 +128,42 @@ def test_shadow_learning_read_includes_calibration_and_exposes_safe_consensus(mo
     assert "calibration" in captured["params"]["select"].split(",")
     assert out[0]["market_consensus_reliable"] is True
     assert out[0]["market_consensus_timestamp_safe"] is True
+
+
+def test_prospective_snapshot_normalizes_membership_and_freezes_eligibility():
+    snap=engine._prospective_universe_snapshot(
+        "scan-123",
+        [{"symbol":"eth-usdt"},{"symbol":"BTC-USDT"},{"symbol":"ETH-USDT"},{"symbol":""}],
+    )
+    assert snap["recorded"] is True
+    assert snap["scan_id"] == "scan-123"
+    assert snap["membership_stage"] == "post_liquidity_spread_prefilter_pre_deep_scan"
+    assert snap["symbols"] == ["BTC-USDT","ETH-USDT"]
+    assert snap["member_count"] == 2
+    assert snap["eligibility"]["min_quote_volume_24h"] == float(engine.MIN_QUOTE_VOLUME)
+    assert snap["eligibility"]["max_spread_bps"] == float(engine.MAX_SPREAD_BPS)
+    assert snap["provenance"]["prospective_only"] is True
+    assert snap["provenance"]["historical_backfill"] is False
+    assert snap["provenance"]["future_data_used"] is False
+    assert snap["research_only"] is True
+    assert snap["trade_authority_added"] is False
+
+
+def test_prospective_snapshot_is_captured_before_deep_scan_selection():
+    src=inspect.getsource(engine.run_scan)
+    assert src.index("universe=build_universe()") < src.index("universe_snapshot=_prospective_universe_snapshot")
+    assert src.index("universe_snapshot=_prospective_universe_snapshot") < src.index("pre=universe[:DEEP_SCAN_SIZE]")
+
+
+def test_universe_snapshot_is_attached_once_and_invalid_input_fails_closed():
+    rows=[{"calibration":{"status":"A"}},{"calibration":{"status":"B"}}]
+    snap={"recorded":True,"scan_id":"scan-1","symbols":["BTC-USDT","ETH-USDT"],"captured_at":"2026-09-12T12:00:00+00:00"}
+    assert _attach_universe_snapshot(rows,"scan-1",snap) is True
+    assert rows[0]["calibration"]["preforecast_universe_snapshot"]["symbols"] == ["BTC-USDT","ETH-USDT"]
+    assert "preforecast_universe_snapshot" not in rows[1]["calibration"]
+
+    untouched=[{"calibration":{"status":"A"}}]
+    assert _attach_universe_snapshot(untouched,"scan-1",{"recorded":False,"scan_id":"scan-1","symbols":["BTC-USDT"]}) is False
+    assert _attach_universe_snapshot(untouched,"scan-1",{"recorded":True,"scan_id":"other","symbols":["BTC-USDT"]}) is False
+    assert _attach_universe_snapshot(untouched,"scan-1",{"recorded":True,"scan_id":"scan-1","symbols":[]}) is False
+    assert "preforecast_universe_snapshot" not in untouched[0]["calibration"]
