@@ -77,7 +77,7 @@ def test_duplicate_active_task_prevents_second_ownership():
     state = default_state()
     state["active_task"] = {
         "role": "data-market",
-        "task_id": "COORD-DATA-004",
+        "task_id": "COORD-DATA-005",
         "phase": "WAITING_CI",
         "base_main_sha": MAIN_SHA,
         "started_at": "2026-09-09T03:30:00Z",
@@ -126,7 +126,7 @@ def test_stale_main_blocks_active_work():
     state = default_state()
     state["active_task"] = {
         "role": "data-market",
-        "task_id": "COORD-DATA-004",
+        "task_id": "COORD-DATA-005",
         "phase": "WAITING_CI",
         "base_main_sha": "b" * 40,
         "started_at": "2026-09-09T03:30:00Z",
