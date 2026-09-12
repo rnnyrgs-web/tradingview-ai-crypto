@@ -312,7 +312,7 @@
       "id": "COORD-DATA-003",
       "priority": 27,
       "owner": "data-market",
-      "status": "READY",
+      "status": "DONE",
       "title": "Falsify incremental value of DATA-BASIS-001",
       "dependencies": ["COORD-DATA-002"],
       "blockers": [],
@@ -327,6 +327,40 @@
         "no production use without canonical gates"
       ],
       "completion_rule": "Reject DATA-BASIS-001 if it adds no stable timestamp-safe predictive value; do not keep it merely because it increases feature count.",
+      "completion_evidence": {
+        "candidate_id": "DATA-BASIS-001",
+        "rejection_pr": 291,
+        "rejection_merge": "204d30e668f9208a5514aaa950b445cee9846ada",
+        "status": "REJECTED_CURRENT_FINGERPRINT",
+        "24h_oos_samples": 134,
+        "24h_avg_net_bps": -8.490253160921695,
+        "7d_oos_samples": 19,
+        "7d_avg_net_bps": -51.210226000078,
+        "note": "The 8,000-hour predeclared evidence-window expansion falsified both primary horizons after realistic costs. Do not tune, rescue, or reopen untouched OOS for this fingerprint."
+      },
+      "next_task": "COORD-DATA-004"
+    },
+    {
+      "id": "COORD-DATA-004",
+      "priority": 28,
+      "owner": "data-market",
+      "status": "READY",
+      "title": "Select next timestamp-safe candidate after DATA-BASIS rejection",
+      "dependencies": ["COORD-DATA-003"],
+      "blockers": [],
+      "issue": null,
+      "branch": "agent/data-market",
+      "pr": null,
+      "evidence_required": [
+        "new immutable fingerprint predeclared before outcome inspection",
+        "timestamp and provenance defensible before forecast",
+        "candidate is distinct from rejected DATA-BASIS-001",
+        "do not retry unchanged Binance or Bybit historical-OI routes",
+        "expected incremental after-cost value stated before testing",
+        "bounded free/public data path or existing data reuse",
+        "chronological falsification plan with realistic execution costs and multiple-testing protection"
+      ],
+      "completion_rule": "Choose at most one separately fingerprinted candidate with high expected information value; do not tune or resurrect rejected evidence and do not add paid infrastructure.",
       "next_task": null
     }
   ]
