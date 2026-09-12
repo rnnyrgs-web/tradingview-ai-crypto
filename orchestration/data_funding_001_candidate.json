@@ -1,9 +1,9 @@
 {
   "task_id": "COORD-DATA-004",
   "candidate_id": "DATA-FUNDING-001",
-  "status": "PREDECLARED_RESEARCH_ONLY",
+  "status": "REJECTED_CURRENT_FINGERPRINT",
   "selected_after": "DATA-BASIS-001 rejection",
-  "purpose": "Test whether already-realized perpetual-swap funding pressure contains stable incremental forward information after realistic costs without relying on blocked historical open-interest routes.",
+  "purpose": "Preserve the frozen realized-funding falsification audit trail and prevent workers from tuning or rescuing a fingerprint that failed its predeclared incremental-profitability requirements.",
   "source": {
     "venue": "OKX",
     "endpoint": "/api/v5/public/funding-rate-history",
@@ -47,6 +47,47 @@
     "untouched_oos_opened": false,
     "genuine_forward_evidence_required_before_promotion": true
   },
+  "latest_live_falsification_evidence": {
+    "captured_at": "2026-09-12T05:31:52Z",
+    "source_main": "4e920f19de9600d7c0fc9ccdd0b4f396be61de7f",
+    "stage": "stage1_evaluated",
+    "collection": {
+      "funding_point_count": 288,
+      "index_point_count": 5000,
+      "funding_pages": 4,
+      "index_pages": 51,
+      "uses_actual_funding_timestamps": true,
+      "assumed_fixed_funding_interval": false,
+      "completed_price_candles_only": true,
+      "interpolation_allowed": false,
+      "forward_fill_allowed": false,
+      "nearest_neighbor_matching": false
+    },
+    "24h": {
+      "status": "REJECTED_CURRENT_FINGERPRINT",
+      "oos_samples": 38,
+      "oos_directional_hit_rate": 0.5,
+      "canonical_cost_bps_round_trip": 12.0,
+      "avg_net_bps": 43.56917973482839,
+      "incremental_vs_training_only_constant_avg_net_bps": 0.0,
+      "cost_stress_2x_avg_net_bps": 31.569179734828385,
+      "cost_stress_3x_avg_net_bps": 19.56917973482838,
+      "first_half_avg_net_bps": 91.54259508197315,
+      "second_half_avg_net_bps": -4.404235612316374,
+      "reason": "Absolute returns remained positive after fixed costs, but the funding signal added exactly zero incremental OOS expectancy versus the training-only constant-direction baseline, directional hit rate was 50%, and the OOS halves were unstable with the second half negative. The predeclared incremental-profitability and stability requirements therefore fail. Do not tune or rescue the 24h fingerprint."
+    },
+    "7d": {
+      "status": "REJECTED_INSUFFICIENT_INDEPENDENT_OOS",
+      "sample_count": 13,
+      "train_samples": 7,
+      "oos_samples": 6,
+      "minimum_oos_samples": 8,
+      "reason": "Only six non-overlapping chronological OOS observations were available, below the predeclared minimum of eight, so the 7d horizon fails closed before scoring. Do not infer profitability from an underpowered sample or open untouched OOS."
+    },
+    "stage1_pass_count": 0,
+    "promotion_authority": false,
+    "production_authority": false
+  },
   "rejection_rules": [
     "reject if timestamp/provenance safety cannot be defended",
     "reject if realized funding coverage is insufficient or unstable",
@@ -64,9 +105,10 @@
     "do not tune thresholds from OOS outcomes",
     "do not attach historical funding retrospectively to old prediction-ledger rows",
     "do not open untouched OOS from this candidate-selection step",
+    "do not tune, rescue, or resurrect DATA-FUNDING-001 without a materially different predeclared fingerprint and new rationale",
     "do not create paper, broker, promotion, or live-trading authority"
   ],
-  "next_step": "Build a bounded research-only historical collector/evaluator for the frozen feature, then falsify it chronologically. Reject rather than rescue if after-cost incremental evidence fails.",
+  "next_step": "Retire DATA-FUNDING-001 from active profitability research and select a genuinely new timestamp-defensible candidate with expected incremental after-cost value. Preserve this negative result so autonomous workers do not repeat it.",
   "authority": {
     "research_only": true,
     "signal_authority": false,
