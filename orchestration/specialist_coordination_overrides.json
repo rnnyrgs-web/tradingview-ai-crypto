@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "reason": "Reconcile canonical coordination with already-merged DATA-BREADTH-001 selection and evaluator without rewriting prior immutable completion evidence.",
+  "task_updates": {
+    "COORD-DATA-005": {
+      "status": "DONE",
+      "completion_evidence": {
+        "candidate_id": "DATA-BREADTH-001",
+        "selection_pr": 300,
+        "evaluator_pr": 301,
+        "merge_commit": "40e9737e0e1dbdee7a25c48788b2d55b963db8d4",
+        "status": "EVALUATOR_INTEGRATED_POINT_IN_TIME_HISTORY_BLOCKED",
+        "note": "The immutable breadth candidate and strict chronological evaluator are integrated. Historical scoring remains fail-closed unless genuinely historical point-in-time universe snapshots exist; never reconstruct missing history from present-day survivors."
+      },
+      "next_task": "COORD-DATA-006"
+    }
+  },
+  "append_tasks": [
+    {
+      "id": "COORD-DATA-006",
+      "priority": 30,
+      "owner": "data-market",
+      "status": "READY",
+      "title": "Capture prospective point-in-time universe snapshots for DATA-BREADTH-001 forward evidence",
+      "dependencies": ["COORD-DATA-005"],
+      "blockers": [],
+      "issue": null,
+      "branch": "agent/data-market",
+      "pr": null,
+      "evidence_required": [
+        "capture only universe membership actually knowable at or before each forecast/scan timestamp",
+        "persist capture timestamp, source/provenance, normalized symbol set, and eligibility semantics",
+        "never retroactively backfill or infer missing historical universe membership from current survivors",
+        "malformed, stale, missing, or ambiguous snapshots fail closed",
+        "future breadth evaluation uses only snapshots captured before the corresponding forecast",
+        "no signal threshold, strategy fingerprint, paper, broker, or promotion authority",
+        "zero new paid services and no recurring-cost increase",
+        "regression tests prove no retrospective enrichment and preserve point-in-time safety",
+        "exact-head Security and Reliability success"
+      ],
+      "completion_rule": "Start accumulating genuine forward point-in-time universe evidence using existing data paths only. This task may enable future research scoring but cannot itself establish alpha, alter live signals, backfill history, reset paper evidence, connect a broker, or authorize promotion.",
+      "next_task": null
+    }
+  ]
+}
