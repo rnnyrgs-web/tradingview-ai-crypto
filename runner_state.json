@@ -1,7 +1,7 @@
 {
   "active_task": null,
-  "last_seen_main_sha": "dc07dc3e30ae93dcafa3300272593a9d544980d3",
-  "next_eligible_at": "2026-09-12T14:48:44Z",
+  "last_seen_main_sha": "c2739fa52b796b19dab6c9e1f5caf75e66a6c304",
+  "next_eligible_at": "2026-09-12T15:48:23Z",
   "paused_reason": "MODEL_EXECUTION_FAILURE",
   "runs": [
     {
@@ -171,6 +171,20 @@
       "started_at": "2026-09-12T14:48:00Z",
       "status": "FAILED_RESERVED",
       "task_id": "COORD-DATA-005"
+    },
+    {
+      "actual_cost_usd": 0.0416,
+      "cached_input_tokens": 0,
+      "failure_reason": "MODEL_EXECUTION_FAILURE",
+      "finished_at": "2026-09-12T15:47:23Z",
+      "input_tokens": 0,
+      "model": "gpt-5.6-luna",
+      "output_tokens": 0,
+      "reserved_cost_usd": 0.0416,
+      "role": "data-market",
+      "started_at": "2026-09-12T15:47:12Z",
+      "status": "FAILED_RESERVED",
+      "task_id": "COORD-DATA-005"
     }
   ],
   "task_failures": {
@@ -178,7 +192,7 @@
     "COORD-DATA-002": 3,
     "COORD-DATA-003": 3,
     "COORD-DATA-004": 2,
-    "COORD-DATA-005": 1
+    "COORD-DATA-005": 2
   },
   "version": 1
 }
