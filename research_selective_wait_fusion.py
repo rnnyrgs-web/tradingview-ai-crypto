@@ -43,7 +43,8 @@ def build_selective_wait_fusion(*, meta_wait, regime_strategy, economic_calibrat
 
     for row in (microstructure_veto or {}).get("groups") or []:
         if row.get("candidate_status") == "RESTRICTIVE_VETO_CANDIDATE":
-            key = f"microstructure:{row.get('microstructure_state')}"
+            horizon = str(row.get("horizon") or "unknown")
+            key = f"microstructure:{horizon}:{row.get('microstructure_state')}"
             _add(votes, key, "microstructure_veto", row.get("samples"), row)
 
     for row in (error_attribution or {}).get("research_priorities") or []:
