@@ -1,7 +1,7 @@
 from research_heavy_experiment_scheduler import build_heavy_dispatch_plan
 
 
-def _experiment(experiment_id, priority, samples=20):
+def _experiment(experiment_id, priority, samples=20, *, profitability_impact=None, signal_quality_impact=None):
     scaled = min(1.0, max(0.0, float(priority) / 100.0))
     return {
         "experiment_id": experiment_id,
@@ -13,7 +13,7 @@ def _experiment(experiment_id, priority, samples=20):
         "hypothesis": "A predeclared regime condition can reduce false signals.",
         "predicted_mechanism": "Trend-regime structure may improve selective directional precision.",
         "target_horizon": "both",
-        "expected_signal_quality_effect": "Improve genuine BUY/SELL precision or WAIT quality after costs.",
+        "expected_signal_quality_effect": "Increase after-cost expectancy first; improve genuine BUY/SELL precision or WAIT quality second.",
         "evidence_needed": ["chronological backtest", "untouched OOS", "genuine forward evidence"],
         "falsification_criteria": ["no stable after-cost OOS improvement"],
         "chronological_oos_requirements": ["purged chronology", "untouched OOS not reused for tuning"],
@@ -22,7 +22,8 @@ def _experiment(experiment_id, priority, samples=20):
         "result": None,
         "evidence_conclusion": "unresolved",
         "priority_factors": {
-            "expected_genuine_signal_quality_impact": scaled,
+            "expected_incremental_after_cost_profitability_impact": scaled if profitability_impact is None else profitability_impact,
+            "expected_genuine_signal_quality_impact": scaled if signal_quality_impact is None else signal_quality_impact,
             "expected_information_falsification_value": 1.0,
             "probability_actionable_evidence": 1.0,
             "compute_api_cost_units": 1.0,
@@ -45,6 +46,16 @@ def test_scheduler_admits_highest_priority_without_raising_concurrency():
     assert plan["selected"][0]["experiment_id"] == "high"
     assert plan["raises_heavy_concurrency"] is False
     assert plan["trade_authority"] is False
+
+
+def test_scheduler_profitability_outranks_higher_signal_quality():
+    queue = {"experiments": [
+        _experiment("accurate_low_profit", 100, profitability_impact=0.2, signal_quality_impact=1.0),
+        _experiment("lower_accuracy_high_profit", 50, profitability_impact=0.9, signal_quality_impact=0.5),
+    ]}
+    plan = build_heavy_dispatch_plan(queue)
+    assert plan["selected"][0]["experiment_id"] == "lower_accuracy_high_profit"
+    assert plan["selected"][0]["profitability_priority_score"] == 0.9
 
 
 def test_scheduler_skips_running_and_rejects_authority_escalation():
