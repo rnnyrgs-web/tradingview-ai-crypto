@@ -31,6 +31,15 @@ def test_each_specialist_has_one_obvious_active_task_and_safe_handoff_state():
             row for row in role_queue(state, role)
             if row["status"] in {"READY", "IN_PROGRESS", "PR_OPEN"}
         ]
+        # Data-market is intentionally blocked after completing prospective PIT
+        # capture; all other roles keep exactly one active task.
+        if role == "data-market":
+            assert active == []
+            task = next_task(state, role)
+            assert task is None
+            blocked = [row for row in role_queue(state, role) if row["status"] == "BLOCKED"]
+            assert blocked and blocked[0]["id"] == "COORD-DATA-007"
+            continue
         assert len(active) == 1, (role, active)
         task = next_task(state, role)
         assert task == active[0]
@@ -40,7 +49,6 @@ def test_each_specialist_has_one_obvious_active_task_and_safe_handoff_state():
         # evidence determines the next separately predeclared step.
         if task["next_task"] is None:
             assert task["id"] in {
-                "COORD-DATA-006",
                 "COORD-QUANT-002",
                 "COORD-REGIME-002",
                 "COORD-EXEC-002",
@@ -86,15 +94,25 @@ def test_completed_data_provenance_work_is_not_reassigned():
     assert breadth["completion_evidence"]["status"] == "EVALUATOR_INTEGRATED_POINT_IN_TIME_HISTORY_BLOCKED"
     assert breadth["next_task"] == "COORD-DATA-006"
 
-    next_data_task = next_task(state, "data-market")
-    assert next_data_task["id"] == "COORD-DATA-006"
-    assert next_data_task["status"] == "READY"
-    assert next_data_task["next_task"] is None
-    assert "prospective point-in-time universe snapshots" in next_data_task["title"]
+    capture = next(row for row in state["tasks"] if row["id"] == "COORD-DATA-006")
+    assert capture["status"] == "DONE"
+    assert capture["completion_evidence"]["integration_pr"] == 306
+    assert capture["completion_evidence"]["status"] == "PROSPECTIVE_PIT_CAPTURE_VERIFIED_LIVE"
+    assert capture["completion_evidence"]["member_count"] == 79
+    assert capture["completion_evidence"]["historical_backfill"] is False
+    assert capture["completion_evidence"]["future_data_used"] is False
+    assert capture["completion_evidence"]["trade_authority_added"] is False
+    assert capture["next_task"] == "COORD-DATA-007"
+
+    next_data_task = next(row for row in state["tasks"] if row["id"] == "COORD-DATA-007")
+    assert next_data_task["status"] == "BLOCKED"
+    assert next_task(state, "data-market") is None
+    assert "matured prospective point-in-time cohorts" in next_data_task["title"]
     requirements = " ".join(next_data_task["evidence_required"]).lower()
-    assert "never retroactively backfill" in requirements
-    assert "no signal threshold" in requirements
-    assert "zero new paid services" in requirements
+    assert "minimum eight independent" in requirements
+    assert "1x/2x/3x realistic execution-cost stress" in requirements
+    assert "no threshold mining" in requirements
+    assert next_data_task["blockers"]
 
 
 def test_duplicate_active_ownership_is_rejected():
@@ -153,4 +171,5 @@ def test_compact_snapshot_keeps_role_next_work_small():
     state = load_state()
     snapshot = compact_snapshot(state)
     assert set(snapshot["roles"]) == REQUIRED_ROLES
-    assert all(snapshot["roles"][role]["next"] for role in REQUIRED_ROLES)
+    assert snapshot["roles"]["data-market"]["next"] is None
+    assert all(snapshot["roles"][role]["next"] for role in REQUIRED_ROLES if role != "data-market")
