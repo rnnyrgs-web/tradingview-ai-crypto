@@ -10,8 +10,8 @@ ROOT = Path(__file__).resolve().parent
 OBJECTIVE_PATH = ROOT / "orchestration" / "signal_development_objective.json"
 PRIMARY_OBJECTIVE_ID = "UNIVERSAL_SIGNAL_DEVELOPMENT_V1"
 PRIMARY_MISSION = (
-    "Continuously develop the highest achievable genuinely accurate 24h and 7d crypto "
-    "BUY / SELL / WAIT signals with positive after-cost expectancy."
+    "Continuously maximize genuine sustainable after-cost profitability for 24h and 7d crypto "
+    "BUY / SELL / WAIT signals, with genuine forward signal accuracy/precision as the secondary objective."
 )
 VALID_HORIZONS = {"24h", "7d", "both"}
 VALID_CONCLUSIONS = {"supports", "rejects", "unresolved"}
@@ -39,8 +39,8 @@ def validate_objective(payload: dict) -> None:
         raise ObjectiveError("primary signal-development objective id changed")
     if payload.get("primary_mission") != PRIMARY_MISSION:
         raise ObjectiveError("primary signal-development mission changed")
-    if payload.get("optimization_target") != "genuine_forward_signal_quality":
-        raise ObjectiveError("optimization target must remain genuine forward signal quality")
+    if payload.get("optimization_target") != "genuine_after_cost_profitability_first_then_forward_signal_quality":
+        raise ObjectiveError("optimization target must remain genuine after-cost profitability first, then forward signal quality")
     invariants = payload.get("hard_invariants") or {}
     required_false = (
         "increase_heavy_concurrency_for_speed", "automatic_merge", "broker_connected",
@@ -81,9 +81,20 @@ def validate_task_contract(task: dict) -> dict:
     return task
 
 
-def priority_score(*, expected_genuine_signal_quality_impact: float, expected_information_falsification_value: float,
+def priority_score(*, expected_incremental_after_cost_profitability_impact: float,
+                   expected_information_falsification_value: float,
                    probability_actionable_evidence: float, compute_api_cost_units: float) -> float:
-    values = (expected_genuine_signal_quality_impact, expected_information_falsification_value, probability_actionable_evidence)
+    """Return the primary economic-research priority score.
+
+    Forward signal quality is intentionally not multiplied into this score: accuracy is a
+    secondary objective and therefore cannot compensate for weak expected economic impact.
+    Callers may use signal-quality impact only as a tie-breaker after this score.
+    """
+    values = (
+        expected_incremental_after_cost_profitability_impact,
+        expected_information_falsification_value,
+        probability_actionable_evidence,
+    )
     if any(not math.isfinite(float(v)) or float(v) < 0 or float(v) > 1 for v in values):
         raise ObjectiveError("priority factors must be finite in [0,1]")
     cost = max(0.25, float(compute_api_cost_units))
@@ -97,14 +108,24 @@ def rank_tasks(tasks: list[dict]) -> list[dict]:
     for task in tasks:
         factors = task.get("priority_factors") or {}
         row = dict(task)
-        row["signal_priority_score"] = priority_score(
-            expected_genuine_signal_quality_impact=factors.get("expected_genuine_signal_quality_impact", 0),
+        row["profitability_priority_score"] = priority_score(
+            expected_incremental_after_cost_profitability_impact=factors.get("expected_incremental_after_cost_profitability_impact", 0),
             expected_information_falsification_value=factors.get("expected_information_falsification_value", 0),
             probability_actionable_evidence=factors.get("probability_actionable_evidence", 0),
             compute_api_cost_units=factors.get("compute_api_cost_units", 1),
         )
+        row["signal_quality_secondary_score"] = max(
+            0.0, min(1.0, float(factors.get("expected_genuine_signal_quality_impact", 0) or 0))
+        )
         ranked.append(row)
-    return sorted(ranked, key=lambda r: (-r["signal_priority_score"], str(r.get("id", ""))))
+    return sorted(
+        ranked,
+        key=lambda r: (
+            -r["profitability_priority_score"],
+            -r["signal_quality_secondary_score"],
+            str(r.get("id", "")),
+        ),
+    )
 
 
 def objective_reference(worker_name: str, worker_class: str) -> dict:
