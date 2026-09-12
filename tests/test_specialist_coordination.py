@@ -36,13 +36,18 @@ def test_each_specialist_has_one_obvious_active_task_and_safe_handoff_state():
         assert task == active[0]
         assert task["evidence_required"]
         assert task["branch"] == state["roles"][role]["branch"]
-        # A READY falsification task may intentionally be terminal until its
-        # evidence determines whether the candidate is rejected or merits a
-        # separately predeclared follow-up. Other active tasks retain their
-        # already-declared handoffs.
+        # A terminal READY task may intentionally have no handoff until its
+        # evidence determines the next separately predeclared step.
         if task["next_task"] is None:
-            assert task["id"] == "COORD-DATA-003"
-            assert "falsif" in task["title"].lower()
+            assert task["id"] in {
+                "COORD-DATA-004",
+                "COORD-QUANT-002",
+                "COORD-REGIME-002",
+                "COORD-EXEC-002",
+                "COORD-RISK-002",
+                "COORD-TEST-002",
+                "COORD-VAL-002",
+            }
         else:
             assert task["next_task"]
 
@@ -59,10 +64,17 @@ def test_completed_data_provenance_work_is_not_reassigned():
     assert selected["completion_evidence"]["candidate_id"] == "DATA-BASIS-001"
     assert selected["next_task"] == "COORD-DATA-003"
 
+    rejected = next(row for row in state["tasks"] if row["id"] == "COORD-DATA-003")
+    assert rejected["status"] == "DONE"
+    assert rejected["completion_evidence"]["status"] == "REJECTED_CURRENT_FINGERPRINT"
+    assert rejected["completion_evidence"]["rejection_pr"] == 291
+    assert rejected["next_task"] == "COORD-DATA-004"
+
     next_data_task = next_task(state, "data-market")
-    assert next_data_task["id"] == "COORD-DATA-003"
+    assert next_data_task["id"] == "COORD-DATA-004"
     assert next_data_task["status"] == "READY"
     assert next_data_task["next_task"] is None
+    assert "DATA-BASIS" in next_data_task["title"]
 
 
 def test_duplicate_active_ownership_is_rejected():
