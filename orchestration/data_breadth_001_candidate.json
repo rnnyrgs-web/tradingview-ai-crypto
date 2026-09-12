@@ -1,0 +1,90 @@
+{
+  "task_id": "COORD-DATA-005",
+  "candidate_id": "DATA-BREADTH-001",
+  "status": "PREDECLARED_RESEARCH_ONLY",
+  "selected_after": "DATA-FUNDING-001 rejection",
+  "purpose": "Test whether broad cross-sectional participation contains incremental after-cost information about subsequent crypto-market direction that was absent from the rejected basis and realized-funding fingerprints.",
+  "source": {
+    "data_family": "completed timestamp-safe OHLC candles already available to research",
+    "public_or_existing_data_only": true,
+    "paid_service_required": false,
+    "blocked_oi_dependency": false,
+    "point_in_time_universe_required": true,
+    "survivorship_prone_static_universe_forbidden": true
+  },
+  "immutable_feature": {
+    "name": "pit_cross_sectional_breadth_24h",
+    "definition": "2 * (count of point-in-time eligible assets with strictly positive trailing 24h close-to-close return / count of point-in-time eligible assets with valid trailing 24h return) - 1",
+    "range": [-1.0, 1.0],
+    "lookback_hours": 24,
+    "completed_candles_only": true,
+    "forecast_timestamp_or_earlier_only": true,
+    "point_in_time_eligibility": "Use the repository canonical point-in-time universe at each forecast timestamp; never construct the cohort from present-day survival or future liquidity.",
+    "minimum_eligible_assets": 15,
+    "missing_or_malformed_input": "FAIL_CLOSED_UNAVAILABLE",
+    "interpolation": false,
+    "forward_fill": false,
+    "nearest_neighbor_matching": false,
+    "retroactive_prediction_ledger_enrichment": false,
+    "threshold_search": false
+  },
+  "hypothesis": {
+    "primary_question": "Does pre-forecast 24h market breadth add stable incremental after-cost information for 24h or 7d crypto-market direction/return beyond a frozen training-only constant-direction baseline?",
+    "economic_mechanism": "Broad participation may distinguish durable market-wide demand/supply from narrow moves driven by a few leaders; if real, that should improve subsequent market-direction expectancy rather than merely describe contemporaneous price strength.",
+    "direction_rule": "Learn only the sign of the breadth/forward-return association from the chronological training segment and freeze it before OOS scoring; do not tune a breadth cutoff on validation or OOS.",
+    "economic_intuition_is_not_evidence": true
+  },
+  "evaluation_contract": {
+    "primary_horizons": ["24h", "7d"],
+    "target": "equal-weight return of the same point-in-time eligible market cohort over the primary horizon, computed only as the future label",
+    "chronological_split": "60_percent_train_40_percent_oos",
+    "non_overlapping_forward_samples": true,
+    "minimum_oos_samples_per_primary_horizon": 8,
+    "training_only_constant_direction_baseline": true,
+    "incremental_after_cost_value_required": true,
+    "canonical_execution_costs_required": true,
+    "fixed_cost_stress_multipliers": [1.0, 2.0, 3.0],
+    "oos_threshold_tuning": false,
+    "oos_subperiod_halves_diagnostic_only": true,
+    "liquidity_and_universe_stability_required": true,
+    "multiple_testing_accounting_required": true,
+    "untouched_oos_opened": false,
+    "genuine_forward_evidence_required_before_promotion": true
+  },
+  "rejection_rules": [
+    "reject if the canonical point-in-time universe cannot be reconstructed without future information",
+    "reject if fewer than 15 eligible assets are available at a scoring timestamp",
+    "reject if fewer than 8 independent OOS samples remain for either scored primary horizon",
+    "reject if canonical after-cost OOS expectancy is non-positive",
+    "reject if incremental OOS expectancy versus the frozen training-only constant-direction baseline is non-positive or unstable",
+    "reject if apparent edge disappears under fixed 2x/3x cost stress",
+    "reject if OOS halves, liquidity cohorts, or universe-size stability checks materially contradict the claimed edge",
+    "reject if breadth is redundant with already-tested momentum evidence and adds no incremental economic value"
+  ],
+  "forbidden_actions": [
+    "do not use a present-day fixed survivor list to manufacture historical breadth",
+    "do not retry unchanged Binance historical-OI route",
+    "do not retry unchanged Bybit historical-OI route",
+    "do not tune breadth thresholds or lookbacks from OOS outcomes",
+    "do not combine breadth with dispersion, residual momentum, regime filters, or other features inside this fingerprint",
+    "do not open untouched OOS from this candidate-selection step",
+    "do not create paper, broker, promotion, or live-trading authority"
+  ],
+  "why_ranked_next": {
+    "profitability_first": "Uses existing zero-incremental-cost data to test a different economic mechanism that can potentially suppress narrow, fragile market-direction trades and improve dollars earned per unit risk.",
+    "information_value": "A clean rejection is valuable because it determines whether simple broad participation deserves further investment before adding more complex cross-sectional interactions.",
+    "compute_cost": "LOW_TO_MODERATE_EXISTING_DATA_REUSE",
+    "overfitting_risk": "BOUNDED_BY_ONE_SCALAR_ONE_LOOKBACK_TRAINING_ONLY_SIGN"
+  },
+  "next_step": "Implement the smallest bounded evaluator for this frozen fingerprint and falsify it chronologically before adding any breadth variants or interactions.",
+  "authority": {
+    "research_only": true,
+    "signal_authority": false,
+    "paper_authority": false,
+    "broker_authority": false,
+    "promotion_authority": false,
+    "threshold_changes": false,
+    "worker_concurrency_change": false,
+    "recurring_cost_change": false
+  }
+}
