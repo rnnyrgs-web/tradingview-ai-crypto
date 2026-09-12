@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "objective": "Maximize genuine forward 24h/7d BUY/SELL/WAIT accuracy and after-cost profitability without weakening scientific or production safety gates.",
+  "objective": "Maximize genuine after-cost profitability first and genuine forward 24h/7d BUY/SELL/WAIT accuracy/precision second without weakening scientific or production safety gates.",
   "policy": {
-    "priority_basis": "expected_genuine_forward_signal_quality_impact",
+    "priority_basis": "expected_incremental_after_cost_profitability_impact_then_forward_signal_quality",
     "specialists_write_main": false,
     "specialists_merge_own_prs": false,
     "automatic_merge": false,
@@ -344,8 +344,8 @@
       "id": "COORD-DATA-004",
       "priority": 28,
       "owner": "data-market",
-      "status": "READY",
-      "title": "Select next timestamp-safe candidate after DATA-BASIS rejection",
+      "status": "DONE",
+      "title": "Select and falsify the next timestamp-safe candidate after DATA-BASIS rejection",
       "dependencies": ["COORD-DATA-003"],
       "blockers": [],
       "issue": null,
@@ -360,7 +360,51 @@
         "bounded free/public data path or existing data reuse",
         "chronological falsification plan with realistic execution costs and multiple-testing protection"
       ],
-      "completion_rule": "Choose at most one separately fingerprinted candidate with high expected information value; do not tune or resurrect rejected evidence and do not add paid infrastructure.",
+      "completion_rule": "Choose at most one separately fingerprinted candidate with high expected information value; reject rather than tune if incremental after-cost evidence fails.",
+      "completion_evidence": {
+        "candidate_id": "DATA-FUNDING-001",
+        "selection_pr": 293,
+        "runtime_prs": [295, 296, 297],
+        "rejection_pr": 298,
+        "rejection_merge": "9172f7acc1cca9233e4791274aecac5500287bd8",
+        "status": "REJECTED_CURRENT_FINGERPRINT",
+        "24h_oos_samples": 38,
+        "24h_directional_hit_rate": 0.5,
+        "24h_avg_net_bps": 43.56917973482839,
+        "24h_incremental_vs_training_only_baseline_bps": 0.0,
+        "24h_oos_half_avg_net_bps": [91.54259508197315, -4.404235612316374],
+        "7d_oos_samples": 6,
+        "7d_minimum_oos_samples": 8,
+        "7d_status": "REJECTED_INSUFFICIENT_INDEPENDENT_OOS",
+        "note": "DATA-FUNDING-001 added zero incremental 24h OOS expectancy versus the frozen training-only baseline and was unstable across OOS halves; 7d remained below the predeclared independent-sample floor. Do not tune, rescue, or resurrect this fingerprint."
+      },
+      "next_task": "COORD-DATA-005"
+    },
+    {
+      "id": "COORD-DATA-005",
+      "priority": 29,
+      "owner": "data-market",
+      "status": "READY",
+      "title": "Select next genuinely new timestamp-safe profitability candidate after DATA-FUNDING rejection",
+      "dependencies": ["COORD-DATA-004"],
+      "blockers": [],
+      "issue": null,
+      "branch": "agent/data-market",
+      "pr": null,
+      "evidence_required": [
+        "new immutable fingerprint predeclared before any outcome inspection",
+        "candidate is materially distinct from rejected DATA-BASIS-001 and DATA-FUNDING-001",
+        "timestamp and provenance defensible before forecast",
+        "do not retry unchanged Binance or Bybit historical-OI routes",
+        "economic mechanism for incremental after-cost value stated before testing",
+        "bounded free/public data path or existing timestamp-safe data reuse",
+        "24h and 7d chronological non-overlapping primary evaluation",
+        "training-only decision rules and frozen baseline",
+        "minimum independent OOS sample floor plus 1x/2x/3x realistic cost stress",
+        "robustness/stability and multiple-testing protection",
+        "reject quickly if stable incremental after-cost value is absent"
+      ],
+      "completion_rule": "Select at most one genuinely new candidate ranked by expected dollars earned per unit risk and information value; no threshold mining, rejected-fingerprint rescue, paid infrastructure, production authority, paper authority, broker authority, or promotion authority.",
       "next_task": null
     }
   ]
