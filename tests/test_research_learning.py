@@ -74,6 +74,32 @@ def test_priorities_require_independent_windows_and_new_validation():
     assert top["promotion_authority"] is False
 
 
+def test_profitability_harm_ranks_before_wrong_signal_rate():
+    start = datetime(2026, 8, 1, tzinfo=timezone.utc)
+    rows = []
+    for i in range(12):
+        due_at = start + timedelta(days=i + 1)
+        common = {"due_at": due_at.isoformat(), "resolved_at": (due_at + timedelta(minutes=1)).isoformat()}
+        rows.append(_row(
+            **common,
+            strategy_identity="profitable_low_accuracy",
+            correct=i < 3,
+            after_cost_return_pct=1.0,
+        ))
+        rows.append(_row(
+            **common,
+            strategy_identity="losing_high_accuracy",
+            correct=i < 10,
+            after_cost_return_pct=-0.2,
+        ))
+    result = learning_diagnostics(rows, minimum_samples=12)
+    top = result["research_priorities"][0]
+    assert top["dimension"] == "strategy_identity"
+    assert top["group"] == "losing_high_accuracy"
+    assert top["average_after_cost_return_pct"] == -0.2
+    assert top["economic_harm_score_pct"] > 0
+
+
 def test_small_independent_groups_do_not_become_priorities():
     result = learning_diagnostics(_independent_rows(5), minimum_samples=12)
     assert result["research_priorities"] == []
