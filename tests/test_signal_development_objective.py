@@ -19,6 +19,7 @@ from signal_development import (
     build_signal_quality_scorecard,
     load_objective,
     priority_score,
+    rank_tasks,
     validate_objective,
     validate_task_contract,
 )
@@ -42,6 +43,7 @@ def test_primary_signal_objective_cannot_be_silently_replaced():
     objective = load_objective()
     assert objective["objective_id"] == PRIMARY_OBJECTIVE_ID
     assert objective["primary_mission"] == PRIMARY_MISSION
+    assert objective["optimization_target"] == "genuine_after_cost_profitability_first_then_forward_signal_quality"
     for field, value in (("objective_id", "OTHER"), ("primary_mission", "maximize historical accuracy")):
         bad = copy.deepcopy(objective)
         bad[field] = value
@@ -59,11 +61,14 @@ def test_canonical_safety_and_acc002_gate_remain_fail_closed_while_profitability
     assert inv["reset_paper_evidence"] is False
     assert inv["fabricate_historical_data"] is False
     assert inv["weaken_validation_gates"] is False
+    assert "after_cost_profitability" in objective["optimization_target"]
+    assert "expected_incremental_after_cost_profitability_impact" in objective["priority_formula"]["expression"]
     blocker = objective["current_bottleneck"]
     assert blocker["reason"] == "24h_pre_oos_profitability_gate_not_met"
     assert blocker["minimum_subset_coverage"] == 0.8
     assert blocker["lower_requirement_allowed"] is False
     assert blocker["status"] == "24H_DATA_READY_PRE_OOS_EDGE_NOT_ESTABLISHED"
+    assert blocker["priority_factors"]["expected_incremental_after_cost_profitability_impact"] == 1.0
     assert blocker["priority_factors"]["probability_actionable_evidence"] >= 0.8
     assert any("positive after-cost expectancy" in action for action in blocker["preferred_actions"])
     assert any("7d" in action and "low-priority" in action for action in blocker["preferred_actions"])
@@ -126,14 +131,38 @@ def test_task_contract_requires_falsifiable_measurable_fields():
         validate_task_contract(bad)
 
 
-def test_priority_formula_prefers_high_signal_information_value_per_cost():
-    high = priority_score(expected_genuine_signal_quality_impact=1.0,
-        expected_information_falsification_value=1.0, probability_actionable_evidence=0.95,
-        compute_api_cost_units=0.5)
-    cosmetic = priority_score(expected_genuine_signal_quality_impact=0.1,
-        expected_information_falsification_value=0.2, probability_actionable_evidence=0.9,
-        compute_api_cost_units=0.5)
-    assert high > cosmetic
+def test_priority_formula_uses_profitability_as_primary_and_accuracy_only_as_tiebreaker():
+    high_profit = priority_score(
+        expected_incremental_after_cost_profitability_impact=1.0,
+        expected_information_falsification_value=1.0,
+        probability_actionable_evidence=0.95,
+        compute_api_cost_units=0.5,
+    )
+    low_profit = priority_score(
+        expected_incremental_after_cost_profitability_impact=0.2,
+        expected_information_falsification_value=1.0,
+        probability_actionable_evidence=0.95,
+        compute_api_cost_units=0.5,
+    )
+    assert high_profit > low_profit
+
+    ranked = rank_tasks([
+        {"id": "accurate_but_low_economic_impact", "priority_factors": {
+            "expected_incremental_after_cost_profitability_impact": 0.2,
+            "expected_genuine_signal_quality_impact": 1.0,
+            "expected_information_falsification_value": 1.0,
+            "probability_actionable_evidence": 1.0,
+            "compute_api_cost_units": 1.0,
+        }},
+        {"id": "higher_economic_impact_lower_accuracy", "priority_factors": {
+            "expected_incremental_after_cost_profitability_impact": 0.9,
+            "expected_genuine_signal_quality_impact": 0.5,
+            "expected_information_falsification_value": 1.0,
+            "probability_actionable_evidence": 1.0,
+            "compute_api_cost_units": 1.0,
+        }},
+    ])
+    assert ranked[0]["id"] == "higher_economic_impact_lower_accuracy"
 
 
 def test_scorecard_counts_only_non_overlapping_full_horizon_evidence():
