@@ -45,13 +45,13 @@ def test_7d_shadow_policy_is_restrictive_symmetric_and_horizon_specific(monkeypa
     assert not rows[3].get("paper_shadow")
 
 
-def test_24h_wait_is_never_upgraded_by_paper_shadow_policy(monkeypatch):
-    source = [_row(horizon="24h", rank=1, evidence=100.0)]
+def test_24h_short_wait_is_never_upgraded_by_long_only_paper_shadow_policy(monkeypatch):
+    source = [_row(horizon="24h", direction="SHORT", rank=1, evidence=100.0)]
     monkeypatch.setattr(p, "fetch_production_ranked_opportunities", lambda **kwargs: source)
 
     rows = p.fetch_ranked_opportunities(horizon="24h", limit=20)
 
-    assert rows is source
+    assert source[0]["action"] == "WAIT"
     assert rows[0]["action"] == "WAIT"
     assert "paper_shadow" not in rows[0]
 
