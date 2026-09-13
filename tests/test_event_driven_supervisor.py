@@ -15,7 +15,6 @@ def test_priority_backlog_is_ordered_and_fail_closed():
     # demand that they be re-enabled merely to satisfy an inventory count.
     assert ready
     assert [item["priority"] for item in ready] == sorted(item["priority"] for item in ready)
-    assert ready[0]["id"] == "ACC-001"
     assert all(item["owner"] for item in ready)
     assert all(item["status"] == "READY" for item in ready)
 
@@ -25,8 +24,10 @@ def test_supervisor_snapshot_is_compact_and_contains_handoff_and_queue(monkeypat
     monkeypatch.setenv("GITHUB_RUN_ID", "123")
     monkeypatch.setenv("GITHUB_SHA", "abc")
     snapshot = build_snapshot()
+    ready = ready_items(load_backlog())
     assert snapshot["event"]["name"] == "schedule"
-    assert snapshot["highest_ready"] == "ACC-001"
+    assert ready
+    assert snapshot["highest_ready"] == ready[0]["id"]
     assert "EXACT NEXT STEP" in snapshot["exact_next_step"]
     assert "SAFETY INVARIANTS" in snapshot["safety_invariants"]
     assert len(json.dumps(snapshot)) < 20000
