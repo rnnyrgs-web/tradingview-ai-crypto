@@ -14,6 +14,7 @@ from pathlib import Path
 # as a script.
 if __package__:
     from .autonomous_cloud_runner import (
+        CONFIG_PATH,
         PolicyError,
         apply_ci_status,
         iso,
@@ -26,6 +27,7 @@ if __package__:
     )
 else:
     from autonomous_cloud_runner import (
+        CONFIG_PATH,
         PolicyError,
         apply_ci_status,
         iso,
@@ -54,8 +56,8 @@ def mark_waiting_ci(state: dict, *, branch: str, pr_number: int, head_sha: str) 
     return updated
 
 
-def mark_failure(state: dict, *, reason_code: str) -> dict:
-    config = load_config()
+def mark_failure(state: dict, *, reason_code: str, config_path: Path = CONFIG_PATH) -> dict:
+    config = load_config(config_path)
     updated = copy.deepcopy(state)
     active = updated.get("active_task")
     if not isinstance(active, dict):
@@ -116,6 +118,7 @@ def main() -> int:
     failed = sub.add_parser("mark-failure")
     failed.add_argument("--state", required=True)
     failed.add_argument("--reason-code", required=True)
+    failed.add_argument("--config", default=str(CONFIG_PATH))
 
     show = sub.add_parser("show")
     show.add_argument("--state", required=True)
@@ -132,7 +135,7 @@ def main() -> int:
         save_state(path, state)
         return 0
     if args.command == "mark-failure":
-        state = mark_failure(state, reason_code=args.reason_code)
+        state = mark_failure(state, reason_code=args.reason_code, config_path=Path(args.config))
         save_state(path, state)
         return 0
     if args.command == "show":

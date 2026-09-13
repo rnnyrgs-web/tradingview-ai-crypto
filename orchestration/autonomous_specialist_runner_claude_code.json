@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "enabled": true,
+  "objective_id": "UNIVERSAL_SIGNAL_DEVELOPMENT_V1",
+  "primary_mission": "Continuously maximize genuine sustainable after-cost profitability for 24h and 7d crypto BUY / SELL / WAIT signals, with genuine forward signal accuracy/precision as the secondary objective.",
+  "engine": "claude-code",
+  "engine_role_description": "Implementation / engineering / testing agent. This is the sole autonomous engine permitted to change test or production code under the multi-engine coordination layer -- ChatGPT's existing autonomous_cloud_specialist.yml role and this role must never both be enabled for the same coordination role at once (enforced by each engine's plan step refusing a task_id whose auto/<role>/<task_id> branch already exists).",
+  "autonomous_roles": ["testing-security"],
+  "policy": {
+    "max_concurrent_agent_runs": 1,
+    "max_agent_runs_per_invocation": 1,
+    "schedule_check_hours": 1,
+    "successful_run_cooldown_hours": 12,
+    "max_retries": 0,
+    "task_retry_limit": 2,
+    "retry_base_seconds": 30,
+    "retry_cap_seconds": 300,
+    "specialists_write_main": false,
+    "specialists_merge_own_prs": false,
+    "automatic_merge": false,
+    "trade_authority": false,
+    "broker_connected": false,
+    "insufficient_evidence": "WAIT_RESEARCH_ONLY",
+    "state_branch": "automation/specialist-runner-state",
+    "task_branch_prefix": "auto/",
+    "coordination_updates": "LEAD_ONLY",
+    "sibling_state_files": [
+      "runner_state.json",
+      "runner_state_claude.json"
+    ],
+    "own_state_file": "runner_state_claude_code.json"
+  },
+  "budget": {
+    "project_monthly_ceiling_usd": 30.0,
+    "baseline_infrastructure_reserve_usd": 0.0,
+    "runner_monthly_api_budget_usd": 12.0,
+    "runner_daily_api_budget_usd": 0.75,
+    "pause_buffer_usd": 1.0,
+    "provider_retry_safety_multiplier": 3.0
+  },
+  "models": {
+    "claude-haiku-4-5": {
+      "input_usd_per_million": 1.0,
+      "cached_input_usd_per_million": 0.10,
+      "output_usd_per_million": 5.0,
+      "enabled": true
+    },
+    "claude-sonnet-5": {
+      "input_usd_per_million": 2.0,
+      "cached_input_usd_per_million": 0.20,
+      "output_usd_per_million": 10.0,
+      "enabled": false
+    }
+  },
+  "roles": {
+    "testing-security": {
+      "model": "claude-haiku-4-5",
+      "max_turns": 4,
+      "max_output_tokens_per_turn": 2000,
+      "reserved_max_input_tokens_per_run": 150000,
+      "reserved_max_output_tokens_per_run": 10000,
+      "max_file_read_bytes": 20000,
+      "max_file_write_bytes": 60000,
+      "allowed_paths": [
+        "tests/test_*.py",
+        "SECURITY.md",
+        "docs/security_*.md",
+        "resource_recommendations_proposed.json"
+      ],
+      "mission": "Own coordination task COORD-TEST-001 (adversarially verify coordination and specialist safety boundaries) as the implementation engine: add or strengthen tests for coordination schema validation, duplicate active ownership detection, invalid dependency/status detection, protected-path enforcement, no-direct-main-write and no-automatic-merge regressions, and cost-ceiling / broker-disconnected invariants. Attack existing specialist work; never merge it, never weaken a gate to make a test pass, never touch production strategy/signal/paper-ledger code (out of allowed_paths by construction). If a paid resource/tool would materially improve testing coverage, propose it in resource_recommendations_proposed.json instead of assuming it is available. Missing or insufficient evidence is WAIT / RESEARCH_ONLY, never a fabricated pass. TURN-BUDGET DISCIPLINE: finish within four model turns. Turn 1: read only the minimum files needed to choose one falsifiable test gap. Turn 2: implement the smallest allowed regression test. Turn 3: run it and fix only directly observed failures in the test itself. Turn 4: return READY_FOR_PR, NO_CHANGE, or BLOCKED; do not perform additional exploration. Prefer a safe NO_CHANGE/BLOCKED result over exceeding the turn budget."
+    }
+  }
+}

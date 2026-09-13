@@ -82,6 +82,30 @@
       ],
       "completion_rule": "Remain blocked until authentic prospective cohorts mature. Then reject DATA-BREADTH-001 quickly if incremental after-cost value is absent or unstable; do not tune it to survive.",
       "next_task": null
+    },
+    {
+      "id": "COORD-VAL-003",
+      "priority": 2,
+      "severity": "HIGH",
+      "owner": "signal-accuracy",
+      "status": "QUEUED",
+      "title": "Scientifically validate or replace the undocumented profitability-priority weights",
+      "dependencies": [],
+      "blockers": [],
+      "issue": null,
+      "branch": "agent/signal-accuracy",
+      "pr": null,
+      "evidence_required": [
+        "cite or derive a defensible methodology for the weights currently hard-coded in research_director.mission_priority() (0.45/0.35/0.20 evidence_value terms, 0.90/0.10 economic_value terms, 0.25/0.75 cost_efficiency terms, 0.35/0.65 actionable multiplier, 0.025/0.04 secondary tie-breakers, 0.75 redundancy discount, 0.08/0.02 blocked discount), or replace them with weights that carry a stated, falsifiable rationale",
+        "add explicit, graded terms for contamination risk (reuse/bias of an evidence window another active task is still accumulating) and multiple-testing burden (connect to multiple_testing.py's trial-count scaling), which orchestration/profitability_priority.py documents as currently missing",
+        "any validation or re-derivation must use chronological, non-overlapping, untouched-OOS-safe evidence and must not retune weights using the same untouched OOS/forward outcomes the weights would then be judged by",
+        "preserve the existing primary/secondary ordering (expected incremental after-cost economic value first, genuine forward signal-quality second) unless evidence justifies changing it",
+        "preserve WAIT/no-task capability when no clean high-value experiment exists",
+        "regression tests pin the new methodology's documented properties the same way tests/test_profitability_priority.py pins the current one",
+        "exact-head Security and Reliability success"
+      ],
+      "completion_rule": "Do not silently legitimize the current weights by leaving them undocumented, and do not retune them using untouched OOS/forward outcomes as if that were validation. A defensible methodology, or an explicit predeclared plan for deriving one, is required before this task can move past READY.",
+      "next_task": null
     }
   ]
 }

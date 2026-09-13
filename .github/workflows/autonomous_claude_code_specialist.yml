@@ -1,17 +1,18 @@
-name: Cost-Bounded Autonomous Cloud Specialist
+name: Cost-Bounded Autonomous Claude Code Implementation Specialist
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "41 * * * *"
+    - cron: "26 * * * *"
 
 permissions:
   contents: write
   pull-requests: write
   actions: write
+  id-token: write
 
 concurrency:
-  group: autonomous-cloud-specialist-runner
+  group: autonomous-claude-code-specialist-runner
   cancel-in-progress: false
 
 jobs:
@@ -20,9 +21,10 @@ jobs:
     timeout-minutes: 35
     env:
       GH_TOKEN: ${{ github.token }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       PYTHONPATH: ${{ github.workspace }}
       PYTHONDONTWRITEBYTECODE: "1"
+      STATE_FILE: runner_state_claude_code.json
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,11 +38,13 @@ jobs:
       - id: meta
         name: Resolve fail-closed runner metadata
         run: |
-          python agents/autonomous_cloud_runner.py validate
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python agents/claude_code_specialist_runner.py validate
           MAIN_SHA="$(git rev-parse HEAD)"
           STATE_BRANCH="$(python - <<'PY'
           import json
-          print(json.load(open('orchestration/autonomous_specialist_runner.json'))['policy']['state_branch'])
+          print(json.load(open('orchestration/autonomous_specialist_runner_claude_code.json'))['policy']['state_branch'])
           PY
           )"
           test "$STATE_BRANCH" != "main" -a "$STATE_BRANCH" != "master"
@@ -48,28 +52,27 @@ jobs:
           echo "state_branch=$STATE_BRANCH" >> "$GITHUB_OUTPUT"
 
       - id: load_state
-        name: Load durable non-main runner state
+        name: Load durable non-main runner state (own file and fleet siblings)
         env:
           STATE_BRANCH: ${{ steps.meta.outputs.state_branch }}
         run: |
-          if git ls-remote --exit-code --heads origin "refs/heads/$STATE_BRANCH" >/dev/null 2>&1; then
-            if gh api "repos/$GITHUB_REPOSITORY/contents/runner_state.json?ref=$STATE_BRANCH" --jq .content >/tmp/state.b64 2>/dev/null; then
-              tr -d '\n' </tmp/state.b64 | base64 -d >/tmp/runner_state.json
+          fetch_or_default () {
+            FILE="$1"
+            DEST="$2"
+            if git ls-remote --exit-code --heads origin "refs/heads/$STATE_BRANCH" >/dev/null 2>&1 \
+              && gh api "repos/$GITHUB_REPOSITORY/contents/$FILE?ref=$STATE_BRANCH" --jq .content >/tmp/b64_$FILE 2>/dev/null; then
+              tr -d '\n' </tmp/b64_$FILE | base64 -d >"$DEST"
             else
-              python - <<'PY'
-          import json
+              python - "$DEST" <<'PY'
+          import json, sys
           from agents.autonomous_cloud_runner import default_state
-          json.dump(default_state(), open('/tmp/runner_state.json', 'w'), indent=2)
+          json.dump(default_state(), open(sys.argv[1], 'w'), indent=2)
           PY
             fi
-          else
-            python - <<'PY'
-          import json
-          from agents.autonomous_cloud_runner import default_state
-          json.dump(default_state(), open('/tmp/runner_state.json', 'w'), indent=2)
-          PY
-          fi
-          python agents/autonomous_cloud_state.py show --state /tmp/runner_state.json >/tmp/state-summary.json
+          }
+          fetch_or_default "$STATE_FILE" /tmp/runner_state.json
+          fetch_or_default "runner_state.json" /tmp/sibling_openai.json || true
+          fetch_or_default "runner_state_claude.json" /tmp/sibling_claude.json || true
 
       - id: reconcile
         name: Reconcile exact-head Security and Reliability state
@@ -112,7 +115,7 @@ jobs:
       - id: plan
         name: Select at most one READY autonomous task
         run: |
-          python agents/autonomous_cloud_runner.py plan \
+          python agents/claude_code_specialist_runner.py plan \
             --state /tmp/runner_state.json \
             --main-sha '${{ steps.meta.outputs.main_sha }}' \
             --output /tmp/decision.json
@@ -127,11 +130,11 @@ jobs:
         name: Fail closed when API credential is unavailable
         if: steps.plan.outputs.run == 'true'
         run: |
-          if [ -z "$OPENAI_API_KEY" ]; then
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
             python - <<'PY'
           import json
           p='/tmp/runner_state.json'
-          s=json.load(open(p)); s['paused_reason']='MISSING_OPENAI_API_KEY'
+          s=json.load(open(p)); s['paused_reason']='MISSING_ANTHROPIC_API_KEY'
           json.dump(s, open(p,'w'), indent=2, sort_keys=True)
           PY
             echo "execute=false" >> "$GITHUB_OUTPUT"
@@ -139,32 +142,16 @@ jobs:
             echo "execute=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - id: fleet_siblings
-        name: Load fleet sibling state (best effort) for the shared budget check
-        if: steps.credential_gate.outputs.execute == 'true'
-        env:
-          STATE_BRANCH: ${{ steps.meta.outputs.state_branch }}
-        run: |
-          fetch_or_skip () {
-            FILE="$1"
-            DEST="$2"
-            if gh api "repos/$GITHUB_REPOSITORY/contents/$FILE?ref=$STATE_BRANCH" --jq .content >/tmp/b64_$FILE 2>/dev/null; then
-              tr -d '\n' </tmp/b64_$FILE | base64 -d >"$DEST"
-            fi
-          }
-          fetch_or_skip "runner_state_claude.json" /tmp/sibling_claude.json
-          fetch_or_skip "runner_state_claude_code.json" /tmp/sibling_claude_code.json
-
       - id: fleet_budget
         name: Fail closed if combined fleet spend would exceed the shared project ceiling
         if: steps.credential_gate.outputs.execute == 'true'
         run: |
           python -m orchestration.shared_budget \
-            --config orchestration/autonomous_specialist_runner.json \
+            --config orchestration/autonomous_specialist_runner_claude_code.json \
             --state /tmp/runner_state.json \
             --role '${{ steps.plan.outputs.role }}' \
-            --sibling /tmp/sibling_claude.json \
-            --sibling /tmp/sibling_claude_code.json
+            --sibling /tmp/sibling_openai.json \
+            --sibling /tmp/sibling_claude.json
 
       - id: branch
         name: Create isolated task branch from exact current main
@@ -175,87 +162,132 @@ jobs:
         run: |
           test "$BRANCH" != "main" -a "$BRANCH" != "master"
           if git ls-remote --exit-code --heads origin "refs/heads/$BRANCH" >/dev/null 2>&1; then
-            echo "Existing task branch detected; refusing to overwrite autonomous work."
+            echo "Existing task branch detected (this engine's own prior run, or another engine already claimed this task); refusing to overwrite."
             exit 1
           fi
-          git config user.name "autonomous-cloud-specialist"
+          git config user.name "autonomous-claude-code-specialist"
           git config user.email "actions@users.noreply.github.com"
           git checkout -b "$BRANCH" "$MAIN_SHA"
 
-      - name: Install bounded Agents SDK runtime
+      - id: prompt
+        name: Build the bounded implementation prompt for the claimed task
         if: steps.credential_gate.outputs.execute == 'true'
+        env:
+          ROLE: ${{ steps.plan.outputs.role }}
+          TASK_ID: ${{ steps.plan.outputs.task_id }}
+          BRANCH: ${{ steps.plan.outputs.branch }}
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest 'openai-agents==0.22.1'
+          python - <<'PY' > /tmp/prompt.txt
+          import json, os
+          from agents.autonomous_cloud_runner import coordination_task, load_config, load_coordination
+          from agents.claude_code_specialist_runner import CONFIG_PATH
+
+          role = os.environ["ROLE"]
+          task_id = os.environ["TASK_ID"]
+          branch = os.environ["BRANCH"]
+          cfg = load_config(CONFIG_PATH)
+          coord = load_coordination()
+          task = coordination_task(coord, task_id)
+          mission = cfg["roles"][role]["mission"]
+          allowed = cfg["roles"][role]["allowed_paths"]
+
+          print(f"""You are the autonomous {role} implementation specialist on branch {branch}.
+          Mission: {mission}
+
+          Owned coordination task (from orchestration/specialist_coordination.json):
+          {json.dumps(task, indent=2)}
+
+          Read AI_STATE.md and AGENTS.md yourself before making any change; treat AI_STATE.md as
+          authoritative current project state.
+
+          Hard rules, enforced independently of anything you do here (do not rely on your own
+          judgment about them -- they are checked mechanically after you finish):
+          - You may write only to paths matching one of: {json.dumps(allowed)}. Anything else is
+            rejected by a post-hoc allowlist check regardless of what you write.
+          - Do NOT run git commit, git push, gh pr create, or any git/gh command. A separate step
+            owns publication; your job is only to edit the working tree and, if useful, run pytest
+            to check your own work.
+          - Never edit orchestration/, agents/, .github/workflows/, AI_STATE.md, AGENTS.md,
+            requirements.txt, Dockerfile, live_promotions.json, or any credential/.env file --
+            these are blocked by orchestration/protected_paths.json regardless of role.
+          - Preserve chronology, untouched OOS, robustness, multiple-testing protection,
+            point-in-time safety, genuine-forward requirements, execution/risk gates, and
+            immutable strategy fingerprints. Never weaken a validation or promotion gate.
+          - Never fabricate data or evidence. Missing or insufficient evidence means the correct
+            outcome is to make no change (or the smallest safe diagnostic change) rather than a
+            fabricated pass.
+          - Make the smallest scientifically/technically safe change that advances the owned task,
+            with relevant tests. If no safe, useful change is justified, make no change.
+          - Finish within your bounded turn budget; do not perform open-ended exploration.
+          """)
+          PY
+          {
+            echo "prompt<<CLAUDE_PROMPT_EOF"
+            cat /tmp/prompt.txt
+            echo "CLAUDE_PROMPT_EOF"
+          } >> "$GITHUB_OUTPUT"
+          MODEL="$(python -c "import json; print(json.load(open('orchestration/autonomous_specialist_runner_claude_code.json'))['roles']['${ROLE}']['model'])")"
+          MAX_TURNS="$(python -c "import json; print(json.load(open('orchestration/autonomous_specialist_runner_claude_code.json'))['roles']['${ROLE}']['max_turns'])")"
+          echo "model=$MODEL" >> "$GITHUB_OUTPUT"
+          echo "max_turns=$MAX_TURNS" >> "$GITHUB_OUTPUT"
 
       - id: agent
-        name: Run one bounded specialist Agents SDK cycle
+        name: Run one bounded Claude Code implementation cycle
         if: steps.credential_gate.outputs.execute == 'true'
         continue-on-error: true
-        run: |
-          set +e
-          python agents/autonomous_cloud_runner.py execute \
-            --state /tmp/runner_state.json \
-            --decision /tmp/decision.json \
-            --output /tmp/agent_result.json \
-            > >(tee /tmp/agent.log) 2> >(tee -a /tmp/agent.log >&2)
-          STATUS=$?
-          set -e
-          if grep -q 'organization_spend_limit_exceeded' /tmp/agent.log; then
-            echo "quota_exhausted=true" >> "$GITHUB_OUTPUT"
-            echo "OpenAI organization spend limit reached; pausing fail-closed without retry spam."
-            exit 0
-          fi
-          echo "quota_exhausted=false" >> "$GITHUB_OUTPUT"
-          exit "$STATUS"
-
-      - name: Pause cleanly when organization spend limit is exhausted
-        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outputs.quota_exhausted == 'true'
-        run: |
-          python - <<'PY'
-          import json
-          p='/tmp/runner_state.json'
-          s=json.load(open(p))
-          s['paused_reason']='OPENAI_ORGANIZATION_SPEND_LIMIT_EXCEEDED'
-          s['active_task']=None
-          json.dump(s, open(p,'w'), indent=2, sort_keys=True)
-          PY
+        # Uses the official anthropics/claude-code-action (see
+        # https://code.claude.com/docs/en/github-actions), pinned to the v1
+        # tag. --allowedTools deliberately omits git/gh/general Bash access:
+        # Claude Code can Read/Write/Edit files and run pytest only, so it
+        # cannot commit, push, or open a PR itself even if instructed to --
+        # publication stays under this workflow's own control, verified by
+        # the allowlist and test steps below.
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: ${{ steps.prompt.outputs.prompt }}
+          claude_args: "--max-turns ${{ steps.prompt.outputs.max_turns }} --model ${{ steps.prompt.outputs.model }} --allowedTools \"Read,Write,Edit,Bash(pytest*)\""
 
       - name: Account conservatively for failed model execution
-        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'failure' && steps.agent.outputs.quota_exhausted != 'true'
+        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'failure'
         run: |
           python agents/autonomous_cloud_state.py mark-failure \
             --state /tmp/runner_state.json \
-            --reason-code MODEL_EXECUTION_FAILURE
+            --reason-code MODEL_EXECUTION_FAILURE \
+            --config orchestration/autonomous_specialist_runner_claude_code.json
 
-      - id: result
-        name: Read structured agent outcome
-        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'success' && steps.agent.outputs.quota_exhausted != 'true'
+      - id: changes
+        name: Determine whether the working tree actually changed
+        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'success'
         run: |
-          STATUS="$(jq -r '.outcome.status' /tmp/agent_result.json)"
-          test "$STATUS" = "READY_FOR_PR" -o "$STATUS" = "NO_CHANGE" -o "$STATUS" = "BLOCKED"
-          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "status=READY_FOR_PR" >> "$GITHUB_OUTPUT"
+          else
+            echo "status=NO_CHANGE" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Enforce full repository tests before publication
-        if: steps.result.outputs.status == 'READY_FOR_PR'
+        if: steps.changes.outputs.status == 'READY_FOR_PR'
         run: |
+          pip install pytest
           if ! pytest -q; then
             python agents/autonomous_cloud_state.py mark-failure \
               --state /tmp/runner_state.json \
-              --reason-code FULL_TEST_FAILURE
+              --reason-code FULL_TEST_FAILURE \
+              --config orchestration/autonomous_specialist_runner_claude_code.json
             exit 1
           fi
 
       - name: Reject any actual change outside the role allowlist
-        if: steps.result.outputs.status == 'READY_FOR_PR'
+        if: steps.changes.outputs.status == 'READY_FOR_PR'
         env:
           ROLE: ${{ steps.plan.outputs.role }}
         run: |
           python - <<'PY'
           import os, subprocess
           from agents.autonomous_cloud_runner import load_config, path_allowed
-          cfg=load_config(); role=os.environ['ROLE']
+          from agents.claude_code_specialist_runner import CONFIG_PATH
+          cfg=load_config(CONFIG_PATH); role=os.environ['ROLE']
           raw=subprocess.check_output(['git','status','--porcelain','-z'])
           entries=[e.decode('utf-8','strict') for e in raw.split(b'\0') if e]
           if not entries:
@@ -273,7 +305,7 @@ jobs:
 
       - id: publish
         name: Commit candidate branch and open PR without merge authority
-        if: steps.result.outputs.status == 'READY_FOR_PR'
+        if: steps.changes.outputs.status == 'READY_FOR_PR'
         env:
           BRANCH: ${{ steps.plan.outputs.branch }}
           ROLE: ${{ steps.plan.outputs.role }}
@@ -281,12 +313,12 @@ jobs:
         run: |
           git add -A
           git diff --cached --check
-          git commit -m "autonomous($ROLE): $TASK_ID bounded candidate"
+          git commit -m "autonomous($ROLE): $TASK_ID bounded Claude Code implementation candidate"
           HEAD_SHA="$(git rev-parse HEAD)"
           git push origin "$BRANCH"
           PR_URL="$(gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$BRANCH" \
-            --title "autonomous($ROLE): $TASK_ID candidate" \
-            --body "Autonomous cost-bounded specialist candidate for $TASK_ID. No merge or live-trading authority. Requires exact-head Security and Reliability plus manual Lead Integrator review. Insufficient evidence remains WAIT / RESEARCH_ONLY.")"
+            --title "autonomous($ROLE): $TASK_ID Claude Code candidate" \
+            --body "Autonomous cost-bounded Claude Code implementation specialist candidate for $TASK_ID. No merge or live-trading authority. Requires exact-head Security and Reliability plus independent security/lead/claude-adversarial review plus manual Lead Integrator review. Insufficient evidence remains WAIT / RESEARCH_ONLY.")"
           PR_NUMBER="${PR_URL##*/}"
           gh workflow run security.yml --repo "$GITHUB_REPOSITORY" --ref "$BRANCH"
           python agents/autonomous_cloud_state.py mark-pr \
@@ -296,6 +328,17 @@ jobs:
             --head-sha "$HEAD_SHA"
           echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
           echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Record NO_CHANGE outcome
+        if: steps.changes.outputs.status == 'NO_CHANGE'
+        run: |
+          python - <<'PY'
+          import json
+          p = '/tmp/runner_state.json'
+          s = json.load(open(p))
+          s['active_task'] = None
+          json.dump(s, open(p, 'w'), indent=2, sort_keys=True)
+          PY
 
       - name: Persist sanitized durable state to non-main branch
         if: always()
@@ -308,17 +351,17 @@ jobs:
             git push origin '${{ steps.meta.outputs.main_sha }}':"refs/heads/$STATE_BRANCH"
           fi
           CONTENT="$(base64 -w0 /tmp/runner_state.json)"
-          EXISTING_SHA="$(gh api "repos/$GITHUB_REPOSITORY/contents/runner_state.json?ref=$STATE_BRANCH" --jq .sha 2>/dev/null || true)"
+          EXISTING_SHA="$(gh api "repos/$GITHUB_REPOSITORY/contents/$STATE_FILE?ref=$STATE_BRANCH" --jq .sha 2>/dev/null || true)"
           set +e
           if [ -n "$EXISTING_SHA" ]; then
-            gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/runner_state.json" \
-              -f message='Update autonomous specialist runner state' \
+            gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/$STATE_FILE" \
+              -f message='Update Claude Code specialist runner state' \
               -f content="$CONTENT" \
               -f branch="$STATE_BRANCH" \
               -f sha="$EXISTING_SHA" >/dev/null
           else
-            gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/runner_state.json" \
-              -f message='Initialize autonomous specialist runner state' \
+            gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/$STATE_FILE" \
+              -f message='Initialize Claude Code specialist runner state' \
               -f content="$CONTENT" \
               -f branch="$STATE_BRANCH" >/dev/null
           fi
@@ -327,13 +370,9 @@ jobs:
           if [ "$WRITE_STATUS" -eq 0 ]; then
             exit 0
           fi
-
-          # The GitHub API can commit the contents update successfully while gh exits
-          # non-zero parsing an incomplete response body. Fail closed unless a fresh GET
-          # proves that the durable branch contains the exact bytes we intended to write.
           echo "State write command reported failure; verifying durable state before failing."
           LOCAL_HASH="$(sha256sum /tmp/runner_state.json | awk '{print $1}')"
-          if gh api "repos/$GITHUB_REPOSITORY/contents/runner_state.json?ref=$STATE_BRANCH" --jq .content >/tmp/state-verify.b64 2>/dev/null; then
+          if gh api "repos/$GITHUB_REPOSITORY/contents/$STATE_FILE?ref=$STATE_BRANCH" --jq .content >/tmp/state-verify.b64 2>/dev/null; then
             tr -d '\n' </tmp/state-verify.b64 | base64 -d >/tmp/state-verify.json
             REMOTE_HASH="$(sha256sum /tmp/state-verify.json | awk '{print $1}')"
             if [ "$LOCAL_HASH" = "$REMOTE_HASH" ]; then
@@ -345,5 +384,5 @@ jobs:
           exit "$WRITE_STATUS"
 
       - name: Fail workflow after bounded agent failure
-        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'failure' && steps.agent.outputs.quota_exhausted != 'true'
+        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'failure'
         run: exit 1

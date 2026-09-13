@@ -177,5 +177,9 @@ def test_legacy_specialist_workflow_is_manual_and_lead_remains_review_only():
     assert "contents: write" not in lead_workflow
     assert "git push origin main" not in lead_workflow
     assert "Require exact candidate Security and Reliability success" in lead_workflow
-    assert "Require both AI reviewers to approve" in lead_workflow
+    assert "Require all three independent reviewers to approve" in lead_workflow
+    assert "Independent Claude adversarial review" in lead_workflow
+    assert "claude-adversarial" in lead_workflow
+    assert "ANTHROPIC_API_KEY" in lead_workflow
+    assert "Fail closed if Claude adversarial review could not run" in lead_workflow
     assert "MANUAL LEAD INTEGRATION REQUIRED" in lead_workflow

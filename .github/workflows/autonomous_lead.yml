@@ -26,6 +26,8 @@ jobs:
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       OPENAI_AGENT_MODEL: gpt-5.6-sol
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      ANTHROPIC_REVIEW_MODEL: claude-haiku-4-5
       # Review-only. This workflow must never push or merge candidates to main.
       AUTONOMOUS_MERGE_ENABLED: "false"
       GH_TOKEN: ${{ github.token }}
@@ -48,6 +50,15 @@ jobs:
         run: |
           test -n "$OPENAI_API_KEY" || { echo "OPENAI_API_KEY missing"; exit 1; }
           test -n "$OPENAI_AGENT_MODEL" || { echo "OPENAI_AGENT_MODEL missing"; exit 1; }
+      - id: claude_credential_gate
+        name: Determine whether the Claude adversarial reviewer can run
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "ANTHROPIC_API_KEY missing; Claude adversarial review cannot run, so no candidate can be approved until it is configured (see resource_recommendations_proposed.json RESOURCE-REC-001)."
+          fi
       - name: Select oldest current-base autonomous candidate
         id: select
         run: |
@@ -112,30 +123,42 @@ jobs:
           echo "Diff bytes: $BYTES"
           test "$BYTES" -gt 0
           test "$BYTES" -le 80000 || { echo "Diff too large; fail closed."; exit 1; }
-          if grep -Eq '^diff --git a/(AI_STATE\.md|agents/|\.github/workflows/|requirements\.txt|Dockerfile)' /tmp/candidate.diff; then
-            echo "Protected path changed; refusing autonomous integration."
-            exit 1
-          fi
+          # Checked against the single canonical list in
+          # orchestration/protected_paths.json (also enforced at candidate
+          # generation time and by every reviewer), not a separately
+          # maintained regex, so this check cannot drift from theirs again.
+          python -m orchestration.protected_paths --base origin/main --head "origin/$BRANCH"
       - name: Independent security review
         if: steps.select.outputs.branch != ''
         run: python agents/autonomous_orchestrator.py review --reviewer security --diff /tmp/candidate.diff --output /tmp/security-review.json
       - name: Independent lead review
         if: steps.select.outputs.branch != ''
         run: python agents/autonomous_orchestrator.py review --reviewer lead --diff /tmp/candidate.diff --output /tmp/lead-review.json
-      - name: Require both AI reviewers to approve
+      - name: Independent Claude adversarial review
+        if: steps.select.outputs.branch != '' && steps.claude_credential_gate.outputs.available == 'true'
+        run: python agents/autonomous_orchestrator.py review --reviewer claude-adversarial --diff /tmp/candidate.diff --output /tmp/claude-adversarial-review.json
+      - name: Fail closed if Claude adversarial review could not run
+        if: steps.select.outputs.branch != '' && steps.claude_credential_gate.outputs.available != 'true'
+        run: |
+          echo "ANTHROPIC_API_KEY is not configured, so the required independent Claude adversarial review cannot run."
+          echo "No candidate can be approved until it is added as a repository secret and RESOURCE-REC-001 in resource_recommendations_proposed.json is explicitly decided."
+          exit 1
+      - name: Require all three independent reviewers to approve
         if: steps.select.outputs.branch != ''
         run: |
           jq -e '.approve == true' /tmp/security-review.json
           jq -e '.approve == true' /tmp/lead-review.json
+          jq -e '.approve == true' /tmp/claude-adversarial-review.json
           echo "Security review:" && cat /tmp/security-review.json
           echo "Lead review:" && cat /tmp/lead-review.json
+          echo "Claude adversarial review:" && cat /tmp/claude-adversarial-review.json
       - name: Record approved review-only candidate
         if: steps.select.outputs.branch != ''
         env:
           BRANCH: ${{ steps.select.outputs.branch }}
           HEAD_SHA: ${{ steps.select.outputs.sha }}
         run: |
-          BODY="$(printf 'Candidate branch: `%s`\nExact reviewed SHA: `%s`\n\nSecurity and Reliability: PASS on exact candidate SHA.\n\nAutonomous Security review:\n```json\n%s\n```\n\nAutonomous Lead review:\n```json\n%s\n```\n\nThis workflow is review-only and has no contents write permission, so the candidate remains unmerged pending an explicit Lead Integrator cycle.' "$BRANCH" "$HEAD_SHA" "$(cat /tmp/security-review.json)" "$(cat /tmp/lead-review.json)")"
+          BODY="$(printf 'Candidate branch: `%s`\nExact reviewed SHA: `%s`\n\nSecurity and Reliability: PASS on exact candidate SHA.\n\nAutonomous Security review:\n```json\n%s\n```\n\nAutonomous Lead review:\n```json\n%s\n```\n\nIndependent Claude adversarial review:\n```json\n%s\n```\n\nThis workflow is review-only and has no contents write permission, so the candidate remains unmerged pending an explicit Lead Integrator cycle. No review here substitutes for canonical quantitative evidence (forward_proof.py / robustness.py / multiple_testing.py).' "$BRANCH" "$HEAD_SHA" "$(cat /tmp/security-review.json)" "$(cat /tmp/lead-review.json)" "$(cat /tmp/claude-adversarial-review.json)")"
           gh issue create --repo "$GITHUB_REPOSITORY" --title "autonomous-review: $HEAD_SHA" --body "$BODY"
           {
             echo "### Autonomous candidate approved for explicit review"
@@ -144,5 +167,6 @@ jobs:
             echo "- Security CI: PASS"
             echo "- Security AI: APPROVE"
             echo "- Lead AI: APPROVE"
+            echo "- Claude adversarial AI: APPROVE"
             echo "- Merge: DISABLED / MANUAL LEAD INTEGRATION REQUIRED"
           } >> "$GITHUB_STEP_SUMMARY"

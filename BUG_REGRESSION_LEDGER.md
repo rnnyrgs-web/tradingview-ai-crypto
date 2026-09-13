@@ -118,3 +118,30 @@ Only the two proven `RuntimeError` insufficient-history messages are classified 
 
 ### Safety invariants
 No historical-data minimum, strategy logic, evidence threshold, OOS/forward-proof rule, market-data source behavior, concurrency, paper ledger, broker connectivity, promotion authority or live-trade authority is weakened by this fix.
+
+## PROTECT-PATH-001 — Divergent protected-path lists across engines and review
+
+Status: FIXED IN PR (pending merge at time of entry)
+Component: `agents/autonomous_cloud_runner.py` / `agents/autonomous_orchestrator.py` / `.github/workflows/autonomous_lead.yml`
+Detected: 2026-09-13
+Severity: scientific/operational integrity (multi-engine coordination prerequisite)
+
+### Symptom
+Three independently maintained protected-path lists had drifted out of sync: `agents/autonomous_cloud_runner.py`'s `PROTECTED_PATHS` (the fullest list), `agents/autonomous_orchestrator.py`'s `PROTECTED_PATTERNS` (missing `docs/CHATGPT_SPECIALISTS.md`, `orchestration/*`, `live_promotions.json`, `.env*`), and `.github/workflows/autonomous_lead.yml`'s hand-written bash regex guard (missing the same set). A fourth, previously unnoticed copy existed inline inside `agents/autonomous_orchestrator.py`'s `review_diff()` as a tuple-of-substring check with the same gaps. This was safe as long as only one engine (the OpenAI runner, whose candidate-generation path used the fullest list) ever produced `auto/*` candidate branches, but became a live gap the moment a second engine's candidate branches would flow through the same Lead review workflow, since that workflow's own guard was the weakest of the four.
+
+### Reproducer
+Before the fix: construct a diff touching `orchestration/some_file.json` or `live_promotions.json` and pass it to `agents/autonomous_orchestrator.py review_diff()`, or push a branch containing such a change to `.github/workflows/autonomous_lead.yml`'s selection logic. Neither the reviewer function's inline check nor the workflow's grep would refuse it, even though `agents/autonomous_cloud_runner.py`'s candidate-generation-time check would have.
+
+### Fix
+`orchestration/protected_paths.json` is now the single canonical list. `orchestration/protected_paths.py` provides `load_protected_paths()`, `is_protected()`, `find_protected_matches()`, and `diff_changed_paths()`. All four locations now load from it: `agents/autonomous_cloud_runner.py`'s `PROTECTED_PATHS`, `agents/autonomous_orchestrator.py`'s `PROTECTED_PATTERNS` and `review_diff()`'s inline check (replaced with `diff_changed_paths()` + `find_protected_matches()`), and `.github/workflows/autonomous_lead.yml`'s guard step (replaced the bash regex with `python -m orchestration.protected_paths --base origin/main --head "origin/$BRANCH"`, operating on the actual `git diff --name-only` changed-file list rather than a hand-maintained regex over raw diff text).
+
+### Permanent regression coverage
+`tests/test_protected_paths.py`
+- verifies the canonical list loads and is non-empty;
+- verifies every path previously protected by any of the three original lists is still protected by the canonical one;
+- verifies `find_protected_matches()` and `diff_changed_paths()` correctly identify protected paths from a sample unified diff.
+
+Updated assertions in `tests/test_autonomous_cloud_runner.py` and `tests/test_autonomous_orchestrator.py` continue to pass unchanged against the canonical list.
+
+### Safety invariants
+No role's writable-path set was widened by this fix; the canonical list is a superset (stricter) union of the three prior lists. No strategy logic, evidence threshold, OOS/forward-proof rule, paper ledger, broker connectivity, promotion authority, or live-trade authority is affected.

@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "description": "Append-only. Only a human/Lead-authored pull request may add an entry here -- no autonomous engine role's allowed_paths includes this file (it is also listed in orchestration/protected_paths.json as a blanket-protected path enforced independently of any role allowlist). A decision entry references a proposal id in resource_recommendations_proposed.json. No proposal is approved, and no paid resource is enabled, until a matching decision entry with decision=APPROVED exists here.",
+  "required_fields": [
+    "proposal_id",
+    "decision",
+    "decided_by",
+    "decided_at",
+    "rationale"
+  ],
+  "decisions": []
+}
