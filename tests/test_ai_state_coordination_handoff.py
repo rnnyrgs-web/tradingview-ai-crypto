@@ -12,7 +12,7 @@ def test_authoritative_ai_state_tracks_effective_data_market_handoff():
     assert "`COORD-DATA-006`: **DONE**" in text
     assert "`COORD-DATA-007`: **BLOCKED**" in text
     assert "Do not select another data candidate" in text
-    assert "do **not** read only the base JSON" in text.lower()
+    assert "do **not** read only the base json" in text.lower()
 
     stale_claims = (
         "COORD-DATA-005 as the next READY data-market task",
