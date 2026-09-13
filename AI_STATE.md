@@ -1,7 +1,7 @@
 # AI_STATE.md
 
-Last reconciled: 2026-09-12
-Last updated: 2026-09-12
+Last reconciled: 2026-09-13
+Last updated: 2026-09-13
 
 This file is the authoritative compact handoff for future agents working on `rnnyrgs-web/tradingview-ai-crypto`. Read it before changing the system. When this file conflicts with an older chat summary, branch note, or stale base coordination row, this file plus the repository's canonical coordination loader state wins.
 
@@ -15,12 +15,12 @@ Profitability means net expectancy after realistic fees, spread, slippage, fundi
 
 ## CURRENT MAIN / DEPLOYMENT STATE
 
-- Latest runtime-affecting GitHub `main` verified during this reconciliation: `b95f81459fe8bd4bdcc4b283f8d65f31363da660` (PR #328, retired funding observability made explicitly inactive).
-- PR #328 changed observability/control-plane semantics only; no strategy rules, thresholds, OOS/forward gates, paper ledger, broker state, promotions, concurrency, budget, or deployment authority changed.
-- PR #328 exact candidate head `ba3a240f0e1d0f44be392d2f411b8a498a3a2451` passed **Security and Reliability #2245**.
-- Production Render service `srv-dadliegu01pc73bc7t50` is live on `b95f81459fe8bd4bdcc4b283f8d65f31363da660`.
+- Latest runtime/control-plane GitHub `main` verified during this reconciliation: `79605c24f99086ce8d2be774c2b76829ce421a2f` (PR #332, fail-close ACC-001 until prospective forecast-time microstructure evidence is durably persisted).
+- PR #331 (`745fe5b3fd291564f8a861a68cc8dd24db279aac`) keeps ACC-005 blocked while the frozen DATA-BREADTH-001 prospective evidence matures; PR #332 keeps ACC-001 blocked until timestamp-defensible forecast-time microstructure/execution evidence is durably captured.
+- These are scientific/control-plane fail-closed changes. They do not weaken untouched OOS/forward validation, timestamp causality, leakage protections, paper-ledger authenticity, broker-disconnected state, promotion gates, execution realism, budget controls, or real-order authority.
+- Production Render service `srv-dadliegu01pc73bc7t50` is live on `79605c24f99086ce8d2be774c2b76829ce421a2f`.
 - Research-coordinator Render service `srv-dafgtead0e5s73cc7ekg` is live on the same commit.
-- There were no open GitHub PRs before this state-reconciliation branch was created.
+- Current-head GitHub scan/research/adversarial checks observed during this reconciliation are green, and there were no open GitHub PRs before this state-reconciliation branch was created.
 
 Do not confuse a later state-only commit with a new trading/runtime strategy baseline. State-only reconciliations can advance `main` without changing trading behavior.
 
@@ -88,12 +88,14 @@ Do not waste research capacity retrying the same blocked routes unless the acces
 
 ## PROFITABILITY-FIRST CONTROL PLANE
 
-Recent integrations deliberately changed research prioritization, not production trading rules:
+Recent integrations deliberately changed research prioritization or scientific eligibility, not production trading authority:
 
 - PR #319 made independent after-cost economic harm outrank wrong-signal rate when allocating research attention.
 - PR #320 made expected incremental after-cost profitability the research director's primary impact term, with forward signal quality secondary.
 - PR #321 removed the permanently rejected DATA-BASIS/DATA-FUNDING compatibility job from the always-on heavy lane.
 - PR #328 made the retained legacy funding observability projection explicitly inactive/retired so rejected evidence cannot masquerade as an active candidate.
+- PR #331 fail-closed ACC-005 while DATA-BREADTH-001's frozen prospective evidence matures, preventing a separate data candidate from contaminating or bypassing that evidence gate.
+- PR #332 fail-closed ACC-001 until genuine forecast-time microstructure/execution evidence is durably persisted and available to resolved research rows. Historical reconstruction/backfill is not an acceptable substitute.
 
 After PR #321 the active layout is **20 logical workers: 18 heavy + 2 lightweight research-brain workers**. Physical heavy concurrency/cost controls remain bounded; no paid infrastructure increase was authorized.
 
@@ -115,6 +117,7 @@ Recent corrections:
 - Direction-aware imbalance was required so LONG and SHORT do not interpret the same raw imbalance identically.
 - A suspected execution condition must be compared against a sufficiently sampled normal-execution baseline; negative expectancy alone is not enough to blame execution.
 - 24h and 7d execution economics must remain separated; one horizon may not hide the other's losses.
+- As of PR #332, ACC-001 remains **BLOCKED** until timestamp-defensible forecast-time microstructure/execution fields are durably persisted. Never reconstruct them after outcomes are known merely to make the lane runnable.
 
 Earlier paper observations suggested worse measured entry slippage among some 7d stop-outs than target winners, but sample size was too small to authorize a veto. Continue prospective measurement; do not turn it into a threshold until independent evidence passes the canonical gates.
 
@@ -122,12 +125,12 @@ Earlier paper observations suggested worse measured entry slippage among some 7d
 
 At the last authoritative profitability-first state before this reconciliation:
 
-- 24h ACC-002 history was close to data-ready (roughly 28–29/30 histories) with supported Top-15/30 liquidity evidence.
-- 7d remained history-limited (roughly 19/30) and must stay blocked rather than borrowing 24h evidence.
+- 24h ACC-002 history was close to data-ready with supported Top-15/30 liquidity evidence, but the currently resolved universe count is dynamic and should be read from fresh runtime artifacts rather than copied from an older snapshot.
+- 7d remains history-limited and must stay blocked rather than borrowing 24h evidence.
 - Horizon evidence is never pooled merely to meet sample counts.
 - Untouched holdout / forward evidence is not reusable tuning data.
 
-Use the latest authentic repository/runtime artifacts if these counts have advanced. Never copy an older count forward as if it were fresh evidence.
+Use the latest authentic repository/runtime artifacts for current counts. Never copy an older count forward as if it were fresh evidence.
 
 ## PAPER / PROFITABILITY INTERPRETATION
 
@@ -161,7 +164,7 @@ While DATA-BREADTH-001 naturally matures, independent lanes may continue bounded
 
 - resolving 24h ACC-002 profitability hypotheses once canonical data gates permit;
 - diagnosing genuine resolved-signal errors and missed opportunities without reusing holdout evidence;
-- execution/microstructure hypotheses that test incremental after-cost value rather than raw correlation;
+- execution/microstructure hypotheses that test incremental after-cost value rather than raw correlation, but ACC-001 itself remains blocked until prospective evidence persistence exists;
 - regime-conditioned abstention/demotion where evidence is genuinely independent;
 - portfolio interaction, concentration, and contradictory 24h/7d signal suppression;
 - reliability/adversarial validation for leakage, overlap, timestamp, ledger, cost, and fail-closed defects.
@@ -174,7 +177,7 @@ Before merging any code/runtime change:
 
 1. Work on an isolated branch.
 2. Add or update regression tests for confirmed defects.
-3. Run/obtain exact-head Security and Reliability and require success.
+3. Run/obtain exact-head **Security and Reliability** and require success.
 4. Merge only after the exact candidate SHA is green.
 5. Confirm both deployment services reach the intended merged commit and remain healthy.
 6. Preserve `live_promotions.json`, broker-disconnected state, paper-ledger authenticity, and the cost ceiling unless independently authorized by the canonical gates/user.
