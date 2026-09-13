@@ -15,12 +15,12 @@ Profitability means net expectancy after realistic fees, spread, slippage, fundi
 
 ## CURRENT MAIN / DEPLOYMENT STATE
 
-- Latest runtime/control-plane GitHub `main` verified during this reconciliation: `7789e3f6d66584b4ec79e5bcc3d71db090743727` (PR #334, prevent old-signal evaluation from starving fresh production scans of runtime budget).
+- Latest GitHub `main` verified during this reconciliation: `1278fa540e5e0a99c80095a6ffaa526660136b54` (merge of PR #336, multi-engine ChatGPT / Claude / Claude Code coordination layer).
+- PR #336 exact candidate head `53159a2a8e7db7a31ef0370b133701cedc458a82` passed exact-head Security and Reliability before merge. It adds bounded fleet coordination across ChatGPT/OpenAI, Claude research, Claude Code implementation, and existing deterministic workers while preserving isolated branches, no autonomous unsafe merge authority, no real-order authority, rejected-fingerprint memory, and fail-closed scientific gates.
 - PR #331 (`745fe5b3fd291564f8a861a68cc8dd24db279aac`) keeps ACC-005 blocked while the frozen DATA-BREADTH-001 prospective evidence matures; PR #332 keeps ACC-001 blocked until timestamp-defensible forecast-time microstructure/execution evidence is durably captured; PR #334 isolates/bounds evaluation runtime so fresh production scans cannot be cancelled solely because evaluation consumed the scan budget.
 - These are scientific/control-plane/reliability changes. They do not weaken untouched OOS/forward validation, timestamp causality, leakage protections, paper-ledger authenticity, broker-disconnected state, promotion gates, execution realism, budget controls, or real-order authority.
-- Production Render service `srv-dadliegu01pc73bc7t50` is live on `7789e3f6d66584b4ec79e5bcc3d71db090743727`.
-- Research-coordinator Render service `srv-dafgtead0e5s73cc7ekg` is live on the same commit.
-- Current-head scheduled Lead Integrator activity observed after deployment is green, and there were no open GitHub PRs before this state-reconciliation branch was created.
+- The last independently recorded Render verification in this file predates PR #336. Treat GitHub `main` above as authoritative repository state, but re-check both Render services before asserting that the PR #336 merge commit is the currently deployed runtime revision.
+- There were no open GitHub PRs when this reconciliation branch was prepared.
 
 Do not confuse a later state-only commit with a new trading/runtime strategy baseline. State-only reconciliations can advance `main` without changing trading behavior.
 
@@ -29,7 +29,8 @@ Do not confuse a later state-only commit with a new trading/runtime strategy bas
 - `live_promotions.json` remains empty unless genuine forward profitability evidence and every canonical promotion gate authorize otherwise.
 - Broker remains disconnected. Research, shadow execution, and paper trading have no real-order authority.
 - Never reset, rewrite, reseed, or cosmetically improve the authentic paper ledger. The canonical starting account is the existing **$100,000** paper account; history remains append-only/authentic.
-- Monthly infrastructure ceiling remains **$30 USD**. Add no paid service without explicit user approval.
+- Combined calendar-month variable paid-project ceiling remains approximately **$30 USD total** across approved OpenAI API, Anthropic API, and any other explicitly approved paid project resource. Target roughly $1/day on average, carry unused allowance forward, allow occasional higher-value $2–3 days only when justified, and throttle/defer low-value paid-AI work when ahead of pace. Never raise the ceiling or add another paid service without explicit user approval.
+- Paid-AI throttling or exhaustion must never stop free/local Python research, backtests, market-data collection, paper trading, signal generation, deterministic diagnostics, dashboards, scans, logging, or evidence accumulation.
 - Code changes only on isolated branches.
 - Confirmed defects require regression coverage where practical.
 - Require exact-head **Security and Reliability** green before merge.
@@ -59,6 +60,8 @@ DATA-BREADTH-001 remains frozen and research-only. Its next evaluation requires 
 **Do not select another data candidate while DATA-BREADTH-001 is awaiting the prospectively captured evidence required by COORD-DATA-007.** Let authentic point-in-time cohorts mature and run the frozen falsification only after its predeclared sample floor is satisfied. Never backfill or reconstruct missing historical membership from current survivors.
 
 While that evidence matures, the event-driven supervisor may assign at most one independent, non-contaminating CHANGE task from the profitability-first READY backlog. Prefer work on genuine 24h after-cost profitability, execution/microstructure, resolved-signal error attribution, regime-conditioned abstention, or reliability defects only when it does not duplicate, tune on, or contaminate DATA-BREADTH-001 evidence. All other specialists remain AUDIT-only under the existing supervisor contract. If no clean independent work is justified, waiting is the correct action.
+
+Under the PR #336 fleet layer, coordinate rather than duplicate: route research/falsification toward Claude, bounded implementation/testing/debugging toward Claude Code, integration/prioritization/evidence synthesis toward ChatGPT, and bulk deterministic research/backtests/data/diagnostics toward the existing workers. Paid-AI engines remain subordinate to the shared monthly budget and scientific gates; they must not manufacture experiments merely to stay busy.
 
 ## DURABLE NEGATIVE DATA RESULTS — DO NOT RESCUE
 
@@ -97,8 +100,9 @@ Recent integrations deliberately changed research prioritization or scientific e
 - PR #331 fail-closed ACC-005 while DATA-BREADTH-001's frozen prospective evidence matures, preventing a separate data candidate from contaminating or bypassing that evidence gate.
 - PR #332 fail-closed ACC-001 until genuine forecast-time microstructure/execution evidence is durably persisted and available to resolved research rows. Historical reconstruction/backfill is not an acceptable substitute.
 - PR #334 bounded/separated evaluation runtime so stale-signal evaluation cannot consume the production scan budget and suppress fresh forward signal generation.
+- PR #336 adds the bounded multi-engine coordination layer. It is a coordination/cost-control capability, not evidence of improved trading profitability or accuracy. ChatGPT remains the integration/prioritization/evidence-synthesis layer; Claude is routed toward research/falsification; Claude Code toward bounded implementation/testing/debugging; existing deterministic workers retain bulk research/backtest/data/diagnostic work. Shared paid usage is budget-gated and must fail closed without weakening free/local research.
 
-After PR #321 the active layout is **20 logical workers: 18 heavy + 2 lightweight research-brain workers**. Physical heavy concurrency/cost controls remain bounded; no paid infrastructure increase was authorized.
+After PR #321 the deterministic research layout is **20 logical workers: 18 heavy + 2 lightweight research-brain workers**. The PR #336 paid-AI coordination layer is separate from that deterministic worker count. Physical heavy concurrency/cost controls remain bounded; no paid infrastructure ceiling increase is authorized.
 
 Experiment ranking should continue to favor, in order:
 
