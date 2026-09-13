@@ -15,10 +15,10 @@ Profitability means net expectancy after realistic fees, spread, slippage, fundi
 
 ## CURRENT MAIN / DEPLOYMENT STATE
 
-- Current GitHub `main` verified during this reconciliation: `bd761ada19c4964ce8ab00a6ec645877ee2d7c34` (PR #322 state synchronization).
-- Latest runtime-affecting integration before that state-only commit: PR #321 merge `a4471433a85d0a86a50dfd5e0d3bb40b6a2861c0`.
-- PR #322 exact candidate head `21b57daefa53ab94e69c930f5ca826767a86d877` passed **Security and Reliability #2211**.
-- Production Render service `srv-dadliegu01pc73bc7t50` is live on `bd761ada19c4964ce8ab00a6ec645877ee2d7c34`.
+- Current GitHub `main` verified during this reconciliation: `89f1888066f6e37eb3210bb4ca7301c9bbba928e` (PR #326 regression guard for coordinator state freshness).
+- Latest trading/runtime strategy baseline remains unchanged by PR #326; PR #326 only added regression coverage for the coordinator freshness contract.
+- PR #326 exact candidate head `23e76a826874af963321b102601ad05a4ba76466` passed **Security and Reliability #2235**.
+- Production Render service `srv-dadliegu01pc73bc7t50` is live on `89f1888066f6e37eb3210bb4ca7301c9bbba928e`.
 - Research-coordinator Render service `srv-dafgtead0e5s73cc7ekg` is live on the same commit.
 - There were no open GitHub PRs at this reconciliation point.
 
