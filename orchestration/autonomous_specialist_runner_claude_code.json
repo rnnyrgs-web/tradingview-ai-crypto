@@ -2,10 +2,10 @@
   "version": 1,
   "enabled": true,
   "objective_id": "UNIVERSAL_SIGNAL_DEVELOPMENT_V1",
-  "primary_mission": "Continuously maximize genuine sustainable after-cost profitability for 24h and 7d crypto BUY / SELL / WAIT signals, with genuine forward signal accuracy/precision as the secondary objective.",
+  "primary_mission": "Continuously maximize genuine sustainable after-cost profitability for adaptive-horizon crypto BUY / SELL / WAIT signals, with genuine forward signal accuracy/precision as the secondary objective.",
   "engine": "claude-code",
-  "engine_role_description": "Implementation / engineering / testing agent. This is the sole autonomous engine permitted to change test or production code under the multi-engine coordination layer -- ChatGPT's existing autonomous_cloud_specialist.yml role and this role must never both be enabled for the same coordination role at once (enforced by each engine's plan step refusing a task_id whose auto/<role>/<task_id> branch already exists).",
-  "autonomous_roles": ["testing-security"],
+  "engine_role_description": "Implementation / engineering / testing agent. This is the sole autonomous engine permitted to change test or production code under the multi-engine coordination layer for any role explicitly enabled here. A sibling autonomous engine must not be enabled for the same coordination role at the same time.",
+  "autonomous_roles": ["testing-security", "data-market"],
   "policy": {
     "max_concurrent_agent_runs": 1,
     "max_agent_runs_per_invocation": 1,
@@ -51,7 +51,7 @@
       "input_usd_per_million": 2.0,
       "cached_input_usd_per_million": 0.20,
       "output_usd_per_million": 10.0,
-      "enabled": false
+      "enabled": true
     }
   },
   "roles": {
@@ -69,7 +69,23 @@
         "docs/security_*.md",
         "resource_recommendations_proposed.json"
       ],
-      "mission": "Own coordination task COORD-TEST-001 (adversarially verify coordination and specialist safety boundaries) as the implementation engine: add or strengthen tests for coordination schema validation, duplicate active ownership detection, invalid dependency/status detection, protected-path enforcement, no-direct-main-write and no-automatic-merge regressions, and cost-ceiling / broker-disconnected invariants. Attack existing specialist work; never merge it, never weaken a gate to make a test pass, never touch production strategy/signal/paper-ledger code (out of allowed_paths by construction). If a paid resource/tool would materially improve testing coverage, propose it in resource_recommendations_proposed.json instead of assuming it is available. Missing or insufficient evidence is WAIT / RESEARCH_ONLY, never a fabricated pass. TURN-BUDGET DISCIPLINE: finish within four model turns. Turn 1: read only the minimum files needed to choose one falsifiable test gap. Turn 2: implement the smallest allowed regression test. Turn 3: run it and fix only directly observed failures in the test itself. Turn 4: return READY_FOR_PR, NO_CHANGE, or BLOCKED; do not perform additional exploration. Prefer a safe NO_CHANGE/BLOCKED result over exceeding the turn budget."
+      "mission": "Own the active testing-security coordination task as the implementation engine: add or strengthen adversarial regression tests without weakening any scientific, safety, budget, broker, or promotion gate. Attack existing specialist work; never merge it. Missing or insufficient evidence is WAIT / RESEARCH_ONLY, never a fabricated pass. Finish within four model turns."
+    },
+    "data-market": {
+      "model": "claude-sonnet-5",
+      "max_turns": 6,
+      "max_output_tokens_per_turn": 3000,
+      "reserved_max_input_tokens_per_run": 140000,
+      "reserved_max_output_tokens_per_run": 12000,
+      "max_file_read_bytes": 24000,
+      "max_file_write_bytes": 90000,
+      "allowed_paths": [
+        "extreme_move_research.py",
+        "tests/test_extreme_move_research*.py",
+        "docs/research/extreme_move_*.md",
+        "resource_recommendations_proposed.json"
+      ],
+      "mission": "Implement the active adaptive-horizon extreme-move research task as a research-only engineering lane. Build the smallest deterministic, timestamp-safe kernel needed for event schemas, extreme upside/crash event discovery, matched-control cohorts, magnitude labels, duration/time-to-event labels, and falsification tests. The implementation must support research from roughly 5 minutes through multi-week horizons without outcome leakage, winner-selection bias, horizon mining, survivorship bias, or unrealistic liquidity assumptions. Preserve existing 24h/7d benchmark science. Do not touch production signals, paper-ledger logic, broker code, promotion logic, orchestration state, agents, workflows, or protected paths. Never claim profitability from this implementation alone. Require chronological/OOS-safe semantics and fail closed on malformed, future, stale, ambiguous, or insufficient evidence. Prefer a safe bounded research module plus strong tests over broad integration."
     }
   }
 }
