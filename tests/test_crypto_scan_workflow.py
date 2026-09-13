@@ -7,21 +7,20 @@ WORKFLOW = Path('.github/workflows/crypto_scan.yml')
 def test_market_scan_cannot_be_starved_by_signal_evaluation():
     text = WORKFLOW.read_text(encoding='utf-8')
 
-    scan_pos = text.index('  scan:')
-    evaluate_pos = text.index('  evaluate:')
-    assert scan_pos < evaluate_pos
+    evaluate_pos = text.index('- name: Evaluate previous signals')
+    scan_pos = text.index('- name: Run production market scan')
+    assert evaluate_pos < scan_pos
 
-    evaluate_block = text[evaluate_pos:]
-    assert 'needs: scan' in evaluate_block
-    assert "needs.scan.result == 'success'" in evaluate_block
+    evaluate_block = text[evaluate_pos:scan_pos]
+    assert 'timeout-minutes: 5' in evaluate_block
+    assert 'continue-on-error: true' in evaluate_block
+    assert '--retry 1' in evaluate_block
+    assert '--max-time 240' in evaluate_block
 
 
-def test_scan_and_evaluation_have_independent_timeouts():
+def test_scan_job_keeps_a_hard_total_timeout():
     text = WORKFLOW.read_text(encoding='utf-8')
-    scan_block = text[text.index('  scan:'):text.index('  evaluate:')]
-    evaluate_block = text[text.index('  evaluate:'):]
+    scan_job = text[text.index('  scan:'):]
 
-    assert 'timeout-minutes: 7' in scan_block
-    assert 'timeout-minutes: 10' in evaluate_block
-    assert 'Run production market scan' in scan_block
-    assert 'Evaluate previous signals' not in scan_block
+    assert 'timeout-minutes: 10' in scan_job
+    assert 'Run production market scan' in scan_job
