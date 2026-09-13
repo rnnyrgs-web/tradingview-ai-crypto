@@ -66,21 +66,45 @@ def test_claude_workflows_run_the_allowlist_rejection_step_before_publishing():
         assert "path_allowed" in text
 
 
-def test_claude_workflows_fetch_fleet_sibling_state_before_budget_check():
+def test_claude_workflows_reserve_against_the_shared_fleet_ledger_not_a_stale_local_snapshot():
+    """Regression for BUG_REGRESSION_LEDGER.md FLEET-BUDGET-RACE-001: each
+    workflow's budget check must use the race-free `reserve` subcommand
+    (live, lock-protected reads of sibling state) rather than best-effort
+    local sibling files fetched once at job start."""
     for path, expected_siblings in (
-        (".github/workflows/autonomous_claude_specialist.yml", ["sibling_openai.json", "sibling_claude_code.json"]),
-        (".github/workflows/autonomous_claude_code_specialist.yml", ["sibling_openai.json", "sibling_claude.json"]),
+        (".github/workflows/autonomous_claude_specialist.yml", ["runner_state.json", "runner_state_claude_code.json"]),
+        (".github/workflows/autonomous_claude_code_specialist.yml", ["runner_state.json", "runner_state_claude.json"]),
     ):
         text = _read(path)
+        assert "orchestration.shared_budget reserve" in text
+        assert "--sibling-state-path" in text
         for sibling in expected_siblings:
             assert sibling in text
+        # The old best-effort local prefetch pattern must be gone.
+        assert "/tmp/sibling_" not in text
+        assert "fetch_or_skip" not in text
 
 
-def test_openai_workflow_also_gained_the_fleet_budget_check():
+def test_claude_workflows_clear_reservation_after_run_concludes():
+    for path in (
+        ".github/workflows/autonomous_claude_specialist.yml",
+        ".github/workflows/autonomous_claude_code_specialist.yml",
+    ):
+        text = _read(path)
+        assert "orchestration.shared_budget clear-reservation" in text
+        assert "Clear fleet budget reservation now that this run has concluded" in text
+        assert "steps.fleet_budget.outputs.reservation_id" in text
+
+
+def test_openai_workflow_also_gained_the_race_free_fleet_reservation():
     text = _read(".github/workflows/autonomous_cloud_specialist.yml")
-    assert "orchestration.shared_budget" in text
-    assert "sibling_claude.json" in text
-    assert "sibling_claude_code.json" in text
+    assert "orchestration.shared_budget reserve" in text
+    assert "orchestration.shared_budget clear-reservation" in text
+    assert "--sibling-state-path" in text
+    assert "runner_state_claude.json" in text
+    assert "runner_state_claude_code.json" in text
+    assert "/tmp/sibling_" not in text
+    assert "fetch_or_skip" not in text
 
 
 def test_lead_workflow_requires_claude_adversarial_approval():

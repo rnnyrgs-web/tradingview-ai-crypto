@@ -14,6 +14,7 @@
     "live_promotions.json",
     "resource_recommendations_decisions.json",
     "BUG_REGRESSION_LEDGER.md",
+    "fleet_coordination.json",
     ".env*",
     "**/.env*"
   ]

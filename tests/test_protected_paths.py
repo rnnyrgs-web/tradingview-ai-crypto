@@ -29,6 +29,7 @@ def test_canonical_list_is_superset_of_every_prior_list():
         "live_promotions.json",
         "resource_recommendations_decisions.json",
         "BUG_REGRESSION_LEDGER.md",
+        "fleet_coordination.json",
         ".env",
         ".env.local",
         "subdir/.env",

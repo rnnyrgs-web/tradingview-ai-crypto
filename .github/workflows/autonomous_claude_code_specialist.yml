@@ -52,7 +52,7 @@ jobs:
           echo "state_branch=$STATE_BRANCH" >> "$GITHUB_OUTPUT"
 
       - id: load_state
-        name: Load durable non-main runner state (own file and fleet siblings)
+        name: Load durable non-main runner state
         env:
           STATE_BRANCH: ${{ steps.meta.outputs.state_branch }}
         run: |
@@ -71,8 +71,6 @@ jobs:
             fi
           }
           fetch_or_default "$STATE_FILE" /tmp/runner_state.json
-          fetch_or_default "runner_state.json" /tmp/sibling_openai.json || true
-          fetch_or_default "runner_state_claude.json" /tmp/sibling_claude.json || true
 
       - id: reconcile
         name: Reconcile exact-head Security and Reliability state
@@ -143,15 +141,29 @@ jobs:
           fi
 
       - id: fleet_budget
-        name: Fail closed if combined fleet spend would exceed the shared project ceiling
+        name: Race-free fleet budget reservation (fails closed on any real fetch failure)
         if: steps.credential_gate.outputs.execute == 'true'
+        env:
+          STATE_BRANCH: ${{ steps.meta.outputs.state_branch }}
         run: |
-          python -m orchestration.shared_budget \
+          # Reserves against the single shared fleet_coordination.json under
+          # a short-lived compare-and-swap lock, so this run and any
+          # concurrent OpenAI/Claude run can never both decide against the
+          # same stale snapshot (BUG_REGRESSION_LEDGER.md
+          # FLEET-BUDGET-RACE-001). A genuine 404 for a sibling's state file
+          # (never run yet) counts as zero spend; any other fetch failure
+          # fails this reservation closed.
+          python -m orchestration.shared_budget reserve \
             --config orchestration/autonomous_specialist_runner_claude_code.json \
-            --state /tmp/runner_state.json \
             --role '${{ steps.plan.outputs.role }}' \
-            --sibling /tmp/sibling_openai.json \
-            --sibling /tmp/sibling_claude.json
+            --engine claude-code \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref "$STATE_BRANCH" \
+            --own-state-path "$STATE_FILE" \
+            --sibling-state-path runner_state.json \
+            --sibling-state-path runner_state_claude.json \
+            --output /tmp/fleet_reservation.json
+          echo "reservation_id=$(jq -r '.reservation_id // empty' /tmp/fleet_reservation.json)" >> "$GITHUB_OUTPUT"
 
       - id: branch
         name: Create isolated task branch from exact current main
@@ -339,6 +351,19 @@ jobs:
           s['active_task'] = None
           json.dump(s, open(p, 'w'), indent=2, sort_keys=True)
           PY
+
+      - name: Clear fleet budget reservation now that this run has concluded
+        if: always() && steps.fleet_budget.outputs.reservation_id != ''
+        env:
+          STATE_BRANCH: ${{ steps.meta.outputs.state_branch }}
+        run: |
+          # Best effort: if this cannot complete (e.g. the runner is being
+          # cancelled), the reservation's own TTL frees it for sibling
+          # engines regardless -- see PENDING_RESERVATION_TTL_SECONDS.
+          python -m orchestration.shared_budget clear-reservation \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref "$STATE_BRANCH" \
+            --reservation-id '${{ steps.fleet_budget.outputs.reservation_id }}' || true
 
       - name: Persist sanitized durable state to non-main branch
         if: always()
