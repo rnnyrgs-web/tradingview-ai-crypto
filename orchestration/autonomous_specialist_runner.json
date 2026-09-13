@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "enabled": true,
+  "enabled": false,
   "objective_id": "UNIVERSAL_SIGNAL_DEVELOPMENT_V1",
   "primary_mission": "Continuously maximize genuine sustainable after-cost profitability for 24h and 7d crypto BUY / SELL / WAIT signals, with genuine forward signal accuracy/precision as the secondary objective.",
   "autonomous_roles": ["data-market"],
