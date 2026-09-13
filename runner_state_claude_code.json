@@ -1,0 +1,9 @@
+{
+  "active_task": null,
+  "last_seen_main_sha": "ce998b91ac4caab0cd52680c45b450e742eb7982",
+  "next_eligible_at": null,
+  "paused_reason": null,
+  "runs": [],
+  "task_failures": {},
+  "version": 1
+}
