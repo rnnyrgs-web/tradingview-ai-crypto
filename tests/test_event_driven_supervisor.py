@@ -10,10 +10,14 @@ def test_priority_backlog_is_ordered_and_fail_closed():
     assert backlog["policy"]["live_promotion_from_backlog"] is False
     assert backlog["policy"]["insufficient_evidence"] == "WAIT_RESEARCH_ONLY"
     ready = ready_items(backlog)
-    assert len(ready) >= 7
+    # READY is intentionally a dynamic subset: scientifically blocked tasks must
+    # be allowed to leave the runnable queue without making the supervisor test
+    # demand that they be re-enabled merely to satisfy an inventory count.
+    assert ready
     assert [item["priority"] for item in ready] == sorted(item["priority"] for item in ready)
     assert ready[0]["id"] == "ACC-001"
     assert all(item["owner"] for item in ready)
+    assert all(item["status"] == "READY" for item in ready)
 
 
 def test_supervisor_snapshot_is_compact_and_contains_handoff_and_queue(monkeypatch):
