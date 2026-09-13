@@ -10,12 +10,14 @@
     {
       "id": "ACC-001",
       "priority": 1,
-      "status": "READY",
+      "status": "BLOCKED",
       "owner": "market-microstructure",
       "title": "Execution-realism and prospective microstructure evidence",
+      "block_reason": "Confirmed evidence-path defect: research_microstructure_veto expects forecast-time microstructure fields, but current opportunity/prediction-ledger persistence stores preforecast market-consensus provenance only. Reopen only after genuinely prospective, timestamp-defensible microstructure/execution fields are persisted with each eligible forecast and exposed to resolved research rows with deterministic regression coverage.",
       "goal": "Measure whether timestamp-safe public Kraken spread, visible depth, direction-aware imbalance, liquidity deterioration, microprice deviation, and size-aware expected slippage identify conditions where otherwise-valid signals lose incremental after-cost value. Keep 24h and 7d economics separate and require a sufficiently sampled normal-execution baseline before attributing losses to execution. Do not retry or rescue the rejected DATA-BASIS-001 or DATA-FUNDING-001 fingerprints, and do not re-probe unchanged blocked historical-OI routes unless access conditions materially change.",
       "acceptance": [
         "research uses genuinely timestamped public microstructure data and remains research-only",
+        "forecast-time microstructure/execution evidence is durably persisted and exposed to resolved research rows without historical reconstruction or backfill",
         "suspected adverse execution conditions are compared with a sufficiently sampled normal-execution baseline",
         "24h and 7d execution economics are evaluated separately",
         "new evidence is timestamp-safe and stale, future, crossed, malformed, or one-sided books fail closed",
