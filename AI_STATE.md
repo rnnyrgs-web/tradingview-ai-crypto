@@ -1,6 +1,7 @@
 # AI_STATE.md
 
 Last reconciled: 2026-09-12
+Last updated: 2026-09-12
 
 This file is the authoritative compact handoff for future agents working on `rnnyrgs-web/tradingview-ai-crypto`. Read it before changing the system. When this file conflicts with an older chat summary, branch note, or stale base coordination row, this file plus the repository's canonical coordination loader state wins.
 
