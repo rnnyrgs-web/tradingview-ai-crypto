@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import calendar
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -17,14 +18,73 @@ def load_sibling_states(paths: list[Path]) -> list[dict[str, Any]]:
     """Load whichever sibling engine state files currently exist.
 
     A missing sibling file (an engine that has never run, or is not yet
-    enabled) contributes zero spend rather than failing closed, since a
-    not-yet-enabled or never-run engine cannot have spent anything.
+    enabled) contributes zero spend. An existing malformed file fails closed
+    through load_json/load_state validation rather than being silently ignored.
     """
     states = []
     for path in paths:
         if path.exists():
             states.append(load_json(path))
     return states
+
+
+def _next_month_start(now: datetime) -> datetime:
+    current = month_start(now)
+    if current.month == 12:
+        return current.replace(year=current.year + 1, month=1)
+    return current.replace(month=current.month + 1)
+
+
+def pacing_snapshot(
+    config: dict[str, Any],
+    own_state: dict[str, Any],
+    sibling_states: list[dict[str, Any]],
+    now: datetime,
+    reserve: float = 0.0,
+) -> dict[str, float]:
+    """Return fleet-wide monthly pacing metrics.
+
+    The project has one shared paid-AI allowance. The pacing target advances
+    continuously through the calendar month, unused allowance carries forward,
+    and a small bounded burst allowance can temporarily run ahead of pace. Any
+    overshoot is then repaid by throttling later work until the calendar catches
+    up. This prevents spending most of the month's budget in the first few days.
+    """
+    all_states = [own_state, *sibling_states]
+    start = month_start(now)
+    end = _next_month_start(now)
+    month_seconds = max(1.0, (end - start).total_seconds())
+    elapsed_seconds = min(month_seconds, max(0.0, (now - start).total_seconds()))
+    elapsed_fraction = elapsed_seconds / month_seconds
+
+    ceiling = float(config["budget"]["project_monthly_ceiling_usd"])
+    monthly = combined_spend_since(all_states, start)
+    daily = combined_spend_since(all_states, day_start(now))
+    projected = monthly + reserve
+    target_to_now = ceiling * elapsed_fraction
+    burst_allowance = float(config["budget"].get("fleet_pacing_burst_allowance_usd", 2.0))
+    paced_limit = min(ceiling, target_to_now + burst_allowance)
+    daily_burst_cap = float(config["budget"].get("fleet_daily_burst_cap_usd", 3.0))
+
+    # Forecast is intentionally conservative early in the month. It is an
+    # observability metric, not the sole gate, because a one-off important burst
+    # should be allowed and then repaid by subsequent throttling.
+    min_fraction = 1.0 / float(calendar.monthrange(start.year, start.month)[1])
+    forecast_fraction = max(elapsed_fraction, min_fraction)
+    projected_month_end = projected / forecast_fraction if forecast_fraction > 0 else ceiling
+
+    return {
+        "monthly_spend_usd": monthly,
+        "daily_spend_usd": daily,
+        "reserved_cost_usd": reserve,
+        "projected_after_run_usd": projected,
+        "target_to_now_usd": target_to_now,
+        "paced_limit_usd": paced_limit,
+        "daily_burst_cap_usd": daily_burst_cap,
+        "projected_month_end_usd": projected_month_end,
+        "elapsed_fraction": elapsed_fraction,
+        "ceiling_usd": ceiling,
+    }
 
 
 def fleet_budget_gate(
@@ -34,46 +94,37 @@ def fleet_budget_gate(
     role: str,
     now: datetime,
 ) -> tuple[bool, str, float]:
-    """Fleet-wide backstop on top of (never a replacement for) each engine's own budget_gate.
+    """Fleet-wide pacing and hard-ceiling gate for every paid AI engine.
 
-    orchestration/autonomous_specialist_runner.json, orchestration/autonomous_specialist_runner_claude.json,
-    and orchestration/autonomous_specialist_runner_claude_code.json each declare their own
-    per-engine daily/monthly reserved-spend ceilings and are individually
-    enforced by agents.autonomous_cloud_runner.budget_gate(), unchanged. Those
-    per-engine ceilings were each sized against the single shared
-    monthly_infrastructure_ceiling_usd in isolation, so summing three
-    independently-configured engines' ceilings could exceed that one shared
-    ceiling. This function is the additional, fleet-wide check every engine's
-    workflow must also pass: it sums this engine's own recorded spend plus
-    every sibling engine's recorded spend (loaded from their state files on
-    the shared non-main state branch) against the single project-wide
-    monthly ceiling, so no combination of per-engine budgets can push
-    combined spend past it.
+    This is additive to each engine's local safety limits. The shared gate
+    enforces one combined project budget, a maximum daily burst, and a rolling
+    calendar-month pace. Unused budget carries forward naturally. A bounded
+    burst can run ahead of pace for important work, after which routine paid
+    work is automatically deferred until the target catches up.
     """
-    from agents.autonomous_cloud_runner import reserved_cost_usd  # deferred: avoids importing openai-agents-adjacent code paths at module import time
+    from agents.autonomous_cloud_runner import reserved_cost_usd  # deferred import
 
     raw_reserve = reserved_cost_usd(config, role)
     reserve = raw_reserve * float(config["budget"].get("provider_retry_safety_multiplier", 1.0))
-    all_states = [own_state, *sibling_states]
-    monthly = combined_spend_since(all_states, month_start(now))
-    ceiling = float(config["budget"]["project_monthly_ceiling_usd"])
-    projected = monthly + reserve
-    if projected > ceiling:
+    snapshot = pacing_snapshot(config, own_state, sibling_states, now, reserve)
+
+    if snapshot["projected_after_run_usd"] > snapshot["ceiling_usd"]:
         return False, "FLEET_MONTHLY_WOULD_EXCEED_PROJECT_CEILING", reserve
+
+    if snapshot["daily_spend_usd"] + reserve > snapshot["daily_burst_cap_usd"]:
+        return False, "FLEET_DAILY_BURST_CAP", reserve
+
+    if snapshot["projected_after_run_usd"] > snapshot["paced_limit_usd"]:
+        return False, "FLEET_PACING_AHEAD_OF_SCHEDULE", reserve
+
     return True, "OK", reserve
 
 
 def main() -> int:
-    """CLI used by every engine's workflow as the fleet-wide gate before it executes.
-
-    Exits 0 (and prints the gate result as JSON) when combined fleet spend
-    would stay within the shared project ceiling, 1 otherwise. A missing
-    ``--sibling`` path (an engine that has never run) is treated as zero
-    spend for that engine, never as a failure.
-    """
+    """CLI used by every engine's workflow as the fleet-wide gate before it executes."""
     import argparse
 
-    from agents.autonomous_cloud_runner import load_config, load_state, utc_now
+    from agents.autonomous_cloud_runner import load_config, load_state, reserved_cost_usd, utc_now
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True)
@@ -85,8 +136,12 @@ def main() -> int:
     config = load_config(Path(args.config))
     own_state = load_state(Path(args.state))
     sibling_states = load_sibling_states([Path(p) for p in args.sibling])
-    ok, reason, reserve = fleet_budget_gate(config, own_state, sibling_states, args.role, utc_now())
-    print(json.dumps({"ok": ok, "reason": reason, "reserved_cost_usd": round(reserve, 8)}))
+    now = utc_now()
+    raw_reserve = reserved_cost_usd(config, args.role)
+    reserve = raw_reserve * float(config["budget"].get("provider_retry_safety_multiplier", 1.0))
+    ok, reason, _ = fleet_budget_gate(config, own_state, sibling_states, args.role, now)
+    metrics = pacing_snapshot(config, own_state, sibling_states, now, reserve)
+    print(json.dumps({"ok": ok, "reason": reason, **{k: round(v, 8) for k, v in metrics.items()}}))
     return 0 if ok else 1
 
 
