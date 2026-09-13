@@ -15,12 +15,12 @@ Profitability means net expectancy after realistic fees, spread, slippage, fundi
 
 ## CURRENT MAIN / DEPLOYMENT STATE
 
-- Latest runtime/control-plane GitHub `main` verified during this reconciliation: `79605c24f99086ce8d2be774c2b76829ce421a2f` (PR #332, fail-close ACC-001 until prospective forecast-time microstructure evidence is durably persisted).
-- PR #331 (`745fe5b3fd291564f8a861a68cc8dd24db279aac`) keeps ACC-005 blocked while the frozen DATA-BREADTH-001 prospective evidence matures; PR #332 keeps ACC-001 blocked until timestamp-defensible forecast-time microstructure/execution evidence is durably captured.
-- These are scientific/control-plane fail-closed changes. They do not weaken untouched OOS/forward validation, timestamp causality, leakage protections, paper-ledger authenticity, broker-disconnected state, promotion gates, execution realism, budget controls, or real-order authority.
-- Production Render service `srv-dadliegu01pc73bc7t50` is live on `79605c24f99086ce8d2be774c2b76829ce421a2f`.
+- Latest runtime/control-plane GitHub `main` verified during this reconciliation: `7789e3f6d66584b4ec79e5bcc3d71db090743727` (PR #334, prevent old-signal evaluation from starving fresh production scans of runtime budget).
+- PR #331 (`745fe5b3fd291564f8a861a68cc8dd24db279aac`) keeps ACC-005 blocked while the frozen DATA-BREADTH-001 prospective evidence matures; PR #332 keeps ACC-001 blocked until timestamp-defensible forecast-time microstructure/execution evidence is durably captured; PR #334 isolates/bounds evaluation runtime so fresh production scans cannot be cancelled solely because evaluation consumed the scan budget.
+- These are scientific/control-plane/reliability changes. They do not weaken untouched OOS/forward validation, timestamp causality, leakage protections, paper-ledger authenticity, broker-disconnected state, promotion gates, execution realism, budget controls, or real-order authority.
+- Production Render service `srv-dadliegu01pc73bc7t50` is live on `7789e3f6d66584b4ec79e5bcc3d71db090743727`.
 - Research-coordinator Render service `srv-dafgtead0e5s73cc7ekg` is live on the same commit.
-- Current-head GitHub scan/research/adversarial checks observed during this reconciliation are green, and there were no open GitHub PRs before this state-reconciliation branch was created.
+- Current-head scheduled Lead Integrator activity observed after deployment is green, and there were no open GitHub PRs before this state-reconciliation branch was created.
 
 Do not confuse a later state-only commit with a new trading/runtime strategy baseline. State-only reconciliations can advance `main` without changing trading behavior.
 
@@ -96,6 +96,7 @@ Recent integrations deliberately changed research prioritization or scientific e
 - PR #328 made the retained legacy funding observability projection explicitly inactive/retired so rejected evidence cannot masquerade as an active candidate.
 - PR #331 fail-closed ACC-005 while DATA-BREADTH-001's frozen prospective evidence matures, preventing a separate data candidate from contaminating or bypassing that evidence gate.
 - PR #332 fail-closed ACC-001 until genuine forecast-time microstructure/execution evidence is durably persisted and available to resolved research rows. Historical reconstruction/backfill is not an acceptable substitute.
+- PR #334 bounded/separated evaluation runtime so stale-signal evaluation cannot consume the production scan budget and suppress fresh forward signal generation.
 
 After PR #321 the active layout is **20 logical workers: 18 heavy + 2 lightweight research-brain workers**. Physical heavy concurrency/cost controls remain bounded; no paid infrastructure increase was authorized.
 
