@@ -1,6 +1,6 @@
 {
-  "version": 2,
-  "reason": "Reconcile canonical coordination with integrated DATA-BREADTH-001 work and independently verified prospective point-in-time universe persistence without rewriting prior immutable completion evidence.",
+  "version": 3,
+  "reason": "Reconcile canonical coordination with integrated DATA-BREADTH-001 work and explicitly prioritize a bounded Claude Code implementation milestone for adaptive-horizon extreme-move research without rewriting prior immutable completion evidence.",
   "task_updates": {
     "COORD-DATA-005": {
       "status": "DONE",
@@ -105,6 +105,35 @@
         "exact-head Security and Reliability success"
       ],
       "completion_rule": "Do not silently legitimize the current weights by leaving them undocumented, and do not retune them using untouched OOS/forward outcomes as if that were validation. A defensible methodology, or an explicit predeclared plan for deriving one, is required before this task can move past READY.",
+      "next_task": null
+    },
+    {
+      "id": "COORD-EXTREME-001",
+      "priority": 1,
+      "owner": "data-market",
+      "status": "READY",
+      "title": "Implement research-only adaptive-horizon extreme-move event and matched-control kernel",
+      "dependencies": [],
+      "blockers": [],
+      "issue": 337,
+      "branch": "agent/data-market",
+      "pr": null,
+      "eligible_engines": ["claude-code"],
+      "evidence_required": [
+        "new research-only module defines timestamp-safe schemas for abnormal upside and crash events without production authority",
+        "deterministic event discovery supports roughly 5-minute through multi-week candidate horizons without post-outcome horizon selection",
+        "upside event families include at least 2x/3x/5x/10x/20x thresholds and crash families include at least -50%/-80%/-95% thresholds",
+        "matched-control construction uses only information available at the event anchor and includes non-winners rather than survivor-only controls",
+        "magnitude and duration/time-to-event labels are outcome labels only and never leak into forecast-time features",
+        "event de-duplication prevents overlapping observations from being counted as independent evidence",
+        "liquidity/tradeability metadata is represented so later research can reject economically infeasible events",
+        "tests explicitly attack winner-selection bias, future leakage, overlap, post-hoc horizon mining, and malformed/ambiguous timestamps",
+        "existing 24h/7d benchmark science remains unchanged",
+        "no paper, broker, live signal, promotion, or strategy-fingerprint authority",
+        "no new paid service or recurring cost",
+        "exact-head Security and Reliability success"
+      ],
+      "completion_rule": "Produce only the smallest deterministic research kernel and adversarial tests needed to support later broad cohort scans and falsification. Do not claim predictive edge, profitability, or production readiness from this milestone; insufficient or ambiguous evidence remains WAIT / RESEARCH_ONLY.",
       "next_task": null
     }
   ]
