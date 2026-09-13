@@ -8,6 +8,8 @@ def test_authoritative_ai_state_tracks_effective_data_market_handoff():
     # coordination JSON still contains the historical COORD-DATA-005 READY row,
     # while the canonical loader applies the later append-only override that
     # marks DATA-BREADTH selection/capture complete and DATA-007 blocked.
+    assert "## SAFETY INVARIANTS" in text
+    assert "## EXACT NEXT STEP" in text
     assert "`COORD-DATA-005`: **DONE**" in text
     assert "`COORD-DATA-006`: **DONE**" in text
     assert "`COORD-DATA-007`: **BLOCKED**" in text
