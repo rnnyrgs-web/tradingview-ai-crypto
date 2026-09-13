@@ -6,6 +6,7 @@ import fnmatch
 import io
 import json
 import os
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -13,15 +14,14 @@ from typing import Any
 import httpx
 import pytest
 
+from orchestration.protected_paths import find_protected_matches, load_protected_paths
+
 ROOT = Path(__file__).resolve().parents[1]
 ROLES_PATH = ROOT / "agents" / "roles.json"
-PROTECTED_PATTERNS = (
-    "AI_STATE.md",
-    "agents/*",
-    ".github/workflows/*",
-    "requirements.txt",
-    "Dockerfile",
-)
+# Sourced from orchestration/protected_paths.json so this list cannot drift
+# from the one agents/autonomous_cloud_runner.py enforces at candidate
+# generation time. See BUG_REGRESSION_LEDGER.md PROTECT-PATH-001.
+PROTECTED_PATTERNS = load_protected_paths()
 MAX_FILE_READ_BYTES = 80_000
 MAX_FILE_WRITE_BYTES = 120_000
 ABSOLUTE_MAX_TOOL_STEPS = 32
@@ -229,6 +229,66 @@ def response_text(payload: dict[str, Any]) -> str:
     return "\n".join(out)
 
 
+def anthropic_model() -> str:
+    model = os.getenv("ANTHROPIC_REVIEW_MODEL", "").strip()
+    if not model:
+        raise RuntimeError("ANTHROPIC_REVIEW_MODEL is not configured")
+    return model
+
+
+def anthropic_headers() -> dict[str, str]:
+    key = os.getenv("ANTHROPIC_API_KEY", "").strip()
+    if not key:
+        raise RuntimeError("ANTHROPIC_API_KEY is not configured")
+    return {"x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json"}
+
+
+def post_anthropic_message(system: str, user: str, *, max_tokens: int = 1500) -> dict[str, Any]:
+    retryable_statuses = {408, 409, 429, 500, 502, 503, 504}
+    payload = {"model": anthropic_model(), "max_tokens": max_tokens, "system": system, "messages": [{"role": "user", "content": user}]}
+    with httpx.Client(timeout=180.0) as client:
+        for attempt in range(OPENAI_MAX_ATTEMPTS):
+            response: httpx.Response | None = None
+            try:
+                response = client.post("https://api.anthropic.com/v1/messages", headers=anthropic_headers(), json=payload)
+                if response.status_code not in retryable_statuses:
+                    response.raise_for_status()
+                    return response.json()
+                if attempt == OPENAI_MAX_ATTEMPTS - 1:
+                    response.raise_for_status()
+            except (httpx.TimeoutException, httpx.NetworkError):
+                if attempt == OPENAI_MAX_ATTEMPTS - 1:
+                    raise
+            time.sleep(_retry_delay(response, attempt))
+    raise RuntimeError("Anthropic response retry loop exited unexpectedly")
+
+
+def anthropic_response_text(payload: dict[str, Any]) -> str:
+    out: list[str] = []
+    for block in payload.get("content", []):
+        if isinstance(block, dict) and block.get("type") == "text" and isinstance(block.get("text"), str):
+            out.append(block["text"])
+    return "\n".join(out)
+
+
+_DIFF_HEADER_RE = re.compile(r"^diff --git a/(?P<a>.+?) b/(?P<b>.+?)$", re.MULTILINE)
+
+
+def diff_changed_paths(diff_text: str) -> list[str]:
+    """Extract the changed file paths from a unified ``git diff`` header.
+
+    Used instead of the tuple-of-substring check this function previously
+    used, so protected-path enforcement here shares
+    ``orchestration/protected_paths.json`` with every other engine and
+    cannot silently diverge from it again.
+    """
+    paths: set[str] = set()
+    for match in _DIFF_HEADER_RE.finditer(diff_text):
+        paths.add(match.group("a"))
+        paths.add(match.group("b"))
+    return sorted(paths)
+
+
 def extract_json(text: str) -> dict[str, Any]:
     stripped = text.strip()
     if stripped.startswith("```"):
@@ -311,14 +371,34 @@ Rules:
     return 0
 
 
+REVIEWERS = {"lead", "security", "claude-adversarial"}
+REQUIRED_FALSIFICATION_FINDINGS = (
+    "leakage_lookahead",
+    "oos_contamination",
+    "overlapping_observations",
+    "point_in_time_universe",
+    "multiple_testing",
+    "unrealistic_costs",
+    "timestamp_errors",
+    "regime_instability",
+    "insufficient_sample_size",
+    "baseline_mismatch",
+    "paper_ledger_integrity",
+)
+
+
 def review_diff(reviewer: str, diff_path: Path, output: Path) -> int:
-    if reviewer not in {"lead", "security"}:
+    if reviewer not in REVIEWERS:
         raise RuntimeError("unknown reviewer")
     diff = diff_path.read_text(encoding="utf-8")
     if len(diff.encode("utf-8")) > 80_000:
         raise RuntimeError("diff too large")
-    if any(marker in diff for marker in ("diff --git a/AI_STATE.md ", "diff --git a/agents/", "diff --git a/.github/workflows/", "diff --git a/requirements.txt ", "diff --git a/Dockerfile ")):
-        raise RuntimeError("protected orchestration/state path in diff")
+    protected_hits = find_protected_matches(diff_changed_paths(diff))
+    if protected_hits:
+        raise RuntimeError(f"protected path(s) in diff: {protected_hits}")
+
+    if reviewer == "claude-adversarial":
+        return _review_diff_claude_adversarial(diff, output)
 
     focus = (
         "security, secret handling, path boundaries, malformed input, fail-closed behavior, and whether tests can be bypassed"
@@ -345,6 +425,74 @@ Approve only if the diff is bounded, internally coherent, does not weaken safety
     return 0
 
 
+def _review_diff_claude_adversarial(diff: str, output: Path) -> int:
+    """Independent Claude review of a candidate diff.
+
+    Must be genuinely independent of the implementing engine's own claims:
+    it is instructed to actively try to falsify the change against eleven
+    named failure modes rather than confirm it, and its approval is
+    documented (here and in the prompt itself) as never sufficient by
+    itself to promote a strategy, weaken a validation gate, or authorize
+    live trading -- ``forward_proof.py``, ``robustness.py``, and
+    ``multiple_testing.py`` remain the only source of promotion-grade
+    quantitative evidence.
+    """
+    system = (
+        "You are an independent adversarial scientific reviewer for a crypto trading "
+        "signal system. Your job is to actively try to FALSIFY the claimed improvement "
+        "in the diff you are given, not to confirm it. You are reviewing a candidate "
+        "produced by a different engine (Claude Code or ChatGPT); your review must be "
+        "genuinely independent of that engine's own claims about correctness or evidence "
+        "quality -- do not simply trust its summary or test results. Your approval is "
+        "never sufficient to promote a strategy, weaken a validation gate, or authorize "
+        "live trading; it is one input among the canonical quantitative gates "
+        "(forward_proof.py, robustness.py, multiple_testing.py), which alone can "
+        "establish scientific evidence."
+    )
+    findings_schema = ", ".join(f'"{name}": "..."' for name in REQUIRED_FALSIFICATION_FINDINGS)
+    user = f"""
+Adversarially review this diff. For each of the eleven failure modes below, state whether
+the diff shows evidence of the problem, evidence the problem is avoided, or gives
+insufficient evidence to tell -- insufficient evidence must be treated as a finding against
+approval, never silently passed.
+
+1. leakage_lookahead: does any feature or label use information not available at decision time?
+2. oos_contamination: is untouched out-of-sample evidence reused, or opened more than once?
+3. overlapping_observations: are forward-return windows counted as independent when they are not?
+4. point_in_time_universe: could survivorship or backfilled universe membership bias the result?
+5. multiple_testing: how many variants were implicitly or explicitly searched, and is that accounted for?
+6. unrealistic_costs: are fees/spread/slippage/adverse-selection modeled realistically and cost-stressed per this project's convention?
+7. timestamp_errors: could any timestamp be stale, future, or inconsistent with the claimed causal order?
+8. regime_instability: does the claimed effect hold across more than one regime/period, or only in a cherry-picked window?
+9. insufficient_sample_size: does the independent sample count meet this project's predeclared minimums for the horizon in question?
+10. baseline_mismatch: is the comparison against the correct frozen baseline, not a weaker or different one?
+11. paper_ledger_integrity: does the change touch, or could it indirectly corrupt, the append-only paper ledger's authenticity?
+
+PROPOSED DIFF:
+{diff}
+
+Return JSON only:
+{{"approve": true|false, "reason": "specific evidence-based reason", "risk": "low|medium|high",
+  "falsification_findings": {{{findings_schema}}}}}
+Approve only if every finding above is either "avoided" or "not applicable to this diff" with a
+stated reason, the diff is bounded and internally coherent, it does not weaken any safety or
+validation gate, and it makes no unsupported live-trading or promotion claim. Reject when
+evidence for any finding is insufficient to rule the problem out -- do not give the benefit of
+the doubt.
+"""
+    response = post_anthropic_message(system, user, max_tokens=2000)
+    verdict = extract_json(anthropic_response_text(response))
+    if not isinstance(verdict.get("approve"), bool):
+        raise RuntimeError("reviewer returned invalid approval")
+    if verdict.get("risk") not in {"low", "medium", "high"}:
+        raise RuntimeError("reviewer returned invalid risk")
+    findings = verdict.get("falsification_findings")
+    if not isinstance(findings, dict) or set(REQUIRED_FALSIFICATION_FINDINGS) - set(findings):
+        raise RuntimeError("claude-adversarial reviewer omitted required falsification findings")
+    output.write_text(json.dumps(verdict, indent=2) + "\n", encoding="utf-8")
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
@@ -353,7 +501,7 @@ def main() -> int:
     plan.add_argument("--output", required=True)
 
     review = sub.add_parser("review")
-    review.add_argument("--reviewer", choices=("lead", "security"), required=True)
+    review.add_argument("--reviewer", choices=sorted(REVIEWERS), required=True)
     review.add_argument("--diff", required=True)
     review.add_argument("--output", required=True)
 

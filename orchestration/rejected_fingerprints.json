@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "description": "Canonical, machine-checkable record of rejected research fingerprints, mirrored from orchestration/specialist_coordination.json completion_evidence and AI_STATE.md's DURABLE NEGATIVE DATA RESULTS section. orchestration/specialist_coordination.py cross-checks any task that declares a fingerprint_id against this registry before it may be READY/IN_PROGRESS/PR_OPEN/QUEUED, and any engine proposing a new candidate should check is_rejected_fingerprint() before opening untouched OOS. A genuinely different economic hypothesis is not barred merely because its name resembles a rejected one -- see reconsideration_conditions on each entry.",
+  "entries": [
+    {
+      "fingerprint_id": "DATA-BASIS-001",
+      "fingerprint_version": 1,
+      "coordination_task": "COORD-DATA-003",
+      "hypothesis": "Exact-shared-timestamp completed-candle OKX mark/index basis carries incremental after-cost predictive value for 24h/7d direction.",
+      "economic_mechanism": "Persistent mark-index basis dislocations proxy funding/positioning pressure that mean-reverts or continues predictably enough to survive realistic trading costs.",
+      "horizons_evaluated": ["24h", "7d"],
+      "sample_sizes": {
+        "24h_oos_samples": 134,
+        "7d_oos_samples": 19
+      },
+      "rejection_evidence": {
+        "24h_avg_net_bps": -8.490253160921695,
+        "7d_avg_net_bps": -51.210226000078,
+        "evaluation_window_hours": 8000
+      },
+      "rejection_reason": "The predeclared 8,000-hour chronological evidence window falsified both primary horizons after realistic costs: negative average net expectancy on 24h and on 7d.",
+      "rejection_date": "2026-09-11",
+      "rejection_pr": 291,
+      "rejection_commit": "204d30e668f9208a5514aaa950b445cee9846ada",
+      "do_not_resubmit_same_fingerprint": true,
+      "reconsideration_conditions": "A materially different economic mechanism (not a re-parameterized basis threshold or a renamed feature over the same underlying signal) computed from genuinely new timestamp-safe inputs, evaluated on a fresh predeclared window with its own frozen baseline, may be proposed as a new fingerprint. Re-testing this exact fingerprint on the same or an overlapping evidence window is not legitimate reconsideration."
+    },
+    {
+      "fingerprint_id": "DATA-FUNDING-001",
+      "fingerprint_version": 1,
+      "coordination_task": "COORD-DATA-004",
+      "hypothesis": "Funding-rate-derived positioning pressure carries incremental after-cost predictive value for 24h/7d direction beyond the frozen training-only baseline.",
+      "economic_mechanism": "Extreme or persistent funding rates proxy crowded positioning that mean-reverts or precedes liquidation cascades predictably enough to survive realistic trading costs.",
+      "horizons_evaluated": ["24h", "7d"],
+      "sample_sizes": {
+        "24h_oos_samples": 38,
+        "7d_oos_samples": 6,
+        "7d_minimum_required_oos_samples": 8
+      },
+      "rejection_evidence": {
+        "24h_directional_hit_rate": 0.5,
+        "24h_avg_net_bps": 43.56917973482839,
+        "24h_incremental_vs_training_only_baseline_bps": 0.0,
+        "24h_oos_half_avg_net_bps": [91.54259508197315, -4.404235612316374],
+        "7d_status": "REJECTED_INSUFFICIENT_INDEPENDENT_OOS"
+      },
+      "rejection_reason": "Zero incremental 24h OOS expectancy versus the frozen training-only baseline despite a positive headline return, and unstable across OOS halves (+91.5bps then -4.4bps); 7d fell below the predeclared independent-sample floor.",
+      "rejection_date": "2026-09-11",
+      "rejection_pr": 298,
+      "rejection_commit": "9172f7acc1cca9233e4791274aecac5500287bd8",
+      "do_not_resubmit_same_fingerprint": true,
+      "reconsideration_conditions": "A materially different economic mechanism using funding/positioning data (not a re-parameterized threshold or a renamed feature over the same funding-rate signal), with its own fresh predeclared frozen baseline and window, and at least the predeclared minimum independent OOS sample floor per horizon, may be proposed as a new fingerprint. Re-testing this exact fingerprint on the same evidence is not legitimate reconsideration."
+    }
+  ]
+}

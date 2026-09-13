@@ -2,6 +2,8 @@
 
 This repository is the persistent shared brain for all ChatGPT development windows working on `rnnyrgs-web/tradingview-ai-crypto`.
 
+As of the 2026-09-13 Lead Integrator multi-engine amendment, this repository is also developed by Claude (deep scientific research and independent adversarial review) and Claude Code (implementation/engineering/testing), coordinating through the same repository state rather than through a human relaying messages. Read `docs/MULTI_ENGINE_PROTOCOL.md` for the engine-agnostic rules shared by all engines (canonical task state, task claiming, protected paths, resource escalation, shared cost ceiling). This file remains authoritative for the ChatGPT-specific manual "paste a role assignment into a ChatGPT window" channel described below and in `docs/CHATGPT_SPECIALISTS.md`; its safety invariants apply to every engine, not only ChatGPT.
+
 ## Mandatory startup sequence
 Every new or resumed ChatGPT development window must do this before development:
 

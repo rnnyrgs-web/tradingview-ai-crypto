@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "description": "Canonical glob patterns that no autonomous engine (any model provider) may write to, regardless of its own role allowlist. agents/autonomous_cloud_runner.py, agents/autonomous_orchestrator.py, agents/claude_specialist_runner.py, agents/claude_code_specialist_runner.py, and .github/workflows/autonomous_lead.yml all load this single list so protected-path enforcement cannot drift between engines or between generation-time and review-time checks.",
+  "patterns": [
+    "AI_STATE.md",
+    "AGENTS.md",
+    "docs/CHATGPT_SPECIALISTS.md",
+    "docs/MULTI_ENGINE_PROTOCOL.md",
+    "agents/*",
+    "orchestration/*",
+    ".github/workflows/*",
+    "requirements.txt",
+    "Dockerfile",
+    "live_promotions.json",
+    "resource_recommendations_decisions.json",
+    "BUG_REGRESSION_LEDGER.md",
+    "fleet_coordination.json",
+    ".env*",
+    "**/.env*"
+  ]
+}

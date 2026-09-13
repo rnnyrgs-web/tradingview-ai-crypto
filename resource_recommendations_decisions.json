@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "description": "Append-only. Only a human/Lead-authored pull request may add an entry here -- no autonomous engine role's allowed_paths includes this file (it is also listed in orchestration/protected_paths.json as a blanket-protected path enforced independently of any role allowlist). A decision entry references a proposal id in resource_recommendations_proposed.json. No proposal is approved, and no paid resource is enabled, until a matching decision entry with decision=APPROVED exists here.",
+  "required_fields": [
+    "proposal_id",
+    "decision",
+    "decided_by",
+    "decided_at",
+    "rationale"
+  ],
+  "decisions": [
+    {
+      "proposal_id": "RESOURCE-REC-001",
+      "decision": "APPROVED",
+      "decided_by": "project owner (rn.nyrgs@gmail.com)",
+      "decided_at": "2026-09-13",
+      "rationale": "Owner explicitly approves recurring Anthropic API usage for this project (the Claude research/signal-accuracy runner and the Claude Code testing-security implementation runner, plus the existing Claude adversarial-review call) ONLY within the existing combined $30/month paid-AI ceiling shared across OpenAI + Anthropic + any other paid AI (orchestration/shared_budget.py's fleet_budget_gate against project_monthly_ceiling_usd=30.0 in every engine config, unchanged by this decision). No spending above $30/month combined is authorized. Both new runner configs keep specialists_write_main=false, specialists_merge_own_prs=false, automatic_merge=false, trade_authority=false, and broker_connected=false, and default to the cheapest enabled model (claude-haiku-4-5); claude-sonnet-5 stays disabled and is reserved for any future high-value task that would justify it. This decision approves enabling the two runners; it does not raise, and must never be read to raise, the project's combined $30/month ceiling."
+    }
+  ]
+}

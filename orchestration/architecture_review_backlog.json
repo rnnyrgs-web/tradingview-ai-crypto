@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "description": "Evidence-backed weaknesses identified during the 2026-09-13 repository analysis and multi-engine coordination-layer implementation. Per the Lead Integrator's explicit instruction, medium/low items are recorded here for future prioritization rather than casually fixed inside this PR. The one high-severity item that was a direct prerequisite for safely trusting multiple engines' candidate PRs through the same review pipeline was fixed as part of this same change; it is recorded here with status FIXED for traceability, not left open.",
+  "required_fields": ["id", "severity", "summary", "evidence", "status"],
+  "items": [
+    {
+      "id": "PROTECT-PATH-001",
+      "severity": "HIGH",
+      "status": "FIXED",
+      "summary": "Three independently maintained protected-path lists had drifted out of sync: agents/autonomous_cloud_runner.py's PROTECTED_PATHS, agents/autonomous_orchestrator.py's PROTECTED_PATTERNS (missing docs/CHATGPT_SPECIALISTS.md, orchestration/*, live_promotions.json, .env*), and .github/workflows/autonomous_lead.yml's hand-written bash regex guard (missing orchestration/*, live_promotions.json, .env*, docs/CHATGPT_SPECIALISTS.md). A fourth, previously unnoticed copy existed inline inside agents/autonomous_orchestrator.py's review_diff() as a tuple-of-substring check with the same gaps as the workflow regex.",
+      "evidence": "Found during architecture analysis (2026-09-13) and confirmed by direct code reading of all four locations.",
+      "fix": "orchestration/protected_paths.json is now the single canonical list; all four locations load from it via orchestration/protected_paths.py (load_protected_paths, is_protected, find_protected_matches, diff_changed_paths). Regression coverage: tests/test_protected_paths.py, plus updated assertions in tests/test_autonomous_cloud_runner.py, tests/test_autonomous_orchestrator.py.",
+      "fixed_in": "lead/multi-engine-coordination-layer (this branch)"
+    },
+    {
+      "id": "FALSIFICATION-FINGERPRINT-LOCK-001",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "summary": "Falsification-research evaluators (breadth/basis/funding_falsification_research.py) have no fingerprint-hash-locking analogous to strategy_identity.py's production-code hashing. Nothing currently prevents a single PR from editing both a candidate's predeclaration JSON (orchestration/*_candidate.json) and its evaluator together, which would undermine the scientific integrity of every REJECTED/BLOCKED claim the system has made or will make.",
+      "evidence": "Confirmed by direct reading of strategy_identity.py (hashes backtest.py/features.py/robustness.py/strategy_families.py/strategy_identity.py into research_code_sha256) versus the falsification-research modules (no equivalent hash binding to their orchestration/*_candidate.json predeclaration).",
+      "suggested_owner": "testing-security",
+      "not_addressed_by_this_pr": "Out of scope for the minimal multi-engine coordination layer; requires its own predeclared design (which files/fields to hash, how to handle legitimate evaluator bugfixes without resetting the fingerprint) rather than a mechanical fix."
+    },
+    {
+      "id": "DUAL-RESOLUTION-PATH-001",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "summary": "evaluator.py's canonical prediction_ledger resolver bounds resolution lag via close_at_or_after()'s max_lag_ms, but the legacy trading_signals resolver's nearest_close() has no equivalent bound -- it walks forward to the first candle at or after the target regardless of gap size. Not a lookahead bug (still forward-only), but inconsistent rigor that could silently return very stale as-of prices during a data gap.",
+      "evidence": "Confirmed by direct reading of evaluator.py's two resolution loops during architecture analysis (2026-09-13).",
+      "suggested_owner": "signal-accuracy"
+    },
+    {
+      "id": "DORMANT-BUDGET-GUARD-001",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "summary": "api_budget_guard.py is fully implemented and tested but is not invoked by any GitHub Actions workflow or runtime path. Real enforcement of the $30/month ceiling today is the budget_gate() logic inside agents/autonomous_cloud_runner.py (and, after this PR, orchestration/shared_budget.py's fleet-wide extension of it) plus the external OpenAI/Anthropic org-level spend caps -- not api_budget_guard.py. This creates a risk of false confidence about what module actually enforces the ceiling.",
+      "evidence": "Confirmed by searching all workflow files and runtime entry points for references to api_budget_guard.py during architecture analysis (2026-09-13); none found.",
+      "suggested_owner": "infra-cost"
+    },
+    {
+      "id": "OVERLAPPING-COORDINATION-LAYERS-001",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "summary": "Three task/backlog-tracking files exist at different granularities: orchestration/specialist_coordination.json (7 broad roles), orchestration/priority_backlog.json (ACC-00N experiment items owned by 14 finer-grained roles matching agents/roles.json), and each orchestration/autonomous_specialist_runner*.json's single enabled autonomous role per engine. This increases the chance the same conceptual work is tracked, prioritized, or executed inconsistently across layers as more overrides and engines accumulate.",
+      "evidence": "Confirmed by direct comparison of all three files' role/task schemas during architecture analysis (2026-09-13).",
+      "suggested_owner": "testing-security"
+    },
+    {
+      "id": "CORRELATION-DEFAULT-ZERO-001",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "summary": "champion_challenger.py's correlation-penalty matrix silently treats a missing pairwise correlation as 0.0 (uncorrelated) rather than failing closed (treating unknown correlation as high). For a newly introduced strategy pair with no correlation history yet, this understates true co-movement risk and could over-allocate weight to two effectively redundant challengers.",
+      "evidence": "Confirmed by direct reading of champion_challenger.py during architecture analysis (2026-09-13).",
+      "suggested_owner": "regime-selection"
+    },
+    {
+      "id": "PROMOTION-KEY-STRENGTH-001",
+      "severity": "LOW",
+      "status": "OPEN",
+      "summary": "promotion_manifest.py only checks signing-key length (>=32 chars), with no rotation, expiry, or scoping model. Low blast radius today since the broker is disconnected, but this is the single most security-sensitive artifact in the repository (the only thing standing between research and live trade authority) and deserves a real key-management story before broker connection is ever considered.",
+      "evidence": "Confirmed by direct reading of promotion_manifest.py during architecture analysis (2026-09-13).",
+      "suggested_owner": "production-risk"
+    },
+    {
+      "id": "PRIORITY-WEIGHTS-UNVALIDATED-001",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "summary": "research_director.mission_priority()'s weights (0.45/0.35/0.20, 0.90/0.10, 0.25/0.75, 0.35/0.65, 0.025, 0.04, 0.75, 0.08/0.02) are hand-tuned constants with no cited derivation, sensitivity analysis, or validation against realized outcomes. orchestration/profitability_priority.py (this PR) documents this honestly and exposes score_breakdown() for auditability, but does not itself validate or replace the weights, per explicit Lead Integrator instruction not to retune using untouched OOS/forward outcomes.",
+      "evidence": "orchestration/profitability_priority.py module docstring (this PR); original weights unchanged from research_director.py.",
+      "suggested_owner": "signal-accuracy",
+      "tracking_task": "COORD-VAL-003 (orchestration/specialist_coordination_overrides.json, this PR)"
+    },
+    {
+      "id": "STALE-BRANCH-CLUTTER-001",
+      "severity": "LOW",
+      "status": "OPEN",
+      "summary": "Roughly 380+ remote branches exist, heavily dominated by superseded agent/*, lead/*, and auto/* iterations (many with -v2/-v3/-final/-final2 naming). Operational clutter rather than a safety bug, but increases the chance a stale or already-rejected branch is confused for current work by a human or an engine.",
+      "evidence": "git branch -a output during architecture analysis (2026-09-13).",
+      "suggested_owner": "testing-security"
+    },
+    {
+      "id": "NONOVERLAP-DEFAULTABLE-FLAG-001",
+      "severity": "LOW",
+      "status": "OPEN",
+      "summary": "cross_asset_runner.py's non_overlapping_evaluation config flag defaults to True and no current caller overrides it to False, but it is a defaultable flag rather than a hard-coded invariant -- a latent footgun if a future caller ever constructs CrossAssetConfig(non_overlapping_evaluation=False).",
+      "evidence": "Confirmed by reading all CrossAssetConfig(...) call sites during architecture analysis (2026-09-13); none override the flag today.",
+      "suggested_owner": "quant-research"
+    },
+    {
+      "id": "MULTIPLE-TESTING-HEURISTIC-001",
+      "severity": "LOW",
+      "status": "OPEN",
+      "summary": "multiple_testing.py's log2(trial_count) scaling is an explicit heuristic penalty, not a formal false-discovery-rate correction -- honestly labeled in its own docstring, but the true false-discovery rate across many concurrently running workers x strategy families x horizons is not rigorously bounded, only discouraged.",
+      "evidence": "multiple_testing.py's own docstring, confirmed during architecture analysis (2026-09-13).",
+      "suggested_owner": "signal-accuracy"
+    }
+  ]
+}

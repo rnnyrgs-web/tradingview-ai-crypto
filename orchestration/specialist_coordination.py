@@ -6,6 +6,7 @@ from pathlib import Path
 
 from signal_development import load_objective
 from orchestration.coordination_overrides import apply_coordination_overrides
+from orchestration.rejected_fingerprints import is_rejected_fingerprint, rejection_record
 
 ROOT = Path(__file__).resolve().parents[1]
 STATE_PATH = ROOT / "orchestration" / "specialist_coordination.json"
@@ -20,6 +21,12 @@ REQUIRED_ROLES = {
     "production-risk",
     "testing-security",
 }
+# Engine identities recognized by the multi-engine coordination layer. A task
+# may optionally declare "eligible_engines" (subset of this set) to restrict
+# which engine kind may claim it; omitting the field means every engine kind
+# is eligible, preserving prior behavior for every existing task row.
+VALID_ENGINES = {"chatgpt", "claude", "claude-code", "human"}
+ACTIVE_TASK_STATUSES = {"READY", "IN_PROGRESS", "PR_OPEN", "QUEUED"}
 
 
 def load_state(path: Path = STATE_PATH) -> dict:
@@ -81,6 +88,30 @@ def validate_state(payload: dict) -> None:
             raise RuntimeError(f"branch mismatch for {task_id}: expected {expected_branch}")
         if status == "PR_OPEN" and not task.get("pr"):
             raise RuntimeError(f"PR_OPEN task missing pr for {task_id}")
+
+        eligible_engines = task.get("eligible_engines")
+        if eligible_engines is not None:
+            if not isinstance(eligible_engines, list) or not eligible_engines:
+                raise RuntimeError(f"eligible_engines must be a non-empty list for {task_id}")
+            unknown = set(eligible_engines) - VALID_ENGINES
+            if unknown:
+                raise RuntimeError(f"unknown eligible_engines for {task_id}: {sorted(unknown)}")
+        engine_claim = task.get("engine_claim")
+        if engine_claim is not None and engine_claim not in VALID_ENGINES:
+            raise RuntimeError(f"unknown engine_claim for {task_id}: {engine_claim}")
+        if engine_claim is not None and eligible_engines is not None and engine_claim not in eligible_engines:
+            raise RuntimeError(f"engine_claim {engine_claim} not in eligible_engines for {task_id}")
+
+        fingerprint_id = task.get("fingerprint_id")
+        if fingerprint_id is not None and status in ACTIVE_TASK_STATUSES:
+            if is_rejected_fingerprint(str(fingerprint_id)):
+                record = rejection_record(str(fingerprint_id)) or {}
+                raise RuntimeError(
+                    f"{task_id} declares rejected fingerprint {fingerprint_id} "
+                    f"(rejected {record.get('rejection_date', 'unknown date')}); "
+                    "see orchestration/rejected_fingerprints.json reconsideration_conditions "
+                    "before proposing a genuinely new fingerprint"
+                )
         if status == "BLOCKED" and not task.get("blockers"):
             raise RuntimeError(f"BLOCKED task missing blocker for {task_id}")
 

@@ -12,14 +12,15 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable
 
+from orchestration.protected_paths import load_protected_paths
+
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "orchestration" / "autonomous_specialist_runner.json"
 COORDINATION_PATH = ROOT / "orchestration" / "specialist_coordination.json"
-PROTECTED_PATHS = (
-    "AI_STATE.md", "AGENTS.md", "docs/CHATGPT_SPECIALISTS.md", "agents/*",
-    "orchestration/*", ".github/workflows/*", "requirements.txt", "Dockerfile",
-    "live_promotions.json", ".env*", "**/.env*",
-)
+# Sourced from orchestration/protected_paths.json so this list cannot drift
+# from the one agents/autonomous_orchestrator.py and the Lead review workflow
+# enforce. See BUG_REGRESSION_LEDGER.md PROTECT-PATH-001.
+PROTECTED_PATHS = load_protected_paths()
 TERMINAL_AGENT_STATUSES = {"READY_FOR_PR", "NO_CHANGE", "BLOCKED"}
 RUNNING_RECOVERY_MINUTES = 60
 

@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "description": "Append-only. Any engine (ChatGPT, Claude, Claude Code, a research worker, or a human) proposes a paid resource/tool/API/data-source/compute upgrade here instead of purchasing, enabling, or installing it. A proposal in this file has no purchasing, installation, or approval authority by itself -- see resource_recommendations_decisions.json for the separate human/Lead-only approval record. This file lives at the repository root, not under orchestration/, specifically so autonomous engine roles can be granted write access to it without weakening the orchestration/* protection that keeps coordination state Lead-only.",
+  "required_fields": [
+    "id",
+    "proposed_by",
+    "proposed_at",
+    "cost",
+    "limitation_solved",
+    "expected_benefit",
+    "free_alternatives_considered",
+    "evidence"
+  ],
+  "proposals": [
+    {
+      "id": "RESOURCE-REC-001",
+      "proposed_by": "lead/multi-engine-coordination-layer (Lead Integrator implementation cycle)",
+      "proposed_at": "2026-09-13",
+      "cost": "Anthropic API usage for two new bounded autonomous runners (Claude research/review role on orchestration/autonomous_specialist_runner_claude.json, Claude Code implementation role on orchestration/autonomous_specialist_runner_claude_code.json) plus one adversarial-review call per Lead-reviewed candidate PR. GitHub Actions minutes are $0 recurring: this repository is public (verified via the GitHub API, private=false), and GitHub does not meter Actions minutes on public repositories. Verified current Anthropic API pricing (platform.claude.com/docs/en/about-claude/pricing, fetched during this implementation): Claude Haiku 4.5 -- $1/MTok input, $5/MTok output, $0.10/MTok cache read. Both new runner configs default to Haiku 4.5 (Sonnet 5 and Opus 5 are listed but left disabled, mirroring the existing OpenAI runner's cheap-tier-by-default pattern) and mirror the existing per-run reserved-token ceilings and 12-hour cooldown already proven safe by the OpenAI runner. Worst-case reserved ceiling per engine is roughly $0.13-0.20 per run at a 12-hour cooldown (~$8-12/month reserved, not typical actual spend) for each of the two new runners, plus roughly $0.06 per adversarial review. Summed naively against the OpenAI runner's existing $29/month configured cap, the three engines' individually configured ceilings could exceed the project's single $30/month infrastructure ceiling if all three ran at their configured maximums simultaneously.",
+      "limitation_solved": "Enables the approved multi-engine coordination architecture (ChatGPT = Lead/coordinator, Claude = research + genuinely independent adversarial review, Claude Code = implementation) to run unattended in the cloud instead of requiring a human to relay work between engines.",
+      "expected_benefit": "A second, genuinely independent model family reviewing every autonomous candidate (see agents/autonomous_orchestrator.py's new claude-adversarial reviewer) closes the same-model-twice review gap identified during architecture analysis, and a dedicated implementation engine removes ChatGPT's current single-role code-writing bottleneck (v1 scope: 1 autonomous role) without adding new infrastructure spend beyond Anthropic API usage.",
+      "free_alternatives_considered": "None of the three roles (research, adversarial review, implementation) can be performed by the existing free/already-paid components: research workers run deterministic backtests only (no model reasoning); the existing OpenAI reviewers in autonomous_lead.yml are the same model family reviewing itself, which is the exact independence gap this proposal closes; there is no free LLM API with comparable code-editing tool support to Claude Code for the implementation role.",
+      "evidence": [
+        "orchestration/autonomous_specialist_runner_claude.json (this PR) -- reserved-cost ceilings and enabled-model configuration",
+        "orchestration/autonomous_specialist_runner_claude_code.json (this PR) -- reserved-cost ceilings and enabled-model configuration",
+        "https://platform.claude.com/docs/en/about-claude/pricing (fetched 2026-09-13) -- verified current per-model token pricing",
+        "https://code.claude.com/docs/en/github-actions (fetched 2026-09-13) -- confirms ANTHROPIC_API_KEY / CLAUDE_CODE_OAUTH_TOKEN as the two supported CI authentication mechanisms and that GitHub Actions minutes plus API tokens are the only two billed resources",
+        "GitHub API repos/rnnyrgs-web/tradingview-ai-crypto -> private:false (fetched 2026-09-13) -- confirms $0 recurring GitHub Actions cost on this public repository",
+        "orchestration/shared_budget.py (this PR) -- fleet-wide combined-spend gate that refuses any engine's run once combined spend would exceed the existing $30/month project ceiling, so the naive-sum risk above cannot actually be exceeded in practice; it instead means all three engines together get fewer runs per month than the OpenAI runner's current $29 figure alone would nominally allow"
+      ],
+      "decision_needed": "The user must decide, and record in resource_recommendations_decisions.json, whether to: (a) keep the $30/month ceiling shared across all three engines as this PR implements by default (each engine runs less often as a result), or (b) approve a higher combined ceiling if more frequent automated research/review/implementation cycles are wanted. Also decide authentication: an ANTHROPIC_API_KEY repository secret (predictable per-token billing, not tied to any individual's personal plan) is recommended for shared project automation; a CLAUDE_CODE_OAUTH_TOKEN generated from a personal Claude subscription is a documented, legitimate alternative (Anthropic's own GitHub Actions documentation lists it) that draws on that subscription's existing usage instead of separate API billing, but ties the automation to one person's account and its plan's usage limits -- Anthropic's own docs recommend the API key specifically for automation shared across a project/organization rather than tied to one person. Neither credential has been added to this repository's secrets as part of this PR; both new workflows fail closed and run nothing until one is added."
+    }
+  ]
+}
