@@ -71,9 +71,10 @@
     {
       "id": "ACC-005",
       "priority": 5,
-      "status": "READY",
+      "status": "BLOCKED",
       "owner": "data-market",
       "title": "Broader high-quality market data coverage",
+      "block_reason": "Authoritative AI_STATE requires no additional data candidate while DATA-BREADTH-001 prospective cohorts mature under COORD-DATA-007. Reopen only after that gate is resolved or AI_STATE explicitly authorizes another independent data-market candidate.",
       "goal": "Increase reliable exchange and market-state coverage while preserving freshness, timestamp normalization, liquidity filters and explicit unavailable states.",
       "acceptance": [
         "every source has provenance and freshness metadata",
