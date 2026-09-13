@@ -1,10 +1,11 @@
 """Strict compatibility observability for the reserved falsification worker.
 
-DATA-BASIS-001 is retired.  The worker/key name is retained temporarily to avoid
-changing coordinator topology, but this projection only reports bounded
-DATA-FUNDING-001 aggregate evidence from COORD-DATA-004.  Raw funding/price rows,
-timestamps, arbitrary upstream payloads, and trading authority are never
-projected.
+DATA-BASIS-001 and DATA-FUNDING-001 are retired.  The legacy worker/key name is
+retained only so historical rejected evidence remains inspectable without
+changing coordinator log shape.  This projection is explicitly non-active and
+can never imply that either candidate is scheduled, promotable, or authoritative.
+Raw funding/price rows, timestamps, arbitrary upstream payloads, and trading
+authority are never projected.
 """
 
 from __future__ import annotations
@@ -104,7 +105,7 @@ def _compact_result(raw: object, expected_horizon: int) -> dict | None:
 
 
 def compact_basis_falsification(army: object) -> dict:
-    """Compatibility API: return strict DATA-FUNDING-001 evidence only."""
+    """Compatibility API: expose rejected DATA-FUNDING-001 evidence as retired history only."""
     if not isinstance(army, dict):
         army = {}
     workers = army.get("workers") if isinstance(army.get("workers"), dict) else {}
@@ -120,6 +121,9 @@ def compact_basis_falsification(army: object) -> dict:
     raw_results = evidence.get("results") if isinstance(evidence.get("results"), dict) else {}
 
     return {
+        "active": False,
+        "retired": True,
+        "candidate_status": "rejected_retired",
         "worker_exit": worker.get("last_exit_code") if isinstance(worker.get("last_exit_code"), int) else None,
         "worker_elapsed_s": _finite_number(worker.get("elapsed_seconds")),
         "worker_finished_at": worker.get("last_finished_at") if isinstance(worker.get("last_finished_at"), str) else None,
