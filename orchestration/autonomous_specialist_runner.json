@@ -23,13 +23,13 @@
     "task_branch_prefix": "auto/",
     "coordination_updates": "LEAD_ONLY",
     "hourly_self_improvement_question": "What should be added, removed, simplified, combined, deprioritized, or tested next to increase genuine sustainable after-cost profitability first and forward signal accuracy/precision second while reducing overfitting, duplicated research and wasted compute?",
-    "hourly_self_improvement_policy": "Re-evaluate this question at each hourly eligibility check using available evidence, but do not force a paid model call, bypass the 12-hour successful-run cooldown, exceed the shared monthly pacing budget, raise physical concurrency, or change production authority merely to answer it."
+    "hourly_self_improvement_policy": "Re-evaluate this question at each hourly eligibility check using available evidence, but do not force a paid model call, bypass the 12-hour successful-run cooldown, exceed the $1/day API budget, raise physical concurrency, or change production authority merely to answer it."
   },
   "budget": {
     "project_monthly_ceiling_usd": 30.0,
     "baseline_infrastructure_reserve_usd": 0.0,
     "runner_monthly_api_budget_usd": 29.0,
-    "runner_daily_api_budget_usd": 3.0,
+    "runner_daily_api_budget_usd": 1.0,
     "pause_buffer_usd": 1.0,
     "provider_retry_safety_multiplier": 3.0,
     "fleet_pacing_burst_allowance_usd": 2.0,
