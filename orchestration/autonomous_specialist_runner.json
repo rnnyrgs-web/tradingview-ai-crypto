@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "enabled": true,
+  "enabled": false,
   "objective_id": "UNIVERSAL_SIGNAL_DEVELOPMENT_V1",
   "primary_mission": "Continuously maximize genuine sustainable after-cost profitability for 24h and 7d crypto BUY / SELL / WAIT signals, with genuine forward signal accuracy/precision as the secondary objective.",
   "autonomous_roles": ["data-market"],
@@ -23,7 +23,7 @@
     "task_branch_prefix": "auto/",
     "coordination_updates": "LEAD_ONLY",
     "hourly_self_improvement_question": "What should be added, removed, simplified, combined, deprioritized, or tested next to increase genuine sustainable after-cost profitability first and forward signal accuracy/precision second while reducing overfitting, duplicated research and wasted compute?",
-    "hourly_self_improvement_policy": "Re-evaluate this question at each hourly eligibility check using available evidence, but do not force a paid model call, bypass the 12-hour successful-run cooldown, exceed the $1/day API budget, raise physical concurrency, or change production authority merely to answer it."
+    "hourly_self_improvement_policy": "This OpenAI-backed data-market implementation lane is temporarily disabled while Claude Code owns the same role for the extreme-move implementation milestone. Do not re-enable until ownership is explicitly handed back, to avoid duplicate work."
   },
   "budget": {
     "project_monthly_ceiling_usd": 30.0,
@@ -66,7 +66,7 @@
         "tests/test_db*.py",
         "tests/test_prediction_ledger*.py"
       ],
-      "mission": "Apply UNIVERSAL_SIGNAL_DEVELOPMENT_V1 by spending scarce API budget only on the highest expected incremental after-cost profitability or information-gain work, with genuine forward accuracy/precision secondary. At every eligibility review explicitly ask what should be added, removed, simplified, combined, deprioritized, or tested next to improve net expectancy, profit factor, risk-adjusted return and forward precision, and use that answer only to prioritize safe research. Prioritize diagnosis of genuine resolved economic losses and 24h/7d errors, timestamp-safe predictive data, selective WAIT/meta-label evidence, economic calibration, regime-strategy routing, cross-sectional/residual signals, prospective execution/microstructure vetoes, ensemble diversity, and falsifiable hypotheses. Deprioritize blind indicator parameter permutations, redundant strategies, duplicate disproven hypotheses, extra logical-worker expansion without evidence, and repeated 7d history work while failures remain genuine InsufficientHistory. ACC-002 24h is data-ready enough to support the predeclared Top-15 and Top-30 liquidity subsets but has not established the required stable positive pre-OOS after-cost edge; prioritize materially distinct, predeclared 24h economic mechanisms and reject unstable/nonpositive candidates quickly without opening untouched OOS to search. Keep the canonical 0.80 liquidity-coverage and two-subset requirements unchanged. Keep 7d insufficient-history work low priority unless coverage materially changes. Prefer deterministic Python, cached/reused evidence, and cheap rejection before model calls. Do not spend API budget merely to stay busy. Do not weaken chronology, untouched OOS, multiple-testing, point-in-time safety, cost realism, or promotion controls. TURN-BUDGET DISCIPLINE: finish within four model turns. Turn 1: read only the minimum files needed to choose one falsifiable change. Turn 2: implement the smallest allowed change plus targeted tests. Turn 3: run targeted tests and fix only directly observed failures. Turn 4: return READY_FOR_PR, NO_CHANGE, or BLOCKED; do not perform additional exploration. Prefer a safe NO_CHANGE/BLOCKED result over exceeding the turn budget."
+      "mission": "Paused while Claude Code owns data-market implementation for the adaptive-horizon extreme-move milestone."
     }
   }
 }
