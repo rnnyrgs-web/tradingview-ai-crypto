@@ -23,7 +23,7 @@ Profitability means net expectancy after realistic fees, spread, slippage, fundi
 
 Do not confuse a later state-only commit with a new trading/runtime strategy baseline. State-only reconciliations can advance `main` without changing trading behavior.
 
-## HARD SAFETY / SCIENTIFIC INVARIANTS
+## SAFETY INVARIANTS
 
 - `live_promotions.json` remains empty unless genuine forward profitability evidence and every canonical promotion gate authorize otherwise.
 - Broker remains disconnected. Research, shadow execution, and paper trading have no real-order authority.
@@ -53,9 +53,11 @@ Current data-market handoff:
 
 DATA-BREADTH-001 remains frozen and research-only. Its next evaluation requires at least eight independent matured OOS observations per primary horizon, separate 24h/7d scoring, the frozen feature/sign/baseline, incremental after-cost expectancy, 1x/2x/3x cost stress, OOS-half/liquidity/regime stability, and no threshold mining or untouched-OOS reuse. Negative or insufficient evidence remains WAIT / RESEARCH_ONLY.
 
-### Exact next data-market action
+## EXACT NEXT STEP
 
-**Do not select another data candidate while DATA-BREADTH-001 is awaiting the prospectively captured evidence required by COORD-DATA-007.** The safe action is to let authentic cohorts mature and then run the frozen falsification once its predeclared sample floor is satisfied. Other independent research lanes may continue if they do not duplicate or contaminate this evidence.
+**Do not select another data candidate while DATA-BREADTH-001 is awaiting the prospectively captured evidence required by COORD-DATA-007.** Let authentic point-in-time cohorts mature and run the frozen falsification only after its predeclared sample floor is satisfied. Never backfill or reconstruct missing historical membership from current survivors.
+
+While that evidence matures, the event-driven supervisor may assign at most one independent, non-contaminating CHANGE task from the profitability-first READY backlog. Prefer work on genuine 24h after-cost profitability, execution/microstructure, resolved-signal error attribution, regime-conditioned abstention, or reliability defects only when it does not duplicate, tune on, or contaminate DATA-BREADTH-001 evidence. All other specialists remain AUDIT-only under the existing supervisor contract. If no clean independent work is justified, waiting is the correct action.
 
 ## DURABLE NEGATIVE DATA RESULTS — DO NOT RESCUE
 
