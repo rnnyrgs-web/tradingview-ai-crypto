@@ -11,7 +11,10 @@ from orchestration.resource_recommendations import (
 )
 
 
-def test_seed_proposal_has_required_fields_and_is_unapproved():
+def test_seed_proposal_has_required_fields_and_is_now_approved():
+    """RESOURCE-REC-001 was approved by the project owner (see
+    resource_recommendations_decisions.json) for recurring Anthropic API
+    usage, scoped to the existing combined $30/month paid-AI ceiling."""
     proposals = load_proposals()
     assert len(proposals) >= 1
     ids = {p["id"] for p in proposals}
@@ -19,16 +22,23 @@ def test_seed_proposal_has_required_fields_and_is_unapproved():
     for proposal in proposals:
         for field in ("id", "proposed_by", "proposed_at", "cost", "limitation_solved", "expected_benefit", "free_alternatives_considered", "evidence"):
             assert field in proposal, (proposal["id"], field)
-    assert is_approved("RESOURCE-REC-001") is False
+    assert is_approved("RESOURCE-REC-001") is True
 
 
-def test_decisions_file_starts_empty():
-    assert load_decisions() == []
+def test_decisions_file_records_the_owner_approved_resource_rec_001():
+    decisions = load_decisions()
+    assert len(decisions) == 1
+    decision = decisions[0]
+    assert decision["proposal_id"] == "RESOURCE-REC-001"
+    assert decision["decision"] == "APPROVED"
+    for field in ("proposal_id", "decision", "decided_by", "decided_at", "rationale"):
+        assert field in decision, field
+    assert "30" in decision["rationale"]
 
 
-def test_unresolved_proposal_ids_includes_seed_proposal_until_decided():
+def test_unresolved_proposal_ids_no_longer_includes_the_decided_seed_proposal():
     unresolved = unresolved_proposal_ids()
-    assert "RESOURCE-REC-001" in unresolved
+    assert "RESOURCE-REC-001" not in unresolved
 
 
 def test_is_approved_only_true_after_matching_approved_decision():

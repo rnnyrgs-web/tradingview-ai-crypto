@@ -28,16 +28,18 @@ def _coord():
     return load_coordination()
 
 
-def _enabled_config():
-    """Test-local copy of the real config with enabled=True.
+def _disabled_config():
+    """Test-local copy of the real config with enabled=False.
 
-    The on-disk config is enabled=false (safety: disabled pending
-    paid-service approval, see BUG_REGRESSION_LEDGER.md). Ownership/planning
-    behavior still needs coverage, so it is exercised against a deep-copied,
-    test-local config rather than by flipping the real gate.
+    The real on-disk config is now enabled=true (owner-approved recurring
+    Anthropic usage within the shared $30/month ceiling, see
+    resource_recommendations_decisions.json RESOURCE-REC-001). The
+    RUNNER_DISABLED fail-closed codepath still needs regression coverage, so
+    it is exercised against a deep-copied, test-local config rather than by
+    flipping the real gate back off.
     """
     config = copy.deepcopy(_config())
-    config["enabled"] = True
+    config["enabled"] = False
     return config
 
 
@@ -91,20 +93,19 @@ def test_atomic_claim_branch_naming_matches_shared_convention():
     assert safe_branch("signal-accuracy", "COORD-VAL-001") == "auto/signal-accuracy/coord-val-001"
 
 
-def test_runner_disabled_pending_paid_service_approval_blocks_all_execution():
-    """The real on-disk config is enabled=false (safety: disabled pending
-    paid-service approval). plan_decision must fail closed regardless of an
-    otherwise-ready owned task, never silently run."""
-    decision = plan_decision(_config(), _coord(), default_state(), MAIN_SHA, NOW)
+def test_disabled_config_still_blocks_all_execution():
+    """Regression coverage for the fail-closed RUNNER_DISABLED codepath,
+    exercised against a test-local disabled config copy rather than the real
+    (now owner-approved, enabled) on-disk config."""
+    decision = plan_decision(_disabled_config(), _coord(), default_state(), MAIN_SHA, NOW)
     assert decision.run is False
     assert decision.reason == "RUNNER_DISABLED"
 
 
 def test_plan_selects_the_owned_ready_task_and_no_other_role():
-    """Ownership/planning behavior, exercised against a test-local enabled
-    config copy -- the real config stays disabled pending paid-service
-    approval; see test_runner_disabled_pending_paid_service_approval_blocks_all_execution."""
-    decision = plan_decision(_enabled_config(), _coord(), default_state(), MAIN_SHA, NOW)
+    """Owner approved recurring Anthropic usage within the shared $30/month
+    ceiling (RESOURCE-REC-001), so the real config is enabled=true."""
+    decision = plan_decision(_config(), _coord(), default_state(), MAIN_SHA, NOW)
     assert decision.run is True
     assert decision.role == "signal-accuracy"
     assert decision.task_id == "COORD-VAL-001"
@@ -120,7 +121,7 @@ def test_no_agent_can_steal_a_healthy_active_task():
         "base_main_sha": MAIN_SHA,
         "started_at": "2026-09-13T11:00:00Z",
     }
-    decision = plan_decision(_enabled_config(), _coord(), state, MAIN_SHA, NOW)
+    decision = plan_decision(_config(), _coord(), state, MAIN_SHA, NOW)
     assert decision.run is False
     assert decision.reason == "ACTIVE_TASK_WAITING_CI"
 
