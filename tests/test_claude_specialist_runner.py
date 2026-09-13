@@ -126,11 +126,12 @@ def test_no_agent_can_steal_a_healthy_active_task():
     assert decision.reason == "ACTIVE_TASK_WAITING_CI"
 
 
-def test_reserved_cost_uses_verified_haiku_pricing():
+def test_reserved_cost_uses_verified_haiku_pricing_and_full_turn_ceiling():
     config = _config()
-    # $1/MTok input, $5/MTok output (verified against platform.claude.com
-    # pricing during implementation): (100000*1 + 6000*5) / 1e6 = 0.13
-    assert reserved_cost_usd(config, "signal-accuracy") == pytest.approx(0.13)
+    # $1/MTok input, $5/MTok output. Reserve the full configured output
+    # ceiling: 4 turns * 2000 output tokens = 8000 tokens.
+    # (100000*1 + 8000*5) / 1e6 = 0.14
+    assert reserved_cost_usd(config, "signal-accuracy") == pytest.approx(0.14)
 
 
 def test_credential_gate_fails_closed_without_anthropic_api_key(monkeypatch):
