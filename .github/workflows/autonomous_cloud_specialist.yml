@@ -282,6 +282,7 @@ jobs:
           fi
           CONTENT="$(base64 -w0 /tmp/runner_state.json)"
           EXISTING_SHA="$(gh api "repos/$GITHUB_REPOSITORY/contents/runner_state.json?ref=$STATE_BRANCH" --jq .sha 2>/dev/null || true)"
+          set +e
           if [ -n "$EXISTING_SHA" ]; then
             gh api --method PUT "repos/$GITHUB_REPOSITORY/contents/runner_state.json" \
               -f message='Update autonomous specialist runner state' \
@@ -294,6 +295,27 @@ jobs:
               -f content="$CONTENT" \
               -f branch="$STATE_BRANCH" >/dev/null
           fi
+          WRITE_STATUS=$?
+          set -e
+          if [ "$WRITE_STATUS" -eq 0 ]; then
+            exit 0
+          fi
+
+          # The GitHub API can commit the contents update successfully while gh exits
+          # non-zero parsing an incomplete response body. Fail closed unless a fresh GET
+          # proves that the durable branch contains the exact bytes we intended to write.
+          echo "State write command reported failure; verifying durable state before failing."
+          LOCAL_HASH="$(sha256sum /tmp/runner_state.json | awk '{print $1}')"
+          if gh api "repos/$GITHUB_REPOSITORY/contents/runner_state.json?ref=$STATE_BRANCH" --jq .content >/tmp/state-verify.b64 2>/dev/null; then
+            tr -d '\n' </tmp/state-verify.b64 | base64 -d >/tmp/state-verify.json
+            REMOTE_HASH="$(sha256sum /tmp/state-verify.json | awk '{print $1}')"
+            if [ "$LOCAL_HASH" = "$REMOTE_HASH" ]; then
+              echo "Durable state verified after ambiguous API response."
+              exit 0
+            fi
+          fi
+          echo "Durable state could not be verified after write failure."
+          exit "$WRITE_STATUS"
 
       - name: Fail workflow after bounded agent failure
         if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'failure' && steps.agent.outputs.quota_exhausted != 'true'
