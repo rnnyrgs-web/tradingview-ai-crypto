@@ -34,7 +34,7 @@
     "project_monthly_ceiling_usd": 30.0,
     "baseline_infrastructure_reserve_usd": 0.0,
     "runner_monthly_api_budget_usd": 29.0,
-    "runner_daily_api_budget_usd": 3.0,
+    "runner_daily_api_budget_usd": 1.0,
     "pause_buffer_usd": 1.0,
     "provider_retry_safety_multiplier": 3.0,
     "fleet_pacing_burst_allowance_usd": 2.0,
