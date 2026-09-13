@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 
 from continuous_coordinator import parse_state_last_updated
 
@@ -23,6 +24,19 @@ def test_authoritative_ai_state_tracks_effective_data_market_handoff():
         "COORD-DATA-005 is the next READY data-market task",
     )
     assert not any(claim in text for claim in stale_claims)
+
+
+def test_data_market_backlog_respects_data_breadth_maturation_gate():
+    """Prevent a READY backlog row from bypassing the authoritative data freeze."""
+    text = Path("AI_STATE.md").read_text(encoding="utf-8")
+    backlog = json.loads(Path("orchestration/priority_backlog.json").read_text(encoding="utf-8"))
+    acc005 = next(item for item in backlog["items"] if item["id"] == "ACC-005")
+
+    assert "`COORD-DATA-007`: **BLOCKED**" in text
+    assert "Do not select another data candidate" in text
+    assert acc005["owner"] == "data-market"
+    assert acc005["status"] == "BLOCKED"
+    assert "DATA-BREADTH-001" in acc005["block_reason"]
 
 
 def test_authoritative_ai_state_preserves_coordinator_freshness_contract():
