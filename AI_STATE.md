@@ -15,12 +15,12 @@ Profitability means net expectancy after realistic fees, spread, slippage, fundi
 
 ## CURRENT MAIN / DEPLOYMENT STATE
 
-- Current GitHub `main` verified during this reconciliation: `89f1888066f6e37eb3210bb4ca7301c9bbba928e` (PR #326 regression guard for coordinator state freshness).
-- Latest trading/runtime strategy baseline remains unchanged by PR #326; PR #326 only added regression coverage for the coordinator freshness contract.
-- PR #326 exact candidate head `23e76a826874af963321b102601ad05a4ba76466` passed **Security and Reliability #2235**.
-- Production Render service `srv-dadliegu01pc73bc7t50` is live on `89f1888066f6e37eb3210bb4ca7301c9bbba928e`.
+- Latest runtime-affecting GitHub `main` verified during this reconciliation: `b95f81459fe8bd4bdcc4b283f8d65f31363da660` (PR #328, retired funding observability made explicitly inactive).
+- PR #328 changed observability/control-plane semantics only; no strategy rules, thresholds, OOS/forward gates, paper ledger, broker state, promotions, concurrency, budget, or deployment authority changed.
+- PR #328 exact candidate head `ba3a240f0e1d0f44be392d2f411b8a498a3a2451` passed **Security and Reliability #2245**.
+- Production Render service `srv-dadliegu01pc73bc7t50` is live on `b95f81459fe8bd4bdcc4b283f8d65f31363da660`.
 - Research-coordinator Render service `srv-dafgtead0e5s73cc7ekg` is live on the same commit.
-- There were no open GitHub PRs at this reconciliation point.
+- There were no open GitHub PRs before this state-reconciliation branch was created.
 
 Do not confuse a later state-only commit with a new trading/runtime strategy baseline. State-only reconciliations can advance `main` without changing trading behavior.
 
@@ -93,6 +93,7 @@ Recent integrations deliberately changed research prioritization, not production
 - PR #319 made independent after-cost economic harm outrank wrong-signal rate when allocating research attention.
 - PR #320 made expected incremental after-cost profitability the research director's primary impact term, with forward signal quality secondary.
 - PR #321 removed the permanently rejected DATA-BASIS/DATA-FUNDING compatibility job from the always-on heavy lane.
+- PR #328 made the retained legacy funding observability projection explicitly inactive/retired so rejected evidence cannot masquerade as an active candidate.
 
 After PR #321 the active layout is **20 logical workers: 18 heavy + 2 lightweight research-brain workers**. Physical heavy concurrency/cost controls remain bounded; no paid infrastructure increase was authorized.
 
