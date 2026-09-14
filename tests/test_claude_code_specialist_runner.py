@@ -53,8 +53,8 @@ def test_config_owns_exactly_one_implementation_role():
 
 
 def test_role_permissions_match_the_existing_testing_security_role_exactly():
-    """Reuses the already-defined testing-security allowlist from
-    agents/roles.json rather than inventing new scope for this engine."""
+    """Keep the legacy testing-security scope while allowing the one explicit
+    Gate A paper-execution file needed for issue #349."""
     from agents.autonomous_orchestrator import load_roles
 
     legacy_allowed_paths = set(load_roles()["testing-security"]["allowed_paths"])
@@ -62,14 +62,15 @@ def test_role_permissions_match_the_existing_testing_security_role_exactly():
     assert legacy_allowed_paths.issubset(config_allowed_paths)
 
 
-def test_role_permissions_never_touch_production_signal_or_ledger_code():
+def test_role_permissions_allow_only_the_explicit_gate_a_production_exception():
     config = _config()
-    production_files = [
-        "paper_trading.py", "engine.py", "selective_precision.py",
-        "cross_asset_runner.py", "champion_challenger.py", "db.py",
-        "market_data.py", "promotion_manifest.py", "strategy_identity.py",
+    assert path_allowed(config, "testing-security", "paper_trading.py") is True
+    unrelated_production_files = [
+        "engine.py", "selective_precision.py", "cross_asset_runner.py",
+        "champion_challenger.py", "db.py", "market_data.py",
+        "promotion_manifest.py", "strategy_identity.py",
     ]
-    for path in production_files:
+    for path in unrelated_production_files:
         assert path_allowed(config, "testing-security", path) is False, path
 
 

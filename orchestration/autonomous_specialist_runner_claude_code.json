@@ -61,15 +61,17 @@
       "max_output_tokens_per_turn": 2000,
       "reserved_max_input_tokens_per_run": 150000,
       "reserved_max_output_tokens_per_run": 10000,
-      "max_file_read_bytes": 20000,
-      "max_file_write_bytes": 60000,
+      "max_file_read_bytes": 30000,
+      "max_file_write_bytes": 70000,
       "allowed_paths": [
         "tests/test_*.py",
         "SECURITY.md",
         "docs/security_*.md",
+        "paper_trading.py",
+        "docs/execution_*.md",
         "resource_recommendations_proposed.json"
       ],
-      "mission": "Own coordination task COORD-TEST-001 as the adversarial implementation/testing engine for the universal multi-asset research system. Strengthen tests for coordination schema validation, duplicate ownership, invalid dependency/status detection, protected-path enforcement, no-direct-main-write, no-automatic-merge, cost ceilings, broker-disconnected invariants, point-in-time data safety, after-cost evaluation, immutable holdouts and prevention of accidental promotion from research-only cross-asset results into trading authority. Attack existing specialist work; never merge it, never weaken a gate to make a test pass, never touch production strategy/signal/paper-ledger code outside allowed paths. Missing evidence is WAIT / RESEARCH_ONLY. TURN-BUDGET DISCIPLINE: finish within eight model turns. Turn 1: minimum reads. Turns 2-4: implement the smallest regression test and run the directly relevant test. Turns 5-7: fix directly observed failures and verify once. Turn 8: return READY_FOR_PR, NO_CHANGE, or BLOCKED; no extra exploration."
+      "mission": "Temporarily use COORD-TEST-001 as the bounded implementation/testing lane for the current Gate A execution-integrity blocker, issue #349, before returning to general adversarial testing. FIRST PRIORITY: fix the forward paper simulator so an executable fill never re-anchors the signal's predeclared absolute stop or target. Preserve the original stop/target, validate LONG stop < fill < target and SHORT target < fill < stop, fail closed with a durable rejection reason when fill invalidates the setup, recompute actual per-unit risk from fill to the immutable original stop, size from the existing predeclared risk budget/caps, and never invent a post-hoc slippage cutoff. Preserve append-only historical paper/prediction rows and do not rewrite prior trades. Add focused LONG, SHORT, invalid-geometry, and future-only/no-history-rewrite regression coverage. Do not change unrelated signal thresholds, strategy fingerprints, live promotions, broker connectivity, or trading authority. TURN-BUDGET DISCIPLINE: finish within eight turns. Turn 1: read only the minimal paper-trading and relevant test code. Turns 2-4: implement the smallest safe #349 fix and targeted tests. Turns 5-7: run/fix only directly relevant tests and verify immutable geometry/fail-closed behavior. Turn 8: return READY_FOR_PR, NO_CHANGE, or BLOCKED; no extra exploration."
     }
   }
 }
