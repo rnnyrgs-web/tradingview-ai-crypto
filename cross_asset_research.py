@@ -1,30 +1,50 @@
 """Research-only non-crypto market study. No trade authority or broker actions."""
 import csv, io, math, statistics, uuid
+from urllib.parse import quote
 import httpx
 from config import SUPABASE_URL, SUPABASE_SECRET_KEY
 
 H=5
 ASSETS=[
-("SPY","spy.us","EQUITY_INDEX"),("QQQ","qqq.us","EQUITY_INDEX"),("IWM","iwm.us","EQUITY_INDEX"),("DIA","dia.us","EQUITY_INDEX"),
-("SMH","smh.us","SECTOR_ETF"),("XLE","xle.us","SECTOR_ETF"),("XLF","xlf.us","SECTOR_ETF"),("TLT","tlt.us","RATES"),("HYG","hyg.us","CREDIT"),
-("NVDA","nvda.us","STOCK"),("AAPL","aapl.us","STOCK"),("MSFT","msft.us","STOCK"),("AMZN","amzn.us","STOCK"),("META","meta.us","STOCK"),("GOOGL","googl.us","STOCK"),("TSLA","tsla.us","STOCK"),("AMD","amd.us","STOCK"),("AVGO","avgo.us","STOCK"),
-("GOLD","gld.us","COMMODITY_ETF"),("SILVER","slv.us","COMMODITY_ETF"),("OIL","uso.us","COMMODITY_ETF"),("NATGAS","ung.us","COMMODITY_ETF"),("COPPER","cper.us","COMMODITY_ETF"),
-("EURUSD","eurusd","FX"),("GBPUSD","gbpusd","FX"),("USDJPY","usdjpy","FX"),("AUDUSD","audusd","FX"),("VXX","vxx.us","VOLATILITY_ETP")]
-http=httpx.Client(timeout=30.0,follow_redirects=True,headers={"User-Agent":"Mozilla/5.0 research-only market study"})
+("SPY","SPY","spy.us","EQUITY_INDEX"),("QQQ","QQQ","qqq.us","EQUITY_INDEX"),("IWM","IWM","iwm.us","EQUITY_INDEX"),("DIA","DIA","dia.us","EQUITY_INDEX"),
+("SMH","SMH","smh.us","SECTOR_ETF"),("XLE","XLE","xle.us","SECTOR_ETF"),("XLF","XLF","xlf.us","SECTOR_ETF"),("TLT","TLT","tlt.us","RATES"),("HYG","HYG","hyg.us","CREDIT"),
+("NVDA","NVDA","nvda.us","STOCK"),("AAPL","AAPL","aapl.us","STOCK"),("MSFT","MSFT","msft.us","STOCK"),("AMZN","AMZN","amzn.us","STOCK"),("META","META","meta.us","STOCK"),("GOOGL","GOOGL","googl.us","STOCK"),("TSLA","TSLA","tsla.us","STOCK"),("AMD","AMD","amd.us","STOCK"),("AVGO","AVGO","avgo.us","STOCK"),
+("GOLD","GC=F","gld.us","COMMODITY"),("SILVER","SI=F","slv.us","COMMODITY"),("OIL","CL=F","uso.us","COMMODITY"),("NATGAS","NG=F","ung.us","COMMODITY"),("COPPER","HG=F","cper.us","COMMODITY"),
+("EURUSD","EURUSD=X","eurusd","FX"),("GBPUSD","GBPUSD=X","gbpusd","FX"),("USDJPY","JPY=X","usdjpy","FX"),("AUDUSD","AUDUSD=X","audusd","FX"),("VIX","^VIX","vxx.us","VOLATILITY")]
+http=httpx.Client(timeout=30.0,follow_redirects=True,headers={"User-Agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/152 Safari/537.36","Accept":"application/json,text/plain,*/*","Accept-Language":"en-US,en;q=0.9"})
 
 def _hdr(prefer=None):
  h={"apikey":SUPABASE_SECRET_KEY,"Authorization":f"Bearer {SUPABASE_SECRET_KEY}","Content-Type":"application/json"}
  if prefer:h["Prefer"]=prefer
  return h
 
-def _history(ticker):
- r=http.get("https://stooq.com/q/d/l/",params={"s":ticker,"i":"d"});r.raise_for_status()
- out=[]
+def _yahoo_history(ticker):
+ url=f"https://query2.finance.yahoo.com/v8/finance/chart/{quote(ticker,safe='')}"
+ r=http.get(url,params={"range":"5y","interval":"1d","events":"div,splits","includeAdjustedClose":"true","includePrePost":"false"});r.raise_for_status()
+ j=r.json();x=(((j.get("chart") or {}).get("result") or [None])[0]) or {};q=(((x.get("indicators") or {}).get("quote") or [{}])[0]);out=[]
+ for c in q.get("close") or []:
+  try:v=float(c)
+  except (TypeError,ValueError):continue
+  if math.isfinite(v) and v>0:out.append(v)
+ return out
+
+def _stooq_history(ticker):
+ r=http.get("https://stooq.com/q/d/l/",params={"s":ticker,"i":"d"});r.raise_for_status();out=[]
  for row in csv.DictReader(io.StringIO(r.text)):
   try:v=float(row.get("Close") or 0)
   except (TypeError,ValueError):continue
   if math.isfinite(v) and v>0:out.append(v)
  return out
+
+def _history(yahoo,stooq):
+ errors=[]
+ for fn,arg in ((_yahoo_history,yahoo),(_stooq_history,stooq)):
+  try:
+   rows=fn(arg)
+   if len(rows)>=200:return rows
+   errors.append(f"{fn.__name__}:{len(rows)}")
+  except Exception as exc:errors.append(f"{fn.__name__}:{type(exc).__name__}")
+ raise RuntimeError(";".join(errors))
 
 def _sig(c,i):
  if i<60:return None
@@ -48,12 +68,12 @@ def _study(c):
 
 def run_cross_asset_research():
  scan=str(uuid.uuid4());rows=[];fail=[]
- for symbol,ticker,cls in ASSETS:
+ for symbol,yahoo,stooq,cls in ASSETS:
   try:
-   x=_study(_history(ticker))
-   if x:rows.append({"scan_id":scan,"symbol":symbol,"provider_symbol":ticker,"asset_class":cls,"horizon_days":H,"source":"Stooq public daily history","research_only":True,**x,"details":{"trade_authority":False,"method":"5d momentum + realized-vol forward study","underlying_or_proxy":"tradable ETF/equity/FX"}})
+   x=_study(_history(yahoo,stooq))
+   if x:rows.append({"scan_id":scan,"symbol":symbol,"provider_symbol":yahoo,"asset_class":cls,"horizon_days":H,"source":"Yahoo chart API with Stooq fallback","research_only":True,**x,"details":{"trade_authority":False,"method":"5d momentum + realized-vol forward study","underlying_or_proxy":"liquid tradable market instrument"}})
    else:fail.append({"symbol":symbol,"reason":"insufficient_history"})
-  except Exception as exc:fail.append({"symbol":symbol,"reason":type(exc).__name__})
+  except Exception as exc:fail.append({"symbol":symbol,"reason":str(exc)[:160]})
  rows.sort(key=lambda x:x["research_score"],reverse=True)
  if rows and SUPABASE_URL and SUPABASE_SECRET_KEY:
   r=http.post(f"{SUPABASE_URL}/rest/v1/cross_asset_research",headers=_hdr("return=minimal"),json=rows)
