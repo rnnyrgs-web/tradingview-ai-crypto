@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "as_of": "2026-09-14T23:07:14Z",
+  "as_of": "2026-09-14T23:20:09Z",
   "status": "INITIAL_VALIDATED_ASSESSMENT",
   "world_money_map": {
-    "summary": "The picture remains mixed rather than broadly risk-on or risk-off. U.S. banking-system liquidity received a large one-week boost as the Treasury General Account fell by about $101B and reserve balances rose by about $107B, while the Fed's securities portfolio was essentially flat. Treasury still assumes a $950B end-September cash balance versus about $844B on Sep. 9, so a quarter-end cash rebuild can reverse part of that easing. However, a reserve drain is not the same thing as immediate funding stress: SOFR was 3.62% for Sep. 10, inside the 3.50%-3.75% target range, and the Fed's standing repo facility provides an explicit backstop if private repo funding becomes scarce. The correct interpretation is therefore conditional: TGA rebuilding is a liquidity headwind, but it should not become a standalone risk-asset sell signal unless funding-market evidence confirms tightening. Global policy also remains restrictive/divergent, and the Sep. 15-16 FOMC decision is the dominant near-term event risk.",
-    "regime": "TRANSITION / EVENT RISK",
-    "liquidity": "SHORT-TERM US EASING; TGA REVERSAL RISK, FUNDING CALM SO FAR",
-    "credit": "NO VALIDATED STRESS SIGNAL YET",
+    "summary": "The picture remains mixed rather than broadly risk-on or risk-off, but the near-term U.S. funding-risk assessment has become more precise. Bank reserves were $3.0365T on Sep. 9 and ON RRP was only about $5.3B on Sep. 11. Relative to Q2 nominal GDP of $32.486T, reserves plus ON RRP are roughly 9.4% of GDP. A Federal Reserve FEDS Note published Aug. 26 finds that Treasury issuance shocks become much more powerful for repo rates when Fed-provided liquidity is below 10% of GDP. Sep. 15 is therefore a high-information stress test because major estimated-tax payments coincide with settlement of 3-year, 10-year and 30-year Treasury coupon securities and several bills. Latest validated repo data remain calm, so this is a conditional vulnerability rather than a current funding crisis. The Sep. 15-16 FOMC decision remains the dominant policy event risk.",
+    "regime": "TRANSITION / EVENT RISK / LOW-LIQUIDITY-SENSITIVITY ZONE",
+    "liquidity": "SHORT-TERM US EASING, BUT CURRENT FED LIQUIDITY ~9.4% OF GDP AND MORE SENSITIVE TO ISSUANCE SHOCKS",
+    "credit": "NO VALIDATED BROAD STRESS SIGNAL YET",
     "policy": "RESTRICTIVE / DIVERGENT",
     "risk_appetite": "MIXED / UNCONFIRMED"
   },
@@ -24,45 +24,62 @@
       "direction": "PRIVATE CASH / BANK RESERVES -> TREASURY",
       "horizon": "through Sep. 30",
       "confidence": "MODERATE",
-      "summary": "Treasury's Aug. 3 financing estimate assumes a $950B end-September cash balance. The Sep. 9 TGA stood near $844B, leaving roughly $106B to rebuild if the target is met. Because ON RRP usage is now only a few billion dollars, there is much less money-fund RRP cash available to absorb a large TGA rebuild than in earlier cycles, so a larger share can pressure bank reserves or other private liquidity sources.",
+      "summary": "Treasury's Aug. 3 financing estimate assumes a $950B end-September cash balance. The Sep. 9 TGA stood near $844B. Because ON RRP is nearly exhausted, a future TGA rebuild has less buffer than in earlier cycles and can transmit more directly to reserves/private liquidity.",
       "invalidation": "Treasury materially undershoots its $950B cash target, or offsetting Fed/liability flows replenish reserves.",
-      "source": "U.S. Treasury Aug. 3 borrowing estimate; Fed H.4.1; NY Fed/FRED ON RRP data through Sep. 11"
+      "source": "U.S. Treasury Aug. 3 borrowing estimate; Fed H.4.1; NY Fed/FRED ON RRP"
+    },
+    {
+      "title": "Sep. 15 concentrates potential repo demand and cash drainage",
+      "direction": "BANK/MMF CASH -> TREASURY / DEALER FINANCING DEMAND",
+      "horizon": "1-2 days",
+      "confidence": "MODERATE-HIGH",
+      "summary": "Sep. 15 combines a major estimated-tax payment date with settlement of 3-year, 10-year and 30-year Treasury coupon securities and several bills. Fed research shows that issuance and dealer Treasury holdings are much more rate-sensitive when reserves plus ON RRP are below 10% of GDP; current aggregate Fed liquidity is roughly 9.4% of Q2 nominal GDP.",
+      "invalidation": "Repo rates and upper percentiles remain orderly through the cash/settlement window, standing repo usage stays negligible, and TGA/reserves show no meaningful tightening.",
+      "source": "Federal Reserve FEDS Note Aug. 26, 2026; IRS 2026 tax calendar; U.S. Treasury tentative auction schedule; Fed H.4.1; BEA/FRED GDP"
     },
     {
       "title": "Funding markets have not yet confirmed reserve scarcity",
       "direction": "NO BROAD FUNDING STRESS CONFIRMATION",
       "horizon": "days",
       "confidence": "MODERATE-HIGH",
-      "summary": "SOFR was 3.62% for Sep. 10, inside the 3.50%-3.75% federal funds target range, while New York Fed standing repo operations remain available at the top of the target range to cap economically significant private-repo pressure. This means the TGA-rebuild thesis is a conditional liquidity risk, not a mechanical funding-crisis call.",
-      "source": "NY Fed/FRED SOFR; New York Fed standing repo framework"
+      "summary": "Latest validated repo observations remained orderly: SOFR was 3.62% on Sep. 10, the SOFR 99th percentile was 3.70%, and the TGCR 99th percentile was 3.65%. Standing repo operations remain available to limit economically significant upward pressure.",
+      "source": "NY Fed data via FRED; New York Fed standing repo framework"
     },
     {
       "title": "Global policy is not moving in one easing direction",
       "direction": "CASH / BONDS REPRICE TOWARD HIGHER REQUIRED RETURNS",
       "horizon": "weeks to months",
       "confidence": "HIGH",
-      "summary": "The ECB raised all three key policy rates by 25 bp on Sep. 10 because energy and conflict-related inflation pressure remained elevated. In the U.S., the last FOMC target range was 3.50%-3.75% and the next decision is Sep. 16. This argues against treating the current environment as a synchronized global liquidity boom.",
-      "source": "ECB Sep. 10 policy decision; Federal Reserve July 29 statement and Sep. calendar"
+      "summary": "The ECB raised all three key policy rates by 25 bp on Sep. 10. In the U.S., the last FOMC target range was 3.50%-3.75% and the next decision is Sep. 16. This argues against treating the current environment as a synchronized global liquidity boom.",
+      "source": "ECB Sep. 10 decision; Federal Reserve calendar"
     }
   ],
   "opportunities": [
     {
-      "title": "Preserve cash optionality into the Sep. 16 FOMC decision",
+      "title": "Preserve cash optionality through the Sep. 15 funding test and Sep. 16 FOMC",
       "action": "WAIT",
       "horizon": "1-3 days",
-      "confidence": "MODERATE",
-      "thesis": "The current causal signals conflict: short-term reserve liquidity improved sharply, potential TGA rebuilding is a headwind but funding markets have not confirmed stress, inflation remains above target, Treasury yields rose into the meeting, the ECB just tightened, and U.S. policy uncertainty resolves within roughly two days. The expected value of forcing a broad directional macro position before the FOMC is not yet demonstrated.",
-      "invalidation": "A clear pre-meeting dislocation appears with strong asymmetric payoff and independently verified flow support.",
-      "source": "Fed H.4.1, NY Fed/FRED SOFR, BLS CPI/employment, Treasury yields, ECB policy decision"
+      "confidence": "MODERATE-HIGH",
+      "thesis": "The expected value of forcing a broad directional macro position is not yet demonstrated. Current Fed liquidity is in a more issuance-sensitive zone, but actual repo stress has not appeared. Sep. 15 provides a direct falsifiable test before the FOMC: if repo rates remain contained despite taxes and settlements, the scarcity thesis weakens; if broad secured-funding pressure appears, the risk case strengthens materially.",
+      "invalidation": "A clear asymmetric opportunity appears with independently verified flow support before these events resolve.",
+      "source": "Fed FEDS Note Aug. 26; IRS tax calendar; Treasury auction schedule; NY Fed repo data; FOMC calendar"
     }
   ],
   "risks": [
+    {
+      "title": "Sep. 15 can expose repo-market capacity constraints",
+      "direction": "SHORT-TERM FUNDING / DELEVERAGING RISK",
+      "horizon": "1-3 days",
+      "confidence": "MODERATE",
+      "summary": "Fed research finds that when reserves plus ON RRP are below 10% of GDP, Treasury coupon issuance has historically had a much larger impact on TGCR-IORB. Current Fed liquidity is roughly 9.4% of Q2 nominal GDP. Sep. 15 also combines estimated-tax cash drains with Treasury settlements. This raises sensitivity to a funding shock but does not establish that one will occur.",
+      "invalidation": "TGCR, SOFR and their upper percentiles remain contained; standing repo usage remains negligible; EFFR stays anchored; and post-event TGA/reserve data show adequate liquidity."
+    },
     {
       "title": "TGA rebuild can become a near-term liquidity drain, but stress is conditional",
       "direction": "LIQUIDITY DRAIN RISK",
       "horizon": "2 weeks",
       "confidence": "MODERATE",
-      "summary": "If Treasury rebuilds the TGA toward its $950B quarter-end assumption from roughly $844B, the cash transfer can absorb private liquidity. With ON RRP nearly exhausted, the buffering channel is much smaller than during the 2021-2024 era. But this should not be interpreted as an automatic market sell signal: secured funding remained orderly at the latest validated observation, and the Fed standing repo facility can supply funding if repo pressure rises.",
+      "summary": "A TGA rebuild toward Treasury's $950B quarter-end assumption can absorb private liquidity with little remaining ON RRP buffer. It becomes a stronger market-risk signal only if funding-market indicators confirm scarcity.",
       "invalidation": "The TGA does not rebuild materially, reserve-supplying offsets dominate, or funding markets remain orderly despite the reserve decline."
     },
     {
@@ -70,7 +87,7 @@
       "direction": "DURATION / HIGH-VALUATION ASSET RISK",
       "horizon": "weeks to months",
       "confidence": "MODERATE",
-      "summary": "August payrolls rose 162k with unemployment at 4.1%, while August CPI was 3.4% y/y and 0.4% m/m. A resilient labor market plus elevated inflation can keep required returns high. On Sep. 11 the Treasury curve showed roughly 4.63% at 2 years and 4.96% at 10 years.",
+      "summary": "August payrolls rose 162k with unemployment at 4.1%, while August CPI was 3.4% y/y and 0.4% m/m. A resilient labor market plus elevated inflation can keep required returns high.",
       "invalidation": "Inflation falls faster than expected and policy guidance turns materially more accommodative without a growth shock."
     }
   ],
@@ -78,19 +95,25 @@
     {
       "title": "Treasury cash drawdown -> reserve injection",
       "confidence": "HIGH",
-      "summary": "TGA falls -> Treasury spends cash held at the Fed -> payments land in private bank deposits -> bank reserve balances rise -> short-term balance-sheet liquidity improves -> risk assets may receive support if the cash is redeployed rather than retained. The Sep. 2-9 data show this mechanism clearly, but it is a liquidity mechanism, not proof of a durable bull regime.",
+      "summary": "TGA falls -> Treasury spends cash held at the Fed -> payments land in private bank deposits -> bank reserves rise -> short-term balance-sheet liquidity improves. This mechanism does not prove a durable bull regime.",
       "source": "Federal Reserve H.4.1"
     },
     {
-      "title": "Quarter-end TGA rebuild -> reserve drain -> funding stress only if reserve demand binds",
+      "title": "Low Fed liquidity + coupon settlement + tax payments -> repo sensitivity",
       "confidence": "MODERATE-HIGH",
-      "summary": "Treasury issues/collects more cash than it spends -> TGA rises -> cash leaves bank deposits / money markets -> reserves can fall because ON RRP has little remaining room to absorb the shift -> but market stress requires the supply of usable reserves/intermediation capacity to become scarce relative to demand -> repo rates and their upper percentiles rise -> standing repo usage may increase -> only then does the liquidity drain become a stronger signal of forced deleveraging risk. Latest validated SOFR did not yet show that scarcity condition.",
-      "source": "Treasury financing estimate + Fed balance-sheet mechanics + NY Fed/FRED SOFR + NY Fed standing repo framework"
+      "summary": "Reserves plus ON RRP fall below roughly 10% of GDP -> repo rates become more sensitive to Treasury issuance/dealer financing demand -> coupon settlements increase financing demand while tax payments drain bank/MMF cash -> TGCR/SOFR can rise -> FHLBs may reallocate from fed funds toward repo -> EFFR can face upward pressure -> forced balance-sheet adjustment becomes more plausible. Standing repo operations and reserve-management purchases can interrupt this chain.",
+      "source": "Federal Reserve FEDS Note Aug. 26, 2026; IRS calendar; Treasury auction schedule"
+    },
+    {
+      "title": "Quarter-end TGA rebuild -> reserve drain -> funding stress only if reserve/repo capacity binds",
+      "confidence": "MODERATE-HIGH",
+      "summary": "Treasury cash accumulation drains private liquidity; near-zero ON RRP reduces buffering capacity; but stress requires usable reserves or repo-market lending/intermediation capacity to become scarce. Confirm with TGCR/SOFR percentiles, EFFR-IORB and standing-repo usage rather than aggregate reserves alone.",
+      "source": "Treasury financing estimate + Fed balance-sheet mechanics + Fed/NY Fed repo research"
     },
     {
       "title": "Energy inflation -> policy restraint -> higher discount rates",
       "confidence": "HIGH",
-      "summary": "Middle East / energy pressure -> higher headline inflation and inflation uncertainty -> central banks maintain or raise restrictive rates -> sovereign yields / required returns rise -> long-duration valuations face compression unless earnings or growth expectations compensate. The ECB's Sep. 10 hike is direct current evidence of this chain.",
+      "summary": "Energy pressure -> higher inflation uncertainty -> central banks maintain or raise restrictive rates -> sovereign yields / required returns rise -> long-duration valuations face compression unless earnings or growth expectations compensate.",
       "source": "ECB Sep. 10 decision; BLS Aug. CPI"
     }
   ],
@@ -99,42 +122,50 @@
       "title": "Reserve growth and Fed asset growth are not the same thing",
       "status": "SUPPORTED",
       "confidence": "HIGH",
-      "summary": "A large weekly reserve increase can come from liability-side shifts such as a falling Treasury General Account even when the Fed's securities holdings barely change. Therefore a 'liquidity' model that watches only the size of the Fed asset portfolio can miss economically important short-term injections and drains.",
+      "summary": "Large reserve changes can come from liability-side shifts such as the TGA even when Fed securities holdings barely change.",
       "source": "Fed H.4.1 Sep. 10, 2026"
     },
     {
       "title": "Near-zero ON RRP changes Treasury-liquidity transmission",
       "status": "SUPPORTED / REGIME-SPECIFIC",
       "confidence": "MODERATE",
-      "summary": "ON RRP usage was only about $5.3B on Sep. 11. When this buffer is tiny, a future TGA rebuild cannot be absorbed mainly by money funds simply shifting cash out of ON RRP, so the reserve impact of Treasury cash accumulation can be larger than in periods when ON RRP held hundreds of billions or trillions.",
+      "summary": "With ON RRP near zero, Treasury cash rebuilding has less capacity to be absorbed by an ON RRP decline and can transmit more directly to reserves/private liquidity.",
       "source": "NY Fed source via FRED ON RRP series"
     },
     {
       "title": "Reserve drain is not the same as funding stress",
       "status": "SUPPORTED / REGIME-SPECIFIC",
       "confidence": "MODERATE-HIGH",
-      "summary": "The causal chain needs an additional condition: reserves can fall without producing a funding crisis while the system remains in an ample-reserves regime. SOFR at 3.62% on Sep. 10 remained inside the Fed's 3.50%-3.75% target range, and the standing repo facility is designed to cap private repo pressure. Therefore the correct escalation trigger is TGA/reserve deterioration plus funding-market confirmation, not TGA movement alone.",
+      "summary": "A falling reserve balance is a liquidity headwind, not a mechanical sell signal. Funding-market confirmation is required.",
       "source": "NY Fed/FRED SOFR; New York Fed standing repo framework"
+    },
+    {
+      "title": "Repo-market capacity can bind before aggregate reserve demand",
+      "status": "SUPPORTED / REGIME-SPECIFIC",
+      "confidence": "MODERATE-HIGH",
+      "summary": "Recent Fed research shows that day-to-day repo pricing is strongly driven by Treasury issuance, dealer inventory and MMF cash, and that repo-rate sensitivity rises sharply when reserves plus ON RRP fall below roughly 10% of GDP. At current levels, the system is already near 9.4%, so aggregate reserves can still look ample while repo capacity becomes the marginal constraint.",
+      "source": "Federal Reserve FEDS Note Aug. 26, 2026; Fed H.4.1; BEA/FRED GDP"
     }
   ],
   "changes_since_previous": [
-    "The TGA-rebuild risk has been refined: a reserve drain is a liquidity headwind, but not a mechanical sell signal or proof of funding stress.",
-    "Latest validated secured-funding evidence remained orderly: SOFR was 3.62% for Sep. 10, within the Fed's target range.",
-    "The standing repo facility has been added as an explicit stabilizing mechanism that must be considered when modeling how reserve scarcity propagates into markets.",
-    "No broad asset BUY/SELL thesis is being promoted before the Sep. 16 FOMC decision because causal evidence remains mixed."
+    "Current reserves plus ON RRP are roughly 9.4% of Q2 nominal GDP, placing the system in the Fed research bucket where Treasury issuance shocks have historically had much larger repo-rate effects.",
+    "Sep. 15 is now identified as a high-information funding stress test because estimated-tax payments coincide with multiple Treasury settlements.",
+    "The reserve-scarcity model has been upgraded: repo-market capacity, dealer financing demand and MMF cash supply can become binding before aggregate bank reserve demand does.",
+    "Latest validated repo observations remain orderly, so the new finding raises conditional risk rather than establishing a current funding crisis.",
+    "The decision-support stance remains WAIT through the Sep. 15 funding test and Sep. 16 FOMC."
   ],
   "unknowns": [
     "The Sep. 15-16 FOMC decision and guidance are not known yet and can materially change the rates/liquidity interpretation.",
-    "Treasury's $950B end-September cash balance is an assumption, not a guaranteed realized level; the size/timing of the actual rebuild remains uncertain.",
-    "It remains unknown how far reserves can fall in the current distribution of bank balance sheets before repo rates show persistent scarcity; aggregate reserve levels alone do not answer this.",
-    "The current data establish Treasury-to-reserve transmission, but do not yet prove how strongly that mechanism predicts equities, crypto, gold, credit or the dollar in the present regime.",
-    "August PCE data are not scheduled until Sep. 30, so current inflation assessment relies on CPI plus the latest available July PCE data."
+    "The exact net cash impact of Sep. 15 Treasury settlements and estimated-tax payments is not known in advance.",
+    "Treasury's $950B end-September cash balance is an assumption, not a guaranteed realized level.",
+    "It remains unknown whether current repo-market capacity is sufficient to absorb the Sep. 15 combination of settlement demand and tax-driven cash outflows without measurable rate pressure.",
+    "The current liquidity mechanics do not yet establish a reliable directional forecast for equities, crypto, gold, credit or the dollar."
   ],
   "research_frontier": [
+    "Highest priority: treat Sep. 15 as a falsifiable stress test. Compare TGCR-IORB, SOFR median/75th/99th percentiles, EFFR-IORB, standing-repo usage, TGA and reserve changes against the pre-event baseline.",
     "After the Sep. 16 FOMC decision, measure the change in the expected policy path and identify which asset classes should gain or lose from the new real-rate regime.",
-    "Monitor SOFR, TGCR/BGCR percentiles, standing-repo usage and reserve distribution as Treasury cash rebuilds; determine the actual threshold at which a reserve drain becomes market-relevant scarcity.",
-    "Quantify historically how TGA changes affect reserve balances and risk assets specifically in the post-ON-RRP-depletion regime, controlling for Fed asset changes, repo conditions and major macro events.",
-    "Build a point-in-time global liquidity composite across the Fed, ECB, BoJ, PBoC, Treasury cash balances, dollar funding and major stablecoin supply rather than relying on a single balance-sheet proxy.",
+    "Quantify historically how tax dates and Treasury settlements interact when reserves plus ON RRP are below 10% of GDP, controlling for Fed reserve-management purchases and dealer/MMF balance sheets.",
+    "Build a point-in-time global liquidity composite across the Fed, ECB, BoJ, PBoC, Treasury cash balances, dollar funding and major stablecoin supply.",
     "Establish the immutable Money Intelligence forecast ledger before making the first directional forecast that clears the evidence bar."
   ],
   "prediction_scorecard": {
@@ -147,48 +178,43 @@
   "source_notes": [
     {
       "title": "Federal Reserve H.4.1 - Sep. 10, 2026",
-      "summary": "Sep. 9 Wednesday figures: reserve balances $3.0365T, up $107.2B week/week; TGA $843.7B, down $100.7B; securities held outright $6.4683T, essentially flat week/week.",
+      "summary": "Sep. 9 reserve balances $3.0365T, up $107.2B week/week; TGA $843.7B, down $100.7B; securities held outright essentially flat.",
       "source": "https://www.federalreserve.gov/releases/h41/Current/"
     },
     {
+      "title": "Federal Reserve FEDS Note - Aug. 26, 2026",
+      "summary": "Repo-rate sensitivity to Treasury issuance rises sharply at low Fed liquidity. $50B net coupon issuance is associated with less than 1 bp of TGCR-IORB pressure above 12% of GDP but almost 10 bp below 10% of GDP. Day-to-day repo moves are driven strongly by issuance, dealer holdings and MMF cash supply.",
+      "source": "https://www.federalreserve.gov/econres/notes/feds-notes/repo-markets-and-the-feds-balance-sheet-implications-for-monetary-policy-implementation-20260826.html"
+    },
+    {
+      "title": "Q2 2026 nominal GDP",
+      "summary": "Current-dollar GDP was $32.486T at a seasonally adjusted annual rate in Q2 2026.",
+      "source": "https://fred.stlouisfed.org/series/GDP"
+    },
+    {
+      "title": "IRS Sep. 15 tax calendar",
+      "summary": "Sep. 15 is the third estimated-tax installment date for individuals and corporations, alongside several other federal tax deposit deadlines.",
+      "source": "https://www.irs.gov/businesses/small-businesses-self-employed/third-quarter-tax-calendar"
+    },
+    {
+      "title": "U.S. Treasury tentative auction schedule",
+      "summary": "3-year, 10-year and 30-year coupon securities and several bills settle Sep. 15, concentrating Treasury settlement flows on the tax date.",
+      "source": "https://home.treasury.gov/system/files/221/Tentative-Auction-Schedule.pdf"
+    },
+    {
+      "title": "NY Fed repo reference rates through Sep. 10, 2026",
+      "summary": "SOFR 3.62%, SOFR 99th percentile 3.70%, TGCR 99th percentile 3.65%: latest validated data were orderly ahead of the Sep. 15 event window.",
+      "source": "https://www.newyorkfed.org/markets/reference-rates"
+    },
+    {
       "title": "U.S. Treasury marketable borrowing estimate - Aug. 3, 2026",
-      "summary": "Treasury expected $739B of privately held net marketable borrowing in Jul-Sep and assumed a $950B end-September cash balance.",
+      "summary": "Treasury assumed a $950B end-September cash balance.",
       "source": "https://home.treasury.gov/news/press-releases/sb0584"
     },
     {
-      "title": "NY Fed ON RRP - Sep. 11, 2026",
-      "summary": "ON RRP usage was about $5.255B, showing that the old large RRP liquidity buffer is now nearly exhausted.",
-      "source": "https://fred.stlouisfed.org/series/RRPONTSYSAD"
-    },
-    {
-      "title": "NY Fed/FRED SOFR - Sep. 10, 2026",
-      "summary": "SOFR was 3.62%, inside the 3.50%-3.75% federal funds target range, so the latest validated observation did not indicate broad secured-funding scarcity.",
-      "source": "https://fred.stlouisfed.org/series/SOFR"
-    },
-    {
-      "title": "New York Fed standing repo framework - May 14, 2026",
-      "summary": "The standing repo facility supplies overnight funding at the top of the target range and is intended to limit upward pressure in private repo rates. 2026 surveys showed improved willingness among counterparties to use it when economically sensible.",
-      "source": "https://tellerwindow.newyorkfed.org/2026/05/14/surveys-suggest-improved-willingness-by-counterparties-to-use-standing-repo-operations/"
-    },
-    {
-      "title": "BLS CPI - Aug. 2026",
-      "summary": "Headline CPI rose 0.4% m/m and 3.4% y/y; CPI excluding food and energy rose 0.3% m/m and 2.4% y/y.",
-      "source": "https://www.bls.gov/cpi/news.htm"
-    },
-    {
-      "title": "BLS employment - Aug. 2026",
-      "summary": "Payrolls increased 162,000 and unemployment was 4.1%.",
-      "source": "https://www.bls.gov/ces/"
-    },
-    {
       "title": "ECB policy decision - Sep. 10, 2026",
-      "summary": "ECB raised its three key rates 25 bp, taking the deposit facility to 2.50%, citing persistent inflation pressure linked in part to the Middle East conflict.",
+      "summary": "ECB raised its three key rates 25 bp, reinforcing global policy divergence/restriction.",
       "source": "https://www.ecb.europa.eu/press/pr/date/2026/html/ecb.mp260910~314e508016.en.html"
-    },
-    {
-      "title": "U.S. Treasury yield curve - Sep. 11, 2026",
-      "summary": "Treasury published about 4.63% at 2 years and 4.96% at 10 years on Sep. 11, with both higher than earlier in the week.",
-      "source": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?field_tdr_date_value=2026&type=daily_treasury_yield_curve"
     }
   ]
 }
