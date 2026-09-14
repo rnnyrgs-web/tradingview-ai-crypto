@@ -45,7 +45,8 @@ def test_combined_dashboard_defaults_to_unified_all_markets(monkeypatch):
     assert "Current Opportunities &amp; Research" in body or "Current Opportunities & Research" in body
     assert "Open Paper Trades" in body
     assert "DATA INTEGRITY" in body
-    assert "POST-FIX CLEAN" in body
+    assert "CUTOVER" in body
+    assert "NOT VERIFIED" in body
     assert "/dashboard/signals?horizon=" not in body
 
 
