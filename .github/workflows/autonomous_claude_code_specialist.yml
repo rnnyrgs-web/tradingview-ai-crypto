@@ -146,13 +146,6 @@ jobs:
         env:
           STATE_BRANCH: ${{ steps.meta.outputs.state_branch }}
         run: |
-          # Reserves against the single shared fleet_coordination.json under
-          # a short-lived compare-and-swap lock, so this run and any
-          # concurrent OpenAI/Claude run can never both decide against the
-          # same stale snapshot (BUG_REGRESSION_LEDGER.md
-          # FLEET-BUDGET-RACE-001). A genuine 404 for a sibling's state file
-          # (never run yet) counts as zero spend; any other fetch failure
-          # fails this reservation closed.
           python -m orchestration.shared_budget reserve \
             --config orchestration/autonomous_specialist_runner_claude_code.json \
             --role '${{ steps.plan.outputs.role }}' \
@@ -193,7 +186,6 @@ jobs:
           import json, os
           from agents.autonomous_cloud_runner import coordination_task, load_config, load_coordination
           from agents.claude_code_specialist_runner import CONFIG_PATH
-
           role = os.environ["ROLE"]
           task_id = os.environ["TASK_ID"]
           branch = os.environ["BRANCH"]
@@ -202,7 +194,6 @@ jobs:
           task = coordination_task(coord, task_id)
           mission = cfg["roles"][role]["mission"]
           allowed = cfg["roles"][role]["allowed_paths"]
-
           print(f"""You are the autonomous {role} implementation specialist on branch {branch}.
           Mission: {mission}
 
@@ -214,22 +205,12 @@ jobs:
 
           Hard rules, enforced independently of anything you do here (do not rely on your own
           judgment about them -- they are checked mechanically after you finish):
-          - You may write only to paths matching one of: {json.dumps(allowed)}. Anything else is
-            rejected by a post-hoc allowlist check regardless of what you write.
-          - Do NOT run git commit, git push, gh pr create, or any git/gh command. A separate step
-            owns publication; your job is only to edit the working tree and, if useful, run pytest
-            to check your own work.
-          - Never edit orchestration/, agents/, .github/workflows/, AI_STATE.md, AGENTS.md,
-            requirements.txt, Dockerfile, live_promotions.json, or any credential/.env file --
-            these are blocked by orchestration/protected_paths.json regardless of role.
-          - Preserve chronology, untouched OOS, robustness, multiple-testing protection,
-            point-in-time safety, genuine-forward requirements, execution/risk gates, and
-            immutable strategy fingerprints. Never weaken a validation or promotion gate.
-          - Never fabricate data or evidence. Missing or insufficient evidence means the correct
-            outcome is to make no change (or the smallest safe diagnostic change) rather than a
-            fabricated pass.
-          - Make the smallest scientifically/technically safe change that advances the owned task,
-            with relevant tests. If no safe, useful change is justified, make no change.
+          - You may write only to paths matching one of: {json.dumps(allowed)}. Anything else is rejected by a post-hoc allowlist check.
+          - Do NOT run git commit, git push, gh pr create, or any git/gh command.
+          - Never edit orchestration/, agents/, .github/workflows/, AI_STATE.md, AGENTS.md, requirements.txt, Dockerfile, live_promotions.json, or any credential/.env file.
+          - Preserve chronology, untouched OOS, robustness, multiple-testing protection, point-in-time safety, genuine-forward requirements, execution/risk gates, and immutable strategy fingerprints.
+          - Never fabricate data or evidence.
+          - Make the smallest scientifically/technically safe change that advances the owned task, with relevant tests.
           - Finish within your bounded turn budget; do not perform open-ended exploration.
           """)
           PY
@@ -247,15 +228,9 @@ jobs:
         name: Run one bounded Claude Code implementation cycle
         if: steps.credential_gate.outputs.execute == 'true'
         continue-on-error: true
-        # Uses the official anthropics/claude-code-action (see
-        # https://code.claude.com/docs/en/github-actions), pinned to the v1
-        # tag. --allowedTools deliberately omits git/gh/general Bash access:
-        # Claude Code can Read/Write/Edit files and run pytest only, so it
-        # cannot commit, push, or open a PR itself even if instructed to --
-        # publication stays under this workflow's own control, verified by
-        # the allowlist and test steps below.
         uses: anthropics/claude-code-action@v1
         with:
+          github_token: ${{ github.token }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           prompt: ${{ steps.prompt.outputs.prompt }}
           claude_args: "--max-turns ${{ steps.prompt.outputs.max_turns }} --model ${{ steps.prompt.outputs.model }} --allowedTools \"Read,Write,Edit,Bash(pytest*)\""
@@ -263,6 +238,19 @@ jobs:
       - name: Account conservatively for failed model execution
         if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'failure'
         run: |
+          python - <<'PY'
+          import json
+          p='/tmp/runner_state.json'
+          s=json.load(open(p))
+          if not s.get('active_task'):
+              s['active_task']={
+                  'task_id':'${{ steps.plan.outputs.task_id }}',
+                  'role':'${{ steps.plan.outputs.role }}',
+                  'branch':'${{ steps.plan.outputs.branch }}',
+                  'phase':'MODEL_FAILED'
+              }
+              json.dump(s, open(p,'w'), indent=2, sort_keys=True)
+          PY
           python agents/autonomous_cloud_state.py mark-failure \
             --state /tmp/runner_state.json \
             --reason-code MODEL_EXECUTION_FAILURE \
@@ -357,9 +345,6 @@ jobs:
         env:
           STATE_BRANCH: ${{ steps.meta.outputs.state_branch }}
         run: |
-          # Best effort: if this cannot complete (e.g. the runner is being
-          # cancelled), the reservation's own TTL frees it for sibling
-          # engines regardless -- see PENDING_RESERVATION_TTL_SECONDS.
           python -m orchestration.shared_budget clear-reservation \
             --repo "$GITHUB_REPOSITORY" \
             --ref "$STATE_BRANCH" \
