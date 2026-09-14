@@ -208,15 +208,19 @@ def test_all_sealed_research_artifacts_are_bound_to_primary_objective():
         seal_research_payload({"signal_development_objective": "OTHER"})
 
 
-def test_autonomous_cloud_runner_is_bound_to_same_objective_and_current_acc002_state():
+def test_autonomous_cloud_runner_is_bound_to_same_objective_and_current_universal_mission():
     config = json.loads(Path("orchestration/autonomous_specialist_runner.json").read_text(encoding="utf-8"))
     assert config["objective_id"] == PRIMARY_OBJECTIVE_ID
-    assert config["primary_mission"] == PRIMARY_MISSION
+    primary_mission = config["primary_mission"].lower()
+    assert "genuine sustainable after-cost profitability" in primary_mission
+    assert "tradable liquid assets" in primary_mission
+    assert "economically meaningful move duration" in primary_mission
+    assert "genuine forward profitability" in primary_mission
     assert config["policy"]["max_concurrent_agent_runs"] == 1
     assert config["budget"]["project_monthly_ceiling_usd"] == 30.0
-    mission = config["roles"]["data-market"]["mission"]
-    assert "ACC-002" in mission
-    assert "0.80" in mission
-    assert "Top-15" in mission and "Top-30" in mission
-    assert "pre-OOS after-cost edge" in mission
-    assert "7d insufficient-history work low priority" in mission
+    mission = config["roles"]["data-market"]["mission"].lower()
+    assert "all supported asset classes and move durations" in mission
+    assert "diagnose genuine resolved economic losses first" in mission
+    assert "selective wait/meta-label evidence" in mission
+    assert "reject unstable or nonpositive candidates quickly" in mission
+    assert "never weaken chronology" in mission
