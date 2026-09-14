@@ -1,1 +1,1 @@
-{"lock": {"acquired_at": null, "expires_at": null, "holder": null}, "pending_reservations": [{"amount_usd": 0.2, "engine": "claude-code", "expires_at": "2026-09-14T11:11:16Z", "reservation_id": "91faacf1-d712-41b8-b578-6addaaf55d0b", "reserved_at": "2026-09-14T10:26:16Z", "role": "testing-security"}], "version": 1}
+{"lock": {"acquired_at": "2026-09-14T10:27:07Z", "expires_at": "2026-09-14T10:29:07Z", "holder": "clear:91faacf1-d712-41b8-b578-6addaaf55d0b:8bac17fd-7a7d-4a1e-a227-e41716fff84a"}, "pending_reservations": [], "version": 1}
