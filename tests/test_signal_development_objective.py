@@ -208,15 +208,16 @@ def test_all_sealed_research_artifacts_are_bound_to_primary_objective():
         seal_research_payload({"signal_development_objective": "OTHER"})
 
 
-def test_autonomous_cloud_runner_is_bound_to_same_objective_and_current_acc002_state():
+def test_autonomous_cloud_runner_preserves_profitability_and_safety_contract():
     config = json.loads(Path("orchestration/autonomous_specialist_runner.json").read_text(encoding="utf-8"))
     assert config["objective_id"] == PRIMARY_OBJECTIVE_ID
-    assert config["primary_mission"] == PRIMARY_MISSION
+    assert "after-cost profitability" in config["primary_mission"].lower()
     assert config["policy"]["max_concurrent_agent_runs"] == 1
     assert config["budget"]["project_monthly_ceiling_usd"] == 30.0
-    mission = config["roles"]["data-market"]["mission"]
-    assert "ACC-002" in mission
-    assert "0.80" in mission
-    assert "Top-15" in mission and "Top-30" in mission
-    assert "pre-OOS after-cost edge" in mission
-    assert "7d insufficient-history work low priority" in mission
+    assert config["policy"]["automatic_merge"] is False
+    assert config["policy"]["trade_authority"] is False
+    assert config["policy"]["broker_connected"] is False
+    mission = config["roles"]["data-market"]["mission"].lower()
+    assert "highest expected incremental after-cost profitability" in mission
+    assert "reject unstable or nonpositive candidates quickly" in mission
+    assert "never weaken chronology" in mission
