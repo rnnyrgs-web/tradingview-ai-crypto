@@ -52,25 +52,23 @@ def test_config_owns_exactly_one_implementation_role():
     assert config["engine"] == "claude-code"
 
 
-def test_role_permissions_match_the_existing_testing_security_role_exactly():
-    """Keep the legacy testing-security scope while allowing the one explicit
-    Gate A paper-execution file needed for issue #349."""
+def test_role_permissions_match_existing_testing_security_role_plus_resource_proposal():
     from agents.autonomous_orchestrator import load_roles
 
     legacy_allowed_paths = set(load_roles()["testing-security"]["allowed_paths"])
     config_allowed_paths = set(_config()["roles"]["testing-security"]["allowed_paths"])
     assert legacy_allowed_paths.issubset(config_allowed_paths)
+    assert config_allowed_paths - legacy_allowed_paths == {"resource_recommendations_proposed.json"}
 
 
-def test_role_permissions_allow_only_the_explicit_gate_a_production_exception():
+def test_role_permissions_never_touch_production_signal_or_ledger_code():
     config = _config()
-    assert path_allowed(config, "testing-security", "paper_trading.py") is True
-    unrelated_production_files = [
-        "engine.py", "selective_precision.py", "cross_asset_runner.py",
-        "champion_challenger.py", "db.py", "market_data.py",
-        "promotion_manifest.py", "strategy_identity.py",
+    production_files = [
+        "paper_trading.py", "engine.py", "selective_precision.py",
+        "cross_asset_runner.py", "champion_challenger.py", "db.py",
+        "market_data.py", "promotion_manifest.py", "strategy_identity.py",
     ]
-    for path in unrelated_production_files:
+    for path in production_files:
         assert path_allowed(config, "testing-security", path) is False, path
 
 
@@ -133,24 +131,21 @@ def test_no_retry_runner_does_not_multiply_reservation_for_nonexistent_retries()
     config = _config()
     assert config["policy"]["max_retries"] == 0
     assert config["budget"]["provider_retry_safety_multiplier"] == pytest.approx(1.0)
-    # Gate A issue #349 is a justified high-value burst day. Preserve the
-    # shared $30/month ceiling and the fleet's $3/day hard cap while allowing
-    # this implementation lane up to $2 today instead of being stalled by
-    # conservative accounting from failed zero-token cycles.
-    assert config["budget"]["runner_daily_api_budget_usd"] == pytest.approx(2.0)
+    assert config["budget"]["runner_daily_api_budget_usd"] == pytest.approx(1.0)
     assert config["budget"]["fleet_daily_burst_cap_usd"] == pytest.approx(3.0)
     assert config["budget"]["project_monthly_ceiling_usd"] == pytest.approx(30.0)
 
 
-def test_gate_a_mission_explicitly_ignores_stale_generic_coordination_payload():
+def test_post_gate_a_mission_returns_to_general_adversarial_testing():
     config = _config()
-    mission = config["roles"]["testing-security"]["mission"]
-    assert "ISSUE #349" in mission.upper()
-    assert "generic COORD-TEST-001" in mission
-    assert "stale coordination metadata" in mission
-    assert "do not spend model turns rereading broad AI_STATE.md/AGENTS.md" in mission
-    assert "NEVER re-anchors" in mission
-    assert config["roles"]["testing-security"]["max_turns"] == 8
+    role = config["roles"]["testing-security"]
+    mission = role["mission"]
+    assert "COORD-TEST-001" in mission
+    assert "ISSUE #349" not in mission.upper()
+    assert "never touch production strategy/signal/paper-ledger code" in mission
+    assert role["max_turns"] == 8
+    assert role["max_file_read_bytes"] == 20000
+    assert role["max_file_write_bytes"] == 60000
 
 
 def test_claude_code_and_claude_research_roles_never_collide():
