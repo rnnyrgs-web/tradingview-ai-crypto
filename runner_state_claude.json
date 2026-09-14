@@ -1,7 +1,7 @@
 {
   "active_task": null,
-  "last_seen_main_sha": "719f99aec2520ce2eb23941154cc182aa30fdf4f",
-  "next_eligible_at": "2026-09-13T23:23:33Z",
+  "last_seen_main_sha": "a7b297501abf540ce5ca5d6b78526bb7b3153c7c",
+  "next_eligible_at": "2026-09-14T00:35:01Z",
   "paused_reason": "MODEL_EXECUTION_FAILURE",
   "runs": [
     {
@@ -17,10 +17,24 @@
       "started_at": "2026-09-13T23:22:59Z",
       "status": "FAILED_RESERVED",
       "task_id": "COORD-VAL-001"
+    },
+    {
+      "actual_cost_usd": 0.14,
+      "cached_input_tokens": 0,
+      "failure_reason": "MODEL_EXECUTION_FAILURE",
+      "finished_at": "2026-09-14T00:34:01Z",
+      "input_tokens": 0,
+      "model": "claude-haiku-4-5",
+      "output_tokens": 0,
+      "reserved_cost_usd": 0.14,
+      "role": "signal-accuracy",
+      "started_at": "2026-09-14T00:33:55Z",
+      "status": "FAILED_RESERVED",
+      "task_id": "COORD-VAL-001"
     }
   ],
   "task_failures": {
-    "COORD-VAL-001": 1
+    "COORD-VAL-001": 2
   },
   "version": 1
 }
