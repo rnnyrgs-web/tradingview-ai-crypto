@@ -34,7 +34,7 @@
     "project_monthly_ceiling_usd": 30.0,
     "baseline_infrastructure_reserve_usd": 0.0,
     "runner_monthly_api_budget_usd": 29.0,
-    "runner_daily_api_budget_usd": 2.0,
+    "runner_daily_api_budget_usd": 1.0,
     "pause_buffer_usd": 1.0,
     "provider_retry_safety_multiplier": 1.0,
     "fleet_pacing_burst_allowance_usd": 2.0,
@@ -61,17 +61,15 @@
       "max_output_tokens_per_turn": 2000,
       "reserved_max_input_tokens_per_run": 150000,
       "reserved_max_output_tokens_per_run": 10000,
-      "max_file_read_bytes": 30000,
-      "max_file_write_bytes": 70000,
+      "max_file_read_bytes": 20000,
+      "max_file_write_bytes": 60000,
       "allowed_paths": [
         "tests/test_*.py",
         "SECURITY.md",
         "docs/security_*.md",
-        "paper_trading.py",
-        "docs/execution_*.md",
         "resource_recommendations_proposed.json"
       ],
-      "mission": "TEMPORARY AUTHORITATIVE GATE-A MISSION FOR ISSUE #349. This is a surgical repair and MUST finish inside the existing 8-turn safety ceiling. For this bounded emergency repair, do not spend model turns rereading broad AI_STATE.md/AGENTS.md; the relevant safety invariants are repeated in the workflow hard rules and this mission. The later generic COORD-TEST-001 payload is stale coordination metadata for this assignment; do NOT analyze it. You already have the exact scope. TURN 1: Read ONLY paper_trading.py and tests/test_paper_trading.py. Do not search, glob, grep, browse other files, or run broad tests. TURNS 2-3: Edit ONLY paper_trading.py so executable fill NEVER re-anchors the signal's predeclared absolute stop or target. At executable entry fill, keep the signal's original absolute stop_loss and target_2 unchanged. For LONG require original_stop < fill < original_target; for SHORT require original_target < fill < original_stop. If invalid, fail closed before opening a trade and emit a durable technical rejection reason such as invalid_fill_geometry. Recompute risk_per_unit as abs(fill-original_stop), then size from the existing risk budget/caps. Never re-anchor stop/target around fill and never invent a slippage threshold. TURN 4: Create ONLY tests/test_paper_fill_geometry.py with four focused cases: LONG preserves absolute stop/target, SHORT preserves absolute stop/target, invalid fill geometry rejects without opening, and existing historical rows are not rewritten. Reuse existing test helpers/patterns from tests/test_paper_trading.py rather than exploring other tests. TURNS 5-6: Run ONLY pytest -q tests/test_paper_fill_geometry.py tests/test_paper_trading.py and fix only failures caused by this patch. TURN 7: Re-read the changed hunk(s) only and verify append-only history, broker-disconnected behavior, and no unrelated threshold/fingerprint changes. TURN 8: STOP and return READY_FOR_PR if changed tests pass, otherwise BLOCKED with the exact blocker. Do not use Bash except the allowed targeted pytest command. Do not alter live_promotions, historical paper/prediction rows, strategy fingerprints, budgets, model settings, orchestration outside this file, or trading authority."
+      "mission": "Own coordination task COORD-TEST-001 as the adversarial implementation/testing engine for the universal multi-asset research system. Strengthen tests for coordination schema validation, duplicate ownership, invalid dependency/status detection, protected-path enforcement, no-direct-main-write, no-automatic-merge, cost ceilings, broker-disconnected invariants, point-in-time data safety, after-cost evaluation, immutable holdouts and prevention of accidental promotion from research-only cross-asset results into trading authority. Attack existing specialist work; never merge it, never weaken a gate to make a test pass, never touch production strategy/signal/paper-ledger code outside allowed paths. Missing evidence is WAIT / RESEARCH_ONLY. TURN-BUDGET DISCIPLINE: finish within eight model turns. Turn 1: minimum reads. Turns 2-4: implement the smallest regression test and run the directly relevant test. Turns 5-7: fix directly observed failures and verify once. Turn 8: return READY_FOR_PR, NO_CHANGE, or BLOCKED; no extra exploration."
     }
   }
 }
