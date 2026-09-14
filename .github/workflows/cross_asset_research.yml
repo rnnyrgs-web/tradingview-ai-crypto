@@ -1,0 +1,45 @@
+name: Cross-Asset Research
+
+on:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+  push:
+    paths:
+      - "cross_asset_research.py"
+      - ".github/workflows/cross_asset_research.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cross-asset-research
+  cancel-in-progress: false
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Research stocks ETFs indices FX rates and commodities
+        run: |
+          python - <<'PY' > cross_asset_research.json
+          import json
+          from cross_asset_research import run_cross_asset_research
+          print(json.dumps(run_cross_asset_research(), indent=2))
+          PY
+      - name: Upload research evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: cross-asset-research-${{ github.run_id }}
+          path: cross_asset_research.json
+          retention-days: 30
