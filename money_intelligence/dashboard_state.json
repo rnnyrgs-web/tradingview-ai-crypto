@@ -1,27 +1,123 @@
 {
   "schema_version": 1,
-  "as_of": null,
-  "status": "BOOTSTRAP_LEARNING",
+  "as_of": "2026-09-14T22:12:00Z",
+  "status": "INITIAL_VALIDATED_ASSESSMENT",
   "world_money_map": {
-    "summary": "No Money Intelligence research cycle has published a validated current-state assessment yet.",
-    "regime": "UNKNOWN",
-    "liquidity": "UNKNOWN",
-    "credit": "UNKNOWN",
-    "policy": "UNKNOWN",
-    "risk_appetite": "UNKNOWN"
+    "summary": "The initial picture is mixed rather than broadly risk-on or risk-off. U.S. banking-system liquidity received a large one-week boost as the Treasury General Account fell by about $101B and reserve balances rose by about $107B, while the Fed's securities portfolio was essentially flat. That easing is likely temporary: Treasury still assumes a $950B end-September cash balance versus about $844B on Sep. 9, implying a potential cash rebuild of roughly $106B that could drain reserves if not offset elsewhere. Meanwhile policy is not globally easing: the ECB raised rates 25 bp on Sep. 10, U.S. headline CPI was 3.4% y/y in August, and U.S. Treasury yields moved higher into the Sep. 15-16 FOMC meeting. The correct current stance is therefore transition / event-risk, not a high-confidence directional macro trade.",
+    "regime": "TRANSITION / EVENT RISK",
+    "liquidity": "SHORT-TERM US EASING, REVERSAL RISK",
+    "credit": "NO VALIDATED STRESS SIGNAL YET",
+    "policy": "RESTRICTIVE / DIVERGENT",
+    "risk_appetite": "MIXED / UNCONFIRMED"
   },
-  "money_flows": [],
-  "opportunities": [],
-  "risks": [],
-  "causal_chains": [],
-  "discoveries": [],
-  "changes_since_previous": [],
+  "money_flows": [
+    {
+      "title": "Treasury cash runoff temporarily released reserves",
+      "direction": "TREASURY -> BANK RESERVES",
+      "horizon": "1 week",
+      "confidence": "HIGH",
+      "summary": "On the Fed's Sep. 9 balance sheet, the Treasury General Account fell by about $101B from the prior Wednesday while reserve balances rose by about $107B. With the Fed securities portfolio nearly unchanged, Treasury cash movements were the dominant observable source of the reserve increase.",
+      "source": "Federal Reserve H.4.1, released Sep. 10, 2026"
+    },
+    {
+      "title": "Quarter-end Treasury cash rebuilding can reverse part of that easing",
+      "direction": "PRIVATE CASH / BANK RESERVES -> TREASURY",
+      "horizon": "through Sep. 30",
+      "confidence": "MODERATE",
+      "summary": "Treasury's Aug. 3 financing estimate assumes a $950B end-September cash balance. The Sep. 9 TGA stood near $844B, leaving roughly $106B to rebuild if the target is met. Because ON RRP usage is now only a few billion dollars, there is much less money-fund RRP cash available to absorb a large TGA rebuild than in earlier cycles, so a larger share could pressure bank reserves or other private liquidity sources.",
+      "invalidation": "Treasury materially undershoots its $950B cash target, or offsetting Fed/liability flows replenish reserves.",
+      "source": "U.S. Treasury Aug. 3 borrowing estimate; Fed H.4.1; NY Fed/FRED ON RRP data through Sep. 11"
+    },
+    {
+      "title": "Global policy is not moving in one easing direction",
+      "direction": "CASH / BONDS REPRICE TOWARD HIGHER REQUIRED RETURNS",
+      "horizon": "weeks to months",
+      "confidence": "HIGH",
+      "summary": "The ECB raised all three key policy rates by 25 bp on Sep. 10 because energy and conflict-related inflation pressure remained elevated. In the U.S., the last FOMC target range was 3.50%-3.75% and the next decision is Sep. 16. This argues against treating the current environment as a synchronized global liquidity boom.",
+      "source": "ECB Sep. 10 policy decision; Federal Reserve July 29 statement and Sep. calendar"
+    }
+  ],
+  "opportunities": [
+    {
+      "title": "Preserve cash optionality into the Sep. 16 FOMC decision",
+      "action": "WAIT",
+      "horizon": "1-3 days",
+      "confidence": "MODERATE",
+      "thesis": "The current causal signals conflict: short-term reserve liquidity improved sharply, but inflation remains above target, Treasury yields rose into the meeting, the ECB just tightened, and U.S. policy uncertainty resolves within roughly two days. The expected value of forcing a broad directional macro position before the FOMC is not yet demonstrated.",
+      "invalidation": "A clear pre-meeting dislocation appears with strong asymmetric payoff and independently verified flow support.",
+      "source": "Fed H.4.1, BLS CPI/employment, Treasury yields, ECB policy decision"
+    }
+  ],
+  "risks": [
+    {
+      "title": "TGA rebuild can become a near-term liquidity drain",
+      "direction": "LIQUIDITY DRAIN RISK",
+      "horizon": "2 weeks",
+      "confidence": "MODERATE",
+      "summary": "If Treasury rebuilds the TGA toward its $950B quarter-end assumption from roughly $844B, the cash transfer can absorb private liquidity. With ON RRP nearly exhausted, the buffering channel is much smaller than during the 2021-2024 era.",
+      "invalidation": "The TGA does not rebuild materially, or reserve-supplying offsets dominate."
+    },
+    {
+      "title": "Rates can stay high even if growth remains resilient",
+      "direction": "DURATION / HIGH-VALUATION ASSET RISK",
+      "horizon": "weeks to months",
+      "confidence": "MODERATE",
+      "summary": "August payrolls rose 162k with unemployment at 4.1%, while August CPI was 3.4% y/y and 0.4% m/m. A resilient labor market plus elevated inflation can keep required returns high. On Sep. 11 the Treasury curve showed roughly 4.63% at 2 years and 4.96% at 10 years.",
+      "invalidation": "Inflation falls faster than expected and policy guidance turns materially more accommodative without a growth shock."
+    }
+  ],
+  "causal_chains": [
+    {
+      "title": "Treasury cash drawdown -> reserve injection",
+      "confidence": "HIGH",
+      "summary": "TGA falls -> Treasury spends cash held at the Fed -> payments land in private bank deposits -> bank reserve balances rise -> short-term balance-sheet liquidity improves -> risk assets may receive support if the cash is redeployed rather than retained. The Sep. 2-9 data show this mechanism clearly, but it is a liquidity mechanism, not proof of a durable bull regime.",
+      "source": "Federal Reserve H.4.1"
+    },
+    {
+      "title": "Quarter-end TGA rebuild -> potential private liquidity drain",
+      "confidence": "MODERATE",
+      "summary": "Treasury issues/collects more cash than it spends -> TGA rises -> cash leaves bank deposits / money markets -> reserves can fall unless ON RRP or another Fed liability supplies the offset -> marginal financing conditions tighten -> leveraged and liquidity-sensitive assets become more vulnerable.",
+      "source": "Treasury financing estimate + Fed balance-sheet mechanics"
+    },
+    {
+      "title": "Energy inflation -> policy restraint -> higher discount rates",
+      "confidence": "HIGH",
+      "summary": "Middle East / energy pressure -> higher headline inflation and inflation uncertainty -> central banks maintain or raise restrictive rates -> sovereign yields / required returns rise -> long-duration valuations face compression unless earnings or growth expectations compensate. The ECB's Sep. 10 hike is direct current evidence of this chain.",
+      "source": "ECB Sep. 10 decision; BLS Aug. CPI"
+    }
+  ],
+  "discoveries": [
+    {
+      "title": "Reserve growth and Fed asset growth are not the same thing",
+      "status": "SUPPORTED",
+      "confidence": "HIGH",
+      "summary": "A large weekly reserve increase can come from liability-side shifts such as a falling Treasury General Account even when the Fed's securities holdings barely change. Therefore a 'liquidity' model that watches only the size of the Fed asset portfolio can miss economically important short-term injections and drains.",
+      "source": "Fed H.4.1 Sep. 10, 2026"
+    },
+    {
+      "title": "Near-zero ON RRP changes Treasury-liquidity transmission",
+      "status": "SUPPORTED / REGIME-SPECIFIC",
+      "confidence": "MODERATE",
+      "summary": "ON RRP usage was only about $5.3B on Sep. 11. When this buffer is tiny, a future TGA rebuild cannot be absorbed mainly by money funds simply shifting cash out of ON RRP, so the reserve impact of Treasury cash accumulation can be larger than in periods when ON RRP held hundreds of billions or trillions.",
+      "source": "NY Fed source via FRED ON RRP series"
+    }
+  ],
+  "changes_since_previous": [
+    "First validated Money Intelligence assessment published; bootstrap UNKNOWN state has ended.",
+    "Initial high-information-value finding: current U.S. liquidity improved because Treasury cash fell, not because of broad Fed balance-sheet expansion.",
+    "No broad asset BUY/SELL thesis is being promoted before the Sep. 16 FOMC decision because causal evidence is mixed."
+  ],
   "unknowns": [
-    "Initial research cycle has not completed yet. The dashboard intentionally shows no invented market conclusions."
+    "The Sep. 15-16 FOMC decision and guidance are not known yet and can materially change the rates/liquidity interpretation.",
+    "Treasury's $950B end-September cash balance is an assumption, not a guaranteed realized level; the size/timing of the actual rebuild remains uncertain.",
+    "The current data establish a short-term reserve-liquidity mechanism, but do not yet prove how strongly that mechanism predicts equities, crypto, gold, credit or the dollar in the present regime.",
+    "August PCE data are not scheduled until Sep. 30, so current inflation assessment relies on CPI plus the latest available July PCE data."
   ],
   "research_frontier": [
-    "Build and validate the initial world-money causal map using point-in-time evidence.",
-    "Establish immutable forecast and scorecard history before claiming predictive skill."
+    "After the Sep. 16 FOMC decision, measure the change in the expected policy path and identify which asset classes should gain or lose from the new real-rate regime.",
+    "Quantify historically how TGA changes affect reserve balances and risk assets specifically in the post-ON-RRP-depletion regime, controlling for Fed asset changes and major macro events.",
+    "Build a point-in-time global liquidity composite across the Fed, ECB, BoJ, PBoC, Treasury cash balances, dollar funding and major stablecoin supply rather than relying on a single balance-sheet proxy.",
+    "Establish the immutable Money Intelligence forecast ledger before making the first directional forecast that clears the evidence bar."
   ],
   "prediction_scorecard": {
     "frozen": 0,
@@ -30,5 +126,41 @@
     "brier_score": null,
     "calibration_status": "LEARNING"
   },
-  "source_notes": []
+  "source_notes": [
+    {
+      "title": "Federal Reserve H.4.1 - Sep. 10, 2026",
+      "summary": "Sep. 9 Wednesday figures: reserve balances $3.0365T, up $107.2B week/week; TGA $843.7B, down $100.7B; securities held outright $6.4683T, essentially flat week/week.",
+      "source": "https://www.federalreserve.gov/releases/h41/Current/"
+    },
+    {
+      "title": "U.S. Treasury marketable borrowing estimate - Aug. 3, 2026",
+      "summary": "Treasury expected $739B of privately held net marketable borrowing in Jul-Sep and assumed a $950B end-September cash balance.",
+      "source": "https://home.treasury.gov/news/press-releases/sb0584"
+    },
+    {
+      "title": "NY Fed ON RRP - Sep. 11, 2026",
+      "summary": "ON RRP usage was about $5.255B, showing that the old large RRP liquidity buffer is now nearly exhausted.",
+      "source": "https://fred.stlouisfed.org/series/RRPONTSYSAD"
+    },
+    {
+      "title": "BLS CPI - Aug. 2026",
+      "summary": "Headline CPI rose 0.4% m/m and 3.4% y/y; CPI excluding food and energy rose 0.3% m/m and 2.4% y/y.",
+      "source": "https://www.bls.gov/cpi/news.htm"
+    },
+    {
+      "title": "BLS employment - Aug. 2026",
+      "summary": "Payrolls increased 162,000 and unemployment was 4.1%.",
+      "source": "https://www.bls.gov/ces/"
+    },
+    {
+      "title": "ECB policy decision - Sep. 10, 2026",
+      "summary": "ECB raised its three key rates 25 bp, taking the deposit facility to 2.50%, citing persistent inflation pressure linked in part to the Middle East conflict.",
+      "source": "https://www.ecb.europa.eu/press/pr/date/2026/html/ecb.mp260910~314e508016.en.html"
+    },
+    {
+      "title": "U.S. Treasury yield curve - Sep. 11, 2026",
+      "summary": "Treasury published about 4.63% at 2 years and 4.96% at 10 years on Sep. 11, with both higher than earlier in the week.",
+      "source": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?field_tdr_date_value=2026&type=daily_treasury_yield_curve"
+    }
+  ]
 }
