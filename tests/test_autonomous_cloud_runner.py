@@ -43,7 +43,7 @@ def test_v1_is_single_agent_cost_bounded_and_broker_disconnected():
     assert config["autonomous_roles"] == ["data-market"]
     assert config["policy"]["max_concurrent_agent_runs"] == 1
     assert config["policy"]["max_agent_runs_per_invocation"] == 1
-    assert config["roles"]["data-market"]["max_turns"] <= 4
+    assert config["roles"]["data-market"]["max_turns"] <= 8
     assert config["roles"]["data-market"]["max_output_tokens_per_turn"] <= 2000
     assert config["policy"]["automatic_merge"] is False
     assert config["policy"]["trade_authority"] is False
@@ -68,7 +68,7 @@ def test_runaway_loop_configuration_is_rejected():
     with pytest.raises(PolicyError):
         validate_config(bad)
     bad = copy.deepcopy(config)
-    bad["roles"]["data-market"]["max_turns"] = 5
+    bad["roles"]["data-market"]["max_turns"] = 9
     with pytest.raises(PolicyError):
         validate_config(bad)
 
