@@ -139,6 +139,17 @@ def test_no_retry_runner_does_not_multiply_reservation_for_nonexistent_retries()
     assert config["budget"]["project_monthly_ceiling_usd"] == pytest.approx(30.0)
 
 
+def test_gate_a_mission_explicitly_ignores_stale_generic_coordination_payload():
+    config = _config()
+    mission = config["roles"]["testing-security"]["mission"]
+    assert "ISSUE #349" in mission.upper()
+    assert "generic COORD-TEST-001" in mission
+    assert "stale coordination metadata" in mission
+    assert "do not spend model turns rereading broad AI_STATE.md/AGENTS.md" in mission
+    assert "NEVER re-anchors" in mission
+    assert config["roles"]["testing-security"]["max_turns"] == 8
+
+
 def test_claude_code_and_claude_research_roles_never_collide():
     """The two new engines own disjoint coordination roles by construction
     (signal-accuracy vs testing-security), so their deterministic claim
