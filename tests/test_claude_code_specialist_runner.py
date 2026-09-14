@@ -133,9 +133,12 @@ def test_no_retry_runner_does_not_multiply_reservation_for_nonexistent_retries()
     config = _config()
     assert config["policy"]["max_retries"] == 0
     assert config["budget"]["provider_retry_safety_multiplier"] == pytest.approx(1.0)
-    # Preserve the existing $1/day and $30/month ceilings; only remove the
-    # stale 3x retry cushion when this runner cannot retry within a cycle.
-    assert config["budget"]["runner_daily_api_budget_usd"] == pytest.approx(1.0)
+    # Gate A issue #349 is a justified high-value burst day. Preserve the
+    # shared $30/month ceiling and the fleet's $3/day hard cap while allowing
+    # this implementation lane up to $2 today instead of being stalled by
+    # conservative accounting from failed zero-token cycles.
+    assert config["budget"]["runner_daily_api_budget_usd"] == pytest.approx(2.0)
+    assert config["budget"]["fleet_daily_burst_cap_usd"] == pytest.approx(3.0)
     assert config["budget"]["project_monthly_ceiling_usd"] == pytest.approx(30.0)
 
 
