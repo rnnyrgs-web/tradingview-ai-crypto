@@ -1,0 +1,1 @@
+Scheduled Anthropic-backed GitHub Actions were intentionally disabled because recurring paid Anthropic API usage was not authorized. Local Claude Code via the user's Claude subscription remains unaffected. Re-enable paid scheduled runners only with explicit owner approval and preserved project budget controls.
