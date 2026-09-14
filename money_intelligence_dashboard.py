@@ -50,13 +50,24 @@ def _list_cards(items, empty_message, kind="neutral"):
             direction = item.get("action") or item.get("direction") or item.get("status") or ""
             horizon = item.get("horizon") or ""
             confidence = item.get("confidence")
-            meta = " · ".join(x for x in [_esc(direction) if direction else "", _esc(horizon) if horizon else "", f"confidence {_esc(confidence)}" if confidence is not None else ""] if x)
+            meta_parts = []
+            if direction:
+                meta_parts.append(_esc(direction))
+            if horizon:
+                meta_parts.append(_esc(horizon))
+            if confidence is not None:
+                meta_parts.append(f"confidence {_esc(confidence)}")
+            meta = " · ".join(meta_parts)
             extra = []
             if item.get("invalidation"):
                 extra.append(f"<b>Invalidation:</b> {_esc(item.get('invalidation'))}")
             if item.get("source"):
                 extra.append(f"<b>Source:</b> {_esc(item.get('source'))}")
-            out.append(f'<article class="card {kind}"><h3>{_esc(title)}</h3><div class="meta">{meta}</div><p>{_esc(body)}</p>{"<p class=\"small\">" + "<br>".join(extra) + "</p>" if extra else ""}</article>')
+            extra_html = f'<p class="small">{"<br>".join(extra)}</p>' if extra else ""
+            out.append(
+                f'<article class="card {kind}"><h3>{_esc(title)}</h3>'
+                f'<div class="meta">{meta}</div><p>{_esc(body)}</p>{extra_html}</article>'
+            )
         else:
             out.append(f'<article class="card {kind}"><p>{_esc(item)}</p></article>')
     return "".join(out)
