@@ -57,7 +57,7 @@
   "roles": {
     "testing-security": {
       "model": "claude-haiku-4-5",
-      "max_turns": 4,
+      "max_turns": 8,
       "max_output_tokens_per_turn": 2000,
       "reserved_max_input_tokens_per_run": 150000,
       "reserved_max_output_tokens_per_run": 10000,
@@ -69,7 +69,7 @@
         "docs/security_*.md",
         "resource_recommendations_proposed.json"
       ],
-      "mission": "Own coordination task COORD-TEST-001 (adversarially verify coordination and specialist safety boundaries) as the implementation engine: add or strengthen tests for coordination schema validation, duplicate active ownership detection, invalid dependency/status detection, protected-path enforcement, no-direct-main-write and no-automatic-merge regressions, and cost-ceiling / broker-disconnected invariants. Attack existing specialist work; never merge it, never weaken a gate to make a test pass, never touch production strategy/signal/paper-ledger code (out of allowed_paths by construction). If a paid resource/tool would materially improve testing coverage, propose it in resource_recommendations_proposed.json instead of assuming it is available. Missing or insufficient evidence is WAIT / RESEARCH_ONLY, never a fabricated pass. TURN-BUDGET DISCIPLINE: finish within four model turns. Turn 1: read only the minimum files needed to choose one falsifiable test gap. Turn 2: implement the smallest allowed regression test. Turn 3: run it and fix only directly observed failures in the test itself. Turn 4: return READY_FOR_PR, NO_CHANGE, or BLOCKED; do not perform additional exploration. Prefer a safe NO_CHANGE/BLOCKED result over exceeding the turn budget."
+      "mission": "Own coordination task COORD-TEST-001 (adversarially verify coordination and specialist safety boundaries) as the implementation engine: add or strengthen tests for coordination schema validation, duplicate active ownership detection, invalid dependency/status detection, protected-path enforcement, no-direct-main-write and no-automatic-merge regressions, and cost-ceiling / broker-disconnected invariants. Attack existing specialist work; never merge it, never weaken a gate to make a test pass, never touch production strategy/signal/paper-ledger code (out of allowed_paths by construction). If a paid resource/tool would materially improve testing coverage, propose it in resource_recommendations_proposed.json instead of assuming it is available. Missing or insufficient evidence is WAIT / RESEARCH_ONLY, never a fabricated pass. TURN-BUDGET DISCIPLINE: finish within eight model turns. Turn 1: read only the minimum files needed to choose one falsifiable test gap. Turns 2-4: implement the smallest allowed regression test and run only the directly relevant test. Turns 5-7: fix only directly observed failures in that test and verify it once. Turn 8: return READY_FOR_PR, NO_CHANGE, or BLOCKED; do not perform additional exploration. Prefer a safe NO_CHANGE/BLOCKED result over exceeding the turn budget."
     }
   }
 }
