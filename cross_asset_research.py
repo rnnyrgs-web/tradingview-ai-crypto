@@ -1,17 +1,16 @@
 """Research-only non-crypto market study. No trade authority or broker actions."""
-import math, statistics, uuid
-from urllib.parse import quote
+import csv, io, math, statistics, uuid
 import httpx
 from config import SUPABASE_URL, SUPABASE_SECRET_KEY
 
 H=5
 ASSETS=[
-("SPY","SPY","EQUITY_INDEX"),("QQQ","QQQ","EQUITY_INDEX"),("IWM","IWM","EQUITY_INDEX"),("DIA","DIA","EQUITY_INDEX"),
-("SMH","SMH","SECTOR_ETF"),("XLE","XLE","SECTOR_ETF"),("XLF","XLF","SECTOR_ETF"),("TLT","TLT","RATES"),("HYG","HYG","CREDIT"),
-("NVDA","NVDA","STOCK"),("AAPL","AAPL","STOCK"),("MSFT","MSFT","STOCK"),("AMZN","AMZN","STOCK"),("META","META","STOCK"),("GOOGL","GOOGL","STOCK"),("TSLA","TSLA","STOCK"),("AMD","AMD","STOCK"),("AVGO","AVGO","STOCK"),
-("GOLD","GC=F","COMMODITY"),("SILVER","SI=F","COMMODITY"),("OIL","CL=F","COMMODITY"),("NATGAS","NG=F","COMMODITY"),("COPPER","HG=F","COMMODITY"),
-("EURUSD","EURUSD=X","FX"),("GBPUSD","GBPUSD=X","FX"),("USDJPY","JPY=X","FX"),("AUDUSD","AUDUSD=X","FX"),("VIX","^VIX","VOLATILITY")]
-http=httpx.Client(timeout=30.0,follow_redirects=True)
+("SPY","spy.us","EQUITY_INDEX"),("QQQ","qqq.us","EQUITY_INDEX"),("IWM","iwm.us","EQUITY_INDEX"),("DIA","dia.us","EQUITY_INDEX"),
+("SMH","smh.us","SECTOR_ETF"),("XLE","xle.us","SECTOR_ETF"),("XLF","xlf.us","SECTOR_ETF"),("TLT","tlt.us","RATES"),("HYG","hyg.us","CREDIT"),
+("NVDA","nvda.us","STOCK"),("AAPL","aapl.us","STOCK"),("MSFT","msft.us","STOCK"),("AMZN","amzn.us","STOCK"),("META","meta.us","STOCK"),("GOOGL","googl.us","STOCK"),("TSLA","tsla.us","STOCK"),("AMD","amd.us","STOCK"),("AVGO","avgo.us","STOCK"),
+("GOLD","gld.us","COMMODITY_ETF"),("SILVER","slv.us","COMMODITY_ETF"),("OIL","uso.us","COMMODITY_ETF"),("NATGAS","ung.us","COMMODITY_ETF"),("COPPER","cper.us","COMMODITY_ETF"),
+("EURUSD","eurusd","FX"),("GBPUSD","gbpusd","FX"),("USDJPY","usdjpy","FX"),("AUDUSD","audusd","FX"),("VXX","vxx.us","VOLATILITY_ETP")]
+http=httpx.Client(timeout=30.0,follow_redirects=True,headers={"User-Agent":"Mozilla/5.0 research-only market study"})
 
 def _hdr(prefer=None):
  h={"apikey":SUPABASE_SECRET_KEY,"Authorization":f"Bearer {SUPABASE_SECRET_KEY}","Content-Type":"application/json"}
@@ -19,12 +18,10 @@ def _hdr(prefer=None):
  return h
 
 def _history(ticker):
- u=f"https://query1.finance.yahoo.com/v8/finance/chart/{quote(ticker,safe='')}"
- r=http.get(u,params={"range":"5y","interval":"1d","events":"history"});r.raise_for_status();j=r.json()
- x=(((j.get("chart") or {}).get("result") or [None])[0]) or {};q=(((x.get("indicators") or {}).get("quote") or [{}])[0])
+ r=http.get("https://stooq.com/q/d/l/",params={"s":ticker,"i":"d"});r.raise_for_status()
  out=[]
- for c in q.get("close") or []:
-  try:v=float(c)
+ for row in csv.DictReader(io.StringIO(r.text)):
+  try:v=float(row.get("Close") or 0)
   except (TypeError,ValueError):continue
   if math.isfinite(v) and v>0:out.append(v)
  return out
@@ -54,9 +51,9 @@ def run_cross_asset_research():
  for symbol,ticker,cls in ASSETS:
   try:
    x=_study(_history(ticker))
-   if x:rows.append({"scan_id":scan,"symbol":symbol,"provider_symbol":ticker,"asset_class":cls,"horizon_days":H,"source":"Yahoo public chart API","research_only":True,**x,"details":{"trade_authority":False,"method":"5d momentum + realized-vol forward study"}})
-   else:fail.append(symbol)
-  except Exception:fail.append(symbol)
+   if x:rows.append({"scan_id":scan,"symbol":symbol,"provider_symbol":ticker,"asset_class":cls,"horizon_days":H,"source":"Stooq public daily history","research_only":True,**x,"details":{"trade_authority":False,"method":"5d momentum + realized-vol forward study","underlying_or_proxy":"tradable ETF/equity/FX"}})
+   else:fail.append({"symbol":symbol,"reason":"insufficient_history"})
+  except Exception as exc:fail.append({"symbol":symbol,"reason":type(exc).__name__})
  rows.sort(key=lambda x:x["research_score"],reverse=True)
  if rows and SUPABASE_URL and SUPABASE_SECRET_KEY:
   r=http.post(f"{SUPABASE_URL}/rest/v1/cross_asset_research",headers=_hdr("return=minimal"),json=rows)
