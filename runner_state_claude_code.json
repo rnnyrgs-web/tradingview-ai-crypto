@@ -1,8 +1,15 @@
 {
-  "active_task": null,
-  "last_seen_main_sha": "f82306994cb195ac595f4790a9ab1f59dfef3fde",
+  "active_task": {
+    "branch": "auto/testing-security/coord-test-001",
+    "failure_count": 4,
+    "failure_reason": "MODEL_EXECUTION_FAILURE",
+    "phase": "CI_FAILED",
+    "role": "testing-security",
+    "task_id": "COORD-TEST-001"
+  },
+  "last_seen_main_sha": "a37da7cda625cebb07bc1629f6077a57c4dab9d0",
   "next_eligible_at": null,
-  "paused_reason": null,
+  "paused_reason": "TASK_RETRY_LIMIT",
   "runs": [
     {
       "actual_cost_usd": 0.2,
@@ -45,10 +52,24 @@
       "started_at": "2026-09-14T05:36:45Z",
       "status": "FAILED_RESERVED",
       "task_id": "COORD-TEST-001"
+    },
+    {
+      "actual_cost_usd": 0.2,
+      "cached_input_tokens": 0,
+      "failure_reason": "MODEL_EXECUTION_FAILURE",
+      "finished_at": "2026-09-14T10:27:07Z",
+      "input_tokens": 0,
+      "model": "claude-haiku-4-5",
+      "output_tokens": 0,
+      "reserved_cost_usd": 0.2,
+      "role": "testing-security",
+      "started_at": "2026-09-14T10:27:07Z",
+      "status": "FAILED_RESERVED",
+      "task_id": "COORD-TEST-001"
     }
   ],
   "task_failures": {
-    "COORD-TEST-001": 3
+    "COORD-TEST-001": 4
   },
   "version": 1
 }
