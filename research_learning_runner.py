@@ -1,4 +1,4 @@
-"""Lightweight read-only worker that learns from resolved forecasts."""
+"""Lightweight read-only worker that learns from resolved forecasts and paper P&L."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 
 from db import fetch_shadow_predictions
+from paper_db import fetch_all_paper_trades
 from research_cross_sectional_diagnostics import build_cross_sectional_diagnostics
 from research_economic_calibration import build_economic_calibration
 from research_ensemble_diversity import build_ensemble_diversity
@@ -17,6 +18,7 @@ from research_learning_state import append_lesson, load_state
 from research_meta_signal_trust import build_meta_signal_trust
 from research_meta_wait import build_meta_wait_diagnostics
 from research_microstructure_veto import build_microstructure_veto
+from research_paper_loss_attribution import build_paper_loss_attribution, merge_paper_priorities
 from research_regime_strategy_router import build_regime_strategy_router
 from research_selective_wait_fusion import build_selective_wait_fusion
 from selective_precision import selective_precision_summary
@@ -39,13 +41,15 @@ def _priority_lesson(report):
             "samples": top.get("samples"),
             "wrong_rate": top.get("wrong_rate"),
             "priority_score": top.get("priority_score"),
+            "economic_harm_usd": top.get("economic_harm_usd"),
         },
-        "recommended_next_test": "Design a predeclared restrictive filter or challenger and validate it on fresh chronological/OOS evidence.",
+        "recommended_next_test": "Design a predeclared restrictive filter or challenger and validate it on fresh chronological/OOS/forward evidence.",
     }
 
 
-def build_learning_report(rows):
-    diagnostics = learning_diagnostics(rows)
+def build_learning_report(rows, paper_trades=None):
+    paper_loss = build_paper_loss_attribution(paper_trades or [])
+    diagnostics = merge_paper_priorities(learning_diagnostics(rows), paper_loss)
     selective = selective_precision_summary(rows)
     meta_wait = build_meta_wait_diagnostics(rows)
     regime_strategy = build_regime_strategy_router(rows)
@@ -78,6 +82,7 @@ def build_learning_report(rows):
         "promotion_authority": False,
         "automatic_strategy_mutation": False,
         "diagnostics": diagnostics,
+        "paper_trade_loss_attribution": paper_loss,
         "selective_precision": selective,
         "meta_wait_economic_diagnostics": meta_wait,
         "regime_strategy_router": regime_strategy,
@@ -98,7 +103,8 @@ def build_learning_report(rows):
 
 def main():
     rows = fetch_shadow_predictions(limit=10000)
-    report = build_learning_report(rows)
+    paper_trades = fetch_all_paper_trades(limit=10000)
+    report = build_learning_report(rows, paper_trades)
     summary_path = os.getenv("RESEARCH_LEARNING_SUMMARY_PATH", "").strip()
     if summary_path:
         target = Path(summary_path)
