@@ -1,1 +1,1 @@
-{"lock": {"acquired_at": "2026-09-14T11:38:59Z", "expires_at": "2026-09-14T11:40:59Z", "holder": "clear:fa3c3869-ac83-4f06-b3ee-66597c6d9223:444e484e-5b21-485e-bb12-f7f5d732125a"}, "pending_reservations": [], "version": 1}
+{"lock": {"acquired_at": null, "expires_at": null, "holder": null}, "pending_reservations": [], "version": 1}
