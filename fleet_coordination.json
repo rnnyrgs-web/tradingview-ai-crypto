@@ -1,1 +1,1 @@
-{"lock": {"acquired_at": null, "expires_at": null, "holder": null}, "pending_reservations": [], "version": 1}
+{"lock": {"acquired_at": "2026-09-14T02:36:36Z", "expires_at": "2026-09-14T02:38:36Z", "holder": "claude-code:testing-security:cc8b2393-c059-42dc-b533-11b017dd99ef"}, "pending_reservations": [], "version": 1}
