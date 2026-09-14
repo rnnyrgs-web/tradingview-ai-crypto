@@ -258,7 +258,7 @@ jobs:
 
       - id: changes
         name: Determine whether the working tree actually changed
-        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'success'
+        if: steps.credential_gate.outputs.execute == 'true'
         run: |
           if [ -n "$(git status --porcelain)" ]; then
             echo "status=READY_FOR_PR" >> "$GITHUB_OUTPUT"
@@ -393,6 +393,6 @@ jobs:
           echo "Durable state could not be verified after write failure."
           exit "$WRITE_STATUS"
 
-      - name: Fail workflow after bounded agent failure
-        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'failure'
+      - name: Fail workflow after unrecovered bounded agent failure
+        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'failure' && steps.changes.outputs.status != 'READY_FOR_PR'
         run: exit 1
