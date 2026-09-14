@@ -218,6 +218,29 @@ def _candidate_reduces_net_directional_exposure(open_trades, direction, notional
     return abs(after) + 1e-6 < abs(before)
 
 
+def _immutable_fill_geometry(direction, entry, signal_stop, signal_target):
+    direction = str(direction or "").upper()
+    try:
+        entry = float(entry)
+        stop = float(signal_stop)
+        target = float(signal_target)
+    except (TypeError, ValueError):
+        return None
+    if direction not in {"LONG", "SHORT"}:
+        return None
+    if not all(math.isfinite(v) and v > 0 for v in (entry, stop, target)):
+        return None
+    if direction == "LONG":
+        if not stop < entry < target:
+            return None
+    elif not target < entry < stop:
+        return None
+    risk_per_unit = abs(entry - stop)
+    if not math.isfinite(risk_per_unit) or risk_per_unit <= 0:
+        return None
+    return stop, target, risk_per_unit
+
+
 def _strong_opposite_7d_signal(trade, rows, now=None):
     if str(trade.get("horizon") or "") != "7d" or str(trade.get("direction") or "").upper() != "LONG":
         return None
@@ -462,7 +485,7 @@ def _run_paper_cycle_locked():
         signal_entry = float(row.get("entry_price") or 0)
         signal_stop = float(row.get("stop_loss") or 0)
         signal_target = float(row.get("target_1") or 0)
-        if min(signal_entry, signal_stop, signal_target) <= 0:
+        if not all(math.isfinite(v) and v > 0 for v in (signal_entry, signal_stop, signal_target)):
             _record_decision(row, "REJECTED", "invalid_signal_prices")
             continue
 
@@ -480,7 +503,7 @@ def _run_paper_cycle_locked():
         risk_usd = equity_for_sizing * RISK_PER_TRADE_PCT / 100.0
         max_notional = equity_for_sizing * MAX_NOTIONAL_PCT / 100.0
         desired_notional = min(risk_usd / stop_distance_pct, max_notional, cash)
-        if desired_notional <= 0:
+        if not math.isfinite(desired_notional) or desired_notional <= 0:
             _record_decision(row, "REJECTED", "insufficient_cash")
             continue
         if concentration_only and not _candidate_reduces_net_directional_exposure(open_trades, direction, desired_notional):
@@ -500,22 +523,20 @@ def _run_paper_cycle_locked():
             log.warning("Kraken paper execution unavailable for %s direction=%s: %s", symbol, direction, str(exc)[:160])
             continue
 
-        if direction == "LONG":
-            stop = entry * (1.0 - stop_distance_pct)
-            target = entry * (1.0 + target_distance_pct)
-        else:
-            stop = entry * (1.0 + stop_distance_pct)
-            target = entry * (1.0 - target_distance_pct)
-        risk_per_unit = abs(entry - stop)
-        if min(entry, stop, target, risk_per_unit) <= 0:
+        geometry = _immutable_fill_geometry(direction, entry, signal_stop, signal_target)
+        if geometry is None:
             _record_decision(row, "REJECTED", "invalid_fill_geometry")
             continue
+        stop, target, risk_per_unit = geometry
 
         quantity = min(risk_usd / risk_per_unit, desired_notional / entry, cash / entry)
-        if quantity <= 0:
+        if not math.isfinite(quantity) or quantity <= 0:
             _record_decision(row, "REJECTED", "invalid_quantity")
             continue
         notional = quantity * entry
+        if not math.isfinite(notional) or notional <= 0:
+            _record_decision(row, "REJECTED", "invalid_notional")
+            continue
         if notional > cash or (execution.supported_notional is not None and notional > execution.supported_notional + 1e-6):
             _record_decision(row, "REJECTED", "unsupported_kraken_notional")
             continue
