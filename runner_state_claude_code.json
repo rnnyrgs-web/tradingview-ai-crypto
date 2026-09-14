@@ -1,9 +1,26 @@
 {
   "active_task": null,
-  "last_seen_main_sha": "c0a407ac454cc201dac6c07afb5c05b32e6062e9",
-  "next_eligible_at": null,
-  "paused_reason": null,
-  "runs": [],
-  "task_failures": {},
+  "last_seen_main_sha": "2473f98f7128ca9e5fcc69cf69f85f3906566560",
+  "next_eligible_at": "2026-09-14T03:39:10Z",
+  "paused_reason": "MODEL_EXECUTION_FAILURE",
+  "runs": [
+    {
+      "actual_cost_usd": 0.2,
+      "cached_input_tokens": 0,
+      "failure_reason": "MODEL_EXECUTION_FAILURE",
+      "finished_at": "2026-09-14T03:38:40Z",
+      "input_tokens": 0,
+      "model": "claude-haiku-4-5",
+      "output_tokens": 0,
+      "reserved_cost_usd": 0.2,
+      "role": "testing-security",
+      "started_at": "2026-09-14T03:38:40Z",
+      "status": "FAILED_RESERVED",
+      "task_id": "COORD-TEST-001"
+    }
+  ],
+  "task_failures": {
+    "COORD-TEST-001": 1
+  },
   "version": 1
 }
