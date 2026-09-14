@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "as_of": null,
+  "status": "BOOTSTRAP_LEARNING",
+  "world_money_map": {
+    "summary": "No Money Intelligence research cycle has published a validated current-state assessment yet.",
+    "regime": "UNKNOWN",
+    "liquidity": "UNKNOWN",
+    "credit": "UNKNOWN",
+    "policy": "UNKNOWN",
+    "risk_appetite": "UNKNOWN"
+  },
+  "money_flows": [],
+  "opportunities": [],
+  "risks": [],
+  "causal_chains": [],
+  "discoveries": [],
+  "changes_since_previous": [],
+  "unknowns": [
+    "Initial research cycle has not completed yet. The dashboard intentionally shows no invented market conclusions."
+  ],
+  "research_frontier": [
+    "Build and validate the initial world-money causal map using point-in-time evidence.",
+    "Establish immutable forecast and scorecard history before claiming predictive skill."
+  ],
+  "prediction_scorecard": {
+    "frozen": 0,
+    "resolved": 0,
+    "directional_hit_rate": null,
+    "brier_score": null,
+    "calibration_status": "LEARNING"
+  },
+  "source_notes": []
+}
