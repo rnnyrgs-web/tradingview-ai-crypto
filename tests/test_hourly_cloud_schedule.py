@@ -20,17 +20,17 @@ def test_cloud_specialist_checks_hourly_but_model_cooldown_stays_12h():
     assert config["policy"]["trade_authority"] is False
 
 
-def test_hourly_review_asks_add_remove_question_without_relaxing_budget_or_authority():
+def test_hourly_review_prioritizes_profitability_without_relaxing_budget_or_authority():
     config = json.loads((ROOT / "orchestration/autonomous_specialist_runner.json").read_text(encoding="utf-8"))
-    question = config["policy"]["hourly_self_improvement_question"]
-    policy = config["policy"]["hourly_self_improvement_policy"]
-    mission = config["roles"]["data-market"]["mission"]
-    assert "added" in question
-    assert "removed" in question
-    assert "after-cost" in question
+    question = config["policy"]["hourly_self_improvement_question"].lower()
+    policy = config["policy"]["hourly_self_improvement_policy"].lower()
+    mission = config["roles"]["data-market"]["mission"].lower()
+    assert "after-cost profitability" in question
+    assert "reducing overfitting" in question
     assert "12-hour" in policy
     assert "$1/day" in policy
-    assert "what should be added, removed" in mission.lower()
+    assert "highest expected incremental after-cost profitability" in mission
+    assert "prefer broad cheap deterministic screening" in mission
     assert config["policy"]["successful_run_cooldown_hours"] == 12
     assert config["budget"]["runner_daily_api_budget_usd"] == 1.0
     assert config["policy"]["automatic_merge"] is False
