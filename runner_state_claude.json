@@ -1,6 +1,6 @@
 {
   "active_task": null,
-  "last_seen_main_sha": "36742dfc6ba5328c455df5a0b3e164e5d81820c3",
+  "last_seen_main_sha": "4b8a63133f88cf92b40755ef02b8b7f1bcc03309",
   "next_eligible_at": "2026-09-15T01:29:21Z",
   "paused_reason": "MODEL_EXECUTION_FAILURE",
   "runs": [
