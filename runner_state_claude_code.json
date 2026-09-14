@@ -1,15 +1,8 @@
 {
-  "active_task": {
-    "branch": "auto/testing-security/coord-test-001",
-    "failure_count": 5,
-    "failure_reason": "MODEL_EXECUTION_FAILURE",
-    "phase": "CI_FAILED",
-    "role": "testing-security",
-    "task_id": "COORD-TEST-001"
-  },
-  "last_seen_main_sha": "a6f025a5158fc2c179bc6c1c260b992d41917895",
+  "active_task": null,
+  "last_seen_main_sha": "c1af2621941250f73cc0cfd3cc54b9422a735430",
   "next_eligible_at": null,
-  "paused_reason": "TASK_RETRY_LIMIT",
+  "paused_reason": null,
   "runs": [
     {
       "actual_cost_usd": 0.2,
