@@ -22,7 +22,9 @@ def test_default_api_work_uses_luna_and_keeps_sol_disabled():
 def test_budget_mission_prioritizes_profitability_and_avoids_waste():
     mission = load_config()["roles"]["data-market"]["mission"].lower()
     assert "highest expected incremental after-cost profitability" in mission
-    assert "accuracy/precision secondary" in mission
-    assert "deterministic python" in mission
-    assert "do not spend api budget merely to stay busy" in mission
-    assert "insufficienthistory" in mission
+    assert "information-gain" in mission
+    assert "all supported asset classes and move durations" in mission
+    assert "deterministic screening" in mission
+    assert "reject unstable or nonpositive candidates quickly" in mission
+    assert "redundant strategies" in mission
+    assert "never weaken chronology" in mission
