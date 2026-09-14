@@ -14,6 +14,7 @@ from market_data import build_universe
 from dashboard import login_page, handle_login, dashboard_page, signal_detail_page, signal_chart_data
 from paper_dashboard import paper_audit_page, paper_portfolio_page
 from combined_dashboard import combined_dashboard_page
+from money_intelligence_dashboard import money_dashboard_page
 from operational_monitor import health_snapshot, record_error
 from calibration import calibration_summary
 from continuous_ai_agent import continuous_ai_loop, status_snapshot as continuous_ai_status
@@ -61,6 +62,7 @@ def root():
         "service":"Crypto Signal Engine V3",
         "version":STRATEGY_VERSION,
         "dashboard":"/dashboard",
+        "money_intelligence":"/dashboard/money",
         "paper_portfolio":"/dashboard/paper",
         "paper_audit":"/dashboard/paper/audit",
         "endpoints":["/health","/research-observability","/selective-precision","/paper","/paper/run","/scan","/evaluate","/calibration","/shadow-readiness","/backtest","/walkforward","/universe","/signals","/signals/cursor"]
@@ -125,6 +127,13 @@ def dashboard(request:Request,horizon:str="all"):
         return combined_dashboard_page(request,horizon)
     except Exception as e:
         internal_error("dashboard", e, "Dashboard unavailable")
+
+@app.get("/dashboard/money")
+def dashboard_money(request:Request):
+    try:
+        return money_dashboard_page(request)
+    except Exception as e:
+        internal_error("dashboard_money", e, "Money Intelligence dashboard unavailable")
 
 @app.get("/dashboard/signals")
 def dashboard_signals(request:Request,horizon:str="all"):
