@@ -12,14 +12,6 @@ from typing import Any
 
 import httpx
 
-# Mirrors the import-collision defense in agents/autonomous_cloud_state.py:
-# this module is executed both as `python -m agents.claude_specialist_runner`
-# and directly as a script, and must not depend on any pip-installed
-# top-level `agents` package (this engine uses no SDK -- only httpx -- so the
-# collision that forces autonomous_cloud_runner.py's Agents-SDK import to be
-# deferred inside a function does not apply here, but the dual-import
-# pattern is kept for consistency and because PYTHONPATH is the only thing
-# that makes `agents.*` resolve to this repository's agents/ directory).
 if __package__:
     from .autonomous_cloud_runner import (
         Decision,
@@ -135,15 +127,7 @@ def _tool_specs() -> list[dict[str, Any]]:
 
 
 def run_agent(config: dict[str, Any], coordination: dict[str, Any], decision: Decision) -> tuple[dict[str, Any], dict[str, int]]:
-    """Bounded Claude research-role tool-use loop.
-
-    Mirrors ``agents.autonomous_cloud_runner.run_agent()``'s sandbox (same
-    three read/write/pytest tools, same branch/path enforcement, same
-    terminal-status contract validated by ``validate_outcome_dict``) but
-    calls the Anthropic Messages API directly with ``tool_use`` instead of
-    the OpenAI Agents SDK, so this engine carries no dependency on that SDK
-    and cannot collide with its package name.
-    """
+    """Bounded Claude research-role tool-use loop."""
     if not decision.run or not decision.role or not decision.task_id or not decision.branch:
         raise PolicyError("invalid runnable decision")
     role, expected_branch = decision.role, decision.branch
@@ -269,7 +253,23 @@ def run_agent(config: dict[str, Any], coordination: dict[str, Any], decision: De
             )
             return outcome, {"input_tokens": total_input, "output_tokens": total_output, "cached_input_tokens": total_cached}
         messages.append({"role": "user", "content": tool_results})
-    raise PolicyError("Claude research runner exceeded its turn budget without calling submit_outcome")
+
+    # The model has already consumed its predeclared bounded turn budget. Do
+    # not retry, increase turns, or convert this into a workflow error that
+    # can trigger more paid execution. Fail closed as BLOCKED while retaining
+    # the exact observed usage for budget accounting. BLOCKED is non-
+    # publishable by the workflow and clears the active task in main().
+    outcome = validate_outcome_dict(
+        {
+            "status": "BLOCKED",
+            "summary": "Claude reached its bounded turn budget without submitting an outcome; failed closed with no publication authority.",
+            "tests": [],
+            "evidence": [],
+            "risks": ["No model-submitted terminal outcome was received within the bounded turn budget."],
+            "changed_files": [],
+        }
+    )
+    return outcome, {"input_tokens": total_input, "output_tokens": total_output, "cached_input_tokens": total_cached}
 
 
 def main() -> int:
