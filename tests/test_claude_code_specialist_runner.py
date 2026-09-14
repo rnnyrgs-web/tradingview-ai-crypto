@@ -52,12 +52,13 @@ def test_config_owns_exactly_one_implementation_role():
     assert config["engine"] == "claude-code"
 
 
-def test_role_permissions_match_the_existing_testing_security_role_exactly():
+def test_role_permissions_match_existing_testing_security_role_plus_resource_proposal():
     from agents.autonomous_orchestrator import load_roles
 
     legacy_allowed_paths = set(load_roles()["testing-security"]["allowed_paths"])
     config_allowed_paths = set(_config()["roles"]["testing-security"]["allowed_paths"])
-    assert config_allowed_paths == legacy_allowed_paths
+    assert legacy_allowed_paths.issubset(config_allowed_paths)
+    assert config_allowed_paths - legacy_allowed_paths == {"resource_recommendations_proposed.json"}
 
 
 def test_role_permissions_never_touch_production_signal_or_ledger_code():
