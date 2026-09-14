@@ -36,7 +36,7 @@
     "runner_monthly_api_budget_usd": 29.0,
     "runner_daily_api_budget_usd": 1.0,
     "pause_buffer_usd": 1.0,
-    "provider_retry_safety_multiplier": 3.0,
+    "provider_retry_safety_multiplier": 1.0,
     "fleet_pacing_burst_allowance_usd": 2.0,
     "fleet_daily_burst_cap_usd": 3.0
   },
