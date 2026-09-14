@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "as_of": "2026-09-14T22:12:00Z",
+  "as_of": "2026-09-14T23:07:14Z",
   "status": "INITIAL_VALIDATED_ASSESSMENT",
   "world_money_map": {
-    "summary": "The initial picture is mixed rather than broadly risk-on or risk-off. U.S. banking-system liquidity received a large one-week boost as the Treasury General Account fell by about $101B and reserve balances rose by about $107B, while the Fed's securities portfolio was essentially flat. That easing is likely temporary: Treasury still assumes a $950B end-September cash balance versus about $844B on Sep. 9, implying a potential cash rebuild of roughly $106B that could drain reserves if not offset elsewhere. Meanwhile policy is not globally easing: the ECB raised rates 25 bp on Sep. 10, U.S. headline CPI was 3.4% y/y in August, and U.S. Treasury yields moved higher into the Sep. 15-16 FOMC meeting. The correct current stance is therefore transition / event-risk, not a high-confidence directional macro trade.",
+    "summary": "The picture remains mixed rather than broadly risk-on or risk-off. U.S. banking-system liquidity received a large one-week boost as the Treasury General Account fell by about $101B and reserve balances rose by about $107B, while the Fed's securities portfolio was essentially flat. Treasury still assumes a $950B end-September cash balance versus about $844B on Sep. 9, so a quarter-end cash rebuild can reverse part of that easing. However, a reserve drain is not the same thing as immediate funding stress: SOFR was 3.62% for Sep. 10, inside the 3.50%-3.75% target range, and the Fed's standing repo facility provides an explicit backstop if private repo funding becomes scarce. The correct interpretation is therefore conditional: TGA rebuilding is a liquidity headwind, but it should not become a standalone risk-asset sell signal unless funding-market evidence confirms tightening. Global policy also remains restrictive/divergent, and the Sep. 15-16 FOMC decision is the dominant near-term event risk.",
     "regime": "TRANSITION / EVENT RISK",
-    "liquidity": "SHORT-TERM US EASING, REVERSAL RISK",
+    "liquidity": "SHORT-TERM US EASING; TGA REVERSAL RISK, FUNDING CALM SO FAR",
     "credit": "NO VALIDATED STRESS SIGNAL YET",
     "policy": "RESTRICTIVE / DIVERGENT",
     "risk_appetite": "MIXED / UNCONFIRMED"
@@ -24,9 +24,17 @@
       "direction": "PRIVATE CASH / BANK RESERVES -> TREASURY",
       "horizon": "through Sep. 30",
       "confidence": "MODERATE",
-      "summary": "Treasury's Aug. 3 financing estimate assumes a $950B end-September cash balance. The Sep. 9 TGA stood near $844B, leaving roughly $106B to rebuild if the target is met. Because ON RRP usage is now only a few billion dollars, there is much less money-fund RRP cash available to absorb a large TGA rebuild than in earlier cycles, so a larger share could pressure bank reserves or other private liquidity sources.",
+      "summary": "Treasury's Aug. 3 financing estimate assumes a $950B end-September cash balance. The Sep. 9 TGA stood near $844B, leaving roughly $106B to rebuild if the target is met. Because ON RRP usage is now only a few billion dollars, there is much less money-fund RRP cash available to absorb a large TGA rebuild than in earlier cycles, so a larger share can pressure bank reserves or other private liquidity sources.",
       "invalidation": "Treasury materially undershoots its $950B cash target, or offsetting Fed/liability flows replenish reserves.",
       "source": "U.S. Treasury Aug. 3 borrowing estimate; Fed H.4.1; NY Fed/FRED ON RRP data through Sep. 11"
+    },
+    {
+      "title": "Funding markets have not yet confirmed reserve scarcity",
+      "direction": "NO BROAD FUNDING STRESS CONFIRMATION",
+      "horizon": "days",
+      "confidence": "MODERATE-HIGH",
+      "summary": "SOFR was 3.62% for Sep. 10, inside the 3.50%-3.75% federal funds target range, while New York Fed standing repo operations remain available at the top of the target range to cap economically significant private-repo pressure. This means the TGA-rebuild thesis is a conditional liquidity risk, not a mechanical funding-crisis call.",
+      "source": "NY Fed/FRED SOFR; New York Fed standing repo framework"
     },
     {
       "title": "Global policy is not moving in one easing direction",
@@ -43,19 +51,19 @@
       "action": "WAIT",
       "horizon": "1-3 days",
       "confidence": "MODERATE",
-      "thesis": "The current causal signals conflict: short-term reserve liquidity improved sharply, but inflation remains above target, Treasury yields rose into the meeting, the ECB just tightened, and U.S. policy uncertainty resolves within roughly two days. The expected value of forcing a broad directional macro position before the FOMC is not yet demonstrated.",
+      "thesis": "The current causal signals conflict: short-term reserve liquidity improved sharply, potential TGA rebuilding is a headwind but funding markets have not confirmed stress, inflation remains above target, Treasury yields rose into the meeting, the ECB just tightened, and U.S. policy uncertainty resolves within roughly two days. The expected value of forcing a broad directional macro position before the FOMC is not yet demonstrated.",
       "invalidation": "A clear pre-meeting dislocation appears with strong asymmetric payoff and independently verified flow support.",
-      "source": "Fed H.4.1, BLS CPI/employment, Treasury yields, ECB policy decision"
+      "source": "Fed H.4.1, NY Fed/FRED SOFR, BLS CPI/employment, Treasury yields, ECB policy decision"
     }
   ],
   "risks": [
     {
-      "title": "TGA rebuild can become a near-term liquidity drain",
+      "title": "TGA rebuild can become a near-term liquidity drain, but stress is conditional",
       "direction": "LIQUIDITY DRAIN RISK",
       "horizon": "2 weeks",
       "confidence": "MODERATE",
-      "summary": "If Treasury rebuilds the TGA toward its $950B quarter-end assumption from roughly $844B, the cash transfer can absorb private liquidity. With ON RRP nearly exhausted, the buffering channel is much smaller than during the 2021-2024 era.",
-      "invalidation": "The TGA does not rebuild materially, or reserve-supplying offsets dominate."
+      "summary": "If Treasury rebuilds the TGA toward its $950B quarter-end assumption from roughly $844B, the cash transfer can absorb private liquidity. With ON RRP nearly exhausted, the buffering channel is much smaller than during the 2021-2024 era. But this should not be interpreted as an automatic market sell signal: secured funding remained orderly at the latest validated observation, and the Fed standing repo facility can supply funding if repo pressure rises.",
+      "invalidation": "The TGA does not rebuild materially, reserve-supplying offsets dominate, or funding markets remain orderly despite the reserve decline."
     },
     {
       "title": "Rates can stay high even if growth remains resilient",
@@ -74,10 +82,10 @@
       "source": "Federal Reserve H.4.1"
     },
     {
-      "title": "Quarter-end TGA rebuild -> potential private liquidity drain",
-      "confidence": "MODERATE",
-      "summary": "Treasury issues/collects more cash than it spends -> TGA rises -> cash leaves bank deposits / money markets -> reserves can fall unless ON RRP or another Fed liability supplies the offset -> marginal financing conditions tighten -> leveraged and liquidity-sensitive assets become more vulnerable.",
-      "source": "Treasury financing estimate + Fed balance-sheet mechanics"
+      "title": "Quarter-end TGA rebuild -> reserve drain -> funding stress only if reserve demand binds",
+      "confidence": "MODERATE-HIGH",
+      "summary": "Treasury issues/collects more cash than it spends -> TGA rises -> cash leaves bank deposits / money markets -> reserves can fall because ON RRP has little remaining room to absorb the shift -> but market stress requires the supply of usable reserves/intermediation capacity to become scarce relative to demand -> repo rates and their upper percentiles rise -> standing repo usage may increase -> only then does the liquidity drain become a stronger signal of forced deleveraging risk. Latest validated SOFR did not yet show that scarcity condition.",
+      "source": "Treasury financing estimate + Fed balance-sheet mechanics + NY Fed/FRED SOFR + NY Fed standing repo framework"
     },
     {
       "title": "Energy inflation -> policy restraint -> higher discount rates",
@@ -100,22 +108,32 @@
       "confidence": "MODERATE",
       "summary": "ON RRP usage was only about $5.3B on Sep. 11. When this buffer is tiny, a future TGA rebuild cannot be absorbed mainly by money funds simply shifting cash out of ON RRP, so the reserve impact of Treasury cash accumulation can be larger than in periods when ON RRP held hundreds of billions or trillions.",
       "source": "NY Fed source via FRED ON RRP series"
+    },
+    {
+      "title": "Reserve drain is not the same as funding stress",
+      "status": "SUPPORTED / REGIME-SPECIFIC",
+      "confidence": "MODERATE-HIGH",
+      "summary": "The causal chain needs an additional condition: reserves can fall without producing a funding crisis while the system remains in an ample-reserves regime. SOFR at 3.62% on Sep. 10 remained inside the Fed's 3.50%-3.75% target range, and the standing repo facility is designed to cap private repo pressure. Therefore the correct escalation trigger is TGA/reserve deterioration plus funding-market confirmation, not TGA movement alone.",
+      "source": "NY Fed/FRED SOFR; New York Fed standing repo framework"
     }
   ],
   "changes_since_previous": [
-    "First validated Money Intelligence assessment published; bootstrap UNKNOWN state has ended.",
-    "Initial high-information-value finding: current U.S. liquidity improved because Treasury cash fell, not because of broad Fed balance-sheet expansion.",
-    "No broad asset BUY/SELL thesis is being promoted before the Sep. 16 FOMC decision because causal evidence is mixed."
+    "The TGA-rebuild risk has been refined: a reserve drain is a liquidity headwind, but not a mechanical sell signal or proof of funding stress.",
+    "Latest validated secured-funding evidence remained orderly: SOFR was 3.62% for Sep. 10, within the Fed's target range.",
+    "The standing repo facility has been added as an explicit stabilizing mechanism that must be considered when modeling how reserve scarcity propagates into markets.",
+    "No broad asset BUY/SELL thesis is being promoted before the Sep. 16 FOMC decision because causal evidence remains mixed."
   ],
   "unknowns": [
     "The Sep. 15-16 FOMC decision and guidance are not known yet and can materially change the rates/liquidity interpretation.",
     "Treasury's $950B end-September cash balance is an assumption, not a guaranteed realized level; the size/timing of the actual rebuild remains uncertain.",
-    "The current data establish a short-term reserve-liquidity mechanism, but do not yet prove how strongly that mechanism predicts equities, crypto, gold, credit or the dollar in the present regime.",
+    "It remains unknown how far reserves can fall in the current distribution of bank balance sheets before repo rates show persistent scarcity; aggregate reserve levels alone do not answer this.",
+    "The current data establish Treasury-to-reserve transmission, but do not yet prove how strongly that mechanism predicts equities, crypto, gold, credit or the dollar in the present regime.",
     "August PCE data are not scheduled until Sep. 30, so current inflation assessment relies on CPI plus the latest available July PCE data."
   ],
   "research_frontier": [
     "After the Sep. 16 FOMC decision, measure the change in the expected policy path and identify which asset classes should gain or lose from the new real-rate regime.",
-    "Quantify historically how TGA changes affect reserve balances and risk assets specifically in the post-ON-RRP-depletion regime, controlling for Fed asset changes and major macro events.",
+    "Monitor SOFR, TGCR/BGCR percentiles, standing-repo usage and reserve distribution as Treasury cash rebuilds; determine the actual threshold at which a reserve drain becomes market-relevant scarcity.",
+    "Quantify historically how TGA changes affect reserve balances and risk assets specifically in the post-ON-RRP-depletion regime, controlling for Fed asset changes, repo conditions and major macro events.",
     "Build a point-in-time global liquidity composite across the Fed, ECB, BoJ, PBoC, Treasury cash balances, dollar funding and major stablecoin supply rather than relying on a single balance-sheet proxy.",
     "Establish the immutable Money Intelligence forecast ledger before making the first directional forecast that clears the evidence bar."
   ],
@@ -141,6 +159,16 @@
       "title": "NY Fed ON RRP - Sep. 11, 2026",
       "summary": "ON RRP usage was about $5.255B, showing that the old large RRP liquidity buffer is now nearly exhausted.",
       "source": "https://fred.stlouisfed.org/series/RRPONTSYSAD"
+    },
+    {
+      "title": "NY Fed/FRED SOFR - Sep. 10, 2026",
+      "summary": "SOFR was 3.62%, inside the 3.50%-3.75% federal funds target range, so the latest validated observation did not indicate broad secured-funding scarcity.",
+      "source": "https://fred.stlouisfed.org/series/SOFR"
+    },
+    {
+      "title": "New York Fed standing repo framework - May 14, 2026",
+      "summary": "The standing repo facility supplies overnight funding at the top of the target range and is intended to limit upward pressure in private repo rates. 2026 surveys showed improved willingness among counterparties to use it when economically sensible.",
+      "source": "https://tellerwindow.newyorkfed.org/2026/05/14/surveys-suggest-improved-willingness-by-counterparties-to-use-standing-repo-operations/"
     },
     {
       "title": "BLS CPI - Aug. 2026",
