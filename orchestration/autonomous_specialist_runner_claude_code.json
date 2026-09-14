@@ -5,7 +5,7 @@
   "primary_mission": "Safely implement and adversarially test the highest-value research changes that improve genuine sustainable after-cost profitability across tradable liquid assets and variable move durations. Engineering quality, reproducibility, execution realism and protection against overfitting are mandatory; no autonomous live-trading authority.",
   "engine": "claude-code",
   "engine_role_description": "Implementation / engineering / testing agent. This is the sole autonomous engine permitted to change test or production code under the multi-engine coordination layer -- ChatGPT's existing autonomous_cloud_specialist.yml role and this role must never both be enabled for the same coordination role at once (enforced by each engine's plan step refusing a task_id whose auto/<role>/<task_id> branch already exists).",
-  "autonomous_roles": ["testing-security"],
+  "autonomous_roles": ["execution-microstructure"],
   "policy": {
     "max_concurrent_agent_runs": 1,
     "max_agent_runs_per_invocation": 1,
@@ -55,21 +55,21 @@
     }
   },
   "roles": {
-    "testing-security": {
+    "execution-microstructure": {
       "model": "claude-haiku-4-5",
       "max_turns": 8,
       "max_output_tokens_per_turn": 2000,
       "reserved_max_input_tokens_per_run": 150000,
       "reserved_max_output_tokens_per_run": 10000,
-      "max_file_read_bytes": 20000,
-      "max_file_write_bytes": 60000,
+      "max_file_read_bytes": 30000,
+      "max_file_write_bytes": 70000,
       "allowed_paths": [
-        "tests/test_*.py",
-        "SECURITY.md",
-        "docs/security_*.md",
+        "paper_trading.py",
+        "tests/test_paper*.py",
+        "docs/execution_*.md",
         "resource_recommendations_proposed.json"
       ],
-      "mission": "Own coordination task COORD-TEST-001 as the adversarial implementation/testing engine for the universal multi-asset research system. Strengthen tests for coordination schema validation, duplicate ownership, invalid dependency/status detection, protected-path enforcement, no-direct-main-write, no-automatic-merge, cost ceilings, broker-disconnected invariants, point-in-time data safety, after-cost evaluation, immutable holdouts and prevention of accidental promotion from research-only cross-asset results into trading authority. Attack existing specialist work; never merge it, never weaken a gate to make a test pass, never touch production strategy/signal/paper-ledger code outside allowed paths. Missing evidence is WAIT / RESEARCH_ONLY. TURN-BUDGET DISCIPLINE: finish within eight model turns. Turn 1: minimum reads. Turns 2-4: implement the smallest regression test and run the directly relevant test. Turns 5-7: fix directly observed failures and verify once. Turn 8: return READY_FOR_PR, NO_CHANGE, or BLOCKED; no extra exploration."
+      "mission": "Own COORD-EXEC-001 as the implementation/testing engine for the current Gate A execution-integrity blocker, issue #349. FIRST PRIORITY: fix the forward paper simulator so an executable fill never re-anchors the signal's predeclared absolute stop or target. Preserve the original stop/target, validate LONG stop < fill < target and SHORT target < fill < stop, fail closed with a durable rejection reason when fill invalidates the setup, recompute actual per-unit risk from fill to the immutable original stop, size from the existing predeclared risk budget/caps, and never invent a post-hoc slippage cutoff. Preserve append-only historical paper/prediction rows and do not rewrite prior trades. Add focused LONG, SHORT, invalid-geometry, and future-only/no-history-rewrite regression coverage. Do not change unrelated signal thresholds, strategy fingerprints, live promotions, broker connectivity, or trading authority. After #349 is correctly implemented and tested, further COORD-EXEC-001 work may only measure execution drag prospectively under the existing scientific gates. TURN-BUDGET DISCIPLINE: finish within eight turns. Turn 1: read only the minimal paper-trading and relevant test code. Turns 2-4: implement the smallest safe #349 fix and targeted tests. Turns 5-7: run/fix only directly relevant tests and verify immutable geometry/fail-closed behavior. Turn 8: return READY_FOR_PR, NO_CHANGE, or BLOCKED; no extra exploration."
     }
   }
 }
