@@ -4,12 +4,18 @@ from pathlib import Path
 import money_intelligence_dashboard as mid
 
 
-def test_bootstrap_state_is_explicitly_fail_closed():
+def test_money_intelligence_state_is_explicitly_fail_closed():
     state = json.loads((Path(__file__).parents[1] / "money_intelligence" / "dashboard_state.json").read_text())
-    assert state["status"] == "BOOTSTRAP_LEARNING"
-    assert state["opportunities"] == []
-    assert state["prediction_scorecard"]["resolved"] == 0
-    assert state["prediction_scorecard"]["directional_hit_rate"] is None
+    assert state["status"] in {"BOOTSTRAP_LEARNING", "INITIAL_VALIDATED_ASSESSMENT"}
+    scorecard = state["prediction_scorecard"]
+    if scorecard["resolved"] == 0:
+        assert scorecard["directional_hit_rate"] is None
+        assert scorecard["brier_score"] is None
+    if state["status"] == "BOOTSTRAP_LEARNING":
+        assert state["opportunities"] == []
+    else:
+        assert state["status"] == "INITIAL_VALIDATED_ASSESSMENT"
+        assert all(opportunity.get("action") == "WAIT" for opportunity in state["opportunities"])
 
 
 def test_money_dashboard_has_independent_sections(monkeypatch):
