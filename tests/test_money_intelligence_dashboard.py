@@ -4,12 +4,19 @@ from pathlib import Path
 import money_intelligence_dashboard as mid
 
 
-def test_bootstrap_state_is_explicitly_fail_closed():
+def test_dashboard_state_is_fail_closed_until_evidence_exists():
     state = json.loads((Path(__file__).parents[1] / "money_intelligence" / "dashboard_state.json").read_text())
-    assert state["status"] == "BOOTSTRAP_LEARNING"
-    assert state["opportunities"] == []
-    assert state["prediction_scorecard"]["resolved"] == 0
-    assert state["prediction_scorecard"]["directional_hit_rate"] is None
+    assert isinstance(state.get("status"), str) and state["status"]
+    assert isinstance(state.get("opportunities"), list)
+    scorecard = state["prediction_scorecard"]
+    assert isinstance(scorecard["resolved"], int) and scorecard["resolved"] >= 0
+    if scorecard["resolved"] == 0:
+        assert scorecard["directional_hit_rate"] is None
+
+    # The original bootstrap state must remain explicitly fail-closed, but this
+    # regression test must not freeze the live research state at bootstrap forever.
+    if state["status"] == "BOOTSTRAP_LEARNING":
+        assert state["opportunities"] == []
 
 
 def test_money_dashboard_has_independent_sections(monkeypatch):
