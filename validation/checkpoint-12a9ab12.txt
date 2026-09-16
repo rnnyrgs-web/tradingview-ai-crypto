@@ -1,0 +1,2 @@
+Validation-only checkpoint for main commit 12a9ab1217d564b5988e1a78269188a8a4d4a4b3.
+No runtime, model, strategy, signal, broker, profitability-evidence, validation-gate, or budget behavior is changed by this file.
