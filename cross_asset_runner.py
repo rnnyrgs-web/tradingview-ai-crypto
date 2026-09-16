@@ -53,6 +53,7 @@ SELECTION_OOS_LOCK = {
     "status": "LOCKED_UNTOUCHED_OOS",
     "reason": "single_strategy_selection_requires_central_candidate_freeze_before_oos",
 }
+LOCKED_RESEARCH_RESULT = False
 
 
 def _int_env(name: str, default: int, low: int, high: int) -> int:
@@ -424,7 +425,7 @@ def run() -> dict:
                 "pre_oos": selected["pre_oos"],
                 "liquidity_stability": selected["liquidity_stability"],
                 "untouched_oos": dict(SELECTION_OOS_LOCK),
-                "acc002_research_pass": False,
+                "acc002_research_pass": LOCKED_RESEARCH_RESULT,
                 "acc011_survivorship_pass": survivorship["promotion_allowed"],
                 "eligible_for_promotion_review": False,
             }
@@ -551,7 +552,7 @@ def summarize_evidence(envelope: dict) -> dict:
                 "primary_liquidity_subset": selected["primary_liquidity_subset"],
                 "status": oos["status"],
                 "reason": oos["reason"],
-                "acc002_research_pass": False,
+                "acc002_research_pass": LOCKED_RESEARCH_RESULT,
                 "acc011_survivorship_pass": selected["acc011_survivorship_pass"],
                 "eligible_for_promotion_review": False,
             }
