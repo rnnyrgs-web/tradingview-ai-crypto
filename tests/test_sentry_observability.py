@@ -1,6 +1,9 @@
+import hashlib
+import hmac
 import importlib
 
 import pytest
+from fastapi import HTTPException
 
 
 def test_sentry_observability_requires_configuration(monkeypatch):
@@ -49,3 +52,22 @@ def test_sentry_observability_redacts_sensitive_fields(monkeypatch):
     }]
     assert "secret-token" not in repr(result)
     assert "must-not-leak" not in repr(result)
+
+
+def test_observability_signature_is_short_lived(monkeypatch):
+    monkeypatch.setenv("SENTRY_OBSERVABILITY_SECRET", "bridge-secret")
+    import sentry_service
+
+    ts = 2_000_000_000
+    monkeypatch.setattr(sentry_service.time, "time", lambda: ts)
+    sig = hmac.new(
+        b"bridge-secret",
+        f"sentry-observability:{ts}".encode(),
+        hashlib.sha256,
+    ).hexdigest()
+    sentry_service._verify_observability_signature(ts, sig)
+
+    monkeypatch.setattr(sentry_service.time, "time", lambda: ts + 91)
+    with pytest.raises(HTTPException) as exc:
+        sentry_service._verify_observability_signature(ts, sig)
+    assert exc.value.status_code == 401
