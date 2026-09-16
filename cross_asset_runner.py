@@ -1,9 +1,12 @@
 """Continuous ACC-002 cross-asset research runner.
 
 A small fixed lookback grid is evaluated on train+validation only. Candidate
-parameters must also survive predeclared liquidity subsets before the untouched
-holdout is opened exactly once on the largest supported subset. This reduces
-selection bias and rejects edges that exist only in one narrow universe.
+parameters must also survive predeclared liquidity subsets. In canonical
+single-strategy SELECTION mode the best pre-OOS candidate is fingerprinted and
+returned with untouched OOS locked. Only after the Lead freezes that exact
+fingerprint may DEEP_VALIDATION open the holdout exactly once on the largest
+supported subset. This reduces selection bias and rejects edges that exist only
+in one narrow universe.
 
 ACC-011 adds a separate survivorship gate. Selecting today's liquid universe and
 pulling those survivors backward is useful research but is not promotion-grade
@@ -28,7 +31,7 @@ from cross_asset_rank import (
 )
 from market_data import build_universe, get_history
 from point_in_time_universe import filter_histories, load_manifest
-from research_artifact import seal_research_payload
+from research_artifact import seal_research_payload, sha256_hex
 
 
 MIN_INDEPENDENT_OOS_SAMPLES = 20
@@ -46,10 +49,22 @@ HORIZON_PROFILES = {
     },
 }
 LIQUIDITY_SUBSETS = (15, 30, 45)
+SELECTION_OOS_LOCK = {
+    "status": "LOCKED_UNTOUCHED_OOS",
+    "reason": "single_strategy_selection_requires_central_candidate_freeze_before_oos",
+}
 
 
 def _int_env(name: str, default: int, low: int, high: int) -> int:
     return max(low, min(int(os.getenv(name, str(default))), high))
+
+
+def _selection_mode() -> bool:
+    return os.getenv("SINGLE_STRATEGY_SELECTION_MODE", "").strip() == "1"
+
+
+def _deep_mode() -> bool:
+    return os.getenv("SINGLE_STRATEGY_DEEP_MODE", "").strip() == "1"
 
 
 def required_history_bars(config: CrossAssetConfig, min_oos_samples: int = MIN_INDEPENDENT_OOS_SAMPLES) -> int:
@@ -192,6 +207,25 @@ def _candidate_selection_score(candidate: dict) -> tuple[float, float]:
     return min(score[0] for score in scores), min(score[1] for score in scores)
 
 
+def _candidate_fingerprint(*, horizon: str, bar: str, config: CrossAssetConfig, primary_liquidity_subset: int) -> str:
+    """Fingerprint every behavior-changing field before untouched OOS is opened."""
+    return sha256_hex({
+        "strategy": "ACC-002-cross-asset-rank",
+        "horizon": horizon,
+        "bar": bar,
+        "lookbacks": list(config.lookbacks),
+        "forward_bars": int(config.forward_bars),
+        "top_fraction": float(config.top_fraction),
+        "round_trip_cost_bps": float(config.round_trip_cost_bps),
+        "min_assets": int(config.min_assets),
+        "cost_stress_multipliers": list(config.cost_stress_multipliers),
+        "non_overlapping_evaluation": bool(config.non_overlapping_evaluation),
+        "primary_liquidity_subset": int(primary_liquidity_subset),
+        "minimum_stable_liquidity_subsets": MIN_STABLE_LIQUIDITY_SUBSETS,
+        "minimum_liquidity_subset_coverage": MIN_LIQUIDITY_SUBSET_COVERAGE,
+    })
+
+
 def _horizon_settings() -> tuple[str, str, int, tuple[tuple[int, ...], ...]]:
     horizon = os.getenv("CROSS_ASSET_HORIZON", "").strip().lower()
     if not horizon:
@@ -208,6 +242,7 @@ def _horizon_settings() -> tuple[str, str, int, tuple[tuple[int, ...], ...]]:
 
 
 def _blocked_payload(*, horizon: str, bar: str, universe_size: int, requested_bars: int, bars: int, minimum_bars: int, histories: dict, failures: list, survivorship: dict, liquidity_histories: dict, symbols: list[str], reason: str, history_provenance: dict) -> dict:
+    selection_mode = _selection_mode()
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "acc": "ACC-002",
@@ -216,9 +251,14 @@ def _blocked_payload(*, horizon: str, bar: str, universe_size: int, requested_ba
         "research_blocked_reason": reason,
         "live_approved": False,
         "trade_authority": False,
+        "selection_mode": selection_mode,
         "source": "OKX public historical API with bounded Bybit spot full-series fallback for 7d only",
         "history_provenance": history_provenance,
-        "selection_policy": "fixed_grid_train_validation_parameter_and_liquidity_stability_then_open_one_untouched_oos",
+        "selection_policy": (
+            "fixed_grid_train_validation_parameter_and_liquidity_stability_then_freeze_one_candidate_before_untouched_oos"
+            if selection_mode
+            else "fixed_grid_train_validation_parameter_and_liquidity_stability_then_open_one_untouched_oos"
+        ),
         "survivorship_policy": (
             "Today's liquid universe is not historical membership evidence. Cross-sectional promotion review requires "
             "timestamped investable-universe snapshots with provenance and all manifest members actually fetched."
@@ -259,6 +299,10 @@ def run() -> dict:
     requested_bars = _int_env("CROSS_ASSET_BARS", 3000, 300, MAX_HISTORY_BARS)
     horizon, bar, forward_bars, lookback_grid = _horizon_settings()
     cost_bps = float(os.getenv("CROSS_ASSET_ROUND_TRIP_COST_BPS", "12"))
+    selection_mode = _selection_mode()
+    deep_mode = _deep_mode()
+    if selection_mode and deep_mode:
+        raise ValueError("cross-asset worker cannot run selection and deep validation modes simultaneously")
 
     configs = [CrossAssetConfig(lookbacks=lookbacks, forward_bars=forward_bars, round_trip_cost_bps=cost_bps, min_assets=8) for lookbacks in lookback_grid]
     minimum_bars = max(required_history_bars(config) for config in configs)
@@ -343,9 +387,16 @@ def run() -> dict:
                 primary_pre = pre
         stable_subset_count = sum(1 for item in subset_evidence.values() if item["eligible_pre_oos"])
         liquidity_stability_pass = stable_subset_count >= MIN_STABLE_LIQUIDITY_SUBSETS
+        candidate_fingerprint = _candidate_fingerprint(
+            horizon=horizon,
+            bar=bar,
+            config=config,
+            primary_liquidity_subset=primary_subset_size,
+        )
         candidates.append({
             "index": index,
             "lookbacks": list(config.lookbacks),
+            "candidate_fingerprint": candidate_fingerprint,
             "pre_oos": primary_pre,
             "eligible_pre_oos": liquidity_stability_pass,
             "liquidity_stability": {
@@ -363,39 +414,68 @@ def run() -> dict:
     selected = max(eligible, key=_candidate_selection_score) if stability_pass else None
     selected_evaluation = None
     if selected is not None:
-        oos = evaluate_untouched_oos(selected["_panel"], selected["_config"])
-        if oos["metrics"]["timestamps"] < MIN_INDEPENDENT_OOS_SAMPLES:
-            raise ValueError("insufficient independent untouched-OOS observations after alignment")
-        acc002_pass = bool(oos.get("passes_acc002_research_gate"))
-        selected_evaluation = {
-            "index": selected["index"],
-            "lookbacks": selected["lookbacks"],
-            "primary_liquidity_subset": primary_subset_size,
-            "pre_oos": selected["pre_oos"],
-            "liquidity_stability": selected["liquidity_stability"],
-            "untouched_oos": oos,
-            "acc002_research_pass": acc002_pass,
-            "acc011_survivorship_pass": survivorship["promotion_allowed"],
-            "eligible_for_promotion_review": acc002_pass and survivorship["promotion_allowed"],
-        }
+        candidate_fingerprint = selected["candidate_fingerprint"]
+        if selection_mode:
+            selected_evaluation = {
+                "index": selected["index"],
+                "lookbacks": selected["lookbacks"],
+                "candidate_fingerprint": candidate_fingerprint,
+                "primary_liquidity_subset": primary_subset_size,
+                "pre_oos": selected["pre_oos"],
+                "liquidity_stability": selected["liquidity_stability"],
+                "untouched_oos": dict(SELECTION_OOS_LOCK),
+                "acc002_research_pass": False,
+                "acc011_survivorship_pass": survivorship["promotion_allowed"],
+                "eligible_for_promotion_review": False,
+            }
+        else:
+            if deep_mode:
+                active_fingerprint = os.getenv("ACTIVE_STRATEGY_FINGERPRINT", "").strip()
+                if not active_fingerprint:
+                    raise ValueError("deep validation requires ACTIVE_STRATEGY_FINGERPRINT")
+                if active_fingerprint != candidate_fingerprint:
+                    raise ValueError("deep validation candidate fingerprint drifted before untouched OOS")
+            oos = evaluate_untouched_oos(selected["_panel"], selected["_config"])
+            if oos["metrics"]["timestamps"] < MIN_INDEPENDENT_OOS_SAMPLES:
+                raise ValueError("insufficient independent untouched-OOS observations after alignment")
+            acc002_pass = bool(oos.get("passes_acc002_research_gate"))
+            selected_evaluation = {
+                "index": selected["index"],
+                "lookbacks": selected["lookbacks"],
+                "candidate_fingerprint": candidate_fingerprint,
+                "primary_liquidity_subset": primary_subset_size,
+                "pre_oos": selected["pre_oos"],
+                "liquidity_stability": selected["liquidity_stability"],
+                "untouched_oos": oos,
+                "acc002_research_pass": acc002_pass,
+                "acc011_survivorship_pass": survivorship["promotion_allowed"],
+                "eligible_for_promotion_review": acc002_pass and survivorship["promotion_allowed"],
+            }
 
     public_candidates = [{
         "index": c["index"],
         "lookbacks": c["lookbacks"],
+        "candidate_fingerprint": c["candidate_fingerprint"],
         "pre_oos": c["pre_oos"],
         "eligible_pre_oos": c["eligible_pre_oos"],
         "liquidity_stability": c["liquidity_stability"],
         "liquidity_subsets": c["liquidity_subsets"],
     } for c in candidates]
+    oos_opened_count = 1 if selected is not None and not selection_mode else 0
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "acc": "ACC-002",
         "research_only": True,
         "live_approved": False,
         "trade_authority": False,
+        "selection_mode": selection_mode,
         "source": "OKX public historical API with bounded Bybit spot full-series fallback for 7d only",
         "history_provenance": history_provenance,
-        "selection_policy": "fixed_grid_train_validation_parameter_and_liquidity_stability_then_open_one_untouched_oos",
+        "selection_policy": (
+            "fixed_grid_train_validation_parameter_and_liquidity_stability_then_freeze_one_candidate_before_untouched_oos"
+            if selection_mode
+            else "fixed_grid_train_validation_parameter_and_liquidity_stability_then_open_one_untouched_oos"
+        ),
         "survivorship_policy": (
             "Today's liquid universe is not historical membership evidence. Cross-sectional promotion review requires "
             "timestamped investable-universe snapshots with provenance and all manifest members actually fetched."
@@ -408,10 +488,10 @@ def run() -> dict:
             "minimum_subset_coverage": MIN_LIQUIDITY_SUBSET_COVERAGE,
             "minimum_passing_subsets_per_candidate": MIN_STABLE_LIQUIDITY_SUBSETS,
             "primary_oos_subset": primary_subset_size,
-            "oos_subset_count": 1,
+            "oos_subset_count": oos_opened_count,
             "coverage_diagnostics": _liquidity_subset_coverage(symbols, research_histories),
         },
-        "untouched_oos_opened_for_candidate_count": 1 if selected is not None else 0,
+        "untouched_oos_opened_for_candidate_count": oos_opened_count,
         "candidate_count": len(public_candidates),
         "candidates": public_candidates,
         "selected_evaluation": selected_evaluation,
@@ -454,6 +534,7 @@ def summarize_evidence(envelope: dict) -> dict:
             }
         candidate_summaries.append({
             "lookbacks": candidate["lookbacks"],
+            "candidate_fingerprint": candidate.get("candidate_fingerprint"),
             "eligible_pre_oos": candidate["eligible_pre_oos"],
             "passing_liquidity_subsets": candidate["liquidity_stability"]["passing_subset_count"],
             "liquidity_subsets": subsets,
@@ -463,20 +544,33 @@ def summarize_evidence(envelope: dict) -> dict:
     oos_summary = None
     if selected is not None:
         oos = selected["untouched_oos"]
-        metrics = oos["metrics"]
-        bootstrap = oos["bootstrap_robustness"]
-        oos_summary = {
-            "lookbacks": selected["lookbacks"],
-            "primary_liquidity_subset": selected["primary_liquidity_subset"],
-            "samples": metrics["timestamps"],
-            "rank_ic": metrics["mean_rank_ic"],
-            "max_cost_net_spread": _worst_stress(metrics)["mean_net_top_minus_bottom"],
-            "rank_ic_95pct_lower_bound": bootstrap["rank_ic_mean_95pct_lower_bound"],
-            "max_cost_net_spread_95pct_lower_bound": bootstrap["max_cost_net_spread_mean_95pct_lower_bound"],
-            "acc002_research_pass": selected["acc002_research_pass"],
-            "acc011_survivorship_pass": selected["acc011_survivorship_pass"],
-            "eligible_for_promotion_review": selected["eligible_for_promotion_review"],
-        }
+        if oos.get("status") == "LOCKED_UNTOUCHED_OOS":
+            oos_summary = {
+                "lookbacks": selected["lookbacks"],
+                "candidate_fingerprint": selected.get("candidate_fingerprint"),
+                "primary_liquidity_subset": selected["primary_liquidity_subset"],
+                "status": oos["status"],
+                "reason": oos["reason"],
+                "acc002_research_pass": False,
+                "acc011_survivorship_pass": selected["acc011_survivorship_pass"],
+                "eligible_for_promotion_review": False,
+            }
+        else:
+            metrics = oos["metrics"]
+            bootstrap = oos["bootstrap_robustness"]
+            oos_summary = {
+                "lookbacks": selected["lookbacks"],
+                "candidate_fingerprint": selected.get("candidate_fingerprint"),
+                "primary_liquidity_subset": selected["primary_liquidity_subset"],
+                "samples": metrics["timestamps"],
+                "rank_ic": metrics["mean_rank_ic"],
+                "max_cost_net_spread": _worst_stress(metrics)["mean_net_top_minus_bottom"],
+                "rank_ic_95pct_lower_bound": bootstrap["rank_ic_mean_95pct_lower_bound"],
+                "max_cost_net_spread_95pct_lower_bound": bootstrap["max_cost_net_spread_mean_95pct_lower_bound"],
+                "acc002_research_pass": selected["acc002_research_pass"],
+                "acc011_survivorship_pass": selected["acc011_survivorship_pass"],
+                "eligible_for_promotion_review": selected["eligible_for_promotion_review"],
+            }
     failure_type_counts = {}
     for failure in payload["failed_symbols"]:
         if not isinstance(failure, dict):
@@ -503,6 +597,7 @@ def summarize_evidence(envelope: dict) -> dict:
         "generated_at": payload["generated_at"],
         "horizon": payload["horizon"],
         "bar": payload["bar"],
+        "selection_mode": bool(payload.get("selection_mode")),
         "research_blocked": bool(payload.get("research_blocked")),
         "research_blocked_reason": payload.get("research_blocked_reason"),
         "supported_liquidity_subsets": payload["liquidity_stability_policy"]["supported_subsets"],
@@ -510,7 +605,7 @@ def summarize_evidence(envelope: dict) -> dict:
         "history_provenance": provenance_summary,
         "parameter_stability": payload["parameter_stability"],
         "point_in_time_universe": payload["point_in_time_universe"],
-        "untouched_oos_opened": selected is not None,
+        "untouched_oos_opened": int(payload.get("untouched_oos_opened_for_candidate_count") or 0) > 0,
         "selected_oos": oos_summary,
         "candidates": candidate_summaries,
         "universe_requested": payload["universe_requested"],
