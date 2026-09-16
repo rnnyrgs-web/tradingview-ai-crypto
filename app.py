@@ -14,6 +14,7 @@ from market_data import build_universe
 from dashboard import login_page, handle_login, dashboard_page, signal_detail_page, signal_chart_data
 from paper_dashboard import paper_audit_page, paper_portfolio_page
 from combined_dashboard import combined_dashboard_page
+from strategy_mission_dashboard import mission_control_page
 from money_intelligence_dashboard import money_dashboard_page
 from operational_monitor import health_snapshot, record_error
 from calibration import calibration_summary
@@ -62,6 +63,8 @@ def root():
         "service":"Crypto Signal Engine V3",
         "version":STRATEGY_VERSION,
         "dashboard":"/dashboard",
+        "mission_control":"/dashboard",
+        "system_dashboard":"/dashboard/system",
         "money_intelligence":"/dashboard/money",
         "paper_portfolio":"/dashboard/paper",
         "paper_audit":"/dashboard/paper/audit",
@@ -122,11 +125,18 @@ async def dashboard_login_post(request:Request):
     return await handle_login(request)
 
 @app.get("/dashboard")
-def dashboard(request:Request,horizon:str="all"):
+def dashboard(request:Request):
+    try:
+        return mission_control_page(request)
+    except Exception as e:
+        internal_error("dashboard_mission_control", e, "Mission Control unavailable")
+
+@app.get("/dashboard/system")
+def dashboard_system(request:Request,horizon:str="all"):
     try:
         return combined_dashboard_page(request,horizon)
     except Exception as e:
-        internal_error("dashboard", e, "Dashboard unavailable")
+        internal_error("dashboard_system", e, "System dashboard unavailable")
 
 @app.get("/dashboard/money")
 def dashboard_money(request:Request):
