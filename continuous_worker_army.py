@@ -82,9 +82,10 @@ WORKERS = (
 def focused_worker_specs(workers: tuple[WorkerSpec, ...], objective: dict) -> tuple[WorkerSpec, ...]:
     """Return only workers authorized by the canonical one-candidate lifecycle.
 
-    Lightweight diagnostics may continue during selection. Heavy research is parked
-    until the Lead records one immutable candidate and explicitly names its deep
-    workers. Unknown worker names fail closed rather than silently broadening work.
+    Selection permits only explicitly declared cheap screeners plus the lightweight
+    research-brain workers. Those screeners receive an environment guard that keeps
+    untouched OOS locked. Once the Lead freezes one immutable candidate, only its
+    explicitly declared deep workers may run. Unknown names fail closed.
     """
     focus = objective.get("single_strategy_focus") or {}
     if focus.get("enabled") is not True or focus.get("max_active_deep_candidates") != 1:
@@ -92,7 +93,24 @@ def focused_worker_specs(workers: tuple[WorkerSpec, ...], objective: dict) -> tu
     lightweight = tuple(spec for spec in workers if spec.compute_class == "lightweight")
     candidate = focus.get("active_candidate")
     if candidate is None:
-        return lightweight
+        selection_names = focus.get("selection_screen_workers")
+        if not isinstance(selection_names, list) or not selection_names:
+            raise RuntimeError("selection phase has no declared screening workers")
+        allowed = {str(name).strip() for name in selection_names if str(name).strip()}
+        known = {spec.name for spec in workers}
+        unknown = allowed - known
+        if unknown:
+            raise RuntimeError(f"selection phase declares unknown screening workers: {sorted(unknown)}")
+        selected = list(lightweight)
+        for spec in workers:
+            if spec.name not in allowed:
+                continue
+            if spec.compute_class != "heavy":
+                raise RuntimeError(f"selection screener must be a bounded heavy worker: {spec.name}")
+            env = dict(spec.env)
+            env["SINGLE_STRATEGY_SELECTION_MODE"] = "1"
+            selected.append(replace(spec, env=env))
+        return tuple(selected)
     contracts = candidate.get("deep_worker_contracts")
     if not isinstance(contracts, dict) or not contracts:
         raise RuntimeError("active candidate has no declared deep worker contracts")
@@ -110,7 +128,7 @@ def focused_worker_specs(workers: tuple[WorkerSpec, ...], objective: dict) -> tu
             continue
         contract = contracts[spec.name]
         family = str((contract or {}).get("strategy_family") or "").strip()
-        if spec.script != "research_runner.py" or not family:
+        if not family:
             raise RuntimeError(f"unsupported deep worker contract for {spec.name}")
         env = dict(spec.env)
         env.update({
