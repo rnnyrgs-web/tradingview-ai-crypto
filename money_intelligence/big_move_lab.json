@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-09-16T18:45:00Z",
+  "purpose": "Point-in-time causal case library for significant cross-asset price moves. This artifact is independent of the crypto signal engine and has no trading authority.",
+  "cases": [
+    {
+      "case_id": "2026-09-15-16-brent-yanbu-substitution-reversal",
+      "asset": "Brent crude oil futures",
+      "event_window": "2026-09-15 to 2026-09-16",
+      "pre_move_evidence_cutoff": "2026-09-16T18:45:00Z",
+      "observed_move": "Brent settled Sep. 15 at $108.75, up $3.07 or 2.9%, after Yanbu loadings were suspended and some Saudi European cargoes were cancelled. On Sep. 16 Reuters reported Brent down 2.7% to $105.83 as Saudi Arabia increased crude shipments via Oman; U.S. inventory evidence also reduced immediate scarcity pressure.",
+      "abnormality": "Two consecutive material opposite-direction daily moves around a physical supply-route shock; volatility-adjusted abnormality not yet quantified.",
+      "observed_facts": [
+        "Yanbu loadings were suspended and Saudi Arabia cancelled some European cargo deliveries, contributing to Brent's Sep. 15 rise.",
+        "On Sep. 16 Saudi Arabia increased crude shipments using ship-to-ship transfers off Sohar, Oman, providing an alternative delivery route.",
+        "Brent fell despite the underlying geopolitical disruption remaining unresolved.",
+        "EIA's petroleum data page confirms the Weekly Petroleum Status Report was released Sep. 16; detailed inventory decomposition should be preserved as UNKNOWN until the primary table is captured into this artifact."
+      ],
+      "inference": "The economically relevant supply variable is effective deliverable supply after route substitution and inventory buffers, not gross capacity attached to the initially disrupted route. The marginal buyer's scarcity bid can reverse quickly when credible substitution capacity appears even though the original disruption persists.",
+      "causal_chain": "physical-route disruption -> expected deliverable-barrel shortage -> refiners/traders bid for replacement barrels and crude futures -> price rises -> alternative routing/ship-to-ship capacity becomes credible plus inventory buffer evidence improves -> expected net shortage falls -> scarcity/risk premium unwinds -> crude futures fall",
+      "capital_source_destination": "During the scarcity phase, capital moved toward crude/energy exposure from cash or competing risk allocations; during the reversal, part of that event-risk premium exited crude as expected effective supply improved. Exact source-of-funds and participant decomposition remain UNKNOWN.",
+      "likely_marginal_buyers_sellers": "Likely marginal buyers on Sep. 15 included physical replacement-barrel seekers and financial participants hedging/expressing supply risk; likely marginal sellers on Sep. 16 included holders unwinding scarcity premium as alternative-route capacity became credible. Participant-level attribution is INFERENCE, not directly observed.",
+      "catalyst": "Yanbu loading suspension/cargo cancellations, followed by evidence of Saudi alternative routing via Oman.",
+      "transmission_mechanism": "Changes in expected effective deliverable supply altered the price required to clear near-term crude demand.",
+      "amplifiers": [
+        "Geopolitical risk premium",
+        "Physical-versus-futures scarcity expectations",
+        "Potential inventory and refined-product constraints"
+      ],
+      "alternative_explanations": [
+        "U.S. inventory news independently reduced scarcity expectations.",
+        "Pre-FOMC positioning and broader risk reduction may have influenced futures flows.",
+        "The reversal may partly represent profit-taking after the Sep. 15 spike rather than a durable supply reassessment."
+      ],
+      "confirmations": [
+        "Sustained alternative-route loading volumes",
+        "Normalization of physical crude differentials/backwardation",
+        "No renewed cancellation wave beyond available replacement capacity",
+        "Inventories remain adequate relative to disruption duration"
+      ],
+      "falsifiers": [
+        "Alternative routing proves too small or temporary",
+        "Physical premiums/backwardation continue widening despite lower futures",
+        "Refinery/feedstock shortages force renewed replacement buying",
+        "Further infrastructure/shipping disruption removes substitute routes"
+      ],
+      "matched_control_requirement": "Compare with prior pipeline/port outages where gross disrupted capacity was large but alternative routing/storage prevented persistent benchmark-price increases, and with outages where substitution capacity was unavailable and prices remained elevated.",
+      "reusable_pre_move_indicators": [
+        "Net effective deliverable supply after substitution, not headline disrupted capacity",
+        "Alternative port/pipeline/ship-to-ship spare capacity",
+        "Physical differential and futures-curve response versus outright futures price",
+        "Inventory buffer relative to expected outage duration",
+        "Refinery/product bottlenecks that can shift scarcity downstream"
+      ],
+      "lesson_status": "SUPPORTED / PROVISIONAL / NEEDS CROSS-EPISODE TESTING",
+      "decision_support": "WAIT on extrapolating a crude spike solely from headline route capacity. Require evidence that net deliverable supply after substitution is actually impaired. No real-money trade authority.",
+      "sources": [
+        {
+          "publisher": "Reuters",
+          "date": "2026-09-16",
+          "url": "https://www.reuters.com/business/energy/oil-falls-us-crude-inventories-rise-despite-saudi-supply-concerns-2026-09-16/"
+        },
+        {
+          "publisher": "U.S. Energy Information Administration",
+          "date": "2026-09-16",
+          "url": "https://www.eia.gov/petroleum/data.php"
+        }
+      ]
+    }
+  ],
+  "cross_case_hypotheses": [
+    {
+      "hypothesis_id": "effective-deliverable-supply-vs-gross-disruption",
+      "status": "CANDIDATE",
+      "claim": "For transport-route commodity shocks, changes in net effective deliverable supply after substitution and inventory buffers should predict persistence of benchmark price moves better than headline gross disrupted capacity.",
+      "falsification": "Across timestamp-safe matched historical disruptions, gross disrupted capacity predicts persistence at least as well after controlling for substitution capacity, inventories and demand conditions.",
+      "next_test": "Build matched historical port/pipeline/chokepoint outage sample and compare gross disruption with net deliverable-supply estimates against 1d/5d/20d crude returns, physical differentials and curve backwardation."
+    }
+  ]
+}
