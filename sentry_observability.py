@@ -12,15 +12,69 @@ class SentryAPIError(RuntimeError):
     pass
 
 
-def _config():
+def _base_config():
     token = os.getenv("SENTRY_AUTH_TOKEN", "").strip()
-    org = os.getenv("SENTRY_ORG", "").strip()
-    project = os.getenv("SENTRY_PROJECT", "").strip()
     base_url = os.getenv("SENTRY_BASE_URL", "https://sentry.io").strip().rstrip("/")
-    if not token or not org or not project:
+    if not token:
         raise SentryConfigurationError("Sentry read-only observability is not configured")
     if not base_url.startswith("https://"):
         raise SentryConfigurationError("SENTRY_BASE_URL must use HTTPS")
+    return token, base_url
+
+
+def _headers(token):
+    return {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/json",
+        "User-Agent": "tradingview-ai-crypto/sentry-observability",
+    }
+
+
+def _get_json(url, token, params=None):
+    try:
+        response = httpx.get(
+            url,
+            params=params,
+            headers=_headers(token),
+            timeout=10.0,
+            follow_redirects=False,
+        )
+        response.raise_for_status()
+        return response.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        raise SentryAPIError("Sentry API request failed") from exc
+
+
+def _target():
+    token, base_url = _base_config()
+    org = os.getenv("SENTRY_ORG", "").strip()
+    project = os.getenv("SENTRY_PROJECT", "").strip()
+
+    if not org:
+        organizations = _get_json(f"{base_url}/api/0/organizations/", token)
+        if not isinstance(organizations, list) or len(organizations) != 1:
+            raise SentryConfigurationError("Set SENTRY_ORG when the token can access multiple organizations")
+        org = str(organizations[0].get("slug") or "").strip()
+        if not org:
+            raise SentryConfigurationError("Unable to discover Sentry organization slug")
+
+    if not project:
+        projects = _get_json(
+            f"{base_url}/api/0/organizations/{quote(org, safe='')}/projects/",
+            token,
+            params={"per_page": 100},
+        )
+        if not isinstance(projects, list):
+            raise SentryAPIError("Unexpected Sentry projects response")
+        candidates = [str(item.get("slug") or "").strip() for item in projects if isinstance(item, dict)]
+        candidates = [slug for slug in candidates if slug]
+        if "tradingview-ai-crypto" in candidates:
+            project = "tradingview-ai-crypto"
+        elif len(candidates) == 1:
+            project = candidates[0]
+        else:
+            raise SentryConfigurationError("Set SENTRY_PROJECT when the organization has multiple projects")
+
     return token, org, project, base_url
 
 
@@ -50,7 +104,7 @@ def sanitize_issues(items):
 
 
 def fetch_recent_issues(limit=20, stats_period="24h", environment="production"):
-    token, org, project, base_url = _config()
+    token, org, project, base_url = _target()
     limit = max(1, min(int(limit), 50))
     params = {
         "project": project,
@@ -61,23 +115,11 @@ def fetch_recent_issues(limit=20, stats_period="24h", environment="production"):
     }
     if environment:
         params["environment"] = environment
-    url = f"{base_url}/api/0/organizations/{quote(org, safe='')}/issues/"
-    try:
-        response = httpx.get(
-            url,
-            params=params,
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Accept": "application/json",
-                "User-Agent": "tradingview-ai-crypto/sentry-observability",
-            },
-            timeout=10.0,
-            follow_redirects=False,
-        )
-        response.raise_for_status()
-        payload = response.json()
-    except (httpx.HTTPError, ValueError) as exc:
-        raise SentryAPIError("Sentry API request failed") from exc
+    payload = _get_json(
+        f"{base_url}/api/0/organizations/{quote(org, safe='')}/issues/",
+        token,
+        params=params,
+    )
     if not isinstance(payload, list):
         raise SentryAPIError("Unexpected Sentry API response")
     return sanitize_issues(payload)
