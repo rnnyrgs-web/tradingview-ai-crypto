@@ -10,38 +10,28 @@ from utils import iso, now_utc
 http = httpx.Client(timeout=25.0, follow_redirects=True)
 log = logging.getLogger(__name__)
 
-# Research-only paper shadow policy. This never mutates persisted production
-# opportunities, live signal authority, strategy fingerprints, or broker connectivity.
-# It allows the authentic paper simulator to collect forward execution/P&L evidence
-# from narrowly predeclared WAIT cohorts while all normal paper risk/execution gates
-# remain in force.
 PAPER_7D_SHADOW_MIN_EVIDENCE = 80.0
 PAPER_7D_SHADOW_MAX_RANK = 5
-
-# 24h is intentionally stricter because it creates a faster, more-overlapping research
-# stream. Start LONG-only: the canonical paper engine currently validates perpetual
-# SHORT shadow execution only for 7d. Adding 24h SHORT authority would be a separate
-# execution-policy change and must not be smuggled into this research expansion.
 PAPER_24H_SHADOW_MIN_EVIDENCE = 85.0
 PAPER_24H_SHADOW_MAX_RANK = 3
 PAPER_24H_SHADOW_DIRECTIONS = {"LONG"}
 PAPER_24H_SHADOW_FINGERPRINT = "PAPER_SHADOW_24H_V1_LONG_STRICT_85_TOP3"
 PAPER_7D_SHADOW_FINGERPRINT = "PAPER_SHADOW_7D_V1_80_TOP5"
 
-# These are infrastructure/data-availability failures, not strategy/risk verdicts.
-# They must remain visible in the audit trail while leaving the canonical signal key
-# unused so the same signal can be retried and later accepted if execution evidence
-# becomes available. Genuine risk/liquidity/strategy rejects keep their normal key.
 TECHNICAL_PAPER_REJECTION_REASONS = {
     "kraken_execution_evidence_unavailable",
     "kraken_perp_execution_evidence_unavailable",
 }
 
-# Opportunity rows are fetched immediately before paper decisions are recorded. Keep
-# a bounded, in-process mapping from the immutable signal key to the structured
-# restrictive gate that made an opportunity WAIT. This avoids extra database reads and
-# changes observability only: no action, threshold, risk gate, sizing, or authority is
-# modified.
+STRATEGY_PROVENANCE_FIELDS = (
+    "signal_id",
+    "strategy_fingerprint",
+    "experiment_id",
+    "git_sha",
+    "dataset_sha256",
+    "strategy_contract_sha256",
+)
+
 _ACTIONABILITY_REASON_CACHE = {}
 _ACTIONABILITY_REASON_CACHE_MAX = 512
 
@@ -122,10 +112,6 @@ def fetch_ranked_opportunities(horizon="24h", hours=None, limit=20):
             and 1 <= rank <= policy["max_rank"]
             and evidence >= policy["min_evidence"]
         ):
-            # Copy-only override for the authentic paper simulator. Persisted
-            # production action remains WAIT. Existing freshness, portfolio risk,
-            # sizing, Kraken execution, stop, target, and horizon time-exit gates
-            # still apply before any paper position can be accepted.
             row["action"] = "TRADE"
             row["paper_shadow"] = True
             row["paper_source_action"] = action
@@ -218,9 +204,15 @@ def close_paper_trade(trade_id, exit_price, exit_reason, pnl_usd, pnl_pct, audit
 def _prepare_paper_signal_decision(row):
     allowed = {
         "account_id","signal_key","scan_id","symbol","horizon","direction","action",
-        "evidence_score","decision","reason","signal_generated_at","decided_at"
+        "evidence_score","decision","reason","signal_generated_at","decided_at",
+        *STRATEGY_PROVENANCE_FIELDS,
     }
     payload = {k: v for k, v in row.items() if k in allowed}
+    provenance_present = any(str(payload.get(key) or "").strip() for key in STRATEGY_PROVENANCE_FIELDS)
+    if provenance_present:
+        missing = [key for key in STRATEGY_PROVENANCE_FIELDS if not str(payload.get(key) or "").strip()]
+        if missing:
+            raise RuntimeError(f"paper strategy provenance incomplete: {missing}")
     payload.setdefault("decided_at", iso(now_utc()))
     decision = str(payload.get("decision") or "").upper()
     reason = str(payload.get("reason") or "")
@@ -365,5 +357,5 @@ __all__ = [
     "fetch_all_paper_trades","insert_paper_trade","close_paper_trade","insert_paper_signal_decision",
     "fetch_paper_signal_decisions","insert_paper_reconciliation_snapshot","fetch_latest_paper_reconciliation",
     "insert_paper_equity_snapshot","fetch_paper_trade_stats","_prepare_paper_signal_decision",
-    "_structured_not_actionable_reason","_paper_shadow_policy"
+    "_structured_not_actionable_reason","_paper_shadow_policy","STRATEGY_PROVENANCE_FIELDS"
 ]

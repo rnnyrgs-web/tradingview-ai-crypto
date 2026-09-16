@@ -12,6 +12,7 @@ from datetime import timedelta
 
 from calibration import deterioration_assessment, wilson_lower_bound
 from config import BACKTEST_COST_BPS
+from strategy_contract import CONTRACT_SCHEMA_VERSION, StrategyContract
 from utils import parse_dt
 
 MIN_FORWARD_SAMPLES = {"6h":30,"12h":30,"24h":20,"48h":20,"72h":16,"7d":12}
@@ -19,6 +20,24 @@ HORIZON_SPAN = {"6h":timedelta(hours=6),"12h":timedelta(hours=12),"24h":timedelt
 MAX_FORWARD_DRAWDOWN_PCT = 12.0
 FORWARD_COST_MULTIPLIER = 3.0
 MIN_FORWARD_PRECISION_LOWER = 0.50
+FORWARD_PROVENANCE_FIELDS = (
+    "strategy_fingerprint",
+    "signal_id",
+    "experiment_id",
+    "hypothesis_id",
+    "git_sha",
+    "dataset_id",
+    "dataset_sha256",
+    "strategy_contract_sha256",
+    "decision_timestamp",
+    "symbol",
+    "direction",
+    "entry_reference",
+    "expected_horizon",
+    "expected_move_pct",
+    "stop_rule",
+    "exit_rule",
+)
 
 
 def _finite(value):
@@ -73,6 +92,92 @@ def _max_drawdown_pct(net_returns):
         if peak > 0:
             worst = max(worst, (peak - equity) / peak * 100.0)
     return worst
+
+
+def _validated_frozen_contract(frozen: dict) -> tuple[StrategyContract, dict]:
+    if not isinstance(frozen, dict) or frozen.get("frozen") is not True:
+        raise RuntimeError("forward shadow requires a frozen strategy contract")
+    if frozen.get("schema_version") != CONTRACT_SCHEMA_VERSION:
+        raise RuntimeError("forward shadow received unsupported strategy contract schema")
+    payload = frozen.get("payload")
+    if not isinstance(payload, dict):
+        raise RuntimeError("forward shadow strategy contract payload missing")
+    contract = StrategyContract.from_mapping(payload)
+    if frozen.get("fingerprint") != contract.fingerprint():
+        raise RuntimeError("forward shadow strategy contract seal is invalid")
+    return contract, payload
+
+
+def build_forward_decision_record(
+    frozen_contract: dict,
+    gate_result: dict,
+    *,
+    signal_id: str,
+    decision_timestamp: str,
+    symbol: str,
+    direction: str,
+    entry_reference: float,
+    expected_horizon: str,
+    expected_move_pct: float,
+    stop_rule,
+    exit_rule,
+) -> dict:
+    """Create the immutable decision-time record that starts genuine forward evidence.
+
+    Independent reproduction must already have passed: the central lifecycle therefore
+    must be FORWARD_PENDING. OOS_PASS alone is insufficient and cannot open forward
+    collection. This helper never grants real-money authority.
+    """
+    gate_result = gate_result if isinstance(gate_result, dict) else {}
+    if gate_result.get("state") != "FORWARD_PENDING":
+        raise RuntimeError("forward shadow requires central state FORWARD_PENDING")
+    blockers = set(gate_result.get("blocking_gates") or [])
+    if blockers - {"genuine_forward"}:
+        raise RuntimeError("forward shadow has unresolved pre-forward validation gates")
+    if gate_result.get("real_money_trade_authority") is not False:
+        raise RuntimeError("forward shadow cannot carry real-money trade authority")
+
+    contract, payload = _validated_frozen_contract(frozen_contract)
+    signal_id = str(signal_id or "").strip()
+    timestamp = str(decision_timestamp or "").strip()
+    symbol = str(symbol or "").strip().upper()
+    direction = str(direction or "").strip().upper()
+    horizon = str(expected_horizon or "").strip()
+    entry = _finite(entry_reference)
+    move = _finite(expected_move_pct)
+    if not all((signal_id, timestamp, symbol, horizon)) or direction not in {"LONG", "SHORT"}:
+        raise RuntimeError("forward decision identity is incomplete")
+    if entry is None or entry <= 0 or move is None:
+        raise RuntimeError("forward decision economics are invalid")
+
+    return {
+        "strategy_fingerprint": contract.fingerprint(),
+        "signal_id": signal_id,
+        "experiment_id": str(payload["experiment_id"]),
+        "hypothesis_id": str(payload["hypothesis_id"]),
+        "git_sha": str(payload["git_sha"]),
+        "dataset_id": str(payload["dataset_id"]),
+        "dataset_sha256": str(payload["dataset_sha256"]),
+        "strategy_contract_sha256": contract.fingerprint(),
+        "decision_timestamp": timestamp,
+        "symbol": symbol,
+        "direction": direction,
+        "entry_reference": entry,
+        "expected_horizon": horizon,
+        "expected_move_pct": move,
+        "stop_rule": stop_rule,
+        "exit_rule": exit_rule,
+        "outcome_status": "PENDING",
+        "real_money_trade_authority": False,
+    }
+
+
+def assert_forward_provenance_unchanged(existing: dict, proposed: dict) -> None:
+    if not isinstance(existing, dict) or not isinstance(proposed, dict):
+        raise RuntimeError("forward provenance records must be objects")
+    changed = [field for field in FORWARD_PROVENANCE_FIELDS if proposed.get(field) != existing.get(field)]
+    if changed:
+        raise RuntimeError(f"forward provenance changed: {changed}")
 
 
 def assess_forward_proof(identity, horizon, resolved_rows):

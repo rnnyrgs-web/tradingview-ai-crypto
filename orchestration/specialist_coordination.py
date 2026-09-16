@@ -21,12 +21,10 @@ REQUIRED_ROLES = {
     "production-risk",
     "testing-security",
 }
-# Engine identities recognized by the multi-engine coordination layer. A task
-# may optionally declare "eligible_engines" (subset of this set) to restrict
-# which engine kind may claim it; omitting the field means every engine kind
-# is eligible, preserving prior behavior for every existing task row.
 VALID_ENGINES = {"chatgpt", "claude", "claude-code", "human"}
 ACTIVE_TASK_STATUSES = {"READY", "IN_PROGRESS", "PR_OPEN", "QUEUED"}
+ACTIVE_EXECUTION_STATUSES = {"READY", "IN_PROGRESS", "PR_OPEN"}
+VALID_RESEARCH_LANES = {"CHANGE", "REVIEW", "FALSIFICATION", "DATA_CERTIFICATION", "EVIDENCE_COLLECTION"}
 
 
 def load_state(path: Path = STATE_PATH) -> dict:
@@ -35,6 +33,25 @@ def load_state(path: Path = STATE_PATH) -> dict:
     payload = apply_coordination_overrides(payload)
     validate_state(payload)
     return payload
+
+
+def _default_research_lane(task: dict) -> str:
+    work_mode = str(task.get("work_mode") or "").strip().upper()
+    owner = str(task.get("owner") or "").strip()
+    if work_mode == "DEEP":
+        return "CHANGE"
+    if owner == "data-market":
+        return "DATA_CERTIFICATION"
+    if work_mode == "VALIDATION":
+        return "EVIDENCE_COLLECTION"
+    if work_mode == "CHEAP_SCREEN":
+        return "FALSIFICATION"
+    return "REVIEW"
+
+
+def research_lane(task: dict) -> str:
+    explicit = str(task.get("research_lane") or "").strip().upper()
+    return explicit or _default_research_lane(task)
 
 
 def validate_state(payload: dict) -> None:
@@ -80,6 +97,7 @@ def validate_state(payload: dict) -> None:
     by_id: dict[str, dict] = {}
     active_by_owner: dict[str, list[str]] = {role: [] for role in REQUIRED_ROLES}
     active_deep_fingerprints: set[str] = set()
+    active_change_tasks: list[str] = []
     for task in tasks:
         if not isinstance(task, dict):
             raise RuntimeError("task must be an object")
@@ -98,8 +116,18 @@ def validate_state(payload: dict) -> None:
             raise RuntimeError(f"dependencies/blockers must be lists for {task_id}")
         if not isinstance(task.get("evidence_required"), list) or not task["evidence_required"]:
             raise RuntimeError(f"evidence_required missing for {task_id}")
-        if status in {"READY", "IN_PROGRESS", "PR_OPEN"}:
+        if status in ACTIVE_EXECUTION_STATUSES:
             active_by_owner[owner].append(task_id)
+            lane = research_lane(task)
+            if lane not in VALID_RESEARCH_LANES:
+                raise RuntimeError(f"invalid research_lane for {task_id}: {lane}")
+            mutation_authority = task.get("strategy_mutation_authority") is True
+            if lane == "CHANGE":
+                if not mutation_authority:
+                    raise RuntimeError(f"CHANGE lane requires explicit strategy_mutation_authority for {task_id}")
+                active_change_tasks.append(task_id)
+            elif mutation_authority:
+                raise RuntimeError(f"non-CHANGE lane cannot mutate strategy: {task_id}")
         expected_branch = roles[owner].get("branch")
         if task.get("branch") != expected_branch:
             raise RuntimeError(f"branch mismatch for {task_id}: expected {expected_branch}")
@@ -132,11 +160,13 @@ def validate_state(payload: dict) -> None:
         if status == "BLOCKED" and not task.get("blockers"):
             raise RuntimeError(f"BLOCKED task missing blocker for {task_id}")
 
+    if len(active_change_tasks) > 1:
+        raise RuntimeError(f"only one active CHANGE lane is permitted: {active_change_tasks}")
     for owner, active in active_by_owner.items():
         if len(active) > 1:
             raise RuntimeError(f"duplicate active ownership for {owner}: {active}")
     for task in tasks:
-        if task.get("status") not in {"READY", "IN_PROGRESS", "PR_OPEN"}:
+        if task.get("status") not in ACTIVE_EXECUTION_STATUSES:
             continue
         task_id = str(task.get("id") or "")
         work_mode = task.get("work_mode")
@@ -177,7 +207,7 @@ def role_queue(payload: dict, role: str) -> list[dict]:
 
 def next_task(payload: dict, role: str) -> dict | None:
     for task in role_queue(payload, role):
-        if task["status"] in {"IN_PROGRESS", "PR_OPEN", "READY"}:
+        if task["status"] in ACTIVE_EXECUTION_STATUSES:
             return task
     for task in role_queue(payload, role):
         if task["status"] == "QUEUED":
