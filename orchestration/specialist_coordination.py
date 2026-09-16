@@ -59,10 +59,17 @@ def validate_state(payload: dict) -> None:
         raise RuntimeError("broker must remain disconnected")
     if int(policy.get("monthly_infrastructure_ceiling_usd", -1)) != 30:
         raise RuntimeError("monthly infrastructure ceiling must remain USD 30")
+    if policy.get("single_strategy_focus") is not True or policy.get("max_active_deep_strategy_candidates") != 1:
+        raise RuntimeError("coordination must enforce one active deep candidate")
+    if policy.get("broad_unrelated_research") != "DEPRIORITIZED":
+        raise RuntimeError("broad unrelated research must remain deprioritized")
+    if policy.get("single_strategy_lifecycle_phase") == "SELECTION" and policy.get("active_strategy_candidate") is not None:
+        raise RuntimeError("coordination selection phase cannot declare an active candidate")
 
     ids: set[str] = set()
     by_id: dict[str, dict] = {}
     active_by_owner: dict[str, list[str]] = {role: [] for role in REQUIRED_ROLES}
+    active_deep_fingerprints: set[str] = set()
     for task in tasks:
         if not isinstance(task, dict):
             raise RuntimeError("task must be an object")
@@ -118,6 +125,20 @@ def validate_state(payload: dict) -> None:
     for owner, active in active_by_owner.items():
         if len(active) > 1:
             raise RuntimeError(f"duplicate active ownership for {owner}: {active}")
+    for task in tasks:
+        if task.get("status") not in {"READY", "IN_PROGRESS", "PR_OPEN"}:
+            continue
+        task_id = str(task.get("id") or "")
+        work_mode = task.get("work_mode")
+        if work_mode not in {"CHEAP_SCREEN", "DEEP", "VALIDATION", "AUDIT"}:
+            raise RuntimeError(f"active task missing valid work_mode for {task_id}")
+        if work_mode == "DEEP":
+            fingerprint = str(task.get("fingerprint_id") or "").strip()
+            if not fingerprint:
+                raise RuntimeError(f"deep task missing fingerprint_id for {task_id}")
+            active_deep_fingerprints.add(fingerprint)
+    if len(active_deep_fingerprints) > 1:
+        raise RuntimeError(f"one active deep candidate permitted, found: {sorted(active_deep_fingerprints)}")
 
     for task in tasks:
         for dep in task["dependencies"]:

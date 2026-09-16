@@ -41,6 +41,8 @@
     "single_strategy_focus": true,
     "max_active_deep_strategy_candidates": 1,
     "broad_unrelated_research": "DEPRIORITIZED",
+    "single_strategy_lifecycle_phase": "SELECTION",
+    "active_strategy_candidate": null,
     "exception": "Safety/reliability work may preempt only when necessary to protect evidence validity, availability, authenticity, or fail-closed operation."
   }
 }

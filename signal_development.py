@@ -45,8 +45,29 @@ def validate_objective(payload: dict) -> None:
     focus = payload.get("single_strategy_focus") or {}
     if focus.get("enabled") is not True or focus.get("max_active_deep_candidates") != 1:
         raise ObjectiveError("single-strategy focus must remain enabled with one active deep candidate")
+    phase = focus.get("lifecycle_phase")
+    candidate = focus.get("active_candidate")
+    if phase not in {"SELECTION", "DEEP_VALIDATION", "FORWARD_PAPER", "VALIDATED", "REJECTED"}:
+        raise ObjectiveError("invalid single-strategy lifecycle phase")
+    if phase == "SELECTION" and candidate is not None:
+        raise ObjectiveError("selection phase cannot declare an active deep candidate")
+    if phase in {"DEEP_VALIDATION", "FORWARD_PAPER", "VALIDATED"}:
+        if not isinstance(candidate, dict) or not str(candidate.get("fingerprint_id") or "").strip():
+            raise ObjectiveError("deep strategy lifecycle requires an immutable active fingerprint")
+        workers = candidate.get("deep_worker_names")
+        if not isinstance(workers, list) or not workers or not all(isinstance(name, str) and name for name in workers):
+            raise ObjectiveError("active strategy candidate must declare deep workers")
     if focus.get("real_money_trading_authority") is not False:
         raise ObjectiveError("single-strategy research may not receive real-money trading authority")
+    required_evidence = set(focus.get("required_evidence") or [])
+    mandatory_evidence = {
+        "predeclared_immutable_fingerprint", "positive_after_cost_expectancy",
+        "purged_chronological_validation", "untouched_oos",
+        "cost_stress_and_parameter_stability", "multiple_testing_control",
+        "genuine_forward_paper_validation",
+    }
+    if required_evidence != mandatory_evidence:
+        raise ObjectiveError("single-strategy evidence contract changed")
     invariants = payload.get("hard_invariants") or {}
     required_false = (
         "increase_heavy_concurrency_for_speed", "automatic_merge", "broker_connected",

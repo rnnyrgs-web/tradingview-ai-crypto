@@ -6,6 +6,8 @@
   "single_strategy_focus": {
     "enabled": true,
     "max_active_deep_candidates": 1,
+    "lifecycle_phase": "SELECTION",
+    "active_candidate": null,
     "broad_unrelated_research": "DEPRIORITIZED",
     "success_state": "VALIDATED_RESEARCH_CANDIDATE",
     "required_evidence": [
