@@ -9,7 +9,9 @@ class SentryConfigurationError(RuntimeError):
 
 
 class SentryAPIError(RuntimeError):
-    pass
+    def __init__(self, message, status_code=None):
+        super().__init__(message)
+        self.status_code = status_code
 
 
 def _base_config():
@@ -41,6 +43,8 @@ def _get_json(url, token, params=None):
         )
         response.raise_for_status()
         return response.json()
+    except httpx.HTTPStatusError as exc:
+        raise SentryAPIError("Sentry API request failed", status_code=exc.response.status_code) from exc
     except (httpx.HTTPError, ValueError) as exc:
         raise SentryAPIError("Sentry API request failed") from exc
 
