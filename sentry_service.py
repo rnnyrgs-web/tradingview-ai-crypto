@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import logging
 import os
 import time
 
@@ -7,6 +8,8 @@ from fastapi import HTTPException
 
 from app import app, internal_error
 from sentry_observability import snapshot as sentry_snapshot
+
+log = logging.getLogger(__name__)
 
 
 def _verify_observability_signature(ts: int, sig: str):
@@ -20,6 +23,20 @@ def _verify_observability_signature(ts: int, sig: str):
     expected = hmac.new(secret.encode(), message, hashlib.sha256).hexdigest()
     if not hmac.compare_digest(sig, expected):
         raise HTTPException(status_code=401, detail="Unauthorized")
+
+
+def _verify_sentry_connection_at_startup():
+    try:
+        result = sentry_snapshot(limit=1)
+        log.warning(
+            "SENTRY_OBSERVABILITY_CONNECTED read_only=true issue_count=%s",
+            result.get("issue_count", 0),
+        )
+    except Exception as exc:
+        log.error("SENTRY_OBSERVABILITY_CONNECTION_FAILED type=%s", type(exc).__name__)
+
+
+_verify_sentry_connection_at_startup()
 
 
 @app.get("/sentry-observability")
