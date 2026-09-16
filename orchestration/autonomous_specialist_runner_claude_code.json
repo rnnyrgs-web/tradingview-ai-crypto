@@ -2,7 +2,7 @@
   "version": 1,
   "enabled": true,
   "objective_id": "UNIVERSAL_SIGNAL_DEVELOPMENT_V1",
-  "primary_mission": "Safely implement and adversarially test the highest-value research changes that improve genuine sustainable after-cost profitability across tradable liquid assets and variable move durations. Engineering quality, reproducibility, execution realism and protection against overfitting are mandatory; no autonomous live-trading authority.",
+  "primary_mission": "Safely implement and adversarially test the highest-value changes needed to find and validate one strategy with genuine sustainable after-cost profitability. Concentrate engineering on the single active candidate's reproducible backtest and evidence pipeline. Engineering quality, execution realism and protection against overfitting are mandatory; no autonomous live-trading authority.",
   "engine": "claude-code",
   "engine_role_description": "Implementation / engineering / testing agent. This is the sole autonomous engine permitted to change test or production code under the multi-engine coordination layer -- ChatGPT's existing autonomous_cloud_specialist.yml role and this role must never both be enabled for the same coordination role at once (enforced by each engine's plan step refusing a task_id whose auto/<role>/<task_id> branch already exists).",
   "autonomous_roles": ["testing-security"],
@@ -20,6 +20,11 @@
     "automatic_merge": false,
     "trade_authority": false,
     "broker_connected": false,
+    "single_strategy_focus": true,
+    "max_active_deep_strategy_candidates": 1,
+    "broad_unrelated_research": "DEPRIORITIZED",
+    "single_strategy_lifecycle_phase": "SELECTION",
+    "active_strategy_candidate": null,
     "insufficient_evidence": "WAIT_RESEARCH_ONLY",
     "state_branch": "automation/specialist-runner-state",
     "task_branch_prefix": "auto/",
@@ -69,7 +74,7 @@
         "docs/security_*.md",
         "resource_recommendations_proposed.json"
       ],
-      "mission": "Own coordination task COORD-TEST-001 as the adversarial implementation/testing engine for the universal multi-asset research system. Strengthen tests for coordination schema validation, duplicate ownership, invalid dependency/status detection, protected-path enforcement, no-direct-main-write, no-automatic-merge, cost ceilings, broker-disconnected invariants, point-in-time data safety, after-cost evaluation, immutable holdouts and prevention of accidental promotion from research-only cross-asset results into trading authority. Attack existing specialist work; never merge it, never weaken a gate to make a test pass, never touch production strategy/signal/paper-ledger code outside allowed paths. Missing evidence is WAIT / RESEARCH_ONLY. TURN-BUDGET DISCIPLINE: finish within eight model turns. Turn 1: minimum reads. Turns 2-4: implement the smallest regression test and run the directly relevant test. Turns 5-7: fix directly observed failures and verify once. Turn 8: return READY_FOR_PR, NO_CHANGE, or BLOCKED; no extra exploration."
+      "mission": "Own coordination task COORD-TEST-001 as the adversarial implementation/testing engine supporting the one strategy focus. Strengthen tests for the single active candidate limit, coordination schema validation, protected-path enforcement, no-direct-main-write, no-automatic-merge, cost ceilings, broker-disconnected invariants, point-in-time data safety, positive after-cost evaluation, immutable holdouts and prevention of accidental promotion from research-only results into trading authority. Attack the candidate and its evidence pipeline; never merge it, never weaken a gate to make a test pass, never touch production strategy/signal/paper-ledger code outside allowed paths. Missing evidence is WAIT / RESEARCH_ONLY. TURN-BUDGET DISCIPLINE: finish within eight model turns. Turn 1: minimum reads. Turns 2-4: implement the smallest regression test and run the directly relevant test. Turns 5-7: fix directly observed failures and verify once. Turn 8: return READY_FOR_PR, NO_CHANGE, or BLOCKED; no extra exploration."
     }
   }
 }

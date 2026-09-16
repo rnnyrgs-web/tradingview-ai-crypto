@@ -1,21 +1,22 @@
 # AI_STATE.md
 
-Last reconciled: 2026-09-13
-Last updated: 2026-09-13
+Last reconciled: 2026-09-16
+Last updated: 2026-09-16
 
 This file is the authoritative compact handoff for future agents working on `rnnyrgs-web/tradingview-ai-crypto`. Read it before changing the system. When this file conflicts with an older chat summary, branch note, or stale base coordination row, this file plus the repository's canonical coordination loader state wins.
 
 ## PRIMARY OBJECTIVE
 
-1. Maximize **genuine sustainable after-cost profitability** first.
-2. Maximize **genuine forward BUY/SELL precision/accuracy** second.
-3. Never improve reported results by weakening chronology, untouched OOS/forward gates, multiple-testing controls, point-in-time universe safety, realistic execution/risk assumptions, abstention, or fail-closed behavior.
+1. Find and validate **one strategy** with genuine sustainable after-cost profitability. At most one candidate may consume deep research/backtest/implementation capacity at a time.
+2. Use broad, cheap deterministic screening only to select or reject that single candidate. Deprioritize unrelated broad research, blind parameter sweeps, redundant strategies, and work created merely to keep workers busy.
+3. Maximize **genuine forward BUY/SELL precision/accuracy** second.
+4. Never improve reported results by weakening chronology, untouched OOS/forward gates, multiple-testing controls, point-in-time universe safety, realistic execution/risk assumptions, abstention, or fail-closed behavior.
 
 Profitability means net expectancy after realistic fees, spread, slippage, funding/carry, adverse selection, missed fills, market impact, and drawdown/risk. Headline accuracy and trade count are not objectives by themselves.
 
 ## CURRENT MAIN / DEPLOYMENT STATE
 
-- Latest GitHub `main` verified during this reconciliation: `1278fa540e5e0a99c80095a6ffaa526660136b54` (merge of PR #336, multi-engine ChatGPT / Claude / Claude Code coordination layer).
+- Latest GitHub `main` verified during this reconciliation: `881f1ed33b7a77fd29999ac57d57d8020c0ce236` (merge of PR #384, safe Sentry API failure status).
 - PR #336 exact candidate head `53159a2a8e7db7a31ef0370b133701cedc458a82` passed exact-head Security and Reliability before merge. It adds bounded fleet coordination across ChatGPT/OpenAI, Claude research, Claude Code implementation, and existing deterministic workers while preserving isolated branches, no autonomous unsafe merge authority, no real-order authority, rejected-fingerprint memory, and fail-closed scientific gates.
 - PR #331 (`745fe5b3fd291564f8a861a68cc8dd24db279aac`) keeps ACC-005 blocked while the frozen DATA-BREADTH-001 prospective evidence matures; PR #332 keeps ACC-001 blocked until timestamp-defensible forecast-time microstructure/execution evidence is durably captured; PR #334 isolates/bounds evaluation runtime so fresh production scans cannot be cancelled solely because evaluation consumed the scan budget.
 - These are scientific/control-plane/reliability changes. They do not weaken untouched OOS/forward validation, timestamp causality, leakage protections, paper-ledger authenticity, broker-disconnected state, promotion gates, execution realism, budget controls, or real-order authority.
@@ -59,9 +60,11 @@ DATA-BREADTH-001 remains frozen and research-only. Its next evaluation requires 
 
 **Do not select another data candidate while DATA-BREADTH-001 is awaiting the prospectively captured evidence required by COORD-DATA-007.** Let authentic point-in-time cohorts mature and run the frozen falsification only after its predeclared sample floor is satisfied. Never backfill or reconstruct missing historical membership from current survivors.
 
-While that evidence matures, the event-driven supervisor may assign at most one independent, non-contaminating CHANGE task from the profitability-first READY backlog. Prefer work on genuine 24h after-cost profitability, execution/microstructure, resolved-signal error attribution, regime-conditioned abstention, or reliability defects only when it does not duplicate, tune on, or contaminate DATA-BREADTH-001 evidence. All other specialists remain AUDIT-only under the existing supervisor contract. If no clean independent work is justified, waiting is the correct action.
+While that evidence matures, the event-driven supervisor may assign at most one independent, non-contaminating CHANGE task from the profitability-first READY backlog. The primary program goal is now to select and validate one backtested strategy. Cheap deterministic screening may compare predeclared, materially distinct mechanisms, but once a candidate is selected all deep research, implementation, testing, backtesting and evidence collection must converge on that immutable candidate until it is rejected or passes every canonical gate. Broad unrelated research, blind indicator/parameter sweeps, duplicate mechanisms and cosmetic work are deprioritized. Prefer a data-ready 24h candidate because the 7d lane remains history-limited. All other specialists remain validation/AUDIT-only around the same candidate. If no clean candidate is justified, waiting is the correct action.
 
 Under the PR #336 fleet layer, coordinate rather than duplicate: route research/falsification toward Claude, bounded implementation/testing/debugging toward Claude Code, integration/prioritization/evidence synthesis toward ChatGPT, and bulk deterministic research/backtests/data/diagnostics toward the existing workers. Paid-AI engines remain subordinate to the shared monthly budget and scientific gates; they must not manufacture experiments merely to stay busy.
+
+“Working backtested strategy” means a research candidate with a predeclared immutable fingerprint, positive after-cost expectancy on purged chronological validation and untouched OOS, adequate independent observations, realistic cost stress, parameter/subperiod/liquidity/regime stability, multiple-testing protection, and subsequent genuine forward paper validation. It does not mean an in-sample curve, one lucky OOS result, a high nominal win rate, or authority to trade real money.
 
 ## DURABLE NEGATIVE DATA RESULTS — DO NOT RESCUE
 

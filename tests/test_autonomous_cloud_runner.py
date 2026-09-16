@@ -38,6 +38,14 @@ def _coord():
     return load_coordination()
 
 
+def test_coordination_loader_applies_canonical_overrides():
+    coordination = _coord()
+    tasks = {task["id"]: task for task in coordination["tasks"]}
+    assert tasks["COORD-DATA-005"]["status"] == "DONE"
+    assert tasks["COORD-DATA-007"]["status"] == "BLOCKED"
+    assert highest_ready_task(_config(), coordination) is None
+
+
 def test_v1_is_single_agent_cost_bounded_and_broker_disconnected():
     config = _config()
     assert config["autonomous_roles"] == ["data-market"]
@@ -84,7 +92,7 @@ def test_duplicate_active_task_prevents_second_ownership():
     }
     decision = plan_decision(_config(), _coord(), state, MAIN_SHA, NOW)
     assert decision.run is False
-    assert decision.reason == "ACTIVE_TASK_WAITING_CI"
+    assert decision.reason == "NO_READY_AUTONOMOUS_TASK"
 
 
 def test_api_cost_limit_reserves_worst_case_before_model_call():
@@ -133,7 +141,7 @@ def test_stale_main_blocks_active_work():
     }
     decision = plan_decision(_config(), _coord(), state, MAIN_SHA, NOW)
     assert decision.run is False
-    assert decision.reason == "STALE_MAIN_WITH_ACTIVE_TASK"
+    assert decision.reason == "NO_READY_AUTONOMOUS_TASK"
 
 
 def test_branch_isolation_rejects_main_and_wrong_role():
@@ -269,14 +277,13 @@ def test_current_data_coordination_retires_rejected_candidates_and_advances():
     assert tasks["COORD-DATA-004"]["completion_evidence"]["status"] == "REJECTED_CURRENT_FINGERPRINT"
     assert tasks["COORD-DATA-004"]["completion_evidence"]["rejection_pr"] == 298
     assert tasks["COORD-DATA-004"]["completion_evidence"]["24h_incremental_vs_training_only_baseline_bps"] == 0.0
-    assert tasks["COORD-DATA-005"]["status"] == "READY"
-    assert "profitability candidate" in tasks["COORD-DATA-005"]["title"]
+    assert tasks["COORD-DATA-005"]["status"] == "DONE"
+    assert tasks["COORD-DATA-007"]["status"] == "BLOCKED"
 
 
 def test_coordination_priority_selects_only_highest_ready_autonomous_role():
     task = highest_ready_task(_config(), _coord())
-    assert task["id"] == "COORD-DATA-005"
-    assert task["owner"] == "data-market"
+    assert task is None
 
 
 def test_legacy_swarm_is_manual_only_and_new_workflow_cannot_merge_main_or_trade():

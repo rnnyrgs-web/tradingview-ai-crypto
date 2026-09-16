@@ -32,12 +32,17 @@
     "execution-microstructure": {"class": "validation_workers", "signal_role": "test whether apparent signal edge survives realistic execution costs"},
     "production-risk": {"class": "validation_workers", "signal_role": "protect realized profitability from concentration, contradiction, execution loss and weak expectancy"},
     "testing-security": {"class": "operational_security_workers", "signal_role": "protect validity and authenticity of profitability/signal-development evidence; no alpha claim"},
-    "lead-integrator": {"class": "lead_coordination", "signal_role": "prioritize after-cost profitability work first and integrate only verified improvements"}
+    "lead-integrator": {"class": "lead_coordination", "signal_role": "coordinate every engine toward finding and validating one strategy with positive after-cost evidence; integrate only verified improvements"}
   },
   "binding_policy": {
     "all_outputs_must_trace_to_objective": true,
     "operational_security_may_claim_alpha": false,
     "cosmetic_work_may_displace_signal_research": false,
+    "single_strategy_focus": true,
+    "max_active_deep_strategy_candidates": 1,
+    "broad_unrelated_research": "DEPRIORITIZED",
+    "single_strategy_lifecycle_phase": "SELECTION",
+    "active_strategy_candidate": null,
     "exception": "Safety/reliability work may preempt only when necessary to protect evidence validity, availability, authenticity, or fail-closed operation."
   }
 }

@@ -2,7 +2,7 @@
   "version": 1,
   "enabled": true,
   "objective_id": "UNIVERSAL_SIGNAL_DEVELOPMENT_V1",
-  "primary_mission": "Continuously maximize genuine sustainable after-cost profitability across tradable liquid assets and any economically meaningful move duration. Act as the independent scientific research and adversarial-validation layer: discover materially distinct predictive mechanisms, study large moves and crashes, predeclare tests, compare asset classes and regimes, and reject fragile ideas before implementation. Research broadly; recommend promotion only when forward evidence, costs, robustness and calibration justify it.",
+  "primary_mission": "Find and validate one strategy with genuine sustainable after-cost profitability. Act as the independent scientific research and falsification layer for the single active deep candidate: study its mechanism, indicators, market information and data, predeclare tests, and reject it quickly if evidence is fragile. Broad unrelated research is deprioritized; recommend promotion only when untouched OOS, forward evidence, costs, robustness and calibration justify it.",
   "engine": "claude",
   "engine_role_description": "Deep scientific researcher and independent adversarial reviewer. This config governs Claude's bounded research role only (predeclared validation design, error attribution, resource-recommendation proposals). Claude's separate adversarial-review duty (agents/autonomous_orchestrator.py --reviewer claude-adversarial) is unrelated code that does not read this file, so the two remain structurally independent as required.",
   "autonomous_roles": ["signal-accuracy"],
@@ -20,6 +20,11 @@
     "automatic_merge": false,
     "trade_authority": false,
     "broker_connected": false,
+    "single_strategy_focus": true,
+    "max_active_deep_strategy_candidates": 1,
+    "broad_unrelated_research": "DEPRIORITIZED",
+    "single_strategy_lifecycle_phase": "SELECTION",
+    "active_strategy_candidate": null,
     "insufficient_evidence": "WAIT_RESEARCH_ONLY",
     "state_branch": "automation/specialist-runner-state",
     "task_branch_prefix": "auto/",
@@ -68,7 +73,7 @@
         "tests/test_signal_accuracy_validation_design*.py",
         "resource_recommendations_proposed.json"
       ],
-      "mission": "Own coordination task COORD-VAL-001 as a genuinely independent scientific researcher. Predeclare falsifiable validation for cross-asset, variable-duration opportunity ranking before outcome inspection: fixed comparison groups/cutoffs, minimum independent sample sizes, Wilson/confidence reporting, non-overlapping observations, after-cost treatment, asset-class and regime stratification, multiple-testing control and explicit failure criteria. Prioritize mechanisms that could explain unusually large moves, crashes, breakouts, volatility expansions and persistent trends, but never infer edge from narrative alone. Write only a predeclaration design document plus a test that pins the design against later tampering; never production signal code and never a claim that validation design alone authorizes production behavior. Missing or insufficient evidence is WAIT / RESEARCH_ONLY. TURN-BUDGET DISCIPLINE: finish within four model turns. Turn 1: read only the minimum files needed. Turn 2: write the smallest safe predeclaration plus pinning test. Turn 3: verify it. TURN 4 IS TERMINAL: submit READY_FOR_PR, NO_CHANGE, or BLOCKED as the first tool call."
+      "mission": "Own coordination task COORD-VAL-001 as the independent scientific researcher for the one strategy focus. Predeclare falsifiable validation before outcome inspection: fixed comparison groups/cutoffs, minimum independent sample sizes, Wilson/confidence reporting, non-overlapping observations, positive after-cost expectancy, regime stability, multiple-testing control and explicit failure criteria. Research indicators, algorithms, market information and timestamp-safe data only when they directly test or select the single active candidate; broad unrelated research is deprioritized. Never infer edge from narrative alone. Write only a predeclaration design document plus a test that pins the design against later tampering; never production signal code and never a claim that validation design alone authorizes production behavior. Missing or insufficient evidence is WAIT / RESEARCH_ONLY. TURN-BUDGET DISCIPLINE: finish within four model turns. Turn 1: read only the minimum files needed. Turn 2: write the smallest safe predeclaration plus pinning test. Turn 3: verify it. TURN 4 IS TERMINAL: submit READY_FOR_PR, NO_CHANGE, or BLOCKED as the first tool call."
     }
   }
 }

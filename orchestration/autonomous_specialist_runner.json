@@ -2,7 +2,7 @@
   "version": 1,
   "enabled": true,
   "objective_id": "UNIVERSAL_SIGNAL_DEVELOPMENT_V1",
-  "primary_mission": "Continuously maximize genuine sustainable after-cost profitability across tradable liquid assets and any economically meaningful move duration, using crypto, equities, ETFs, indices/proxies, FX, commodities, rates/credit and volatility where reliable point-in-time data exists. Research broadly, rank opportunities cross-sectionally, and surface or paper-trade only the strongest validated opportunities. Genuine forward profitability, expectancy, profit factor, drawdown control and calibration outrank raw signal count or nominal accuracy.",
+  "primary_mission": "Find and validate one strategy with genuine sustainable after-cost profitability across tradable liquid assets and any economically meaningful move duration. Use broad cheap deterministic screening only to select that one strategy, then concentrate deep work on its immutable fingerprint until rejection or full validation. Genuine forward profitability, expectancy, profit factor, drawdown control and calibration outrank raw signal count or nominal accuracy.",
   "autonomous_roles": ["data-market"],
   "policy": {
     "max_concurrent_agent_runs": 1,
@@ -18,6 +18,11 @@
     "automatic_merge": false,
     "trade_authority": false,
     "broker_connected": false,
+    "single_strategy_focus": true,
+    "max_active_deep_strategy_candidates": 1,
+    "broad_unrelated_research": "DEPRIORITIZED",
+    "single_strategy_lifecycle_phase": "SELECTION",
+    "active_strategy_candidate": null,
     "insufficient_evidence": "WAIT_RESEARCH_ONLY",
     "state_branch": "automation/specialist-runner-state",
     "task_branch_prefix": "auto/",
@@ -66,7 +71,7 @@
         "tests/test_db*.py",
         "tests/test_prediction_ledger*.py"
       ],
-      "mission": "Apply UNIVERSAL_SIGNAL_DEVELOPMENT_V1 by spending scarce API budget only on the highest expected incremental after-cost profitability or information-gain work across all supported asset classes and move durations. Diagnose genuine resolved economic losses first. Improve point-in-time market data, cross-asset comparability, liquidity/cost estimates, selective WAIT/meta-label evidence, economic calibration, regime-strategy routing, cross-sectional/residual signals, prospective execution/microstructure vetoes, ensemble diversity and falsifiable hypotheses. Expand research coverage only where data quality, liquidity and execution realism can be measured. Prefer broad cheap deterministic screening followed by deep testing of only the best candidates. Reject unstable or nonpositive candidates quickly. Deprioritize blind indicator parameter permutations, redundant strategies, duplicate disproven hypotheses and worker-count expansion without evidence. Never weaken chronology, untouched OOS, multiple-testing controls, point-in-time safety, cost realism or promotion controls. TURN-BUDGET DISCIPLINE: finish within four model turns. Turn 1: read only the minimum files needed to choose one falsifiable change. Turn 2: implement the smallest allowed change plus targeted tests. Turn 3: run targeted tests and fix only directly observed failures. Turn 4: return READY_FOR_PR, NO_CHANGE, or BLOCKED; do not perform additional exploration. Prefer a safe NO_CHANGE/BLOCKED result over exceeding the turn budget."
+      "mission": "Apply UNIVERSAL_SIGNAL_DEVELOPMENT_V1 by spending scarce API budget only on the highest expected incremental after-cost profitability or information-gain work across all supported asset classes and move durations, with one strategy as the only active deep candidate. Diagnose genuine resolved economic losses first. Preserve selective WAIT/meta-label evidence. Prefer broad cheap deterministic screening only to choose the one candidate, then route deep work to its immutable fingerprint. Reject unstable or nonpositive candidates quickly before selecting a replacement. Deprioritize unrelated research, blind indicator parameter permutations, redundant strategies, duplicate disproven hypotheses and worker-count expansion without evidence. Never weaken chronology, untouched OOS, multiple-testing controls, point-in-time safety, cost realism or promotion controls. TURN-BUDGET DISCIPLINE: finish within four model turns. Turn 1: read only the minimum files needed to choose one falsifiable change. Turn 2: implement the smallest allowed change plus targeted tests. Turn 3: run targeted tests and fix only directly observed failures. Turn 4: return READY_FOR_PR, NO_CHANGE, or BLOCKED; do not perform additional exploration. Prefer a safe NO_CHANGE/BLOCKED result over exceeding the turn budget."
     }
   }
 }

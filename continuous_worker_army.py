@@ -16,12 +16,13 @@ import os
 import sys
 import tempfile
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock
 
 from research_observability import record_worker_result, snapshot as research_metrics_snapshot
+from signal_development import load_objective
 from worker_supervisor import infer_error_type, record_incident, sanitize_diagnostic, supervisor_summary
 
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -76,6 +77,67 @@ WORKERS = (
     WorkerSpec("learning-diagnostics", {}, script="research_learning_runner.py", compute_class="lightweight"),
     WorkerSpec("experiment-factory", {}, script="research_experiment_factory_runner.py", compute_class="lightweight"),
 )
+
+
+def focused_worker_specs(workers: tuple[WorkerSpec, ...], objective: dict) -> tuple[WorkerSpec, ...]:
+    """Return only workers authorized by the canonical one-candidate lifecycle.
+
+    Selection permits only explicitly declared cheap screeners plus the lightweight
+    research-brain workers. Those screeners receive an environment guard that keeps
+    untouched OOS locked. Once the Lead freezes one immutable candidate, only its
+    explicitly declared deep workers may run. Unknown names fail closed.
+    """
+    focus = objective.get("single_strategy_focus") or {}
+    if focus.get("enabled") is not True or focus.get("max_active_deep_candidates") != 1:
+        raise RuntimeError("single-strategy worker focus is invalid")
+    lightweight = tuple(spec for spec in workers if spec.compute_class == "lightweight")
+    candidate = focus.get("active_candidate")
+    if candidate is None:
+        selection_names = focus.get("selection_screen_workers")
+        if not isinstance(selection_names, list) or not selection_names:
+            raise RuntimeError("selection phase has no declared screening workers")
+        allowed = {str(name).strip() for name in selection_names if str(name).strip()}
+        known = {spec.name for spec in workers}
+        unknown = allowed - known
+        if unknown:
+            raise RuntimeError(f"selection phase declares unknown screening workers: {sorted(unknown)}")
+        selected = list(lightweight)
+        for spec in workers:
+            if spec.name not in allowed:
+                continue
+            if spec.compute_class != "heavy":
+                raise RuntimeError(f"selection screener must be a bounded heavy worker: {spec.name}")
+            env = dict(spec.env)
+            env["SINGLE_STRATEGY_SELECTION_MODE"] = "1"
+            selected.append(replace(spec, env=env))
+        return tuple(selected)
+    contracts = candidate.get("deep_worker_contracts")
+    if not isinstance(contracts, dict) or not contracts:
+        raise RuntimeError("active candidate has no declared deep worker contracts")
+    allowed = set(contracts)
+    known = {spec.name for spec in workers}
+    unknown = allowed - known
+    if unknown:
+        raise RuntimeError(f"active candidate declares unknown deep workers: {sorted(unknown)}")
+    fingerprint = str(candidate.get("fingerprint_id") or "").strip()
+    if not fingerprint:
+        raise RuntimeError("active candidate has no immutable fingerprint")
+    selected = list(lightweight)
+    for spec in workers:
+        if spec.name not in allowed:
+            continue
+        contract = contracts[spec.name]
+        family = str((contract or {}).get("strategy_family") or "").strip()
+        if not family:
+            raise RuntimeError(f"unsupported deep worker contract for {spec.name}")
+        env = dict(spec.env)
+        env.update({
+            "SINGLE_STRATEGY_DEEP_MODE": "1",
+            "ACTIVE_STRATEGY_FINGERPRINT": fingerprint,
+            "ACTIVE_STRATEGY_FAMILY": family,
+        })
+        selected.append(replace(spec, env=env))
+    return tuple(selected)
 
 SUMMARY_ENV_BY_SCRIPT = {
     "cross_asset_runner.py": "CROSS_ASSET_SUMMARY_PATH",
@@ -406,32 +468,38 @@ def _initial_worker_state(spec: WorkerSpec) -> dict:
     }
 
 
-def _build_lanes() -> dict[str, asyncio.Semaphore]:
+def _build_lanes(workers: tuple[WorkerSpec, ...] = WORKERS) -> dict[str, asyncio.Semaphore]:
     lightweight_lane = asyncio.Semaphore(LIGHTWEIGHT_MAX_CONCURRENT)
-    heavy_specs = [spec for spec in WORKERS if not _is_lightweight_worker(spec)]
+    heavy_specs = [spec for spec in workers if not _is_lightweight_worker(spec)]
     if MAX_CONCURRENT == 1:
         heavy_shared = asyncio.Semaphore(1)
-        return {spec.name: (lightweight_lane if _is_lightweight_worker(spec) else heavy_shared) for spec in WORKERS}
+        return {spec.name: (lightweight_lane if _is_lightweight_worker(spec) else heavy_shared) for spec in workers}
     accuracy_lane = asyncio.Semaphore(1)
     general_lane = asyncio.Semaphore(MAX_CONCURRENT - 1)
     lanes = {}
-    for spec in WORKERS:
+    for spec in workers:
         if _is_lightweight_worker(spec):
             lanes[spec.name] = lightweight_lane
         elif _is_accuracy_worker(spec):
             lanes[spec.name] = accuracy_lane
         else:
             lanes[spec.name] = general_lane
-    assert len(heavy_specs) >= 1
+    if not heavy_specs:
+        return {spec.name: lightweight_lane for spec in workers}
     return lanes
 
 
 async def run_army() -> None:
+    active_workers = focused_worker_specs(WORKERS, load_objective())
     with _lock:
         _status["started_at"] = _now()
-        _status["workers"] = {spec.name: _initial_worker_state(spec) for spec in WORKERS}
-    lanes = _build_lanes()
-    specs = {spec.name: spec for spec in WORKERS}
+        _status["workers"] = {spec.name: _initial_worker_state(spec) for spec in active_workers}
+        _status["worker_count"] = len(active_workers)
+        _status["heavy_worker_count"] = sum(1 for spec in active_workers if spec.compute_class == "heavy")
+        _status["lightweight_worker_count"] = sum(1 for spec in active_workers if spec.compute_class == "lightweight")
+        _status["single_strategy_lifecycle"] = load_objective()["single_strategy_focus"]["lifecycle_phase"]
+    lanes = _build_lanes(active_workers)
+    specs = {spec.name: spec for spec in active_workers}
     tasks = {name: asyncio.create_task(_worker_loop(spec, lanes[name]), name=name) for name, spec in specs.items()}
     shutting_down = False
     try:

@@ -92,4 +92,5 @@ def test_coordination_task_with_genuinely_new_fingerprint_is_unaffected():
     task = ok["tasks"][0]
     task["fingerprint_id"] = "DATA-BREADTH-002-GENUINELY-NEW"
     task["status"] = "READY"
+    task["work_mode"] = "CHEAP_SCREEN"
     validate_state(ok)  # must not raise

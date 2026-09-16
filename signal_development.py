@@ -10,8 +10,9 @@ ROOT = Path(__file__).resolve().parent
 OBJECTIVE_PATH = ROOT / "orchestration" / "signal_development_objective.json"
 PRIMARY_OBJECTIVE_ID = "UNIVERSAL_SIGNAL_DEVELOPMENT_V1"
 PRIMARY_MISSION = (
-    "Continuously maximize genuine sustainable after-cost profitability for 24h and 7d crypto "
-    "BUY / SELL / WAIT signals, with genuine forward signal accuracy/precision as the secondary objective."
+    "Find and validate one strategy with genuine sustainable after-cost profitability for 24h and 7d "
+    "crypto BUY / SELL / WAIT signals; concentrate deep research on that single candidate while genuine "
+    "forward signal accuracy/precision remains the secondary objective."
 )
 VALID_HORIZONS = {"24h", "7d", "both"}
 VALID_CONCLUSIONS = {"supports", "rejects", "unresolved"}
@@ -41,6 +42,36 @@ def validate_objective(payload: dict) -> None:
         raise ObjectiveError("primary signal-development mission changed")
     if payload.get("optimization_target") != "genuine_after_cost_profitability_first_then_forward_signal_quality":
         raise ObjectiveError("optimization target must remain genuine after-cost profitability first, then forward signal quality")
+    focus = payload.get("single_strategy_focus") or {}
+    if focus.get("enabled") is not True or focus.get("max_active_deep_candidates") != 1:
+        raise ObjectiveError("single-strategy focus must remain enabled with one active deep candidate")
+    if focus.get("broad_unrelated_research") != "DEPRIORITIZED":
+        raise ObjectiveError("broad unrelated research must remain deprioritized")
+    if focus.get("success_state") != "VALIDATED_RESEARCH_CANDIDATE":
+        raise ObjectiveError("single-strategy success state cannot be weakened")
+    phase = focus.get("lifecycle_phase")
+    candidate = focus.get("active_candidate")
+    if phase not in {"SELECTION", "DEEP_VALIDATION", "FORWARD_PAPER", "VALIDATED", "REJECTED"}:
+        raise ObjectiveError("invalid single-strategy lifecycle phase")
+    if phase == "SELECTION" and candidate is not None:
+        raise ObjectiveError("selection phase cannot declare an active deep candidate")
+    if phase in {"DEEP_VALIDATION", "FORWARD_PAPER", "VALIDATED"}:
+        if not isinstance(candidate, dict) or not str(candidate.get("fingerprint_id") or "").strip():
+            raise ObjectiveError("deep strategy lifecycle requires an immutable active fingerprint")
+        contracts = candidate.get("deep_worker_contracts")
+        if not isinstance(contracts, dict) or not contracts:
+            raise ObjectiveError("active strategy candidate must declare deep worker contracts")
+    if focus.get("real_money_trading_authority") is not False:
+        raise ObjectiveError("single-strategy research may not receive real-money trading authority")
+    required_evidence = set(focus.get("required_evidence") or [])
+    mandatory_evidence = {
+        "predeclared_immutable_fingerprint", "positive_after_cost_expectancy",
+        "purged_chronological_validation", "untouched_oos",
+        "cost_stress_and_parameter_stability", "multiple_testing_control",
+        "genuine_forward_paper_validation",
+    }
+    if required_evidence != mandatory_evidence:
+        raise ObjectiveError("single-strategy evidence contract changed")
     invariants = payload.get("hard_invariants") or {}
     required_false = (
         "increase_heavy_concurrency_for_speed", "automatic_merge", "broker_connected",
