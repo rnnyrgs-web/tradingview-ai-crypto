@@ -33,7 +33,11 @@ def _verify_sentry_connection_at_startup():
             result.get("issue_count", 0),
         )
     except Exception as exc:
-        log.error("SENTRY_OBSERVABILITY_CONNECTION_FAILED type=%s", type(exc).__name__)
+        log.error(
+            "SENTRY_OBSERVABILITY_CONNECTION_FAILED type=%s status=%s",
+            type(exc).__name__,
+            getattr(exc, "status_code", None),
+        )
 
 
 _verify_sentry_connection_at_startup()
