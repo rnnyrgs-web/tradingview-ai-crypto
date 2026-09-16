@@ -16,7 +16,7 @@ import os
 import sys
 import tempfile
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock
@@ -93,14 +93,33 @@ def focused_worker_specs(workers: tuple[WorkerSpec, ...], objective: dict) -> tu
     candidate = focus.get("active_candidate")
     if candidate is None:
         return lightweight
-    allowed = candidate.get("deep_worker_names")
-    if not isinstance(allowed, list) or not allowed:
-        raise RuntimeError("active candidate has no declared deep workers")
+    contracts = candidate.get("deep_worker_contracts")
+    if not isinstance(contracts, dict) or not contracts:
+        raise RuntimeError("active candidate has no declared deep worker contracts")
+    allowed = set(contracts)
     known = {spec.name for spec in workers}
-    unknown = set(allowed) - known
+    unknown = allowed - known
     if unknown:
         raise RuntimeError(f"active candidate declares unknown deep workers: {sorted(unknown)}")
-    return tuple(spec for spec in workers if spec.compute_class == "lightweight" or spec.name in set(allowed))
+    fingerprint = str(candidate.get("fingerprint_id") or "").strip()
+    if not fingerprint:
+        raise RuntimeError("active candidate has no immutable fingerprint")
+    selected = list(lightweight)
+    for spec in workers:
+        if spec.name not in allowed:
+            continue
+        contract = contracts[spec.name]
+        family = str((contract or {}).get("strategy_family") or "").strip()
+        if spec.script != "research_runner.py" or not family:
+            raise RuntimeError(f"unsupported deep worker contract for {spec.name}")
+        env = dict(spec.env)
+        env.update({
+            "SINGLE_STRATEGY_DEEP_MODE": "1",
+            "ACTIVE_STRATEGY_FINGERPRINT": fingerprint,
+            "ACTIVE_STRATEGY_FAMILY": family,
+        })
+        selected.append(replace(spec, env=env))
+    return tuple(selected)
 
 SUMMARY_ENV_BY_SCRIPT = {
     "cross_asset_runner.py": "CROSS_ASSET_SUMMARY_PATH",

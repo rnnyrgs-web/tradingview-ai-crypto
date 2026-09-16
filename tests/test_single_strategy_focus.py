@@ -8,7 +8,7 @@ import pytest
 
 from agents.autonomous_cloud_runner import PolicyError, load_config, validate_config
 from continuous_worker_army import WORKERS, focused_worker_specs
-from signal_development import load_objective
+from signal_development import ObjectiveError, load_objective, validate_objective
 from orchestration.specialist_coordination import validate_state
 
 
@@ -85,11 +85,16 @@ def test_active_candidate_allows_only_its_declared_deep_workers():
     objective["single_strategy_focus"]["lifecycle_phase"] = "DEEP_VALIDATION"
     objective["single_strategy_focus"]["active_candidate"] = {
         "fingerprint_id": "TEST-CANDIDATE-V1",
-        "deep_worker_names": ["cross-asset-rank-24h"],
+        "deep_worker_contracts": {
+            "major-btc": {"strategy_family": "trend"},
+        },
     }
     selected = focused_worker_specs(WORKERS, objective)
-    heavy = [worker.name for worker in selected if worker.compute_class == "heavy"]
-    assert heavy == ["cross-asset-rank-24h"]
+    heavy = [worker for worker in selected if worker.compute_class == "heavy"]
+    assert [worker.name for worker in heavy] == ["major-btc"]
+    assert heavy[0].env["SINGLE_STRATEGY_DEEP_MODE"] == "1"
+    assert heavy[0].env["ACTIVE_STRATEGY_FINGERPRINT"] == "TEST-CANDIDATE-V1"
+    assert heavy[0].env["ACTIVE_STRATEGY_FAMILY"] == "trend"
 
 
 @pytest.mark.parametrize("field,value", [
@@ -101,6 +106,14 @@ def test_runner_rejects_single_strategy_policy_drift(field, value):
     config["policy"][field] = value
     with pytest.raises(PolicyError):
         validate_config(config)
+
+
+def test_objective_rejects_weakened_focus_contract():
+    for field, value in (("broad_unrelated_research", "PRIORITIZED"), ("success_state", "BACKTEST_ONLY")):
+        objective = copy.deepcopy(load_objective())
+        objective["single_strategy_focus"][field] = value
+        with pytest.raises(ObjectiveError):
+            validate_objective(objective)
 
 
 def test_specialist_coordination_persists_the_same_focus_and_gates():
@@ -122,4 +135,13 @@ def test_coordination_rejects_multiple_deep_candidate_fingerprints():
         task["work_mode"] = "DEEP"
         task["fingerprint_id"] = f"CANDIDATE-{index}"
     with pytest.raises(RuntimeError, match="one active deep candidate"):
+        validate_state(coordination)
+
+
+def test_coordination_rejects_deep_work_during_selection():
+    coordination = _load("orchestration/specialist_coordination.json")
+    task = next(task for task in coordination["tasks"] if task["status"] == "READY")
+    task["work_mode"] = "DEEP"
+    task["fingerprint_id"] = "TEST-CANDIDATE-V1"
+    with pytest.raises(RuntimeError, match="SELECTION"):
         validate_state(coordination)

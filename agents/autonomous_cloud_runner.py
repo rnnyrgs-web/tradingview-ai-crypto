@@ -15,6 +15,7 @@ from typing import Any, Callable
 from orchestration.protected_paths import load_protected_paths
 from orchestration.coordination_overrides import apply_coordination_overrides
 from orchestration.specialist_coordination import validate_state as validate_coordination_state
+from signal_development import load_objective
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "orchestration" / "autonomous_specialist_runner.json"
@@ -118,8 +119,19 @@ def validate_config(config: dict[str, Any]) -> None:
         raise PolicyError("runner must enforce one active deep strategy candidate")
     if policy.get("broad_unrelated_research") != "DEPRIORITIZED":
         raise PolicyError("runner must deprioritize broad unrelated research")
-    if policy.get("single_strategy_lifecycle_phase") == "SELECTION" and policy.get("active_strategy_candidate") is not None:
+    lifecycle = policy.get("single_strategy_lifecycle_phase")
+    candidate = policy.get("active_strategy_candidate")
+    if lifecycle not in {"SELECTION", "DEEP_VALIDATION", "FORWARD_PAPER", "VALIDATED", "REJECTED"}:
+        raise PolicyError("invalid runner single-strategy lifecycle")
+    if lifecycle == "SELECTION" and candidate is not None:
         raise PolicyError("runner selection phase cannot declare an active candidate")
+    if lifecycle in {"DEEP_VALIDATION", "FORWARD_PAPER", "VALIDATED"} and (
+        not isinstance(candidate, dict) or not str(candidate.get("fingerprint_id") or "").strip()
+    ):
+        raise PolicyError("deep runner lifecycle requires an active candidate fingerprint")
+    canonical_focus = load_objective()["single_strategy_focus"]
+    if lifecycle != canonical_focus["lifecycle_phase"] or candidate != canonical_focus["active_candidate"]:
+        raise PolicyError("runner strategy lifecycle drifted from canonical objective")
     if policy.get("state_branch") in {"main", "master"}:
         raise PolicyError("runner state branch must not be main")
     if float(budget.get("project_monthly_ceiling_usd", -1)) != 30.0:

@@ -72,6 +72,16 @@ def declared_hypothesis_trials(symbols, timeframes, universe_meta):
     return max(1, resolved) * max(1, len(timeframes)) * len(STRATEGY_FAMILIES) * 3
 
 
+def active_strategy_contract():
+    if os.getenv("SINGLE_STRATEGY_DEEP_MODE") != "1":
+        return None, tuple(STRATEGY_FAMILIES)
+    fingerprint = os.getenv("ACTIVE_STRATEGY_FINGERPRINT", "").strip()
+    family = os.getenv("ACTIVE_STRATEGY_FAMILY", "").strip()
+    if not fingerprint or family not in STRATEGY_FAMILIES:
+        raise RuntimeError("single-strategy deep mode requires a valid fingerprint and family")
+    return fingerprint, (family,)
+
+
 def _demote_for_survivorship(registry_result, survivorship):
     """ACC-011 is restrictive only and cannot make a strategy eligible."""
     for row in (registry_result.get("registry") or []):
@@ -125,7 +135,9 @@ def main():
     bars = int(os.getenv("RESEARCH_BARS", "5000"))
     threshold = float(os.getenv("RESEARCH_THRESHOLD", "2.25"))
     execution_quote_notional = float(os.getenv("RESEARCH_EXECUTION_NOTIONAL", "5000"))
-    trial_count = declared_hypothesis_trials(symbols, timeframes, universe_meta)
+    active_fingerprint, active_families = active_strategy_contract()
+    resolved = int(universe_meta.get("universe_size_resolved") or len(symbols) or 1)
+    trial_count = max(1, resolved) * max(1, len(timeframes)) * len(active_families) * 3
 
     manifest = load_manifest(os.getenv("POINT_IN_TIME_UNIVERSE_MANIFEST", "").strip() or None)
     full_research_symbol_set = universe_meta.get("resolved_symbols") or symbols
@@ -153,7 +165,7 @@ def main():
                     bars=bars,
                     quote_notional=execution_quote_notional,
                 )
-                raw_registry = evaluate_strategy_registry(symbol, bar=bar, bars=bars)
+                raw_registry = evaluate_strategy_registry(symbol, bar=bar, bars=bars, families=active_families)
                 multiple_testing_registry = apply_registry_firewall(raw_registry, trial_count)
                 item["strategy_registry"] = _demote_for_survivorship(multiple_testing_registry, survivorship)
                 item["ok"] = True
@@ -202,6 +214,8 @@ def main():
         "universe": universe_meta,
         "point_in_time_universe": survivorship,
         "declared_hypothesis_trials": trial_count,
+        "active_strategy_fingerprint": active_fingerprint,
+        "active_strategy_families": list(active_families),
         "research_blocked_count": blocked,
         "software_failure_count": failures,
         "strategy_policy": "research-only unless validation+holdout OOS+robustness+search-breadth+point-in-time-universe gates pass",

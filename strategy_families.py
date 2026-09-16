@@ -363,7 +363,7 @@ def _skipped_robustness(gate):
     }
 
 
-def evaluate_strategy_registry(symbol, bar="15m", bars=5000):
+def evaluate_strategy_registry(symbol, bar="15m", bars=5000, *, families=None):
     history = get_history(symbol, bar, bars)
     if len(history) < 1000:
         raise RuntimeError("Need at least 1000 candles for strategy-family research")
@@ -376,8 +376,11 @@ def evaluate_strategy_registry(symbol, bar="15m", bars=5000):
     validation = history[int(n * 0.6):int(n * 0.8)]
     holdout = history[int(n * 0.8):]
 
+    selected_families = tuple(STRATEGY_FAMILIES if families is None else families)
+    if not selected_families or any(family not in STRATEGY_FAMILIES for family in selected_families):
+        raise ValueError("strategy families must be a non-empty supported subset")
     registry = []
-    for family in STRATEGY_FAMILIES:
+    for family in selected_families:
         train_records = _simulate(train, bar, family, benchmark, detailed=True)
         validation_records = _simulate(validation, bar, family, benchmark, detailed=True)
         holdout_records = _simulate(holdout, bar, family, benchmark, detailed=True)

@@ -45,6 +45,10 @@ def validate_objective(payload: dict) -> None:
     focus = payload.get("single_strategy_focus") or {}
     if focus.get("enabled") is not True or focus.get("max_active_deep_candidates") != 1:
         raise ObjectiveError("single-strategy focus must remain enabled with one active deep candidate")
+    if focus.get("broad_unrelated_research") != "DEPRIORITIZED":
+        raise ObjectiveError("broad unrelated research must remain deprioritized")
+    if focus.get("success_state") != "VALIDATED_RESEARCH_CANDIDATE":
+        raise ObjectiveError("single-strategy success state cannot be weakened")
     phase = focus.get("lifecycle_phase")
     candidate = focus.get("active_candidate")
     if phase not in {"SELECTION", "DEEP_VALIDATION", "FORWARD_PAPER", "VALIDATED", "REJECTED"}:
@@ -54,9 +58,9 @@ def validate_objective(payload: dict) -> None:
     if phase in {"DEEP_VALIDATION", "FORWARD_PAPER", "VALIDATED"}:
         if not isinstance(candidate, dict) or not str(candidate.get("fingerprint_id") or "").strip():
             raise ObjectiveError("deep strategy lifecycle requires an immutable active fingerprint")
-        workers = candidate.get("deep_worker_names")
-        if not isinstance(workers, list) or not workers or not all(isinstance(name, str) and name for name in workers):
-            raise ObjectiveError("active strategy candidate must declare deep workers")
+        contracts = candidate.get("deep_worker_contracts")
+        if not isinstance(contracts, dict) or not contracts:
+            raise ObjectiveError("active strategy candidate must declare deep worker contracts")
     if focus.get("real_money_trading_authority") is not False:
         raise ObjectiveError("single-strategy research may not receive real-money trading authority")
     required_evidence = set(focus.get("required_evidence") or [])

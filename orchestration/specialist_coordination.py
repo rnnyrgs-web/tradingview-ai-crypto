@@ -63,8 +63,18 @@ def validate_state(payload: dict) -> None:
         raise RuntimeError("coordination must enforce one active deep candidate")
     if policy.get("broad_unrelated_research") != "DEPRIORITIZED":
         raise RuntimeError("broad unrelated research must remain deprioritized")
-    if policy.get("single_strategy_lifecycle_phase") == "SELECTION" and policy.get("active_strategy_candidate") is not None:
+    lifecycle = policy.get("single_strategy_lifecycle_phase")
+    active_candidate = policy.get("active_strategy_candidate")
+    if lifecycle not in {"SELECTION", "DEEP_VALIDATION", "FORWARD_PAPER", "VALIDATED", "REJECTED"}:
+        raise RuntimeError("invalid single-strategy coordination lifecycle")
+    if lifecycle == "SELECTION" and active_candidate is not None:
         raise RuntimeError("coordination selection phase cannot declare an active candidate")
+    if lifecycle in {"DEEP_VALIDATION", "FORWARD_PAPER", "VALIDATED"}:
+        if not isinstance(active_candidate, dict) or not str(active_candidate.get("fingerprint_id") or "").strip():
+            raise RuntimeError("deep coordination lifecycle requires an active candidate fingerprint")
+    canonical_focus = load_objective()["single_strategy_focus"]
+    if lifecycle != canonical_focus["lifecycle_phase"] or active_candidate != canonical_focus["active_candidate"]:
+        raise RuntimeError("coordination strategy lifecycle drifted from canonical objective")
 
     ids: set[str] = set()
     by_id: dict[str, dict] = {}
@@ -139,6 +149,12 @@ def validate_state(payload: dict) -> None:
             active_deep_fingerprints.add(fingerprint)
     if len(active_deep_fingerprints) > 1:
         raise RuntimeError(f"one active deep candidate permitted, found: {sorted(active_deep_fingerprints)}")
+    if active_deep_fingerprints:
+        if lifecycle == "SELECTION":
+            raise RuntimeError("SELECTION lifecycle cannot contain DEEP tasks")
+        expected = str((active_candidate or {}).get("fingerprint_id") or "")
+        if active_deep_fingerprints != {expected}:
+            raise RuntimeError("DEEP task fingerprint must equal active strategy candidate")
 
     for task in tasks:
         for dep in task["dependencies"]:
