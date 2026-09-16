@@ -8,6 +8,7 @@
     "max_active_deep_candidates": 1,
     "lifecycle_phase": "SELECTION",
     "active_candidate": null,
+    "selection_screen_workers": ["cross-asset-rank-24h"],
     "broad_unrelated_research": "DEPRIORITIZED",
     "success_state": "VALIDATED_RESEARCH_CANDIDATE",
     "required_evidence": [
@@ -20,7 +21,7 @@
       "genuine_forward_paper_validation"
     ],
     "real_money_trading_authority": false,
-    "selection_rule": "Use broad cheap deterministic screening only to select the single highest-information candidate. Once selected, route deep research, implementation, testing, backtesting and evidence collection to that candidate until it is rejected or passes every required gate. Rejection reopens selection; weak evidence never becomes success."
+    "selection_rule": "Use only the declared cheap deterministic screening workers to select the single highest-information candidate without opening untouched OOS. Once selected, freeze its fingerprint and route deep research, implementation, testing, backtesting and evidence collection only to that candidate until it is rejected or passes every required gate. Rejection reopens selection; weak evidence never becomes success."
   },
   "anti_objectives": [
     "historical_accuracy_maximization",
@@ -130,7 +131,7 @@
     },
     "cross_asset_rank_24h": {
       "purpose": "Resolve ACC-002 24h cross-sectional profitability and signal evidence.",
-      "signal_path": "liquidity-safe universe -> chronological rank research -> untouched OOS when gates permit"
+      "signal_path": "liquidity-safe universe -> chronological rank research -> untouched OOS only after central candidate freeze"
     },
     "cross_asset_rank_7d": {
       "purpose": "Resolve ACC-002 7d cross-sectional profitability and signal evidence.",
