@@ -151,6 +151,41 @@ def test_candidate_selection_uses_worst_passing_liquidity_subset():
     assert runner._candidate_selection_score(candidate) == runner._robust_selection_score(weaker)
 
 
+def test_selection_mode_freezes_candidate_fingerprint_without_opening_untouched_oos(monkeypatch):
+    symbols = [f"S{i}" for i in range(30)]
+    rows = [{"ts": i, "close": 100.0} for i in range(3000)]
+    pre = {"train": _segment(), "validation": _segment()}
+
+    monkeypatch.setenv("CROSS_ASSET_HORIZON", "24h")
+    monkeypatch.setenv("CROSS_ASSET_UNIVERSE_SIZE", "30")
+    monkeypatch.setenv("SINGLE_STRATEGY_SELECTION_MODE", "1")
+    monkeypatch.setattr(runner, "build_universe", lambda: [{"symbol": symbol} for symbol in symbols])
+    monkeypatch.setattr(runner, "get_history", lambda *_args, **_kwargs: rows)
+    monkeypatch.setattr(runner, "load_manifest", lambda _path: None)
+    monkeypatch.setattr(runner, "filter_histories", lambda _manifest, histories: (histories, {"promotion_allowed": False}))
+    monkeypatch.setattr(runner, "build_cross_section_panel", lambda *_args, **_kwargs: {"panel": True})
+    monkeypatch.setattr(runner, "evaluate_pre_oos", lambda *_args, **_kwargs: pre)
+    monkeypatch.setattr(runner, "seal_research_payload", lambda payload: payload)
+
+    def must_not_open_oos(*_args, **_kwargs):
+        raise AssertionError("selection mode must not open untouched OOS")
+
+    monkeypatch.setattr(runner, "evaluate_untouched_oos", must_not_open_oos)
+
+    result = runner.run()
+    selected = result["selected_evaluation"]
+    assert selected is not None
+    assert selected["candidate_fingerprint"]
+    assert selected["untouched_oos"] == {
+        "status": "LOCKED_UNTOUCHED_OOS",
+        "reason": "single_strategy_selection_requires_central_candidate_freeze_before_oos",
+    }
+    assert selected["acc002_research_pass"] is False
+    assert selected["eligible_for_promotion_review"] is False
+    assert result["untouched_oos_opened_for_candidate_count"] == 0
+    assert result["selection_mode"] is True
+
+
 def test_long_horizon_fails_closed_when_depth_cap_is_insufficient(monkeypatch):
     monkeypatch.setenv("CROSS_ASSET_FORWARD_BARS", "168")
     monkeypatch.setenv("CROSS_ASSET_BARS", "5000")
