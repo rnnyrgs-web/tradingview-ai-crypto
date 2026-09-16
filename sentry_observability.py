@@ -1,8 +1,7 @@
-import json
 import os
-from urllib.error import HTTPError, URLError
-from urllib.parse import urlencode, quote
-from urllib.request import Request, urlopen
+from urllib.parse import quote
+
+import httpx
 
 
 class SentryConfigurationError(RuntimeError):
@@ -62,20 +61,22 @@ def fetch_recent_issues(limit=20, stats_period="24h", environment="production"):
     }
     if environment:
         params["environment"] = environment
-    url = f"{base_url}/api/0/organizations/{quote(org, safe='')}/issues/?{urlencode(params)}"
-    request = Request(
-        url,
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/json",
-            "User-Agent": "tradingview-ai-crypto/sentry-observability",
-        },
-        method="GET",
-    )
+    url = f"{base_url}/api/0/organizations/{quote(org, safe='')}/issues/"
     try:
-        with urlopen(request, timeout=10) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-    except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
+        response = httpx.get(
+            url,
+            params=params,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Accept": "application/json",
+                "User-Agent": "tradingview-ai-crypto/sentry-observability",
+            },
+            timeout=10.0,
+            follow_redirects=False,
+        )
+        response.raise_for_status()
+        payload = response.json()
+    except (httpx.HTTPError, ValueError) as exc:
         raise SentryAPIError("Sentry API request failed") from exc
     if not isinstance(payload, list):
         raise SentryAPIError("Unexpected Sentry API response")
