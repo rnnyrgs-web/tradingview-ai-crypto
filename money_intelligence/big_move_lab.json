@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "as_of": "2026-09-16T18:45:00Z",
-  "purpose": "Point-in-time causal case library for significant cross-asset price moves. This artifact is independent of the crypto signal engine and has no trading authority.",
+  "as_of": "2026-09-16T20:13:45Z",
+  "purpose": "Point-in-time causal case library for significant cross-asset price moves and matched non-moves. Independent of the crypto signal engine; no trading authority.",
   "cases": [
     {
       "case_id": "2026-09-15-16-brent-yanbu-substitution-reversal",
@@ -10,71 +10,50 @@
       "pre_move_evidence_cutoff": "2026-09-16T18:45:00Z",
       "observed_move": "Brent settled Sep. 15 at $108.75, up $3.07 or 2.9%, after Yanbu loadings were suspended and some Saudi European cargoes were cancelled. On Sep. 16 Reuters reported Brent down 2.7% to $105.83 as Saudi Arabia increased crude shipments via Oman; U.S. inventory evidence also reduced immediate scarcity pressure.",
       "abnormality": "Two consecutive material opposite-direction daily moves around a physical supply-route shock; volatility-adjusted abnormality not yet quantified.",
-      "observed_facts": [
-        "Yanbu loadings were suspended and Saudi Arabia cancelled some European cargo deliveries, contributing to Brent's Sep. 15 rise.",
-        "On Sep. 16 Saudi Arabia increased crude shipments using ship-to-ship transfers off Sohar, Oman, providing an alternative delivery route.",
-        "Brent fell despite the underlying geopolitical disruption remaining unresolved.",
-        "EIA's petroleum data page confirms the Weekly Petroleum Status Report was released Sep. 16; detailed inventory decomposition should be preserved as UNKNOWN until the primary table is captured into this artifact."
-      ],
-      "inference": "The economically relevant supply variable is effective deliverable supply after route substitution and inventory buffers, not gross capacity attached to the initially disrupted route. The marginal buyer's scarcity bid can reverse quickly when credible substitution capacity appears even though the original disruption persists.",
-      "causal_chain": "physical-route disruption -> expected deliverable-barrel shortage -> refiners/traders bid for replacement barrels and crude futures -> price rises -> alternative routing/ship-to-ship capacity becomes credible plus inventory buffer evidence improves -> expected net shortage falls -> scarcity/risk premium unwinds -> crude futures fall",
-      "capital_source_destination": "During the scarcity phase, capital moved toward crude/energy exposure from cash or competing risk allocations; during the reversal, part of that event-risk premium exited crude as expected effective supply improved. Exact source-of-funds and participant decomposition remain UNKNOWN.",
-      "likely_marginal_buyers_sellers": "Likely marginal buyers on Sep. 15 included physical replacement-barrel seekers and financial participants hedging/expressing supply risk; likely marginal sellers on Sep. 16 included holders unwinding scarcity premium as alternative-route capacity became credible. Participant-level attribution is INFERENCE, not directly observed.",
-      "catalyst": "Yanbu loading suspension/cargo cancellations, followed by evidence of Saudi alternative routing via Oman.",
-      "transmission_mechanism": "Changes in expected effective deliverable supply altered the price required to clear near-term crude demand.",
-      "amplifiers": [
-        "Geopolitical risk premium",
-        "Physical-versus-futures scarcity expectations",
-        "Potential inventory and refined-product constraints"
-      ],
-      "alternative_explanations": [
-        "U.S. inventory news independently reduced scarcity expectations.",
-        "Pre-FOMC positioning and broader risk reduction may have influenced futures flows.",
-        "The reversal may partly represent profit-taking after the Sep. 15 spike rather than a durable supply reassessment."
-      ],
-      "confirmations": [
-        "Sustained alternative-route loading volumes",
-        "Normalization of physical crude differentials/backwardation",
-        "No renewed cancellation wave beyond available replacement capacity",
-        "Inventories remain adequate relative to disruption duration"
-      ],
-      "falsifiers": [
-        "Alternative routing proves too small or temporary",
-        "Physical premiums/backwardation continue widening despite lower futures",
-        "Refinery/feedstock shortages force renewed replacement buying",
-        "Further infrastructure/shipping disruption removes substitute routes"
-      ],
-      "matched_control_requirement": "Compare with prior pipeline/port outages where gross disrupted capacity was large but alternative routing/storage prevented persistent benchmark-price increases, and with outages where substitution capacity was unavailable and prices remained elevated.",
-      "reusable_pre_move_indicators": [
-        "Net effective deliverable supply after substitution, not headline disrupted capacity",
-        "Alternative port/pipeline/ship-to-ship spare capacity",
-        "Physical differential and futures-curve response versus outright futures price",
-        "Inventory buffer relative to expected outage duration",
-        "Refinery/product bottlenecks that can shift scarcity downstream"
-      ],
+      "observed_facts": ["Yanbu loadings were suspended and Saudi Arabia cancelled some European cargo deliveries, contributing to Brent's Sep. 15 rise.","On Sep. 16 Saudi Arabia increased crude shipments using ship-to-ship transfers off Sohar, Oman, providing an alternative delivery route.","Brent fell despite the underlying geopolitical disruption remaining unresolved."],
+      "inference": "The economically relevant supply variable is effective deliverable supply after route substitution and inventory buffers, not gross capacity attached to the initially disrupted route.",
+      "causal_chain": "physical-route disruption -> expected deliverable-barrel shortage -> replacement/hedging demand -> price rises -> alternative routing and inventory buffers become credible -> expected net shortage falls -> scarcity premium unwinds -> crude futures fall",
+      "capital_source_destination": "Capital initially moved toward crude/energy scarcity exposure, then partly exited as effective supply improved; exact participant source-of-funds remains UNKNOWN.",
+      "likely_marginal_buyers_sellers": "Physical replacement seekers and supply-risk hedgers are plausible marginal buyers; scarcity-premium holders are plausible marginal sellers on reversal. Attribution is INFERENCE.",
+      "catalyst": "Yanbu disruption/cargo cancellations followed by alternative Saudi routing via Oman.",
+      "transmission_mechanism": "Expected effective deliverable supply changed the clearing price for near-term crude demand.",
+      "amplifiers": ["Geopolitical risk premium","Physical-versus-futures scarcity expectations","Inventory/refined-product constraints"],
+      "alternative_explanations": ["U.S. inventory news independently reduced scarcity expectations.","Pre-FOMC positioning influenced futures flows.","Profit-taking contributed to reversal."],
+      "confirmations": ["Sustained alternative-route volumes","Normalization of physical differentials/backwardation","Adequate inventories relative to outage duration"],
+      "falsifiers": ["Alternative routing proves insufficient","Physical premiums keep widening","Further disruption removes substitute routes"],
+      "matched_control_requirement": "Compare historical port/pipeline outages with and without substitution/storage capacity.",
+      "reusable_pre_move_indicators": ["Net effective deliverable supply after substitution","Alternative logistics spare capacity","Physical differentials/futures curve","Inventory buffer versus outage duration"],
       "lesson_status": "SUPPORTED / PROVISIONAL / NEEDS CROSS-EPISODE TESTING",
-      "decision_support": "WAIT on extrapolating a crude spike solely from headline route capacity. Require evidence that net deliverable supply after substitution is actually impaired. No real-money trade authority.",
-      "sources": [
-        {
-          "publisher": "Reuters",
-          "date": "2026-09-16",
-          "url": "https://www.reuters.com/business/energy/oil-falls-us-crude-inventories-rise-despite-saudi-supply-concerns-2026-09-16/"
-        },
-        {
-          "publisher": "U.S. Energy Information Administration",
-          "date": "2026-09-16",
-          "url": "https://www.eia.gov/petroleum/data.php"
-        }
-      ]
+      "decision_support": "WAIT on extrapolating crude spikes solely from headline disrupted capacity.",
+      "sources": [{"publisher":"Reuters","date":"2026-09-16","url":"https://www.reuters.com/business/energy/oil-falls-us-crude-inventories-rise-despite-saudi-supply-concerns-2026-09-16/"},{"publisher":"U.S. Energy Information Administration","date":"2026-09-16","url":"https://www.eia.gov/petroleum/data.php"}]
+    },
+    {
+      "case_id": "2026-09-16-fomc-priced-in-hike-nonmove-control",
+      "asset": "Cross-asset: U.S. rates, dollar and equities",
+      "event_window": "2026-09-16 FOMC release",
+      "pre_move_evidence_cutoff": "2026-09-16T18:00:00Z",
+      "observed_move": "The Fed raised the target range 25 bp to 3.75%-4.00%, but contemporaneous market reporting described markets as broadly steady rather than showing a large shock response.",
+      "abnormality": "High-importance macro event with muted immediate broad-market response; deliberately retained as a matched non-move/control.",
+      "observed_facts": ["The FOMC vote was 12-0 to raise 25 bp.","Before the decision, market pricing assigned roughly a 92% probability to a 25 bp hike.","The September SEP raised the median end-2026 policy-rate projection to 4.1% from 3.8% in June, while median 2026 GDP rose to 2.3%, unemployment fell to 4.1%, and PCE inflation rose to 3.7%.","The implementation note raised IORB to 3.90% effective Sep. 17 and retained standing repo at 4.0%."],
+      "inference": "The announced 25 bp hike itself contained little marginal information because it was heavily priced. The more informative policy shock was the distribution/path of future rates and the combination of stronger growth/labor projections with persistent inflation.",
+      "causal_chain": "pre-event expectations price near-certain hike -> Fed delivers expected hike -> little need for marginal repricing from headline action -> future-rate distribution and macro projections become the marginal information -> cross-asset prices respond mainly to surprise relative to prior path, not the sign of the policy action alone",
+      "capital_source_destination": "No validated large immediate reallocation attributable solely to the hike. The likely opportunity-cost channel is higher prospective cash/front-end returns versus duration/risk assets, but magnitude is UNKNOWN pending post-event flow and yield data.",
+      "likely_marginal_buyers_sellers": "UNKNOWN at participant level; event-driven rates/FX/equity participants likely adjusted exposures to the revised path rather than the already-priced headline hike.",
+      "catalyst": "September FOMC decision and Summary of Economic Projections.",
+      "transmission_mechanism": "Policy surprise is expectation-relative: prices change when the realized policy path differs from the distribution already embedded in yields, FX and risk assets.",
+      "amplifiers": ["Positioning into the event","Rate-path convexity/duration","Dollar carry/opportunity cost","Options/event hedging"],
+      "alternative_explanations": ["Oil's same-day decline offset some hawkish inflation impulse.","Long yields had already risen materially before the meeting.","Other geopolitical and energy news contaminated the event window."],
+      "confirmations": ["Front-end yields and OIS reprice toward the revised path","Dollar strength persists if relative-rate advantage widens","Rate-sensitive assets weaken if real/nominal required returns remain higher"],
+      "falsifiers": ["Rate-path markets do not retain the hawkish revision","Subsequent inflation/growth data reverse the projected path","Risk assets rise while discount rates fall because the growth revision dominates"],
+      "matched_control_requirement": "Compare FOMC actions with similar-sized surprises but different pre-event probabilities and dot-path revisions; test headline action versus expectation-adjusted policy surprise.",
+      "reusable_pre_move_indicators": ["Pre-event probability distribution, not action sign","Expected-versus-realized dot/path shift","Front-end OIS/Treasury reaction","Cross-market confirmation in USD, duration and rate-sensitive equities"],
+      "lesson_status": "SUPPORTED / PROVISIONAL / NEEDS HISTORICAL EVENT STUDY",
+      "decision_support": "WAIT / NO EDGE from the headline hike alone. Require expectation-adjusted path surprise plus cross-market confirmation before directional action.",
+      "sources": [{"publisher":"Federal Reserve","date":"2026-09-16","url":"https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm"},{"publisher":"Federal Reserve","date":"2026-09-16","url":"https://www.federalreserve.gov/monetarypolicy/fomcprojtabl20260916.htm"},{"publisher":"Federal Reserve","date":"2026-09-16","url":"https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a1.htm"}]
     }
   ],
   "cross_case_hypotheses": [
-    {
-      "hypothesis_id": "effective-deliverable-supply-vs-gross-disruption",
-      "status": "CANDIDATE",
-      "claim": "For transport-route commodity shocks, changes in net effective deliverable supply after substitution and inventory buffers should predict persistence of benchmark price moves better than headline gross disrupted capacity.",
-      "falsification": "Across timestamp-safe matched historical disruptions, gross disrupted capacity predicts persistence at least as well after controlling for substitution capacity, inventories and demand conditions.",
-      "next_test": "Build matched historical port/pipeline/chokepoint outage sample and compare gross disruption with net deliverable-supply estimates against 1d/5d/20d crude returns, physical differentials and curve backwardation."
-    }
+    {"hypothesis_id":"effective-deliverable-supply-vs-gross-disruption","status":"CANDIDATE","claim":"For transport-route commodity shocks, net effective deliverable supply after substitution and inventory buffers predicts persistence better than headline gross disrupted capacity.","falsification":"Gross disrupted capacity predicts persistence at least as well after controlling for substitution, inventories and demand.","next_test":"Matched historical port/pipeline/chokepoint outages versus 1d/5d/20d returns, physical differentials and backwardation."},
+    {"hypothesis_id":"expectation-adjusted-policy-surprise","status":"CANDIDATE","claim":"For scheduled central-bank decisions, expectation-adjusted changes in the projected policy path should explain cross-asset repricing better than the direction/sign of the announced rate action.","falsification":"Across timestamp-safe FOMC events, headline action direction/size explains subsequent cross-asset moves at least as well as pre-event-probability-adjusted path surprise.","next_test":"Build historical FOMC event sample with pre-event futures/OIS probabilities, realized action, dot/path surprise and 30m/1d/5d Treasury, USD, equity and gold responses."}
   ]
 }
