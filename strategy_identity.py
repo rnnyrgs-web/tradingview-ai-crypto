@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from config import BACKTEST_COST_BPS, HORIZONS, STRATEGY_VERSION
+from strategy_contract import CONTRACT_SCHEMA_VERSION, StrategyContract
 
 
 ROOT = Path(__file__).resolve().parent
@@ -44,7 +45,13 @@ def research_code_sha256() -> str:
     return digest.hexdigest()
 
 
-def build_strategy_identity(symbol: str, horizon: str, strategy_family: str) -> dict:
+def build_strategy_identity(
+    symbol: str,
+    horizon: str,
+    strategy_family: str,
+    *,
+    contract: dict | None = None,
+) -> dict:
     normalized_symbol = str(symbol or "").strip().upper()
     normalized_horizon = str(horizon or "").strip()
     family = normalize_family(strategy_family)
@@ -64,6 +71,24 @@ def build_strategy_identity(symbol: str, horizon: str, strategy_family: str) -> 
         "research_code_sha256": research_code_sha256(),
         "identity_complete": identity_complete,
     }
+
+    if contract is not None:
+        strategy_contract = StrategyContract.from_mapping(contract)
+        contract_payload = strategy_contract.canonical_payload()
+        contract_family = normalize_family(contract_payload["strategy_family"])
+        contract_horizon = str(contract_payload["horizon"]).strip()
+        if contract_family != family:
+            raise ValueError("strategy contract family does not match strategy identity")
+        if contract_horizon != normalized_horizon:
+            raise ValueError("strategy contract horizon does not match strategy identity")
+        identity["contract_schema_version"] = CONTRACT_SCHEMA_VERSION
+        identity["fingerprint"] = strategy_contract.fingerprint() if identity_complete else ""
+        identity["dataset_id"] = contract_payload["dataset_id"]
+        identity["dataset_sha256"] = contract_payload["dataset_sha256"]
+        identity["hypothesis_id"] = contract_payload["hypothesis_id"]
+        identity["experiment_id"] = contract_payload["experiment_id"]
+        return identity
+
     if identity_complete:
         canonical = json.dumps(identity, sort_keys=True, separators=(",", ":"))
         identity["fingerprint"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
