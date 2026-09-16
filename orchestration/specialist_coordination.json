@@ -1,12 +1,15 @@
 {
   "version": 1,
-  "objective": "Maximize genuine after-cost profitability first and genuine forward 24h/7d BUY/SELL/WAIT accuracy/precision second without weakening scientific or production safety gates.",
+  "objective": "Find and validate one strategy with genuine positive after-cost evidence; concentrate deep research, implementation, testing and backtesting on the single active candidate while genuine forward 24h/7d BUY/SELL/WAIT accuracy/precision remains secondary and every scientific/production safety gate remains intact.",
   "policy": {
     "priority_basis": "expected_incremental_after_cost_profitability_impact_then_forward_signal_quality",
     "specialists_write_main": false,
     "specialists_merge_own_prs": false,
     "automatic_merge": false,
     "broker_connected": false,
+    "single_strategy_focus": true,
+    "max_active_deep_strategy_candidates": 1,
+    "broad_unrelated_research": "DEPRIORITIZED",
     "monthly_infrastructure_ceiling_usd": 30,
     "insufficient_evidence": "WAIT_RESEARCH_ONLY",
     "required_validation": [

@@ -1,8 +1,25 @@
 {
   "version": 1,
   "objective_id": "UNIVERSAL_SIGNAL_DEVELOPMENT_V1",
-  "primary_mission": "Continuously maximize genuine sustainable after-cost profitability for 24h and 7d crypto BUY / SELL / WAIT signals, with genuine forward signal accuracy/precision as the secondary objective.",
+  "primary_mission": "Find and validate one strategy with genuine sustainable after-cost profitability for 24h and 7d crypto BUY / SELL / WAIT signals; concentrate deep research on that single candidate while genuine forward signal accuracy/precision remains the secondary objective.",
   "optimization_target": "genuine_after_cost_profitability_first_then_forward_signal_quality",
+  "single_strategy_focus": {
+    "enabled": true,
+    "max_active_deep_candidates": 1,
+    "broad_unrelated_research": "DEPRIORITIZED",
+    "success_state": "VALIDATED_RESEARCH_CANDIDATE",
+    "required_evidence": [
+      "predeclared_immutable_fingerprint",
+      "positive_after_cost_expectancy",
+      "purged_chronological_validation",
+      "untouched_oos",
+      "cost_stress_and_parameter_stability",
+      "multiple_testing_control",
+      "genuine_forward_paper_validation"
+    ],
+    "real_money_trading_authority": false,
+    "selection_rule": "Use broad cheap deterministic screening only to select the single highest-information candidate. Once selected, route deep research, implementation, testing, backtesting and evidence collection to that candidate until it is rejected or passes every required gate. Rejection reopens selection; weak evidence never becomes success."
+  },
   "anti_objectives": [
     "historical_accuracy_maximization",
     "threshold_mining",
