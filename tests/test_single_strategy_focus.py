@@ -27,6 +27,7 @@ def test_canonical_objective_focuses_deep_work_on_one_strategy_candidate():
     assert focus["max_active_deep_candidates"] == 1
     assert focus["broad_unrelated_research"] == "DEPRIORITIZED"
     assert focus["success_state"] == "VALIDATED_RESEARCH_CANDIDATE"
+    assert focus["selection_screen_workers"]
     assert "positive_after_cost_expectancy" in focus["required_evidence"]
     assert "untouched_oos" in focus["required_evidence"]
     assert "genuine_forward_paper_validation" in focus["required_evidence"]
@@ -73,11 +74,18 @@ def test_worker_fleet_routes_to_one_candidate_without_claiming_alpha():
     assert policy["operational_security_may_claim_alpha"] is False
 
 
-def test_selection_phase_parks_every_heavy_worker():
-    selected = focused_worker_specs(WORKERS, load_objective())
-    assert selected
-    assert all(worker.compute_class == "lightweight" for worker in selected)
-    assert {worker.name for worker in selected} == {"learning-diagnostics", "experiment-factory"}
+def test_selection_phase_runs_only_declared_screen_workers_and_lightweight_brains():
+    objective = load_objective()
+    screen_names = set(objective["single_strategy_focus"]["selection_screen_workers"])
+    selected = focused_worker_specs(WORKERS, objective)
+    selected_names = {worker.name for worker in selected}
+
+    assert selected_names == screen_names | {"learning-diagnostics", "experiment-factory"}
+    heavy = [worker for worker in selected if worker.compute_class == "heavy"]
+    assert heavy
+    assert {worker.name for worker in heavy} == screen_names
+    assert all(worker.env.get("SINGLE_STRATEGY_SELECTION_MODE") == "1" for worker in heavy)
+    assert all("ACTIVE_STRATEGY_FINGERPRINT" not in worker.env for worker in heavy)
 
 
 def test_active_candidate_allows_only_its_declared_deep_workers():
