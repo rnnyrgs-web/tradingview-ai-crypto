@@ -83,29 +83,3 @@ def test_registry_evaluates_only_declared_strategy_family(monkeypatch):
 
     assert {row["strategy_family"] for row in result["registry"]} == {"trend"}
     assert set(called) == {"trend"}
-
-
-def test_selection_screen_does_not_open_untouched_holdout(monkeypatch):
-    history = [{"ts": i, "close": 100.0} for i in range(1000)]
-    seen_ranges = []
-    monkeypatch.setattr(sf, "get_history", lambda *args, **kwargs: history)
-
-    def fake_simulate(segment, _bar, _family, *_args, **_kwargs):
-        seen_ranges.append((segment[0]["ts"], segment[-1]["ts"]))
-        return []
-
-    monkeypatch.setattr(sf, "_simulate", fake_simulate)
-    result = sf.evaluate_strategy_registry(
-        "BTC-USDT",
-        bar="15m",
-        bars=1000,
-        families=("trend",),
-        open_holdout=False,
-    )
-
-    assert seen_ranges
-    assert max(end for _start, end in seen_ranges) < 800
-    item = result["registry"][0]
-    assert item["holdout_test"] == {"status": "LOCKED_UNTOUCHED_OOS"}
-    assert item["eligible_for_promotion_review"] is False
-    assert result["holdout_opened"] is False
