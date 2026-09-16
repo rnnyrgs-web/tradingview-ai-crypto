@@ -29,24 +29,29 @@ jobs:
         with:
           python-version: "3.12"
 
+      # Evaluation is useful but must never consume most of the scan window.
+      # Keep it best-effort and bounded so a slow /evaluate endpoint cannot
+      # starve the production scan.
       - name: Evaluate previous signals
-        timeout-minutes: 5
         continue-on-error: true
         run: |
           curl --fail --show-error --silent \
-            --retry 1 --retry-delay 8 --retry-all-errors \
-            --max-time 240 \
+            --connect-timeout 10 \
+            --max-time 45 \
             -H "X-Scan-Secret: ${{ secrets.SCAN_SECRET }}" \
-            "https://tradingview-ai-crypto.onrender.com/evaluate"
+            "https://tradingview-ai-crypto.onrender.com/evaluate" || true
 
       - name: Run production market scan
         run: |
+          rm -f /tmp/scan-response.json
           curl --fail --show-error --silent \
-            --retry 4 --retry-delay 10 --retry-all-errors \
-            --max-time 300 \
+            --connect-timeout 15 \
+            --retry 2 --retry-delay 8 --retry-all-errors \
+            --max-time 360 \
             -H "X-Scan-Secret: ${{ secrets.SCAN_SECRET }}" \
             "https://tradingview-ai-crypto.onrender.com/scan" \
             --output /tmp/scan-response.json
+          test -s /tmp/scan-response.json
           python tools/validate_scan_response.py /tmp/scan-response.json
 
       - name: Upload safe scan diagnostics on failure
