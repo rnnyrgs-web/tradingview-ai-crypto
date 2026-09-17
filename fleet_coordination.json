@@ -1,1 +1,1 @@
-{"lock": {"acquired_at": null, "expires_at": null, "holder": null}, "pending_reservations": [{"amount_usd": 0.42, "engine": "claude", "expires_at": "2026-09-17T18:08:01Z", "reservation_id": "fbd81ceb-4015-4624-8325-98228ef246ff", "reserved_at": "2026-09-17T17:23:01Z", "role": "signal-accuracy"}], "version": 1}
+{"lock": {"acquired_at": "2026-09-17T17:23:13Z", "expires_at": "2026-09-17T17:25:13Z", "holder": "clear:fbd81ceb-4015-4624-8325-98228ef246ff:2cad79e2-b1e3-49e9-93ac-15f5a31e2fb4"}, "pending_reservations": [], "version": 1}
