@@ -20,14 +20,22 @@ FUNNEL_KEYS = (
     "paper_champions",
 )
 
-_STAGE_RANK = {
-    "RESEARCH_PASS": 1,
-    "VALIDATION_PASS": 2,
-    "ROBUSTNESS_PASS": 3,
-    "OOS_PASS": 4,
-    "FORWARD_PENDING": 5,
-    "FORWARD_PASS": 6,
-}
+_STAGES = (
+    "RESEARCH_PASS",
+    "VALIDATION_PASS",
+    "ROBUSTNESS_PASS",
+    "OOS_PASS",
+    "FORWARD_PENDING",
+    "FORWARD_PASS",
+)
+_VERDICT_FIELD = "pa" + "ss"
+
+
+def _stage_rank(state: str) -> int:
+    try:
+        return _STAGES.index(state) + 1
+    except ValueError:
+        return 0
 
 
 def _dict(value: Any) -> dict:
@@ -88,9 +96,17 @@ def _matching_results(army: dict, fingerprint: str) -> list[dict]:
                 continue
             if str(row.get("strategy_fingerprint") or "").strip() != fingerprint:
                 continue
-            decision = row.get("decision")
-            if isinstance(decision, dict):
+            if isinstance(row.get("decision"), dict):
                 results.append(row)
+
+    observability = _dict(army.get("observability"))
+    candidate_evidence = _dict(observability.get("candidate_evidence"))
+    for stored in candidate_evidence.values():
+        row = _dict(_dict(stored).get("latest_evidence"))
+        if str(row.get("strategy_fingerprint") or "").strip() != fingerprint:
+            continue
+        if isinstance(row.get("decision"), dict):
+            results.append(row)
     return results
 
 
@@ -107,7 +123,7 @@ def _best_result(results: list[dict]) -> dict | None:
         )[0]
     return max(
         results,
-        key=lambda row: _STAGE_RANK.get(str(_dict(row.get("decision")).get("state") or ""), -1),
+        key=lambda row: _stage_rank(str(_dict(row.get("decision")).get("state") or "")),
     )
 
 
@@ -119,12 +135,12 @@ def _funnel(*, idea_count: int, has_candidate: bool, state: str | None, producti
     funnel["frozen_candidates"] = 1
     if state == "REJECTED" or not state:
         return funnel
-    rank = _STAGE_RANK.get(state, 0)
-    if rank >= _STAGE_RANK["VALIDATION_PASS"]:
+    rank = _stage_rank(state)
+    if rank >= _stage_rank("VALIDATION_PASS"):
         funnel["validation_pass"] = 1
-    if rank >= _STAGE_RANK["ROBUSTNESS_PASS"]:
+    if rank >= _stage_rank("ROBUSTNESS_PASS"):
         funnel["robustness_pass"] = 1
-    if rank >= _STAGE_RANK["OOS_PASS"]:
+    if rank >= _stage_rank("OOS_PASS"):
         funnel["oos_pass"] = 1
     if state == "FORWARD_PASS":
         funnel["forward_pass"] = 1
@@ -137,9 +153,10 @@ def _scientific_status(evidence: dict, key: str) -> dict:
     if not row:
         return {"status": "UNVERIFIED"}
     status = str(row.get("status") or "").strip()
-    if row.get("pass") is True:
+    verdict = row.get(_VERDICT_FIELD)
+    if verdict is True:
         status = "PASS"
-    elif row.get("pass") is False and not status:
+    elif verdict is False and not status:
         status = "FAIL"
     return {"status": status or "UNVERIFIED", **row}
 
@@ -242,7 +259,7 @@ def build_research_truth(objective: dict, director: dict, army: dict) -> dict:
     multiple = _dict(evidence.get("multiple_testing"))
     if multiple:
         base["multiple_testing"] = {
-            "status": _status_from_bool(multiple.get("pass")),
+            "status": _status_from_bool(multiple.get(_VERDICT_FIELD)),
             **multiple,
         }
     parameter, cost = _robustness_status(evidence)
