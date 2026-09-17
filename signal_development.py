@@ -35,6 +35,66 @@ def load_objective(path: Path = OBJECTIVE_PATH) -> dict:
     return payload
 
 
+def validate_active_candidate_contract(candidate: dict) -> dict:
+    """Validate the exact frozen strategy + certified dataset used by deep workers.
+
+    This is deliberately stricter than the legacy fingerprint-only handoff. A deep
+    candidate is not valid unless the full immutable contract fingerprints to the
+    declared candidate id and its dataset identity matches a fail-closed certified
+    manifest. Worker-specific contracts may restrict execution, but they may not
+    silently change the strategy family.
+    """
+    from dataset_certification import certify_dataset_manifest
+    from strategy_contract import StrategyContract
+
+    if not isinstance(candidate, dict):
+        raise ObjectiveError("active strategy candidate must be an object")
+    raw_contract = candidate.get("strategy_contract")
+    raw_manifest = candidate.get("dataset_manifest")
+    if not isinstance(raw_contract, dict):
+        raise ObjectiveError("active strategy candidate is missing immutable strategy contract")
+    if not isinstance(raw_manifest, dict):
+        raise ObjectiveError("active strategy candidate is missing dataset manifest")
+
+    try:
+        contract = StrategyContract.from_mapping(raw_contract)
+    except (TypeError, ValueError) as exc:
+        raise ObjectiveError(f"active strategy contract invalid: {exc}") from exc
+
+    declared_fingerprint = str(candidate.get("fingerprint_id") or "").strip()
+    fingerprint = contract.fingerprint()
+    if not declared_fingerprint or declared_fingerprint != fingerprint:
+        raise ObjectiveError("active strategy candidate fingerprint does not match immutable contract")
+
+    certification = certify_dataset_manifest(raw_manifest)
+    if certification.get("certified") is not True:
+        failures = certification.get("failures") or []
+        raise ObjectiveError(f"active strategy candidate dataset is not certified: {failures}")
+
+    contract_payload = contract.canonical_payload()
+    if certification.get("dataset_id") != contract_payload.get("dataset_id"):
+        raise ObjectiveError("active strategy candidate dataset id does not match immutable contract")
+    if certification.get("dataset_sha256") != contract_payload.get("dataset_sha256"):
+        raise ObjectiveError("active strategy candidate dataset hash does not match immutable contract")
+
+    deep_contracts = candidate.get("deep_worker_contracts")
+    if not isinstance(deep_contracts, dict) or not deep_contracts:
+        raise ObjectiveError("active strategy candidate must declare deep worker contracts")
+    for worker_name, worker_contract in deep_contracts.items():
+        if not str(worker_name or "").strip() or not isinstance(worker_contract, dict):
+            raise ObjectiveError("active strategy deep worker contract is malformed")
+        worker_family = str(worker_contract.get("strategy_family") or "").strip()
+        if worker_family != contract_payload["strategy_family"]:
+            raise ObjectiveError("deep worker strategy family does not match immutable strategy contract")
+
+    return {
+        "strategy_contract": contract_payload,
+        "strategy_fingerprint": fingerprint,
+        "dataset_manifest": dict(raw_manifest),
+        "dataset_certification": certification,
+    }
+
+
 def validate_objective(payload: dict) -> None:
     if payload.get("objective_id") != PRIMARY_OBJECTIVE_ID:
         raise ObjectiveError("primary signal-development objective id changed")
@@ -61,6 +121,7 @@ def validate_objective(payload: dict) -> None:
         contracts = candidate.get("deep_worker_contracts")
         if not isinstance(contracts, dict) or not contracts:
             raise ObjectiveError("active strategy candidate must declare deep worker contracts")
+        validate_active_candidate_contract(candidate)
     if focus.get("real_money_trading_authority") is not False:
         raise ObjectiveError("single-strategy research may not receive real-money trading authority")
     required_evidence = set(focus.get("required_evidence") or [])
