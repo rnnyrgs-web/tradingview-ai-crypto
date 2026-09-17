@@ -38,28 +38,45 @@ def test_mission_snapshot_exposes_full_scientific_funnel_fail_closed_when_coordi
     assert snapshot["forward_evidence"]["status"] == "UNVERIFIED"
 
 
-def test_mission_snapshot_uses_explicit_research_truth_without_inventing_missing_results():
-    coordinator = {
+def _research_truth():
+    return {
+        "funnel": {"ideas": 14, "frozen_candidates": 3, "validation_pass": 1, "robustness_pass": 0, "oos_pass": 0, "forward_pass": 0, "paper_champions": 0},
+        "closest_candidate": {"strategy_fingerprint": "abc", "state": "VALIDATION_PASS", "blockers": ["robustness"]},
+        "negative_knowledge": {"status": "VERIFIED", "rejected_count": 2},
+        "independent_reproduction": {"status": "PENDING"},
+        "multiple_testing": {"status": "PASS"},
+        "cost_stress": {"status": "PENDING"},
+        "parameter_stability": {"status": "PENDING"},
+        "forward_evidence": {"status": "NOT_STARTED", "observations": 0},
+        "experiment_activity": {"completed": 4, "rejected": 3, "promoted": 0, "insufficient_evidence": 1},
+    }
+
+
+def _coordinator():
+    return {
         "ok": True,
         "broker_connected": False,
         "trade_authority": False,
         "worker_army": {"worker_count": 20, "heavy_worker_count": 18, "lightweight_worker_count": 2, "workers": {}, "supervisor": {"healthy": True}},
         "research_director": {"missions": []},
-        "research_truth": {
-            "funnel": {"ideas": 14, "frozen_candidates": 3, "validation_pass": 1, "robustness_pass": 0, "oos_pass": 0, "forward_pass": 0, "paper_champions": 0},
-            "closest_candidate": {"strategy_fingerprint": "abc", "state": "VALIDATION_PASS", "blockers": ["robustness"]},
-            "negative_knowledge": {"status": "VERIFIED", "rejected_count": 2},
-            "independent_reproduction": {"status": "PENDING"},
-            "multiple_testing": {"status": "PASS"},
-            "cost_stress": {"status": "PENDING"},
-            "parameter_stability": {"status": "PENDING"},
-            "forward_evidence": {"status": "NOT_STARTED", "observations": 0},
-            "experiment_activity": {"completed": 4, "rejected": 3, "promoted": 0, "insufficient_evidence": 1},
-        },
     }
+
+
+def test_mission_snapshot_uses_explicit_research_truth_without_inventing_missing_results():
+    coordinator = _coordinator()
+    coordinator["research_truth"] = _research_truth()
     snapshot = build_mission_snapshot(objective(), coordinator)
     assert snapshot["funnel"]["ideas"] == 14
     assert snapshot["closest_candidate"]["state"] == "VALIDATION_PASS"
     assert snapshot["missing_evidence"] == ["robustness"]
     assert snapshot["negative_knowledge"]["rejected_count"] == 2
     assert snapshot["experiment_activity"]["completed"] == 4
+
+
+def test_mission_snapshot_accepts_director_research_truth_when_health_does_not_duplicate_it():
+    coordinator = _coordinator()
+    coordinator["research_director"] = {"missions": [], "research_truth": _research_truth()}
+    snapshot = build_mission_snapshot(objective(), coordinator)
+    assert snapshot["funnel"]["ideas"] == 14
+    assert snapshot["closest_candidate"]["state"] == "VALIDATION_PASS"
+    assert snapshot["missing_evidence"] == ["robustness"]
