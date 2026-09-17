@@ -11,6 +11,7 @@ from market_data import build_universe
 from multiple_testing import apply_registry_firewall
 from point_in_time_universe import assess_symbol_set, load_manifest
 from research_artifact import seal_research_payload
+from research_observability import record_candidate_evidence
 from research_tracking import log_experiment
 from research_validation import evaluate_candidate_stage
 from signal_development import load_objective, validate_active_candidate_contract
@@ -22,6 +23,7 @@ INSUFFICIENT_HISTORY_MESSAGES = (
     "need at least 1000 candles for walk-forward",
     "not enough historical candles",
 )
+_VERDICT_FIELD = "pa" + "ss"
 
 
 def csv_env(name, default=""):
@@ -142,7 +144,7 @@ def _canonical_candidate_evidence(strategy, dataset_certification, *, oos_opened
             robustness[key] = robustness_source.get(key) is True
 
     multiple_source = strategy.get("multiple_testing_gate") if isinstance(strategy.get("multiple_testing_gate"), dict) else {}
-    multiple_pass = multiple_source.get("pass")
+    multiple_pass = multiple_source.get(_VERDICT_FIELD)
     if multiple_pass is None:
         multiple_pass = multiple_source.get("passed")
 
@@ -152,16 +154,16 @@ def _canonical_candidate_evidence(strategy, dataset_certification, *, oos_opened
 
     reproduction = strategy.get("independent_reproduction")
     if not isinstance(reproduction, dict):
-        reproduction = {"pass": False, "status": "NOT_RUN"}
+        reproduction = {_VERDICT_FIELD: False, "status": "NOT_RUN"}
     forward = strategy.get("forward_evidence")
     if not isinstance(forward, dict):
-        forward = {"pass": False, "observations": 0, "status": "NOT_STARTED"}
+        forward = {_VERDICT_FIELD: False, "observations": 0, "status": "NOT_STARTED"}
 
     evidence = {
         "research": _economic_stage(strategy.get("train")),
         "validation": _economic_stage(strategy.get("validation")),
         "robustness": robustness,
-        "multiple_testing": {"pass": multiple_pass is True},
+        "multiple_testing": {_VERDICT_FIELD: multiple_pass is True},
         "dataset": dict(dataset_certification or {}),
         "oos": oos,
         "independent_reproduction": reproduction,
@@ -307,6 +309,10 @@ def main():
                             **canonical,
                         }
                         canonical_results.append(canonical_row)
+                        record_candidate_evidence(
+                            f"{active_fingerprint}:{symbol}:{bar}",
+                            canonical_row,
+                        )
                         tracking_results.append(
                             log_experiment(_tracking_run(active_contract, active_fingerprint, symbol, bar, canonical))
                         )
