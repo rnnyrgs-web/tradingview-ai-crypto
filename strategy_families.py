@@ -363,22 +363,27 @@ def _skipped_robustness(gate):
     }
 
 
-def evaluate_strategy_registry(symbol, bar="15m", bars=5000, *, families=None):
-    history = get_history(symbol, bar, bars)
+def evaluate_strategy_registry(symbol, bar="15m", bars=5000, *, families=None, history=None, benchmark_history=None):
+    frozen_history = isinstance(history, list)
+    history = history if frozen_history else get_history(symbol, bar, bars)
     if len(history) < 1000:
         raise RuntimeError("Need at least 1000 candles for strategy-family research")
 
-    benchmark_history = history if symbol == "BTC-USDT" else get_history("BTC-USDT", bar, bars)
+    selected_families = tuple(STRATEGY_FAMILIES if families is None else families)
+    if not selected_families or any(family not in STRATEGY_FAMILIES for family in selected_families):
+        raise ValueError("strategy families must be a non-empty supported subset")
+    if symbol == "BTC-USDT":
+        benchmark_history = history
+    elif not isinstance(benchmark_history, list):
+        if any(family == "relative_strength" for family in selected_families) and frozen_history:
+            raise RuntimeError("frozen BTC benchmark snapshot required for relative-strength research")
+        benchmark_history = get_history("BTC-USDT", bar, bars)
     benchmark = {x["ts"]: x["close"] for x in benchmark_history}
 
     n = len(history)
     train = history[:int(n * 0.6)]
     validation = history[int(n * 0.6):int(n * 0.8)]
     holdout = history[int(n * 0.8):]
-
-    selected_families = tuple(STRATEGY_FAMILIES if families is None else families)
-    if not selected_families or any(family not in STRATEGY_FAMILIES for family in selected_families):
-        raise ValueError("strategy families must be a non-empty supported subset")
     registry = []
     for family in selected_families:
         train_records = _simulate(train, bar, family, benchmark, detailed=True)

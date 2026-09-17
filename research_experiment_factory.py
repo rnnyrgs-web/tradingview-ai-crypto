@@ -11,7 +11,9 @@ import hashlib
 import json
 from math import isfinite
 
+from orchestration.rejected_fingerprints import is_rejected_fingerprint
 from signal_development import objective_reference, priority_score, validate_task_contract
+from strategy_contract import StrategyContract, freeze_strategy_contract
 
 MAX_EXPERIMENTS = 20
 REQUIRED_VALIDATION = (
@@ -66,6 +68,28 @@ def _contract(item: dict, hypothesis: str) -> dict:
     return contract
 
 
+def _frozen_strategy_binding(item: dict) -> dict | None:
+    raw = item.get("strategy_contract")
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise ValueError("strategy_contract must be an object when supplied")
+    contract = StrategyContract.from_mapping(raw)
+    frozen = freeze_strategy_contract(raw)
+    fingerprint = contract.fingerprint()
+    if is_rejected_fingerprint(fingerprint):
+        return {"rejected": True, "fingerprint": fingerprint}
+    payload = frozen["payload"]
+    return {
+        "rejected": False,
+        "fingerprint": fingerprint,
+        "strategy_contract": frozen,
+        "experiment_id": str(payload["experiment_id"]),
+        "hypothesis_id": str(payload["hypothesis_id"]),
+        "dataset_sha256": str(payload["dataset_sha256"]),
+    }
+
+
 def build_experiment_queue(diagnostics: dict, memory: dict | None = None, *, limit: int = MAX_EXPERIMENTS) -> dict:
     """Create bounded experiment specs from already-resolved diagnostic priorities."""
     priorities = diagnostics.get("research_priorities") if isinstance(diagnostics, dict) else []
@@ -79,6 +103,7 @@ def build_experiment_queue(diagnostics: dict, memory: dict | None = None, *, lim
         default=0.0,
     )
     experiments = []
+    rejected_duplicates = 0
     for item in eligible_priorities:
         dimension = str(item.get("dimension") or "unknown")
         group = str(item.get("group") or "unknown")
@@ -93,7 +118,16 @@ def build_experiment_queue(diagnostics: dict, memory: dict | None = None, *, lim
             "target_horizon": contract["target_horizon"],
             "validation": REQUIRED_VALIDATION,
         }
-        experiment_id = _stable_id(identity)
+        strategy_binding = _frozen_strategy_binding(item)
+        if strategy_binding and strategy_binding["rejected"]:
+            rejected_duplicates += 1
+            continue
+
+        experiment_id = (
+            strategy_binding["experiment_id"]
+            if strategy_binding
+            else _stable_id(identity)
+        )
         lesson_fingerprint = hashlib.sha256(f"{dimension}|{group}".encode("utf-8")).hexdigest()[:24]
         wrong_rate = max(0.0, min(1.0, _finite(item.get("wrong_rate"))))
         sample_strength = max(0.0, min(1.0, int(item.get("independent_samples") or 0) / 50.0))
@@ -118,7 +152,7 @@ def build_experiment_queue(diagnostics: dict, memory: dict | None = None, *, lim
             probability_actionable_evidence=factors["probability_actionable_evidence"],
             compute_api_cost_units=factors["compute_api_cost_units"],
         )
-        experiments.append({
+        experiment = {
             "experiment_id": experiment_id,
             "dimension": dimension,
             "group": group,
@@ -137,7 +171,16 @@ def build_experiment_queue(diagnostics: dict, memory: dict | None = None, *, lim
             "strategy_mutation_authority": False,
             "trade_authority": False,
             "promotion_authority": False,
-        })
+        }
+        if strategy_binding:
+            experiment.update({
+                "hypothesis_id": strategy_binding["hypothesis_id"],
+                "strategy_fingerprint": strategy_binding["fingerprint"],
+                "strategy_contract": strategy_binding["strategy_contract"],
+                "dataset_sha256": strategy_binding["dataset_sha256"],
+                "contract_frozen": True,
+            })
+        experiments.append(experiment)
     experiments.sort(
         key=lambda row: (
             -row["information_priority"],
@@ -153,6 +196,7 @@ def build_experiment_queue(diagnostics: dict, memory: dict | None = None, *, lim
         "objective": objective_reference("experiment-factory", "experiment_factory"),
         "experiment_count": len(bounded),
         "experiments": bounded,
+        "rejected_fingerprint_duplicates": rejected_duplicates,
         "automatic_execution_authority": False,
         "strategy_mutation_authority": False,
         "trade_authority": False,

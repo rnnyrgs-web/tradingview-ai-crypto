@@ -25,6 +25,16 @@ COORDINATOR_STATUS_URL = os.getenv(
     "https://crypto-continuous-coordinator.onrender.com/health",
 ).strip()
 COORDINATOR_TIMEOUT_SECONDS = 8.0
+FUNNEL_KEYS = (
+    "ideas",
+    "frozen_candidates",
+    "validation_pass",
+    "robustness_pass",
+    "oos_pass",
+    "forward_pass",
+    "paper_champions",
+)
+INITIAL_PAPER_EQUITY_USD = 100000.0
 
 
 def _dict(value: Any) -> dict:
@@ -53,12 +63,116 @@ def _candidate_fingerprint(focus: dict) -> str | None:
     return fingerprint or None
 
 
-def build_mission_snapshot(objective: dict, coordinator: dict | None) -> dict:
+def build_paper_economics(trades: list[dict] | None, fingerprint: str | None) -> dict:
+    """Summarize only paper rows bound to the exact frozen candidate."""
+    fingerprint = str(fingerprint or "").strip()
+    if not fingerprint or not isinstance(trades, list):
+        return {"status": "UNVERIFIED", "strategy_fingerprint": fingerprint or None}
+    matching = [
+        row for row in trades
+        if isinstance(row, dict) and str(row.get("strategy_fingerprint") or "").strip() == fingerprint
+    ]
+    closed = [row for row in matching if str(row.get("status") or "").upper() == "CLOSED"]
+    pnls = []
+    for row in sorted(closed, key=lambda item: str(item.get("closed_at") or "")):
+        try:
+            pnls.append(float(row["pnl_usd"]))
+        except (KeyError, TypeError, ValueError):
+            return {"status": "UNVERIFIED", "strategy_fingerprint": fingerprint, "reason": "malformed_pnl"}
+    if not pnls:
+        return {
+            "status": "INSUFFICIENT_EVIDENCE", "strategy_fingerprint": fingerprint,
+            "trades_observed": len(matching), "closed_trades": 0,
+        }
+    gains = sum(value for value in pnls if value > 0)
+    losses = abs(sum(value for value in pnls if value < 0))
+    equity = peak = INITIAL_PAPER_EQUITY_USD
+    max_drawdown = 0.0
+    for pnl in pnls:
+        equity += pnl
+        peak = max(peak, equity)
+        if peak > 0:
+            max_drawdown = max(max_drawdown, (peak - equity) / peak * 100.0)
+    fees = sorted({float(row["fee_bps_one_way"]) for row in matching if row.get("fee_bps_one_way") is not None})
+    return {
+        "status": "VERIFIED",
+        "strategy_fingerprint": fingerprint,
+        "trades_observed": len(matching),
+        "closed_trades": len(closed),
+        "open_trades": len(matching) - len(closed),
+        "net_pnl_usd": round(sum(pnls), 2),
+        "expectancy_usd": round(sum(pnls) / len(pnls), 2),
+        "profit_factor": round(gains / losses, 4) if losses > 0 else None,
+        "max_drawdown_pct": round(max_drawdown, 4),
+        "fee_bps_one_way": fees,
+    }
+
+
+def _unverified_research_truth() -> dict:
+    return {
+        "funnel": {key: "UNVERIFIED" for key in FUNNEL_KEYS},
+        "closest_candidate": None,
+        "missing_evidence": [],
+        "negative_knowledge": {"status": "UNVERIFIED"},
+        "experiment_activity": {
+            "status": "UNVERIFIED",
+            "completed": "UNVERIFIED",
+            "rejected": "UNVERIFIED",
+            "promoted": "UNVERIFIED",
+            "insufficient_evidence": "UNVERIFIED",
+        },
+        "independent_reproduction": {"status": "UNVERIFIED"},
+        "multiple_testing": {"status": "UNVERIFIED"},
+        "cost_stress": {"status": "UNVERIFIED"},
+        "parameter_stability": {"status": "UNVERIFIED"},
+        "forward_evidence": {"status": "UNVERIFIED"},
+    }
+
+
+def _research_truth(coordinator: dict) -> dict:
+    raw = _dict(coordinator.get("research_truth"))
+    if not raw:
+        director = _dict(coordinator.get("research_director"))
+        raw = _dict(director.get("research_truth"))
+    if not raw:
+        return _unverified_research_truth()
+    result = _unverified_research_truth()
+    raw_funnel = _dict(raw.get("funnel"))
+    result["funnel"] = {
+        key: raw_funnel[key] if key in raw_funnel else "UNVERIFIED"
+        for key in FUNNEL_KEYS
+    }
+    candidate = raw.get("closest_candidate")
+    result["closest_candidate"] = dict(candidate) if isinstance(candidate, dict) else None
+    explicit_missing = raw.get("missing_evidence")
+    if isinstance(explicit_missing, list):
+        result["missing_evidence"] = list(explicit_missing)
+    elif isinstance(candidate, dict):
+        result["missing_evidence"] = list(candidate.get("blockers") or [])
+    for key in (
+        "negative_knowledge",
+        "experiment_activity",
+        "independent_reproduction",
+        "multiple_testing",
+        "cost_stress",
+        "parameter_stability",
+        "forward_evidence",
+    ):
+        if isinstance(raw.get(key), dict):
+            merged = dict(result[key])
+            merged.update(raw[key])
+            result[key] = merged
+    return result
+
+
+def build_mission_snapshot(objective: dict, coordinator: dict | None, paper_trades: list[dict] | None = None) -> dict:
     """Collapse canonical objective + live coordinator state into fail-closed UI truth."""
     focus = _dict(objective.get("single_strategy_focus"))
     phase = _text(focus.get("lifecycle_phase"), "UNKNOWN")
     candidate = _dict(focus.get("active_candidate"))
     fingerprint = _candidate_fingerprint(focus)
+    truth = _research_truth(coordinator) if isinstance(coordinator, dict) else _unverified_research_truth()
+    paper_economics = build_paper_economics(paper_trades, fingerprint)
 
     if not isinstance(coordinator, dict):
         return {
@@ -83,6 +197,8 @@ def build_mission_snapshot(objective: dict, coordinator: dict | None) -> dict:
             "gate_status": {},
             "last_screen": None,
             "coordinator_ok": False,
+            **truth,
+            "paper_economics": paper_economics,
         }
 
     army = _dict(coordinator.get("worker_army"))
@@ -94,7 +210,9 @@ def build_mission_snapshot(objective: dict, coordinator: dict | None) -> dict:
 
     blocker = str(evidence.get("research_blocked_reason") or "").strip()
     if not blocker:
-        if fingerprint is None:
+        if truth["missing_evidence"]:
+            blocker = str(truth["missing_evidence"][0])
+        elif fingerprint is None:
             blocker = "screening_for_single_candidate"
         elif phase == "DEEP_VALIDATION" and not _bool(evidence.get("untouched_oos_opened")):
             blocker = "waiting_for_untouched_oos"
@@ -121,11 +239,7 @@ def build_mission_snapshot(objective: dict, coordinator: dict | None) -> dict:
         and promotion_review
     )
     strategy_status = "VALIDATED RESEARCH CANDIDATE" if validated else "NO VALIDATED STRATEGY YET"
-    promotion_status = (
-        "RESEARCH VALIDATED — REAL MONEY STILL DISABLED"
-        if validated
-        else "BLOCKED"
-    )
+    promotion_status = "RESEARCH VALIDATED — REAL MONEY STILL DISABLED" if validated else "BLOCKED"
 
     broker = coordinator.get("broker_connected")
     broker_status = "DISCONNECTED" if broker is False else "UNVERIFIED"
@@ -142,8 +256,14 @@ def build_mission_snapshot(objective: dict, coordinator: dict | None) -> dict:
             gate_status[gate] = "PASS" if research_pass else "PENDING"
         elif gate == "untouched_oos":
             gate_status[gate] = "OPEN" if oos_opened else "LOCKED"
+        elif gate == "multiple_testing_control":
+            gate_status[gate] = _text(truth["multiple_testing"].get("status"), "UNVERIFIED")
+        elif gate == "cost_stress_and_parameter_stability":
+            cost = _text(truth["cost_stress"].get("status"), "UNVERIFIED")
+            stability = _text(truth["parameter_stability"].get("status"), "UNVERIFIED")
+            gate_status[gate] = "PASS" if cost == "PASS" and stability == "PASS" else "PENDING"
         elif gate == "genuine_forward_paper_validation":
-            gate_status[gate] = "PASS" if validated else "PENDING"
+            gate_status[gate] = "PASS" if validated else _text(truth["forward_evidence"].get("status"), "PENDING")
         else:
             gate_status[gate] = "PENDING"
 
@@ -173,6 +293,8 @@ def build_mission_snapshot(objective: dict, coordinator: dict | None) -> dict:
         "gate_status": gate_status,
         "last_screen": evidence.get("generated_at") or evidence.get("updated_at_ms"),
         "coordinator_ok": coordinator.get("ok") is True,
+        **truth,
+        "paper_economics": paper_economics,
     }
 
 
@@ -180,11 +302,7 @@ def fetch_coordinator_state() -> dict | None:
     if not COORDINATOR_STATUS_URL:
         return None
     try:
-        response = httpx.get(
-            COORDINATOR_STATUS_URL,
-            timeout=COORDINATOR_TIMEOUT_SECONDS,
-            follow_redirects=True,
-        )
+        response = httpx.get(COORDINATOR_STATUS_URL, timeout=COORDINATOR_TIMEOUT_SECONDS, follow_redirects=True)
         response.raise_for_status()
         data = response.json()
         return data if isinstance(data, dict) else None
@@ -205,10 +323,10 @@ def _gate_label(name: str) -> str:
 
 
 def _badge_class(status: str) -> str:
-    normalized = status.upper()
-    if normalized in {"PASS", "OPEN", "HEALTHY", "DISCONNECTED"}:
+    normalized = str(status or "").upper()
+    if normalized in {"PASS", "OPEN", "HEALTHY", "DISCONNECTED", "VERIFIED"}:
         return "good"
-    if normalized in {"LOCKED", "PENDING", "BLOCKED", "UNVERIFIED"}:
+    if normalized in {"LOCKED", "PENDING", "BLOCKED", "UNVERIFIED", "NOT_STARTED", "FORWARD_PENDING"}:
         return "warn"
     return "bad"
 
@@ -219,7 +337,12 @@ def mission_control_page(request: Request):
 
     objective = load_objective()
     coordinator = fetch_coordinator_state()
-    snapshot = build_mission_snapshot(objective, coordinator)
+    try:
+        from paper_db import fetch_all_paper_trades
+        paper_trades = fetch_all_paper_trades("default")
+    except Exception:
+        paper_trades = None
+    snapshot = build_mission_snapshot(objective, coordinator, paper_trades)
     generated = datetime.now(timezone.utc).isoformat()
 
     fingerprint = snapshot["candidate_fingerprint"] or "NOT FROZEN"
@@ -230,7 +353,7 @@ def mission_control_page(request: Request):
     gate_cards = "".join(
         f"<div class='gate'><span>{html.escape(_gate_label(gate))}</span>"
         f"<b class='{_badge_class(snapshot['gate_status'].get(gate, 'PENDING'))}'>"
-        f"{html.escape(snapshot['gate_status'].get(gate, 'PENDING'))}</b></div>"
+        f"{html.escape(str(snapshot['gate_status'].get(gate, 'PENDING')))}</b></div>"
         for gate in snapshot["required_evidence"]
     ) or "<div class='empty'>No canonical evidence gates available.</div>"
 
@@ -239,6 +362,32 @@ def mission_control_page(request: Request):
         for name, state in sorted(snapshot["worker_states"].items())
     ) or "<tr><td colspan='2' class='empty'>Worker state unavailable.</td></tr>"
 
+    funnel_cards = "".join(
+        f"<div class='card'><div class='label'>{html.escape(key.replace('_', ' '))}</div><div class='value' style='font-size:18px'>{html.escape(str(value))}</div></div>"
+        for key, value in snapshot["funnel"].items()
+    )
+    closest = snapshot["closest_candidate"] or {}
+    closest_text = _text(closest.get("strategy_fingerprint") or closest.get("fingerprint"), "NONE VERIFIED")
+    closest_state = _text(closest.get("state"), "UNVERIFIED")
+    paper = snapshot["paper_economics"]
+    paper_summary = (
+        f"{paper.get('closed_trades', 0)} closed / {paper.get('trades_observed', 0)} observed · "
+        f"net ${paper.get('net_pnl_usd', '—')} · expectancy ${paper.get('expectancy_usd', '—')} · "
+        f"PF {paper.get('profit_factor', '—')} · max DD {paper.get('max_drawdown_pct', '—')}% · "
+        f"fees {paper.get('fee_bps_one_way', '—')} bps/side"
+    )
+    truth_rows = "".join(
+        f"<tr><td>{html.escape(label)}</td><td><span class='pill {_badge_class(_text(data.get('status'), 'UNVERIFIED'))}'>{html.escape(_text(data.get('status'), 'UNVERIFIED'))}</span></td></tr>"
+        for label, data in (
+            ("Independent reproduction", snapshot["independent_reproduction"]),
+            ("Multiple testing", snapshot["multiple_testing"]),
+            ("Cost stress", snapshot["cost_stress"]),
+            ("Parameter stability", snapshot["parameter_stability"]),
+            ("Forward evidence", snapshot["forward_evidence"]),
+            ("Negative knowledge", snapshot["negative_knowledge"]),
+        )
+    )
+
     status_class = "good" if snapshot["strategy_status"] == "VALIDATED RESEARCH CANDIDATE" else "warn"
     coordinator_class = "good" if snapshot["coordinator_ok"] else "warn"
 
@@ -246,7 +395,7 @@ def mission_control_page(request: Request):
 <html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>
 <meta http-equiv='refresh' content='60'><title>Strategy Mission Control</title>
 <style>
-*{{box-sizing:border-box}}:root{{--bg:#071019;--panel:#0b1722;--panel2:#0e1d2a;--line:#1b3448;--text:#eef7ff;--muted:#8ba4b8;--green:#43e39b;--yellow:#ffd86b;--red:#ff7180;--blue:#77bfff}}body{{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif}}.shell{{max-width:1500px;margin:auto;padding:24px}}.top{{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:18px}}h1{{margin:0;font-size:28px}}.mission{{color:var(--muted);font-size:13px;max-width:850px;line-height:1.5;margin-top:7px}}.links a{{color:var(--blue);text-decoration:none;margin-left:14px;font-size:12px}}.hero{{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin-bottom:14px}}.card,.panel{{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px}}.card{{padding:16px}}.label{{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}}.value{{font-size:22px;font-weight:900;margin-top:8px}}.sub{{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.45}}.good{{color:var(--green)}}.warn{{color:var(--yellow)}}.bad{{color:var(--red)}}.grid{{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}}.panel{{padding:16px;margin-bottom:14px}}.panel h2{{font-size:17px;margin:0 0 12px}}.gates{{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}}.gate{{display:flex;justify-content:space-between;gap:10px;background:#08141e;border:1px solid #173149;border-radius:10px;padding:12px;font-size:12px}}.gate span{{color:#afc2d1}}.gate b{{font-size:10px}}table{{width:100%;border-collapse:collapse}}td,th{{text-align:left;padding:10px;border-bottom:1px solid #163044;font-size:12px}}th{{color:var(--muted);font-size:10px}}.pill{{font-size:10px;font-weight:800}}.blocker{{border-left:3px solid var(--yellow);padding:12px;background:#211d0e;border-radius:8px;line-height:1.45}}.footer{{font-size:10px;color:#6f899d}}.empty{{color:var(--muted);font-size:12px}}@media(max-width:900px){{.hero,.grid,.gates{{grid-template-columns:1fr 1fr}}}}@media(max-width:600px){{.hero,.grid,.gates{{grid-template-columns:1fr}}.top{{flex-direction:column}}.links a{{margin:0 12px 0 0}}}}
+*{{box-sizing:border-box}}:root{{--bg:#071019;--panel:#0b1722;--panel2:#0e1d2a;--line:#1b3448;--text:#eef7ff;--muted:#8ba4b8;--green:#43e39b;--yellow:#ffd86b;--red:#ff7180;--blue:#77bfff}}body{{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif}}.shell{{max-width:1500px;margin:auto;padding:24px}}.top{{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:18px}}h1{{margin:0;font-size:28px}}.mission{{color:var(--muted);font-size:13px;max-width:850px;line-height:1.5;margin-top:7px}}.links a{{color:var(--blue);text-decoration:none;margin-left:14px;font-size:12px}}.hero{{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;margin-bottom:14px}}.card,.panel{{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px}}.card{{padding:16px}}.label{{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}}.value{{font-size:22px;font-weight:900;margin-top:8px}}.sub{{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.45}}.good{{color:var(--green)}}.warn{{color:var(--yellow)}}.bad{{color:var(--red)}}.grid{{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}}.funnel{{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}}.panel{{padding:16px;margin-bottom:14px}}.panel h2{{font-size:17px;margin:0 0 12px}}.gates{{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}}.gate{{display:flex;justify-content:space-between;gap:10px;background:#08141e;border:1px solid #173149;border-radius:10px;padding:12px;font-size:12px}}.gate span{{color:#afc2d1}}.gate b{{font-size:10px}}table{{width:100%;border-collapse:collapse}}td,th{{text-align:left;padding:10px;border-bottom:1px solid #163044;font-size:12px}}th{{color:var(--muted);font-size:10px}}.pill{{font-size:10px;font-weight:800}}.blocker{{border-left:3px solid var(--yellow);padding:12px;background:#211d0e;border-radius:8px;line-height:1.45}}.footer{{font-size:10px;color:#6f899d}}.empty{{color:var(--muted);font-size:12px}}@media(max-width:1100px){{.funnel{{grid-template-columns:repeat(4,1fr)}}}}@media(max-width:900px){{.hero,.grid,.gates{{grid-template-columns:1fr 1fr}}}}@media(max-width:600px){{.hero,.grid,.gates,.funnel{{grid-template-columns:1fr}}.top{{flex-direction:column}}.links a{{margin:0 12px 0 0}}}}
 </style></head><body><div class='shell'>
 <div class='top'><div><h1>Strategy Mission Control</h1><div class='mission'>{html.escape(snapshot['mission'])}</div></div><div class='links'><a href='/dashboard/system'>System view</a><a href='/dashboard/paper'>Paper portfolio</a><a href='/dashboard/money'>Money intelligence</a></div></div>
 <div class='hero'>
@@ -254,14 +403,17 @@ def mission_control_page(request: Request):
 <div class='card'><div class='label'>Research phase</div><div class='value'>{html.escape(snapshot['phase'])}</div><div class='sub'>One deep candidate maximum.</div></div>
 <div class='card'><div class='label'>Untouched OOS</div><div class='value {_badge_class(snapshot['oos_status'])}'>{html.escape(snapshot['oos_status'])}</div><div class='sub'>Must remain locked during candidate selection.</div></div>
 </div>
+<div class='panel'><h2>Champion funnel</h2><div class='funnel'>{funnel_cards}</div></div>
 <div class='grid'>
 <div class='card'><div class='label'>Candidate fingerprint</div><div class='value' style='font-size:14px;word-break:break-all'>{html.escape(fingerprint)}</div><div class='sub'>Immutable once frozen.</div></div>
-<div class='card'><div class='label'>Data coverage</div><div class='value'>{html.escape(snapshot['coverage'])}</div><div class='sub'>Supported subsets: {html.escape(subset_text)}</div></div>
+<div class='card'><div class='label'>Closest candidate</div><div class='value' style='font-size:14px;word-break:break-all'>{html.escape(closest_text)}</div><div class='sub'>Stage: {html.escape(closest_state)} · blockers: {html.escape(', '.join(snapshot['missing_evidence']) or 'none verified')}</div></div>
 <div class='card'><div class='label'>Focused workers</div><div class='value'>{snapshot['focused_workers']}</div><div class='sub'>{snapshot['heavy_workers']} heavy · {snapshot['lightweight_workers']} lightweight · {snapshot['research_missions']} research missions</div></div>
 <div class='card'><div class='label'>Coordinator / broker</div><div class='value {coordinator_class}'>{html.escape(snapshot['worker_health'])}</div><div class='sub'>Broker: <b class='{_badge_class(snapshot['broker_status'])}'>{html.escape(snapshot['broker_status'])}</b> · trade authority: {str(snapshot['trade_authority']).upper()}</div></div>
 </div>
 <div class='panel'><h2>Current blocker</h2><div class='blocker'><b>{html.escape(blocker)}</b><div class='sub'>The system must solve or falsify this without weakening evidence thresholds.</div></div></div>
 <div class='panel'><h2>Evidence gates</h2><div class='gates'>{gate_cards}</div></div>
+<div class='panel'><h2>Scientific truth</h2><table><thead><tr><th>CHECK</th><th>STATUS</th></tr></thead><tbody>{truth_rows}</tbody></table></div>
+<div class='panel'><h2>Exact-fingerprint paper economics</h2><div class='value {_badge_class(_text(paper.get('status'), 'UNVERIFIED'))}' style='font-size:16px'>{html.escape(_text(paper.get('status'), 'UNVERIFIED'))}</div><div class='sub'>{html.escape(paper_summary)}</div></div>
 <div class='panel'><h2>Focused team activity</h2><table><thead><tr><th>WORKER</th><th>STATE</th></tr></thead><tbody>{worker_rows}</tbody></table></div>
 <div class='panel'><h2>Promotion state</h2><div class='value {_badge_class(snapshot['promotion_status'])}' style='font-size:16px'>{html.escape(snapshot['promotion_status'])}</div><div class='sub'>Research validation never grants automatic real-money trading authority.</div></div>
 <div class='footer'>Generated {html.escape(generated)} · auto-refresh 60s · fail-closed display · live coordinator source: {'reachable' if coordinator is not None else 'unavailable'}.</div>

@@ -11,11 +11,13 @@ from typing import Any
 
 from bybit_oi_access_probe import ALLOWED_STATUSES as BYBIT_OI_ALLOWED_STATUSES, SOURCE_ID as BYBIT_OI_SOURCE_ID, SYSTEM_ID as BYBIT_OI_SYSTEM_ID, probe as probe_bybit_oi_access
 from research_director import build_daily_lead_report, build_mission, claim_mission, rank_missions
+from research_truth import build_research_truth
+from signal_development import load_objective
 
 _STATE_PATH = Path(os.getenv("RESEARCH_DIRECTOR_STATE_PATH", str(Path(tempfile.gettempdir()) / "tradingview-ai-research-director.json")))
 _lock = Lock()
 log = logging.getLogger("uvicorn.error")
-_state: dict[str, Any] = {"updated_at": None, "missions": [], "claims": [], "next_missions": [], "daily_lead_report": {}, "research_only": True, "trade_authority": False, "promotion_authority": False, "write_authority": False}
+_state: dict[str, Any] = {"updated_at": None, "missions": [], "claims": [], "next_missions": [], "daily_lead_report": {}, "research_truth": {}, "research_only": True, "trade_authority": False, "promotion_authority": False, "write_authority": False}
 _bybit_probe_ran = False
 _bybit_probe_result: dict[str, Any] | None = None
 
@@ -54,18 +56,59 @@ def _ensure_bybit_probe() -> dict[str, Any]:
     return dict(result)
 
 
-def _mission_for_worker(name: str, row: dict[str, Any]):
+def _mission_identity(objective: dict) -> dict[str, Any]:
+    focus = objective.get("single_strategy_focus") if isinstance(objective, dict) else {}
+    focus = focus if isinstance(focus, dict) else {}
+    candidate = focus.get("active_candidate") if isinstance(focus.get("active_candidate"), dict) else {}
+    contract = candidate.get("strategy_contract") if isinstance(candidate.get("strategy_contract"), dict) else {}
+    fingerprint = str(candidate.get("fingerprint_id") or "").strip() or None
+    hypothesis_id = str(contract.get("hypothesis_id") or "").strip() or None
+    experiment_id = str(contract.get("experiment_id") or "").strip() or None
+    git_sha = str(contract.get("git_sha") or "").strip() or None
+    dataset_sha256 = str(contract.get("dataset_sha256") or "").strip() or None
+    return {
+        "candidate_fingerprint": fingerprint,
+        "hypothesis_id": hypothesis_id,
+        "experiment_id": experiment_id,
+        "git_sha": git_sha,
+        "dataset_sha256": dataset_sha256,
+        "strategy_contract_sha256": fingerprint,
+    }
+
+
+def _permission_for_worker(name: str, *, candidate_active: bool) -> str:
+    if not candidate_active:
+        return "REVIEW"
+    if name == "learning-diagnostics":
+        return "FALSIFICATION"
+    if name == "experiment-factory":
+        return "REVIEW"
+    if name.startswith("cross-asset-rank"):
+        return "DATA_CERTIFICATION"
+    return "EVIDENCE_COLLECTION"
+
+
+def _mission_for_worker(name: str, row: dict[str, Any], identity: dict[str, Any] | None = None):
+    identity = identity if isinstance(identity, dict) else {}
+    bound = {
+        "candidate_fingerprint": identity.get("candidate_fingerprint"),
+        "hypothesis_id": identity.get("hypothesis_id"),
+        "permission": _permission_for_worker(name, candidate_active=bool(identity.get("candidate_fingerprint"))),
+        "git_sha": identity.get("git_sha"),
+        "dataset_sha256": identity.get("dataset_sha256"),
+        "strategy_contract_sha256": identity.get("strategy_contract_sha256"),
+    }
     evidence = _worker_evidence(row); blocker = "InsufficientHistory" if _pure_history_block(evidence) else None
     if name == "adaptive-accuracy":
         experiment = evidence.get("experiment") if isinstance(evidence.get("experiment"), dict) else {}; horizon = str(experiment.get("effective_horizon") or "both"); dimension = str(experiment.get("dimension") or "adaptive"); group = str(experiment.get("group") or "next-best-restrictive-hypothesis"); dispatchable = evidence.get("evidence_conclusion") not in {"no_dispatchable_hypothesis", None}
-        return build_mission(lane="adaptive-accuracy", horizon=horizon, direction=group if dimension == "direction" else "BUY_SELL_WAIT", theme=dimension, hypothesis=str(experiment.get("hypothesis") or "test the highest-value falsifiable restrictive accuracy hypothesis"), expected_information_gain=0.95, expected_signal_impact=0.95, sample_readiness=0.9 if dispatchable else 0.55, novelty=0.9, falsification_value=0.98, actionable_evidence_probability=_evidence_probability(evidence, 0.85 if dispatchable else 0.4), compute_cost=0.55, blocker=blocker, experiment_id=experiment.get("experiment_id"))
+        return build_mission(lane="adaptive-accuracy", horizon=horizon, direction=group if dimension == "direction" else "BUY_SELL_WAIT", theme=dimension, hypothesis=str(experiment.get("hypothesis") or "test the highest-value falsifiable restrictive accuracy hypothesis"), expected_information_gain=0.95, expected_signal_impact=0.95, sample_readiness=0.9 if dispatchable else 0.55, novelty=0.9, falsification_value=0.98, actionable_evidence_probability=_evidence_probability(evidence, 0.85 if dispatchable else 0.4), compute_cost=0.55, blocker=blocker, experiment_id=experiment.get("experiment_id") or identity.get("experiment_id"), **bound)
     if name in {"cross-asset-rank-24h", "cross-asset-rank-7d"}:
         horizon = "24h" if name.endswith("24h") else "7d"; resolved = int(evidence.get("universe_resolved") or 0); requested = max(1, int(evidence.get("universe_requested") or 30)); readiness = min(1.0, resolved / requested)
-        return build_mission(lane="cross-asset", horizon=horizon, direction="BUY_SELL_WAIT", theme="cross_asset_rank_validation", hypothesis=f"validate point-in-time cross-asset ranking edge for {horizon}", expected_information_gain=0.88, expected_signal_impact=0.9, sample_readiness=readiness, novelty=0.75, falsification_value=0.9, actionable_evidence_probability=_evidence_probability(evidence, readiness), compute_cost=0.8, blocker=blocker)
-    if name == "learning-diagnostics": return build_mission(lane="learning-diagnostics", horizon="both", direction="BUY_SELL_WAIT", theme="resolved_error_diagnostics", hypothesis="diagnose fresh resolved-signal mistakes into falsifiable mechanisms", expected_information_gain=0.82, expected_signal_impact=0.78, sample_readiness=0.85, novelty=0.8, falsification_value=0.9, actionable_evidence_probability=_evidence_probability(evidence, 0.8), compute_cost=0.15)
-    if name == "experiment-factory": return build_mission(lane="experiment-factory", horizon="both", direction="BUY_SELL_WAIT", theme="hypothesis_generation", hypothesis="convert fresh diagnostics into ranked predeclared experiments", expected_information_gain=0.84, expected_signal_impact=0.8, sample_readiness=0.8, novelty=0.9, falsification_value=0.92, actionable_evidence_probability=_evidence_probability(evidence, 0.8), compute_cost=0.15)
+        return build_mission(lane="cross-asset", horizon=horizon, direction="BUY_SELL_WAIT", theme="cross_asset_rank_validation", hypothesis=f"validate point-in-time cross-asset ranking edge for {horizon}", expected_information_gain=0.88, expected_signal_impact=0.9, sample_readiness=readiness, novelty=0.75, falsification_value=0.9, actionable_evidence_probability=_evidence_probability(evidence, readiness), compute_cost=0.8, blocker=blocker, experiment_id=identity.get("experiment_id"), **bound)
+    if name == "learning-diagnostics": return build_mission(lane="learning-diagnostics", horizon="both", direction="BUY_SELL_WAIT", theme="resolved_error_diagnostics", hypothesis="diagnose fresh resolved-signal mistakes into falsifiable mechanisms", expected_information_gain=0.82, expected_signal_impact=0.78, sample_readiness=0.85, novelty=0.8, falsification_value=0.9, actionable_evidence_probability=_evidence_probability(evidence, 0.8), compute_cost=0.15, experiment_id=identity.get("experiment_id"), **bound)
+    if name == "experiment-factory": return build_mission(lane="experiment-factory", horizon="both", direction="BUY_SELL_WAIT", theme="hypothesis_generation", hypothesis="convert fresh diagnostics into ranked predeclared experiments", expected_information_gain=0.84, expected_signal_impact=0.8, sample_readiness=0.8, novelty=0.9, falsification_value=0.92, actionable_evidence_probability=_evidence_probability(evidence, 0.8), compute_cost=0.15, experiment_id=identity.get("experiment_id"), **bound)
     horizon = "7d" if "swing" in name else "24h"
-    return build_mission(lane="feature-research", horizon=horizon, direction="BUY_SELL_WAIT", theme=name, hypothesis=f"search for robust after-cost predictive edge in {name}", expected_information_gain=0.62, expected_signal_impact=0.62, sample_readiness=0.75, novelty=0.58, falsification_value=0.62, actionable_evidence_probability=_evidence_probability(evidence, 0.55), compute_cost=0.65, blocker=blocker)
+    return build_mission(lane="feature-research", horizon=horizon, direction="BUY_SELL_WAIT", theme=name, hypothesis=f"search for robust after-cost predictive edge in {name}", expected_information_gain=0.62, expected_signal_impact=0.62, sample_readiness=0.75, novelty=0.58, falsification_value=0.62, actionable_evidence_probability=_evidence_probability(evidence, 0.55), compute_cost=0.65, blocker=blocker, experiment_id=identity.get("experiment_id"), **bound)
 
 
 def _daily_report(army: dict[str, Any], missions) -> dict[str, Any]:
@@ -87,7 +130,12 @@ def _write_state(payload: dict[str, Any]) -> None:
 
 
 def refresh_director(army: dict[str, Any]) -> dict[str, Any]:
-    bybit_probe = _ensure_bybit_probe(); workers = army.get("workers") if isinstance(army.get("workers"), dict) else {}; missions = [_mission_for_worker(name, row if isinstance(row, dict) else {}) for name, row in sorted(workers.items())]; claims=[]
+    bybit_probe = _ensure_bybit_probe()
+    objective = load_objective()
+    identity = _mission_identity(objective)
+    workers = army.get("workers") if isinstance(army.get("workers"), dict) else {}
+    missions = [_mission_for_worker(name, row if isinstance(row, dict) else {}, identity) for name, row in sorted(workers.items())]
+    claims=[]
     for name, row in sorted(workers.items()):
         if not isinstance(row, dict) or row.get("state") not in {"queued", "running"}: continue
         mission = next((item for item in missions if item.theme == name or item.lane == name), None)
@@ -96,6 +144,7 @@ def refresh_director(army: dict[str, Any]) -> dict[str, Any]:
     claimed_ids={claim["mission_id"] for claim in claims}; next_missions=[m for m in rank_missions(missions) if not m.blocker and m.mission_id not in claimed_ids][:5]
     visible_missions=sorted(missions, key=lambda m:(m.priority,m.falsification_value,m.actionable_evidence_probability,m.expected_information_gain,m.expected_signal_impact,m.mission_id), reverse=True)
     payload={"updated_at":_now(),"missions":[m.to_dict() for m in visible_missions],"claims":claims,"next_missions":[m.to_dict() for m in next_missions],"daily_lead_report":_daily_report(army,missions),"bybit_oi_access_probe":bybit_probe,"research_only":True,"trade_authority":False,"promotion_authority":False,"write_authority":False,"broker_connected":False,"automatic_strategy_promotion":False}
+    payload["research_truth"] = build_research_truth(objective, payload, army)
     with _lock: _state.clear(); _state.update(payload)
     _write_state(payload); return payload
 

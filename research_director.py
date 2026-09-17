@@ -7,9 +7,16 @@ import json
 from typing import Any, Iterable
 
 
-DIRECTOR_VERSION = "v3"
+DIRECTOR_VERSION = "v4"
 DEFAULT_LEASE_MINUTES = 45
 NATURAL_HISTORY_RECHECK_HOURS = 6
+VALID_PERMISSIONS = {
+    "CHANGE",
+    "REVIEW",
+    "FALSIFICATION",
+    "DATA_CERTIFICATION",
+    "EVIDENCE_COLLECTION",
+}
 
 
 @dataclass(frozen=True)
@@ -33,6 +40,12 @@ class ResearchMission:
     blocker: str | None = None
     recheck_after: str | None = None
     experiment_id: str | None = None
+    candidate_fingerprint: str | None = None
+    hypothesis_id: str | None = None
+    git_sha: str | None = None
+    dataset_sha256: str | None = None
+    strategy_contract_sha256: str | None = None
+    permission: str = "REVIEW"
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -48,6 +61,12 @@ class MissionClaim:
     state: str = "claimed"
     experiment_id: str | None = None
     last_progress_at: str | None = None
+    candidate_fingerprint: str | None = None
+    hypothesis_id: str | None = None
+    git_sha: str | None = None
+    dataset_sha256: str | None = None
+    strategy_contract_sha256: str | None = None
+    permission: str = "REVIEW"
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -69,6 +88,13 @@ def _clamp01(value: float) -> float:
     return max(0.0, min(1.0, float(value)))
 
 
+def _permission(value: str | None) -> str:
+    permission = str(value or "REVIEW").strip().upper()
+    if permission not in VALID_PERMISSIONS:
+        raise ValueError(f"invalid research mission permission: {permission}")
+    return permission
+
+
 def mission_priority(
     *,
     expected_information_gain: float,
@@ -82,17 +108,7 @@ def mission_priority(
     redundancy_risk: float = 0.0,
     blocker: str | None = None,
 ) -> float:
-    """Rank scarce research by expected after-cost economic value first.
-
-    `expected_profitability_impact` is the primary impact term. Callers that have
-    not yet emitted a separate economic estimate remain backward compatible by
-    falling back to `expected_signal_impact`, but a higher accuracy/precision
-    estimate cannot substitute for a lower explicitly supplied profitability
-    estimate. Information gain, falsifiability, sample readiness, actionable
-    evidence probability, compute cost, novelty and redundancy then decide how
-    efficiently that economic hypothesis can be tested. Blocked work remains
-    heavily discounted and cannot claim the heavy lane.
-    """
+    """Rank scarce research by expected after-cost economic value first."""
     info = _clamp01(expected_information_gain)
     signal = _clamp01(expected_signal_impact)
     profitability = _clamp01(
@@ -111,7 +127,6 @@ def mission_priority(
     economic_value = 0.90 * profitability + 0.10 * actionable
     cost_efficiency = 1.0 / (0.25 + 0.75 * cost)
     score = evidence_value * economic_value * (0.35 + 0.65 * actionable) * cost_efficiency
-    # Genuine signal quality is deliberately only a secondary tie-breaker.
     score += 0.025 * signal
     score += 0.04 * novel
     score *= 1.0 - 0.75 * redundant
@@ -138,6 +153,12 @@ def build_mission(
     redundancy_risk: float = 0.0,
     blocker: str | None = None,
     experiment_id: str | None = None,
+    candidate_fingerprint: str | None = None,
+    hypothesis_id: str | None = None,
+    git_sha: str | None = None,
+    dataset_sha256: str | None = None,
+    strategy_contract_sha256: str | None = None,
+    permission: str = "REVIEW",
     now: datetime | None = None,
 ) -> ResearchMission:
     current = _utcnow(now)
@@ -149,7 +170,16 @@ def build_mission(
         if expected_profitability_impact is None
         else expected_profitability_impact
     )
-    mission_id = stable_mission_id(horizon, direction, lane, theme, hypothesis)
+    normalized_permission = _permission(permission)
+    mission_id = stable_mission_id(
+        horizon,
+        direction,
+        lane,
+        theme,
+        hypothesis,
+        candidate_fingerprint or "unbound",
+        normalized_permission,
+    )
     return ResearchMission(
         mission_id=mission_id,
         lane=lane,
@@ -181,6 +211,12 @@ def build_mission(
         blocker=blocker,
         recheck_after=recheck_after,
         experiment_id=experiment_id,
+        candidate_fingerprint=str(candidate_fingerprint).strip() or None if candidate_fingerprint is not None else None,
+        hypothesis_id=str(hypothesis_id).strip() or None if hypothesis_id is not None else None,
+        git_sha=str(git_sha).strip() or None if git_sha is not None else None,
+        dataset_sha256=str(dataset_sha256).strip() or None if dataset_sha256 is not None else None,
+        strategy_contract_sha256=str(strategy_contract_sha256).strip() or None if strategy_contract_sha256 is not None else None,
+        permission=normalized_permission,
     )
 
 
@@ -227,6 +263,12 @@ def claim_mission(
         lease_expires_at=(current + timedelta(minutes=max(1, lease_minutes))).isoformat(),
         experiment_id=mission.experiment_id,
         last_progress_at=current.isoformat(),
+        candidate_fingerprint=mission.candidate_fingerprint,
+        hypothesis_id=mission.hypothesis_id,
+        git_sha=mission.git_sha,
+        dataset_sha256=mission.dataset_sha256,
+        strategy_contract_sha256=mission.strategy_contract_sha256,
+        permission=mission.permission,
     )
 
 

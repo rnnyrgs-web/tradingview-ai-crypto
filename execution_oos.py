@@ -82,7 +82,7 @@ def execution_stress_costs(snapshot_anchor=None, base_cost_bps=BACKTEST_COST_BPS
     return tuple(sorted(costs))
 
 
-def evaluate_execution_oos(symbol, bar="15m", bars=5000, quote_notional=5000.0, order_book=None):
+def evaluate_execution_oos(symbol, bar="15m", bars=5000, quote_notional=5000.0, order_book=None, *, history=None):
     """Compare the untouched holdout across conservative execution-cost stress.
 
     Threshold selection is delegated to the existing training-only walk-forward
@@ -90,7 +90,7 @@ def evaluate_execution_oos(symbol, bar="15m", bars=5000, quote_notional=5000.0, 
     cost deduction changes. Current slippage can expand the stress grid but is
     never assigned to any historical timestamp.
     """
-    wf = walk_forward(symbol, bar=bar, bars=bars)
+    wf = walk_forward(symbol, bar=bar, bars=bars, history=history)
     selected = wf.get("selected_threshold")
     if selected is None:
         return {
@@ -105,7 +105,7 @@ def evaluate_execution_oos(symbol, bar="15m", bars=5000, quote_notional=5000.0, 
     anchor = snapshot_round_trip_slippage_bps(snapshot, quote_notional=quote_notional)
     costs = execution_stress_costs(anchor)
 
-    history = get_history(symbol, bar, bars)
+    history = history if isinstance(history, list) else get_history(symbol, bar, bars)
     if len(history) < 1000:
         raise RuntimeError("Need at least 1000 candles for execution OOS robustness")
     _validate_timestamps(history)

@@ -114,8 +114,8 @@ def _score_history(hist, bar, threshold, cost_bps=BACKTEST_COST_BPS):
     return rs
 
 
-def run_backtest(symbol, bar="15m", bars=2500, threshold=2.25):
-    hist = get_history(symbol, bar, bars)
+def run_backtest(symbol, bar="15m", bars=2500, threshold=2.25, *, history=None):
+    hist = history if isinstance(history, list) else get_history(symbol, bar, bars)
     if len(hist) < 300:
         raise RuntimeError("Not enough historical candles")
 
@@ -144,8 +144,8 @@ def run_backtest(symbol, bar="15m", bars=2500, threshold=2.25):
     }
 
 
-def walk_forward(symbol, bar="15m", bars=3000):
-    hist = get_history(symbol, bar, bars)
+def walk_forward(symbol, bar="15m", bars=3000, *, history=None):
+    hist = history if isinstance(history, list) else get_history(symbol, bar, bars)
     if len(hist) < 1000:
         raise RuntimeError("Need at least 1000 candles for walk-forward")
 

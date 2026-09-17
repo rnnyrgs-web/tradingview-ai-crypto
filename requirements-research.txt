@@ -1,0 +1,5 @@
+-r requirements.txt
+mlflow>=3.16,<4
+vectorbt>=1.1,<2
+duckdb>=1.4,<2
+pyarrow>=18,<25

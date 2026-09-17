@@ -93,6 +93,12 @@ def test_active_candidate_allows_only_its_declared_deep_workers():
     objective["single_strategy_focus"]["lifecycle_phase"] = "DEEP_VALIDATION"
     objective["single_strategy_focus"]["active_candidate"] = {
         "fingerprint_id": "TEST-CANDIDATE-V1",
+        "strategy_contract": {
+            "experiment_id": "EXP-001",
+            "hypothesis_id": "H-001",
+            "git_sha": "git-abc",
+            "dataset_sha256": "data-abc",
+        },
         "deep_worker_contracts": {
             "major-btc": {"strategy_family": "trend"},
         },
@@ -103,6 +109,10 @@ def test_active_candidate_allows_only_its_declared_deep_workers():
     assert heavy[0].env["SINGLE_STRATEGY_DEEP_MODE"] == "1"
     assert heavy[0].env["ACTIVE_STRATEGY_FINGERPRINT"] == "TEST-CANDIDATE-V1"
     assert heavy[0].env["ACTIVE_STRATEGY_FAMILY"] == "trend"
+    assert heavy[0].env["ACTIVE_EXPERIMENT_ID"] == "EXP-001"
+    assert heavy[0].env["ACTIVE_HYPOTHESIS_ID"] == "H-001"
+    assert heavy[0].env["ACTIVE_GIT_SHA"] == "git-abc"
+    assert heavy[0].env["ACTIVE_DATASET_SHA256"] == "data-abc"
 
 
 @pytest.mark.parametrize("field,value", [
