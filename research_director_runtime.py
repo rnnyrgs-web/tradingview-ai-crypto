@@ -11,11 +11,13 @@ from typing import Any
 
 from bybit_oi_access_probe import ALLOWED_STATUSES as BYBIT_OI_ALLOWED_STATUSES, SOURCE_ID as BYBIT_OI_SOURCE_ID, SYSTEM_ID as BYBIT_OI_SYSTEM_ID, probe as probe_bybit_oi_access
 from research_director import build_daily_lead_report, build_mission, claim_mission, rank_missions
+from research_truth import build_research_truth
+from signal_development import load_objective
 
 _STATE_PATH = Path(os.getenv("RESEARCH_DIRECTOR_STATE_PATH", str(Path(tempfile.gettempdir()) / "tradingview-ai-research-director.json")))
 _lock = Lock()
 log = logging.getLogger("uvicorn.error")
-_state: dict[str, Any] = {"updated_at": None, "missions": [], "claims": [], "next_missions": [], "daily_lead_report": {}, "research_only": True, "trade_authority": False, "promotion_authority": False, "write_authority": False}
+_state: dict[str, Any] = {"updated_at": None, "missions": [], "claims": [], "next_missions": [], "daily_lead_report": {}, "research_truth": {}, "research_only": True, "trade_authority": False, "promotion_authority": False, "write_authority": False}
 _bybit_probe_ran = False
 _bybit_probe_result: dict[str, Any] | None = None
 
@@ -96,6 +98,7 @@ def refresh_director(army: dict[str, Any]) -> dict[str, Any]:
     claimed_ids={claim["mission_id"] for claim in claims}; next_missions=[m for m in rank_missions(missions) if not m.blocker and m.mission_id not in claimed_ids][:5]
     visible_missions=sorted(missions, key=lambda m:(m.priority,m.falsification_value,m.actionable_evidence_probability,m.expected_information_gain,m.expected_signal_impact,m.mission_id), reverse=True)
     payload={"updated_at":_now(),"missions":[m.to_dict() for m in visible_missions],"claims":claims,"next_missions":[m.to_dict() for m in next_missions],"daily_lead_report":_daily_report(army,missions),"bybit_oi_access_probe":bybit_probe,"research_only":True,"trade_authority":False,"promotion_authority":False,"write_authority":False,"broker_connected":False,"automatic_strategy_promotion":False}
+    payload["research_truth"] = build_research_truth(load_objective(), payload, army)
     with _lock: _state.clear(); _state.update(payload)
     _write_state(payload); return payload
 
