@@ -86,6 +86,9 @@ def _unverified_research_truth() -> dict:
 def _research_truth(coordinator: dict) -> dict:
     raw = _dict(coordinator.get("research_truth"))
     if not raw:
+        director = _dict(coordinator.get("research_director"))
+        raw = _dict(director.get("research_truth"))
+    if not raw:
         return _unverified_research_truth()
     result = _unverified_research_truth()
     raw_funnel = _dict(raw.get("funnel"))
