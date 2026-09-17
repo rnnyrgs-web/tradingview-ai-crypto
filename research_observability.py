@@ -25,6 +25,7 @@ DEFAULT_METRICS_DIR = Path(
     )
 )
 MAX_LATENCY_SAMPLES = 256
+MAX_CANDIDATE_EVIDENCE_ROWS = 128
 
 
 def _default_state() -> dict[str, Any]:
@@ -53,6 +54,7 @@ def _default_state() -> dict[str, Any]:
             "last_event_at_ms": None,
             "by_name": {},
         },
+        "candidate_evidence": {},
     }
 
 
@@ -72,6 +74,8 @@ def _read_state(path: Path) -> dict[str, Any]:
     for section in ("cache", "history_network", "workers"):
         if isinstance(raw.get(section), dict):
             state[section].update(raw[section])
+    if isinstance(raw.get("candidate_evidence"), dict):
+        state["candidate_evidence"] = dict(raw["candidate_evidence"])
     return state
 
 
@@ -199,6 +203,34 @@ def record_worker_result(name: str, exit_code: int, elapsed_seconds: float, evid
     _mutate(mutate, metrics_dir=metrics_dir)
 
 
+def record_candidate_evidence(name: str, evidence, *, metrics_dir=None) -> None:
+    """Persist exact-fingerprint scientific evidence without changing worker counters."""
+    if not isinstance(evidence, dict):
+        return
+    fingerprint = str(evidence.get("strategy_fingerprint") or "").strip()
+    decision = evidence.get("decision")
+    if not fingerprint or not isinstance(decision, dict) or not str(decision.get("state") or "").strip():
+        return
+    key = str(name or "").strip()
+    if not key:
+        return
+
+    def mutate(state):
+        rows = state.setdefault("candidate_evidence", {})
+        rows[key] = {
+            "latest_evidence": evidence,
+            "updated_at_ms": int(time.time() * 1000),
+        }
+        ordered = sorted(
+            rows.items(),
+            key=lambda item: int((item[1] or {}).get("updated_at_ms") or 0),
+            reverse=True,
+        )[:MAX_CANDIDATE_EVIDENCE_ROWS]
+        state["candidate_evidence"] = dict(ordered)
+
+    _mutate(mutate, metrics_dir=metrics_dir)
+
+
 def _percentile(values: list[float], q: float):
     if not values:
         return None
@@ -262,6 +294,15 @@ def snapshot(*, metrics_dir=None) -> dict[str, Any]:
         for name in ("cross-asset-rank-24h", "cross-asset-rank-7d")
     }
     adaptive_accuracy = _worker_evidence(by_name, "adaptive-accuracy")
+    raw_candidate_evidence = state.get("candidate_evidence") if isinstance(state.get("candidate_evidence"), dict) else {}
+    candidate_evidence = {
+        str(name): {
+            "latest_evidence": row.get("latest_evidence") if isinstance(row, dict) and isinstance(row.get("latest_evidence"), dict) else None,
+            "updated_at_ms": row.get("updated_at_ms") if isinstance(row, dict) else None,
+        }
+        for name, row in raw_candidate_evidence.items()
+        if isinstance(row, dict) and isinstance(row.get("latest_evidence"), dict)
+    }
 
     return {
         "research_only": True,
@@ -301,4 +342,5 @@ def snapshot(*, metrics_dir=None) -> dict[str, Any]:
         },
         "acc002": acc002,
         "adaptive_accuracy": adaptive_accuracy,
+        "candidate_evidence": candidate_evidence,
     }
