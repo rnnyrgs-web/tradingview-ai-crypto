@@ -1,0 +1,216 @@
+{
+  "date": "2026-09-17",
+  "canonical_main_sha": "dfa71d64d0faf6581392a19a5ef6a929ee8aa12f",
+  "canonical_phase": "SELECTION",
+  "active_strategy_fingerprint": null,
+  "runtime_commit_verification": "UNVERIFIED: public health does not report deployed SHA; Render connector lacks a confirmed workspace",
+  "source_url": "https://crypto-continuous-coordinator.onrender.com/health",
+  "captured_check_at": "2026-09-17T15:31:01.525550+00:00",
+  "coordinator": {
+    "broker_connected": false,
+    "canary_status": "healthy",
+    "ok": true,
+    "research_only": true,
+    "started_at": "2026-09-16T23:04:22.709175+00:00",
+    "trade_authority": false
+  },
+  "focused_screen": {
+    "compute_class": "heavy",
+    "consecutive_failures": 0,
+    "elapsed_seconds": 28.39,
+    "health": {
+      "crashed": false,
+      "healthy": true,
+      "heartbeat_age_seconds": 22.78,
+      "stale": false
+    },
+    "heartbeat_at": "2026-09-17T15:31:25.263521+00:00",
+    "last_error_type": null,
+    "last_exit_code": 0,
+    "last_finished_at": "2026-09-17T11:42:36.740182+00:00",
+    "last_incident": null,
+    "last_started_at": "2026-09-17T11:42:08.345296+00:00",
+    "latest_evidence": {
+      "bar": "1H",
+      "candidates": [],
+      "failed_symbol_count": 6,
+      "failure_type_counts": {
+        "InsufficientHistory": 6
+      },
+      "generated_at": "2026-09-17T11:42:36.667690+00:00",
+      "history_provenance": {
+        "fallback_attempts": 0,
+        "fallback_bar": null,
+        "fallback_failed_assets": 0,
+        "fallback_rescued_assets": 0,
+        "no_rank_substitution": true,
+        "no_venue_stitching": true,
+        "policy": "OKX only"
+      },
+      "horizon": "24h",
+      "liquidity_subset_coverage": {
+        "15": {
+          "blocking_deficit_to_minimum": 1,
+          "coverage": 0.7333333333333333,
+          "minimum_required_assets": 12,
+          "missing_assets": 4,
+          "passes_coverage": false,
+          "requested_assets": 15,
+          "resolved_assets": 11
+        },
+        "30": {
+          "blocking_deficit_to_minimum": 0,
+          "coverage": 0.8,
+          "minimum_required_assets": 24,
+          "missing_assets": 6,
+          "passes_coverage": true,
+          "requested_assets": 30,
+          "resolved_assets": 24
+        }
+      },
+      "live_approved": false,
+      "parameter_stability": {
+        "eligible_candidate_count": 0,
+        "minimum_eligible_candidates": 2,
+        "passes": false
+      },
+      "payload_sha256": "757e38f0dfb4fe91efae37e650347c4f771538509522f7f9d3a930ce4852211e",
+      "point_in_time_universe": {
+        "can_authorize_by_itself": false,
+        "covered_observations": 0,
+        "excluded_nonmember_observations": 0,
+        "promotion_allowed": false,
+        "reason": "point_in_time_snapshot_manifest_not_configured",
+        "restrictive_only": true,
+        "survivorship_safe": false,
+        "uncovered_observations": 71976
+      },
+      "research_blocked": true,
+      "research_blocked_reason": "insufficient_supported_liquidity_subsets",
+      "research_only": true,
+      "selected_oos": null,
+      "selection_mode": true,
+      "supported_liquidity_subsets": [
+        30
+      ],
+      "trade_authority": false,
+      "universe_requested": 30,
+      "universe_resolved": 24,
+      "untouched_oos_opened": false
+    },
+    "next_retry_delay_seconds": 21600,
+    "script": "cross_asset_runner.py",
+    "state": "resting"
+  },
+  "reported_experiments": {
+    "blocked": 1,
+    "rejected": 0,
+    "tested": 0,
+    "untouched_oos_opened": 0,
+    "validation_passed": 0
+  },
+  "worker_counts": {
+    "active_jobs": 1,
+    "failed_jobs": 0,
+    "heavy_worker_count": 1,
+    "lightweight_worker_count": 2,
+    "worker_count": 3
+  },
+  "engine_states": [
+    {
+      "path": "runner_state.json",
+      "source_url": "https://github.com/rnnyrgs-web/tradingview-ai-crypto/blob/automation/specialist-runner-state/runner_state.json",
+      "last_seen_main_sha": "dfa71d64d0faf6581392a19a5ef6a929ee8aa12f",
+      "paused_reason": null,
+      "next_eligible_at": "2026-09-12T15:48:23Z",
+      "active_task": null,
+      "last_run": {
+        "actual_cost_usd": 0.0416,
+        "cached_input_tokens": 0,
+        "failure_reason": "MODEL_EXECUTION_FAILURE",
+        "finished_at": "2026-09-12T16:47:51Z",
+        "input_tokens": 0,
+        "model": "gpt-5.6-luna",
+        "output_tokens": 0,
+        "reserved_cost_usd": 0.0416,
+        "role": "data-market",
+        "started_at": "2026-09-12T16:47:34Z",
+        "status": "FAILED_RESERVED",
+        "task_id": "COORD-DATA-005"
+      },
+      "recorded_spend": {
+        "recorded_month_usd": 0.5823999999999998,
+        "recorded_today_usd": 0,
+        "state": null
+      }
+    },
+    {
+      "path": "runner_state_claude.json",
+      "source_url": "https://github.com/rnnyrgs-web/tradingview-ai-crypto/blob/automation/specialist-runner-state/runner_state_claude.json",
+      "last_seen_main_sha": "dfa71d64d0faf6581392a19a5ef6a929ee8aa12f",
+      "paused_reason": "MODEL_EXECUTION_FAILURE",
+      "next_eligible_at": "2026-09-17T16:27:04Z",
+      "active_task": null,
+      "last_run": {
+        "actual_cost_usd": 0.042131,
+        "cached_input_tokens": 0,
+        "finished_at": "2026-09-17T04:27:04Z",
+        "input_tokens": 40036,
+        "model": "claude-haiku-4-5",
+        "output_tokens": 419,
+        "reserved_cost_usd": 0.42,
+        "role": "signal-accuracy",
+        "started_at": "2026-09-17T04:26:56Z",
+        "status": "BLOCKED",
+        "task_id": "COORD-VAL-001"
+      },
+      "recorded_spend": {
+        "recorded_month_usd": 0.600391,
+        "recorded_today_usd": 0.042131,
+        "state": "MODEL_EXECUTION_FAILURE"
+      }
+    },
+    {
+      "path": "runner_state_claude_code.json",
+      "source_url": "https://github.com/rnnyrgs-web/tradingview-ai-crypto/blob/automation/specialist-runner-state/runner_state_claude_code.json",
+      "last_seen_main_sha": "dfa71d64d0faf6581392a19a5ef6a929ee8aa12f",
+      "paused_reason": "TASK_RETRY_LIMIT",
+      "next_eligible_at": null,
+      "active_task": {
+        "branch": "auto/testing-security/coord-test-001",
+        "failure_count": 6,
+        "failure_reason": "MODEL_EXECUTION_FAILURE",
+        "phase": "CI_FAILED",
+        "role": "testing-security",
+        "task_id": "COORD-TEST-001"
+      },
+      "last_run": {
+        "actual_cost_usd": 0.2,
+        "cached_input_tokens": 0,
+        "failure_reason": "MODEL_EXECUTION_FAILURE",
+        "finished_at": "2026-09-14T13:39:07Z",
+        "input_tokens": 0,
+        "model": "claude-haiku-4-5",
+        "output_tokens": 0,
+        "reserved_cost_usd": 0.2,
+        "role": "testing-security",
+        "started_at": "2026-09-14T13:39:07Z",
+        "status": "FAILED_RESERVED",
+        "task_id": "COORD-TEST-001"
+      },
+      "recorded_spend": {
+        "recorded_month_usd": 1.2,
+        "recorded_today_usd": 0,
+        "state": "TASK_RETRY_LIMIT"
+      }
+    }
+  ],
+  "pending_budget_reservations": [],
+  "shared_ceiling_usd": 30,
+  "recorded_specialist_month_usd": 2.382791,
+  "recorded_specialist_today_usd": 0.042131,
+  "recorded_budget_scope": "Three specialist-runner ledgers only; includes conservative failed-call reservations. Does not verify total provider/infrastructure/project spend.",
+  "dataset_window_utc": null,
+  "dataset_window_status": "Not exposed by the bounded live screen summary. Do not infer dates from requested bar count.",
+  "claimed_validated_strategies": 0
+}
