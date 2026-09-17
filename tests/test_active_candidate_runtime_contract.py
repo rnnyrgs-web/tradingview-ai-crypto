@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import copy
+import hashlib
+import json
 
 import pytest
 
@@ -9,7 +11,17 @@ from signal_development import ObjectiveError, validate_active_candidate_contrac
 from strategy_contract import StrategyContract
 
 
-def _manifest() -> dict:
+def _snapshot() -> dict:
+    return {"series": [{
+        "symbol": "BTC-USDT", "bar": "1H", "rows": [
+            {"ts": 1735689600000, "open": 100, "high": 102, "low": 99, "close": 101, "volume": 5},
+            {"ts": 1735693200000, "open": 101, "high": 103, "low": 100, "close": 102, "volume": 6},
+        ],
+    }]}
+
+
+def _manifest(snapshot=None) -> dict:
+    snapshot = snapshot or _snapshot()
     return {
         "dataset_id": "acc002-24h-frozen-v1",
         "source": "okx",
@@ -17,7 +29,7 @@ def _manifest() -> dict:
         "symbol": "MULTI_ASSET",
         "timezone": "UTC",
         "start_timestamp": "2025-01-01T00:00:00+00:00",
-        "end_timestamp": "2025-12-31T23:00:00+00:00",
+        "end_timestamp": "2025-01-01T01:00:00+00:00",
         "fields": ["open", "high", "low", "close", "volume"],
         "missing_periods": [],
         "duplicate_timestamps": 0,
@@ -27,12 +39,15 @@ def _manifest() -> dict:
         "future_universe_membership": False,
         "future_feature_use": False,
         "point_in_time_universe": True,
-        "content_sha256": "content-sha-001",
+        "content_sha256": hashlib.sha256(json.dumps(
+            snapshot, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False,
+        ).encode()).hexdigest(),
     }
 
 
 def _candidate() -> dict:
-    manifest = _manifest()
+    snapshot = _snapshot()
+    manifest = _manifest(snapshot)
     certification = certify_dataset_manifest(manifest)
     assert certification["certified"] is True
     contract = {
@@ -70,6 +85,7 @@ def _candidate() -> dict:
         "fingerprint_id": fingerprint,
         "strategy_contract": contract,
         "dataset_manifest": manifest,
+        "dataset_snapshot": snapshot,
         "deep_worker_contracts": {
             "cross-asset-rank-24h": {"strategy_family": "momentum"},
         },
@@ -95,6 +111,13 @@ def test_active_candidate_rejects_uncertified_dataset():
     candidate["dataset_manifest"] = copy.deepcopy(candidate["dataset_manifest"])
     candidate["dataset_manifest"]["future_feature_use"] = True
     with pytest.raises(ObjectiveError, match="dataset"):
+        validate_active_candidate_contract(candidate)
+
+
+def test_active_candidate_rejects_snapshot_content_drift():
+    candidate = _candidate()
+    candidate["dataset_snapshot"]["series"][0]["rows"][0]["close"] = 999
+    with pytest.raises(ObjectiveError, match="snapshot"):
         validate_active_candidate_contract(candidate)
 
 

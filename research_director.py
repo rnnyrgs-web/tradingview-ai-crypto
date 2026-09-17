@@ -42,6 +42,9 @@ class ResearchMission:
     experiment_id: str | None = None
     candidate_fingerprint: str | None = None
     hypothesis_id: str | None = None
+    git_sha: str | None = None
+    dataset_sha256: str | None = None
+    strategy_contract_sha256: str | None = None
     permission: str = "REVIEW"
 
     def to_dict(self) -> dict[str, Any]:
@@ -60,6 +63,9 @@ class MissionClaim:
     last_progress_at: str | None = None
     candidate_fingerprint: str | None = None
     hypothesis_id: str | None = None
+    git_sha: str | None = None
+    dataset_sha256: str | None = None
+    strategy_contract_sha256: str | None = None
     permission: str = "REVIEW"
 
     def to_dict(self) -> dict[str, Any]:
@@ -149,6 +155,9 @@ def build_mission(
     experiment_id: str | None = None,
     candidate_fingerprint: str | None = None,
     hypothesis_id: str | None = None,
+    git_sha: str | None = None,
+    dataset_sha256: str | None = None,
+    strategy_contract_sha256: str | None = None,
     permission: str = "REVIEW",
     now: datetime | None = None,
 ) -> ResearchMission:
@@ -204,6 +213,9 @@ def build_mission(
         experiment_id=experiment_id,
         candidate_fingerprint=str(candidate_fingerprint).strip() or None if candidate_fingerprint is not None else None,
         hypothesis_id=str(hypothesis_id).strip() or None if hypothesis_id is not None else None,
+        git_sha=str(git_sha).strip() or None if git_sha is not None else None,
+        dataset_sha256=str(dataset_sha256).strip() or None if dataset_sha256 is not None else None,
+        strategy_contract_sha256=str(strategy_contract_sha256).strip() or None if strategy_contract_sha256 is not None else None,
         permission=normalized_permission,
     )
 
@@ -253,6 +265,9 @@ def claim_mission(
         last_progress_at=current.isoformat(),
         candidate_fingerprint=mission.candidate_fingerprint,
         hypothesis_id=mission.hypothesis_id,
+        git_sha=mission.git_sha,
+        dataset_sha256=mission.dataset_sha256,
+        strategy_contract_sha256=mission.strategy_contract_sha256,
         permission=mission.permission,
     )
 

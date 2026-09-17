@@ -64,10 +64,15 @@ def _mission_identity(objective: dict) -> dict[str, Any]:
     fingerprint = str(candidate.get("fingerprint_id") or "").strip() or None
     hypothesis_id = str(contract.get("hypothesis_id") or "").strip() or None
     experiment_id = str(contract.get("experiment_id") or "").strip() or None
+    git_sha = str(contract.get("git_sha") or "").strip() or None
+    dataset_sha256 = str(contract.get("dataset_sha256") or "").strip() or None
     return {
         "candidate_fingerprint": fingerprint,
         "hypothesis_id": hypothesis_id,
         "experiment_id": experiment_id,
+        "git_sha": git_sha,
+        "dataset_sha256": dataset_sha256,
+        "strategy_contract_sha256": fingerprint,
     }
 
 
@@ -89,6 +94,9 @@ def _mission_for_worker(name: str, row: dict[str, Any], identity: dict[str, Any]
         "candidate_fingerprint": identity.get("candidate_fingerprint"),
         "hypothesis_id": identity.get("hypothesis_id"),
         "permission": _permission_for_worker(name, candidate_active=bool(identity.get("candidate_fingerprint"))),
+        "git_sha": identity.get("git_sha"),
+        "dataset_sha256": identity.get("dataset_sha256"),
+        "strategy_contract_sha256": identity.get("strategy_contract_sha256"),
     }
     evidence = _worker_evidence(row); blocker = "InsufficientHistory" if _pure_history_block(evidence) else None
     if name == "adaptive-accuracy":

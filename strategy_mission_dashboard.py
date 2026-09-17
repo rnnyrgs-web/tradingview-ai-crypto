@@ -34,6 +34,7 @@ FUNNEL_KEYS = (
     "forward_pass",
     "paper_champions",
 )
+INITIAL_PAPER_EQUITY_USD = 100000.0
 
 
 def _dict(value: Any) -> dict:
@@ -60,6 +61,51 @@ def _candidate_fingerprint(focus: dict) -> str | None:
     candidate = _dict(focus.get("active_candidate"))
     fingerprint = str(candidate.get("fingerprint_id") or "").strip()
     return fingerprint or None
+
+
+def build_paper_economics(trades: list[dict] | None, fingerprint: str | None) -> dict:
+    """Summarize only paper rows bound to the exact frozen candidate."""
+    fingerprint = str(fingerprint or "").strip()
+    if not fingerprint or not isinstance(trades, list):
+        return {"status": "UNVERIFIED", "strategy_fingerprint": fingerprint or None}
+    matching = [
+        row for row in trades
+        if isinstance(row, dict) and str(row.get("strategy_fingerprint") or "").strip() == fingerprint
+    ]
+    closed = [row for row in matching if str(row.get("status") or "").upper() == "CLOSED"]
+    pnls = []
+    for row in sorted(closed, key=lambda item: str(item.get("closed_at") or "")):
+        try:
+            pnls.append(float(row["pnl_usd"]))
+        except (KeyError, TypeError, ValueError):
+            return {"status": "UNVERIFIED", "strategy_fingerprint": fingerprint, "reason": "malformed_pnl"}
+    if not pnls:
+        return {
+            "status": "INSUFFICIENT_EVIDENCE", "strategy_fingerprint": fingerprint,
+            "trades_observed": len(matching), "closed_trades": 0,
+        }
+    gains = sum(value for value in pnls if value > 0)
+    losses = abs(sum(value for value in pnls if value < 0))
+    equity = peak = INITIAL_PAPER_EQUITY_USD
+    max_drawdown = 0.0
+    for pnl in pnls:
+        equity += pnl
+        peak = max(peak, equity)
+        if peak > 0:
+            max_drawdown = max(max_drawdown, (peak - equity) / peak * 100.0)
+    fees = sorted({float(row["fee_bps_one_way"]) for row in matching if row.get("fee_bps_one_way") is not None})
+    return {
+        "status": "VERIFIED",
+        "strategy_fingerprint": fingerprint,
+        "trades_observed": len(matching),
+        "closed_trades": len(closed),
+        "open_trades": len(matching) - len(closed),
+        "net_pnl_usd": round(sum(pnls), 2),
+        "expectancy_usd": round(sum(pnls) / len(pnls), 2),
+        "profit_factor": round(gains / losses, 4) if losses > 0 else None,
+        "max_drawdown_pct": round(max_drawdown, 4),
+        "fee_bps_one_way": fees,
+    }
 
 
 def _unverified_research_truth() -> dict:
@@ -119,13 +165,14 @@ def _research_truth(coordinator: dict) -> dict:
     return result
 
 
-def build_mission_snapshot(objective: dict, coordinator: dict | None) -> dict:
+def build_mission_snapshot(objective: dict, coordinator: dict | None, paper_trades: list[dict] | None = None) -> dict:
     """Collapse canonical objective + live coordinator state into fail-closed UI truth."""
     focus = _dict(objective.get("single_strategy_focus"))
     phase = _text(focus.get("lifecycle_phase"), "UNKNOWN")
     candidate = _dict(focus.get("active_candidate"))
     fingerprint = _candidate_fingerprint(focus)
     truth = _research_truth(coordinator) if isinstance(coordinator, dict) else _unverified_research_truth()
+    paper_economics = build_paper_economics(paper_trades, fingerprint)
 
     if not isinstance(coordinator, dict):
         return {
@@ -151,6 +198,7 @@ def build_mission_snapshot(objective: dict, coordinator: dict | None) -> dict:
             "last_screen": None,
             "coordinator_ok": False,
             **truth,
+            "paper_economics": paper_economics,
         }
 
     army = _dict(coordinator.get("worker_army"))
@@ -246,6 +294,7 @@ def build_mission_snapshot(objective: dict, coordinator: dict | None) -> dict:
         "last_screen": evidence.get("generated_at") or evidence.get("updated_at_ms"),
         "coordinator_ok": coordinator.get("ok") is True,
         **truth,
+        "paper_economics": paper_economics,
     }
 
 
@@ -288,7 +337,12 @@ def mission_control_page(request: Request):
 
     objective = load_objective()
     coordinator = fetch_coordinator_state()
-    snapshot = build_mission_snapshot(objective, coordinator)
+    try:
+        from paper_db import fetch_all_paper_trades
+        paper_trades = fetch_all_paper_trades("default")
+    except Exception:
+        paper_trades = None
+    snapshot = build_mission_snapshot(objective, coordinator, paper_trades)
     generated = datetime.now(timezone.utc).isoformat()
 
     fingerprint = snapshot["candidate_fingerprint"] or "NOT FROZEN"
@@ -315,6 +369,13 @@ def mission_control_page(request: Request):
     closest = snapshot["closest_candidate"] or {}
     closest_text = _text(closest.get("strategy_fingerprint") or closest.get("fingerprint"), "NONE VERIFIED")
     closest_state = _text(closest.get("state"), "UNVERIFIED")
+    paper = snapshot["paper_economics"]
+    paper_summary = (
+        f"{paper.get('closed_trades', 0)} closed / {paper.get('trades_observed', 0)} observed · "
+        f"net ${paper.get('net_pnl_usd', '—')} · expectancy ${paper.get('expectancy_usd', '—')} · "
+        f"PF {paper.get('profit_factor', '—')} · max DD {paper.get('max_drawdown_pct', '—')}% · "
+        f"fees {paper.get('fee_bps_one_way', '—')} bps/side"
+    )
     truth_rows = "".join(
         f"<tr><td>{html.escape(label)}</td><td><span class='pill {_badge_class(_text(data.get('status'), 'UNVERIFIED'))}'>{html.escape(_text(data.get('status'), 'UNVERIFIED'))}</span></td></tr>"
         for label, data in (
@@ -352,6 +413,7 @@ def mission_control_page(request: Request):
 <div class='panel'><h2>Current blocker</h2><div class='blocker'><b>{html.escape(blocker)}</b><div class='sub'>The system must solve or falsify this without weakening evidence thresholds.</div></div></div>
 <div class='panel'><h2>Evidence gates</h2><div class='gates'>{gate_cards}</div></div>
 <div class='panel'><h2>Scientific truth</h2><table><thead><tr><th>CHECK</th><th>STATUS</th></tr></thead><tbody>{truth_rows}</tbody></table></div>
+<div class='panel'><h2>Exact-fingerprint paper economics</h2><div class='value {_badge_class(_text(paper.get('status'), 'UNVERIFIED'))}' style='font-size:16px'>{html.escape(_text(paper.get('status'), 'UNVERIFIED'))}</div><div class='sub'>{html.escape(paper_summary)}</div></div>
 <div class='panel'><h2>Focused team activity</h2><table><thead><tr><th>WORKER</th><th>STATE</th></tr></thead><tbody>{worker_rows}</tbody></table></div>
 <div class='panel'><h2>Promotion state</h2><div class='value {_badge_class(snapshot['promotion_status'])}' style='font-size:16px'>{html.escape(snapshot['promotion_status'])}</div><div class='sub'>Research validation never grants automatic real-money trading authority.</div></div>
 <div class='footer'>Generated {html.escape(generated)} · auto-refresh 60s · fail-closed display · live coordinator source: {'reachable' if coordinator is not None else 'unavailable'}.</div>

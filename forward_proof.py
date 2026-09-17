@@ -108,6 +108,34 @@ def _validated_frozen_contract(frozen: dict) -> tuple[StrategyContract, dict]:
     return contract, payload
 
 
+def validated_forward_candidate_identity(frozen_contract: dict, gate_result: dict) -> dict:
+    """Return identity derived only from a sealed contract after the central gate.
+
+    This deliberately ignores caller-supplied provenance.  Paper observations may
+    begin only after independent reproduction has moved the authoritative lifecycle
+    to ``FORWARD_PENDING``.
+    """
+    gate_result = gate_result if isinstance(gate_result, dict) else {}
+    if gate_result.get("state") != "FORWARD_PENDING":
+        raise RuntimeError("forward shadow requires central state FORWARD_PENDING")
+    blockers = set(gate_result.get("blocking_gates") or [])
+    if blockers - {"genuine_forward"}:
+        raise RuntimeError("forward shadow has unresolved pre-forward validation gates")
+    if gate_result.get("real_money_trade_authority") is not False:
+        raise RuntimeError("forward shadow cannot carry real-money trade authority")
+
+    contract, payload = _validated_frozen_contract(frozen_contract)
+    return {
+        "strategy_fingerprint": contract.fingerprint(),
+        "experiment_id": str(payload["experiment_id"]),
+        "hypothesis_id": str(payload["hypothesis_id"]),
+        "git_sha": str(payload["git_sha"]),
+        "dataset_id": str(payload["dataset_id"]),
+        "dataset_sha256": str(payload["dataset_sha256"]),
+        "strategy_contract_sha256": contract.fingerprint(),
+    }
+
+
 def build_forward_decision_record(
     frozen_contract: dict,
     gate_result: dict,
@@ -128,16 +156,7 @@ def build_forward_decision_record(
     must be FORWARD_PENDING. OOS_PASS alone is insufficient and cannot open forward
     collection. This helper never grants real-money authority.
     """
-    gate_result = gate_result if isinstance(gate_result, dict) else {}
-    if gate_result.get("state") != "FORWARD_PENDING":
-        raise RuntimeError("forward shadow requires central state FORWARD_PENDING")
-    blockers = set(gate_result.get("blocking_gates") or [])
-    if blockers - {"genuine_forward"}:
-        raise RuntimeError("forward shadow has unresolved pre-forward validation gates")
-    if gate_result.get("real_money_trade_authority") is not False:
-        raise RuntimeError("forward shadow cannot carry real-money trade authority")
-
-    contract, payload = _validated_frozen_contract(frozen_contract)
+    identity = validated_forward_candidate_identity(frozen_contract, gate_result)
     signal_id = str(signal_id or "").strip()
     timestamp = str(decision_timestamp or "").strip()
     symbol = str(symbol or "").strip().upper()
@@ -151,14 +170,14 @@ def build_forward_decision_record(
         raise RuntimeError("forward decision economics are invalid")
 
     return {
-        "strategy_fingerprint": contract.fingerprint(),
+        "strategy_fingerprint": identity["strategy_fingerprint"],
         "signal_id": signal_id,
-        "experiment_id": str(payload["experiment_id"]),
-        "hypothesis_id": str(payload["hypothesis_id"]),
-        "git_sha": str(payload["git_sha"]),
-        "dataset_id": str(payload["dataset_id"]),
-        "dataset_sha256": str(payload["dataset_sha256"]),
-        "strategy_contract_sha256": contract.fingerprint(),
+        "experiment_id": identity["experiment_id"],
+        "hypothesis_id": identity["hypothesis_id"],
+        "git_sha": identity["git_sha"],
+        "dataset_id": identity["dataset_id"],
+        "dataset_sha256": identity["dataset_sha256"],
+        "strategy_contract_sha256": identity["strategy_contract_sha256"],
         "decision_timestamp": timestamp,
         "symbol": symbol,
         "direction": direction,

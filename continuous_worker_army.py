@@ -122,6 +122,19 @@ def focused_worker_specs(workers: tuple[WorkerSpec, ...], objective: dict) -> tu
     fingerprint = str(candidate.get("fingerprint_id") or "").strip()
     if not fingerprint:
         raise RuntimeError("active candidate has no immutable fingerprint")
+    strategy_contract = candidate.get("strategy_contract")
+    if not isinstance(strategy_contract, dict):
+        raise RuntimeError("active candidate has no immutable strategy contract")
+    identity_env = {
+        "ACTIVE_EXPERIMENT_ID": str(strategy_contract.get("experiment_id") or "").strip(),
+        "ACTIVE_HYPOTHESIS_ID": str(strategy_contract.get("hypothesis_id") or "").strip(),
+        "ACTIVE_GIT_SHA": str(strategy_contract.get("git_sha") or "").strip(),
+        "ACTIVE_DATASET_SHA256": str(strategy_contract.get("dataset_sha256") or "").strip(),
+        "ACTIVE_STRATEGY_CONTRACT_SHA256": fingerprint,
+    }
+    missing_identity = [key for key, value in identity_env.items() if not value]
+    if missing_identity:
+        raise RuntimeError(f"active candidate deep identity is incomplete: {missing_identity}")
     selected = list(lightweight)
     for spec in workers:
         if spec.name not in allowed:
@@ -135,6 +148,7 @@ def focused_worker_specs(workers: tuple[WorkerSpec, ...], objective: dict) -> tu
             "SINGLE_STRATEGY_DEEP_MODE": "1",
             "ACTIVE_STRATEGY_FINGERPRINT": fingerprint,
             "ACTIVE_STRATEGY_FAMILY": family,
+            **identity_env,
         })
         selected.append(replace(spec, env=env))
     return tuple(selected)

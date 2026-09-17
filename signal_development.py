@@ -44,17 +44,20 @@ def validate_active_candidate_contract(candidate: dict) -> dict:
     manifest. Worker-specific contracts may restrict execution, but they may not
     silently change the strategy family.
     """
-    from dataset_certification import certify_dataset_manifest
+    from dataset_certification import certify_dataset_snapshot
     from strategy_contract import StrategyContract
 
     if not isinstance(candidate, dict):
         raise ObjectiveError("active strategy candidate must be an object")
     raw_contract = candidate.get("strategy_contract")
     raw_manifest = candidate.get("dataset_manifest")
+    raw_snapshot = candidate.get("dataset_snapshot")
     if not isinstance(raw_contract, dict):
         raise ObjectiveError("active strategy candidate is missing immutable strategy contract")
     if not isinstance(raw_manifest, dict):
         raise ObjectiveError("active strategy candidate is missing dataset manifest")
+    if not isinstance(raw_snapshot, dict):
+        raise ObjectiveError("active strategy candidate is missing immutable dataset snapshot")
 
     try:
         contract = StrategyContract.from_mapping(raw_contract)
@@ -66,7 +69,7 @@ def validate_active_candidate_contract(candidate: dict) -> dict:
     if not declared_fingerprint or declared_fingerprint != fingerprint:
         raise ObjectiveError("active strategy candidate fingerprint does not match immutable contract")
 
-    certification = certify_dataset_manifest(raw_manifest)
+    certification = certify_dataset_snapshot(raw_manifest, raw_snapshot)
     if certification.get("certified") is not True:
         failures = certification.get("failures") or []
         raise ObjectiveError(f"active strategy candidate dataset is not certified: {failures}")
@@ -91,6 +94,7 @@ def validate_active_candidate_contract(candidate: dict) -> dict:
         "strategy_contract": contract_payload,
         "strategy_fingerprint": fingerprint,
         "dataset_manifest": dict(raw_manifest),
+        "dataset_snapshot": dict(raw_snapshot),
         "dataset_certification": certification,
     }
 

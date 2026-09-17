@@ -14,6 +14,7 @@ from research_artifact import seal_research_payload
 from research_observability import record_candidate_evidence
 from research_tracking import log_experiment
 from research_validation import evaluate_candidate_stage
+from independent_reproduction import reproduce_vectorized
 from signal_development import load_objective, validate_active_candidate_contract
 from strategy_families import STRATEGY_FAMILIES, evaluate_strategy_registry
 from worker_supervisor import sanitize_diagnostic
@@ -85,7 +86,7 @@ def active_strategy_contract(objective=None):
     revalidated locally before any holdout/OOS work starts.
     """
     if os.getenv("SINGLE_STRATEGY_DEEP_MODE") != "1":
-        return None, tuple(STRATEGY_FAMILIES), None, None
+        return None, tuple(STRATEGY_FAMILIES), None, None, None
 
     fingerprint = os.getenv("ACTIVE_STRATEGY_FINGERPRINT", "").strip()
     family = os.getenv("ACTIVE_STRATEGY_FAMILY", "").strip()
@@ -107,7 +108,38 @@ def active_strategy_contract(objective=None):
     contract = validated["strategy_contract"]
     if contract["strategy_family"] != family:
         raise RuntimeError("single-strategy deep family does not match immutable contract")
-    return fingerprint, (family,), contract, validated["dataset_certification"]
+    expected_env_identity = {
+        "ACTIVE_EXPERIMENT_ID": contract["experiment_id"],
+        "ACTIVE_HYPOTHESIS_ID": contract["hypothesis_id"],
+        "ACTIVE_GIT_SHA": contract["git_sha"],
+        "ACTIVE_DATASET_SHA256": contract["dataset_sha256"],
+        "ACTIVE_STRATEGY_CONTRACT_SHA256": fingerprint,
+    }
+    drift = [
+        key for key, expected in expected_env_identity.items()
+        if os.getenv(key, "").strip() != str(expected).strip()
+    ]
+    if drift:
+        raise RuntimeError(f"single-strategy deep identity does not match immutable contract: {drift}")
+    return fingerprint, (family,), contract, validated["dataset_certification"], validated["dataset_snapshot"]
+
+
+def _snapshot_series(snapshot, symbol, bar, *, required=True):
+    series = snapshot.get("series") if isinstance(snapshot, dict) else None
+    target = (str(symbol or "").strip().upper(), str(bar or "").strip().upper())
+    if isinstance(series, list):
+        for item in series:
+            if not isinstance(item, dict):
+                continue
+            identity = (
+                str(item.get("symbol") or "").strip().upper(),
+                str(item.get("bar") or "").strip().upper(),
+            )
+            if identity == target and isinstance(item.get("rows"), list):
+                return item["rows"]
+    if required:
+        raise RuntimeError(f"certified dataset snapshot missing exact series {target[0]}:{target[1]}")
+    return None
 
 
 def _economic_stage(metrics, *, chronology_safe=True):
@@ -121,7 +153,14 @@ def _economic_stage(metrics, *, chronology_safe=True):
     }
 
 
-def _canonical_candidate_evidence(strategy, dataset_certification, *, oos_opened):
+def _canonical_candidate_evidence(
+    strategy,
+    dataset_certification,
+    *,
+    oos_opened,
+    strategy_contract=None,
+    strategy_fingerprint=None,
+):
     """Translate legacy registry evidence into the only authoritative lifecycle gate.
 
     Missing robustness evidence stays missing instead of being guessed. The central
@@ -155,6 +194,22 @@ def _canonical_candidate_evidence(strategy, dataset_certification, *, oos_opened
     reproduction = strategy.get("independent_reproduction")
     if not isinstance(reproduction, dict):
         reproduction = {_VERDICT_FIELD: False, "status": "NOT_RUN"}
+    contract = strategy_contract if isinstance(strategy_contract, dict) else {}
+    expected_reproduction_identity = {
+        "strategy_fingerprint": str(strategy_fingerprint or "").strip(),
+        "dataset_sha256": str(contract.get("dataset_sha256") or "").strip(),
+        "strategy_contract_sha256": str(strategy_fingerprint or "").strip(),
+    }
+    if reproduction.get(_VERDICT_FIELD) is True and expected_reproduction_identity["strategy_fingerprint"]:
+        if any(
+            str(reproduction.get(key) or "").strip() != value
+            for key, value in expected_reproduction_identity.items()
+        ):
+            reproduction = {
+                _VERDICT_FIELD: False,
+                "status": "INVALID_INPUT",
+                "reason": "independent_reproduction_identity_mismatch",
+            }
     forward = strategy.get("forward_evidence")
     if not isinstance(forward, dict):
         forward = {_VERDICT_FIELD: False, "observations": 0, "status": "NOT_STARTED"}
@@ -169,6 +224,34 @@ def _canonical_candidate_evidence(strategy, dataset_certification, *, oos_opened
         "independent_reproduction": reproduction,
         "forward": forward,
     }
+    provisional = evaluate_candidate_stage(evidence)
+    if provisional.get("state") == "OOS_PASS" and reproduction.get(_VERDICT_FIELD) is not True:
+        reproduction_input = strategy.get("independent_reproduction_input")
+        expected_identity = expected_reproduction_identity
+        supplied = reproduction_input if isinstance(reproduction_input, dict) else {}
+        identity_matches = bool(expected_identity["strategy_fingerprint"]) and all(
+            str(supplied.get(key) or "").strip() == value
+            for key, value in expected_identity.items()
+        )
+        price_rows = supplied.get("price_rows")
+        if not identity_matches or not isinstance(price_rows, list):
+            reproduction = {
+                _VERDICT_FIELD: False,
+                "status": "INVALID_INPUT",
+                "reason": "frozen_reproduction_identity_or_dataset_missing",
+            }
+        else:
+            reproduction_spec = {key: value for key, value in supplied.items() if key != "price_rows"}
+            reproduction_spec.setdefault("canonical_metrics", {
+                "net_expectancy_pct": oos.get("net_expectancy_pct"),
+                "profit_factor": oos.get("profit_factor"),
+            })
+            reproduction_spec.setdefault("costs", dict(contract.get("costs") or {}))
+            reproduction = {
+                **reproduce_vectorized(reproduction_spec, price_rows),
+                **expected_identity,
+            }
+        evidence["independent_reproduction"] = reproduction
     return {
         "evidence": evidence,
         "decision": evaluate_candidate_stage(evidence),
@@ -255,7 +338,7 @@ def main():
     bars = int(os.getenv("RESEARCH_BARS", "5000"))
     threshold = float(os.getenv("RESEARCH_THRESHOLD", "2.25"))
     execution_quote_notional = float(os.getenv("RESEARCH_EXECUTION_NOTIONAL", "5000"))
-    active_fingerprint, active_families, active_contract, dataset_certification = active_strategy_contract()
+    active_fingerprint, active_families, active_contract, dataset_certification, dataset_snapshot = active_strategy_contract()
     resolved = int(universe_meta.get("universe_size_resolved") or len(symbols) or 1)
     trial_count = max(1, resolved) * max(1, len(timeframes)) * len(active_families) * 3
 
@@ -282,15 +365,25 @@ def main():
                 item["dataset_certification"] = dataset_certification
             t0 = time.time()
             try:
-                item["backtest"] = run_backtest(symbol, bar=bar, bars=bars, threshold=threshold)
-                item["walk_forward"] = walk_forward(symbol, bar=bar, bars=bars)
+                frozen_history = _snapshot_series(dataset_snapshot, symbol, bar) if dataset_snapshot is not None else None
+                frozen_benchmark = None
+                if dataset_snapshot is not None and symbol != "BTC-USDT":
+                    frozen_benchmark = _snapshot_series(dataset_snapshot, "BTC-USDT", bar, required=False)
+                item["backtest"] = run_backtest(
+                    symbol, bar=bar, bars=bars, threshold=threshold, history=frozen_history,
+                )
+                item["walk_forward"] = walk_forward(symbol, bar=bar, bars=bars, history=frozen_history)
                 item["execution_oos_robustness"] = evaluate_execution_oos(
                     symbol,
                     bar=bar,
                     bars=bars,
                     quote_notional=execution_quote_notional,
+                    history=frozen_history,
                 )
-                raw_registry = evaluate_strategy_registry(symbol, bar=bar, bars=bars, families=active_families)
+                raw_registry = evaluate_strategy_registry(
+                    symbol, bar=bar, bars=bars, families=active_families,
+                    history=frozen_history, benchmark_history=frozen_benchmark,
+                )
                 multiple_testing_registry = apply_registry_firewall(raw_registry, trial_count)
                 item["strategy_registry"] = _demote_for_survivorship(multiple_testing_registry, survivorship)
                 if active_contract is not None:
@@ -299,6 +392,8 @@ def main():
                             strategy,
                             dataset_certification,
                             oos_opened=True,
+                            strategy_contract=active_contract,
+                            strategy_fingerprint=active_fingerprint,
                         )
                         strategy["canonical_validation"] = canonical
                         canonical_row = {

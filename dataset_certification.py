@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 import hashlib
 import json
 from math import isfinite
@@ -157,6 +157,100 @@ def certify_dataset_manifest(manifest: dict) -> dict:
         "certified": not unique_failures,
         "dataset_id": str(manifest.get("dataset_id") or "").strip() or None,
         "dataset_sha256": dataset_sha,
+        "content_sha256": str(manifest.get("content_sha256") or "").strip(),
+        "checks": checks,
+        "failures": unique_failures,
+    }
+
+
+def certify_dataset_snapshot(manifest: dict, snapshot: dict) -> dict:
+    """Certify the actual immutable OHLCV bundle, not merely its description."""
+    result = certify_dataset_manifest(manifest)
+    failures = list(result.get("failures") or [])
+    checks = dict(result.get("checks") or {})
+    series = snapshot.get("series") if isinstance(snapshot, dict) else None
+    if not isinstance(series, list) or not series:
+        failures.append("snapshot_series_missing")
+        series = []
+
+    try:
+        actual_hash = hashlib.sha256(_canonical_bytes(snapshot)).hexdigest()
+    except (TypeError, ValueError):
+        actual_hash = ""
+        failures.append("snapshot_not_canonicalizable")
+    hash_matches = bool(actual_hash and actual_hash == result.get("content_sha256"))
+    checks["snapshot_content_hash_matches"] = hash_matches
+    if not hash_matches:
+        failures.append("snapshot_content_hash_mismatch")
+
+    identities: set[tuple[str, str]] = set()
+    observed_timestamps: list[datetime] = []
+    snapshot_valid = bool(series)
+    for item in series:
+        if not isinstance(item, dict):
+            snapshot_valid = False
+            continue
+        symbol = str(item.get("symbol") or "").strip()
+        bar = str(item.get("bar") or "").strip()
+        identity = (symbol, bar.upper())
+        rows = item.get("rows")
+        if not symbol or not bar or identity in identities or not isinstance(rows, list) or not rows:
+            snapshot_valid = False
+            continue
+        identities.add(identity)
+        previous = None
+        for row in rows:
+            if not isinstance(row, dict):
+                snapshot_valid = False
+                continue
+            try:
+                ts = int(row["ts"])
+                open_px = float(row["open"])
+                high_px = float(row["high"])
+                low_px = float(row["low"])
+                close_px = float(row["close"])
+                volume = float(row["volume"])
+            except (KeyError, TypeError, ValueError):
+                snapshot_valid = False
+                continue
+            values = (open_px, high_px, low_px, close_px, volume)
+            if (
+                ts <= 0
+                or previous is not None and ts <= previous
+                or not all(isfinite(value) for value in values)
+                or min(open_px, high_px, low_px, close_px) <= 0
+                or high_px < max(open_px, low_px, close_px)
+                or low_px > min(open_px, high_px, close_px)
+                or volume < 0
+            ):
+                snapshot_valid = False
+                continue
+            previous = ts
+            observed_timestamps.append(datetime.fromtimestamp(ts / 1000.0, tz=timezone.utc))
+
+    checks["snapshot_market_data_valid"] = snapshot_valid
+    if not snapshot_valid:
+        failures.append("snapshot_market_data_invalid")
+
+    start = _parse_timestamp(manifest.get("start_timestamp"))
+    end = _parse_timestamp(manifest.get("end_timestamp"))
+    range_matches = bool(
+        observed_timestamps
+        and start is not None
+        and end is not None
+        and start == min(observed_timestamps)
+        and end == max(observed_timestamps)
+    )
+    checks["snapshot_timestamp_range_matches"] = range_matches
+    if not range_matches:
+        failures.append("snapshot_timestamp_range_mismatch")
+
+    unique_failures = list(dict.fromkeys(failures))
+    return {
+        **result,
+        "certified": not unique_failures,
+        "snapshot_verified": not unique_failures,
+        "snapshot_content_sha256": actual_hash,
         "checks": checks,
         "failures": unique_failures,
     }

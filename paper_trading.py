@@ -27,6 +27,7 @@ from kraken_futures_execution import (
     simulate_kraken_perp_fill,
 )
 from market_data import get_candles
+from forward_proof import validated_forward_candidate_identity
 from production_risk_gate import assess_portfolio_risk
 from utils import iso, now_utc
 
@@ -46,6 +47,10 @@ PAPER_INTERVAL_SECONDS = 15 * 60
 PAPER_7D_REVERSAL_MIN_EVIDENCE = 80.0
 PAPER_7D_REVERSAL_MAX_RANK = 5
 _cycle_lock = threading.Lock()
+_STRATEGY_PROVENANCE_FIELDS = (
+    "signal_id", "strategy_fingerprint", "experiment_id", "git_sha",
+    "dataset_sha256", "strategy_contract_sha256",
+)
 
 
 def _latest_candle(symbol):
@@ -162,7 +167,42 @@ def _record_decision(row, decision, reason):
         "reason": reason,
         "signal_generated_at": row.get("generated_at"),
         "decided_at": iso(now_utc()),
+        **_strategy_provenance(row),
     })
+
+
+def _strategy_provenance(row):
+    row = row if isinstance(row, dict) else {}
+    one_edge = (
+        row.get("one_edge_candidate") is True
+        or isinstance(row.get("frozen_strategy_contract"), dict)
+        or isinstance(row.get("canonical_gate"), dict)
+        or any(
+            str(row.get(key) or "").strip() for key in _STRATEGY_PROVENANCE_FIELDS
+        )
+    )
+    if not one_edge:
+        return {}
+    frozen = row.get("frozen_strategy_contract")
+    if not isinstance(frozen, dict):
+        raise RuntimeError("paper strategy provenance requires a frozen strategy contract")
+    identity = validated_forward_candidate_identity(frozen, row.get("canonical_gate"))
+    derived = {
+        "signal_id": str(row.get("signal_id") or "").strip(),
+        **{key: str(identity.get(key) or "").strip() for key in _STRATEGY_PROVENANCE_FIELDS if key != "signal_id"},
+    }
+    missing = [key for key, value in derived.items() if not value]
+    if missing:
+        raise RuntimeError(f"paper strategy provenance incomplete: {missing}")
+    supplied = {
+        key: str(row.get(key) or "").strip()
+        for key in _STRATEGY_PROVENANCE_FIELDS
+        if row.get(key) is not None
+    }
+    mismatched = [key for key, value in supplied.items() if value != derived[key]]
+    if mismatched:
+        raise RuntimeError(f"paper strategy provenance does not match frozen strategy contract: {mismatched}")
+    return derived
 
 
 def _has_opposing_symbol_exposure(open_trades, symbol, direction):
@@ -570,6 +610,7 @@ def _run_paper_cycle_locked():
             "entry_slippage_bps": execution.worst_slippage_bps,
             "entry_source_count": execution.source_count,
             "execution_model_version": V2_EXECUTION_MODEL,
+            **_strategy_provenance(row),
         }):
             log.info(
                 "Kraken paper trade opened symbol=%s direction=%s market=%s fill=%s notional=%.2f visible=%.2f slippage_bps=%s fee_bps=%s",
