@@ -1,0 +1,50 @@
+name: ACC-002 Selection Evidence Audit
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "acc002_selection_audit.py"
+      - "acc002_evidence_contract.py"
+      - "cross_asset_runner.py"
+      - "cross_asset_rank.py"
+      - "market_data.py"
+      - "point_in_time_universe.py"
+      - ".github/workflows/acc002_selection_audit.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: acc002-selection-evidence-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SINGLE_STRATEGY_SELECTION_MODE: "1"
+      CROSS_ASSET_HORIZON: "24h"
+      CROSS_ASSET_UNIVERSE_SIZE: "30"
+      CROSS_ASSET_BARS: "3000"
+      CROSS_ASSET_ROUND_TRIP_COST_BPS: "12"
+      ACC002_SELECTION_AUDIT_PATH: "research_output/acc002_selection_audit.json"
+    steps:
+      - name: Checkout exact commit
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run fixed 24h selection audit with untouched OOS locked
+        run: python acc002_selection_audit.py
+      - name: Upload immutable selection evidence artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: acc002-selection-evidence-${{ github.sha }}
+          path: research_output/acc002_selection_audit.json
+          retention-days: 90
