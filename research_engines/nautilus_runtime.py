@@ -16,11 +16,7 @@ def _timeframe_bar_spec(timeframe: str) -> tuple[int, str]:
     step = int(match.group(1))
     if step < 1:
         raise ValueError("timeframe step must be positive")
-    unit = {
-        "m": "MINUTE",
-        "h": "HOUR",
-        "d": "DAY",
-    }[match.group(2).lower()]
+    unit = {"m": "MINUTE", "h": "HOUR", "d": "DAY"}[match.group(2).lower()]
     return step, unit
 
 
@@ -31,33 +27,29 @@ def _money_number(value) -> float:
     return float(text.split()[0])
 
 
-def run_event_driven_frozen_path(
-    contract,
-    bars,
-    shifted_entries,
-    shifted_exits,
-):
+def run_event_driven_frozen_path(contract, bars, shifted_entries, shifted_exits):
     import pandas as pd
 
     from nautilus_trader.backtest.config import BacktestEngineConfig
     from nautilus_trader.backtest.engine import BacktestEngine
     from nautilus_trader.config import LoggingConfig
-    from nautilus_trader.model.currencies import ETH
-    from nautilus_trader.model.currencies import USDT
+    from nautilus_trader.model.currencies import ETH, USDT
     from nautilus_trader.model.data import BarType
-    from nautilus_trader.model.enums import AccountType
-    from nautilus_trader.model.enums import BookType
-    from nautilus_trader.model.enums import OmsType
-    from nautilus_trader.model.enums import OrderSide
-    from nautilus_trader.model.enums import TimeInForce
-    from nautilus_trader.model.identifiers import InstrumentId
-    from nautilus_trader.model.identifiers import Symbol
-    from nautilus_trader.model.identifiers import TraderId
-    from nautilus_trader.model.identifiers import Venue
+    from nautilus_trader.model.enums import (
+        AccountType,
+        BookType,
+        OmsType,
+        OrderSide,
+        TimeInForce,
+    )
+    from nautilus_trader.model.identifiers import (
+        InstrumentId,
+        Symbol,
+        TraderId,
+        Venue,
+    )
     from nautilus_trader.model.instruments.currency_pair import CurrencyPair
-    from nautilus_trader.model.objects import Money
-    from nautilus_trader.model.objects import Price
-    from nautilus_trader.model.objects import Quantity
+    from nautilus_trader.model.objects import Money, Price, Quantity
     from nautilus_trader.model.orders import MarketOrder
     from nautilus_trader.persistence.wranglers import BarDataWrangler
     from nautilus_trader.trading.strategy import Strategy
@@ -65,6 +57,10 @@ def run_event_driven_frozen_path(
     frozen = contract.canonical()
     if not (len(bars) == len(shifted_entries) == len(shifted_exits)):
         raise ValueError("Nautilus bars/signals length mismatch")
+    if frozen["execution_price_model"] != "bar_close_after_lag":
+        raise ValueError("Nautilus only supports frozen bar-close execution")
+    if frozen["timestamp_unit"] != "ns":
+        raise ValueError("Nautilus frozen-path timestamps must be nanoseconds")
 
     step, unit = _timeframe_bar_spec(frozen["timeframe"])
     fee_per_side = Decimal(str(float(frozen["cost_bps_round_trip"]) / 20000.0))
@@ -88,9 +84,7 @@ def run_event_driven_frozen_path(
         maker_fee=fee_per_side,
         taker_fee=fee_per_side,
     )
-    bar_type = BarType.from_str(
-        f"{instrument.id}-{step}-{unit}-LAST-EXTERNAL"
-    )
+    bar_type = BarType.from_str(f"{instrument.id}-{step}-{unit}-LAST-EXTERNAL")
 
     frame = pd.DataFrame(
         [
@@ -177,6 +171,7 @@ def run_event_driven_frozen_path(
             bar_execution=True,
             trade_execution=False,
             use_random_ids=False,
+            use_message_queue=False,
         )
         engine.add_instrument(instrument)
         engine.add_data(nautilus_bars)
