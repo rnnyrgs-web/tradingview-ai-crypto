@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-18T15:41:42Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, paper-trade, promotion-gate or broker state changed.",
+  "observed_facts": [
+    "Federal Reserve H.4.1 released Sep. 17 shows Sep. 16 Wednesday TGA $991.708B, up $148.003B from Sep. 9, while depository-institution reserve balances were $2.921537T, down $114.971B; securities held outright rose only $2.051B.",
+    "The BOJ raised its policy rate 25 bp to 1.25% on Sep. 18, a 31-year high, but Reuters reported USD/JPY rising to about 157.9 as two dissents and cautious guidance reduced expectations for the subsequent hiking path.",
+    "Reuters reported the dollar index near 100.48 and markets assigning roughly 55% odds to another Fed hike next month, preserving a strong U.S.-Japan relative-rate/carry incentive despite the BOJ hike.",
+    "Brent remained near $104-$105 on Sep. 18. Saudi pipeline damage and halted Yanbu deliveries remain real, but rerouting/substitution and refined-product inventory/export evidence continue to cap the crude scarcity premium.",
+    "Reuters fund-flow data for the week ended Sep. 16 showed $23.21B global equity-fund outflows and $31.44B U.S. equity-fund outflows, while Asian equity funds gained $6.26B and sector funds gained $4.49B, led by technology, financials and consumer discretionary.",
+    "Bitcoin moved above $80,000 on Sep. 18 after holding around the mid/high-$70Ks through a hawkish Fed and regulatory disappointment. Public ETF-flow reporting indicates Sep. 17 U.S. spot BTC ETF net inflows near $159.5M after roughly $746M of combined outflows over Sep. 15-16; the three-session net remained negative.",
+    "Gold traded near a one-week high around $4,352/oz on Sep. 18 as easing oil reduced inflation pressure, while a stronger dollar and high policy-rate expectations limited upside."
+  ],
+  "inferences": [
+    "The TGA-reserve mechanism was strongly validated mechanically, but no inference of funding stress is justified from H.4.1 alone. Transaction-based repo distributions and standing-repo take-up remain the decisive falsification evidence.",
+    "BOJ Sep. 18 strengthens the expectation-adjusted-policy-surprise hypothesis: an anticipated hike can coincide with currency depreciation when vote composition/guidance implies a shallower future path than embedded expectations and the foreign rate differential remains dominant.",
+    "Current capital allocation is selective, not generic risk-on/risk-off: aggregate U.S. equity redemptions coexist with technology-sector inflows, Asian equity inflows and a BTC rebound. Marginal flow is rewarding specific growth/liquidity narratives while demanding higher compensation elsewhere.",
+    "BTC's rebound after the ETF-flow reversal is consistent with renewed marginal spot demand contributing to price, but causality is not isolated because macro risk sentiment and regulatory/tokenization news changed concurrently. The still-negative three-session ETF total argues against labeling this a durable institutional-flow regime shift yet.",
+    "Gold's resilience while the dollar is firm is noteworthy but not sufficient to infer a new decoupling regime; lower oil/long-yield pressure and short covering are plausible competing mechanisms."
+  ],
+  "hypotheses": [
+    {
+      "id": "expected-policy-path-dominates-action-sign",
+      "status": "strengthened_candidate",
+      "claim": "For well-anticipated central-bank actions, the expectation-adjusted future path and guidance/vote surprise predict FX and cross-asset reaction better than the sign of the rate action.",
+      "new_case": "BOJ Sep. 18: +25 bp hike to 1.25% accompanied by JPY depreciation.",
+      "falsification": "Historical matched event study finds action sign/size explains 30m/1d/5d responses at least as well after conditioning on pre-event pricing and path/guidance surprise."
+    },
+    {
+      "id": "btc-etf-flow-reversal-price-elasticity",
+      "status": "candidate",
+      "claim": "After large multi-day spot-BTC ETF redemptions, a verified return to net creations has greater short-horizon price impact when BTC has already shown resilience to macro/regulatory bad news, because available marginal supply has proven less elastic.",
+      "falsification": "Matched episodes show no incremental 1d/5d BTC response after controlling for broad crypto/risk-market moves, derivatives positioning and prior drawdown."
+    }
+  ],
+  "big_move_lab_candidates": [
+    {
+      "case_id": "2026-09-18-boj-hike-yen-selloff",
+      "asset": "JPY / USDJPY",
+      "observed_move": "JPY weakened materially despite a 25 bp BOJ hike to a 31-year-high policy rate.",
+      "catalyst": "Expected BOJ hike plus vote/guidance information.",
+      "transmission": "expected hike -> little positive action surprise -> two dissents/cautious path signal -> shallower inferred future tightening -> U.S.-Japan carry remains attractive -> yen selling / USDJPY rise",
+      "unknowns": ["pre-event options/gamma positioning", "carry-account flow attribution", "intervention probability", "30m event-window decomposition"]
+    },
+    {
+      "case_id": "2026-09-18-btc-80k-rebound",
+      "asset": "Bitcoin",
+      "observed_move": "BTC rose roughly 4-5% and reclaimed $80k after a midweek fall below $75k.",
+      "catalyst_candidates": ["Sep. 17 spot ETF net-flow reversal", "risk-asset stabilization", "regulatory/tokenization optimism", "resilience after hawkish Fed/CLARITY disappointment"],
+      "transmission": "redemption pressure abates -> marginal spot demand returns while weak hands already sold -> price reclaims prior support/resistance -> momentum/short-covering may amplify",
+      "unknowns": ["funding/open interest/liquidation decomposition", "exchange netflows", "options gamma", "whether ETF creations persist beyond one session"]
+    }
+  ],
+  "decision_support": "WAIT / NO NEW CANONICAL TRADE THESIS. BOJ/JPY is high-information causal evidence, and BTC flow reversal is worth monitoring, but neither yet clears the actionability and persistence bar.",
+  "sources": [
+    "https://www.federalreserve.gov/releases/h41/Current/",
+    "https://www.reuters.com/world/asia-pacific/boj-raises-interest-rates-31-year-high-widely-expected-move-2026-09-18/",
+    "https://www.reuters.com/world/asia-pacific/yen-weak-ahead-boj-decision-rate-hike-expected-2026-09-18/",
+    "https://www.reuters.com/business/energy/oil-prices-fall-1-hopes-limited-supply-disruptions-2026-09-18/",
+    "https://www.reuters.com/world/china/global-markets-flows-graphic-pix-2026-09-18/",
+    "https://www.reuters.com/business/gold-extends-gains-scale-one-week-high-crude-prices-ease-2026-09-18/"
+  ],
+  "next_priority": "First resolve Sep. 15-17 secured-funding outcomes (SOFR/TGCR percentiles versus IORB, EFFR-IORB and standing-repo usage). Then obtain timestamp-defensible BTC derivatives/exchange-flow evidence to separate spot-ETF demand from leverage/short-covering in the Sep. 18 rebound.",
+  "reporting_gate": "No owner-facing report. Do not infer or claim 60 minutes of verifiable cumulative research/execution from schedule cadence or file timestamps alone."
+}
