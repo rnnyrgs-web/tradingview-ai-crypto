@@ -1,7 +1,7 @@
 """Immutable cross-engine research contract.
 
-The contract is deliberately engine-agnostic: every validator must reproduce
-the same candidate identity, chronology, direction, sizing and capital instead
+Every validator must reproduce the same candidate identity, chronology,
+direction, sizing, capital, price convention and timestamp convention instead
 of silently retuning execution assumptions.
 """
 from __future__ import annotations
@@ -23,6 +23,8 @@ class CrossEngineContract:
     direction: str = "long"
     validation_quantity: float = 1.0
     validation_initial_capital: float = 100000.0
+    execution_price_model: str = "bar_close_after_lag"
+    timestamp_unit: str = "ns"
 
     def canonical(self) -> dict:
         payload = asdict(self)
@@ -32,6 +34,8 @@ class CrossEngineContract:
         payload["strategy_family"] = payload["strategy_family"].strip().lower()
         payload["data_fingerprint"] = payload["data_fingerprint"].strip().lower()
         payload["direction"] = payload["direction"].strip().lower()
+        payload["execution_price_model"] = payload["execution_price_model"].strip().lower()
+        payload["timestamp_unit"] = payload["timestamp_unit"].strip().lower()
 
         if not payload["strategy_fingerprint"] or not payload["data_fingerprint"]:
             raise ValueError(
@@ -47,6 +51,10 @@ class CrossEngineContract:
             raise ValueError("validation quantity must be positive")
         if float(payload["validation_initial_capital"]) <= 0:
             raise ValueError("validation initial capital must be positive")
+        if payload["execution_price_model"] != "bar_close_after_lag":
+            raise ValueError("unsupported cross-engine execution price model")
+        if payload["timestamp_unit"] != "ns":
+            raise ValueError("cross-engine timestamp unit must be ns")
 
         payload["validation_quantity"] = float(payload["validation_quantity"])
         payload["validation_initial_capital"] = float(
