@@ -60,6 +60,8 @@ def run_vectorbt(
     portfolio = vbt.Portfolio.from_signals(**args)
     trades = []
     for rec in portfolio.trades.records.to_dict("records"):
+        if int(rec["status"]) != 1:
+            raise RuntimeError("VectorBT frozen path ended with an open position")
         entry_i = int(rec["entry_idx"])
         exit_i = int(rec["exit_idx"])
         trades.append(

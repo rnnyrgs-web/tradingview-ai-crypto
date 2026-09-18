@@ -358,3 +358,12 @@ def test_lean_successful_process_cannot_reuse_old_result(monkeypatch, tmp_path):
                         subprocess.CompletedProcess(a[0], 0, "", ""))
     with pytest.raises(RuntimeError, match="current run"):
         adapter.run_lean_project(contract(), tmp_path, result)
+
+
+def test_vectorbt_open_position_is_not_closed_trade_evidence():
+    pytest.importorskip("vectorbt")
+    from research_engines.vectorbt_adapter import run_vectorbt
+
+    rows, frozen, entries, _ = real_engine_fixture()
+    with pytest.raises(RuntimeError, match="open position"):
+        run_vectorbt(frozen, rows, entries, [False] * len(rows))

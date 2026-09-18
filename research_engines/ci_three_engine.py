@@ -72,6 +72,7 @@ def run_three_engine_fixture(
         price_tolerance=1e-6,
         pnl_tolerance=1e-6,
         metric_tolerance=1e-6,
+        expected_contract_fingerprint=contract.fingerprint(),
     )
     report = {
         "contract_fingerprint": contract.fingerprint(),
