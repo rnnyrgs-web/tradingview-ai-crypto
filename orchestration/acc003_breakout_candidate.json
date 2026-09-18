@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "candidate_id": "ACC-003-BTCETH-COMPRESSION-BREAKOUT-24H-V1",
-  "fingerprint_sha256": "27dd55c7caa6e6202cd9561c149cd49f70ff703657ba44af96487609b882d1ea",
+  "fingerprint_sha256": "113697e7dd7e22b38e86975bdbaddc8d1167d4b75693d1021b15272a80bf4529",
   "fingerprint_definition": "SHA-256 of canonical sorted compact JSON of this object with fingerprint_sha256 and fingerprint_definition omitted",
   "status": "PREDECLARED_SELECTION_ONLY",
   "research_only": true,
@@ -24,6 +24,13 @@
       "normalized_row_count",
       "normalized_rows_sha256"
     ],
+    "history_request": {
+      "target_bars_per_asset": 50000,
+      "max_bars_per_asset": 50000,
+      "minimum_bars_per_asset": 17520,
+      "short_history_policy": "INSUFFICIENT_EVIDENCE",
+      "coverage_policy": "use the complete normalized history actually returned up to the frozen 50000-bar bound and report exact first/last timestamps; never synthesize missing older history"
+    },
     "point_in_time_universe_required": false,
     "reason": "Fixed ex-ante BTC/ETH asset set avoids historical survivor-membership selection."
   },
