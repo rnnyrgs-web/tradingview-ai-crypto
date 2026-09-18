@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import json
+
 from .availability import engine_availability
+
 
 def preflight() -> dict:
     state = engine_availability()
@@ -13,7 +15,10 @@ def preflight() -> dict:
     if not state["nautilus"]["available"]:
         blockers.append("install nautilus_trader in the research runtime")
     if not state["lean"]["available"]:
-        blockers.append("install/configure LEAN CLI and Docker in the research runtime")
+        blockers.append(
+            "configure LEAN CLI or set LEAN_LAUNCHER_DLL to a source-built "
+            "QuantConnect.Lean.Launcher.dll with dotnet available"
+        )
     return {
         "ok": ready,
         "status": "READY" if ready else "WAIT_RESEARCH_ONLY",
@@ -23,6 +28,7 @@ def preflight() -> dict:
         "trade_authority": False,
         "promotion_authority": False,
     }
+
 
 if __name__ == "__main__":
     print(json.dumps(preflight(), indent=2))
