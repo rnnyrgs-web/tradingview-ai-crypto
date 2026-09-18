@@ -218,6 +218,7 @@ def test_identical_invalid_trade_paths_do_not_count_as_agreement(field, value):
 @pytest.mark.parametrize("field,value", [
     ("trades", 2), ("trades", True), ("ending_equity", "invalid"),
     ("win_rate", 1.1), ("return_pct", float("inf")),
+    ("ending_equity", 10 ** 400),
 ])
 def test_invalid_metrics_fail_closed_even_when_all_engines_agree(field, value):
     results = valid_engine_results()

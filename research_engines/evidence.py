@@ -8,7 +8,10 @@ import math
 
 
 def finite_number(value):
-    return type(value) in (int, float) and math.isfinite(value)
+    try:
+        return type(value) in (int, float) and math.isfinite(value)
+    except OverflowError:
+        return False
 
 
 def validate_trades(trades):

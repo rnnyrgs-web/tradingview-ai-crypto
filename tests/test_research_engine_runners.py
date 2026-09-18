@@ -232,7 +232,17 @@ def test_nautilus_requires_executed_evidence(monkeypatch):
         )
 
 
-def test_real_vectorbt_and_nautilus_reproduce_same_frozen_trade():
+@pytest.mark.parametrize("direction,cost,quantity,capital,expected_pnl", [
+    ("long", 0.0, 1.0, 100000.0, 2.0),
+    ("long", 10.0, 3.0, 20000.0, 5.694),
+    ("short", 10.0, 3.0, 20000.0, -6.306),
+    ("short", 0.0, 1.0, 100000.0, -2.0),
+])
+def test_real_vectorbt_and_nautilus_reproduce_same_frozen_trade(
+    direction, cost, quantity, capital, expected_pnl,
+):
+    from dataclasses import replace
+
     pytest.importorskip("vectorbt")
     pytest.importorskip("nautilus_trader")
 
@@ -241,6 +251,8 @@ def test_real_vectorbt_and_nautilus_reproduce_same_frozen_trade():
     from research_engines.vectorbt_adapter import run_vectorbt
 
     rows, frozen, entries, exits = real_engine_fixture()
+    frozen = replace(frozen, direction=direction, cost_bps_round_trip=cost,
+                     validation_quantity=quantity, validation_initial_capital=capital)
     vector = run_vectorbt(frozen, rows, entries, exits)
     nautilus = run_nautilus(frozen, rows, entries, exits)
 
@@ -248,6 +260,9 @@ def test_real_vectorbt_and_nautilus_reproduce_same_frozen_trade():
     assert nautilus["trades"], nautilus
     assert vector["trades"][0]["entry_ts"] == rows[1]["ts"]
     assert vector["trades"][0]["exit_ts"] == rows[3]["ts"]
+    for result in (vector, nautilus):
+        assert result["trades"][0]["pnl"] == pytest.approx(expected_pnl, abs=1e-6)
+        assert result["trades"][0]["size"] == quantity
 
     result = reconcile(
         {"vectorbt": vector, "nautilus": nautilus},
@@ -367,3 +382,31 @@ def test_vectorbt_open_position_is_not_closed_trade_evidence():
     rows, frozen, entries, _ = real_engine_fixture()
     with pytest.raises(RuntimeError, match="open position"):
         run_vectorbt(frozen, rows, entries, [False] * len(rows))
+
+
+@pytest.mark.parametrize("mode", ["unavailable", "failure", "timeout", "missing", "not_object", "not_executed"])
+def test_lean_failure_paths_cannot_return_success(monkeypatch, tmp_path, mode):
+    import subprocess
+    import research_engines.lean_adapter as adapter
+
+    result_file = tmp_path / "result.json"
+    monkeypatch.setattr(adapter, "lean_runtime", lambda: {
+        "available": mode != "unavailable", "mode": "cli", "executable": "/usr/bin/lean",
+    })
+
+    def execute(argv, **kwargs):
+        if mode == "timeout":
+            raise subprocess.TimeoutExpired(argv, kwargs["timeout"])
+        if mode == "not_object":
+            result_file.write_text("[]", encoding="utf-8")
+        elif mode == "not_executed":
+            result_file.write_text(json.dumps({
+                "executed": False, "trades": [],
+                "run_id": kwargs["env"]["LEAN_RUN_ID"],
+                "contract_fingerprint": kwargs["env"]["LEAN_CONTRACT_FINGERPRINT"],
+            }), encoding="utf-8")
+        return subprocess.CompletedProcess(argv, 1 if mode == "failure" else 0, "", "")
+
+    monkeypatch.setattr(adapter.subprocess, "run", execute)
+    with pytest.raises((RuntimeError, subprocess.TimeoutExpired)):
+        adapter.run_lean_project(contract(), tmp_path, result_file)
