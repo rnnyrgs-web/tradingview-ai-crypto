@@ -29,6 +29,42 @@ def test_contract_requires_frozen_identity_and_next_bar_execution():
         ).canonical()
 
 
+
+def test_contract_freezes_direction_sizing_capital_and_execution_conventions():
+    base = dict(
+        strategy_fingerprint="strategy",
+        symbol="BTC-USDT",
+        timeframe="1H",
+        strategy_family="trend",
+        data_fingerprint="data",
+        cost_bps_round_trip=10,
+    )
+    with pytest.raises(ValueError):
+        CrossEngineContract(**base, direction="sideways").canonical()
+    with pytest.raises(ValueError):
+        CrossEngineContract(**base, validation_quantity=0).canonical()
+    with pytest.raises(ValueError):
+        CrossEngineContract(**base, validation_initial_capital=0).canonical()
+    with pytest.raises(ValueError):
+        CrossEngineContract(
+            **base, execution_price_model="same_bar_open"
+        ).canonical()
+    with pytest.raises(ValueError):
+        CrossEngineContract(**base, timestamp_unit="ms").canonical()
+
+
+def test_signal_path_conflicts_fail_closed_after_lag():
+    contract = CrossEngineContract(
+        "strategy", "BTC-USDT", "1H", "trend", "data", 10, 1
+    )
+    with pytest.raises(ValueError, match="entry/exit conflict"):
+        lagged_signals(
+            contract,
+            [True, False, False],
+            [True, False, False],
+        )
+
+
 def test_decision_path_is_shifted_before_any_engine_executes():
     contract = CrossEngineContract(
         "strategy", "BTC-USDT", "1H", "trend", "data", 10, 1
