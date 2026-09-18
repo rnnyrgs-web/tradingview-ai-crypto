@@ -5,23 +5,81 @@ Last updated: 2026-09-18T23:27Z
 
 This is the authoritative compact handoff for agents working on `rnnyrgs-web/tradingview-ai-crypto`. Read the current default-branch `UNIFIED_PROFITABILITY_LEAD_SPEC.md` first and obey it as the exhaustive operating contract. Also obey the merged `SIGNAL_BACKTEST_CHARTS_SPEC.md`. When this file conflicts with an older chat summary, stale branch note, or stale base coordination row, verify current GitHub/runtime evidence and use the canonical coordination loader state. Do **not** read only the base JSON and treat an overridden historical task row as current.
 
-## AGENT COMMAND / PROMPT DESIGN RULE
+## RESULT-ORIENTED AGENT COMMAND / PROMPT DESIGN RULE
 
-All agents and all new ChatGPT/Work/Sol/Astra/Claude/Claude Code sessions must use **conditional, evidence-gated instructions** instead of broad absolute prohibitions whenever the action could become legitimate under clearly defined conditions.
+All agents and all new ChatGPT/Work/Sol/Astra/Claude/Claude Code sessions must use **goal-first, conditional, evidence-gated, progress-seeking instructions**. Commands should drive the system toward useful results while preserving scientific integrity. The system must be truth-seeking and result-oriented, **not rejection-oriented and not positivity-seeking**.
 
-Default command pattern:
+### Default grammar
 
-- **Do not do X unless condition/evidence Y is satisfied.**
-- **If/when Y is genuinely satisfied, do Z and report the exact supporting evidence, metrics, assumptions, and limitations.**
-- State the desired positive objective and the valid success path, not only what is forbidden.
-- Never let a negatively worded instruction suppress a genuine successful result, useful exploration, or scientifically justified action.
-- For research decisions, pair rejection/fail-closed language with the exact acceptance condition and what must happen if that condition passes.
-- For previously rejected ideas, prohibit blind repetition **unless** materially new data, a genuinely different hypothesis, or a documented scientific reason justifies reopening them; record why the retest is different.
-- For generated Work/agent handoffs, include: objective, evidence gates, allowed success path, failure/rejection path, capacity/checkpoint behavior, and exact reporting requirements.
+Prefer this structure:
 
-Use truly unconditional prohibitions only where they are actually invariant: do not fabricate evidence or test results; do not expose secrets; do not bypass permissions; do not weaken frozen scientific/chronology/OOS/integrity gates merely to obtain a pass; and do not take destructive/irreversible or unauthorized live-trading actions.
+1. **OBJECTIVE:** state the positive result to achieve.
+2. **EXPLORE:** allow scientifically reasonable routes that can achieve the objective within the approved budget/safety boundaries.
+3. **GATE:** "Do not do X **unless** condition/evidence Y is satisfied."
+4. **SUCCESS PATH:** "If/when Y is genuinely satisfied, do Z and report the exact evidence, metrics, assumptions, and limitations."
+5. **FAILURE PATH:** "If the current hypothesis fails, preserve the negative evidence, explain the failure mechanism, and advance to the highest-value materially distinct next hypothesis."
+6. **WAIT PATH:** if one experiment must wait for prospective/forward evidence, scope WAIT to that experiment and continue independent useful work that cannot contaminate it.
+7. **STOP CONDITIONS:** stop only when the bounded milestone is complete, capacity requires checkpointing, a genuine user-only blocker exists, or further scientifically valid progress truly requires future evidence.
+8. **HANDOFF:** commit/push durable progress and record the exact next action before ending.
 
-This rule applies to every future programming/research command generated from this repository state. Agents should be truth-seeking rather than optimism-seeking or pessimism-seeking.
+### No dead-end rejection
+
+A rejection is a **state transition**, not the end of the research program.
+
+- **Reject -> learn -> record -> pivot -> continue.**
+- Every rejection/fail-closed instruction must state the exact acceptance condition **and** the exact next useful action if the candidate fails.
+- The absence of a passing candidate is **not** by itself a stopping condition.
+- Do not spend repeated cycles rescuing the same failed fingerprint through post-hoc tuning **unless** materially new data, a genuinely different hypothesis, or a documented scientific reason justifies reopening it.
+- If repeated variants fail for the same structural reason, close that family temporarily and redirect effort to a materially different economic mechanism.
+
+### Exploration versus promotion
+
+Separate **broad cheap exploration** from **strict expensive validation/promotion**.
+
+- Cheap deterministic screening may generate/rank multiple predeclared hypotheses where chronology and protected evidence remain safe.
+- Exactly one candidate should consume expensive deep-validation capacity at a time unless the canonical contract explicitly allows an equivalent controlled exception.
+- Strict fail-closed rules belong at evidence, OOS, forward, promotion, broker, and irreversible-action gates; they must not unnecessarily suppress hypothesis generation or independent low-cost research.
+- Never weaken scientific gates merely to obtain a positive result. **However, never allow those gates to prevent continued exploration of new independent hypotheses.**
+
+### Success must be recognized
+
+Never let cautious or negatively worded instructions suppress a genuine successful result.
+
+- If predefined rigorous evidence/validation criteria are genuinely satisfied, advance the candidate according to the canonical protocol and report the exact supporting evidence and limitations.
+- Success reporting must distinguish IMPLEMENTED, BACKTESTED, OOS TESTED, ROBUSTNESS TESTED, CROSS-ENGINE VERIFIED, FORWARD TESTED, LIVE TESTED, and PROFITABLE LIVE EVIDENCE.
+- A real success must be recognized; a false positive must not be manufactured.
+
+### Optimize for information gain and forward progress
+
+When choosing the next experiment, prefer the action with the highest expected scientific information gain and economic relevance, not the action most likely to produce an attractive backtest.
+
+A bounded research milestone counts as progress when it produces either:
+
+- a candidate that legitimately advances through a predefined evidence gate; **or**
+- a high-quality falsification/rejection that materially narrows the search and launches/queues the next materially distinct hypothesis.
+
+If one lane is waiting on future evidence, continue allowed independent work such as hypothesis generation, Frizz research, Big-Move Intelligence, Money Intelligence, data-quality improvement, or falsification work **unless** that work would contaminate the protected evidence or violate the single-deep-candidate contract.
+
+### Work/agent handoff language
+
+Every generated Work/agent command should include:
+
+- positive objective;
+- current highest-value milestone;
+- allowed exploration scope;
+- evidence gates;
+- explicit success path;
+- explicit failure -> learning -> pivot path;
+- what may continue while another experiment waits;
+- capacity/checkpoint behavior;
+- exact reporting requirements;
+- exact stop conditions.
+
+Prefer **UNLESS / IF / THEN / OTHERWISE / PIVOT / CONTINUE / ADVANCE** over a command dominated by **DON'T / NEVER / WAIT / REJECT / STOP**.
+
+Use truly unconditional prohibitions only where they are genuine invariants: do not fabricate evidence or test results; do not expose secrets; do not bypass permissions; do not weaken frozen chronology/OOS/integrity gates merely to obtain a pass; and do not take destructive/irreversible or unauthorized live-trading actions.
+
+This rule applies to every future programming/research command generated from this repository state.
 
 ## PRIMARY OBJECTIVE
 
