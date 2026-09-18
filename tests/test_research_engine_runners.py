@@ -54,6 +54,20 @@ def real_engine_fixture():
     return rows, frozen, entries, exits
 
 
+
+def write_lean_manifest(project, launcher_config="/tmp/config.json"):
+    payload = {
+        "config": launcher_config,
+        "algorithm-type-name": "FrozenPathResearchAlgorithm",
+        "algorithm-language": "CSharp",
+        "algorithm-location": "/tmp/algorithm.dll",
+        "data-folder": "/tmp/data",
+        "close-automatically": True,
+    }
+    (project / "lean_args.json").write_text(json.dumps(payload), encoding="utf-8")
+    return payload
+
+
 def test_dataset_fingerprint_is_deterministic_and_chronological():
     assert data_fingerprint(bars()) == data_fingerprint(bars())
     with pytest.raises(ValueError):
@@ -133,7 +147,20 @@ def test_lean_source_launcher_requires_normalized_frozen_evidence(
 
     monkeypatch.setattr(adapter.subprocess, "run", fake_run)
     out = adapter.run_lean_project(frozen, project, result)
-    assert seen["argv"] == ["/usr/bin/dotnet", str(launcher.resolve())]
+    expected = ["/usr/bin/dotnet", str(launcher.resolve())]
+    for key in (
+        "config",
+        "algorithm-type-name",
+        "algorithm-language",
+        "algorithm-location",
+        "data-folder",
+        "close-automatically",
+    ):
+        value = manifest[key]
+        if isinstance(value, bool):
+            value = "true" if value else "false"
+        expected.extend([f"--{key}", str(value)])
+    assert seen["argv"] == expected
     assert Path(seen["cwd"]) == launcher.parent
     assert seen["shell"] is False
     assert out["ok"] is True
