@@ -121,6 +121,7 @@ def test_audit_binds_exact_dataset_predicate_and_locked_oos_boundaries():
     assert len(payload["dataset_manifest"]["missing_ranked_symbols"]) == 3
     assert payload["dataset_manifest"]["survivorship_safe"] is False
     assert payload["scientific_limitations"]["promotion_grade"] is False
+    assert payload["scientific_limitations"]["pre_oos_reproduced_from_captured_rows"] is True
     assert payload["selection_result"]["untouched_oos_status"] == "LOCKED_UNTOUCHED_OOS"
     assert payload["selection_result"]["untouched_oos_opened_for_candidate_count"] == 0
     assert payload["selection_result"]["eligible_for_promotion_review"] is False
@@ -130,25 +131,20 @@ def test_audit_binds_exact_dataset_predicate_and_locked_oos_boundaries():
     assert subset["selection_predicate"]["passes_all"] is runner._pre_oos_candidate_ok(
         envelope["payload"]["candidates"][0]["liquidity_subsets"]["15"]["pre_oos"]
     )
+    assert subset["pre_oos_reproduced_from_dataset"] is True
     assert subset["split_boundaries"]["train"]["first_ts"] < subset["split_boundaries"]["validation"]["first_ts"]
     assert subset["split_boundaries"]["validation"]["last_ts"] < subset["split_boundaries"]["untouched_oos"]["first_ts"]
     assert subset["untouched_oos_scored"] is False
 
 
-def test_audit_hash_changes_when_exact_scored_row_changes():
+def test_audit_refuses_when_exact_scored_row_no_longer_matches_sealed_pre_oos():
     envelope, captured = _fixture()
-    original = build_selection_audit(envelope, captured)["payload"]["dataset_manifest"]["dataset_sha256"]
     changed = copy.deepcopy(captured)
     changed["research_histories"]["ASSET00-USDT"][100]["close"] += 0.01
     changed["liquidity_histories"][15]["ASSET00-USDT"][100]["close"] += 0.01
 
-    with pytest.raises(RuntimeError, match="split drift|fingerprint|predicate"):
-        # The audit refuses to quietly bind data that no longer matches the sealed
-        # pre-OOS evidence. If future scoring changes make the split identical, the
-        # dataset hash still changes and the assertion below can be used instead.
+    with pytest.raises(RuntimeError, match="does not reproduce"):
         build_selection_audit(envelope, changed)
-
-    assert original
 
 
 def test_audit_refuses_opened_untouched_oos():
