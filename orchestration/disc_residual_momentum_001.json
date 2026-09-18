@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "DISC-RESIDUAL-MOMENTUM-001",
+  "fingerprint_id": "DISC-RESIDUAL-MOMENTUM-001-v1",
+  "status": "PREDECLARED_SELECTION_ONLY",
+  "research_only": true,
+  "trade_authority": false,
+  "promotion_authority": false,
+  "hypothesis": "Beta-neutral idiosyncratic cross-sectional momentum improves after-cost rank/spread evidence versus the frozen raw-momentum control on pre-OOS train/validation evidence.",
+  "economic_mechanism": "Asset-specific information and flow may diffuse more slowly than broad-market beta, leaving persistence in residual returns after common crypto market movement is removed.",
+  "source": {
+    "venue": "OKX",
+    "bar_interval": "1H",
+    "completed_bars_only": true,
+    "universe_origin": "current_liquid_ranked_spot_universe_for_cheap_screen_only",
+    "universe_size": 30,
+    "liquidity_subsets": [15, 30],
+    "minimum_subset_coverage": 0.8,
+    "point_in_time_universe_required_to_advance": true,
+    "current_survivor_evidence_policy": "May be used only as explicitly labeled exploratory cheap-screen evidence; cannot unlock untouched OOS, deep validation, promotion, or terminal fingerprint rejection by itself.",
+    "history_bars_per_asset": 3000,
+    "dataset_identity_required": [
+      "exact_source",
+      "coverage_start",
+      "coverage_end",
+      "normalized_row_count",
+      "normalized_rows_sha256",
+      "ranked_symbols",
+      "missing_ranked_symbols"
+    ]
+  },
+  "primary_horizon": "24h",
+  "feature": {
+    "lookbacks_hours": [4, 16, 64],
+    "forward_bars": 24,
+    "beta_window_hours": 64,
+    "beta_clip": 3.0,
+    "minimum_beta_observations": 8,
+    "market_factor": "contemporaneous_equal_weight_return_of_same_scored_cross_section",
+    "score": "mean(asset_lookback_return - trailing_beta * market_lookback_return) / trailing_idiosyncratic_return_stdev",
+    "future_data_policy": "Forward returns are labels only and never enter beta, market factor, volatility, feature construction, or selection."
+  },
+  "baseline": {
+    "id": "ACC-002-RAW-MOMENTUM-CONTROL",
+    "feature": "volatility_normalized_multi_lookback_momentum",
+    "same_lookbacks_hours": [4, 16, 64],
+    "same_forward_bars": 24,
+    "same_liquidity_subsets": [15, 30]
+  },
+  "costs": {
+    "base_round_trip_bps": 12,
+    "stress_multipliers": [1.0, 1.5, 2.0, 3.0],
+    "selection_uses_max_stress": true
+  },
+  "chronology": {
+    "split": "canonical purged chronological 60% train / 20% validation / 20% untouched OOS",
+    "purge_bars": 24,
+    "non_overlapping_evaluation": true,
+    "untouched_oos": "LOCKED",
+    "genuine_forward": "NOT_OPENED"
+  },
+  "pre_oos_pass_rule": {
+    "required_for_each_supported_subset": [
+      "train independent timestamps >= 20",
+      "validation independent timestamps >= 20",
+      "train mean rank IC > 0",
+      "validation mean rank IC > 0",
+      "train max-stress after-cost top-minus-bottom spread > 0",
+      "validation max-stress after-cost top-minus-bottom spread > 0",
+      "validation max-stress positive-net-spread rate >= 0.50",
+      "challenger worst pre-OOS max-stress net spread > control worst pre-OOS max-stress net spread",
+      "challenger worst pre-OOS rank IC >= control worst pre-OOS rank IC"
+    ],
+    "minimum_passing_liquidity_subsets": 2,
+    "all_supported_subset_conditions_required": true,
+    "point_in_time_universe_must_be_verified_before_deep_freeze": true
+  },
+  "search_breadth": {
+    "primary_candidate_count": 1,
+    "parameter_optimization_allowed": false,
+    "post_outcome_parameter_changes_require_new_fingerprint": true
+  },
+  "selection_result_policy": {
+    "on_pre_oos_fail_with_unverified_point_in_time_universe": "PRESERVE_EXPLORATORY_NEGATIVE_EVIDENCE_AND_DEPRIORITIZE; do not terminally reject exact fingerprint solely from survivor-biased universe evidence.",
+    "on_pre_oos_pass_with_unverified_point_in_time_universe": "BLOCKED_POINT_IN_TIME_UNIVERSE; keep OOS locked and either obtain genuine point-in-time membership or pivot to a cleaner fixed-asset hypothesis.",
+    "on_pre_oos_pass_with_verified_point_in_time_universe": "FREEZE_EXACT_FINGERPRINT_AND_DATASET; request single-candidate deep validation; untouched OOS remains unopened until that transition is canonical.",
+    "attractive_curve_can_bypass_gate": false
+  },
+  "budget": {
+    "new_paid_data_services": false,
+    "new_paid_compute": false,
+    "project_monthly_variable_ceiling_usd": 30
+  },
+  "contract_fingerprint_definition": "SHA-256 of canonical sorted compact JSON of this object with contract_sha256 and contract_fingerprint_definition omitted",
+  "contract_sha256": "8d4d4e92d1a835ea86344bd12c26051f29eaa922af3f1a7010ecda275178c153"
+}
