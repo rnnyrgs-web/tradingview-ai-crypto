@@ -1,7 +1,7 @@
 # AI_STATE.md
 
-Last reconciled: 2026-09-18T23:08Z
-Last updated: 2026-09-18T23:08Z
+Last reconciled: 2026-09-18T23:21Z
+Last updated: 2026-09-18T23:21Z
 
 This is the authoritative compact handoff for agents working on `rnnyrgs-web/tradingview-ai-crypto`. Read the current default-branch `UNIFIED_PROFITABILITY_LEAD_SPEC.md` first and obey it as the exhaustive operating contract. Also obey the merged `SIGNAL_BACKTEST_CHARTS_SPEC.md`. When this file conflicts with an older chat summary, stale branch note, or stale base coordination row, verify current GitHub/runtime evidence and use the canonical coordination loader state. Do **not** read only the base JSON and treat an overridden historical task row as current.
 
@@ -13,9 +13,11 @@ Profitability means net expectancy after realistic fees, spread, slippage, fundi
 
 ## CURRENT CANONICAL STATE
 
-- Reconciled GitHub `main`: **`c897f0eed8dd286c2f28c9470599919aa479174d`**, a GitHub-verified merge commit for PR #388.
-- PR #388 is merged. It quarantines the unfocused legacy hourly Cloud Crypto Research matrices so they cannot bypass the canonical one-strategy/OOS controls. This is containment/cost/scientific-integrity work, not profitability evidence.
-- Both Render services (`crypto-continuous-coordinator` and `tradingview-ai-crypto`) were verified **live on exact commit `c897f0ee...`** after that merge.
+- Reconciled GitHub `main`: **`6e95408c88b389bbb100bb8841a97695b785ef9a`**, the merge commit for PR #397.
+- PR #396 is merged and adds immutable ACC-002 evidence-contract helpers for exact normalized-row hashes, ranked-universe/missing-symbol evidence, split timestamp boundaries, full pre-OOS predicate details, and declared search breadth.
+- PR #397 is merged. It adds the fail-closed 24h SELECTION-only ACC-002 audit runner plus a bounded main-push workflow that reruns only the already-declared focused screen, recomputes pre-OOS evidence from captured rows, seals the audit artifact, and keeps untouched OOS locked. Its exact pre-merge head `a4c703fe...` passed Security & Reliability.
+- The fresh post-merge ACC-002 audit result has **not yet been reconciled into this canonical state**. Do not infer that a candidate passed merely because #397 merged; the sealed artifact/result itself must be verified first.
+- Both Render services (`crypto-continuous-coordinator` and `tradingview-ai-crypto`) were last verified **live on exact commit `c897f0ee...`** after PR #388. PRs #396/#397 are research/evidence tooling; do not claim a newer production deployment without exact deployed-SHA evidence.
 - `main` is still not branch-protected. Direct commits therefore remain a governance/integration risk; always verify actual head before acting and require exact-head validation for proposed changes.
 - Canonical lifecycle remains **SELECTION** with **no active strategy candidate frozen**.
 - Broker/live authority remains **OFF**. Research/paper/shadow only. `live_promotions.json` must remain empty unless every canonical gate and explicit authorization allow otherwise.
@@ -37,22 +39,11 @@ Latest recorded mixed paper-account snapshot in issue #112 was losing overall an
 
 ## SINGLE HIGHEST-VALUE BOTTLENECK
 
-The highest-value blocker to finding the one strategy is now **scientifically reproducible selection evidence**, not more engine scaffolding or more strategy variants.
+The implementation bottleneck described previously is now merged. The highest-value blocker is **reconciling one fresh sealed ACC-002 selection-audit artifact from exact main `6e95408c...` and making the next strategy decision from that evidence**.
 
-Before spending another untouched holdout or widening the hypothesis search, ACC-002 must produce an immutable, audit-ready selection artifact that binds the exact data actually scored. At minimum it must persist:
+Before spending another untouched holdout or widening the hypothesis search, verify that the artifact produced by the merged audit path actually contains and passes its own integrity/reproducibility checks for: exact source/bar identity; per-symbol first/last timestamps and row counts; exact ranked universe and missing symbols without substitution; deterministic normalized-row SHA-256; explicit point-in-time/survivorship status; train/validation/locked-OOS timestamp boundaries; the frozen three-variant search breadth; every pre-OOS predicate/failure reason; realistic cost stress; and `research_only=true` / `trade_authority=false` with untouched OOS still locked.
 
-1. exact source venue/instrument/bar identity per symbol;
-2. exact first/last timestamp and observation count per scored symbol;
-3. exact requested ranked universe and missing symbols, without rank substitution;
-4. point-in-time membership provenance/status and an explicit fail-closed survivorship verdict;
-5. a canonical SHA-256 over the exact normalized source rows used by the screen (or an immutable archive reference plus hash);
-6. train/validation/locked-OOS **timestamp** boundaries, not only array indices;
-7. the declared candidate grid/trial count and full pre-OOS selection predicate;
-8. every predicate component and failure reason, including validation max-cost positive-net-spread rate;
-9. realistic cost assumptions/stress and an explicit statement that the spread proxy is not executable portfolio P&L;
-10. `research_only=true`, `trade_authority=false`, untouched OOS locked in SELECTION mode.
-
-If point-in-time membership is unavailable, the artifact must say so and remain non-promotable; never reconstruct historical membership from today's survivors.
+If point-in-time membership is unavailable, the artifact remains non-promotable even if a pre-OOS variant looks attractive. If all three predeclared ACC-002 variants still fail the frozen selection rule, record that screen as rejected and move to one materially distinct, predeclared economic mechanism. If a variant genuinely satisfies the frozen pre-OOS criteria, freeze its exact fingerprint first and only then follow the canonical untouched-OOS gate; do not tune it after seeing the result.
 
 ## CANONICAL DATA-MARKET HANDOFF
 
@@ -66,7 +57,10 @@ Do not select another data candidate while DATA-BREADTH-001 is awaiting that pro
 
 ## EXACT NEXT STEP
 
-**Do not add another strategy family or tune the failed three ACC-002 variants yet.** Implement/validate the immutable ACC-002 dataset + selection-evidence contract above on an isolated branch, with regression tests proving that provenance/hash/split metadata cannot be silently omitted or mutated and that SELECTION mode cannot open OOS. Then rerun only the already-declared focused screen on the frozen evidence input. If all candidates still fail, reject that screen cleanly and move to the next materially distinct, predeclared economic mechanism rather than parameter-mining the same family.
+**Do not add another strategy family or tune the three ACC-002 variants until the merged #397 audit result is reconciled.** Retrieve/inspect the sealed audit produced from exact main `6e95408c...` (or rerun the same fixed audit on that exact code/data path if the first run failed operationally), verify its integrity hash, dataset manifest, full pre-OOS predicate, split timestamps, survivorship verdict, and locked-OOS status, then make exactly one decision:
+
+- if all three frozen variants fail, mark this ACC-002 screen rejected and advance to one materially distinct, predeclared economic mechanism rather than parameter-mining the same family;
+- if a variant genuinely passes every frozen pre-OOS selection/stability criterion, freeze its exact fingerprint and proceed through the canonical untouched-OOS gate without changing parameters.
 
 A 24h lane remains preferable while 7d history/point-in-time evidence is weaker. Genuine prospective point-in-time cohorts from DATA-BREADTH-001 must continue maturing naturally; never backfill them.
 
