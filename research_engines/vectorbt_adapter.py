@@ -1,39 +1,81 @@
-"""VectorBT research adapter.
-
-The adapter consumes an already-frozen position path. Strategy discovery and
-parameter selection must happen before this layer.
-"""
-
+"""VectorBT adapter for an immutable frozen signal path."""
 from __future__ import annotations
 
 from .availability import require_engine
+from .dataset import canonical_bars
+from .evidence import evidence
+from .signals import lagged_signals
 
 
-def run_vectorbt(contract, bars, entries, exits, direction="long") -> dict:
+def run_vectorbt(
+    contract,
+    bars,
+    entries,
+    exits,
+    direction=None,
+    initial_capital=None,
+):
     require_engine("vectorbt")
     import pandas as pd
     import vectorbt as vbt
 
-    if len(bars) != len(entries) or len(bars) != len(exits):
+    rows = canonical_bars(bars)
+    if not (len(rows) == len(entries) == len(exits)):
         raise ValueError("bars/entries/exits length mismatch")
-    close = pd.Series([float(row["close"]) for row in bars])
-    fees = float(contract.canonical()["cost_bps_round_trip"]) / 20000.0
-    kwargs = dict(close=close, entries=pd.Series(entries, dtype=bool), exits=pd.Series(exits, dtype=bool), fees=fees, freq=contract.timeframe)
-    if direction == "short":
-        kwargs = dict(close=close, short_entries=pd.Series(entries, dtype=bool), short_exits=pd.Series(exits, dtype=bool), fees=fees, freq=contract.timeframe)
-    portfolio = vbt.Portfolio.from_signals(**kwargs)
-    trades = portfolio.trades.records_readable
-    returns = trades["Return"].astype(float) * 100.0 if len(trades) else []
-    avg = float(returns.mean()) if len(trades) else 0.0
-    return {
-        "ok": True,
-        "engine": "vectorbt",
-        "contract_fingerprint": contract.fingerprint(),
-        "research_only": True,
-        "trade_authority": False,
-        "metrics": {
-            "trades": int(len(trades)),
-            "avg_trade_pct": avg,
-            "max_drawdown_pct": float(portfolio.max_drawdown()) * 100.0,
-        },
+
+    frozen = contract.canonical()
+    contract_direction = frozen["direction"]
+    if direction is not None and str(direction).lower() != contract_direction:
+        raise ValueError("adapter direction disagrees with frozen contract")
+    if (
+        initial_capital is not None
+        and abs(float(initial_capital) - frozen["validation_initial_capital"]) > 1e-9
+    ):
+        raise ValueError("adapter capital disagrees with frozen contract")
+
+    shifted_entries, shifted_exits = lagged_signals(contract, entries, exits)
+    close = pd.Series([float(row["close"]) for row in rows])
+    fee = float(frozen["cost_bps_round_trip"]) / 20000.0
+    capital = float(frozen["validation_initial_capital"])
+    quantity = float(frozen["validation_quantity"])
+
+    args = {
+        "close": close,
+        "fees": fee,
+        "freq": frozen["timeframe"],
+        "init_cash": capital,
+        "size": quantity,
     }
+    if contract_direction == "short":
+        args.update(
+            short_entries=pd.Series(shifted_entries, dtype=bool),
+            short_exits=pd.Series(shifted_exits, dtype=bool),
+        )
+    else:
+        args.update(
+            entries=pd.Series(shifted_entries, dtype=bool),
+            exits=pd.Series(shifted_exits, dtype=bool),
+        )
+
+    portfolio = vbt.Portfolio.from_signals(**args)
+    trades = []
+    for rec in portfolio.trades.records.to_dict("records"):
+        entry_i = int(rec["entry_idx"])
+        exit_i = int(rec["exit_idx"])
+        trades.append(
+            {
+                "direction": contract_direction,
+                "entry_ts": int(rows[entry_i]["ts"]),
+                "exit_ts": int(rows[exit_i]["ts"]),
+                "entry_price": float(rec["entry_price"]),
+                "exit_price": float(rec["exit_price"]),
+                "size": float(rec["size"]),
+                "fees": float(rec["entry_fees"] + rec["exit_fees"]),
+                "pnl": float(rec["pnl"]),
+            }
+        )
+
+    out = evidence("vectorbt", contract, trades, capital)
+    out["decision_lag_bars"] = int(frozen["decision_lag_bars"])
+    out["validation_quantity"] = quantity
+    return out
