@@ -40,3 +40,12 @@ def test_reconciliation_requires_all_engines_same_contract():
     result = reconcile({"vectorbt": good, "nautilus": good, "lean": {**good, "contract_fingerprint": "different"}})
     assert result["ok"] is False
     assert result["same_contract"] is False
+
+
+def test_reconciliation_fails_on_trade_path_disagreement():
+    base={"ok":True,"contract_fingerprint":"same","metrics":{"trades":1,"avg_trade_pct":0.1,"max_drawdown_pct":0.0,"return_pct":0.1,"win_rate":1.0,"ending_equity":100100.0},
+          "trades":[{"direction":"long","entry_ts":1,"exit_ts":2,"entry_price":10.0,"exit_price":11.0,"size":100.0,"fees":1.0,"pnl":99.0}]}
+    altered={**base,"trades":[{**base["trades"][0],"exit_price":11.5}]}
+    result=reconcile({"vectorbt":base,"nautilus":base,"lean":altered})
+    assert result["ok"] is False
+    assert "lean:trade[0].exit_price" in result["mismatches"]
