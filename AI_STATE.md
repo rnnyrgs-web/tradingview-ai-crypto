@@ -1,7 +1,7 @@
 # AI_STATE.md
 
-Last reconciled: 2026-09-18T23:21Z
-Last updated: 2026-09-18T23:27Z
+Last reconciled: 2026-09-18T23:41Z
+Last updated: 2026-09-18T23:41Z
 
 This is the authoritative compact handoff for agents working on `rnnyrgs-web/tradingview-ai-crypto`. Read the current default-branch `UNIFIED_PROFITABILITY_LEAD_SPEC.md` first and obey it as the exhaustive operating contract. Also obey the merged `SIGNAL_BACKTEST_CHARTS_SPEC.md`. When this file conflicts with an older chat summary, stale branch note, or stale base coordination row, verify current GitHub/runtime evidence and use the canonical coordination loader state. Do **not** read only the base JSON and treat an overridden historical task row as current.
 
@@ -200,17 +200,20 @@ Profitability means net expectancy after realistic fees, spread, slippage, fundi
 
 ## CURRENT CANONICAL STATE
 
-- Reconciled GitHub `main`: **`6e95408c88b389bbb100bb8841a97695b785ef9a`**, the merge commit for PR #397.
+- Reconciled GitHub `main`: **`2e4f529554614f9ba232a7e279984b752d6c7c1e`**, the merge commit for PR #399.
+- PR #399 is merged and makes the result-oriented command language plus the high-agency strategic-achiever lead behavior canonical for all future sessions.
 - PR #396 is merged and adds immutable ACC-002 evidence-contract helpers for exact normalized-row hashes, ranked-universe/missing-symbol evidence, split timestamp boundaries, full pre-OOS predicate details, and declared search breadth.
-- PR #397 is merged. It adds the fail-closed 24h SELECTION-only ACC-002 audit runner plus a bounded main-push workflow that reruns only the already-declared focused screen, recomputes pre-OOS evidence from captured rows, seals the audit artifact, and keeps untouched OOS locked. Its exact pre-merge head `a4c703fe...` passed Security & Reliability.
-- The fresh post-merge ACC-002 audit result has **not yet been reconciled into this canonical state**. Do not infer that a candidate passed merely because #397 merged; the sealed artifact/result itself must be verified first.
-- Both Render services (`crypto-continuous-coordinator` and `tradingview-ai-crypto`) were last verified **live on exact commit `c897f0ee...`** after PR #388. PRs #396/#397 are research/evidence tooling; do not claim a newer production deployment without exact deployed-SHA evidence.
+- PR #397 is merged and produced the fixed 24h ACC-002 SELECTION audit on exact commit `6e95408c...`.
+- The sealed ACC-002 audit is now reconciled: GitHub Actions run `35405308190` completed successfully and uploaded artifact `acc002-selection-evidence-6e95408c88b389bbb100bb8841a97695b785ef9a` with archive digest `sha256:5ad033ac97e057aafea0f4e72faca08c52ee19547f584c050f3ecf1126965efd`.
+- That audit recorded dataset SHA-256 `896a127376c80972d07f58ca605a5673f186a2d9ea7ffda8f5266dc67b11890e`, **eligible_candidate_count = 0**, **point_in_time_membership_verified = false**, `research_only=true`, `trade_authority=false`, and `untouched_oos_status=LOCKED_UNTOUCHED_OOS`.
+- Therefore the current ACC-002 screen is **formally rejected at selection**. Untouched OOS remains unopened. This is a learning/pivot event, not a stop condition.
+- Both Render services (`crypto-continuous-coordinator` and `tradingview-ai-crypto`) were last verified **live on exact commit `c897f0ee...`** after PR #388. Do not claim a newer production deployment without exact deployed-SHA evidence.
 - `main` is still not branch-protected. Direct commits therefore remain a governance/integration risk; always verify actual head before acting and require exact-head validation for proposed changes.
-- Canonical lifecycle remains **SELECTION** with **no active strategy candidate frozen**.
+- Canonical lifecycle remains **SELECTION** with **no active deep strategy candidate frozen yet**.
 - Broker/live authority remains **OFF**. Research/paper/shadow only. `live_promotions.json` must remain empty unless every canonical gate and explicit authorization allow otherwise.
 - Combined variable paid-project ceiling remains approximately **$30/month total** across approved paid project resources. Do not raise it or add paid services without explicit user authorization.
 
-## CURRENT PROFITABILITY EVIDENCE — NO VALIDATED EDGE YET
+## CURRENT PROFITABILITY EVIDENCE — ACC-002 REJECTED; NO VALIDATED EDGE YET
 
 The freshest recorded focused ACC-002 selection evidence on 2026-09-18 rejected all three predeclared 24h relative-strength variants **before untouched OOS**:
 
@@ -226,11 +229,18 @@ Latest recorded mixed paper-account snapshot in issue #112 was losing overall an
 
 ## SINGLE HIGHEST-VALUE BOTTLENECK
 
-The implementation bottleneck described previously is now merged. The highest-value blocker is **reconciling one fresh sealed ACC-002 selection-audit artifact from exact main `6e95408c...` and making the next strategy decision from that evidence**.
+ACC-002 is no longer the bottleneck; its sealed audit resolved it with zero eligible candidates and locked OOS.
 
-Before spending another untouched holdout or widening the hypothesis search, verify that the artifact produced by the merged audit path actually contains and passes its own integrity/reproducibility checks for: exact source/bar identity; per-symbol first/last timestamps and row counts; exact ranked universe and missing symbols without substitution; deterministic normalized-row SHA-256; explicit point-in-time/survivorship status; train/validation/locked-OOS timestamp boundaries; the frozen three-variant search breadth; every pre-OOS predicate/failure reason; realistic cost stress; and `research_only=true` / `trade_authority=false` with untouched OOS still locked.
+The highest-value bottleneck is now **turning that rejection into a fast, durable, autonomous pivot toward materially distinct strategy discovery** without drifting back into old crypto-signaling/dashboard work.
 
-If point-in-time membership is unavailable, the artifact remains non-promotable even if a pre-OOS variant looks attractive. If all three predeclared ACC-002 variants still fail the frozen selection rule, record that screen as rejected and move to one materially distinct, predeclared economic mechanism. If a variant genuinely satisfies the frozen pre-OOS criteria, freeze its exact fingerprint first and only then follow the canonical untouched-OOS gate; do not tune it after seeing the result.
+The next architecture/research milestone must:
+- persist ACC-002 as rejected with its exact evidence/fingerprint and failure reasons;
+- establish or strengthen a Strategy Discovery Supervisor that maintains a ranked queue of cheap, predeclared, materially distinct hypotheses while allowing only one expensive deep-validation candidate at a time;
+- include a dedicated Frizz/PlayBit EMA lane that faithfully fingerprints/tests the rules across assets/timeframes with multiple-testing protection;
+- support Big-Move Intelligence and Money Intelligence as evidence/hypothesis-generation lanes that feed measurable, testable ideas into the same validation pipeline;
+- select the next deep candidate because it earned that position through evidence/information value, not because it produced the prettiest in-sample result.
+
+Old crypto signal generation, dashboard polish, alert features, and signal-P&L presentation remain deprioritized **unless** they are strictly necessary to validate or later operationalize a genuinely validated strategy.
 
 ## CANONICAL DATA-MARKET HANDOFF
 
@@ -244,12 +254,20 @@ Do not select another data candidate while DATA-BREADTH-001 is awaiting that pro
 
 ## EXACT NEXT STEP
 
-**Do not add another strategy family or tune the three ACC-002 variants until the merged #397 audit result is reconciled.** Retrieve/inspect the sealed audit produced from exact main `6e95408c...` (or rerun the same fixed audit on that exact code/data path if the first run failed operationally), verify its integrity hash, dataset manifest, full pre-OOS predicate, split timestamps, survivorship verdict, and locked-OOS status, then make exactly one decision:
+**Pivot now; do not spend another research cycle rescuing ACC-002 unless materially new data or a genuinely different scientific hypothesis justifies reopening it.**
 
-- if all three frozen variants fail, mark this ACC-002 screen rejected and advance to one materially distinct, predeclared economic mechanism rather than parameter-mining the same family;
-- if a variant genuinely passes every frozen pre-OOS selection/stability criterion, freeze its exact fingerprint and proceed through the canonical untouched-OOS gate without changing parameters.
+Use a bounded implementation/research milestone to:
 
-A 24h lane remains preferable while 7d history/point-in-time evidence is weaker. Genuine prospective point-in-time cohorts from DATA-BREADTH-001 must continue maturing naturally; never backfill them.
+1. Persist the sealed ACC-002 rejection and failure evidence in durable rejected-strategy memory.
+2. Build/strengthen the Strategy Discovery Supervisor foundation and ranked hypothesis queue.
+3. Register materially distinct predeclared strategy hypotheses for cheap screening, including the dedicated Frizz/PlayBit EMA lane.
+4. Keep Big-Move Intelligence and Money Intelligence running as independent evidence/hypothesis-generation lanes where they cannot contaminate protected evidence.
+5. Run cheap deterministic screening with chronology/provenance/cost/multiple-testing controls sufficient for selection.
+6. Promote **exactly one** strongest eligible candidate into expensive deep validation.
+7. If no hypothesis qualifies, learn from the failures, generate the next materially distinct hypotheses, and continue; absence of a winner is not a stop condition.
+8. If a candidate genuinely satisfies the predefined selection gates, recognize that success, freeze its exact fingerprint, and advance it through canonical deep/OOS/robustness/cross-engine/forward validation.
+
+Astra/Work should handle the substantial implementation portion in a bounded checkpointed run; Sol should remain the lead that verifies the resulting repository/evidence state and chooses the next milestone.
 
 ## CROSS-ENGINE / INFRASTRUCTURE STATUS
 
