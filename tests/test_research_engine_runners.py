@@ -109,6 +109,7 @@ def test_lean_source_launcher_requires_normalized_frozen_evidence(
     launcher.write_text("test", encoding="utf-8")
     project = tmp_path / "project"
     project.mkdir()
+    manifest = write_lean_manifest(project)
     frozen = contract()
     result = tmp_path / "result.json"
     result.write_text(
@@ -176,6 +177,7 @@ def test_lean_rejects_wrong_contract_fingerprint(monkeypatch, tmp_path):
     launcher.write_text("test", encoding="utf-8")
     project = tmp_path / "project"
     project.mkdir()
+    write_lean_manifest(project)
     result = tmp_path / "result.json"
     result.write_text(
         json.dumps(
