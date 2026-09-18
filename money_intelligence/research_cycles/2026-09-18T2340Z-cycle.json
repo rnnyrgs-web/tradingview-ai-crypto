@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-18T23:40:00Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, paper-trade, promotion-gate or broker state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "highest_information_question": "After the Sep. 18 BTC breakout and short-liquidation burst, is price being supported by durable spot/institutional demand or was most of the move forced-flow amplification?",
+  "observed_facts": [
+    "CoinMarketCap live quotes around 23:39-23:40Z put BTC at $80,898.86 (+5.93%/24h), ETH $2,609.77 (+6.71%), SOL $112.92 (+11.34%), XRP $1.3956 (+7.80%) and LINK $12.246 (+7.62%). BTC dominance was about 58.70%.",
+    "CoinMarketCap global derivatives metrics showed total crypto open interest about $442.53B, down 4.82% over 24 hours, and perpetual open interest about $441.23B, down 4.85%. Aggregate funding was positive and up about 39.68% versus the prior 24-hour comparison window.",
+    "CoinMarketCap BTC liquidations over 24 hours totaled about $260.42M, with about $252.37M from shorts and $8.05M from longs, so roughly 96.9% of forced BTC closures were shorts. The last four hours contained only about $3.17M of BTC liquidations and the last hour showed none, indicating the main liquidation burst had largely passed by this cutoff.",
+    "Direct Kraken BTC/USD perpetual snapshots showed mark price rising from roughly $78,202 with displayed open interest around 2.3K BTC earlier in the day to roughly $80,566 with displayed open interest around 2.1K BTC later in the day. At this venue, price rose while open interest declined.",
+    "Farside's Sep. 18 U.S. spot BTC ETF row remained unfinalized at the cutoff, with component entries shown as dashes. Its automatically displayed total therefore must not be interpreted as a completed zero-flow session. The last completed sequence remained Sep. 14 +$159.9M, Sep. 15 -$450.4M, Sep. 16 -$295.9M and Sep. 17 +$159.5M, about -$426.9M across those four completed sessions.",
+    "Some lower-quality secondary reports claimed a positive Sep. 18 BTC ETF total of roughly $154M, but this was not yet confirmed by the preferred completed Farside table and is therefore not promoted to canonical observed fact.",
+    "Exchange/on-chain flow evidence remains conflicting by provider and methodology. One secondary report citing CryptoQuant described a latest-complete-day exchange net inflow of about +4,099 BTC and a seven-day net inflow of about +13,659 BTC, while a separate wallet-tracing provider reported a materially different recent netflow picture. The disagreement prevents a defensible accumulation/distribution conclusion from exchange netflows in this cycle.",
+    "The broader U.S. close remained selective rather than uniformly risk-on: the Nasdaq rose about 0.4% and the S&P 500 about 0.17%, while the Dow fell about 0.18% and small caps weakened. Semiconductor leadership was strong, market breadth was negative, the U.S. 10-year yield remained around 5%, gold rose about 1.2% and crude stayed near $100-$105."
+  ],
+  "inferences": [
+    "The Sep. 18 BTC acceleration was materially short-squeeze/deleveraging amplified. The joint signature of price up, aggregate open interest down, direct-venue open interest down and approximately 97% short-dominant liquidations is inconsistent with describing the move primarily as a fresh leveraged-long build.",
+    "BTC holding near $80.9K after the liquidation burst had largely subsided is modestly constructive evidence that the move was not instantly dependent on continuing forced short-covering. It is not yet sufficient to prove durable spot accumulation.",
+    "Funding rising while aggregate open interest remains lower creates a two-stage risk: initial short removal can improve market structure, but if open interest rebuilds aggressively on the long side while funding remains elevated and spot flows do not broaden, reversal risk can increase.",
+    "No broad new crypto-liquidity wave is validated. The last completed BTC ETF sequence remains net negative, Sep. 18 ETF data are unfinished, and prior stablecoin evidence showed no rapid weekly expansion. Price strength therefore reflects rotation/forced flow and possibly spot demand more than a demonstrated system-wide liquidity surge.",
+    "The cross-asset regime remains selective: technology, precious metals and BTC can attract marginal capital while sovereign yields remain high and broad equity breadth is weak. Broad risk-on/risk-off labels remain less informative than source-specific capital-flow decomposition."
+  ],
+  "falsification_and_controls": [
+    "Upgrade the durable-spot-demand interpretation only if finalized Sep. 18 and subsequent BTC ETF sessions show persistent positive creations with reasonable breadth, BTC holds the $80K-$82K region after forced liquidations normalize, and venue-grade leverage data do not show an unstable fresh-long buildup.",
+    "Downgrade the breakout if BTC falls back below roughly $77K-$78K, material ETF redemptions resume, or open interest and funding rebuild aggressively on the long side while price stalls.",
+    "Do not infer exchange accumulation or distribution from the current secondary netflow providers because their signs/time windows/methodologies conflict.",
+    "Do not use 'price up + open interest down' as a continuation predictor by itself. It identifies forced-flow/deleveraging amplification, not the persistence of the underlying discretionary demand."
+  ],
+  "negative_findings": [
+    "Do not treat the unfinalized Farside Sep. 18 total as a zero-flow day while constituent entries remain incomplete.",
+    "Do not promote secondary Sep. 18 ETF-flow estimates until a preferred completed or issuer-grade source confirms them.",
+    "A large short squeeze is neither a standalone BUY signal nor a standalone SHORT signal: removing shorts can improve structure, but forced buying can also produce temporary price impact without durable new capital."
+  ],
+  "decision_support": {
+    "instrument": "BTC",
+    "action": "WAIT / TACTICAL MOMENTUM CANDIDATE",
+    "horizon": "days to several weeks",
+    "confidence": "MODERATE on direction; MODERATE-HIGH that the Sep. 18 acceleration was materially squeeze-amplified",
+    "thesis": "BTC has genuine relative strength, but the latest evidence isolates forced short-covering as a major amplifier while durable institutional/spot accumulation remains unconfirmed. The next edge depends on what price and spot flows do after the forced-flow impulse has faded.",
+    "capital_source_destination": "A material marginal source of buying was short sellers forced to repurchase BTC. Additional discretionary spot/ETF demand is plausible but not yet quantified well enough to call a durable accumulation regime.",
+    "confirmations_required": [
+      "Finalized multi-session positive U.S. spot-BTC ETF flows with broader participation",
+      "BTC retains the $80K-$82K area after liquidation activity normalizes",
+      "Open interest stabilizes or rebuilds moderately rather than surging with increasingly expensive funding",
+      "Timestamp-defensible exchange/on-chain evidence supports spot absorption rather than distribution",
+      "BTC keeps relative strength versus comparable high-beta risk assets"
+    ],
+    "invalidation_or_downgrade": [
+      "BTC loses roughly $77K-$78K after the squeeze",
+      "ETF redemptions resume materially",
+      "Long-side open interest/funding crowding grows while price fails to advance",
+      "Higher-quality exchange/on-chain evidence shows distribution into strength"
+    ],
+    "liquidity_cost_capacity": "BTC is highly liquid relative to crypto, but event-window slippage, funding and basis can change quickly. Research/decision support only; no execution authority."
+  },
+  "big_move_lab_status": "The mechanism evidence for a Sep. 18 BTC squeeze/deleveraging case is now strong, but canonical big_move_lab insertion is deferred until the breakout-start timestamp and a defensible pre-move information cutoff are reconstructed. This avoids hindsight contamination in the causal-lab record.",
+  "canonical_update_decision": "No dashboard_state, learning_ledger or big_move_lab canonical change in this cycle. The new evidence materially strengthens the existing BTC mechanism decomposition but does not change the current WAIT action, broader regime classification or immutable forecast scorecard. Persist this cycle only to avoid noisy canonical commits.",
+  "next_priority": [
+    "Finalize Sep. 18 BTC and ETH ETF flows from a preferred completed source and test whether the flow turn persists across subsequent sessions.",
+    "Measure BTC price retention for 6-12 hours after the liquidation burst subsides and compare with any open-interest/funding rebuild.",
+    "Obtain an additional BTC-specific venue-grade derivatives source and, if possible, CME/Deribit options evidence to separate residual short covering from new directional leverage.",
+    "Reconstruct the precise breakout start and pre-move evidence set, then add the case to the canonical Big-Price-Move Lab without hindsight contamination.",
+    "Resolve the conflicting exchange/on-chain netflow readings with a primary/timestamp-consistent provider before using netflows as confirmation."
+  ],
+  "sources": [
+    "CoinMarketCap connected live quote and derivatives feeds, accessed 2026-09-18T23:39-23:40Z",
+    "Kraken BTC/USD perpetual market pages, Sep. 18 2026 direct venue snapshots",
+    "https://farside.co.uk/btc/",
+    "Reuters Sep. 18 2026 U.S. market close, gold and oil coverage",
+    "Secondary CryptoQuant-attributed and wallet-tracing exchange-flow reports retained only as conflicting evidence, not canonical fact"
+  ],
+  "reporting_gate": "No owner-facing report. At least 60 minutes of cumulative verifiable research/execution time has not been established; schedule cadence and artifact timestamps are not treated as duration evidence."
+}
