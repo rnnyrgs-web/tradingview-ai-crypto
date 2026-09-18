@@ -140,8 +140,8 @@ def test_audit_binds_exact_dataset_predicate_and_locked_oos_boundaries():
 def test_audit_refuses_when_exact_scored_row_no_longer_matches_sealed_pre_oos():
     envelope, captured = _fixture()
     changed = copy.deepcopy(captured)
-    changed["research_histories"]["ASSET00-USDT"][100]["close"] += 0.01
-    changed["liquidity_histories"][15]["ASSET00-USDT"][100]["close"] += 0.01
+    changed["research_histories"]["ASSET00-USDT"][64]["close"] += 0.01
+    changed["liquidity_histories"][15]["ASSET00-USDT"][64]["close"] += 0.01
 
     with pytest.raises(RuntimeError, match="does not reproduce"):
         build_selection_audit(envelope, changed)
