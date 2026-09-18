@@ -1,59 +1,163 @@
 {
   "schema_version": 1,
-  "as_of": "2026-09-16T20:13:45Z",
+  "as_of": "2026-09-18T21:34:56Z",
   "purpose": "Point-in-time causal case library for significant cross-asset price moves and matched non-moves. Independent of the crypto signal engine; no trading authority.",
   "cases": [
     {
-      "case_id": "2026-09-15-16-brent-yanbu-substitution-reversal",
+      "case_id": "2026-09-15-18-brent-yanbu-substitution-reversal",
       "asset": "Brent crude oil futures",
-      "event_window": "2026-09-15 to 2026-09-16",
+      "event_window": "2026-09-15 to 2026-09-18",
       "pre_move_evidence_cutoff": "2026-09-16T18:45:00Z",
-      "observed_move": "Brent settled Sep. 15 at $108.75, up $3.07 or 2.9%, after Yanbu loadings were suspended and some Saudi European cargoes were cancelled. On Sep. 16 Reuters reported Brent down 2.7% to $105.83 as Saudi Arabia increased crude shipments via Oman; U.S. inventory evidence also reduced immediate scarcity pressure.",
-      "abnormality": "Two consecutive material opposite-direction daily moves around a physical supply-route shock; volatility-adjusted abnormality not yet quantified.",
-      "observed_facts": ["Yanbu loadings were suspended and Saudi Arabia cancelled some European cargo deliveries, contributing to Brent's Sep. 15 rise.","On Sep. 16 Saudi Arabia increased crude shipments using ship-to-ship transfers off Sohar, Oman, providing an alternative delivery route.","Brent fell despite the underlying geopolitical disruption remaining unresolved."],
-      "inference": "The economically relevant supply variable is effective deliverable supply after route substitution and inventory buffers, not gross capacity attached to the initially disrupted route.",
-      "causal_chain": "physical-route disruption -> expected deliverable-barrel shortage -> replacement/hedging demand -> price rises -> alternative routing and inventory buffers become credible -> expected net shortage falls -> scarcity premium unwinds -> crude futures fall",
-      "capital_source_destination": "Capital initially moved toward crude/energy scarcity exposure, then partly exited as effective supply improved; exact participant source-of-funds remains UNKNOWN.",
-      "likely_marginal_buyers_sellers": "Physical replacement seekers and supply-risk hedgers are plausible marginal buyers; scarcity-premium holders are plausible marginal sellers on reversal. Attribution is INFERENCE.",
-      "catalyst": "Yanbu disruption/cargo cancellations followed by alternative Saudi routing via Oman.",
-      "transmission_mechanism": "Expected effective deliverable supply changed the clearing price for near-term crude demand.",
-      "amplifiers": ["Geopolitical risk premium","Physical-versus-futures scarcity expectations","Inventory/refined-product constraints"],
-      "alternative_explanations": ["U.S. inventory news independently reduced scarcity expectations.","Pre-FOMC positioning influenced futures flows.","Profit-taking contributed to reversal."],
-      "confirmations": ["Sustained alternative-route volumes","Normalization of physical differentials/backwardation","Adequate inventories relative to outage duration"],
-      "falsifiers": ["Alternative routing proves insufficient","Physical premiums keep widening","Further disruption removes substitute routes"],
-      "matched_control_requirement": "Compare historical port/pipeline outages with and without substitution/storage capacity.",
-      "reusable_pre_move_indicators": ["Net effective deliverable supply after substitution","Alternative logistics spare capacity","Physical differentials/futures curve","Inventory buffer versus outage duration"],
-      "lesson_status": "SUPPORTED / PROVISIONAL / NEEDS CROSS-EPISODE TESTING",
-      "decision_support": "WAIT on extrapolating crude spikes solely from headline disrupted capacity.",
-      "sources": [{"publisher":"Reuters","date":"2026-09-16","url":"https://www.reuters.com/business/energy/oil-falls-us-crude-inventories-rise-despite-saudi-supply-concerns-2026-09-16/"},{"publisher":"U.S. Energy Information Administration","date":"2026-09-16","url":"https://www.eia.gov/petroleum/data.php"}]
+      "observed_move": "Brent settled Sep. 15 at $108.75, up 2.9%, after Yanbu loadings were suspended and some Saudi European cargoes were cancelled. It then reversed over the following sessions and closed Sep. 18 at $104.87 as Saudi rerouting/restoration, inventories, product exports and diplomacy reduced the expected net shortage despite continuing physical disruption.",
+      "abnormality": "A material scarcity spike followed by a multi-session reversal while the headline geopolitical disruption remained unresolved.",
+      "observed_facts": [
+        "Yanbu loadings were suspended and some Saudi European cargoes were cancelled during the initial spike.",
+        "Saudi Arabia increased alternative shipments, including routing through Oman and higher Gulf loadings.",
+        "Brent fell across subsequent sessions even as East-West Pipeline damage and abnormal Hormuz conditions persisted.",
+        "Cross-grade scarcity remained uneven: accessible grades could command extreme regional premiums even while benchmark Brent declined."
+      ],
+      "inference": "The relevant price state variable is effective deliverable supply by route, location, grade and product after substitution and inventory buffers, not gross disrupted infrastructure capacity.",
+      "causal_chain": "physical-route disruption -> expected deliverable-barrel shortage -> replacement/hedging demand -> scarcity premium rises -> substitute routes/inventories/diplomacy become credible -> expected net shortage falls -> marginal replacement urgency falls -> benchmark scarcity premium unwinds",
+      "capital_source_destination": "Capital initially moved toward crude scarcity exposure and producer/energy hedges, then partly exited as effective supply improved; participant-level source-of-funds remains UNKNOWN.",
+      "likely_marginal_buyers_sellers": "Physical replacement seekers and supply-risk hedgers are plausible initial marginal buyers; scarcity-premium holders and momentum accounts are plausible sellers on reversal. Attribution remains INFERENCE.",
+      "catalyst": "Yanbu/East-West disruption and cargo cancellations, followed by route substitution, inventory evidence and diplomatic/restoration signals.",
+      "transmission_mechanism": "Changes in expected effective deliverable barrels altered the clearing price and near-term scarcity premium.",
+      "amplifiers": ["Geopolitical risk premium", "Physical differentials/backwardation", "Freight and insurance", "Inventory and refined-product constraints"],
+      "alternative_explanations": ["Demand destruction", "Pre/post-FOMC positioning", "Profit-taking", "Broader dollar/rates moves"],
+      "confirmations": ["Sustained alternative-route volumes", "Normalization of physical differentials/backwardation", "Adequate inventories relative to outage duration"],
+      "falsifiers": ["Alternative routing proves insufficient", "Physical premiums and backwardation widen again", "Further disruption removes substitute routes or inventories fall rapidly"],
+      "matched_control_requirement": "Compare historical port/pipeline/chokepoint outages with and without substitution/storage capacity, including grade/location-specific differentials.",
+      "reusable_pre_move_indicators": ["Effective deliverable supply after substitution", "Alternative logistics spare capacity", "Physical differentials/futures curve", "Inventory buffer versus outage duration", "Grade/refinery compatibility", "Freight/insurance"],
+      "lesson_status": "SUPPORTED / REGIME-SPECIFIC / NEEDS CROSS-EPISODE TESTING",
+      "decision_support": "WAIT on extrapolating crude spikes from headline disrupted capacity alone.",
+      "sources": [
+        {"publisher": "Reuters", "date": "2026-09-16", "url": "https://www.reuters.com/business/energy/oil-falls-us-crude-inventories-rise-despite-saudi-supply-concerns-2026-09-16/"},
+        {"publisher": "Reuters", "date": "2026-09-18", "url": "https://www.reuters.com/business/energy/oil-prices-fall-1-hopes-limited-supply-disruptions-2026-09-18/"},
+        {"publisher": "U.S. Energy Information Administration", "date": "2026-09-16", "url": "https://www.eia.gov/petroleum/data.php"}
+      ]
     },
     {
       "case_id": "2026-09-16-fomc-priced-in-hike-nonmove-control",
       "asset": "Cross-asset: U.S. rates, dollar and equities",
-      "event_window": "2026-09-16 FOMC release",
+      "event_window": "2026-09-16 FOMC release and next session",
       "pre_move_evidence_cutoff": "2026-09-16T18:00:00Z",
-      "observed_move": "The Fed raised the target range 25 bp to 3.75%-4.00%, but contemporaneous market reporting described markets as broadly steady rather than showing a large shock response.",
-      "abnormality": "High-importance macro event with muted immediate broad-market response; deliberately retained as a matched non-move/control.",
-      "observed_facts": ["The FOMC vote was 12-0 to raise 25 bp.","Before the decision, market pricing assigned roughly a 92% probability to a 25 bp hike.","The September SEP raised the median end-2026 policy-rate projection to 4.1% from 3.8% in June, while median 2026 GDP rose to 2.3%, unemployment fell to 4.1%, and PCE inflation rose to 3.7%.","The implementation note raised IORB to 3.90% effective Sep. 17 and retained standing repo at 4.0%."],
-      "inference": "The announced 25 bp hike itself contained little marginal information because it was heavily priced. The more informative policy shock was the distribution/path of future rates and the combination of stronger growth/labor projections with persistent inflation.",
-      "causal_chain": "pre-event expectations price near-certain hike -> Fed delivers expected hike -> little need for marginal repricing from headline action -> future-rate distribution and macro projections become the marginal information -> cross-asset prices respond mainly to surprise relative to prior path, not the sign of the policy action alone",
-      "capital_source_destination": "No validated large immediate reallocation attributable solely to the hike. The likely opportunity-cost channel is higher prospective cash/front-end returns versus duration/risk assets, but magnitude is UNKNOWN pending post-event flow and yield data.",
-      "likely_marginal_buyers_sellers": "UNKNOWN at participant level; event-driven rates/FX/equity participants likely adjusted exposures to the revised path rather than the already-priced headline hike.",
+      "observed_move": "The Fed raised the target range 25 bp to 3.75%-4.00%, a move priced at roughly 92% probability beforehand. The immediate broad-market shock was muted, while the next session saw long yields fall and U.S. equities/gold rise as oil eased despite a hawkish projected policy path.",
+      "abnormality": "High-importance macro event with a muted immediate response and next-session behavior inconsistent with a one-factor 'hike equals risk-off' rule.",
+      "observed_facts": [
+        "The FOMC vote was 12-0 to raise 25 bp.",
+        "Pre-event market pricing assigned roughly 92% probability to a 25 bp hike.",
+        "The September SEP raised the median end-2026 policy-rate projection to 4.1% from 3.8% in June while also raising growth and inflation projections.",
+        "The implementation note raised IORB to 3.90% effective Sep. 17 and retained standing repo at 4.00%."
+      ],
+      "inference": "The headline hike contained little marginal information because it was heavily priced. Future-path, growth/inflation information and concurrent energy shocks were more important for repricing.",
+      "causal_chain": "pre-event distribution prices near-certain hike -> expected hike delivered -> little headline repricing -> path/SEP and concurrent oil information become marginal -> rates/FX/equities respond to net expectation surprise rather than action sign",
+      "capital_source_destination": "No validated large reallocation attributable solely to the hike; relative expected returns between cash/front-end rates and duration/risk assets changed with the future path.",
+      "likely_marginal_buyers_sellers": "Event-driven rates/FX/equity participants plausibly adjusted to the path surprise; participant-level attribution remains UNKNOWN.",
       "catalyst": "September FOMC decision and Summary of Economic Projections.",
-      "transmission_mechanism": "Policy surprise is expectation-relative: prices change when the realized policy path differs from the distribution already embedded in yields, FX and risk assets.",
-      "amplifiers": ["Positioning into the event","Rate-path convexity/duration","Dollar carry/opportunity cost","Options/event hedging"],
-      "alternative_explanations": ["Oil's same-day decline offset some hawkish inflation impulse.","Long yields had already risen materially before the meeting.","Other geopolitical and energy news contaminated the event window."],
-      "confirmations": ["Front-end yields and OIS reprice toward the revised path","Dollar strength persists if relative-rate advantage widens","Rate-sensitive assets weaken if real/nominal required returns remain higher"],
-      "falsifiers": ["Rate-path markets do not retain the hawkish revision","Subsequent inflation/growth data reverse the projected path","Risk assets rise while discount rates fall because the growth revision dominates"],
-      "matched_control_requirement": "Compare FOMC actions with similar-sized surprises but different pre-event probabilities and dot-path revisions; test headline action versus expectation-adjusted policy surprise.",
-      "reusable_pre_move_indicators": ["Pre-event probability distribution, not action sign","Expected-versus-realized dot/path shift","Front-end OIS/Treasury reaction","Cross-market confirmation in USD, duration and rate-sensitive equities"],
+      "transmission_mechanism": "Policy surprise is expectation-relative: realized action/path is compared with the distribution already embedded in markets.",
+      "amplifiers": ["Positioning", "Duration convexity", "Dollar carry/opportunity cost", "Options/event hedging"],
+      "alternative_explanations": ["Oil decline offset inflation pressure", "Long yields had risen pre-meeting", "Geopolitical/energy news contaminated the window"],
+      "confirmations": ["Front-end yields/OIS retain the revised path", "USD follows relative-rate differential", "Rate-sensitive assets react consistently to discount-rate changes"],
+      "falsifiers": ["Historical event study shows action sign/size explains responses at least as well as expectation-adjusted path surprise"],
+      "matched_control_requirement": "Compare scheduled central-bank events with similar action size but different pre-event probabilities, guidance and path revisions.",
+      "reusable_pre_move_indicators": ["Pre-event probability distribution", "Expected-versus-realized path shift", "Relative OIS/front-end spread", "Growth/inflation information surprise", "Cross-market confirmation"],
       "lesson_status": "SUPPORTED / PROVISIONAL / NEEDS HISTORICAL EVENT STUDY",
-      "decision_support": "WAIT / NO EDGE from the headline hike alone. Require expectation-adjusted path surprise plus cross-market confirmation before directional action.",
-      "sources": [{"publisher":"Federal Reserve","date":"2026-09-16","url":"https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm"},{"publisher":"Federal Reserve","date":"2026-09-16","url":"https://www.federalreserve.gov/monetarypolicy/fomcprojtabl20260916.htm"},{"publisher":"Federal Reserve","date":"2026-09-16","url":"https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a1.htm"}]
+      "decision_support": "WAIT / NO EDGE from the headline action alone.",
+      "sources": [
+        {"publisher": "Federal Reserve", "date": "2026-09-16", "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a.htm"},
+        {"publisher": "Federal Reserve", "date": "2026-09-16", "url": "https://www.federalreserve.gov/monetarypolicy/fomcprojtabl20260916.htm"},
+        {"publisher": "Federal Reserve", "date": "2026-09-16", "url": "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a1.htm"}
+      ]
+    },
+    {
+      "case_id": "2026-09-15-16-tga-drain-without-repo-stress-control",
+      "asset": "U.S. secured funding / Treasury liquidity",
+      "event_window": "2026-09-15 to 2026-09-16",
+      "pre_move_evidence_cutoff": "2026-09-14T23:20:09Z",
+      "observed_move": "The anticipated balance-sheet drain occurred but the expected funding-price stress did not. Sep. 16 Wednesday TGA rose about $148.0B week/week and reserve balances fell about $115.0B, while Sep. 15 SOFR moved only to 3.64%, the SOFR 99th percentile to 3.72%, and the TGCR 99th percentile to 3.65%.",
+      "abnormality": "High-information non-move/control: a large realized cash/reserve shock produced only modest median and upper-tail repo repricing.",
+      "observed_facts": [
+        "Sep. 15 combined major estimated-tax payments with multiple Treasury settlements.",
+        "Fed H.4.1 showed Sep. 16 Wednesday TGA $991.708B, +$148.003B week/week, and reserve balances $2.921537T, -$114.971B.",
+        "Fed securities held outright changed little over the interval.",
+        "SOFR median and 99th percentile and TGCR 99th percentile rose only about 2 bp on Sep. 15 versus the prior business day."
+      ],
+      "inference": "Reserves plus ON RRP below roughly 10% of GDP is a sensitivity state, not a deterministic scarcity trigger. Funding stress requires actual intermediation, cash/collateral distribution or facility constraints to bind.",
+      "causal_chain": "tax payments + Treasury settlement -> TGA rebuild -> reserve drain -> potential repo sensitivity; but private intermediation/backstops retain capacity -> median and tail repo rates remain orderly -> no generalized funding-stress transmission",
+      "capital_source_destination": "Private/bank/MMF cash moved toward Treasury; reserve balances fell. No evidence supports a forced broad risk-asset liquidation channel from this event.",
+      "likely_marginal_buyers_sellers": "Treasury settlement and tax flows were largely non-discretionary; repo lenders/borrowers absorbed the balance-sheet shift without validated broad scarcity. Participant-level distribution remains partly UNKNOWN.",
+      "catalyst": "Estimated-tax date plus concentrated Treasury settlement while ON RRP was nearly exhausted.",
+      "transmission_mechanism": "Treasury cash accumulation drained reserves, but repo pricing depended on marginal intermediation capacity rather than reserve quantity alone.",
+      "amplifiers": ["Dealer inventory", "MMF cash supply", "Reserve distribution", "Collateral specials", "Quarter-end balance-sheet constraints"],
+      "alternative_explanations": ["Timing mismatch between H.4.1 snapshot and intraday stress", "Localized stress hidden by broad reference rates"],
+      "confirmations": ["Calm SOFR/TGCR median and upper tails", "No later evidence of forced deleveraging attributable to the event"],
+      "falsifiers": ["Primary data show material Standing Repo Facility use or localized tail stress inconsistent with calm aggregate rates"],
+      "matched_control_requirement": "Compare historical tax/settlement episodes stratified by reserves+RRP/GDP, dealer inventory, MMF cash and facility usage.",
+      "reusable_pre_move_indicators": ["Aggregate liquidity state", "Dealer financing demand", "MMF/private cash supply", "Repo median and distribution tails", "Collateral depth/specials", "Official facility usage"],
+      "lesson_status": "SUPPORTED / REGIME-SPECIFIC",
+      "decision_support": "Do not use sub-10%-of-GDP reserves+RRP alone as a risk-asset sell trigger.",
+      "sources": [
+        {"publisher": "Federal Reserve", "date": "2026-09-17", "url": "https://www.federalreserve.gov/releases/h41/Current/"},
+        {"publisher": "Federal Reserve Bank of New York", "date": "2026-09-18", "url": "https://www.newyorkfed.org/markets/reference-rates/sofr"},
+        {"publisher": "Federal Reserve Bank of New York", "date": "2026-09-18", "url": "https://www.newyorkfed.org/markets/reference-rates/tgcr"}
+      ]
+    },
+    {
+      "case_id": "2026-09-18-boj-expected-hike-yen-selloff",
+      "asset": "JPY / USDJPY",
+      "event_window": "2026-09-18 BOJ decision and same-day FX session",
+      "pre_move_evidence_cutoff": "2026-09-18T02:00:00Z",
+      "observed_move": "The BOJ raised its policy rate 25 bp to 1.25%, a 31-year high, in a widely expected 7-2 vote. Instead of appreciating, the yen weakened; Reuters reported USD/JPY as high as about 158.05, roughly a 1.3% dollar gain, while intervention speculation increased.",
+      "abnormality": "Currency moved materially opposite the naive sign implied by nominal tightening.",
+      "observed_facts": [
+        "The 25 bp hike was widely expected before the decision.",
+        "Two board members dissented.",
+        "Contemporaneous reporting characterized the guidance as insufficiently hawkish for a rapid follow-on path.",
+        "The Fed had just tightened and signaled possible further hikes, preserving a large U.S.-Japan relative-rate advantage.",
+        "Japanese authorities signaled willingness to act against excessive FX moves, raising intervention risk after the yen selloff."
+      ],
+      "inference": "The marginal FX information was the expectation-adjusted future path, vote/guidance composition and relative rate differential, not the sign of the already-priced hike.",
+      "causal_chain": "pre-event pricing embeds expected hike -> BOJ delivers expected +25 bp -> little positive JPY action surprise -> dissent/cautious path signal lowers expected follow-on tightening relative to expectations -> U.S.-Japan carry remains attractive -> yen selling / USDJPY rises -> intervention risk increases",
+      "capital_source_destination": "Capital plausibly remained in or returned to higher-yielding USD/carry exposure rather than reallocating toward JPY solely because of the hike; participant-level flow attribution is UNKNOWN.",
+      "likely_marginal_buyers_sellers": "FX carry and macro accounts are plausible USD buyers/JPY sellers; intervention-sensitive accounts may cap extension. Direct account-level evidence is unavailable.",
+      "catalyst": "BOJ rate decision, dissent and forward-guidance interpretation.",
+      "transmission_mechanism": "FX repriced the future relative-rate path and policy credibility versus what had already been discounted.",
+      "amplifiers": ["Carry positioning", "Options/gamma", "Momentum", "Intervention thresholds", "Japan fiscal-policy expectations"],
+      "alternative_explanations": ["Broad dollar strength", "Global risk-on", "Oil move", "Pre-event short-yen positioning"],
+      "confirmations": ["Relative OIS/front-end spreads remain USD-favorable", "USDJPY strength persists after the event window", "Next-hike pricing does not steepen materially"],
+      "falsifiers": ["JPY rapidly reverses because markets reprice a meaningfully faster BOJ path", "Historical matched event study finds action sign/size superior to expectation-adjusted path surprise"],
+      "matched_control_requirement": "Compare with FOMC/ECB/BOJ events where action size was similar but pre-event pricing, guidance and vote composition differed.",
+      "reusable_pre_move_indicators": ["Pre-event OIS/probability distribution", "Relative expected policy path", "Vote/dissent surprise", "Guidance-language surprise", "Carry differential", "Intervention constraints"],
+      "lesson_status": "SUPPORTED / PROVISIONAL / NEEDS HISTORICAL EVENT STUDY",
+      "decision_support": "WAIT; do not chase USDJPY after the move because intervention risk is elevated and the historical generalization is not yet validated.",
+      "sources": [
+        {"publisher": "Bank of Japan", "date": "2026-09-18", "url": "https://www.boj.or.jp/en/mopo/mpmdeci/mpr_2026/index.htm"},
+        {"publisher": "Reuters", "date": "2026-09-18", "url": "https://www.reuters.com/world/asia-pacific/boj-raises-interest-rates-31-year-high-widely-expected-move-2026-09-18/"},
+        {"publisher": "Reuters", "date": "2026-09-18", "url": "https://www.reuters.com/world/asia-pacific/yen-weak-ahead-boj-decision-rate-hike-expected-2026-09-18/"}
+      ]
     }
   ],
   "cross_case_hypotheses": [
-    {"hypothesis_id":"effective-deliverable-supply-vs-gross-disruption","status":"CANDIDATE","claim":"For transport-route commodity shocks, net effective deliverable supply after substitution and inventory buffers predicts persistence better than headline gross disrupted capacity.","falsification":"Gross disrupted capacity predicts persistence at least as well after controlling for substitution, inventories and demand.","next_test":"Matched historical port/pipeline/chokepoint outages versus 1d/5d/20d returns, physical differentials and backwardation."},
-    {"hypothesis_id":"expectation-adjusted-policy-surprise","status":"CANDIDATE","claim":"For scheduled central-bank decisions, expectation-adjusted changes in the projected policy path should explain cross-asset repricing better than the direction/sign of the announced rate action.","falsification":"Across timestamp-safe FOMC events, headline action direction/size explains subsequent cross-asset moves at least as well as pre-event-probability-adjusted path surprise.","next_test":"Build historical FOMC event sample with pre-event futures/OIS probabilities, realized action, dot/path surprise and 30m/1d/5d Treasury, USD, equity and gold responses."}
+    {
+      "hypothesis_id": "effective-deliverable-supply-vs-gross-disruption",
+      "status": "SUPPORTED_PROVISIONAL",
+      "claim": "For transport-route commodity shocks, net effective deliverable supply after substitution, inventory buffers and grade/location constraints predicts persistence better than headline gross disrupted capacity.",
+      "falsification": "Gross disrupted capacity predicts persistence at least as well after controlling for substitution, inventories, grade/location and demand.",
+      "next_test": "Matched historical port/pipeline/chokepoint outages versus 1d/5d/20d returns, physical differentials and backwardation."
+    },
+    {
+      "hypothesis_id": "expectation-adjusted-policy-surprise",
+      "status": "SUPPORTED_PROVISIONAL",
+      "claim": "For well-anticipated scheduled central-bank decisions, expectation-adjusted changes in the future relative policy path explain short-horizon FX/rates repricing better than the direction/sign of the announced rate action.",
+      "falsification": "Across a timestamp-safe historical event sample, headline action direction/size explains 30m/1d/5d responses at least as well as pre-event-probability-adjusted path/guidance surprise.",
+      "next_test": "Build matched FOMC/BOJ/ECB event sample with pre-event futures/OIS probabilities, realized action, guidance/path/vote surprise and 30m/1d/5d responses."
+    },
+    {
+      "hypothesis_id": "aggregate-fed-liquidity-is-sensitivity-not-trigger",
+      "status": "SUPPORTED_REGIME_SPECIFIC",
+      "claim": "Low reserves-plus-ON-RRP increases potential repo-rate elasticity to issuance/cash shocks, but does not itself cause funding stress unless intermediation, collateral or cash-distribution constraints bind.",
+      "falsification": "Matched episodes show the aggregate liquidity ratio alone reliably predicts funding dislocations after controlling for dealer/MMF capacity and event size.",
+      "next_test": "Historical tax/settlement controls using median/tail repo rates, dealer inventories, MMF cash, reserve distribution and official-facility usage."
+    }
   ]
 }
