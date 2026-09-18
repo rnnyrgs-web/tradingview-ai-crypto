@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass
 import hashlib
 import json
+import math
 
 
 @dataclass(frozen=True)
@@ -28,6 +29,16 @@ class CrossEngineContract:
 
     def canonical(self) -> dict:
         payload = asdict(self)
+        for key in ("strategy_fingerprint", "symbol", "timeframe", "strategy_family",
+                    "data_fingerprint", "direction", "execution_price_model", "timestamp_unit"):
+            if not isinstance(payload[key], str) or not payload[key].strip():
+                raise ValueError(f"cross-engine contract requires nonempty {key}")
+        for key in ("cost_bps_round_trip", "validation_quantity", "validation_initial_capital"):
+            value = payload[key]
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+                raise ValueError(f"cross-engine contract requires finite {key}")
+        if type(payload["decision_lag_bars"]) is not int:
+            raise ValueError("decision lag must be an integer number of bars")
         payload["strategy_fingerprint"] = payload["strategy_fingerprint"].strip()
         payload["symbol"] = payload["symbol"].strip().upper()
         payload["timeframe"] = payload["timeframe"].strip()
@@ -64,6 +75,6 @@ class CrossEngineContract:
 
     def fingerprint(self) -> str:
         canonical = json.dumps(
-            self.canonical(), sort_keys=True, separators=(",", ":")
+            self.canonical(), sort_keys=True, separators=(",", ":"), allow_nan=False
         )
         return hashlib.sha256(canonical.encode("utf-8")).hexdigest()

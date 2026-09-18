@@ -144,6 +144,12 @@ def test_lean_source_launcher_requires_normalized_frozen_evidence(
         seen["argv"] = argv
         seen["cwd"] = kwargs["cwd"]
         seen["shell"] = kwargs["shell"]
+        result.write_text(json.dumps({
+            "executed": True,
+            "contract_fingerprint": kwargs["env"]["LEAN_CONTRACT_FINGERPRINT"],
+            "run_id": kwargs["env"]["LEAN_RUN_ID"],
+            "trades": [],
+        }), encoding="utf-8")
         return Proc()
 
     monkeypatch.setattr(adapter.subprocess, "run", fake_run)
@@ -226,7 +232,17 @@ def test_nautilus_requires_executed_evidence(monkeypatch):
         )
 
 
-def test_real_vectorbt_and_nautilus_reproduce_same_frozen_trade():
+@pytest.mark.parametrize("direction,cost,quantity,capital,expected_pnl", [
+    ("long", 0.0, 1.0, 100000.0, 2.0),
+    ("long", 10.0, 3.0, 20000.0, 5.694),
+    ("short", 10.0, 3.0, 20000.0, -6.306),
+    ("short", 0.0, 1.0, 100000.0, -2.0),
+])
+def test_real_vectorbt_and_nautilus_reproduce_same_frozen_trade(
+    direction, cost, quantity, capital, expected_pnl,
+):
+    from dataclasses import replace
+
     pytest.importorskip("vectorbt")
     pytest.importorskip("nautilus_trader")
 
@@ -235,6 +251,8 @@ def test_real_vectorbt_and_nautilus_reproduce_same_frozen_trade():
     from research_engines.vectorbt_adapter import run_vectorbt
 
     rows, frozen, entries, exits = real_engine_fixture()
+    frozen = replace(frozen, direction=direction, cost_bps_round_trip=cost,
+                     validation_quantity=quantity, validation_initial_capital=capital)
     vector = run_vectorbt(frozen, rows, entries, exits)
     nautilus = run_nautilus(frozen, rows, entries, exits)
 
@@ -242,6 +260,9 @@ def test_real_vectorbt_and_nautilus_reproduce_same_frozen_trade():
     assert nautilus["trades"], nautilus
     assert vector["trades"][0]["entry_ts"] == rows[1]["ts"]
     assert vector["trades"][0]["exit_ts"] == rows[3]["ts"]
+    for result in (vector, nautilus):
+        assert result["trades"][0]["pnl"] == pytest.approx(expected_pnl, abs=1e-6)
+        assert result["trades"][0]["size"] == quantity
 
     result = reconcile(
         {"vectorbt": vector, "nautilus": nautilus},
@@ -297,3 +318,95 @@ def test_preflight_reports_missing_runtime(monkeypatch):
     assert result["status"] == "WAIT_RESEARCH_ONLY"
     assert any("nautilus_trader" in x for x in result["blockers"])
     assert any("LEAN_LAUNCHER_DLL" in x for x in result["blockers"])
+
+
+@pytest.mark.parametrize("field,value", [
+    ("close", float("nan")), ("volume", float("inf")),
+    ("volume", -1), ("low", -1), ("ts", 1.5), ("ts", True),
+])
+def test_invalid_dataset_cannot_receive_a_fingerprint(field, value):
+    rows = bars()
+    rows[0][field] = value
+    with pytest.raises(ValueError):
+        data_fingerprint(rows)
+
+
+@pytest.mark.parametrize("field,value", [("volume", 123.0), ("ts", 3)])
+def test_nautilus_rejects_changed_dataset_before_execution(monkeypatch, field, value):
+    import research_engines.nautilus_adapter as adapter
+
+    monkeypatch.setattr(adapter, "require_engine", lambda name: {})
+    frozen = contract()
+    rows = bars()
+    rows[-1][field] = value
+    with pytest.raises(ValueError, match="dataset fingerprint"):
+        adapter.run_nautilus(
+            frozen, rows, [False, False], [False, False],
+            engine_runner=lambda **kwargs: {
+                "executed": True, "trades": [], "bars_processed": len(rows),
+            },
+        )
+
+
+def test_vectorbt_rejects_changed_dataset():
+    pytest.importorskip("vectorbt")
+    from research_engines.vectorbt_adapter import run_vectorbt
+
+    rows, frozen, entries, exits = real_engine_fixture()
+    rows[0]["volume"] += 1
+    with pytest.raises(ValueError, match="dataset fingerprint"):
+        run_vectorbt(frozen, rows, entries, exits)
+
+
+def test_lean_successful_process_cannot_reuse_old_result(monkeypatch, tmp_path):
+    import subprocess
+    import research_engines.lean_adapter as adapter
+
+    result = tmp_path / "result.json"
+    payload = {"executed": True, "contract_fingerprint": contract().fingerprint(),
+               "trades": [], "run_id": "previous-run"}
+    result.write_text(json.dumps(payload), encoding="utf-8")
+    monkeypatch.setattr(adapter, "lean_runtime", lambda: {
+        "available": True, "mode": "cli", "executable": "/usr/bin/lean",
+    })
+    monkeypatch.setattr(adapter.subprocess, "run", lambda *a, **k:
+                        subprocess.CompletedProcess(a[0], 0, "", ""))
+    with pytest.raises(RuntimeError, match="current run"):
+        adapter.run_lean_project(contract(), tmp_path, result)
+
+
+def test_vectorbt_open_position_is_not_closed_trade_evidence():
+    pytest.importorskip("vectorbt")
+    from research_engines.vectorbt_adapter import run_vectorbt
+
+    rows, frozen, entries, _ = real_engine_fixture()
+    with pytest.raises(RuntimeError, match="open position"):
+        run_vectorbt(frozen, rows, entries, [False] * len(rows))
+
+
+@pytest.mark.parametrize("mode", ["unavailable", "failure", "timeout", "missing", "not_object", "not_executed"])
+def test_lean_failure_paths_cannot_return_success(monkeypatch, tmp_path, mode):
+    import subprocess
+    import research_engines.lean_adapter as adapter
+
+    result_file = tmp_path / "result.json"
+    monkeypatch.setattr(adapter, "lean_runtime", lambda: {
+        "available": mode != "unavailable", "mode": "cli", "executable": "/usr/bin/lean",
+    })
+
+    def execute(argv, **kwargs):
+        if mode == "timeout":
+            raise subprocess.TimeoutExpired(argv, kwargs["timeout"])
+        if mode == "not_object":
+            result_file.write_text("[]", encoding="utf-8")
+        elif mode == "not_executed":
+            result_file.write_text(json.dumps({
+                "executed": False, "trades": [],
+                "run_id": kwargs["env"]["LEAN_RUN_ID"],
+                "contract_fingerprint": kwargs["env"]["LEAN_CONTRACT_FINGERPRINT"],
+            }), encoding="utf-8")
+        return subprocess.CompletedProcess(argv, 1 if mode == "failure" else 0, "", "")
+
+    monkeypatch.setattr(adapter.subprocess, "run", execute)
+    with pytest.raises((RuntimeError, subprocess.TimeoutExpired)):
+        adapter.run_lean_project(contract(), tmp_path, result_file)

@@ -150,6 +150,94 @@ def test_reconciliation_fails_on_trade_path_disagreement():
         **base,
         "trades": [{**base["trades"][0], "exit_price": 11.5}],
     }
-    result = reconcile({"vectorbt": base, "nautilus": base, "lean": altered})
+    result = reconcile({name: {**value, "engine": name, "research_only": True,
+                               "trade_authority": False, "promotion_authority": False}
+                        for name, value in (("vectorbt", base), ("nautilus", base), ("lean", altered))})
     assert result["ok"] is False
     assert "lean:trade[0].exit_price" in result["mismatches"]
+
+
+@pytest.mark.parametrize("field,value", [
+    ("cost_bps_round_trip", float("nan")),
+    ("cost_bps_round_trip", float("inf")),
+    ("validation_quantity", float("nan")),
+    ("validation_initial_capital", float("inf")),
+    ("decision_lag_bars", 1.5), ("decision_lag_bars", True),
+    ("symbol", " "), ("timeframe", ""), ("strategy_family", ""),
+])
+def test_malformed_contract_cannot_receive_a_fingerprint(field, value):
+    from dataclasses import replace
+
+    frozen = CrossEngineContract("strategy", "BTC-USDT", "1H", "trend", "data", 10)
+    with pytest.raises(ValueError):
+        replace(frozen, **{field: value}).fingerprint()
+
+
+def valid_engine_results():
+    from research_engines.evidence import evidence
+
+    frozen = CrossEngineContract("strategy", "BTC-USDT", "1H", "trend", "data", 10)
+    trade = {"direction": "long", "entry_ts": 1, "exit_ts": 2,
+             "entry_price": 100.0, "exit_price": 102.0, "size": 1.0,
+             "fees": 0.1, "pnl": 1.9}
+    return {name: evidence(name, frozen, [dict(trade)])
+            for name in ("vectorbt", "nautilus", "lean")}
+
+
+@pytest.mark.parametrize("field,value", [
+    ("trades", [None]), ("trades", [{}]), ("trades", "invalid"),
+    ("metrics", None), ("metrics", []), ("metrics", "invalid"),
+    ("engine", "vectorbt"), ("research_only", False),
+    ("trade_authority", True), ("promotion_authority", True),
+    ("contract_fingerprint", 123),
+])
+def test_reconciliation_rejects_malformed_or_misattributed_evidence(field, value):
+    results = valid_engine_results()
+    results["lean"][field] = value
+    result = reconcile(results)
+    assert result["ok"] is False
+    assert result["status"] == "WAIT_RESEARCH_ONLY"
+    assert "lean" in result["invalid_engines"]
+    assert result["promotion_authority"] is False
+
+
+@pytest.mark.parametrize("field,value", [
+    ("entry_ts", 2), ("entry_ts", 1.5), ("exit_ts", True),
+    ("entry_price", -1), ("size", 0), ("fees", -1),
+    ("pnl", float("nan")), ("direction", "sideways"),
+])
+def test_identical_invalid_trade_paths_do_not_count_as_agreement(field, value):
+    results = valid_engine_results()
+    for evidence_ in results.values():
+        evidence_["trades"][0][field] = value
+    result = reconcile(results)
+    assert result["ok"] is False
+    assert set(result["invalid_engines"]) == set(results)
+
+
+@pytest.mark.parametrize("field,value", [
+    ("trades", 2), ("trades", True), ("ending_equity", "invalid"),
+    ("win_rate", 1.1), ("return_pct", float("inf")),
+    ("ending_equity", 10 ** 400),
+])
+def test_invalid_metrics_fail_closed_even_when_all_engines_agree(field, value):
+    results = valid_engine_results()
+    for evidence_ in results.values():
+        evidence_["metrics"][field] = value
+    assert reconcile(results)["status"] == "WAIT_RESEARCH_ONLY"
+
+
+@pytest.mark.parametrize("required", [(), ("vectorbt",), ("vectorbt", "vectorbt")])
+def test_reconciliation_requires_distinct_independent_engines(required):
+    assert reconcile(valid_engine_results(), required=required)["ok"] is False
+
+
+def test_expected_contract_prevents_agreement_on_a_different_experiment():
+    results = valid_engine_results()
+    assert reconcile(results, expected_contract_fingerprint="different")["ok"] is False
+
+
+def test_infinite_tolerance_cannot_suppress_disagreement():
+    results = valid_engine_results()
+    results["lean"]["trades"][0]["exit_price"] = 1000.0
+    assert reconcile(results, price_tolerance=float("inf"))["ok"] is False
