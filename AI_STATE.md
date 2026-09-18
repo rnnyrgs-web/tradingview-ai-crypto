@@ -1,7 +1,7 @@
 # AI_STATE.md
 
-Last reconciled: 2026-09-18T23:44Z
-Last updated: 2026-09-18T23:44Z
+Last reconciled: 2026-09-18T23:51Z
+Last updated: 2026-09-18T23:51Z
 
 This is the authoritative compact handoff for agents working on `rnnyrgs-web/tradingview-ai-crypto`. Read the current default-branch `UNIFIED_PROFITABILITY_LEAD_SPEC.md` first and obey it as the exhaustive operating contract. Also obey the merged `SIGNAL_BACKTEST_CHARTS_SPEC.md`. When this file conflicts with an older chat summary, stale branch note, or stale base coordination row, verify current GitHub/runtime evidence and use the canonical coordination loader state. Do **not** read only the base JSON and treat an overridden historical task row as current.
 
@@ -200,7 +200,9 @@ Profitability means net expectancy after realistic fees, spread, slippage, fundi
 
 ## CURRENT CANONICAL STATE
 
-- Reconciled GitHub `main`: **`d7eb5a03759af876b3375967a8a22c7743480a68`**. PR #399 is merged; the newer main also includes an independent Money Intelligence research-cycle commit that does not alter trading authority.
+- Reconciled GitHub `main`: **`b84fc2c560db56f0b53ee4864e6633b000a3f4fb`**. PR #403 is merged after exact-head Security & Reliability and Strategy Discovery Supervisor checks passed.
+- PR #403 persists ACC-002 in `orchestration/rejected_fingerprints.json`, adds `orchestration/strategy_discovery_queue.json`, adds deterministic `strategy_discovery_supervisor.py`, and schedules the zero-model-API `Strategy Discovery Supervisor` GitHub workflow. It enforces one deep candidate, keeps broker/trade authority off, and provides a ranked shared queue for future ChatGPT/Work/worker runs.
+- The queue currently has three materially distinct cheap-screen candidates plus independent Big-Move and Money Intelligence generators. The dedicated Frizz/PlayBit EMA lane is present but intentionally fail-closed until the exact published source/rules are pinned and fingerprinted; do not substitute the existing FFRIZZ family.
 - PR #399 is merged and makes the result-oriented command language plus the high-agency strategic-achiever lead behavior canonical for all future sessions.
 - PR #396 is merged and adds immutable ACC-002 evidence-contract helpers for exact normalized-row hashes, ranked-universe/missing-symbol evidence, split timestamp boundaries, full pre-OOS predicate details, and declared search breadth.
 - PR #397 is merged and produced the fixed 24h ACC-002 SELECTION audit on exact commit `6e95408c...`.
@@ -229,18 +231,18 @@ Latest recorded mixed paper-account snapshot in issue #112 was losing overall an
 
 ## SINGLE HIGHEST-VALUE BOTTLENECK
 
-ACC-002 is no longer the bottleneck; its sealed audit resolved it with zero eligible candidates and locked OOS.
+The strategy-discovery coordination foundation is now implemented and merged. The bottleneck has moved from architecture to **producing truthful cheap-screen evidence for the highest-ranked materially distinct candidate without opening untouched OOS prematurely**.
 
-The highest-value bottleneck is now **turning that rejection into a fast, durable, autonomous pivot toward materially distinct strategy discovery** without drifting back into old crypto-signaling/dashboard work.
+`strategy_discovery_supervisor.py` deterministically ranks eligible cheap screens while enforcing:
+- exact rejected-fingerprint exclusion;
+- one active deep-validation candidate maximum;
+- research-only / broker-disconnected operation;
+- independent hypothesis-generator lanes;
+- explicit blocked state for the Frizz/PlayBit EMA lane until its exact source is pinned.
 
-The next architecture/research milestone must:
-- persist ACC-002 as rejected with its exact evidence/fingerprint and failure reasons;
-- establish or strengthen a Strategy Discovery Supervisor that maintains a ranked queue of cheap, predeclared, materially distinct hypotheses while allowing only one expensive deep-validation candidate at a time;
-- include a dedicated Frizz/PlayBit EMA lane that faithfully fingerprints/tests the rules across assets/timeframes with multiple-testing protection;
-- support Big-Move Intelligence and Money Intelligence as evidence/hypothesis-generation lanes that feed measurable, testable ideas into the same validation pipeline;
-- select the next deep candidate because it earned that position through evidence/information value, not because it produced the prettiest in-sample result.
+Under the current frozen queue, `DISC-RESIDUAL-MOMENTUM-001-v1` ranks first among immediately screenable candidates. That ranking is a research-priority decision, not evidence that the strategy works.
 
-Old crypto signal generation, dashboard polish, alert features, and signal-P&L presentation remain deprioritized **unless** they are strictly necessary to validate or later operationalize a genuinely validated strategy.
+Old crypto signal generation, dashboard polish, alert features, and signal-P&L presentation remain deprioritized unless they are strictly necessary to validate or later operationalize a genuinely validated strategy.
 
 ## CANONICAL DATA-MARKET HANDOFF
 
@@ -254,20 +256,18 @@ Do not select another data candidate while DATA-BREADTH-001 is awaiting that pro
 
 ## EXACT NEXT STEP
 
-**Pivot now; do not spend another research cycle rescuing ACC-002 unless materially new data or a genuinely different scientific hypothesis justifies reopening it.**
+**Execute the first bounded cheap deterministic screen from the merged strategy-discovery queue; do not reopen ACC-002.**
 
-Use a bounded implementation/research milestone to:
+1. Freeze the complete implementation/data/cost/chronology contract for `DISC-RESIDUAL-MOMENTUM-001-v1` before inspecting selection outcomes.
+2. Reuse existing residual-momentum implementation only after verifying it matches the frozen hypothesis; otherwise make the smallest isolated implementation needed.
+3. Bind exact dataset/provenance/time window and point-in-time universe treatment. If historical membership cannot be defended, fail closed rather than silently using survivors.
+4. Run only cheap selection/falsification evidence first, with realistic costs, non-overlapping observations, stability checks and declared search breadth. Untouched OOS stays locked unless the predefined selection gate passes.
+5. If the candidate fails, persist the exact fingerprint and failure mechanism in rejected memory, then advance to the next materially distinct ranked cheap-screen hypothesis.
+6. If it passes, freeze the exact fingerprint and promote **only that one candidate** into deep validation/OOS/robustness/cross-engine/forward evidence.
+7. In parallel, keep Big-Move Intelligence and Money Intelligence generating testable hypotheses where they cannot contaminate protected evidence.
+8. Pin and fingerprint the exact TradingView PlayBit EMA source/rules before activating its dedicated lane. The public page identifies it as an open-source two-EMA indicator, but the current repository does not yet contain the exact source-code/rule fingerprint; do not approximate it.
 
-1. Persist the sealed ACC-002 rejection and failure evidence in durable rejected-strategy memory.
-2. Build/strengthen the Strategy Discovery Supervisor foundation and ranked hypothesis queue.
-3. Register materially distinct predeclared strategy hypotheses for cheap screening, including the dedicated Frizz/PlayBit EMA lane.
-4. Keep Big-Move Intelligence and Money Intelligence running as independent evidence/hypothesis-generation lanes where they cannot contaminate protected evidence.
-5. Run cheap deterministic screening with chronology/provenance/cost/multiple-testing controls sufficient for selection.
-6. Promote **exactly one** strongest eligible candidate into expensive deep validation.
-7. If no hypothesis qualifies, learn from the failures, generate the next materially distinct hypotheses, and continue; absence of a winner is not a stop condition.
-8. If a candidate genuinely satisfies the predefined selection gates, recognize that success, freeze its exact fingerprint, and advance it through canonical deep/OOS/robustness/cross-engine/forward validation.
-
-Astra/Work should handle the substantial implementation portion in a bounded checkpointed run; Sol should remain the lead that verifies the resulting repository/evidence state and chooses the next milestone.
+The hourly Unified Profitability Lead automation has been updated to read this queue/state and use GitHub as the shared mailbox. Coordination should not add OpenAI/Anthropic API spend merely to relay work between ChatGPT sessions.
 
 ## CROSS-ENGINE / INFRASTRUCTURE STATUS
 
@@ -303,6 +303,7 @@ Until a scientifically valid artifact exists, the dashboard must fail closed wit
 
 ## DURABLE NEGATIVE RESULTS — DO NOT RESCUE
 
+- `ACC-002`: rejected at selection with **0 eligible candidates** across the three predeclared variants; the superficially positive Top-30 `(6,24,72)` variant failed the required second liquidity subset. Untouched OOS remains `LOCKED_UNTOUCHED_OOS`. The exact rejection is now machine-readable in `orchestration/rejected_fingerprints.json`.
 - `DATA-BASIS-001`: rejected. Recorded 24h OOS average net about **-8.49 bps** over 134 independent samples; 7d about **-51.21 bps** over 19 samples. Do not tune/relabel/reopen the same fingerprint.
 - `DATA-FUNDING-001`: rejected current fingerprint. Its superficially positive 24h headline had **0 incremental expectancy versus the frozen training-only baseline** and unstable halves; 7d lacked the evidence floor. Do not rescue it.
 - Historical Binance/Bybit OI routes previously returned access blocks (451/403). Do not repeatedly burn capacity on unchanged blocked routes unless access conditions materially change.
