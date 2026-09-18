@@ -1,0 +1,43 @@
+name: Strategy Discovery Supervisor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "37 * * * *"
+  push:
+    paths:
+      - "strategy_discovery_supervisor.py"
+      - "orchestration/strategy_discovery_queue.json"
+      - "orchestration/rejected_fingerprints.json"
+      - "orchestration/rejected_fingerprints.py"
+      - "tests/test_strategy_discovery_supervisor.py"
+      - ".github/workflows/strategy_discovery_supervisor.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: strategy-discovery-supervisor
+  cancel-in-progress: false
+
+jobs:
+  validate-and-rank:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install test runtime
+        run: python -m pip install pytest
+      - name: Validate supervisor and durable rejected memory
+        run: |
+          python strategy_discovery_supervisor.py --validate --output strategy_discovery_snapshot.json
+          python -m pytest -q tests/test_strategy_discovery_supervisor.py tests/test_rejected_fingerprints.py
+      - name: Publish machine-readable ranked discovery snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: strategy-discovery-snapshot-${{ github.run_id }}
+          path: strategy_discovery_snapshot.json
+          retention-days: 30

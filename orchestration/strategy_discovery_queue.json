@@ -1,0 +1,225 @@
+{
+  "schema_version": 1,
+  "objective": "Find and validate one genuinely working strategy with sustainable positive after-cost expectancy and useful frequency.",
+  "lifecycle_phase": "SELECTION",
+  "max_active_deep_candidates": 1,
+  "active_deep_candidate": null,
+  "policy": {
+    "research_only": true,
+    "trade_authority": false,
+    "broker_connected": false,
+    "untouched_oos_requires_frozen_selection_pass": true,
+    "rejected_fingerprints_are_terminal_without_new_hypothesis": true,
+    "no_paid_api_required_for_supervisor": true
+  },
+  "candidates": [
+    {
+      "hypothesis_id": "DISC-RESIDUAL-MOMENTUM-001",
+      "fingerprint_id": "DISC-RESIDUAL-MOMENTUM-001-v1",
+      "family": "residual_momentum",
+      "lane": "cheap_screen",
+      "stage": "CHEAP_SCREEN_READY",
+      "work_mode": "CHEAP_SCREEN",
+      "economic_mechanism": "Asset-specific momentum remaining after removing broad market movement may persist because idiosyncratic information and flows diffuse gradually.",
+      "hypothesis": "Residualized cross-sectional momentum has positive incremental after-cost expectancy across predeclared liquid universes and chronological splits.",
+      "target_markets": [
+        "liquid_crypto"
+      ],
+      "target_timeframes": [
+        "1h",
+        "4h",
+        "1d"
+      ],
+      "source_fingerprint_required": false,
+      "blocker": null,
+      "expected_profitability_impact": 0.72,
+      "expected_information_gain": 0.88,
+      "falsification_value": 0.9,
+      "sample_readiness": 0.85,
+      "compute_cost": 0.35,
+      "validation_requirements": [
+        "chronological_train_validation",
+        "untouched_oos",
+        "robustness_stability",
+        "multiple_testing_firewall",
+        "point_in_time_universe",
+        "realistic_cost_stress",
+        "cross_engine_if_selected",
+        "genuine_forward_shadow"
+      ]
+    },
+    {
+      "hypothesis_id": "DISC-VOL-BREAKOUT-001",
+      "fingerprint_id": "DISC-VOL-BREAKOUT-001-v1",
+      "family": "volatility_breakout",
+      "lane": "cheap_screen",
+      "stage": "CHEAP_SCREEN_READY",
+      "work_mode": "CHEAP_SCREEN",
+      "economic_mechanism": "Volatility expansion after compression can persist when new information, leverage adjustment, or liquidity withdrawal creates directional order-flow imbalance.",
+      "hypothesis": "A predeclared compression-to-breakout rule with volatility-scaled exits has positive after-cost expectancy outside its training period.",
+      "target_markets": [
+        "liquid_crypto",
+        "major_fx",
+        "index_futures_or_proxies"
+      ],
+      "target_timeframes": [
+        "15m",
+        "1h",
+        "4h"
+      ],
+      "source_fingerprint_required": false,
+      "blocker": null,
+      "expected_profitability_impact": 0.7,
+      "expected_information_gain": 0.82,
+      "falsification_value": 0.88,
+      "sample_readiness": 0.8,
+      "compute_cost": 0.4,
+      "validation_requirements": [
+        "chronological_train_validation",
+        "untouched_oos",
+        "robustness_stability",
+        "multiple_testing_firewall",
+        "realistic_cost_stress",
+        "cross_engine_if_selected",
+        "genuine_forward_shadow"
+      ]
+    },
+    {
+      "hypothesis_id": "DISC-LIQUIDITY-MEANREV-001",
+      "fingerprint_id": "DISC-LIQUIDITY-MEANREV-001-v1",
+      "family": "liquidity_shock_mean_reversion",
+      "lane": "cheap_screen",
+      "stage": "CHEAP_SCREEN_READY",
+      "work_mode": "CHEAP_SCREEN",
+      "economic_mechanism": "Short-lived liquidity shocks and forced order flow can temporarily dislocate price from its local equilibrium, followed by partial mean reversion when liquidity replenishes.",
+      "hypothesis": "A predeclared liquidity/volatility shock filter identifies short-horizon mean-reversion opportunities with positive after-cost expectancy.",
+      "target_markets": [
+        "liquid_crypto",
+        "major_equity_etfs"
+      ],
+      "target_timeframes": [
+        "5m",
+        "15m",
+        "1h"
+      ],
+      "source_fingerprint_required": false,
+      "blocker": null,
+      "expected_profitability_impact": 0.62,
+      "expected_information_gain": 0.78,
+      "falsification_value": 0.86,
+      "sample_readiness": 0.78,
+      "compute_cost": 0.45,
+      "validation_requirements": [
+        "chronological_train_validation",
+        "untouched_oos",
+        "robustness_stability",
+        "multiple_testing_firewall",
+        "realistic_cost_stress",
+        "genuine_forward_shadow"
+      ]
+    },
+    {
+      "hypothesis_id": "DISC-FRIZZ-PLAYBIT-EMA-001",
+      "fingerprint_id": "DISC-FRIZZ-PLAYBIT-EMA-001-v1",
+      "family": "frizz_playbit_ema",
+      "lane": "frizz_playbit_ema",
+      "stage": "BLOCKED_SOURCE_FINGERPRINT",
+      "work_mode": "CHEAP_SCREEN",
+      "economic_mechanism": "Trend-following EMA geometry may capture persistent directional order flow if the exact published rules are applied consistently across assets and timeframes.",
+      "hypothesis": "The exact user-specified Frizz/PlayBit EMA rules exhibit robust after-cost expectancy on a subset of assets/timeframes without post-hoc rule changes.",
+      "target_markets": [
+        "crypto",
+        "fx",
+        "indices",
+        "commodities"
+      ],
+      "target_timeframes": [
+        "15m",
+        "1h",
+        "4h",
+        "1d"
+      ],
+      "source_fingerprint_required": true,
+      "blocker": "Exact indicator source/rules must be pinned and fingerprinted before any screen; do not approximate or silently substitute the existing FFRIZZ family.",
+      "expected_profitability_impact": 0.76,
+      "expected_information_gain": 0.9,
+      "falsification_value": 0.92,
+      "sample_readiness": 0.3,
+      "compute_cost": 0.35,
+      "validation_requirements": [
+        "exact_source_fingerprint",
+        "faithful_rule_transcription",
+        "chronological_train_validation",
+        "untouched_oos",
+        "robustness_stability",
+        "multiple_testing_firewall",
+        "realistic_cost_stress",
+        "cross_asset_timeframe_search_adjustment",
+        "genuine_forward_shadow"
+      ]
+    },
+    {
+      "hypothesis_id": "DISC-BIG-MOVE-GENERATOR-001",
+      "fingerprint_id": "DISC-BIG-MOVE-GENERATOR-001-v1",
+      "family": "big_move_intelligence",
+      "lane": "hypothesis_generator",
+      "stage": "INDEPENDENT_GENERATOR",
+      "work_mode": "CHEAP_SCREEN",
+      "economic_mechanism": "Extreme moves may share measurable pre-move combinations of liquidity, leverage, supply, narrative, catalyst, and market-structure conditions.",
+      "hypothesis": "Matched-control big-move studies can generate measurable precursor hypotheses that improve future strategy discovery without using post-move information.",
+      "target_markets": [
+        "global_multi_asset"
+      ],
+      "target_timeframes": [
+        "event",
+        "1h",
+        "1d",
+        "1w"
+      ],
+      "source_fingerprint_required": false,
+      "blocker": null,
+      "expected_profitability_impact": 0.58,
+      "expected_information_gain": 0.95,
+      "falsification_value": 0.94,
+      "sample_readiness": 0.7,
+      "compute_cost": 0.25,
+      "validation_requirements": [
+        "point_in_time_reconstruction",
+        "matched_controls",
+        "post_hoc_story_filter",
+        "prospective_validation"
+      ]
+    },
+    {
+      "hypothesis_id": "DISC-MONEY-INTEL-GENERATOR-001",
+      "fingerprint_id": "DISC-MONEY-INTEL-GENERATOR-001-v1",
+      "family": "money_intelligence",
+      "lane": "hypothesis_generator",
+      "stage": "INDEPENDENT_GENERATOR",
+      "work_mode": "CHEAP_SCREEN",
+      "economic_mechanism": "Liquidity, credit, policy, capital-flow and positioning changes can transmit into asset returns through measurable causal channels.",
+      "hypothesis": "Money Intelligence can generate timestamp-defensible, testable strategy hypotheses with incremental predictive value over simple price-only baselines.",
+      "target_markets": [
+        "global_multi_asset"
+      ],
+      "target_timeframes": [
+        "1d",
+        "1w",
+        "1m"
+      ],
+      "source_fingerprint_required": false,
+      "blocker": null,
+      "expected_profitability_impact": 0.55,
+      "expected_information_gain": 0.92,
+      "falsification_value": 0.9,
+      "sample_readiness": 0.6,
+      "compute_cost": 0.2,
+      "validation_requirements": [
+        "timestamped_sources",
+        "causal_hypothesis",
+        "simple_baseline_comparison",
+        "prospective_validation"
+      ]
+    }
+  ]
+}

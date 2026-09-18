@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "description": "Canonical, machine-checkable record of rejected research fingerprints, mirrored from orchestration/specialist_coordination.json completion_evidence and AI_STATE.md's DURABLE NEGATIVE DATA RESULTS section. orchestration/specialist_coordination.py cross-checks any task that declares a fingerprint_id against this registry before it may be READY/IN_PROGRESS/PR_OPEN/QUEUED, and any engine proposing a new candidate should check is_rejected_fingerprint() before opening untouched OOS. A genuinely different economic hypothesis is not barred merely because its name resembles a rejected one -- see reconsideration_conditions on each entry.",
+  "version": 2,
+  "description": "Canonical, machine-checkable record of rejected research fingerprints, mirrored from orchestration/specialist_coordination.json completion_evidence and AI_STATE.md durable negative results. orchestration/specialist_coordination.py and the strategy discovery supervisor cross-check proposed candidates against this registry before untouched OOS or deep validation. A genuinely different economic hypothesis is not barred merely because its name resembles a rejected one; see reconsideration_conditions.",
   "entries": [
     {
       "fingerprint_id": "DATA-BASIS-001",
@@ -8,7 +8,10 @@
       "coordination_task": "COORD-DATA-003",
       "hypothesis": "Exact-shared-timestamp completed-candle OKX mark/index basis carries incremental after-cost predictive value for 24h/7d direction.",
       "economic_mechanism": "Persistent mark-index basis dislocations proxy funding/positioning pressure that mean-reverts or continues predictably enough to survive realistic trading costs.",
-      "horizons_evaluated": ["24h", "7d"],
+      "horizons_evaluated": [
+        "24h",
+        "7d"
+      ],
       "sample_sizes": {
         "24h_oos_samples": 134,
         "7d_oos_samples": 19
@@ -31,7 +34,10 @@
       "coordination_task": "COORD-DATA-004",
       "hypothesis": "Funding-rate-derived positioning pressure carries incremental after-cost predictive value for 24h/7d direction beyond the frozen training-only baseline.",
       "economic_mechanism": "Extreme or persistent funding rates proxy crowded positioning that mean-reverts or precedes liquidation cascades predictably enough to survive realistic trading costs.",
-      "horizons_evaluated": ["24h", "7d"],
+      "horizons_evaluated": [
+        "24h",
+        "7d"
+      ],
       "sample_sizes": {
         "24h_oos_samples": 38,
         "7d_oos_samples": 6,
@@ -40,8 +46,11 @@
       "rejection_evidence": {
         "24h_directional_hit_rate": 0.5,
         "24h_avg_net_bps": 43.56917973482839,
-        "24h_incremental_vs_training_only_baseline_bps": 0.0,
-        "24h_oos_half_avg_net_bps": [91.54259508197315, -4.404235612316374],
+        "24h_incremental_vs_training_only_baseline_bps": 0,
+        "24h_oos_half_avg_net_bps": [
+          91.54259508197315,
+          -4.404235612316374
+        ],
         "7d_status": "REJECTED_INSUFFICIENT_INDEPENDENT_OOS"
       },
       "rejection_reason": "Zero incremental 24h OOS expectancy versus the frozen training-only baseline despite a positive headline return, and unstable across OOS halves (+91.5bps then -4.4bps); 7d fell below the predeclared independent-sample floor.",
@@ -50,6 +59,39 @@
       "rejection_commit": "9172f7acc1cca9233e4791274aecac5500287bd8",
       "do_not_resubmit_same_fingerprint": true,
       "reconsideration_conditions": "A materially different economic mechanism using funding/positioning data (not a re-parameterized threshold or a renamed feature over the same funding-rate signal), with its own fresh predeclared frozen baseline and window, and at least the predeclared minimum independent OOS sample floor per horizon, may be proposed as a new fingerprint. Re-testing this exact fingerprint on the same evidence is not legitimate reconsideration."
+    },
+    {
+      "fingerprint_id": "ACC-002",
+      "fingerprint_version": 1,
+      "coordination_task": "STRATEGY-SELECTION-ACC-002",
+      "hypothesis": "Predeclared 24h relative-strength variants (4,16,64), (6,24,72), and (8,32,96) produce stable positive after-cost selection evidence across both supported liquidity subsets.",
+      "economic_mechanism": "Cross-sectional relative strength may persist because information and capital diffuse unevenly across liquid crypto assets, creating continuation that survives realistic costs.",
+      "horizons_evaluated": [
+        "24h"
+      ],
+      "sample_sizes": {
+        "predeclared_variants": 3,
+        "supported_liquidity_subsets": 2,
+        "eligible_candidates": 0
+      },
+      "rejection_evidence": {
+        "selection_artifact": "acc002-selection-evidence-6e95408c88b389bbb100bb8841a97695b785ef9a",
+        "archive_sha256": "5ad033ac97e057aafea0f4e72faca08c52ee19547f584c050f3ecf1126965efd",
+        "dataset_sha256": "896a127376c80972d07f58ca605a5673f186a2d9ea7ffda8f5266dc67b11890e",
+        "eligible_candidate_count": 0,
+        "point_in_time_membership_verified": false,
+        "untouched_oos_status": "LOCKED_UNTOUCHED_OOS",
+        "variant_results": {
+          "4_16_64": "REJECTED_STABILITY_0_OF_2_SUBSETS",
+          "6_24_72": "REJECTED_STABILITY_1_OF_2_SUBSETS",
+          "8_32_96": "REJECTED_STABILITY_0_OF_2_SUBSETS"
+        }
+      },
+      "rejection_reason": "No predeclared variant passed the required stability rule across both supported liquidity subsets. The superficially positive Top-30 result for (6,24,72) failed Top-15 and is ineligible. Untouched OOS remains unopened.",
+      "rejection_date": "2026-09-18",
+      "rejection_commit": "6e95408c88b389bbb100bb8841a97695b785ef9a",
+      "do_not_resubmit_same_fingerprint": true,
+      "reconsideration_conditions": "Reopen only for materially new data or a genuinely different scientific/economic hypothesis with a new immutable fingerprint, frozen selection contract, defensible provenance and multiple-testing controls. Do not relax the two-subset stability rule or tune this fingerprint using its rejected selection evidence."
     }
   ]
 }
