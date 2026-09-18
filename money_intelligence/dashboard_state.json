@@ -1,220 +1,239 @@
 {
   "schema_version": 1,
-  "as_of": "2026-09-14T23:20:09Z",
-  "status": "INITIAL_VALIDATED_ASSESSMENT",
+  "as_of": "2026-09-18T21:34:56Z",
+  "status": "VALIDATED_CAUSAL_UPDATE_WAIT_NO_EDGE",
   "world_money_map": {
-    "summary": "The picture remains mixed rather than broadly risk-on or risk-off, but the near-term U.S. funding-risk assessment has become more precise. Bank reserves were $3.0365T on Sep. 9 and ON RRP was only about $5.3B on Sep. 11. Relative to Q2 nominal GDP of $32.486T, reserves plus ON RRP are roughly 9.4% of GDP. A Federal Reserve FEDS Note published Aug. 26 finds that Treasury issuance shocks become much more powerful for repo rates when Fed-provided liquidity is below 10% of GDP. Sep. 15 is therefore a high-information stress test because major estimated-tax payments coincide with settlement of 3-year, 10-year and 30-year Treasury coupon securities and several bills. Latest validated repo data remain calm, so this is a conditional vulnerability rather than a current funding crisis. The Sep. 15-16 FOMC decision remains the dominant policy event risk.",
-    "regime": "TRANSITION / EVENT RISK / LOW-LIQUIDITY-SENSITIVITY ZONE",
-    "liquidity": "SHORT-TERM US EASING, BUT CURRENT FED LIQUIDITY ~9.4% OF GDP AND MORE SENSITIVE TO ISSUANCE SHOCKS",
-    "credit": "NO VALIDATED BROAD STRESS SIGNAL YET",
-    "policy": "RESTRICTIVE / DIVERGENT",
-    "risk_appetite": "MIXED / UNCONFIRMED"
+    "summary": "The current regime is restrictive but selective rather than uniformly risk-off. The Fed and BOJ have tightened, yet recent live controls show that action signs alone are poor price predictors when the moves are already priced: future-path/guidance surprise, relative rates, energy inflation and intermediation capacity matter more. The Sep. 15 U.S. tax/Treasury-settlement window produced a large TGA rebuild and reserve drain without a broad repo dislocation, materially weakening the idea that reserves plus ON RRP below about 10% of GDP is itself a scarcity trigger. At the same time, large broad U.S. equity-fund redemptions coexist with technology/financial/discretionary sector inflows, Asian equity inflows, government/short-duration bond demand, precious-metals inflows and a BTC rebound. Capital allocation is therefore cross-sectional and opportunity-cost-sensitive rather than a simple risk-on/risk-off switch.",
+    "regime": "RESTRICTIVE POLICY / SELECTIVE CAPITAL ALLOCATION / EXPECTATION-SENSITIVE PRICING",
+    "liquidity": "US RESERVES DRAINED ON SEP. 15-16, BUT REPO MEDIAN/TAILS REMAINED ORDERLY; AGGREGATE LIQUIDITY IS A SENSITIVITY VARIABLE, NOT A SCARCITY TRIGGER",
+    "credit": "NO VALIDATED BROAD CREDIT OR FUNDING CRISIS; GOVERNMENT/SHORT-DURATION DEMAND STRONGER THAN HIGH-YIELD DEMAND",
+    "policy": "FED TIGHTER; BOJ TIGHTER; ECB/BOE ALSO RESTRICTIVE OR INFLATION-SENSITIVE; MARKET IMPACT DEPENDS ON EXPECTATION-ADJUSTED PATH",
+    "risk_appetite": "SELECTIVE / DISPERSED / NOT BROADLY CONFIRMED"
   },
   "money_flows": [
     {
-      "title": "Treasury cash runoff temporarily released reserves",
-      "direction": "TREASURY -> BANK RESERVES",
-      "horizon": "1 week",
-      "confidence": "HIGH",
-      "summary": "On the Fed's Sep. 9 balance sheet, the Treasury General Account fell by about $101B from the prior Wednesday while reserve balances rose by about $107B. With the Fed securities portfolio nearly unchanged, Treasury cash movements were the dominant observable source of the reserve increase.",
-      "source": "Federal Reserve H.4.1, released Sep. 10, 2026"
+      "title": "Broad U.S. equity funds are losing capital while selected sectors still receive it",
+      "direction": "BROAD US EQUITY FUNDS -> SELECTIVE SECTORS / OTHER ASSET BUCKETS",
+      "horizon": "1-4 weeks",
+      "confidence": "HIGH on observed flows; MODERATE on destination inference",
+      "summary": "Reuters reported $31.44B of U.S. equity-fund outflows for a fourth consecutive week. U.S. sector funds still received about $2.29B, with financials, consumer discretionary and technology among the leaders. A broader global-fund dataset reported $23.21B global equity outflow but $6.26B Asian equity inflow and $4.49B sector-fund inflow.",
+      "source": "Reuters Sep. 18, 2026 fund-flow reports",
+      "invalidation": "Broad U.S. equity flows reverse and the sector/region dispersion disappears over several reporting periods."
     },
     {
-      "title": "Quarter-end Treasury cash rebuilding can reverse part of that easing",
-      "direction": "PRIVATE CASH / BANK RESERVES -> TREASURY",
-      "horizon": "through Sep. 30",
-      "confidence": "MODERATE",
-      "summary": "Treasury's Aug. 3 financing estimate assumes a $950B end-September cash balance. The Sep. 9 TGA stood near $844B. Because ON RRP is nearly exhausted, a future TGA rebuild has less buffer than in earlier cycles and can transmit more directly to reserves/private liquidity.",
-      "invalidation": "Treasury materially undershoots its $950B cash target, or offsetting Fed/liability flows replenish reserves.",
-      "source": "U.S. Treasury Aug. 3 borrowing estimate; Fed H.4.1; NY Fed/FRED ON RRP"
-    },
-    {
-      "title": "Sep. 15 concentrates potential repo demand and cash drainage",
-      "direction": "BANK/MMF CASH -> TREASURY / DEALER FINANCING DEMAND",
-      "horizon": "1-2 days",
+      "title": "Government and short-duration fixed income retains relative demand",
+      "direction": "CAPITAL -> GOVERNMENT / SHORT-DURATION BONDS",
+      "horizon": "weeks",
       "confidence": "MODERATE-HIGH",
-      "summary": "Sep. 15 combines a major estimated-tax payment date with settlement of 3-year, 10-year and 30-year Treasury coupon securities and several bills. Fed research shows that issuance and dealer Treasury holdings are much more rate-sensitive when reserves plus ON RRP are below 10% of GDP; current aggregate Fed liquidity is roughly 9.4% of Q2 nominal GDP.",
-      "invalidation": "Repo rates and upper percentiles remain orderly through the cash/settlement window, standing repo usage stays negligible, and TGA/reserves show no meaningful tightening.",
-      "source": "Federal Reserve FEDS Note Aug. 26, 2026; IRS 2026 tax calendar; U.S. Treasury tentative auction schedule; Fed H.4.1; BEA/FRED GDP"
+      "summary": "Despite weak aggregate bond-fund inflows, Reuters reported stronger demand for government and short/intermediate Treasury funds while high-yield and some credit buckets saw redemptions. This is consistent with investors demanding yield with less credit/duration risk under restrictive policy.",
+      "source": "Reuters Sep. 18, 2026 fund-flow reports"
     },
     {
-      "title": "Funding markets have not yet confirmed reserve scarcity",
-      "direction": "NO BROAD FUNDING STRESS CONFIRMATION",
+      "title": "Precious-metals funds are receiving capital while energy funds are not",
+      "direction": "COMMODITY FUND CAPITAL -> GOLD / PRECIOUS METALS OVER ENERGY",
+      "horizon": "weeks",
+      "confidence": "MODERATE-HIGH",
+      "summary": "Global commodity funds received about $1.17B in the latest weekly data, concentrated in gold/precious metals, while energy funds had about $148M of outflows. This is observed allocation evidence, not proof of a durable gold bull regime.",
+      "source": "Reuters Sep. 18, 2026 global fund-flow report"
+    },
+    {
+      "title": "BTC ETF demand reversed positive for one completed session, but the short cluster remains net negative",
+      "direction": "MARGINAL SPOT BTC ETF DEMAND IMPROVED; DURABILITY UNCONFIRMED",
       "horizon": "days",
-      "confidence": "MODERATE-HIGH",
-      "summary": "Latest validated repo observations remained orderly: SOFR was 3.62% on Sep. 10, the SOFR 99th percentile was 3.70%, and the TGCR 99th percentile was 3.65%. Standing repo operations remain available to limit economically significant upward pressure.",
-      "source": "NY Fed data via FRED; New York Fed standing repo framework"
+      "confidence": "HIGH on completed flow data; LOW-MODERATE on persistence",
+      "summary": "Farside records +$159.5M U.S. spot BTC ETF net flow on Sep. 17 after -$450.4M Sep. 15 and -$295.9M Sep. 16. The three completed sessions remain net negative and the positive day was concentrated in IBIT. ETH remained -$39.3M on Sep. 17. Sep. 18 flows were unfinalized at the information cutoff.",
+      "source": "Farside Investors BTC/ETH ETF flow tables accessed Sep. 18, 2026",
+      "invalidation": "Several completed sessions of broad positive BTC/ETH creations with improving spot relative strength and healthy leverage would invalidate the current WAIT characterization."
     },
     {
-      "title": "Global policy is not moving in one easing direction",
-      "direction": "CASH / BONDS REPRICE TOWARD HIGHER REQUIRED RETURNS",
-      "horizon": "weeks to months",
+      "title": "Treasury cash rebuilt sharply without validated broad funding stress",
+      "direction": "PRIVATE/BANK CASH -> TREASURY; RESERVES DOWN, BUT NO GENERALIZED REPO DISLOCATION",
+      "horizon": "event-window / days",
       "confidence": "HIGH",
-      "summary": "The ECB raised all three key policy rates by 25 bp on Sep. 10. In the U.S., the last FOMC target range was 3.50%-3.75% and the next decision is Sep. 16. This argues against treating the current environment as a synchronized global liquidity boom.",
-      "source": "ECB Sep. 10 decision; Federal Reserve calendar"
+      "summary": "Fed H.4.1 shows Sep. 16 Wednesday TGA at $991.708B, up $148.003B week/week, and reserve balances at $2.921537T, down $114.971B. Yet Sep. 15 SOFR median and 99th percentile and TGCR 99th percentile rose only about 2 bp. The cash-drain mechanism realized; the scarcity transmission did not bind broadly.",
+      "source": "Federal Reserve H.4.1 and New York Fed reference-rate data"
     }
   ],
   "opportunities": [
     {
-      "title": "Preserve cash optionality through the Sep. 15 funding test and Sep. 16 FOMC",
+      "title": "Broad macro one-factor trade",
       "action": "WAIT",
-      "horizon": "1-3 days",
+      "horizon": "days to weeks",
       "confidence": "MODERATE-HIGH",
-      "thesis": "The expected value of forcing a broad directional macro position is not yet demonstrated. Current Fed liquidity is in a more issuance-sensitive zone, but actual repo stress has not appeared. Sep. 15 provides a direct falsifiable test before the FOMC: if repo rates remain contained despite taxes and settlements, the scarcity thesis weakens; if broad secured-funding pressure appears, the risk case strengthens materially.",
-      "invalidation": "A clear asymmetric opportunity appears with independently verified flow support before these events resolve.",
-      "source": "Fed FEDS Note Aug. 26; IRS tax calendar; Treasury auction schedule; NY Fed repo data; FOMC calendar"
+      "thesis": "The live controls reject simple rules such as 'rate hike equals currency up/risk down' or 'reserve drain equals funding stress'. Oil, long yields, relative policy paths, growth/inflation information and positioning are pulling in different directions. No broad cross-asset directional edge clears the evidence bar.",
+      "confirmations": ["Consistent cross-market repricing in rates, USD, credit and equity breadth", "Persistent flow evidence rather than one-day price reaction"],
+      "invalidation": "A new asymmetric regime emerges with independent flow and price confirmation."
+    },
+    {
+      "title": "AI/technology physical-investment chain",
+      "action": "HOLD / RESEARCH FOR BUY CANDIDATES",
+      "horizon": "6-36 months",
+      "confidence": "MODERATE structural; asset-level LOW until valuation/cash-flow work is complete",
+      "thesis": "Sector fund flows and prior evidence of strong AI-related capex/financing support a structural capital-allocation theme across semiconductors, data centers, networking, power/grid and cooling. The canonical system does not yet have a valuation-adjusted individual-asset BUY thesis.",
+      "capital_source_destination": "Corporate/hyperscaler capex, credit financing and sector allocations -> physical AI infrastructure/value chain.",
+      "invalidation": "Capex commitments fall materially, financing tightens, utilization/monetization disappoints, or valuations imply returns below alternatives."
+    },
+    {
+      "title": "Tokenized-securities infrastructure",
+      "action": "HOLD / RESEARCH FOR BUY CANDIDATES",
+      "horizon": "1-5 years",
+      "confidence": "MODERATE structural; asset-level UNKNOWN",
+      "thesis": "The SEC's Sep. 17 temporary conditional innovation exemption lowers a real regulatory barrier for tokenized NMS stock venues. Potential value capture should be mapped at venue, custody, settlement, liquidity and infrastructure layers rather than assumed to accrue to generic crypto tokens.",
+      "capital_source_destination": "Potential future securities trading/settlement activity -> compliant tokenized-equity infrastructure.",
+      "invalidation": "Low issuer/venue adoption, weak liquidity, adverse final rulemaking, legal challenge or economics accruing mainly to incumbents without public-asset capture."
+    },
+    {
+      "title": "BTC after Sep. 18 rebound",
+      "action": "WAIT",
+      "horizon": "days to weeks",
+      "confidence": "MODERATE",
+      "thesis": "BTC reclaimed about $80k-$81k as Sep. 17 ETF flow turned positive, but the preceding two-day outflow cluster remains larger, Sep. 18 ETF flow is unfinalized, ETH flows remain weaker, and high-quality derivatives/exchange-flow decomposition is incomplete. A short-covering component is plausible but not primary-source validated.",
+      "confirmations": ["Several completed positive ETF sessions with breadth", "Price outperforms comparable risk assets", "Venue-grade OI/funding/liquidations show non-excessive fresh leverage", "Exchange/on-chain flows support spot accumulation"],
+      "invalidation": "Large ETF redemptions resume, price fails to hold the rebound, or leverage rises sharply without spot breadth."
     }
   ],
   "risks": [
     {
-      "title": "Sep. 15 can expose repo-market capacity constraints",
-      "direction": "SHORT-TERM FUNDING / DELEVERAGING RISK",
-      "horizon": "1-3 days",
-      "confidence": "MODERATE",
-      "summary": "Fed research finds that when reserves plus ON RRP are below 10% of GDP, Treasury coupon issuance has historically had a much larger impact on TGCR-IORB. Current Fed liquidity is roughly 9.4% of Q2 nominal GDP. Sep. 15 also combines estimated-tax cash drains with Treasury settlements. This raises sensitivity to a funding shock but does not establish that one will occur.",
-      "invalidation": "TGCR, SOFR and their upper percentiles remain contained; standing repo usage remains negligible; EFFR stays anchored; and post-event TGA/reserve data show adequate liquidity."
-    },
-    {
-      "title": "TGA rebuild can become a near-term liquidity drain, but stress is conditional",
-      "direction": "LIQUIDITY DRAIN RISK",
-      "horizon": "2 weeks",
-      "confidence": "MODERATE",
-      "summary": "A TGA rebuild toward Treasury's $950B quarter-end assumption can absorb private liquidity with little remaining ON RRP buffer. It becomes a stronger market-risk signal only if funding-market indicators confirm scarcity.",
-      "invalidation": "The TGA does not rebuild materially, reserve-supplying offsets dominate, or funding markets remain orderly despite the reserve decline."
-    },
-    {
-      "title": "Rates can stay high even if growth remains resilient",
-      "direction": "DURATION / HIGH-VALUATION ASSET RISK",
+      "title": "High rates and energy inflation can re-tighten financial conditions",
+      "direction": "DURATION / HIGH-VALUATION / CREDIT RISK",
       "horizon": "weeks to months",
+      "confidence": "MODERATE-HIGH",
+      "summary": "The Fed has tightened, the dollar is strong and oil remains above $100 even after its reversal. A renewed energy spike or further rate-path repricing could raise long yields and required returns, pressuring duration-sensitive assets.",
+      "invalidation": "Oil scarcity pressure continues to ease and long yields/real yields decline without a growth shock."
+    },
+    {
+      "title": "Yen intervention risk after BOJ hike failed to strengthen JPY",
+      "direction": "USDJPY REVERSAL / VOLATILITY RISK",
+      "horizon": "days to weeks",
       "confidence": "MODERATE",
-      "summary": "August payrolls rose 162k with unemployment at 4.1%, while August CPI was 3.4% y/y and 0.4% m/m. A resilient labor market plus elevated inflation can keep required returns high.",
-      "invalidation": "Inflation falls faster than expected and policy guidance turns materially more accommodative without a growth shock."
+      "summary": "USD/JPY rose toward about 158 after the expected BOJ hike as guidance disappointed hawkish expectations. Japanese authorities signaled concern, making intervention risk more relevant. This makes chasing the post-BOJ USDJPY move unattractive despite supportive carry.",
+      "invalidation": "Authorities tolerate sustained weakness and relative-rate spreads continue widening without intervention rhetoric/action."
+    },
+    {
+      "title": "Middle-East energy route risk remains fat-tailed",
+      "direction": "OIL / DIESEL / INFLATION VOLATILITY",
+      "horizon": "days to months",
+      "confidence": "HIGH that tail risk exists; LOW on direction",
+      "summary": "Crude benchmark prices have eased as effective supply improved, but pipeline damage, constrained routes and refined-product bottlenecks remain. Fresh attacks or loss of substitute routes could rapidly restore scarcity premiums.",
+      "invalidation": "Route traffic normalizes, damaged capacity returns, physical differentials and product cracks normalize, and inventories rebuild."
+    },
+    {
+      "title": "BTC rebound can be mistaken for durable accumulation",
+      "direction": "CRYPTO REVERSAL RISK",
+      "horizon": "days",
+      "confidence": "MODERATE",
+      "summary": "One positive BTC ETF session after two large negative sessions is not enough to establish a new institutional accumulation regime. The move may contain short-covering or broader risk-beta components.",
+      "invalidation": "Multi-session broad ETF creations, healthier spot relative strength and venue-grade derivatives/exchange evidence confirm durable demand."
     }
   ],
   "causal_chains": [
     {
-      "title": "Treasury cash drawdown -> reserve injection",
-      "confidence": "HIGH",
-      "summary": "TGA falls -> Treasury spends cash held at the Fed -> payments land in private bank deposits -> bank reserves rise -> short-term balance-sheet liquidity improves. This mechanism does not prove a durable bull regime.",
-      "source": "Federal Reserve H.4.1"
+      "title": "Treasury cash rebuild -> reserve drain, but stress requires binding intermediation",
+      "confidence": "HIGH / REGIME-SPECIFIC",
+      "summary": "Tax/settlement flows -> TGA rises -> bank reserves fall -> potential repo sensitivity; however, if dealer/MMF/private intermediation and Fed backstops have capacity -> median and tail repo rates remain orderly -> no generalized funding-stress transmission. Sep. 15-16 is a matched non-crisis control."
     },
     {
-      "title": "Low Fed liquidity + coupon settlement + tax payments -> repo sensitivity",
-      "confidence": "MODERATE-HIGH",
-      "summary": "Reserves plus ON RRP fall below roughly 10% of GDP -> repo rates become more sensitive to Treasury issuance/dealer financing demand -> coupon settlements increase financing demand while tax payments drain bank/MMF cash -> TGCR/SOFR can rise -> FHLBs may reallocate from fed funds toward repo -> EFFR can face upward pressure -> forced balance-sheet adjustment becomes more plausible. Standing repo operations and reserve-management purchases can interrupt this chain.",
-      "source": "Federal Reserve FEDS Note Aug. 26, 2026; IRS calendar; Treasury auction schedule"
+      "title": "Expected central-bank hike -> price response driven by relative path surprise",
+      "confidence": "MODERATE-HIGH / PROVISIONAL",
+      "summary": "Pre-event market embeds a likely action -> central bank delivers expected move -> headline contains little marginal information -> vote/guidance/future relative path becomes the shock -> FX/rates reprice accordingly. BOJ Sep. 18 and FOMC Sep. 16 both support this model."
     },
     {
-      "title": "Quarter-end TGA rebuild -> reserve drain -> funding stress only if reserve/repo capacity binds",
-      "confidence": "MODERATE-HIGH",
-      "summary": "Treasury cash accumulation drains private liquidity; near-zero ON RRP reduces buffering capacity; but stress requires usable reserves or repo-market lending/intermediation capacity to become scarce. Confirm with TGCR/SOFR percentiles, EFFR-IORB and standing-repo usage rather than aggregate reserves alone.",
-      "source": "Treasury financing estimate + Fed balance-sheet mechanics + Fed/NY Fed repo research"
+      "title": "Energy disruption -> price depends on effective deliverable supply",
+      "confidence": "MODERATE-HIGH / PROVISIONAL",
+      "summary": "Infrastructure damage -> expected shortage -> crude scarcity premium rises; rerouting, inventories, grade compatibility, product substitution and diplomacy alter effective deliverable supply -> benchmark premium can reverse even while physical-system stress persists."
     },
     {
-      "title": "Energy inflation -> policy restraint -> higher discount rates",
-      "confidence": "HIGH",
-      "summary": "Energy pressure -> higher inflation uncertainty -> central banks maintain or raise restrictive rates -> sovereign yields / required returns rise -> long-duration valuations face compression unless earnings or growth expectations compensate.",
-      "source": "ECB Sep. 10 decision; BLS Aug. CPI"
+      "title": "Broad equity redemptions can coexist with sector accumulation",
+      "confidence": "MODERATE",
+      "summary": "Macro/rate uncertainty -> broad funds lose capital -> allocators still direct capital to preferred sectors/regions with stronger expected return narratives -> index-level outflow does not imply uniform selling across all equities."
     }
   ],
   "discoveries": [
     {
-      "title": "Reserve growth and Fed asset growth are not the same thing",
-      "status": "SUPPORTED",
+      "title": "Aggregate Fed liquidity is a sensitivity condition, not a scarcity trigger",
+      "status": "SUPPORTED / REGIME-SPECIFIC",
       "confidence": "HIGH",
-      "summary": "Large reserve changes can come from liability-side shifts such as the TGA even when Fed securities holdings barely change.",
-      "source": "Fed H.4.1 Sep. 10, 2026"
+      "summary": "A roughly $148B TGA rise and $115B reserve decline occurred through the Sep. 15-16 event window without a broad median or 99th-percentile repo dislocation. Require actual intermediation/facility evidence before inferring funding stress."
     },
     {
-      "title": "Near-zero ON RRP changes Treasury-liquidity transmission",
-      "status": "SUPPORTED / REGIME-SPECIFIC",
+      "title": "Expectation-adjusted policy path is more informative than action sign",
+      "status": "SUPPORTED / PROVISIONAL",
+      "confidence": "MODERATE-HIGH",
+      "summary": "The widely expected BOJ hike was followed by yen depreciation, while the heavily priced FOMC hike also produced a muted/offset cross-asset reaction. The future relative path, guidance and vote composition appear more informative than raw hike/cut direction; historical event testing is still required."
+    },
+    {
+      "title": "Effective deliverable commodity supply matters more than headline damaged capacity",
+      "status": "SUPPORTED / PROVISIONAL",
+      "confidence": "MODERATE-HIGH",
+      "summary": "Brent reversed for several sessions despite continuing infrastructure/geopolitical stress as Saudi rerouting, inventories and diplomacy improved effective supply. Grade/location/product constraints still matter and can create local scarcity while the benchmark falls."
+    },
+    {
+      "title": "Cross-sectional fund flows can dominate simple risk-on/risk-off labels",
+      "status": "CANDIDATE / SUPPORTED BY CURRENT WEEK",
       "confidence": "MODERATE",
-      "summary": "With ON RRP near zero, Treasury cash rebuilding has less capacity to be absorbed by an ON RRP decline and can transmit more directly to reserves/private liquidity.",
-      "source": "NY Fed source via FRED ON RRP series"
-    },
-    {
-      "title": "Reserve drain is not the same as funding stress",
-      "status": "SUPPORTED / REGIME-SPECIFIC",
-      "confidence": "MODERATE-HIGH",
-      "summary": "A falling reserve balance is a liquidity headwind, not a mechanical sell signal. Funding-market confirmation is required.",
-      "source": "NY Fed/FRED SOFR; New York Fed standing repo framework"
-    },
-    {
-      "title": "Repo-market capacity can bind before aggregate reserve demand",
-      "status": "SUPPORTED / REGIME-SPECIFIC",
-      "confidence": "MODERATE-HIGH",
-      "summary": "Recent Fed research shows that day-to-day repo pricing is strongly driven by Treasury issuance, dealer inventory and MMF cash, and that repo-rate sensitivity rises sharply when reserves plus ON RRP fall below roughly 10% of GDP. At current levels, the system is already near 9.4%, so aggregate reserves can still look ample while repo capacity becomes the marginal constraint.",
-      "source": "Federal Reserve FEDS Note Aug. 26, 2026; Fed H.4.1; BEA/FRED GDP"
+      "summary": "Large broad U.S./global equity outflows coexist with sector and Asian equity inflows plus precious-metals demand. Test persistence and relative-return value before generalizing."
     }
   ],
   "changes_since_previous": [
-    "Current reserves plus ON RRP are roughly 9.4% of Q2 nominal GDP, placing the system in the Fed research bucket where Treasury issuance shocks have historically had much larger repo-rate effects.",
-    "Sep. 15 is now identified as a high-information funding stress test because estimated-tax payments coincide with multiple Treasury settlements.",
-    "The reserve-scarcity model has been upgraded: repo-market capacity, dealer financing demand and MMF cash supply can become binding before aggregate bank reserve demand does.",
-    "Latest validated repo observations remain orderly, so the new finding raises conditional risk rather than establishing a current funding crisis.",
-    "The decision-support stance remains WAIT through the Sep. 15 funding test and Sep. 16 FOMC."
+    "The Sep. 15 tax/Treasury-settlement test is no longer a future risk: the TGA/reserve drain realized, but broad repo pricing stayed orderly. The deterministic scarcity thesis is materially downgraded.",
+    "The Sep. 16 FOMC and Sep. 18 BOJ now provide two live controls supporting expectation-adjusted policy-path reasoning over action-sign heuristics.",
+    "Broad U.S. equity-fund redemptions are now explicitly separated from positive sector/Asian allocations; the regime is selective rather than simply risk-off.",
+    "BTC ETF demand turned positive on Sep. 17 and BTC rebounded above $80k, but the three completed Sep. 15-17 sessions remain net negative and ETH flows remain weaker; stance stays WAIT.",
+    "The crude causal model is upgraded from gross outage size to effective deliverability by route/location/grade/product after substitution and inventories."
   ],
   "unknowns": [
-    "The Sep. 15-16 FOMC decision and guidance are not known yet and can materially change the rates/liquidity interpretation.",
-    "The exact net cash impact of Sep. 15 Treasury settlements and estimated-tax payments is not known in advance.",
-    "Treasury's $950B end-September cash balance is an assumption, not a guaranteed realized level.",
-    "It remains unknown whether current repo-market capacity is sufficient to absorb the Sep. 15 combination of settlement demand and tax-driven cash outflows without measurable rate pressure.",
-    "The current liquidity mechanics do not yet establish a reliable directional forecast for equities, crypto, gold, credit or the dollar."
+    "Direct primary Standing Repo Facility take-up for Sep. 15-17 remains unresolved in this research lane; calm repo distributions make generalized stress unlikely but facility usage must not be inferred.",
+    "Sep. 18 BTC/ETH ETF flows were not finalized at the information cutoff.",
+    "Venue-grade BTC open-interest, funding, liquidation, exchange-flow and options-gamma data sufficient to separate spot demand from short covering have not yet been validated.",
+    "The expectation-adjusted policy-surprise hypothesis has only a small live-event sample and needs a timestamp-safe historical study.",
+    "It is not yet known whether current sector/region fund-flow dispersion predicts persistent relative returns after controlling for rates, earnings and valuation.",
+    "Middle-East energy logistics and diplomacy can change abruptly, leaving large directional uncertainty despite the current crude reversal."
   ],
   "research_frontier": [
-    "Highest priority: treat Sep. 15 as a falsifiable stress test. Compare TGCR-IORB, SOFR median/75th/99th percentiles, EFFR-IORB, standing-repo usage, TGA and reserve changes against the pre-event baseline.",
-    "After the Sep. 16 FOMC decision, measure the change in the expected policy path and identify which asset classes should gain or lose from the new real-rate regime.",
-    "Quantify historically how tax dates and Treasury settlements interact when reserves plus ON RRP are below 10% of GDP, controlling for Fed reserve-management purchases and dealer/MMF balance sheets.",
-    "Build a point-in-time global liquidity composite across the Fed, ECB, BoJ, PBoC, Treasury cash balances, dollar funding and major stablecoin supply.",
-    "Establish the immutable Money Intelligence forecast ledger before making the first directional forecast that clears the evidence bar."
+    "Highest priority: obtain primary/venue-grade BTC derivatives and exchange-flow evidence and test whether the Sep. 18 rebound is spot accumulation, short covering, fresh leverage or a mixture.",
+    "Build timestamp-safe FOMC/BOJ/ECB event study comparing pre-event action/path probabilities with realized action, guidance/vote surprise and 30m/1d/5d FX/rates/equity/gold responses.",
+    "Build historical tax/Treasury-settlement controls stratified by aggregate liquidity plus dealer/MMF/intermediation conditions, using repo median/tails and official-facility usage.",
+    "Extend energy matched controls to route/location/grade/product deliverability, inventories, freight/insurance and physical differentials.",
+    "Test whether broad-equity outflows plus sector-tech inflows predict relative strength after controlling for rates, earnings revisions and starting valuation.",
+    "Map real fee/cash-flow capture under the SEC tokenized-securities exemption across venues, custody, settlement, liquidity and blockchain infrastructure."
   ],
   "prediction_scorecard": {
     "frozen": 0,
     "resolved": 0,
     "directional_hit_rate": null,
     "brier_score": null,
-    "calibration_status": "LEARNING"
+    "calibration_status": "LEARNING / NO IMMUTABLE FORECAST CLEARS BAR YET"
   },
   "source_notes": [
     {
-      "title": "Federal Reserve H.4.1 - Sep. 10, 2026",
-      "summary": "Sep. 9 reserve balances $3.0365T, up $107.2B week/week; TGA $843.7B, down $100.7B; securities held outright essentially flat.",
+      "title": "Federal Reserve H.4.1 - Sep. 17, 2026",
+      "summary": "Sep. 16 Wednesday TGA $991.708B (+$148.003B w/w); reserve balances $2.921537T (-$114.971B w/w); securities held outright changed little.",
       "source": "https://www.federalreserve.gov/releases/h41/Current/"
     },
     {
-      "title": "Federal Reserve FEDS Note - Aug. 26, 2026",
-      "summary": "Repo-rate sensitivity to Treasury issuance rises sharply at low Fed liquidity. $50B net coupon issuance is associated with less than 1 bp of TGCR-IORB pressure above 12% of GDP but almost 10 bp below 10% of GDP. Day-to-day repo moves are driven strongly by issuance, dealer holdings and MMF cash supply.",
-      "source": "https://www.federalreserve.gov/econres/notes/feds-notes/repo-markets-and-the-feds-balance-sheet-implications-for-monetary-policy-implementation-20260826.html"
-    },
-    {
-      "title": "Q2 2026 nominal GDP",
-      "summary": "Current-dollar GDP was $32.486T at a seasonally adjusted annual rate in Q2 2026.",
-      "source": "https://fred.stlouisfed.org/series/GDP"
-    },
-    {
-      "title": "IRS Sep. 15 tax calendar",
-      "summary": "Sep. 15 is the third estimated-tax installment date for individuals and corporations, alongside several other federal tax deposit deadlines.",
-      "source": "https://www.irs.gov/businesses/small-businesses-self-employed/third-quarter-tax-calendar"
-    },
-    {
-      "title": "U.S. Treasury tentative auction schedule",
-      "summary": "3-year, 10-year and 30-year coupon securities and several bills settle Sep. 15, concentrating Treasury settlement flows on the tax date.",
-      "source": "https://home.treasury.gov/system/files/221/Tentative-Auction-Schedule.pdf"
-    },
-    {
-      "title": "NY Fed repo reference rates through Sep. 10, 2026",
-      "summary": "SOFR 3.62%, SOFR 99th percentile 3.70%, TGCR 99th percentile 3.65%: latest validated data were orderly ahead of the Sep. 15 event window.",
+      "title": "NY Fed reference rates - Sep. 15 event",
+      "summary": "SOFR median 3.64%, SOFR 99th percentile 3.72%, TGCR 99th percentile 3.65%; only modest event-date widening despite the cash drain.",
       "source": "https://www.newyorkfed.org/markets/reference-rates"
     },
     {
-      "title": "U.S. Treasury marketable borrowing estimate - Aug. 3, 2026",
-      "summary": "Treasury assumed a $950B end-September cash balance.",
-      "source": "https://home.treasury.gov/news/press-releases/sb0584"
+      "title": "Bank of Japan - Sep. 18, 2026 decision",
+      "summary": "Policy rate raised 25 bp to 1.25%; Reuters reported the move was widely expected and yen weakened after the decision as dissent/guidance limited follow-on tightening expectations.",
+      "source": "https://www.boj.or.jp/en/mopo/mpmdeci/mpr_2026/index.htm"
     },
     {
-      "title": "ECB policy decision - Sep. 10, 2026",
-      "summary": "ECB raised its three key rates 25 bp, reinforcing global policy divergence/restriction.",
-      "source": "https://www.ecb.europa.eu/press/pr/date/2026/html/ecb.mp260910~314e508016.en.html"
+      "title": "Farside U.S. spot BTC/ETH ETF flows",
+      "summary": "BTC Sep. 17 +$159.5M after -$450.4M Sep. 15 and -$295.9M Sep. 16; ETH Sep. 17 -$39.3M; Sep. 18 unfinalized at cutoff.",
+      "source": "https://farside.co.uk/btc/ and https://farside.co.uk/eth/"
+    },
+    {
+      "title": "Reuters Sep. 18 fund flows",
+      "summary": "Broad U.S./global equity outflows alongside positive sector/Asian allocations and precious-metals commodity-fund demand.",
+      "source": "Reuters fund-flow reports Sep. 18, 2026"
+    },
+    {
+      "title": "Reuters Sep. 18 oil market",
+      "summary": "Brent closed $104.87 and WTI $100.30 as effective supply expectations improved despite continuing geopolitical/physical route risk.",
+      "source": "https://www.reuters.com/business/energy/oil-prices-fall-1-hopes-limited-supply-disruptions-2026-09-18/"
     }
   ]
 }
