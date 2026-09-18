@@ -28,3 +28,20 @@ jobs:
           pytest -q tests/test_research_engines.py tests/test_research_engine_runners.py
       - name: Compile adapters
         run: python -m compileall -q research_engines
+
+  lean-source-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout open-source LEAN
+        uses: actions/checkout@v4
+        with:
+          repository: QuantConnect/Lean
+          path: .lean-source
+      - name: Prove source checkout is usable without QuantConnect credentials
+        run: |
+          test -f .lean-source/QuantConnect.Lean.sln
+          test -f .lean-source/Launcher/config.json
+          echo "LEAN open-source source tree available for independent validation lane"
