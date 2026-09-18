@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-18T14:38:06Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "independence": "Money Intelligence only; no signal-engine or broker state changed.",
+  "observed_facts": [
+    "Federal Reserve H.4.1 released 2026-09-17 shows Wednesday Sep. 16 TGA at $991.708B, up $148.003B from Sep. 9, while Wednesday depository-institution reserve balances were $2.921537T, down $114.971B. Fed securities held outright rose only $2.051B over the same Wednesday-to-Wednesday interval.",
+    "The H.4.1 weekly-average figures are less dramatic: average TGA $877.028B and average reserves $3.013794T, so point-in-time settlement/tax-date mechanics matter materially.",
+    "The BOJ raised its policy rate 25 bp to 1.25% on Sep. 18, but the yen weakened; Reuters reported USD/JPY around 158.07, up more than 1.2%, as markets focused on two dissenters and insufficiently hawkish guidance.",
+    "Reuters Sep. 18 reported Brent around $103-$104 as Saudi rerouting, product-inventory builds and Chinese refined-product exports reduced immediate supply-scarcity fears.",
+    "Reuters Sep. 18 fund-flow reporting showed global equity funds lost $23.21B in the week ended Sep. 16, the largest weekly outflow in nine months; U.S. equity funds lost $31.44B while Asian equity funds received $6.26B and sector funds received $4.49B, led by technology, financials and consumer discretionary."
+  ],
+  "inferences": [
+    "The pre-event TGA-rebuild mechanism was directionally validated at the balance-sheet level: Treasury cash accumulation coincided with a large reserve drain while Fed assets were nearly unchanged. This is not evidence by itself of funding stress or a risk-asset sell signal.",
+    "The Sep. 15-16 episode is a high-information test of the prior claim that sub-10%-of-GDP Fed liquidity is a sensitivity regime rather than a mechanical scarcity trigger. Final classification requires transaction-based SOFR/TGCR distributions and standing-repo usage for the event dates.",
+    "BOJ Sep. 18 is a fresh matched case supporting the expectation-adjusted-policy-surprise hypothesis: the sign of the action was hawkish, but the yen moved in the opposite direction because the hike was expected and guidance/vote composition changed the inferred future path.",
+    "Cross-asset flows remain selective rather than uniformly risk-off: aggregate U.S./global equity outflows coexist with sector-level technology inflows and Asian equity inflows."
+  ],
+  "hypotheses": [
+    {
+      "id": "tga-reserve-drain-without-scarcity",
+      "claim": "Large tax/settlement-driven TGA rebuilds can drain reserves materially without causing broad funding stress when private repo intermediation and Fed backstops retain capacity.",
+      "next_falsification_test": "Retrieve Sep. 15-17 SOFR/TGCR median and upper-percentile spreads to IORB, EFFR-IORB, and standing-repo take-up; compare with pre-event baseline."
+    },
+    {
+      "id": "expected-hike-dovish-relative-surprise-fx",
+      "claim": "For central-bank FX reactions, the expectation-adjusted future path and vote/guidance surprise dominate the sign of a fully anticipated rate hike.",
+      "next_falsification_test": "Add BOJ Sep. 18 as a matched event to the planned historical central-bank sample and compare pre-event pricing with 30m/1d/5d FX and rates responses."
+    }
+  ],
+  "big_move_lab_candidates": [
+    {
+      "case_id": "2026-09-18-boj-hike-yen-selloff",
+      "asset": "USD/JPY / JPY",
+      "catalyst": "BOJ +25 bp to 1.25%",
+      "mechanism": "expected hike -> little positive rate surprise -> two dissents / insufficiently hawkish guidance -> shallower inferred future tightening path -> yen selling / USDJPY rise",
+      "amplifiers_or_unknowns": ["carry positioning", "intervention risk", "U.S.-Japan rate differential", "participant-level marginal-flow attribution remains unknown"]
+    }
+  ],
+  "decision_support": "WAIT / NO NEW TRADE THESIS. The strongest new evidence improves causal understanding of Treasury-liquidity transmission and expectation-relative central-bank pricing but does not yet clear the canonical actionability bar.",
+  "sources": [
+    "https://www.federalreserve.gov/releases/h41/Current/",
+    "https://www.reuters.com/world/asia-pacific/bank-japan-set-raise-interest-rates-31-year-high-2026-09-17/",
+    "https://www.reuters.com/world/asia-pacific/yen-weak-ahead-boj-decision-rate-hike-expected-2026-09-18/",
+    "https://www.reuters.com/business/energy/oil-prices-fall-1-hopes-limited-supply-disruptions-2026-09-18/",
+    "https://www.reuters.com/world/china/global-markets-flows-graphic-pix-2026-09-18/"
+  ],
+  "next_priority": "Resolve the Sep. 15 funding-stress test with event-date repo distributions and standing-repo usage before changing the canonical dashboard or promoting the TGA mechanism from conditional sensitivity to realized funding stress/no-stress.",
+  "reporting_gate": "No owner-facing report: cumulative verifiable research/execution has not reached the required 60-minute threshold."
+}
