@@ -23,6 +23,10 @@ concurrency:
 
 jobs:
   fast-evidence:
+    # Quarantined: this legacy matrix bypasses the canonical single-candidate
+    # contract and opens unrelated OOS. The focused Render screener continues.
+    # Re-enable only through reviewed canonical routing, never an env-only flag.
+    if: ${{ false }}
     strategy:
       fail-fast: false
       max-parallel: 5
@@ -59,6 +63,9 @@ jobs:
           retention-days: 7
 
   research:
+    # Same quarantine as fast-evidence. Dependent audit/aggregation jobs skip
+    # automatically; previously generated artifacts are not validation evidence.
+    if: ${{ false }}
     strategy:
       fail-fast: false
       max-parallel: 16
