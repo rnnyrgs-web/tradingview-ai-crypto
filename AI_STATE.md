@@ -1,7 +1,7 @@
 # AI_STATE.md
 
-Last reconciled: 2026-09-18T23:21Z
-Last updated: 2026-09-18T23:21Z
+Last reconciled: 2026-09-18T23:34Z
+Last updated: 2026-09-18T23:34Z
 
 This is the authoritative compact handoff for agents working on `rnnyrgs-web/tradingview-ai-crypto`. Read the current default-branch `UNIFIED_PROFITABILITY_LEAD_SPEC.md` first and obey it as the exhaustive operating contract. Also obey the merged `SIGNAL_BACKTEST_CHARTS_SPEC.md`. When this file conflicts with an older chat summary, stale branch note, or stale base coordination row, verify current GitHub/runtime evidence and use the canonical coordination loader state. Do **not** read only the base JSON and treat an overridden historical task row as current.
 
@@ -13,63 +13,78 @@ Profitability means net expectancy after realistic fees, spread, slippage, fundi
 
 ## CURRENT CANONICAL STATE
 
-- Reconciled GitHub `main`: **`6e95408c88b389bbb100bb8841a97695b785ef9a`**, the merge commit for PR #397.
-- PR #396 is merged and adds immutable ACC-002 evidence-contract helpers for exact normalized-row hashes, ranked-universe/missing-symbol evidence, split timestamp boundaries, full pre-OOS predicate details, and declared search breadth.
-- PR #397 is merged. It adds the fail-closed 24h SELECTION-only ACC-002 audit runner plus a bounded main-push workflow that reruns only the already-declared focused screen, recomputes pre-OOS evidence from captured rows, seals the audit artifact, and keeps untouched OOS locked. Its exact pre-merge head `a4c703fe...` passed Security & Reliability.
-- The fresh post-merge ACC-002 audit result has **not yet been reconciled into this canonical state**. Do not infer that a candidate passed merely because #397 merged; the sealed artifact/result itself must be verified first.
-- Both Render services (`crypto-continuous-coordinator` and `tradingview-ai-crypto`) were last verified **live on exact commit `c897f0ee...`** after PR #388. PRs #396/#397 are research/evidence tooling; do not claim a newer production deployment without exact deployed-SHA evidence.
-- `main` is still not branch-protected. Direct commits therefore remain a governance/integration risk; always verify actual head before acting and require exact-head validation for proposed changes.
+- Verified GitHub `main` at reconciliation start: **`7a3fabe1abf13afcd6f29ff46b23281dc8df9d93`**, merge commit for PR #398. Re-verify actual head before every write/merge because `main` remains unprotected.
+- PR #396 merged immutable ACC-002 evidence-contract helpers. PR #397 merged the fail-closed fixed 24h ACC-002 selection-audit runner/workflow. PR #398 reconciled their handoff state.
+- The exact post-merge ACC-002 audit from main `6e95408c88b389bbb100bb8841a97695b785ef9a` has now been retrieved and inspected directly from GitHub Actions workflow run `35405308190`, artifact id `10572248517`.
+- The artifact ZIP digest is `sha256:5ad033ac97e057aafea0f4e72faca08c52ee19547f584c050f3ecf1126965efd`; the sealed audit payload hash is `e3df4729d0dee344912f53b27e096ef3ddad9610169e904372397d8f27becb03`.
+- Both Render services were last independently verified live on exact commit `c897f0ee...` after PR #388. Do not claim a newer production deployment without exact deployed-SHA evidence.
 - Canonical lifecycle remains **SELECTION** with **no active strategy candidate frozen**.
-- Broker/live authority remains **OFF**. Research/paper/shadow only. `live_promotions.json` must remain empty unless every canonical gate and explicit authorization allow otherwise.
-- Combined variable paid-project ceiling remains approximately **$30/month total** across approved paid project resources. Do not raise it or add paid services without explicit user authorization.
+- Broker/live authority remains **OFF**. Research/paper/shadow only. `live_promotions.json` remains empty.
+- Combined variable paid-project ceiling remains approximately **$30/month total**. Do not raise it or add paid services without explicit authorization.
 
-## CURRENT PROFITABILITY EVIDENCE — NO VALIDATED EDGE YET
+## CURRENT PROFITABILITY EVIDENCE — ACC-002 FIXED SCREEN REJECTED
 
-The freshest recorded focused ACC-002 selection evidence on 2026-09-18 rejected all three predeclared 24h relative-strength variants **before untouched OOS**:
+The sealed audit is reproducible and fail-closed:
 
-- `(4,16,64)`: failed stability; 0/2 supported liquidity subsets passed.
-- `(6,24,72)`: Top-30 looked positive under the recorded stress screen, but Top-15 failed; only 1/2 subsets passed, so the candidate is **ineligible**.
-- `(8,32,96)`: failed stability; 0/2 supported liquidity subsets passed.
+- source generated at `2026-09-18T23:25:41.221624+00:00`;
+- 1H OKX completed-history data;
+- exact normalized dataset SHA-256 `896a127376c80972d07f58ca605a5673f186a2d9ea7ffda8f5266dc67b11890e`;
+- exact coverage `2026-05-17T00:00:00Z` through `2026-09-18T22:00:00Z`;
+- 83,972 normalized rows; 30 ranked symbols; 28 scored symbols;
+- declared round-trip cost 12 bps, stressed at 1x / 1.5x / 2x / 3x;
+- every recorded pre-OOS result reproduced from the captured normalized rows;
+- untouched OOS remained `LOCKED_UNTOUCHED_OOS`; opened-candidate count = 0;
+- `research_only=true`, `trade_authority=false`, `promotion_authority=false`.
 
-Therefore **zero candidate was selected and untouched OOS remains unopened**. Do not cherry-pick the positive Top-30 `(6,24,72)` result, relax the two-subset rule, or open OOS for a failed candidate.
+All three frozen 24h ACC-002 configurations fail the unchanged two-subset selection/stability rule:
 
-The screen itself is still **exploratory / not promotion-grade scientific evidence** because the exact raw dataset was not durably bound to an immutable dataset hash/archive, the exact source time window was not fully persisted in the bounded summary, and the historical universe was current-survivor based rather than verified point-in-time membership. The evidence-envelope hash is not a substitute for a raw-dataset hash.
+- `(4,16,64)`: Top-15 FAIL; Top-30 FAIL; **0/2** supported subsets pass.
+- `(6,24,72)`: Top-15 FAIL; Top-30 FAIL; **0/2** supported subsets pass. Both supported subsets fail the **training** positive-rank-IC and 3x-cost net-spread requirements despite positive validation snapshots. Do not cherry-pick validation.
+- `(8,32,96)`: Top-15 FAIL; Top-30 FAIL; **0/2** supported subsets pass.
 
-Latest recorded mixed paper-account snapshot in issue #112 was losing overall and explicitly **not strategy-specific forward proof**. Treat that snapshot as stale unless refreshed from authentic runtime state; never use it to rescue a candidate.
+The sealed selection result is therefore `eligible_candidate_count=0`, `selected_candidate_present=false`, and `eligible_for_promotion_review=false`. This fixed ACC-002 screen is **REJECTED AT SELECTION**. Do not tune/rescue the three fingerprints, relax the two-subset rule, rename the same economic mechanism, or open their untouched OOS.
+
+The dataset is still non-promotable on provenance even if a pre-OOS row had looked attractive: historical point-in-time universe membership has 0 covered and 83,972 uncovered observations, `survivorship_safe=false`, and `promotion_allowed=false`.
+
+The latest recorded mixed paper-account snapshot remains losing overall and is not strategy-specific forward proof. Refresh only from authentic runtime evidence; never use paper aggregate P&L to rescue a rejected research fingerprint.
 
 ## SINGLE HIGHEST-VALUE BOTTLENECK
 
-The implementation bottleneck described previously is now merged. The highest-value blocker is **reconciling one fresh sealed ACC-002 selection-audit artifact from exact main `6e95408c...` and making the next strategy decision from that evidence**.
+The prior ACC-002 reconciliation bottleneck is closed. The highest-value bottleneck is now **selecting a materially distinct, low-cost economic mechanism that can be falsified with cleaner timestamp-safe evidence without spending another untouched holdout on a failed family**.
 
-Before spending another untouched holdout or widening the hypothesis search, verify that the artifact produced by the merged audit path actually contains and passes its own integrity/reproducibility checks for: exact source/bar identity; per-symbol first/last timestamps and row counts; exact ranked universe and missing symbols without substitution; deterministic normalized-row SHA-256; explicit point-in-time/survivorship status; train/validation/locked-OOS timestamp boundaries; the frozen three-variant search breadth; every pre-OOS predicate/failure reason; realistic cost stress; and `research_only=true` / `trade_authority=false` with untouched OOS still locked.
+Ranked next lanes:
 
-If point-in-time membership is unavailable, the artifact remains non-promotable even if a pre-OOS variant looks attractive. If all three predeclared ACC-002 variants still fail the frozen selection rule, record that screen as rejected and move to one materially distinct, predeclared economic mechanism. If a variant genuinely satisfies the frozen pre-OOS criteria, freeze its exact fingerprint first and only then follow the canonical untouched-OOS gate; do not tune it after seeing the result.
+1. **ACC-003-style regime-conditioned volatility-expansion / breakout screen on deeply liquid fixed assets, 24h first.** Highest current EV because it is economically distinct from cross-sectional relative-strength, can use single-asset completed OHLCV without historical survivor-membership reconstruction, adds no paid data service, and is cheap to falsify before OOS. Treat published trend/breakout claims as hypotheses only; recent literature is mixed and vanilla crypto time-series momentum may have decayed.
+2. **ACC-001 prospective microstructure/execution lane.** Potentially valuable but currently blocked until genuinely prospective forecast-time microstructure fields mature through the evidence path; do not reconstruct history.
+3. **ACC-004 ensemble weighting.** Premature while there is no independently validated component strategy; do not optimize an ensemble of unproven lanes.
+
+Cross-sectional reversal/residual-momentum ideas may remain research hypotheses, but they inherit a heavier point-in-time universe/survivorship burden and therefore should not outrank the simpler fixed-asset screen right now.
+
+## EXACT NEXT STEP
+
+Predeclare **one** cheap ACC-003 selection screen before viewing its outcomes. The screen must be a materially distinct regime-conditioned volatility-expansion/breakout mechanism on a fixed set of deeply liquid assets (prefer BTC/ETH first), with 24h as the primary horizon. Use completed timestamp-safe candles only; bind exact source/coverage/dataset hash; freeze the rule/fingerprint and search breadth before evaluation; use purged chronological train/validation with non-overlapping 24h observations; include realistic after-cost 1x/2x/3x stress; compare against a frozen simple baseline; report regime/subperiod stability; and keep untouched OOS closed unless the frozen pre-OOS gate genuinely passes.
+
+Do **not** broaden into a large indicator/parameter sweep. Do not select parameters from the same validation/OOS window used to judge them. If the clean pre-OOS screen fails, reject it quickly and move to the next materially distinct mechanism. If it passes, freeze the exact fingerprint before opening untouched OOS.
+
+Continue genuine prospective DATA-BREADTH-001 cohorts naturally in parallel; never backfill them. Keep the dashboard evidence view fail-closed until scientifically valid chart artifacts exist.
 
 ## CANONICAL DATA-MARKET HANDOFF
 
 The coordination loader applies the durable base plus later append-only overrides. Do **not** read only the base JSON and infer that an older READY row is still current.
 
-- `COORD-DATA-005`: **DONE**. DATA-BREADTH-001 selection/falsifier work was completed under the canonical frozen contract.
-- `COORD-DATA-006`: **DONE**. Prospective point-in-time universe capture was integrated and independently verified.
-- `COORD-DATA-007`: **BLOCKED**. It remains blocked until genuinely prospective point-in-time cohorts mature into enough independent, non-overlapping 24h/7d outcomes.
+- `COORD-DATA-005`: **DONE**. DATA-BREADTH-001 selection/falsifier work completed under the frozen contract.
+- `COORD-DATA-006`: **DONE**. Prospective point-in-time universe capture integrated and independently verified.
+- `COORD-DATA-007`: **BLOCKED** until genuinely prospective point-in-time cohorts mature into sufficient independent non-overlapping 24h/7d outcomes.
 
-Do not select another data candidate while DATA-BREADTH-001 is awaiting that prospectively captured evidence. Never backfill or reconstruct missing historical membership from current survivors.
+Do not select another data-market candidate while DATA-BREADTH-001 awaits that evidence. Never backfill or reconstruct missing historical membership from current survivors.
 
-## EXACT NEXT STEP
+## CROSS-ENGINE / WORKER STATUS
 
-**Do not add another strategy family or tune the three ACC-002 variants until the merged #397 audit result is reconciled.** Retrieve/inspect the sealed audit produced from exact main `6e95408c...` (or rerun the same fixed audit on that exact code/data path if the first run failed operationally), verify its integrity hash, dataset manifest, full pre-OOS predicate, split timestamps, survivorship verdict, and locked-OOS status, then make exactly one decision:
-
-- if all three frozen variants fail, mark this ACC-002 screen rejected and advance to one materially distinct, predeclared economic mechanism rather than parameter-mining the same family;
-- if a variant genuinely passes every frozen pre-OOS selection/stability criterion, freeze its exact fingerprint and proceed through the canonical untouched-OOS gate without changing parameters.
-
-A 24h lane remains preferable while 7d history/point-in-time evidence is weaker. Genuine prospective point-in-time cohorts from DATA-BREADTH-001 must continue maturing naturally; never backfill them.
-
-## CROSS-ENGINE / INFRASTRUCTURE STATUS
-
-- PRs #390–#392 established research-only VectorBT/Nautilus/LEAN reconciliation infrastructure. This is validation tooling, not an edge.
-- Draft PR #394 hardens mismatched/replayed/malformed engine-evidence rejection. Its exact head has passed both Security & Reliability and Research Engines CI, but it remains infrastructure work and must not displace the ACC-002 evidence bottleneck or be called profitability progress.
-- Draft PRs #387/#389 remain scientifically/economically blocked unless their scope becomes necessary for the single selected candidate. Do not merge broad backtesting infrastructure merely because tests are green.
-- Claude/Claude Code and deterministic workers are subordinate to this same single-candidate mission. Do not reset retry/failure counters merely to manufacture activity.
+- PRs #390–#392 are research-only VectorBT/Nautilus/LEAN reconciliation infrastructure, not an edge.
+- Draft PR #394 hardens mismatched/replayed/malformed engine evidence and has green exact-head validation, but infrastructure work must not displace the next falsification-oriented strategy screen.
+- Claude signal-accuracy runner has repeatedly returned BLOCKED and is currently paused after a model-execution failure; do not reset merely to create activity.
+- Claude Code testing/security runner remains stale at `COORD-TEST-001` after six failed reserved attempts with `TASK_RETRY_LIMIT`; do not reset without a concrete high-EV reason.
+- Deterministic/specialist state must remain subordinate to the one-candidate mission. `live_promotions.json` is empty.
 
 ## BACKTEST / EVIDENCE CHART CONTRACT
 
@@ -82,22 +97,22 @@ A 24h lane remains preferable while 7d history/point-in-time evidence is weaker.
 - never rewrite frozen OOS or forward evidence;
 - never let an attractive curve bypass promotion gates.
 
-Until a scientifically valid artifact exists, the dashboard must fail closed with **`BACKTEST CHART NOT YET VERIFIED` / `INSUFFICIENT EVIDENCE`** rather than display a misleading performance curve. Issue #381 tracks that UI contract, but dashboard work is secondary to producing valid underlying evidence.
+Until a scientifically valid artifact exists, the dashboard must fail closed with **`BACKTEST CHART NOT YET VERIFIED` / `INSUFFICIENT EVIDENCE`** rather than display a misleading performance curve. Issue #381 tracks the UI contract, but chart/UI work remains secondary to valid underlying strategy evidence.
 
 ## SAFETY INVARIANTS
 
 - Broker disconnected; no real-order authority.
 - Existing $100,000 paper ledger remains authentic/append-only; never reset, reseed, rewrite, or cosmetically improve it.
-- Code changes on isolated branches only.
+- Code/state changes on isolated branches only.
 - Confirmed defects get regression coverage where practical.
 - Require exact-head **Security and Reliability** green before merge; runtime-affecting changes also require exact deployed-SHA verification.
 - Missing, stale, malformed, future, ambiguous, provenance-uncertain, or scientifically insufficient evidence fails closed to WAIT / RESEARCH_ONLY.
 - Never weaken chronology, purging, non-overlap, untouched OOS/forward boundaries, multiple-testing controls, point-in-time universe safety, cost realism, abstention, or promotion gates to obtain a pass.
 - One promising backtest/OOS result grants no production, broker, paper-authority, or promotion authority.
-- If the predefined rigorous evidence/validation criteria are genuinely satisfied, report that successful result clearly with exact supporting evidence and limitations.
 
 ## DURABLE NEGATIVE RESULTS — DO NOT RESCUE
 
+- `ACC-002` fixed 24h cross-sectional relative-strength screen `(4,16,64)`, `(6,24,72)`, `(8,32,96)`: **rejected at selection** on sealed exact-data audit; all three have 0/2 supported liquidity subsets passing and untouched OOS remains locked. Do not retune/relabel/reopen these fingerprints.
 - `DATA-BASIS-001`: rejected. Recorded 24h OOS average net about **-8.49 bps** over 134 independent samples; 7d about **-51.21 bps** over 19 samples. Do not tune/relabel/reopen the same fingerprint.
 - `DATA-FUNDING-001`: rejected current fingerprint. Its superficially positive 24h headline had **0 incremental expectancy versus the frozen training-only baseline** and unstable halves; 7d lacked the evidence floor. Do not rescue it.
 - Historical Binance/Bybit OI routes previously returned access blocks (451/403). Do not repeatedly burn capacity on unchanged blocked routes unless access conditions materially change.
