@@ -25,4 +25,16 @@ def lagged_signals(contract, entries, exits):
             continue
         shifted_entries[target] = bool(entries[index])
         shifted_exits[target] = bool(exits[index])
+
+    conflicts = [
+        index
+        for index, (entry, exit_) in enumerate(zip(shifted_entries, shifted_exits))
+        if entry and exit_
+    ]
+    if conflicts:
+        raise ValueError(
+            "frozen signal path has entry/exit conflict at execution bars: "
+            + ",".join(str(i) for i in conflicts[:10])
+        )
+
     return shifted_entries, shifted_exits
