@@ -1,7 +1,7 @@
 # AI_STATE.md
 
-Last reconciled: 2026-09-18T23:43Z
-Last updated: 2026-09-18T23:43Z
+Last reconciled: 2026-09-18T23:46Z
+Last updated: 2026-09-18T23:46Z
 
 This is the authoritative compact handoff for agents working on `rnnyrgs-web/tradingview-ai-crypto`. Read the current default-branch `UNIFIED_PROFITABILITY_LEAD_SPEC.md` first and obey it as the exhaustive operating contract. Also obey the merged `SIGNAL_BACKTEST_CHARTS_SPEC.md`. When this file conflicts with an older chat summary, stale branch note, or stale base coordination row, verify current GitHub/runtime evidence and use the canonical coordination loader state. Do **not** read only the base JSON and treat an overridden historical task row as current.
 
@@ -17,7 +17,7 @@ Profitability means net expectancy after realistic fees, spread, slippage, fundi
 - PR #396 merged immutable ACC-002 evidence-contract helpers. PR #397 merged the fail-closed fixed 24h ACC-002 selection-audit runner/workflow. PR #398 reconciled their handoff state.
 - The exact post-merge ACC-002 audit from main `6e95408c88b389bbb100bb8841a97695b785ef9a` has now been retrieved and inspected directly from GitHub Actions workflow run `35405308190`, artifact id `10572248517`.
 - The artifact ZIP digest is `sha256:5ad033ac97e057aafea0f4e72faca08c52ee19547f584c050f3ecf1126965efd`; the sealed audit payload hash is `e3df4729d0dee344912f53b27e096ef3ddad9610169e904372397d8f27becb03`.
-- PR #400 predeclares the next bounded selection hypothesis in `orchestration/acc003_breakout_candidate.json` with fingerprint `27dd55c7caa6e6202cd9561c149cd49f70ff703657ba44af96487609b882d1ea`; until #400 is merged, that contract is proposed state, not default-branch functionality or evidence.
+- PR #400 predeclares the next bounded selection hypothesis in `orchestration/acc003_breakout_candidate.json` with fingerprint `113697e7dd7e22b38e86975bdbaddc8d1167d4b75693d1021b15272a80bf4529`; until #400 is merged, that contract is proposed state, not default-branch functionality or evidence.
 - Both Render services were last independently verified live on exact commit `c897f0ee...` after PR #388. Do not claim a newer production deployment without exact deployed-SHA evidence.
 - Canonical lifecycle remains **SELECTION** with **no active strategy candidate frozen**.
 - Broker/live authority remains **OFF**. Research/paper/shadow only. `live_promotions.json` remains empty.
@@ -65,7 +65,7 @@ Cross-sectional reversal/residual-momentum ideas may remain research hypotheses,
 
 After PR #400 passes exact-head validation and becomes canonical, implement and execute **exactly** `orchestration/acc003_breakout_candidate.json` without viewing outcomes before the contract is frozen. Do not alter its primary rule or promote a sensitivity variant into the candidate after seeing results.
 
-The frozen screen is BTC-USDT and ETH-USDT, 1H completed OKX bars, 24h primary horizon, one daily non-overlapping decision, 72h breakout after causal low-volatility compression, 12 bps base round-trip cost with 1x/2x/3x stress, a frozen no-compression breakout baseline, chronological 60/40 train/validation with a 24h purge, exact dataset identity/hash binding, minimum per-asset evidence floors, and untouched OOS locked. The four predeclared sensitivity checks are falsifiers only and have no selection authority.
+The frozen screen is BTC-USDT and ETH-USDT, 1H completed OKX bars, 24h primary horizon, one daily non-overlapping decision, 72h breakout after causal low-volatility compression, 12 bps base round-trip cost with 1x/2x/3x stress, a frozen no-compression breakout baseline, chronological 60/40 train/validation with a 24h purge, exact dataset identity/hash binding, minimum per-asset evidence floors, and untouched OOS locked. Request the complete available normalized history up to the frozen 50,000-bar-per-asset bound and require at least 17,520 normalized hourly bars for each asset; if that minimum is unavailable, report `INSUFFICIENT_EVIDENCE` rather than silently shortening the contract. Report exact returned coverage and never synthesize older history. The four predeclared sensitivity checks are falsifiers only and have no selection authority.
 
 If the clean pre-OOS screen fails any frozen gate or lacks the evidence floor, reject/mark insufficient without tuning or rescuing it and keep OOS closed. If it genuinely passes every frozen gate, freeze the exact candidate and exact dataset identity before requesting untouched OOS. Continue genuine prospective DATA-BREADTH-001 cohorts naturally in parallel; never backfill them. Keep the dashboard evidence view fail-closed until scientifically valid chart artifacts exist.
 
