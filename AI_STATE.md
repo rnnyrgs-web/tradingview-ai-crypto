@@ -1,193 +1,105 @@
 # AI_STATE.md
 
-Last reconciled: 2026-09-16
-Last updated: 2026-09-16
+Last reconciled: 2026-09-18
+Last updated: 2026-09-18
 
-This file is the authoritative compact handoff for future agents working on `rnnyrgs-web/tradingview-ai-crypto`. Read it before changing the system. When this file conflicts with an older chat summary, branch note, or stale base coordination row, this file plus the repository's canonical coordination loader state wins.
+Authoritative bounded handoff for `rnnyrgs-web/tradingview-ai-crypto`. Read current main, this file, AGENTS.md and canonical coordination (base + overrides) before work. GitHub/code/check results override older conversation claims. This handoff is proposed on PR #394; it is not yet integrated into main.
 
-## PRIMARY OBJECTIVE
+## CURRENT OBJECTIVE
 
-1. Find and validate **one strategy** with genuine sustainable after-cost profitability. At most one candidate may consume deep research/backtest/implementation capacity at a time.
-2. Use broad, cheap deterministic screening only to select or reject that single candidate. Deprioritize unrelated broad research, blind parameter sweeps, redundant strategies, and work created merely to keep workers busy.
-3. Maximize **genuine forward BUY/SELL precision/accuracy** second.
-4. Never improve reported results by weakening chronology, untouched OOS/forward gates, multiple-testing controls, point-in-time universe safety, realistic execution/risk assumptions, abstention, or fail-closed behavior.
+Discover -> backtest -> falsify -> validate -> forward-test one strategy with useful trade frequency and credible positive expectancy after realistic costs. At most one candidate may consume deep research. No profitable strategy has been established by this milestone.
 
-Profitability means net expectancy after realistic fees, spread, slippage, funding/carry, adverse selection, missed fills, market impact, and drawdown/risk. Headline accuracy and trade count are not objectives by themselves.
+For this bounded Work run, finish/verify the cross-engine research foundation associated with PR #392. The user explicitly assigned implementation and this AI_STATE.md handoff. Signaling, dashboard/UI/P&L display, alerts, Strategy Discovery Supervisor, Frizz research and other roadmap work are deprioritized and were not started. Preserve enough capacity for tested durable checkpoints.
 
-## CURRENT MAIN / DEPLOYMENT STATE
+## CURRENT MAIN / WHAT WAS VERIFIED BEFORE CHANGES
 
-- Latest GitHub `main` verified during this reconciliation: `881f1ed33b7a77fd29999ac57d57d8020c0ce236` (merge of PR #384, safe Sentry API failure status).
-- PR #336 exact candidate head `53159a2a8e7db7a31ef0370b133701cedc458a82` passed exact-head Security and Reliability before merge. It adds bounded fleet coordination across ChatGPT/OpenAI, Claude research, Claude Code implementation, and existing deterministic workers while preserving isolated branches, no autonomous unsafe merge authority, no real-order authority, rejected-fingerprint memory, and fail-closed scientific gates.
-- PR #331 (`745fe5b3fd291564f8a861a68cc8dd24db279aac`) keeps ACC-005 blocked while the frozen DATA-BREADTH-001 prospective evidence matures; PR #332 keeps ACC-001 blocked until timestamp-defensible forecast-time microstructure/execution evidence is durably captured; PR #334 isolates/bounds evaluation runtime so fresh production scans cannot be cancelled solely because evaluation consumed the scan budget.
-- These are scientific/control-plane/reliability changes. They do not weaken untouched OOS/forward validation, timestamp causality, leakage protections, paper-ledger authenticity, broker-disconnected state, promotion gates, execution realism, budget controls, or real-order authority.
-- The last independently recorded Render verification in this file predates PR #336. Treat GitHub `main` above as authoritative repository state, but re-check both Render services before asserting that the PR #336 merge commit is the currently deployed runtime revision.
-- There were no open GitHub PRs when this reconciliation branch was prepared.
+- Current main verified: `21875225951481cc866dab6d0f99c430152ea452`, merge of PR #392. The old AI_STATE.md still named September 16 main `881f1ed...`; that was stale.
+- PR #392 is MERGED (2026-09-18T22:44:12Z), not an open work branch. Its final exact head is `7a3a0878a0e5d1ac104c43cb0249d1dee815dd2e`; the user's earlier `65bd8c4...` head is superseded.
+- Verified on that final #392 head: Security and Reliability run `35402594855` SUCCESS; Research Engines run `35402594901` SUCCESS. Both adapter-contract and source-built three-engine-proof jobs completed successfully, including execution/reconciliation and artifact upload. Adapter log: 19 passed, no skips.
+- Source-built LEAN proof artifact `10571088611`, `three-engine-frozen-path-35402594901`, digest `sha256:54ed130a971a0338228c12019685788d3c5b6c3335da3d9c12e871bdf986efef`, expires 2026-10-18. This proves the fixed fixture only.
+- Actual code executes real VectorBT and NautilusTrader paths and a real source-built LEAN SPY fixture. Native engine is absent from cross-engine reconciliation. No adapter output is substituted for another.
+- Read AGENTS.md, docs/CHATGPT_SPECIALISTS.md, docs/MULTI_ENGINE_PROTOCOL.md, coordination base/overrides, and loaded testing-security queue with PYTHONPATH=. COORD-TEST-001 remains a separate existing task; this direct user-assigned milestone did not take over its ownership. Open #387/#388/#389 were inspected for overlap; their files were not edited.
+- Initial local baseline without optional research packages: 18 passed, 1 skipped. These counts are separate from GitHub's real-engine proof.
 
-Do not confuse a later state-only commit with a new trading/runtime strategy baseline. State-only reconciliations can advance `main` without changing trading behavior.
+## IMPLEMENTED IN PR #394
 
-## SAFETY INVARIANTS
+1. Python adapters recompute the fingerprint of actual canonical OHLCV before executing. Changed prices, volume or chronology cannot inherit a different dataset's declared identity.
+2. Contract validation rejects missing identities, nonfinite costs/sizing/capital and noninteger decision lags. Dataset validation rejects nonfinite/negative values and lossy timestamps.
+3. LEAN evidence must echo a fresh UUID generated for the current subprocess invocation. The adapter passes a copied per-process environment containing that ID, contract fingerprint, evidence path, capital and quantity. The C# fixture emits the ID. A successful process cannot reuse a previous file. Fixed executable/whitelisted argv and shell=False remain intact.
+4. Reconciliation rejects malformed trade/metric schemas, wrong engine attribution, missing or unsafe authority fields, nonfinite/oversized numbers, bad chronology, trade-count inconsistencies, fewer than two distinct engines and nonfinite tolerances. It supports an expected contract fingerprint; the three-engine CI caller supplies it. Invalid evidence returns WAIT_RESEARCH_ONLY without authority.
+5. VectorBT open positions cannot masquerade as closed round trips. Both Python engines are exercised for long/short paths, nonzero fees, quantity and initial capital.
 
-- `live_promotions.json` remains empty unless genuine forward profitability evidence and every canonical promotion gate authorize otherwise.
-- Broker remains disconnected. Research, shadow execution, and paper trading have no real-order authority.
-- Never reset, rewrite, reseed, or cosmetically improve the authentic paper ledger. The canonical starting account is the existing **$100,000** paper account; history remains append-only/authentic.
-- Combined calendar-month variable paid-project ceiling remains approximately **$30 USD total** across approved OpenAI API, Anthropic API, and any other explicitly approved paid project resource. Target roughly $1/day on average, carry unused allowance forward, allow occasional higher-value $2–3 days only when justified, and throttle/defer low-value paid-AI work when ahead of pace. Never raise the ceiling or add another paid service without explicit user approval.
-- Paid-AI throttling or exhaustion must never stop free/local Python research, backtests, market-data collection, paper trading, signal generation, deterministic diagnostics, dashboards, scans, logging, or evidence accumulation.
-- Code changes only on isolated branches.
-- Confirmed defects require regression coverage where practical.
-- Require exact-head **Security and Reliability** green before merge.
-- Verify deployment health after runtime-affecting merges.
-- Missing, stale, malformed, future, ambiguous, or scientifically insufficient evidence fails closed to WAIT / RESEARCH_ONLY.
-- No candidate gets production, broker, paper-authority, or promotion authority merely from one promising research result.
+Changed components: research_engines/{contract,dataset,evidence,protocol,vectorbt_adapter,nautilus_adapter,lean_adapter,ci_three_engine}.py; research_engines/lean_fixture/FrozenPathResearchAlgorithm.cs; tests/test_research_engines.py; tests/test_research_engine_runners.py; this file and its historical archive. Production dependencies, workflows, strategy workers, paper ledger and broker state were not changed.
 
-## CANONICAL COORDINATION STATE — IMPORTANT OVERRIDE RULE
+## BRANCH / COMMITS / PR STATUS / EXACT HEAD
 
-The canonical specialist state is produced by the coordination loader using:
+- Role: direct user-assigned implementation + handoff; task label CROSS-ENGINE-MILESTONE-1.
+- Branch: `agent/cross-engine-milestone1-audit`, based on current main above.
+- Successor PR: https://github.com/rnnyrgs-web/tradingview-ai-crypto/pull/394 — DRAFT / PR_OPEN at handoff creation. No merge or deployment by this run.
+- Published implementation checkpoints:
+  - `c4394b5a021151a7de10a4431fa1b49562a46831`: dataset/contract rejection and LEAN replay protection.
+  - `eaae925bb4d8f93b09506646237468693bd7d99e`: schema/authority/chronology reconciliation and open-position rejection.
+  - `90645af1a231aaf6cb82ff36e7de55064b703f08`: real cost/direction/size tests, LEAN failure paths and oversized-number rejection.
+- Exact implementation head tested locally: `90645af1a231aaf6cb82ff36e7de55064b703f08`. A later documentation-only commit adds this handoff. Read PR #394's current head SHA / `git rev-parse HEAD` before continuing; a file cannot embed its own eventual commit SHA.
+- Local git push had no HTTPS credential; commits were durably published using the authorized GitHub connector Git-object/ref operations with force=false. Local checkout was then aligned with identical published trees. No user credential is required for continuation through that connector.
 
-- `orchestration/specialist_coordination.json` as the durable base; and
-- `orchestration/specialist_coordination_overrides.json` as the later append-only reconciliation layer.
+## TESTS RUN / EXACT RESULTS / REVIEW
 
-Do **not** read only the base JSON and conclude that `COORD-DATA-005` is still READY. That was the control-plane drift corrected by this reconciliation.
+- Latest focused command: `python -m pytest -q tests/test_research_engines.py tests/test_research_engine_runners.py --tb=short` -> **78 passed, 0 skipped, 10 upstream NumPy/pandas/Nautilus deprecation warnings**, 7.67 seconds locally, Python 3.12, VectorBT 0.28.5, NautilusTrader 1.231.0.
+- Real Python engines independently match four cases, using entry bar 1 and exit bar 3: long/zero cost P&L 2.0; long/10bps/quantity3 P&L 5.694; short/10bps/quantity3 P&L -6.306; short/zero cost P&L -2.0. Capital is 100000 or 20000 as frozen per case. Synthetic engineering fixtures, not profitability evidence.
+- Tests reproduce dataset mismatch, malformed contract/data, old LEAN results, copied engine attribution, missing engines, malformed/unsafe evidence, inconsistent chronology/counts, wrong expected identity, disagreement, infinite tolerance and open-position defects. LEAN unavailable/nonzero exit/timeout/missing result/nonobject result/not-executed paths cannot return success.
+- Initial new guards: 18 intended failures before the first fix (plus optional-engine skips). Second batch: 23 failures before reconciliation hardening. Real VectorBT open-position regression failed before its fix. Independent reviewer reproduced oversized-integer OverflowError; regression failed before its fix and now passes.
+- `PYTHONPATH=. python orchestration/specialist_coordination.py --validate` -> specialist coordination: valid. `git diff --check` -> success.
+- Handoff/coordination tests: `python -m pytest -q tests/test_ai_state_coordination_handoff.py tests/test_specialist_coordination.py --tb=short` -> 12 passed in 0.38 seconds.
+- Independent read-only code review found no blocking regressions in the two primary checkpoints; the one reported nonblocking oversized-number path was fixed and tested. Review does not replace CI.
 
-Current data-market handoff:
+## CI / SECURITY STATUS
 
-- `COORD-DATA-005`: **DONE**. DATA-BREADTH-001 was predeclared before outcome inspection in PR #300 and its bounded chronological falsifier was integrated in PR #301 (`40e9737e0e1dbdee7a25c48788b2d55b963db8d4`).
-- `COORD-DATA-006`: **DONE**. Prospective point-in-time universe capture was integrated in PR #306 and independently verified live in PR #309. Verified evidence recorded by the override includes scan `7d886310-0854-41bf-b2b7-650a3c6f81c9`, captured `2026-09-12T14:07:50.146607+00:00`, forecast `2026-09-12T14:09:46.056333+00:00`, 79 members, no historical backfill, no future data, and zero trading authority.
-- `COORD-DATA-007`: **BLOCKED**. It must remain blocked until genuinely prospective point-in-time universe cohorts mature into enough independent, non-overlapping 24h and 7d outcomes. **Never backfill or reconstruct missing historical membership from current survivors.**
+- Original merged #392 exact head: both required workflows verified SUCCESS as recorded above.
+- Successor `eaae925...`: Security and Reliability run `35403820043` and Research Engines run `35403820046` both verified SUCCESS, including the real LEAN fixture with the new invocation ID.
+- Newest implementation `90645af...`: Security and Reliability run `35403913542` verified SUCCESS; Research Engines run `35403913567` is still in progress at handoff creation. The subsequent handoff commit has not yet completed CI. Inspect completed runs for PR #394's CURRENT exact head; never carry an earlier green status forward. Final run IDs/status are also recorded in the PR body after observation.
+- No local LEAN run: this workspace has neither lean CLI nor dotnet/Launcher. `python -m research_engines.runner` correctly reports WAIT_RESEARCH_ONLY with VectorBT/Nautilus available and LEAN unavailable. Source-built CI is the real LEAN validation environment; no purchase/QuantConnect credentials are needed for that path.
 
-DATA-BREADTH-001 remains frozen and research-only. Its next evaluation requires at least eight independent matured OOS observations per primary horizon, separate 24h/7d scoring, the frozen feature/sign/baseline, incremental after-cost expectancy, 1x/2x/3x cost stress, OOS-half/liquidity/regime stability, and no threshold mining or untouched-OOS reuse. Negative or insufficient evidence remains WAIT / RESEARCH_ONLY.
+## WHAT IS GENUINELY WORKING / STILL NOT VERIFIED
+
+IMPLEMENTED and LOCALLY TESTED: the bounded rejection fixes and Python engine parity described above.
+CI VERIFIED: only exact commits/workflows explicitly marked SUCCESS above or in fresh GitHub evidence.
+DEPLOYED: no successor deployment or production service verification claimed.
+FORWARD VALIDATED: no strategy forward evidence added; no profitable strategy claim.
+
+The full requested milestone is **PARTIAL**, not complete:
+
+- Native/existing backtest engine has no adapter/independent comparison under this contract yet.
+- LEAN is a fixed 2013-10-07 SPY hourly long/zero-cost fixture, with hard-coded decision/execution indices. It does not generically consume arbitrary strategies, assets, short paths, costs or split declarations. Echoing contract/run IDs alone is not verification that arbitrary LEAN code executed that strategy.
+- Contract still lacks explicit parameters, decision-path hash, experiment ID/version, train/test/OOS partition metadata and separate fee/slippage/execution models. Dataset hash includes chronology, but adapters do not yet bind an arbitrary strategy implementation to its declared fingerprint. Identical output is corroboration only.
+- Reconciliation validates explicit attribution/schema; it is not cryptographic attestation of an engine or complete provenance verification. Global freshness/version policy across persisted engine results remains unfinished; LEAN replay rejection is invocation-specific.
+- Metrics use shared closed-trade accounting. max_drawdown_pct excludes intra-trade mark-to-market drawdown; avg_trade_pct is mean P&L as percent of starting capital, not return on each trade's notional. Do not use these metrics for strategy promotion.
+- Nautilus uses a synthetic VALIDATION currency pair; actual venue/instrument constraints, realistic slippage, partial/missed fills and funding/carry are not proven by the fixture. Engine versions/upstream LEAN revision are not fully pinned in current research requirements/workflow.
+- No integration with strategy discovery, canonical promotion gates or forward paper validation was added. Cross-engine agreement has zero live/paper/broker/promotion authority.
 
 ## EXACT NEXT STEP
 
-**Do not select another data candidate while DATA-BREADTH-001 is awaiting the prospectively captured evidence required by COORD-DATA-007.** Let authentic point-in-time cohorts mature and run the frozen falsification only after its predeclared sample floor is satisfied. Never backfill or reconstruct missing historical membership from current survivors.
+First re-read current main and PR #394, check for overlap/current head, and obtain exact-head Security and Reliability plus Research Engines success (including the real LEAN three-engine-proof artifact). If any current check fails, fix that bounded failure on the isolated branch; do not merge merely because the original #392 was green. Keep this PR's coherent hardening available for Lead review/integration.
 
-While that evidence matures, the event-driven supervisor may assign at most one independent, non-contaminating CHANGE task from the profitability-first READY backlog. The primary program goal is now to select and validate one backtested strategy. Cheap deterministic screening may compare predeclared, materially distinct mechanisms, but once a candidate is selected all deep research, implementation, testing, backtesting and evidence collection must converge on that immutable candidate until it is rejected or passes every canonical gate. Broad unrelated research, blind indicator/parameter sweeps, duplicate mechanisms and cosmetic work are deprioritized. Prefer a data-ready 24h candidate because the 7d lane remains history-limited. All other specialists remain validation/AUDIT-only around the same candidate. If no clean candidate is justified, waiting is the correct action.
+After verified Lead integration, continue this SAME milestone: bind strategy parameters and decision-path identity plus explicit experiment/chronological split/cost metadata, wire the native engine under that contract without copying another engine's output, then generalize LEAN execution with independently checked data/path evidence and nonzero-cost/short/multi-trade fixtures. Unsupported cases remain blocked. No Supervisor/Frizz/dashboard milestone until this foundation is complete. This run stopped new implementation after a coherent verified subset to preserve checkpoint and CI capacity.
 
-Under the PR #336 fleet layer, coordinate rather than duplicate: route research/falsification toward Claude, bounded implementation/testing/debugging toward Claude Code, integration/prioritization/evidence synthesis toward ChatGPT, and bulk deterministic research/backtests/data/diagnostics toward the existing workers. Paid-AI engines remain subordinate to the shared monthly budget and scientific gates; they must not manufacture experiments merely to stay busy.
+## SAFETY INVARIANTS
 
-“Working backtested strategy” means a research candidate with a predeclared immutable fingerprint, positive after-cost expectancy on purged chronological validation and untouched OOS, adequate independent observations, realistic cost stress, parameter/subperiod/liquidity/regime stability, multiple-testing protection, and subsequent genuine forward paper validation. It does not mean an in-sample curve, one lucky OOS result, a high nominal win rate, or authority to trade real money.
+- Broker disconnected; no real-order, paper-ledger, promotion or production authority from research results. live_promotions.json remains unchanged/empty unless all canonical independent gates authorize otherwise.
+- Keep the authentic append-only $100,000 paper-account baseline and history. Never reset/reseed/rewrite results.
+- Shared approved paid-project ceiling remains approximately $30/month total. No paid service or ceiling increase authorized here. Paid-AI throttling must not stop free/local deterministic evidence accumulation.
+- Isolated branches only; no direct-main writes or self-merge. Require exact-head Security and Reliability before Lead integration and deployment health checks for any runtime-affecting merge.
+- Preserve chronological/purged untouched OOS, sufficient independent samples, walk-forward, parameter/regime/cost stress, multiple-testing controls, point-in-time universe safety and genuine prospective forward validation. Missing/stale/contradictory evidence fails closed.
 
-## DURABLE NEGATIVE DATA RESULTS — DO NOT RESCUE
+## CANONICAL COORDINATION / FROZEN SCIENTIFIC STATE
 
-### DATA-BASIS-001 — REJECTED CURRENT FINGERPRINT
+Load orchestration/specialist_coordination.json with orchestration/specialist_coordination_overrides.json. Do **not** read only the base JSON.
 
-The predeclared 8,000-hour chronological evidence window falsified both primary horizons after realistic costs:
-
-- 24h OOS: **134** independent samples; average net **-8.490253160921695 bps**.
-- 7d OOS: **19** independent samples; average net **-51.210226000078 bps**.
-
-Do not tune, rescue, reopen untouched OOS, or reintroduce the same fingerprint under a new name merely to increase feature count.
-
-### DATA-FUNDING-001 — REJECTED CURRENT FINGERPRINT
-
-- 24h OOS: **38** samples; directional hit rate **0.50**; average net **+43.56917973482839 bps**, but **0.0 bps incremental expectancy versus its frozen training-only baseline**.
-- 24h OOS halves were unstable: approximately **+91.5426 bps** then **-4.4042 bps**.
-- 7d OOS had only **6** samples versus the predeclared minimum **8** and therefore failed the evidence floor.
-
-The headline positive 24h return is not evidence of incremental alpha. Keep this fingerprint rejected.
-
-### Historical OI routes already blocked
-
-- Unchanged Binance historical-OI access from the deployed environment returned HTTP 451.
-- Unchanged Bybit historical-OI access returned HTTP 403.
-
-Do not waste research capacity retrying the same blocked routes unless the access conditions materially change. Do not substitute unverifiable or timestamp-unsafe data.
-
-## PROFITABILITY-FIRST CONTROL PLANE
-
-Recent integrations deliberately changed research prioritization or scientific eligibility, not production trading authority:
-
-- PR #319 made independent after-cost economic harm outrank wrong-signal rate when allocating research attention.
-- PR #320 made expected incremental after-cost profitability the research director's primary impact term, with forward signal quality secondary.
-- PR #321 removed the permanently rejected DATA-BASIS/DATA-FUNDING compatibility job from the always-on heavy lane.
-- PR #328 made the retained legacy funding observability projection explicitly inactive/retired so rejected evidence cannot masquerade as an active candidate.
-- PR #331 fail-closed ACC-005 while DATA-BREADTH-001's frozen prospective evidence matures, preventing a separate data candidate from contaminating or bypassing that evidence gate.
-- PR #332 fail-closed ACC-001 until genuine forecast-time microstructure/execution evidence is durably persisted and available to resolved research rows. Historical reconstruction/backfill is not an acceptable substitute.
-- PR #334 bounded/separated evaluation runtime so stale-signal evaluation cannot consume the production scan budget and suppress fresh forward signal generation.
-- PR #336 adds the bounded multi-engine coordination layer. It is a coordination/cost-control capability, not evidence of improved trading profitability or accuracy. ChatGPT remains the integration/prioritization/evidence-synthesis layer; Claude is routed toward research/falsification; Claude Code toward bounded implementation/testing/debugging; existing deterministic workers retain bulk research/backtest/data/diagnostic work. Shared paid usage is budget-gated and must fail closed without weakening free/local research.
-
-After PR #321 the deterministic research layout is **20 logical workers: 18 heavy + 2 lightweight research-brain workers**. The PR #336 paid-AI coordination layer is separate from that deterministic worker count. Physical heavy concurrency/cost controls remain bounded; no paid infrastructure ceiling increase is authorized.
-
-Experiment ranking should continue to favor, in order:
-
-1. expected incremental after-cost profitability / dollars per unit risk;
-2. genuine forward precision and information gain;
-3. low compute and implementation cost;
-4. low overfitting / multiple-testing risk.
-
-Repeatedly falsified features or strategies should be removed or deprioritized rather than endlessly tuned.
-
-## EXECUTION / MICROSTRUCTURE LESSONS
-
-The public Kraken order-book research path is timestamp-safe and research-only. `kraken_microstructure.py` measures spread, visible depth, top-level/depth imbalance, and microprice deviation from genuine snapshots and fails closed on stale, future, crossed, malformed, or one-sided books. It assumes no hidden liquidity and grants no order/trade/promotion authority.
-
-Recent corrections:
-
-- Direction-aware imbalance was required so LONG and SHORT do not interpret the same raw imbalance identically.
-- A suspected execution condition must be compared against a sufficiently sampled normal-execution baseline; negative expectancy alone is not enough to blame execution.
-- 24h and 7d execution economics must remain separated; one horizon may not hide the other's losses.
-- As of PR #332, ACC-001 remains **BLOCKED** until timestamp-defensible forecast-time microstructure/execution fields are durably persisted. Never reconstruct them after outcomes are known merely to make the lane runnable.
-
-Earlier paper observations suggested worse measured entry slippage among some 7d stop-outs than target winners, but sample size was too small to authorize a veto. Continue prospective measurement; do not turn it into a threshold until independent evidence passes the canonical gates.
-
-## ACC-002 / SIGNAL-EVIDENCE STATUS
-
-At the last authoritative profitability-first state before this reconciliation:
-
-- 24h ACC-002 history was close to data-ready with supported Top-15/30 liquidity evidence, but the currently resolved universe count is dynamic and should be read from fresh runtime artifacts rather than copied from an older snapshot.
-- 7d remains history-limited and must stay blocked rather than borrowing 24h evidence.
-- Horizon evidence is never pooled merely to meet sample counts.
-- Untouched holdout / forward evidence is not reusable tuning data.
-
-Use the latest authentic repository/runtime artifacts for current counts. Never copy an older count forward as if it were fresh evidence.
-
-## PAPER / PROFITABILITY INTERPRETATION
-
-Paper P&L is evidence, not truth. Always study expectancy per trade, profit factor, payoff ratio, win rate, max drawdown, calibration, BUY/SELL/WAIT precision, horizon/regime breakdowns, false positives/negatives, execution costs, and sample uncertainty together.
-
-A higher hit rate is not an improvement if net expectancy or risk-adjusted return falls. A lower-hit-rate strategy may be valid only when chronological OOS plus genuine forward evidence demonstrates superior after-cost expectancy with controlled drawdown/risk.
-
-Do not claim improved profitability or accuracy from process/control-plane fixes alone.
-
-## RESEARCH DISCIPLINE
-
-For every proposed experiment:
-
-- state the economic mechanism before inspecting outcomes;
-- freeze the candidate fingerprint and training-only decision rules;
-- use chronological splits and non-overlapping full-horizon observations;
-- keep 24h and 7d evidence separate;
-- use a defensible point-in-time universe;
-- compare against a frozen baseline and report incremental after-cost value;
-- stress realistic costs and execution assumptions;
-- measure stability across OOS halves, assets/liquidity buckets, and regimes where sample size permits;
-- account for multiple testing/search breadth;
-- preserve negative results and avoid repeating disproven ideas unless conditions materially change;
-- require genuine forward evidence before promotion.
-
-Missed profitable opportunities and losing trades should become falsifiable hypotheses, not ad-hoc threshold changes.
-
-## CURRENT SAFE DEVELOPMENT PRIORITIES
-
-While DATA-BREADTH-001 naturally matures, independent lanes may continue bounded work on:
-
-- resolving 24h ACC-002 profitability hypotheses once canonical data gates permit;
-- diagnosing genuine resolved-signal errors and missed opportunities without reusing holdout evidence;
-- execution/microstructure hypotheses that test incremental after-cost value rather than raw correlation, but ACC-001 itself remains blocked until prospective evidence persistence exists;
-- regime-conditioned abstention/demotion where evidence is genuinely independent;
-- portfolio interaction, concentration, and contradictory 24h/7d signal suppression;
-- reliability/adversarial validation for leakage, overlap, timestamp, ledger, cost, and fail-closed defects.
-
-Do not create work merely to keep workers busy. Waiting for clean prospective evidence is preferable to contaminating the experiment.
-
-## MERGE / DEPLOYMENT CONTRACT
-
-Before merging any code/runtime change:
-
-1. Work on an isolated branch.
-2. Add or update regression tests for confirmed defects.
-3. Run/obtain exact-head **Security and Reliability** and require success.
-4. Merge only after the exact candidate SHA is green.
-5. Confirm both deployment services reach the intended merged commit and remain healthy.
-6. Preserve `live_promotions.json`, broker-disconnected state, paper-ledger authenticity, and the cost ceiling unless independently authorized by the canonical gates/user.
-
-If a safe cycle cannot complete, leave the system fail-closed and record the precise blocker and next experiment. Never fabricate evidence or report a profitability/accuracy gain that has not actually been demonstrated.
+- `COORD-DATA-005`: **DONE** — DATA-BREADTH-001 selected/frozen.
+- `COORD-DATA-006`: **DONE** — prospective point-in-time universe capture integrated and previously verified live.
+- `COORD-DATA-007`: **BLOCKED** — requires genuinely prospective non-overlapping matured outcomes. Do not select another data candidate or reconstruct membership from current survivors to bypass this gate. No new maturation count was verified in this run.
+- DATA-BREADTH-001 stays frozen: minimum eight independent observations per primary horizon, separate 24h/7d, frozen baseline/feature/sign, incremental after-cost value, 1x/2x/3x costs and OOS-half/liquidity/regime stability. No outcome-driven rescue.
+- DATA-BASIS-001 rejected: 24h 134 samples, -8.490253160921695bps; 7d 19 samples, -51.210226000078bps.
+- DATA-FUNDING-001 rejected: 24h 38 samples, +43.56917973482839bps headline but zero incremental value and unstable halves; 7d only 6 versus required 8 samples. Do not resurrect either fingerprint.
+- ACC-001 remains blocked pending timestamp-defensible forecast-time execution evidence; ACC-005 stays subject to the breadth freeze. No historical reconstruction is authorized.
+- See docs/research/AI_STATE_2026-09-16_ARCHIVE.md for the full historical scientific/deployment record. Its old main SHA, open-PR claim and next-action suggestions are historical, not current instructions.
