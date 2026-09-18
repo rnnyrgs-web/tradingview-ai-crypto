@@ -29,3 +29,19 @@ def test_lean_contract_contains_no_authority(tmp_path):
     assert payload["contract_fingerprint"] == contract.fingerprint()
     assert payload["research_only"] is True
     assert payload["trade_authority"] is False
+
+
+def test_nautilus_requires_executed_evidence(monkeypatch):
+    import research_engines.nautilus_adapter as adapter
+    monkeypatch.setattr(adapter,"require_engine",lambda name: {})
+    rows=bars(); contract=CrossEngineContract("strategy","BTC-USDT","1H","trend",data_fingerprint(rows),10)
+    with pytest.raises(RuntimeError):
+        adapter.run_nautilus(contract,rows,lambda **kwargs: {"executed":False,"trades":[]})
+
+def test_canonical_evidence_has_no_authority():
+    from research_engines.evidence import evidence
+    rows=bars(); contract=CrossEngineContract("strategy","BTC-USDT","1H","trend",data_fingerprint(rows),10)
+    result=evidence("test",contract,[])
+    assert result["trade_authority"] is False
+    assert result["promotion_authority"] is False
+    assert {"return_pct","win_rate","ending_equity"} <= set(result["metrics"])
