@@ -31,15 +31,17 @@
     {
       "id": "ACC-002",
       "priority": 2,
-      "status": "READY",
+      "status": "BLOCKED",
       "owner": "quant-cross-asset",
       "title": "Cross-sectional relative-strength prediction",
-      "goal": "Research rank-based prediction across the liquid universe so the system can compare assets against peers and BTC rather than relying only on isolated absolute-direction forecasts.",
+      "block_reason": "REJECTED AT SELECTION by sealed workflow run 35405308190 from exact main 6e95408c88b389bbb100bb8841a97695b785ef9a. All three frozen 24h configurations (4,16,64), (6,24,72), and (8,32,96) passed 0/2 required supported liquidity subsets; eligible_candidate_count=0 and untouched OOS remained locked. The exact normalized dataset SHA-256 was 896a127376c80972d07f58ca605a5673f186a2d9ea7ffda8f5266dc67b11890e. Do not tune, rescue, relabel, or open OOS for these fingerprints. Historical point-in-time universe membership was also unverified, so promotion_allowed=false independently of the negative screen.",
+      "goal": "Preserve the rejected ACC-002 result as durable negative evidence. Reopen only for a genuinely new predeclared fingerprint with materially new mechanism/evidence that satisfies canonical reconsideration discipline; do not parameter-mine the rejected relative-strength screen.",
       "acceptance": [
-        "rank features use only information available at decision time",
-        "chronological train/validation/untouched OOS remains enforced",
-        "realistic trading costs are included",
-        "no live promotion occurs from research output"
+        "rejected frozen ACC-002 fingerprints are not tuned, rescued, relabeled, or reopened",
+        "untouched OOS for the rejected screen remains locked",
+        "any reconsideration is a materially new predeclared hypothesis rather than a parameter permutation",
+        "point-in-time universe safety remains fail-closed for any future cross-sectional promotion claim",
+        "no live promotion occurs from rejected research output"
       ]
     },
     {
@@ -47,13 +49,24 @@
       "priority": 3,
       "status": "READY",
       "owner": "quant-breakout-volatility",
-      "title": "Regime-specialist research models",
-      "goal": "Separate strategy evidence by bull trend, bear trend, range, high-volatility stress and compression regimes, with explicit minimum-sample and stability requirements.",
+      "title": "Fixed-asset compression-breakout selection screen",
+      "selection_contract": "orchestration/acc003_breakout_candidate.json",
+      "selection_fingerprint_sha256": "113697e7dd7e22b38e86975bdbaddc8d1167d4b75693d1021b15272a80bf4529",
+      "goal": "Falsify one predeclared 24h regime-conditioned volatility-compression breakout mechanism on the fixed BTC-USDT and ETH-USDT asset set before spending untouched OOS. Use completed 1H OKX candles, exact dataset binding, the complete returned history up to the frozen 50,000-bar-per-asset bound, non-overlapping daily decisions, realistic after-cost stress, a frozen no-compression breakout baseline, and no parameter optimization.",
       "acceptance": [
-        "regime labels are computed without lookahead",
-        "each promoted research claim has adequate regime sample size",
-        "performance is reported by regime and untouched OOS",
-        "weak or missing regime evidence remains RESEARCH_ONLY"
+        "the exact predeclared contract and fingerprint are loaded before any ACC-003 outcome is inspected",
+        "BTC-USDT and ETH-USDT are fixed ex ante and no historical survivor-universe reconstruction is needed",
+        "only completed timestamp-safe bars available at each decision timestamp are used",
+        "request up to the frozen 50000 completed 1H bars per asset; if either asset has fewer than 17520 normalized bars, return INSUFFICIENT_EVIDENCE instead of shortening the requirement post hoc",
+        "dataset source, exact returned coverage, normalized row count, and normalized-row SHA-256 are persisted; unavailable older history is never synthesized",
+        "chronological 60/40 train/validation with 24h purge and non-overlapping 24h outcomes is enforced",
+        "12 bps base round-trip cost and 1x/2x/3x cost stress are reported; missing required funding/carry prevents promotion claims",
+        "the primary frozen rule must satisfy every per-asset and aggregate pre-OOS gate in orchestration/acc003_breakout_candidate.json or be rejected",
+        "sensitivity variants are falsifiers only and cannot replace the primary parameters",
+        "untouched OOS stays locked unless the exact primary fingerprint passes every frozen pre-OOS criterion",
+        "weak, missing, or scientifically insufficient evidence remains WAIT_RESEARCH_ONLY",
+        "no backtest curve or dashboard artifact is presented as verified unless it satisfies SIGNAL_BACKTEST_CHARTS_SPEC.md",
+        "research output has no live, broker, paper-allocation, or promotion authority"
       ]
     },
     {
