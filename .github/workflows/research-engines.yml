@@ -54,7 +54,24 @@ jobs:
           dotnet-version: "9.0.x"
       - name: Build LEAN Launcher from source
         run: dotnet build .lean-source/Launcher/QuantConnect.Lean.Launcher.csproj --configuration Release --no-restore || dotnet build .lean-source/Launcher/QuantConnect.Lean.Launcher.csproj --configuration Release
-      - name: Prove credential-free LEAN launcher exists
+      - id: lean
+        name: Resolve credential-free LEAN launcher
         run: |
-          test -f .lean-source/Launcher/bin/Release/QuantConnect.Lean.Launcher.dll || find .lean-source/Launcher/bin/Release -name 'QuantConnect.Lean.Launcher.dll' -print -quit | grep .
+          DLL="$(find .lean-source/Launcher/bin/Release -name 'QuantConnect.Lean.Launcher.dll' -print -quit)"
+          test -n "$DLL"
+          echo "launcher=$DLL" >> "$GITHUB_OUTPUT"
           echo "Open-source LEAN built without QuantConnect account credentials"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Prove research preflight accepts source-built LEAN
+        env:
+          LEAN_LAUNCHER_DLL: ${{ steps.lean.outputs.launcher }}
+        run: |
+          python - <<'PY'
+          from research_engines.availability import lean_runtime
+          state = lean_runtime()
+          assert state["available"], state
+          assert state["mode"] == "source_launcher", state
+          print(state)
+          PY
