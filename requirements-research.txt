@@ -1,0 +1,5 @@
+# Optional research-engine dependencies.
+# Deliberately separate from production requirements.txt so research tooling
+# cannot silently change the deployed signal runtime.
+vectorbt>=0.28,<0.29
+nautilus_trader>=1.220,<2
