@@ -56,8 +56,6 @@ def _capture_selection_inputs() -> tuple[dict, dict]:
 
     def capture_subsets(symbols, histories):
         subsets = original_subsets(symbols, histories)
-        # The 24h path calls this after point-in-time filtering. Preserve the
-        # final call so the audit is bound to the exact Top-N rows that were scored.
         captured["ranked_symbols"] = list(symbols)
         captured["liquidity_histories"] = {
             int(size): _copy_histories(rows)
@@ -92,8 +90,6 @@ def _base_round_trip_cost_bps(pre_oos: dict) -> float:
 
 def _pit_manifest_status(survivorship: dict) -> dict:
     status = copy.deepcopy(survivorship) if isinstance(survivorship, dict) else {}
-    # `promotion_allowed` is already the canonical ACC-011 gate. Keep the
-    # stronger survivorship flag false unless the underlying gate is explicitly true.
     status["survivorship_safe"] = status.get("promotion_allowed") is True
     return status
 
@@ -193,6 +189,9 @@ def build_selection_audit(envelope: dict, captured: dict) -> dict:
                     raise RuntimeError("candidate fingerprint/configuration drift detected")
 
             panel = build_cross_section_panel(exact_histories, config)
+            recomputed_pre_oos = runner.evaluate_pre_oos(panel, config)
+            if runner.sha256_hex(recomputed_pre_oos) != runner.sha256_hex(pre_oos):
+                raise RuntimeError(f"pre-OOS evidence does not reproduce from captured Top-{size} rows")
             ranges = purged_split_ranges(len(panel), config.forward_bars)
             expected_pre_ranges = {
                 "train": list(ranges["train"]),
@@ -208,6 +207,7 @@ def build_selection_audit(envelope: dict, captured: dict) -> dict:
                 "scored_symbols": sorted(exact_histories),
                 "selection_predicate": predicate,
                 "split_boundaries": boundaries,
+                "pre_oos_reproduced_from_dataset": True,
                 "untouched_oos_scored": False,
                 "research_only": True,
                 "trade_authority": False,
@@ -253,6 +253,7 @@ def build_selection_audit(envelope: dict, captured: dict) -> dict:
             "promotion_grade": payload["point_in_time_universe"].get("promotion_allowed") is True,
             "raw_rows_archived_in_artifact": False,
             "dataset_bound_by_sha256": True,
+            "pre_oos_reproduced_from_captured_rows": True,
             "warning": (
                 "A dataset hash binds the exact normalized rows scored in this run. It does not repair unavailable "
                 "historical point-in-time membership and does not turn the spread proxy into executable P&L."
