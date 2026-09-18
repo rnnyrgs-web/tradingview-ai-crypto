@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-18T20:37:56Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, paper-trade, promotion-gate or broker state changed.",
+  "observed_facts": [
+    "Fed H.4.1 released Sep. 17 confirms a large realized Treasury cash rebuild: Wednesday Sep. 16 TGA $991.708B (+$148.003B w/w) and reserve balances $2.921537T (-$114.971B w/w), while securities held outright changed little.",
+    "Sep. 17 SOFR was about 3.85% after the FOMC raised IORB to 3.90% effective Sep. 17. Available transaction distribution reporting shows the repo market repriced with the policy corridor rather than displaying an obvious scarcity blowout.",
+    "BOJ raised the policy rate to 1.25% on Sep. 18, a 31-year high, but the yen weakened after the widely expected action, reinforcing that expectation-adjusted path/guidance can dominate the action sign.",
+    "Global equity funds had $23.21B weekly outflow through Sep. 16; U.S. equity funds lost $31.44B while Asian equity funds gained $6.26B and sector funds gained $4.49B, concentrated in technology, financials and consumer discretionary.",
+    "BTC moved above $80k on Sep. 18. Sep. 17 U.S. spot BTC ETF flows reversed to about +$159.5M after about -$746M combined over Sep. 15-16; ETH ETFs still lost about $39.3M Sep. 17. The BTC flow improvement is therefore real but one-day and concentrated, not yet broad crypto institutional accumulation.",
+    "Brent extended its reversal on Sep. 18 as Saudi alternative routing, product inventory builds and diplomacy reduced the expected net shortage despite continuing physical/geopolitical disruption; contemporaneous Reuters reporting put Brent near $104-$105 later in the session after trading near $102 intraday.",
+    "Gold rose to a one-week high around $4,390/oz on Sep. 18 even with a strong dollar, as easing oil reduced inflation/rate pressure and prior event shorts were unwound."
+  ],
+  "inferences": [
+    "The Sep. 15 tax/settlement episode is increasingly valuable as a matched non-crisis control: a very large TGA increase and reserve drain did not by themselves produce a disorderly repo event. Aggregate reserves-plus-ON-RRP below 10% of GDP should remain a sensitivity variable, not a standalone risk-asset timing signal.",
+    "BOJ Sep. 18 and FOMC Sep. 16 jointly strengthen the candidate hypothesis that scheduled central-bank action sign is inferior to expectation-adjusted path/guidance surprise for short-horizon FX/rates pricing.",
+    "BTC's rebound has a genuine spot-ETF-demand component, but the flow remains net negative over the Sep. 15-17 three-session window and ETH continues to lose ETF capital. Treat BTC relative strength as an early confirmation candidate, not a completed accumulation regime.",
+    "Oil's repeated failure to hold the initial disruption spike strengthens the effective-deliverable-supply hypothesis: substitution routes, inventories and diplomacy can dominate gross disrupted capacity. The matched control should compare outages with versus without logistics/storage substitution.",
+    "Gold's rise while the dollar remains strong suggests the immediate rates channel is being offset by lower inflation pressure/short-covering and geopolitical/strategic demand; this is not yet enough to isolate a durable marginal-buyer regime."
+  ],
+  "falsification_and_controls": [
+    "Do not promote BTC accumulation unless ETF creations persist across multiple sessions and leverage/exchange-flow evidence does not show the move is mainly short covering.",
+    "Do not promote gold based on one rebound; require persistence versus real yields/USD and/or primary flow evidence.",
+    "Do not infer crude shortage persistence from infrastructure damage alone; test effective deliverable supply, physical differentials, inventories and substitution capacity.",
+    "Preserve Sep. 15-16 as a funding non-crisis control despite the large reserve drain."
+  ],
+  "decision_support": "WAIT / NO NEW CANONICAL TRADE THESIS. New evidence materially improves causal model selection but does not yet isolate an after-cost directional edge strongly enough for a frozen Money Intelligence opportunity.",
+  "next_priority": "Complete BTC rebound decomposition with funding/open interest/liquidations/exchange flows and multi-session ETF persistence; then formalize the BOJ/FOMC expectation-adjusted policy-event matched case and historical controls.",
+  "sources": [
+    "Federal Reserve H.4.1 Sep. 17, 2026",
+    "Federal Reserve implementation note Sep. 16, 2026",
+    "NY Fed-derived SOFR Sep. 17, 2026",
+    "Reuters Sep. 18 BOJ decision",
+    "Reuters Sep. 18 global fund flows",
+    "Reuters Sep. 18 oil and gold reporting",
+    "U.S. spot BTC ETF daily flow reporting for Sep. 17"
+  ],
+  "reporting_gate": "No owner-facing report. This cycle cannot verify at least 60 minutes of cumulative research/execution time. Artifact timestamps and hourly cadence are not treated as work-duration evidence."
+}
