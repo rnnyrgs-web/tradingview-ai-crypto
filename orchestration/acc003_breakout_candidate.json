@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "candidate_id": "ACC-003-BTCETH-COMPRESSION-BREAKOUT-24H-V1",
+  "fingerprint_sha256": "27dd55c7caa6e6202cd9561c149cd49f70ff703657ba44af96487609b882d1ea",
+  "fingerprint_definition": "SHA-256 of canonical sorted compact JSON of this object with fingerprint_sha256 and fingerprint_definition omitted",
+  "status": "PREDECLARED_SELECTION_ONLY",
+  "research_only": true,
+  "trade_authority": false,
+  "promotion_authority": false,
+  "hypothesis": "A 72-hour price breakout that occurs immediately after a causally observed low-volatility compression has positive 24-hour continuation expectancy after conservative costs on both BTC and ETH, because clustered stops/liquidations and trend-following flows around recent extremes can create short-lived continuation.",
+  "economic_mechanism": "Compression reduces two-sided realized movement while liquidity and stop orders accumulate around recent extremes; a subsequent close beyond the prior 72-hour range may trigger directional stop/liquidation and momentum flows that persist into the next 24 hours.",
+  "assets": [
+    "BTC-USDT",
+    "ETH-USDT"
+  ],
+  "source": {
+    "venue": "OKX",
+    "bar_interval": "1H",
+    "completed_bars_only": true,
+    "dataset_identity_required": [
+      "exact_source",
+      "coverage_start",
+      "coverage_end",
+      "normalized_row_count",
+      "normalized_rows_sha256"
+    ],
+    "point_in_time_universe_required": false,
+    "reason": "Fixed ex-ante BTC/ETH asset set avoids historical survivor-membership selection."
+  },
+  "primary_horizon": "24h",
+  "decision_schedule": {
+    "anchor": "00:00:00Z",
+    "frequency_hours": 24,
+    "non_overlapping_outcomes": true,
+    "entry": "first eligible completed-bar open strictly after the decision timestamp",
+    "exit": "first eligible completed-bar close at or after entry + 24h"
+  },
+  "features": {
+    "breakout_lookback_hours": 72,
+    "breakout_reference": "prior completed bars only; exclude decision bar",
+    "compression_measure": "rolling 24h realized volatility = population standard deviation of hourly log returns over the 24 completed hours immediately preceding the decision bar",
+    "compression_percentile_lookback_hours": 1440,
+    "compression_threshold_percentile": 40,
+    "percentile_causality": "compute threshold from trailing completed observations only; no current/future outcome data",
+    "volume_filter": null
+  },
+  "signal_rule": {
+    "BUY": "compression is true AND decision close > maximum high of prior 72 completed hourly bars",
+    "SELL": "compression is true AND decision close < minimum low of prior 72 completed hourly bars",
+    "WAIT": "otherwise",
+    "conflicting_signal_policy": "WAIT",
+    "missing_or_stale_data_policy": "WAIT_RESEARCH_ONLY"
+  },
+  "baseline": {
+    "id": "72H_BREAKOUT_NO_COMPRESSION_V1",
+    "rule": "same BUY/SELL breakout rule and decision schedule but without compression filter",
+    "frozen_before_outcome_inspection": true
+  },
+  "costs": {
+    "base_round_trip_bps": 12,
+    "stress_multipliers": [
+      1,
+      2,
+      3
+    ],
+    "stress_round_trip_bps": [
+      12,
+      24,
+      36
+    ],
+    "funding_carry_note": "No promotion claim is permitted unless any required funding/carry for the intended executable instrument is separately modeled or conservatively bounded."
+  },
+  "chronology": {
+    "split": "chronological 60% train / 40% validation by eligible decision timestamps",
+    "purge_hours": 24,
+    "untouched_oos": "LOCKED",
+    "genuine_forward": "NOT_OPENED",
+    "no_overlap_within_evidence_stage": true
+  },
+  "minimum_evidence": {
+    "train_actionable_signals_per_asset": 20,
+    "validation_actionable_signals_per_asset": 10,
+    "if_below_floor": "INSUFFICIENT_EVIDENCE"
+  },
+  "pre_oos_pass_rule": {
+    "required_for_each_asset": [
+      "train mean after-cost signed return > 0 at 3x cost",
+      "validation mean after-cost signed return > 0 at 3x cost",
+      "train profit factor > 1 at 3x cost",
+      "validation profit factor > 1 at 3x cost",
+      "minimum evidence floor satisfied"
+    ],
+    "required_aggregate": [
+      "BTC+ETH aggregate train mean after-cost signed return > 0 at 3x cost",
+      "BTC+ETH aggregate validation mean after-cost signed return > 0 at 3x cost"
+    ],
+    "incremental_baseline_requirement": "candidate validation mean after-cost signed return at 3x cost must exceed the frozen no-compression baseline on the same eligible decision timestamps",
+    "validation_stability": "both chronological halves of validation must have non-negative mean after-cost signed return at 1x cost when each half has at least 5 actionable signals; otherwise mark stability INSUFFICIENT rather than pass",
+    "all_conditions_required": true
+  },
+  "fixed_sensitivity_checks": [
+    {
+      "name": "shorter_breakout",
+      "breakout_lookback_hours": 48,
+      "selection_authority": false
+    },
+    {
+      "name": "longer_breakout",
+      "breakout_lookback_hours": 96,
+      "selection_authority": false
+    },
+    {
+      "name": "tighter_compression",
+      "compression_threshold_percentile": 30,
+      "selection_authority": false
+    },
+    {
+      "name": "looser_compression",
+      "compression_threshold_percentile": 50,
+      "selection_authority": false
+    }
+  ],
+  "sensitivity_policy": "Sensitivity checks are falsifiers only. They cannot replace the frozen primary parameters or be cherry-picked to create a passing candidate.",
+  "search_breadth": {
+    "primary_candidate_count": 1,
+    "baseline_count": 1,
+    "sensitivity_falsifiers_count": 4,
+    "parameter_optimization_allowed": false
+  },
+  "selection_result_policy": {
+    "on_fail": "REJECT_PRIMARY_FINGERPRINT; keep OOS locked; do not tune/rescue using validation outcomes",
+    "on_pass": "freeze exact candidate fingerprint and exact dataset identity before requesting untouched OOS",
+    "attractive_curve_can_bypass_gate": false
+  },
+  "budget": {
+    "new_paid_data_services": false,
+    "new_paid_compute": false,
+    "project_monthly_variable_ceiling_usd": 30
+  }
+}
