@@ -15,24 +15,33 @@ permissions:
 jobs:
   adapter-contract:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Contract tests
+      - name: Install research engines
         run: |
           python -m pip install --upgrade pip
-          pip install pytest
-          pytest -q tests/test_research_engines.py tests/test_research_engine_runners.py
+          pip install pytest -r requirements-research.txt
+      - name: Contract and fail-closed tests
+        run: pytest -q tests/test_research_engines.py tests/test_research_engine_runners.py
       - name: Compile adapters
         run: python -m compileall -q research_engines
+      - name: Prove Python research engines are installed
+        run: |
+          python - <<'PY'
+          from research_engines.availability import engine_availability
+          state = engine_availability()
+          assert state["vectorbt"]["available"], state
+          assert state["nautilus"]["available"], state
+          print(state)
+          PY
 
   lean-source-build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - name: Checkout open-source LEAN
@@ -40,8 +49,12 @@ jobs:
         with:
           repository: QuantConnect/Lean
           path: .lean-source
-      - name: Prove source checkout is usable without QuantConnect credentials
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+      - name: Build LEAN Launcher from source
+        run: dotnet build .lean-source/Launcher/QuantConnect.Lean.Launcher.csproj --configuration Release --no-restore || dotnet build .lean-source/Launcher/QuantConnect.Lean.Launcher.csproj --configuration Release
+      - name: Prove credential-free LEAN launcher exists
         run: |
-          test -f .lean-source/QuantConnect.Lean.sln
-          test -f .lean-source/Launcher/config.json
-          echo "LEAN open-source source tree available for independent validation lane"
+          test -f .lean-source/Launcher/bin/Release/QuantConnect.Lean.Launcher.dll || find .lean-source/Launcher/bin/Release -name 'QuantConnect.Lean.Launcher.dll' -print -quit | grep .
+          echo "Open-source LEAN built without QuantConnect account credentials"
