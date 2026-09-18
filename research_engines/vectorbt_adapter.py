@@ -12,8 +12,8 @@ def run_vectorbt(
     bars,
     entries,
     exits,
-    direction="long",
-    initial_capital=100000.0,
+    direction=None,
+    initial_capital=None,
 ):
     require_engine("vectorbt")
     import pandas as pd
@@ -22,19 +22,31 @@ def run_vectorbt(
     rows = canonical_bars(bars)
     if not (len(rows) == len(entries) == len(exits)):
         raise ValueError("bars/entries/exits length mismatch")
-    if direction not in {"long", "short"}:
-        raise ValueError("direction must be long or short")
+
+    frozen = contract.canonical()
+    contract_direction = frozen["direction"]
+    if direction is not None and str(direction).lower() != contract_direction:
+        raise ValueError("adapter direction disagrees with frozen contract")
+    if (
+        initial_capital is not None
+        and abs(float(initial_capital) - frozen["validation_initial_capital"]) > 1e-9
+    ):
+        raise ValueError("adapter capital disagrees with frozen contract")
 
     shifted_entries, shifted_exits = lagged_signals(contract, entries, exits)
     close = pd.Series([float(row["close"]) for row in rows])
-    fee = float(contract.canonical()["cost_bps_round_trip"]) / 20000.0
+    fee = float(frozen["cost_bps_round_trip"]) / 20000.0
+    capital = float(frozen["validation_initial_capital"])
+    quantity = float(frozen["validation_quantity"])
+
     args = {
         "close": close,
         "fees": fee,
-        "freq": contract.timeframe,
-        "init_cash": initial_capital,
+        "freq": frozen["timeframe"],
+        "init_cash": capital,
+        "size": quantity,
     }
-    if direction == "short":
+    if contract_direction == "short":
         args.update(
             short_entries=pd.Series(shifted_entries, dtype=bool),
             short_exits=pd.Series(shifted_exits, dtype=bool),
@@ -52,7 +64,7 @@ def run_vectorbt(
         exit_i = int(rec["exit_idx"])
         trades.append(
             {
-                "direction": direction,
+                "direction": contract_direction,
                 "entry_ts": int(rows[entry_i]["ts"]),
                 "exit_ts": int(rows[exit_i]["ts"]),
                 "entry_price": float(rec["entry_price"]),
@@ -62,6 +74,8 @@ def run_vectorbt(
                 "pnl": float(rec["pnl"]),
             }
         )
-    out = evidence("vectorbt", contract, trades, initial_capital)
-    out["decision_lag_bars"] = int(contract.canonical()["decision_lag_bars"])
+
+    out = evidence("vectorbt", contract, trades, capital)
+    out["decision_lag_bars"] = int(frozen["decision_lag_bars"])
+    out["validation_quantity"] = quantity
     return out
