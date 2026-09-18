@@ -11,26 +11,28 @@
     "The BOJ raised its policy rate 25 bp to 1.25% in a widely expected 7-2 decision. Reuters reported the yen weakening as much as about 1.3% as two dissents and a lack of sufficiently hawkish guidance reduced expectations for the subsequent tightening path; intervention speculation increased.",
     "Reuters reported U.S. equity funds lost $31.44B for a fourth consecutive weekly outflow, while U.S. sector funds received $2.29B and short/intermediate government and Treasury funds received $3.49B. A broader global-fund dataset showed $23.21B global equity outflow, $6.26B Asian equity inflow, $4.49B sector-fund inflow and $1.17B commodity-fund inflow concentrated in precious metals.",
     "Brent closed Sep. 18 at $104.87 and WTI at $100.30 even though major Middle-East route/infrastructure risks remained; diplomatic efforts, Saudi restoration/rerouting and expectations of improved effective supply continued to compress the initial scarcity premium.",
-    "Primary/official-derived Sep. 15 funding evidence already preserved in prior cycles remains calm despite the large realized TGA/reserve swing: SOFR median 3.64%, SOFR 99th percentile 3.72% and TGCR 99th percentile 3.65%. Direct primary Standing Repo Facility take-up for the event dates remains unresolved in this research lane."
+    "The Sep. 15 funding test is now substantially closed with primary NY Fed operation data. Sep. 15 afternoon Standing Repo accepted only $102M ($101M Treasury, $1M MBS) after a zero-take morning operation; Sep. 16 afternoon accepted $254M after a zero-take morning operation. These amounts are trivial relative to the roughly $115B Wednesday reserve decline and occurred alongside calm SOFR/TGCR median and upper-tail pricing."
   ],
   "inferences": [
     "The BTC rebound cannot yet be labeled a durable institutional accumulation regime. The completed Sep. 15-17 BTC ETF total remains net negative, the Sep. 17 inflow was concentrated in IBIT, ETH flows remained negative, and Sep. 18 ETF data were not final at cutoff.",
     "A lower-quality derivatives source reports slightly falling BTC open interest, controlled positive funding and short-dominant liquidations during the rebound. This is directionally consistent with a short-covering component, but source quality is insufficient to promote that decomposition to canonical observed fact without exchange/venue-grade confirmation.",
     "BOJ Sep. 18 materially strengthens the expectation-adjusted-policy-surprise hypothesis: for a well-anticipated action, vote composition, guidance and the relative future rate path can dominate the sign of the rate change for FX.",
     "Current allocation remains selective rather than uniformly risk-on or risk-off: broad U.S. equity redemptions coexist with sector inflows, Asian equity inflows, government/short-duration bond demand and a BTC rebound.",
-    "The continued Brent reversal strengthens the effective-deliverable-supply framework. Gross damaged capacity is an incomplete price predictor when rerouting, inventories, diplomacy, grade compatibility and demand response change the marginal deliverable barrel."
+    "The continued Brent reversal strengthens the effective-deliverable-supply framework. Gross damaged capacity is an incomplete price predictor when rerouting, inventories, diplomacy, grade compatibility and demand response change the marginal deliverable barrel.",
+    "The combination of a large realized TGA/reserve drain, calm repo median/tails and only $102M Sep. 15 Standing Repo take-up strongly falsifies the deterministic near-term rule that sub-10%-of-GDP reserves plus ON RRP combined with a tax/settlement day mechanically causes broad funding stress. The threshold is a sensitivity regime whose transmission requires intermediation constraints actually to bind."
   ],
   "falsification_and_controls": [
     "Do not call the BTC move spot-accumulation driven unless multi-session ETF creations persist and venue-grade open-interest/funding/liquidation/exchange-flow evidence shows the move is not mainly leverage or short covering.",
     "Do not infer BOJ tightening is yen-positive from the action sign; use pre-event pricing, guidance/vote surprise, relative OIS path and intervention constraints.",
-    "Preserve Sep. 15-16 as a matched non-crisis funding control: the balance-sheet drain realized but median and upper-tail repo stress did not.",
+    "Preserve Sep. 15-16 as a matched non-crisis funding control: the balance-sheet drain realized, median and upper-tail repo stress stayed calm, and official Standing Repo take-up was only $102M on Sep. 15.",
     "Do not infer persistent crude scarcity from infrastructure damage alone; require evidence on effective deliverable supply, physical differentials, inventories, route capacity and product/grade constraints."
   ],
   "decision_support": "WAIT / NO NEW CANONICAL ASSET-LEVEL TRADE THESIS. The strongest new evidence improves model selection and relative-flow understanding, but no isolated after-cost directional edge clears the canonical bar.",
-  "next_priority": "Use primary or venue-grade data to decompose the Sep. 18 BTC rebound into ETF spot demand, short covering and fresh leverage; formalize BOJ/FOMC as matched expectation-adjusted policy events; continue historical controls for funding and commodity substitution.",
+  "next_priority": "Use primary or venue-grade data to decompose the Sep. 18 BTC rebound into ETF spot demand, short covering and fresh leverage; formalize BOJ/FOMC as matched expectation-adjusted policy events; build historical matched controls for funding and commodity substitution.",
   "sources": [
     "https://farside.co.uk/btc/",
     "https://farside.co.uk/eth/",
+    "https://markets.newyorkfed.org/api/rp/repo/all/results/last/8.json",
     "https://www.reuters.com/world/asia-pacific/boj-raises-interest-rates-31-year-high-widely-expected-move-2026-09-18/",
     "https://www.reuters.com/world/asia-pacific/yen-weak-ahead-boj-decision-rate-hike-expected-2026-09-18/",
     "https://www.reuters.com/business/us-equity-funds-post-fourth-weekly-outflow-inflation-worries-rate-concerns-2026-09-18/",
