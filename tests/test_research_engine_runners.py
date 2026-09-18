@@ -22,6 +22,38 @@ def contract():
     )
 
 
+def real_engine_fixture():
+    hour_ns = 3_600_000_000_000
+    start = 1_700_000_000_000_000_000
+    closes = [100.0, 101.0, 102.0, 103.0, 104.0]
+    rows = [
+        {
+            "ts": start + i * hour_ns,
+            "open": close - 0.25,
+            "high": close + 0.5,
+            "low": close - 0.5,
+            "close": close,
+            "volume": 1000.0,
+        }
+        for i, close in enumerate(closes)
+    ]
+    frozen = CrossEngineContract(
+        strategy_fingerprint="ci-frozen-long",
+        symbol="BTC-USDT",
+        timeframe="1H",
+        strategy_family="trend",
+        data_fingerprint=data_fingerprint(rows),
+        cost_bps_round_trip=0.0,
+        decision_lag_bars=1,
+        direction="long",
+        validation_quantity=1.0,
+        validation_initial_capital=100000.0,
+    )
+    entries = [True, False, False, False, False]
+    exits = [False, False, True, False, False]
+    return rows, frozen, entries, exits
+
+
 def test_dataset_fingerprint_is_deterministic_and_chronological():
     assert data_fingerprint(bars()) == data_fingerprint(bars())
     with pytest.raises(ValueError):
@@ -153,8 +185,47 @@ def test_nautilus_requires_executed_evidence(monkeypatch):
     frozen = contract()
     with pytest.raises(RuntimeError):
         adapter.run_nautilus(
-            frozen, rows, lambda **kwargs: {"executed": False, "trades": []}
+            frozen,
+            rows,
+            [False, False],
+            [False, False],
+            engine_runner=lambda **kwargs: {
+                "executed": False,
+                "trades": [],
+                "bars_processed": len(rows),
+            },
         )
+
+
+def test_real_vectorbt_and_nautilus_reproduce_same_frozen_trade():
+    pytest.importorskip("vectorbt")
+    pytest.importorskip("nautilus_trader")
+
+    from research_engines.nautilus_adapter import run_nautilus
+    from research_engines.protocol import reconcile
+    from research_engines.vectorbt_adapter import run_vectorbt
+
+    rows, frozen, entries, exits = real_engine_fixture()
+    vector = run_vectorbt(frozen, rows, entries, exits)
+    nautilus = run_nautilus(frozen, rows, entries, exits)
+
+    assert vector["trades"], vector
+    assert nautilus["trades"], nautilus
+    assert vector["trades"][0]["entry_ts"] == rows[1]["ts"]
+    assert vector["trades"][0]["exit_ts"] == rows[3]["ts"]
+
+    result = reconcile(
+        {"vectorbt": vector, "nautilus": nautilus},
+        required=("vectorbt", "nautilus"),
+        price_tolerance=1e-8,
+        pnl_tolerance=1e-6,
+        metric_tolerance=1e-6,
+    )
+    assert result["ok"], {
+        "reconciliation": result,
+        "vectorbt": vector,
+        "nautilus": nautilus,
+    }
 
 
 def test_canonical_evidence_has_no_authority():
