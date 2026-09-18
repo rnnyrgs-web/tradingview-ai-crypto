@@ -1,9 +1,9 @@
 # AI_STATE.md
 
-Last reconciled: 2026-09-18T23:03Z
-Last updated: 2026-09-18T23:03Z
+Last reconciled: 2026-09-18T23:08Z
+Last updated: 2026-09-18T23:08Z
 
-This is the authoritative compact handoff for agents working on `rnnyrgs-web/tradingview-ai-crypto`. Read the current default-branch `UNIFIED_PROFITABILITY_LEAD_SPEC.md` first and obey it as the exhaustive operating contract. Also obey the merged `SIGNAL_BACKTEST_CHARTS_SPEC.md`. When this file conflicts with an older chat summary, stale branch note, or stale base coordination row, verify current GitHub/runtime evidence and use the canonical coordination loader state.
+This is the authoritative compact handoff for agents working on `rnnyrgs-web/tradingview-ai-crypto`. Read the current default-branch `UNIFIED_PROFITABILITY_LEAD_SPEC.md` first and obey it as the exhaustive operating contract. Also obey the merged `SIGNAL_BACKTEST_CHARTS_SPEC.md`. When this file conflicts with an older chat summary, stale branch note, or stale base coordination row, verify current GitHub/runtime evidence and use the canonical coordination loader state. Do **not** read only the base JSON and treat an overridden historical task row as current.
 
 ## PRIMARY OBJECTIVE
 
@@ -54,6 +54,16 @@ Before spending another untouched holdout or widening the hypothesis search, ACC
 
 If point-in-time membership is unavailable, the artifact must say so and remain non-promotable; never reconstruct historical membership from today's survivors.
 
+## CANONICAL DATA-MARKET HANDOFF
+
+The coordination loader applies the durable base plus later append-only overrides. Do **not** read only the base JSON and infer that an older READY row is still current.
+
+- `COORD-DATA-005`: **DONE**. DATA-BREADTH-001 selection/falsifier work was completed under the canonical frozen contract.
+- `COORD-DATA-006`: **DONE**. Prospective point-in-time universe capture was integrated and independently verified.
+- `COORD-DATA-007`: **BLOCKED**. It remains blocked until genuinely prospective point-in-time cohorts mature into enough independent, non-overlapping 24h/7d outcomes.
+
+Do not select another data candidate while DATA-BREADTH-001 is awaiting that prospectively captured evidence. Never backfill or reconstruct missing historical membership from current survivors.
+
 ## EXACT NEXT STEP
 
 **Do not add another strategy family or tune the failed three ACC-002 variants yet.** Implement/validate the immutable ACC-002 dataset + selection-evidence contract above on an isolated branch, with regression tests proving that provenance/hash/split metadata cannot be silently omitted or mutated and that SELECTION mode cannot open OOS. Then rerun only the already-declared focused screen on the frozen evidence input. If all candidates still fail, reject that screen cleanly and move to the next materially distinct, predeclared economic mechanism rather than parameter-mining the same family.
@@ -80,7 +90,7 @@ A 24h lane remains preferable while 7d history/point-in-time evidence is weaker.
 
 Until a scientifically valid artifact exists, the dashboard must fail closed with **`BACKTEST CHART NOT YET VERIFIED` / `INSUFFICIENT EVIDENCE`** rather than display a misleading performance curve. Issue #381 tracks that UI contract, but dashboard work is secondary to producing valid underlying evidence.
 
-## SAFETY / SCIENTIFIC INVARIANTS
+## SAFETY INVARIANTS
 
 - Broker disconnected; no real-order authority.
 - Existing $100,000 paper ledger remains authentic/append-only; never reset, reseed, rewrite, or cosmetically improve it.
