@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-18T11:02:27Z",
+  "status": "RESEARCH_IN_PROGRESS_NOT_OWNER_REPORTED",
+  "canonical_spec_read": true,
+  "prior_artifacts_inspected": ["money_intelligence/dashboard_state.json", "money_intelligence/learning_ledger.jsonl", "money_intelligence/big_move_lab.json"],
+  "validated_new_evidence": [
+    {
+      "topic": "Sep 15 US funding stress test",
+      "observed_fact": "Fed H.4.1 for Sep 16 shows Wednesday TGA $991.708B, +$148.003B week/week, while reserve balances (other deposits held by depository institutions) were $2.921537T, -$114.971B. Despite this large Treasury cash rebuild/reserve drain, SOFR was 3.64% on Sep 15 and 3.62% on Sep 16, with roughly $2.95T and $2.93T underlying volume respectively.",
+      "inference": "The pre-event sub-10%-of-GDP Fed-liquidity condition correctly identified higher sensitivity, but did not by itself imply scarcity. The Sep 15 tax/settlement stress test passed without broad overnight repo-rate stress. This materially weakens the near-term reserve-scarcity thesis and strengthens the rule that aggregate reserve thresholds are sensitivity indicators requiring transaction-rate confirmation.",
+      "sources": ["Federal Reserve H.4.1 released 2026-09-17", "NY Fed SOFR data for 2026-09-15 and 2026-09-16"]
+    },
+    {
+      "topic": "BOJ expectation-adjusted policy surprise",
+      "observed_fact": "BOJ raised the policy rate 25 bp to 1.25% on Sep 18, a 31-year high, but the vote was 7-2 and guidance did not commit to a faster path. USD/JPY rose about 1.2% to 157.84 after the decision.",
+      "inference": "This is a fresh matched case supporting the existing candidate hypothesis that expectation-adjusted path/guidance surprise matters more than the sign of a scheduled rate action. A nominally hawkish hike can weaken the currency when the hike is priced and the future path disappoints hawkish expectations.",
+      "source": "Reuters 2026-09-18; BOJ decision"
+    },
+    {
+      "topic": "Oil logistics substitution",
+      "observed_fact": "Brent fell to about $103.17 on Sep 18, its third consecutive decline, as Saudi alternative exports via Oman, product inventory builds and higher Chinese fuel exports reduced immediate scarcity. Trade sources reported about 60 million barrels of Saudi crude sold for Sep-Oct loading from Ras Tanura with ship-to-ship transfer at Sohar, restoring roughly 1.0-1.5 mb/d Gulf export flow despite Yanbu disruption.",
+      "inference": "Fresh evidence strengthens the big-move-lab hypothesis that effective deliverable supply after route substitution and inventories predicts persistence better than gross disrupted capacity. Freight costs remain an important counter-signal: substitution can restore barrels while raising delivered cost and product-market stress.",
+      "source": "Reuters 2026-09-18"
+    },
+    {
+      "topic": "Observed global fund flows",
+      "observed_fact": "LSEG Lipper data reported $23.21B global equity-fund outflows in the week through Sep 16, including $31.44B from US equities; Asian equities received $6.26B. Sector funds received $4.49B led by technology $1.94B and financials $1.31B. Government bond funds received $2.96B and short-term bond funds $1.96B, while high-yield lost $3.85B. Precious-metals funds received $1.17B and energy funds lost $148M.",
+      "inference": "Capital allocation is defensive at the broad US-equity/credit level but selective rather than indiscriminate: investors are paying for government/short-duration safety while still allocating to technology and Asian equities. This argues against labeling the regime simply risk-off.",
+      "source": "Reuters/LSEG Lipper 2026-09-18"
+    },
+    {
+      "topic": "Crypto institutional flows",
+      "observed_fact": "US spot BTC ETFs reversed from -$450.4M Sep 15 and -$295.9M Sep 16 to +$159.5M Sep 17. ETH ETFs remained negative at -$39.3M Sep 17 after -$224.1M Sep 16.",
+      "inference": "BTC institutional demand shows a one-day rebound but not yet a durable reversal; ETH relative institutional flow remains weaker. Do not promote a bullish crypto thesis from one BTC inflow day.",
+      "source": "Farside Investors, accessed 2026-09-18"
+    }
+  ],
+  "big_move_cases_to_add_after_further_validation": [
+    "2026-09-18-boj-priced-hike-yen-selloff-control",
+    "2026-09-18-tata-governance-dispute-cross-subsidiary-selloff"
+  ],
+  "highest_value_next_tests": [
+    "Retrieve Sep 17/18 official NY Fed TGCR/SOFR percentile and standing-repo usage to close the Sep 15 funding test with primary data.",
+    "Compare the Sep 18 BOJ hike with historical BOJ/FOMC priced hikes where guidance/vote composition surprised in the opposite direction; use pre-event rates pricing and 30m/1d FX responses.",
+    "Quantify oil substitution case with prompt physical differentials, freight and product cracks to test whether restored crude volume merely relocates scarcity into transport/refining.",
+    "Scan additional Sep 18 cross-asset abnormal movers and matched non-movers before updating the living big-move library.",
+    "Do not freeze a new directional forecast until the evidence bar is met; WAIT remains valid."
+  ],
+  "owner_reporting_gate": "NOT_MET: cumulative verifiable research time has not reached the canonical >=60-minute reporting threshold in this cycle. Persist research quietly and continue next run."
+}
