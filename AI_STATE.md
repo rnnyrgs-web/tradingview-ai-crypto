@@ -1,9 +1,27 @@
 # AI_STATE.md
 
 Last reconciled: 2026-09-18T23:21Z
-Last updated: 2026-09-18T23:21Z
+Last updated: 2026-09-18T23:27Z
 
 This is the authoritative compact handoff for agents working on `rnnyrgs-web/tradingview-ai-crypto`. Read the current default-branch `UNIFIED_PROFITABILITY_LEAD_SPEC.md` first and obey it as the exhaustive operating contract. Also obey the merged `SIGNAL_BACKTEST_CHARTS_SPEC.md`. When this file conflicts with an older chat summary, stale branch note, or stale base coordination row, verify current GitHub/runtime evidence and use the canonical coordination loader state. Do **not** read only the base JSON and treat an overridden historical task row as current.
+
+## AGENT COMMAND / PROMPT DESIGN RULE
+
+All agents and all new ChatGPT/Work/Sol/Astra/Claude/Claude Code sessions must use **conditional, evidence-gated instructions** instead of broad absolute prohibitions whenever the action could become legitimate under clearly defined conditions.
+
+Default command pattern:
+
+- **Do not do X unless condition/evidence Y is satisfied.**
+- **If/when Y is genuinely satisfied, do Z and report the exact supporting evidence, metrics, assumptions, and limitations.**
+- State the desired positive objective and the valid success path, not only what is forbidden.
+- Never let a negatively worded instruction suppress a genuine successful result, useful exploration, or scientifically justified action.
+- For research decisions, pair rejection/fail-closed language with the exact acceptance condition and what must happen if that condition passes.
+- For previously rejected ideas, prohibit blind repetition **unless** materially new data, a genuinely different hypothesis, or a documented scientific reason justifies reopening them; record why the retest is different.
+- For generated Work/agent handoffs, include: objective, evidence gates, allowed success path, failure/rejection path, capacity/checkpoint behavior, and exact reporting requirements.
+
+Use truly unconditional prohibitions only where they are actually invariant: do not fabricate evidence or test results; do not expose secrets; do not bypass permissions; do not weaken frozen scientific/chronology/OOS/integrity gates merely to obtain a pass; and do not take destructive/irreversible or unauthorized live-trading actions.
+
+This rule applies to every future programming/research command generated from this repository state. Agents should be truth-seeking rather than optimism-seeking or pessimism-seeking.
 
 ## PRIMARY OBJECTIVE
 
