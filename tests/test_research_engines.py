@@ -153,3 +153,19 @@ def test_reconciliation_fails_on_trade_path_disagreement():
     result = reconcile({"vectorbt": base, "nautilus": base, "lean": altered})
     assert result["ok"] is False
     assert "lean:trade[0].exit_price" in result["mismatches"]
+
+
+@pytest.mark.parametrize("field,value", [
+    ("cost_bps_round_trip", float("nan")),
+    ("cost_bps_round_trip", float("inf")),
+    ("validation_quantity", float("nan")),
+    ("validation_initial_capital", float("inf")),
+    ("decision_lag_bars", 1.5), ("decision_lag_bars", True),
+    ("symbol", " "), ("timeframe", ""), ("strategy_family", ""),
+])
+def test_malformed_contract_cannot_receive_a_fingerprint(field, value):
+    from dataclasses import replace
+
+    frozen = CrossEngineContract("strategy", "BTC-USDT", "1H", "trend", "data", 10)
+    with pytest.raises(ValueError):
+        replace(frozen, **{field: value}).fingerprint()

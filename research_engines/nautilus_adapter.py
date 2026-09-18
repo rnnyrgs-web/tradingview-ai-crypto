@@ -6,7 +6,7 @@ configuration/specification is never treated as a successful engine run.
 from __future__ import annotations
 
 from .availability import require_engine
-from .dataset import canonical_bars
+from .dataset import verified_bars
 from .evidence import evidence
 from .nautilus_runtime import run_event_driven_frozen_path
 from .signals import lagged_signals
@@ -20,7 +20,7 @@ def run_nautilus(
     engine_runner=None,
 ):
     require_engine("nautilus")
-    rows = canonical_bars(bars)
+    rows = verified_bars(contract, bars)
     if not (len(rows) == len(entries) == len(exits)):
         raise ValueError("bars/entries/exits length mismatch")
 

@@ -8,8 +8,10 @@ required after execution.
 from __future__ import annotations
 
 import json
+import os
 import subprocess  # nosec B404 -- fixed resolved executable/argv only; shell is never used.
 from pathlib import Path
+from uuid import uuid4
 
 from .availability import lean_runtime
 from .evidence import evidence
@@ -87,20 +89,25 @@ def _source_launcher_argv(runtime, project):
     return launcher, argv
 
 
-def _normalized_evidence(contract, result_file, initial_capital):
+def _normalized_evidence(contract, result_file, initial_capital, run_id):
     result = Path(result_file).expanduser().resolve()
     if not result.is_file():
         raise RuntimeError("LEAN did not produce normalized result evidence")
     payload = json.loads(result.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise RuntimeError("LEAN normalized result must be an object")
     if (
         payload.get("contract_fingerprint") != contract.fingerprint()
         or payload.get("executed") is not True
     ):
         raise RuntimeError("LEAN result does not prove execution of frozen contract")
+    if payload.get("run_id") != run_id:
+        raise RuntimeError("LEAN result does not prove execution of the current run")
     if not isinstance(payload.get("trades"), list):
         raise RuntimeError("LEAN result has no normalized trades")
     out = evidence("lean", contract, payload["trades"], initial_capital)
     out["execution_mode"] = str(payload.get("execution_mode") or "lean_backtest")
+    out["run_id"] = run_id
     return out
 
 
@@ -145,6 +152,17 @@ def run_lean_project(
     else:
         raise RuntimeError("unsupported LEAN runtime mode")
 
+    # Bind evidence to this invocation. Old files remain available for audit,
+    # but a successful process cannot make a prior result fresh again.
+    run_id = uuid4().hex
+    env = os.environ.copy()
+    env.update({
+        "LEAN_RUN_ID": run_id,
+        "LEAN_CONTRACT_FINGERPRINT": contract.fingerprint(),
+        "LEAN_EVIDENCE_PATH": str(Path(result_file).expanduser().resolve()),
+        "LEAN_VALIDATION_INITIAL_CAPITAL": str(capital),
+        "LEAN_VALIDATION_QUANTITY": str(frozen["validation_quantity"]),
+    })
     proc = subprocess.run(  # nosec B603 -- fixed executable/whitelisted argv, no shell.
         argv,
         cwd=str(cwd),
@@ -153,12 +171,13 @@ def run_lean_project(
         timeout=timeout,
         check=False,
         shell=False,
+        env=env,
     )
     if proc.returncode != 0:
         tail = (proc.stderr or proc.stdout or "")[-3000:]
         raise RuntimeError(f"LEAN local backtest failed: {tail}")
 
-    out = _normalized_evidence(contract, result_file, capital)
+    out = _normalized_evidence(contract, result_file, capital, run_id)
     out["execution_mode"] = execution_mode
     out["decision_lag_bars"] = int(frozen["decision_lag_bars"])
     out["validation_quantity"] = float(frozen["validation_quantity"])

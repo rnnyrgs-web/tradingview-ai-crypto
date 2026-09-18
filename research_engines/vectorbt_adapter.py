@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from .availability import require_engine
-from .dataset import canonical_bars
+from .dataset import verified_bars
 from .evidence import evidence
 from .signals import lagged_signals
 
@@ -19,7 +19,7 @@ def run_vectorbt(
     import pandas as pd
     import vectorbt as vbt
 
-    rows = canonical_bars(bars)
+    rows = verified_bars(contract, bars)
     if not (len(rows) == len(entries) == len(exits)):
         raise ValueError("bars/entries/exits length mismatch")
 

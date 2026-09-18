@@ -144,6 +144,12 @@ def test_lean_source_launcher_requires_normalized_frozen_evidence(
         seen["argv"] = argv
         seen["cwd"] = kwargs["cwd"]
         seen["shell"] = kwargs["shell"]
+        result.write_text(json.dumps({
+            "executed": True,
+            "contract_fingerprint": kwargs["env"]["LEAN_CONTRACT_FINGERPRINT"],
+            "run_id": kwargs["env"]["LEAN_RUN_ID"],
+            "trades": [],
+        }), encoding="utf-8")
         return Proc()
 
     monkeypatch.setattr(adapter.subprocess, "run", fake_run)
@@ -297,3 +303,58 @@ def test_preflight_reports_missing_runtime(monkeypatch):
     assert result["status"] == "WAIT_RESEARCH_ONLY"
     assert any("nautilus_trader" in x for x in result["blockers"])
     assert any("LEAN_LAUNCHER_DLL" in x for x in result["blockers"])
+
+
+@pytest.mark.parametrize("field,value", [
+    ("close", float("nan")), ("volume", float("inf")),
+    ("volume", -1), ("low", -1), ("ts", 1.5), ("ts", True),
+])
+def test_invalid_dataset_cannot_receive_a_fingerprint(field, value):
+    rows = bars()
+    rows[0][field] = value
+    with pytest.raises(ValueError):
+        data_fingerprint(rows)
+
+
+@pytest.mark.parametrize("field,value", [("volume", 123.0), ("ts", 3)])
+def test_nautilus_rejects_changed_dataset_before_execution(monkeypatch, field, value):
+    import research_engines.nautilus_adapter as adapter
+
+    monkeypatch.setattr(adapter, "require_engine", lambda name: {})
+    frozen = contract()
+    rows = bars()
+    rows[-1][field] = value
+    with pytest.raises(ValueError, match="dataset fingerprint"):
+        adapter.run_nautilus(
+            frozen, rows, [False, False], [False, False],
+            engine_runner=lambda **kwargs: {
+                "executed": True, "trades": [], "bars_processed": len(rows),
+            },
+        )
+
+
+def test_vectorbt_rejects_changed_dataset():
+    pytest.importorskip("vectorbt")
+    from research_engines.vectorbt_adapter import run_vectorbt
+
+    rows, frozen, entries, exits = real_engine_fixture()
+    rows[0]["volume"] += 1
+    with pytest.raises(ValueError, match="dataset fingerprint"):
+        run_vectorbt(frozen, rows, entries, exits)
+
+
+def test_lean_successful_process_cannot_reuse_old_result(monkeypatch, tmp_path):
+    import subprocess
+    import research_engines.lean_adapter as adapter
+
+    result = tmp_path / "result.json"
+    payload = {"executed": True, "contract_fingerprint": contract().fingerprint(),
+               "trades": [], "run_id": "previous-run"}
+    result.write_text(json.dumps(payload), encoding="utf-8")
+    monkeypatch.setattr(adapter, "lean_runtime", lambda: {
+        "available": True, "mode": "cli", "executable": "/usr/bin/lean",
+    })
+    monkeypatch.setattr(adapter.subprocess, "run", lambda *a, **k:
+                        subprocess.CompletedProcess(a[0], 0, "", ""))
+    with pytest.raises(RuntimeError, match="current run"):
+        adapter.run_lean_project(contract(), tmp_path, result)

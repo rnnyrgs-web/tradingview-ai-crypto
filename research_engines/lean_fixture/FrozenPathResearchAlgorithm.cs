@@ -103,8 +103,10 @@ namespace QuantConnect.Algorithm.CSharp
             var pnl = (exit.Price - entry.Price) * size - fees;
             var fingerprint = Environment.GetEnvironmentVariable("LEAN_CONTRACT_FINGERPRINT");
             var output = Environment.GetEnvironmentVariable("LEAN_EVIDENCE_PATH");
+            var runId = Environment.GetEnvironmentVariable("LEAN_RUN_ID");
 
-            if (string.IsNullOrWhiteSpace(fingerprint) || string.IsNullOrWhiteSpace(output))
+            if (string.IsNullOrWhiteSpace(fingerprint) || string.IsNullOrWhiteSpace(output)
+                || string.IsNullOrWhiteSpace(runId))
             {
                 throw new InvalidOperationException("LEAN evidence environment is incomplete");
             }
@@ -112,6 +114,7 @@ namespace QuantConnect.Algorithm.CSharp
             var payload = new
             {
                 executed = true,
+                run_id = runId,
                 contract_fingerprint = fingerprint,
                 execution_mode = "lean_source_launcher",
                 research_only = true,
