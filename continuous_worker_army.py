@@ -36,6 +36,10 @@ SUPERVISOR_INTERVAL_SECONDS = max(10, min(int(os.getenv("WORKER_ARMY_SUPERVISOR_
 TASK_RESTART_DELAY_SECONDS = max(5, min(int(os.getenv("WORKER_ARMY_TASK_RESTART_DELAY_SECONDS", "15")), 300))
 NATURAL_HISTORY_RECHECK_SECONDS = max(300, min(int(os.getenv("WORKER_ARMY_NATURAL_HISTORY_RECHECK_SECONDS", "21600")), 86400))
 ADAPTIVE_IDLE_RECHECK_SECONDS = max(60, min(int(os.getenv("WORKER_ARMY_ADAPTIVE_IDLE_RECHECK_SECONDS", "300")), 3600))
+LEARNING_DIAGNOSTICS_RECHECK_SECONDS = max(
+    300,
+    min(int(os.getenv("WORKER_ARMY_LEARNING_RECHECK_SECONDS", "3600")), 21600),
+)
 log = logging.getLogger("uvicorn.error")
 
 
@@ -259,7 +263,12 @@ def _retry_delay_seconds(consecutive_failures: int) -> int:
 
 
 def _success_recheck_delay_seconds(spec: WorkerSpec, evidence) -> int:
-    """Slow only evidence-blocked loops; never disguise software/source failures."""
+    """Slow successful data-heavy loops without masking software/source failures."""
+    if spec.script == "research_learning_runner.py":
+        # Resolved-ledger diagnostics change only when new outcomes arrive. Running
+        # this every 5 seconds previously reread hundreds/thousands of Supabase rows
+        # continuously and exhausted the free egress quota.
+        return LEARNING_DIAGNOSTICS_RECHECK_SECONDS
     if not isinstance(evidence, dict):
         return REST_SECONDS
     if spec.script == "cross_asset_runner.py":
