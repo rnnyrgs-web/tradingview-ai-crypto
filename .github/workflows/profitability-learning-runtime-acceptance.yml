@@ -15,6 +15,8 @@ on:
       - db.py
       - profitability_learning/**
       - orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz
+      - orchestration/rejected_fingerprints.json
+      - orchestration/signal_development_objective.json
       - research_artifact.py
       - research_heavy_experiment_scheduler.py
       - signal_development.py
@@ -81,7 +83,6 @@ jobs:
           echo "last_http_status=$status" >&2
           if jq -e 'type == "object"' "$response" >/dev/null 2>&1; then
             jq -c '{
-              detail: .detail?,
               ok: .ok?,
               deployed_sha: .deployed_sha?,
               fingerprint_id: .fingerprint_id?,
@@ -110,8 +111,15 @@ jobs:
                 matched_learning_mission_count:
                   ((.learning_consumption.matched_learning_missions? // []) | length)
               },
-              evidence_boundaries: .evidence_boundaries?,
-              safety: .safety?
+              evidence_boundaries: {
+                untouched_oos_opened: .evidence_boundaries.untouched_oos_opened?,
+                genuine_forward_opened: .evidence_boundaries.genuine_forward_opened?
+              },
+              safety: {
+                trade_authority: .safety.trade_authority?,
+                promotion_authority: .safety.promotion_authority?,
+                broker_connected: .safety.broker_connected?
+              }
             }' "$response" >&2
           else
             echo "response_not_json" >&2
