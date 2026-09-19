@@ -478,8 +478,10 @@ class CausalRepricingMemory:
         for existing in self.events.values():
             if (
                 existing.hypothesis_id == event.hypothesis_id
-                and existing.outcome_observation_ids == event.outcome_observation_ids
-                and existing.control_observation_ids == event.control_observation_ids
+                and frozenset(existing.outcome_observation_ids)
+                == frozenset(event.outcome_observation_ids)
+                and frozenset(existing.control_observation_ids)
+                == frozenset(event.control_observation_ids)
                 and existing.event_id != event.event_id
             ):
                 raise CausalMemoryError(
@@ -574,15 +576,42 @@ class CausalRepricingMemory:
                 "relative impact ratio must be flow_float or flow_liquidity"
             )
         normalised_as_of = _normalise_time(as_of)
-        numerator = self.latest_metric(numerator_metric, as_of=normalised_as_of)
-        denominator = self.latest_metric(denominator_metric, as_of=normalised_as_of)
+        numerator = self.latest_metric(
+            numerator_metric,
+            as_of=normalised_as_of,
+            subject_id=subject_id,
+        )
+        denominator = self.latest_metric(
+            denominator_metric,
+            as_of=normalised_as_of,
+            subject_id=subject_id,
+        )
         if numerator is None or denominator is None:
+            unscoped_numerator = self.latest_metric(
+                numerator_metric, as_of=normalised_as_of
+            )
+            unscoped_denominator = self.latest_metric(
+                denominator_metric, as_of=normalised_as_of
+            )
+            wrong_subject_exists = (
+                numerator is None
+                and unscoped_numerator is not None
+                and unscoped_numerator.subject_id != subject_id
+            ) or (
+                denominator is None
+                and unscoped_denominator is not None
+                and unscoped_denominator.subject_id != subject_id
+            )
             return RelativeImpact(
                 ratio_name=ratio_name,
                 numerator_observation_id=(numerator.observation_id if numerator else None),
                 denominator_observation_id=(denominator.observation_id if denominator else None),
                 value=None,
-                reason="point_in_time_input_unavailable",
+                reason=(
+                    "subject_mismatch"
+                    if wrong_subject_exists
+                    else "point_in_time_input_unavailable"
+                ),
                 as_of=normalised_as_of,
             )
         if numerator.subject_id != subject_id or denominator.subject_id != subject_id:
