@@ -97,7 +97,17 @@ def validate_contract(c):
         raise ValueError("unknown or protected split")
     start, end = timestamp(c.get("start")), timestamp(c.get("end"))
     frozen, observed = timestamp(c.get("frozen_at")), timestamp(c.get("outcomes_observed_at"))
-    if not frozen < start < end <= observed:
+    retrospective = c.get("retrospective_development_only") is True
+    if retrospective:
+        if c["split"] not in DEVELOPMENT | {"CHRONOLOGICAL_VALIDATION"}:
+            raise ValueError("retrospective evidence is restricted to development splits")
+        if c.get("historical_outcomes_inspected_before_freeze") is not False:
+            raise ValueError("retrospective evidence requires an outcome-inspection disclosure")
+        if c.get("historical_reuse_classification") != "EXPLORATORY_DEVELOPMENT_ONLY":
+            raise ValueError("retrospective evidence requires exploratory-only classification")
+        if not start < end <= frozen <= observed:
+            raise ValueError("retrospective contract chronology invalid")
+    elif not frozen < start < end <= observed:
         raise ValueError("contract freeze / observation chronology invalid")
     if c["split"] == "RELEASED_OOS":
         text(c.get("release_ref"), "independent OOS release reference")

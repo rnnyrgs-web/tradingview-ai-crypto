@@ -194,6 +194,17 @@
           "type": "string",
           "format": "date-time"
         },
+        "retrospective_development_only": {
+          "type": "boolean"
+        },
+        "historical_outcomes_inspected_before_freeze": {
+          "type": "boolean"
+        },
+        "historical_reuse_classification": {
+          "enum": [
+            "EXPLORATORY_DEVELOPMENT_ONLY"
+          ]
+        },
         "no_external_flows": {
           "const": true
         },
@@ -217,6 +228,36 @@
         }
       },
       "allOf": [
+        {
+          "if": {
+            "required": [
+              "retrospective_development_only"
+            ],
+            "properties": {
+              "retrospective_development_only": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "historical_outcomes_inspected_before_freeze",
+              "historical_reuse_classification"
+            ],
+            "properties": {
+              "split": {
+                "enum": [
+                  "DEVELOPMENT",
+                  "TRAINING",
+                  "CHRONOLOGICAL_VALIDATION"
+                ]
+              },
+              "historical_outcomes_inspected_before_freeze": {
+                "const": false
+              }
+            }
+          }
+        },
         {
           "if": {
             "properties": {

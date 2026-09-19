@@ -153,6 +153,68 @@ def test_missing_features_do_not_create_invented_groups():
     assert "capacity" in r["unavailable_metrics"]
 
 
+def test_retrospective_development_contract_requires_truthful_disclosures():
+    contract = deepcopy(experiment()["contract"])
+    contract.update(
+        split="TRAINING",
+        start="2020-01-01T00:00:00+00:00",
+        end="2020-01-05T00:00:00+00:00",
+        frozen_at="2021-01-01T00:00:00+00:00",
+        outcomes_observed_at="2021-01-02T00:00:00+00:00",
+        retrospective_development_only=True,
+        historical_outcomes_inspected_before_freeze=False,
+        historical_reuse_classification="EXPLORATORY_DEVELOPMENT_ONLY",
+    )
+
+    assert validate_experiment({
+        **experiment(),
+        "contract": contract,
+        "trades": [],
+        "equity": [
+            {"timestamp": contract["start"], "nav": 1000.0, "gross_exposure": 0.0},
+            {"timestamp": contract["end"], "nav": 1000.0, "gross_exposure": 0.0},
+        ],
+    })
+
+    validation = deepcopy(contract)
+    validation["split"] = "CHRONOLOGICAL_VALIDATION"
+    assert validate_experiment({
+        **experiment(),
+        "contract": validation,
+        "trades": [],
+        "equity": [
+            {"timestamp": validation["start"], "nav": 1000.0, "gross_exposure": 0.0},
+            {"timestamp": validation["end"], "nav": 1000.0, "gross_exposure": 0.0},
+        ],
+    })
+
+    protected = deepcopy(contract)
+    protected["split"] = "FORWARD"
+    with pytest.raises(ValueError, match="retrospective"):
+        validate_experiment({
+            **experiment(),
+            "contract": protected,
+            "trades": [],
+            "equity": [
+                {"timestamp": protected["start"], "nav": 1000.0, "gross_exposure": 0.0},
+                {"timestamp": protected["end"], "nav": 1000.0, "gross_exposure": 0.0},
+            ],
+        })
+
+    undisclosed = deepcopy(contract)
+    undisclosed.pop("historical_outcomes_inspected_before_freeze")
+    with pytest.raises(ValueError, match="disclosure"):
+        validate_experiment({
+            **experiment(),
+            "contract": undisclosed,
+            "trades": [],
+            "equity": [
+                {"timestamp": undisclosed["start"], "nav": 1000.0, "gross_exposure": 0.0},
+                {"timestamp": undisclosed["end"], "nav": 1000.0, "gross_exposure": 0.0},
+            ],
+        })
+
+
 def test_cost_sensitivity_is_not_a_new_backtest():
     r = analyze(experiment([1, 1, 1]))
     assert r["concentration"]["net_pnl_at_double_variable_cost"] == -3
