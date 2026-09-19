@@ -122,16 +122,19 @@ The previous Supabase egress incident remains bounded by merged query/window/thr
 
 ## LEGACY SIGNAL RETIREMENT / DATA HYGIENE
 
-Legacy signal/dashboard production is now **retired and deployed**.
+Legacy signal/dashboard production is now **retired, deployed and compacted**.
 
 - PR #422 retired the scheduled 15-minute scan, legacy signal/system/paper dashboard routes, paid continuous-AI web observer, and legacy paper-trading runtime.
 - No new legacy opportunity/forecast generation has occurred since the final pre-retirement scan at 2026-09-19 04:51Z.
-- `crypto_opportunities` and `trading_signals` have been truncated to zero rows.
-- PR #424 compacted `prediction_ledger` without discarding scientifically useful evidence: point-in-time universe snapshots were archived, compact `research_context` was preserved, verbose resolved calibration payloads were pruned, and bounded reads no longer request unnecessary JSON blobs.
-- Current public Supabase relation footprint is about **204 MB**, down from roughly half a gigabyte before cleanup.
-- `prediction_ledger` still contains unresolved immutable legacy forecasts; the temporary research-only resolver may let them mature, but it cannot generate new forecasts.
+- `crypto_opportunities` and `trading_signals` are truncated to **0 rows** and remain retired.
+- PR #424 added safe prediction-ledger compaction: point-in-time universe snapshots are archived separately, compact `research_context` is preserved, resolved-summary reads no longer request full calibration JSON, and unresolved immutable forecasts remain untouched.
+- Production compaction preserved **628** point-in-time universe snapshots and retains full calibration JSON for only the newest **2,000 resolved** forecasts plus unresolved forecasts.
+- PR #428 fixes the durable migration contract discovered during production application: `prediction_ledger.calibration` is NOT NULL, so older resolved payloads compact to `{}::jsonb` rather than NULL; `research_context` is backfilled only when NULL to avoid repeat work.
+- After `VACUUM FULL ANALYZE`, `prediction_ledger` is about **195 MB** and the total public Supabase relation footprint is about **204 MB**, down from roughly **488 MB** before cleanup.
+- Current legacy ledger count is **112,462** forecasts, of which **27,052** remain unresolved; the temporary research-only resolver may let them mature but cannot generate new forecasts.
 - Do not delete historical 2x+ event/control data, immutable experiment/rejection evidence, protected OOS/forward proof, or point-in-time provenance.
 - Bulk historical research belongs in compressed Parquet/object storage + DuckDB/Polars rather than repeated large Supabase JSON reads.
+- When the unresolved legacy ledger reaches zero, remove the temporary drain workflow and perform one final bounded compaction/space-reclaim pass if justified.
 
 See `docs/LEGACY_SIGNAL_RETIREMENT.md`.
 
