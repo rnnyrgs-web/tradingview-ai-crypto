@@ -2,6 +2,7 @@ from pathlib import Path
 
 
 WORKFLOW = Path(".github/workflows/profitability-learning-runtime-acceptance.yml")
+DOCKERFILE = Path("Dockerfile")
 
 
 def test_runtime_acceptance_runs_automatically_after_relevant_main_changes():
@@ -49,3 +50,15 @@ def test_runtime_acceptance_failure_diagnostics_are_sanitized():
         "broker_connected: .safety.broker_connected?",
     ):
         assert field in workflow
+
+
+def test_runtime_acceptance_dependencies_are_packaged_in_web_image():
+    dockerfile = DOCKERFILE.read_text(encoding="utf-8")
+
+    for instruction in (
+        "COPY profitability_learning/ profitability_learning/",
+        "COPY orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz orchestration/evidence/",
+        "COPY orchestration/rejected_fingerprints.json orchestration/",
+        "COPY orchestration/signal_development_objective.json orchestration/",
+    ):
+        assert instruction in dockerfile
