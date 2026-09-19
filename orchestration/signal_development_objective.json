@@ -1,14 +1,16 @@
 {
   "version": 1,
   "objective_id": "UNIVERSAL_SIGNAL_DEVELOPMENT_V1",
-  "primary_mission": "Find and validate one strategy with genuine sustainable after-cost profitability for 24h and 7d crypto BUY / SELL / WAIT signals; concentrate deep research on that single candidate while genuine forward signal accuracy/precision remains the secondary objective.",
+  "primary_mission": "Find and validate one strategy with genuine sustainable after-cost profitability across tradable liquid assets and any economically meaningful move duration; in parallel build scientifically defensible 90-day 2x+ event intelligence. Legacy 24h/7d crypto BUY / SELL / WAIT dashboard production is retired; genuine forward evidence remains a validation input rather than a display objective.",
   "optimization_target": "genuine_after_cost_profitability_first_then_forward_signal_quality",
   "single_strategy_focus": {
     "enabled": true,
     "max_active_deep_candidates": 1,
     "lifecycle_phase": "SELECTION",
     "active_candidate": null,
-    "selection_screen_workers": ["cross-asset-rank-24h"],
+    "selection_screen_workers": [
+      "cross-asset-rank-24h"
+    ],
     "broad_unrelated_research": "DEPRIORITIZED",
     "success_state": "VALIDATED_RESEARCH_CANDIDATE",
     "required_evidence": [
@@ -31,7 +33,9 @@
     "cherry_picking",
     "survivorship_bias",
     "weakening_WAIT",
-    "overlapping_forecasts_counted_as_independent"
+    "overlapping_forecasts_counted_as_independent",
+    "legacy_signal_dashboard_optimization",
+    "high_frequency_signal_snapshot_storage"
   ],
   "hard_invariants": {
     "monthly_recurring_ceiling_usd": 30,
@@ -42,7 +46,10 @@
     "fabricate_historical_data": false,
     "weaken_validation_gates": false,
     "change_production_thresholds_to_raise_displayed_accuracy": false,
-    "insufficient_evidence": "WAIT_RESEARCH_ONLY"
+    "insufficient_evidence": "WAIT_RESEARCH_ONLY",
+    "legacy_signal_generation_enabled": false,
+    "legacy_signal_dashboard_active": false,
+    "bulk_historical_research_in_supabase": false
   },
   "task_contract_required_fields": [
     "hypothesis",
@@ -58,11 +65,22 @@
     "result",
     "evidence_conclusion"
   ],
-  "valid_horizons": ["24h", "7d", "both"],
-  "valid_evidence_conclusions": ["supports", "rejects", "unresolved"],
+  "valid_horizons": [
+    "24h",
+    "7d",
+    "both"
+  ],
+  "valid_evidence_conclusions": [
+    "supports",
+    "rejects",
+    "unresolved"
+  ],
   "priority_formula": {
     "expression": "expected_incremental_after_cost_profitability_impact * expected_information_falsification_value * probability_actionable_evidence / compute_api_cost_units; genuine forward signal quality is a secondary tiebreaker and cannot compensate for weaker economic impact",
-    "factor_range": [0.0, 1.0],
+    "factor_range": [
+      0,
+      1
+    ],
     "minimum_cost_units": 0.25,
     "safety_reliability_exception": "Operational/security work may outrank alpha research only when required to preserve validity, availability, authenticity, or fail-closed evidence collection."
   },
@@ -108,8 +126,8 @@
     "minimum_subset_coverage": 0.8,
     "lower_requirement_allowed": false,
     "priority_factors": {
-      "expected_incremental_after_cost_profitability_impact": 1.0,
-      "expected_genuine_signal_quality_impact": 1.0,
+      "expected_incremental_after_cost_profitability_impact": 1,
+      "expected_genuine_signal_quality_impact": 1,
       "expected_information_falsification_value": 0.95,
       "probability_actionable_evidence": 0.9,
       "compute_api_cost_units": 0.5

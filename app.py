@@ -1,48 +1,41 @@
-import asyncio
 import hmac
 import logging
 from contextlib import asynccontextmanager
 from typing import Optional
-from fastapi import FastAPI, HTTPException, Header, Request
 
-from config import *
-from db import configured, fetch_actionable_after, fetch_latest_signal_id, fetch_resolved_predictions, fetch_shadow_predictions
-from engine import run_scan
-from evaluator import run_evaluation
+from fastapi import FastAPI, Header, HTTPException, Request
+
 from backtest import run_backtest, walk_forward
+from calibration import calibration_summary
+from config import *
+from dashboard import handle_login, login_page
+from db import configured, fetch_resolved_predictions, fetch_shadow_predictions
+from evaluator import run_prediction_drain
 from market_data import build_universe
-from dashboard import login_page, handle_login, dashboard_page, signal_detail_page, signal_chart_data
-from paper_dashboard import paper_audit_page, paper_portfolio_page
-from combined_dashboard import combined_dashboard_page
-from strategy_mission_dashboard import mission_control_page
 from money_intelligence_dashboard import money_dashboard_page
 from operational_monitor import health_snapshot, record_error
-from calibration import calibration_summary
-from continuous_ai_agent import continuous_ai_loop, status_snapshot as continuous_ai_status
 from production_validation import validate_live_strategy
-from shadow_readiness import assess_shadow_readiness, canary_review_decision
-from paper_trading import paper_status, paper_trading_loop, run_paper_cycle
 from research_observability import snapshot as research_observability_snapshot
 from selective_precision_observability import resolved_selective_precision_snapshot
+from shadow_readiness import assess_shadow_readiness, canary_review_decision
+from strategy_mission_dashboard import mission_control_page
+
+
+LEGACY_SIGNAL_RETIREMENT_REASON = (
+    "Legacy signal/dashboard production is retired. The service now prioritizes "
+    "strategy discovery and 90-day 2x+ research."
+)
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    ai_task = asyncio.create_task(continuous_ai_loop())
-    paper_task = asyncio.create_task(paper_trading_loop())
-    try:
-        yield
-    finally:
-        ai_task.cancel()
-        paper_task.cancel()
-        for task in (ai_task, paper_task):
-            try:
-                await task
-            except asyncio.CancelledError:
-                pass
+    # The web process no longer hosts paid AI polling, legacy signal scans, or the
+    # old paper-trading loop. Scheduled research/Work/GitHub workers own background
+    # execution, keeping this service small and preventing hidden recurring spend.
+    yield
 
 
-app=FastAPI(title="Crypto Signal Engine V3", lifespan=lifespan)
+app = FastAPI(title="Trading Research Engine", lifespan=lifespan)
 log = logging.getLogger(__name__)
 
 
@@ -51,222 +44,289 @@ def internal_error(component, exc, public_message):
     log.exception("%s failed", component)
     raise HTTPException(status_code=500, detail=public_message) from exc
 
-def verify_secret(secret:Optional[str],x_scan_secret:Optional[str]):
-    supplied=x_scan_secret or secret or ""
-    if not SCAN_SECRET or not hmac.compare_digest(supplied,SCAN_SECRET):
-        raise HTTPException(status_code=401,detail="Unauthorized")
+
+def verify_secret(secret: Optional[str], x_scan_secret: Optional[str]):
+    supplied = x_scan_secret or secret or ""
+    if not SCAN_SECRET or not hmac.compare_digest(supplied, SCAN_SECRET):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+
+def _legacy_retired():
+    raise HTTPException(status_code=410, detail=LEGACY_SIGNAL_RETIREMENT_REASON)
+
 
 @app.get("/")
 def root():
     return {
-        "ok":True,
-        "service":"Crypto Signal Engine V3",
-        "version":STRATEGY_VERSION,
-        "dashboard":"/dashboard",
-        "mission_control":"/dashboard",
-        "system_dashboard":"/dashboard/system",
-        "money_intelligence":"/dashboard/money",
-        "paper_portfolio":"/dashboard/paper",
-        "paper_audit":"/dashboard/paper/audit",
-        "endpoints":["/health","/research-observability","/selective-precision","/paper","/paper/run","/scan","/evaluate","/calibration","/shadow-readiness","/backtest","/walkforward","/universe","/signals","/signals/cursor"]
+        "ok": True,
+        "service": "Trading Research Engine",
+        "version": STRATEGY_VERSION,
+        "mission_control": "/dashboard",
+        "money_intelligence": "/dashboard/money",
+        "legacy_signal_pipeline": "RETIRED",
+        "endpoints": [
+            "/health",
+            "/research-observability",
+            "/selective-precision",
+            "/research/resolve-pending",
+            "/calibration",
+            "/shadow-readiness",
+            "/backtest",
+            "/walkforward",
+            "/universe",
+        ],
     }
+
 
 @app.get("/health")
 def health():
     return {
-        "ok":True,"version":STRATEGY_VERSION,"model":OPENAI_MODEL,
-        "supabase_configured":configured(),
-        "universe_size":UNIVERSE_SIZE,
-        "deep_scan_size":DEEP_SCAN_SIZE,
-        "horizons":list(HORIZONS.keys()),
-        "operations":health_snapshot(),
-        "continuous_ai":continuous_ai_status(),
-        "paper_trading":paper_status(),
+        "ok": True,
+        "version": STRATEGY_VERSION,
+        "model": OPENAI_MODEL,
+        "supabase_configured": configured(),
+        "universe_size": UNIVERSE_SIZE,
+        "deep_scan_size": DEEP_SCAN_SIZE,
+        "horizons": list(HORIZONS.keys()),
+        "operations": health_snapshot(),
+        "legacy_signal_pipeline": "RETIRED",
+        "background_execution": "GITHUB_AND_SCHEDULED_WORK",
     }
 
+
 @app.get("/research-observability")
-def research_observability(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
-    verify_secret(secret,x_scan_secret)
+def research_observability(
+    secret: Optional[str] = None,
+    x_scan_secret: Optional[str] = Header(default=None),
+):
+    verify_secret(secret, x_scan_secret)
     try:
-        return {"ok":True,**research_observability_snapshot()}
+        return {"ok": True, **research_observability_snapshot()}
     except Exception as e:
         internal_error("research_observability", e, "Research observability unavailable")
 
+
 @app.get("/selective-precision")
-def selective_precision_observability(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
-    verify_secret(secret,x_scan_secret)
+def selective_precision_observability(
+    secret: Optional[str] = None,
+    x_scan_secret: Optional[str] = Header(default=None),
+):
+    verify_secret(secret, x_scan_secret)
     try:
         return resolved_selective_precision_snapshot()
     except Exception as e:
         internal_error("selective_precision_observability", e, "Selective precision research unavailable")
 
-@app.get("/paper")
-def paper(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
-    verify_secret(secret,x_scan_secret)
-    try:
-        return paper_status()
-    except Exception as e:
-        internal_error("paper_status", e, "Paper trading status unavailable")
 
-@app.get("/paper/run")
-def paper_run(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
-    verify_secret(secret,x_scan_secret)
+@app.get("/research/resolve-pending")
+def resolve_pending_predictions(
+    secret: Optional[str] = None,
+    x_scan_secret: Optional[str] = Header(default=None),
+):
+    """Drain already-created immutable forecasts without generating new signals."""
+    verify_secret(secret, x_scan_secret)
     try:
-        return run_paper_cycle()
+        return run_prediction_drain()
     except Exception as e:
-        internal_error("paper_run", e, "Paper trading cycle failed")
+        internal_error("prediction_drain", e, "Pending prediction resolution failed")
+
 
 @app.get("/dashboard/login")
 def dashboard_login_get():
     return login_page()
 
+
 @app.post("/dashboard/login")
-async def dashboard_login_post(request:Request):
+async def dashboard_login_post(request: Request):
     return await handle_login(request)
 
+
 @app.get("/dashboard")
-def dashboard(request:Request):
+def dashboard(request: Request):
     try:
         return mission_control_page(request)
     except Exception as e:
         internal_error("dashboard_mission_control", e, "Mission Control unavailable")
 
-@app.get("/dashboard/system")
-def dashboard_system(request:Request,horizon:str="all"):
-    try:
-        return combined_dashboard_page(request,horizon)
-    except Exception as e:
-        internal_error("dashboard_system", e, "System dashboard unavailable")
 
 @app.get("/dashboard/money")
-def dashboard_money(request:Request):
+def dashboard_money(request: Request):
     try:
         return money_dashboard_page(request)
     except Exception as e:
         internal_error("dashboard_money", e, "Money Intelligence dashboard unavailable")
 
+
+@app.get("/dashboard/system")
+def dashboard_system():
+    return _legacy_retired()
+
+
 @app.get("/dashboard/signals")
-def dashboard_signals(request:Request,horizon:str="all"):
-    try:
-        return dashboard_page(request,horizon)
-    except Exception as e:
-        internal_error("dashboard_signals", e, "Signals unavailable")
+def dashboard_signals():
+    return _legacy_retired()
+
 
 @app.get("/dashboard/paper")
-def dashboard_paper(request:Request):
-    try:
-        return paper_portfolio_page(request)
-    except Exception as e:
-        internal_error("dashboard_paper", e, "Paper portfolio unavailable")
+def dashboard_paper():
+    return _legacy_retired()
+
 
 @app.get("/dashboard/paper/audit")
-def dashboard_paper_audit(request:Request):
-    try:
-        return paper_audit_page(request)
-    except Exception as e:
-        internal_error("dashboard_paper_audit", e, "Paper audit unavailable")
+def dashboard_paper_audit():
+    return _legacy_retired()
+
 
 @app.get("/dashboard/signal/{signal_id}")
-def dashboard_signal(request:Request,signal_id:int):
-    try:
-        return signal_detail_page(request,signal_id)
-    except Exception as e:
-        internal_error("dashboard_signal", e, "Signal chart unavailable")
+def dashboard_signal(signal_id: int):
+    del signal_id
+    return _legacy_retired()
+
 
 @app.get("/dashboard/signal/{signal_id}/chart-data")
-def dashboard_signal_chart_data(request:Request,signal_id:int):
-    try:
-        return signal_chart_data(request,signal_id)
-    except Exception as e:
-        internal_error("dashboard_signal_chart_data", e, "Signal chart data unavailable")
+def dashboard_signal_chart_data(signal_id: int):
+    del signal_id
+    return _legacy_retired()
 
-@app.get("/universe")
-def universe(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
-    verify_secret(secret,x_scan_secret)
-    u=build_universe()
-    return {"ok":True,"count":len(u),"top":u[:50]}
 
 @app.get("/signals/cursor")
-def signal_cursor(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
-    verify_secret(secret,x_scan_secret)
-    try:
-        return {"ok":True,"latest_id":fetch_latest_signal_id()}
-    except Exception as e:
-        internal_error("signal_cursor", e, "Signal cursor unavailable")
+def signal_cursor(
+    secret: Optional[str] = None,
+    x_scan_secret: Optional[str] = Header(default=None),
+):
+    verify_secret(secret, x_scan_secret)
+    return _legacy_retired()
+
 
 @app.get("/signals")
-def signals(after_id:int=0,limit:int=20,secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
-    verify_secret(secret,x_scan_secret)
-    try:
-        rows=fetch_actionable_after(after_id,limit)
-        return {"ok":True,"count":len(rows),"signals":rows}
-    except Exception as e:
-        internal_error("signals", e, "Signal feed unavailable")
+def signals(
+    after_id: int = 0,
+    limit: int = 20,
+    secret: Optional[str] = None,
+    x_scan_secret: Optional[str] = Header(default=None),
+):
+    del after_id, limit
+    verify_secret(secret, x_scan_secret)
+    return _legacy_retired()
+
 
 @app.get("/scan")
-def scan(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
-    verify_secret(secret,x_scan_secret)
-    try:
-        return run_scan()
-    except Exception as e:
-        internal_error("scan", e, "Production scan failed")
+def scan(
+    secret: Optional[str] = None,
+    x_scan_secret: Optional[str] = Header(default=None),
+):
+    verify_secret(secret, x_scan_secret)
+    return _legacy_retired()
+
 
 @app.get("/evaluate")
-def evaluate(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
-    verify_secret(secret,x_scan_secret)
-    try:
-        return run_evaluation()
-    except Exception as e:
-        internal_error("evaluation", e, "Signal evaluation failed")
+def evaluate(
+    secret: Optional[str] = None,
+    x_scan_secret: Optional[str] = Header(default=None),
+):
+    verify_secret(secret, x_scan_secret)
+    return _legacy_retired()
+
+
+@app.get("/paper")
+def paper(
+    secret: Optional[str] = None,
+    x_scan_secret: Optional[str] = Header(default=None),
+):
+    verify_secret(secret, x_scan_secret)
+    return _legacy_retired()
+
+
+@app.get("/paper/run")
+def paper_run(
+    secret: Optional[str] = None,
+    x_scan_secret: Optional[str] = Header(default=None),
+):
+    verify_secret(secret, x_scan_secret)
+    return _legacy_retired()
+
+
+@app.get("/universe")
+def universe(
+    secret: Optional[str] = None,
+    x_scan_secret: Optional[str] = Header(default=None),
+):
+    verify_secret(secret, x_scan_secret)
+    u = build_universe()
+    return {"ok": True, "count": len(u), "top": u[:50]}
+
 
 @app.get("/calibration")
-def calibration(secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
-    verify_secret(secret,x_scan_secret)
+def calibration(
+    secret: Optional[str] = None,
+    x_scan_secret: Optional[str] = Header(default=None),
+):
+    verify_secret(secret, x_scan_secret)
     try:
         return calibration_summary(fetch_resolved_predictions())
     except Exception as e:
         internal_error("calibration", e, "Calibration unavailable")
 
+
 @app.get("/shadow-readiness")
-def shadow_readiness(symbol:str="BTC-USDT",horizon:str="24h",strategy_family:str="",
-                     secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
-    verify_secret(secret,x_scan_secret)
+def shadow_readiness(
+    symbol: str = "BTC-USDT",
+    horizon: str = "24h",
+    strategy_family: str = "",
+    secret: Optional[str] = None,
+    x_scan_secret: Optional[str] = Header(default=None),
+):
+    verify_secret(secret, x_scan_secret)
     try:
-        validation=validate_live_strategy(symbol.upper(),horizon,strategy_family)
-        assessment=assess_shadow_readiness(
-            fetch_shadow_predictions(),target_identity=validation.identity,horizon=horizon
+        validation = validate_live_strategy(symbol.upper(), horizon, strategy_family)
+        assessment = assess_shadow_readiness(
+            fetch_shadow_predictions(),
+            target_identity=validation.identity,
+            horizon=horizon,
         )
         return {
-            "ok":True,
-            "symbol":symbol.upper(),
-            "horizon":horizon,
-            "strategy_family":strategy_family,
-            "live_validation":{
-                "approved":validation.approved,
-                "status":validation.status,
-                "reason":validation.reason,
-                "identity":validation.identity,
+            "ok": True,
+            "symbol": symbol.upper(),
+            "horizon": horizon,
+            "strategy_family": strategy_family,
+            "live_validation": {
+                "approved": validation.approved,
+                "status": validation.status,
+                "reason": validation.reason,
+                "identity": validation.identity,
             },
-            "shadow":assessment,
-            "canary_review":canary_review_decision(validation,assessment),
+            "shadow": assessment,
+            "canary_review": canary_review_decision(validation, assessment),
         }
     except Exception as e:
         internal_error("shadow_readiness", e, "Shadow readiness unavailable")
 
+
 @app.get("/backtest")
-def backtest(symbol:str="BTC-USDT",bar:str="15m",bars:int=2500,
-             secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
-    verify_secret(secret,x_scan_secret)
+def backtest(
+    symbol: str = "BTC-USDT",
+    bar: str = "15m",
+    bars: int = 2500,
+    secret: Optional[str] = None,
+    x_scan_secret: Optional[str] = Header(default=None),
+):
+    verify_secret(secret, x_scan_secret)
     try:
-        return run_backtest(symbol.upper(),bar,bars)
+        return run_backtest(symbol.upper(), bar, bars)
     except Exception as e:
         internal_error("backtest", e, "Backtest failed")
 
+
 @app.get("/walkforward")
-def walkforward(symbol:str="BTC-USDT",bar:str="15m",bars:int=3000,
-                secret:Optional[str]=None,x_scan_secret:Optional[str]=Header(default=None)):
-    verify_secret(secret,x_scan_secret)
+def walkforward(
+    symbol: str = "BTC-USDT",
+    bar: str = "15m",
+    bars: int = 3000,
+    secret: Optional[str] = None,
+    x_scan_secret: Optional[str] = Header(default=None),
+):
+    verify_secret(secret, x_scan_secret)
     try:
-        return walk_forward(symbol.upper(),bar,bars)
+        return walk_forward(symbol.upper(), bar, bars)
     except Exception as e:
         internal_error("walkforward", e, "Walk-forward validation failed")

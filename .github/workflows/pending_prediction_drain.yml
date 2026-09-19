@@ -1,0 +1,36 @@
+name: Pending Prediction Drain
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pending-prediction-drain
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - id: gate
+        name: Bound temporary drain window
+        shell: bash
+        run: |
+          CUTOFF_EPOCH="$(date -u -d '2026-10-01T00:00:00Z' +%s)"
+          NOW_EPOCH="$(date -u +%s)"
+          if [ "$NOW_EPOCH" -lt "$CUTOFF_EPOCH" ]; then
+            echo "active=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "active=false" >> "$GITHUB_OUTPUT"
+            echo "Drain window expired; no database request will be sent."
+          fi
+
+      - name: Resolve already-created pending predictions only
+        if: steps.gate.outputs.active == 'true'
+        run: |
+          curl --fail --show-error --silent             --connect-timeout 10             --max-time 180             -H "X-Scan-Secret: ${{ secrets.SCAN_SECRET }}"             "https://tradingview-ai-crypto.onrender.com/research/resolve-pending"
