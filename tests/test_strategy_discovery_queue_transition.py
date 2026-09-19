@@ -27,7 +27,7 @@ def test_residual_negative_evidence_stays_deprioritized_as_queue_advances():
 
     assert state["active_deep_candidate"] is None
     assert state["next_action"]["action"] == "RUN_CHEAP_DETERMINISTIC_SCREEN"
-    assert state["next_action"]["fingerprint_id"] == "DISC-LIQUIDITY-MEANREV-001-v1"
+    assert state["next_action"]["fingerprint_id"] == "DISC-SQUEEZE-RETENTION-001-v1"
     ranked = {row["fingerprint_id"] for row in state["ranked_cheap_screens"]}
     assert "DISC-RESIDUAL-MOMENTUM-001-v1" not in ranked
     assert "DISC-VOL-BREAKOUT-001-v1" not in ranked

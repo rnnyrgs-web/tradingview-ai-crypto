@@ -22,10 +22,16 @@
       "work_mode": "CHEAP_SCREEN",
       "economic_mechanism": "Asset-specific momentum remaining after removing broad market movement may persist because idiosyncratic information and flows diffuse gradually.",
       "hypothesis": "Residualized cross-sectional momentum has positive incremental after-cost expectancy across predeclared liquid universes and chronological splits.",
-      "target_markets": ["liquid_crypto"],
-      "target_timeframes": ["1h", "4h", "1d"],
+      "target_markets": [
+        "liquid_crypto"
+      ],
+      "target_timeframes": [
+        "1h",
+        "4h",
+        "1d"
+      ],
       "source_fingerprint_required": false,
-      "blocker": "Frozen cheap screen DISC-RESIDUAL-MOMENTUM-001-v1 produced 0/2 passing Top-15/Top-30 pre-OOS subsets on exact artifact 10572498750; challenger training rank IC and 3x after-cost spread were negative on both subsets. Historical point-in-time membership is unverified, so the screen is exploratory negative evidence only: keep OOS locked, do not deep-freeze, and do not terminally reject solely from survivor-biased evidence. Pivot to the next materially distinct clean-data screen.",
+      "blocker": "Frozen cheap screen DISC-RESIDUAL-MOMENTUM-001-v1 produced 0/2 passing Top-15/Top-30 pre-OOS subsets on exact artifact 10572498750; challenger training rank IC and 3x after-cost spread were negative on both subsets. Historical point-in-time membership is unverified, so the screen is exploratory negative evidence only: keep OOS locked, do not deep-freeze, and do not terminally reject solely from survivor-biased evidence.",
       "evidence_ref": "orchestration/evidence/disc_residual_momentum_001_20260919.json",
       "expected_profitability_impact": 0.72,
       "expected_information_gain": 0.88,
@@ -44,31 +50,43 @@
       ]
     },
     {
-      "hypothesis_id": "DISC-LIQUIDITY-MEANREV-001",
-      "fingerprint_id": "DISC-LIQUIDITY-MEANREV-001-v1",
-      "family": "liquidity_shock_mean_reversion",
+      "hypothesis_id": "DISC-SQUEEZE-RETENTION-001",
+      "fingerprint_id": "DISC-SQUEEZE-RETENTION-001-v1",
+      "family": "forced_flow_retention_momentum",
       "lane": "cheap_screen",
       "stage": "CHEAP_SCREEN_READY",
       "work_mode": "CHEAP_SCREEN",
-      "economic_mechanism": "Short-lived liquidity shocks and forced order flow can temporarily dislocate price from its local equilibrium, followed by partial mean reversion when liquidity replenishes.",
-      "hypothesis": "A predeclared liquidity/volatility shock filter identifies short-horizon mean-reversion opportunities with positive after-cost expectancy.",
-      "target_markets": ["liquid_crypto", "major_equity_etfs"],
-      "target_timeframes": ["5m", "15m", "1h"],
+      "economic_mechanism": "If a large upside move is initially amplified by short-covering but price remains elevated after forced-flow activity and leverage normalize, independent spot/capital demand may be carrying the move and continuation may have positive expectancy.",
+      "hypothesis": "A predeclared post-squeeze retention/deleveraging filter identifies continuation after large upside moves with positive after-cost expectancy versus equally large price shocks without retention and leverage-normalization confirmation.",
+      "target_markets": [
+        "liquid_crypto"
+      ],
+      "target_timeframes": [
+        "1h",
+        "4h",
+        "24h"
+      ],
       "source_fingerprint_required": false,
       "blocker": null,
-      "expected_profitability_impact": 0.62,
-      "expected_information_gain": 0.78,
-      "falsification_value": 0.86,
-      "sample_readiness": 0.78,
-      "compute_cost": 0.45,
+      "generator_evidence_ref": "money_intelligence/research_cycles/2026-09-19T0357Z-cycle.json",
+      "generator_evidence_note": "Money Intelligence observed BTC retaining a large Sep. 18 gain after the main short-liquidation impulse normalized and explicitly queued a timestamp-safe BTC squeeze matched sample; this is hypothesis-generation evidence only, not strategy evidence.",
+      "expected_profitability_impact": 0.67,
+      "expected_information_gain": 0.9,
+      "falsification_value": 0.93,
+      "sample_readiness": 0.62,
+      "compute_cost": 0.4,
       "validation_requirements": [
+        "timestamp_safe_forced_flow_data",
+        "predeclared_squeeze_and_retention_thresholds",
         "chronological_train_validation",
+        "matched_large_move_baseline",
         "untouched_oos",
         "robustness_stability",
         "multiple_testing_firewall",
         "realistic_cost_stress",
         "genuine_forward_shadow"
-      ]
+      ],
+      "data_preflight_ref": "docs/research/squeeze_retention_data_preflight_20260919.md"
     },
     {
       "hypothesis_id": "DISC-FRIZZ-PLAYBIT-EMA-001",
@@ -79,8 +97,18 @@
       "work_mode": "CHEAP_SCREEN",
       "economic_mechanism": "Trend-following EMA geometry may capture persistent directional order flow if the exact published rules are applied consistently across assets and timeframes.",
       "hypothesis": "The exact user-specified Frizz/PlayBit EMA rules exhibit robust after-cost expectancy on a subset of assets/timeframes without post-hoc rule changes.",
-      "target_markets": ["crypto", "fx", "indices", "commodities"],
-      "target_timeframes": ["15m", "1h", "4h", "1d"],
+      "target_markets": [
+        "crypto",
+        "fx",
+        "indices",
+        "commodities"
+      ],
+      "target_timeframes": [
+        "15m",
+        "1h",
+        "4h",
+        "1d"
+      ],
       "source_fingerprint_required": true,
       "blocker": "Exact indicator source/rules must be pinned and fingerprinted before any screen; do not approximate or silently substitute the existing FFRIZZ family.",
       "expected_profitability_impact": 0.76,
@@ -109,8 +137,15 @@
       "work_mode": "CHEAP_SCREEN",
       "economic_mechanism": "Extreme moves may share measurable pre-move combinations of liquidity, leverage, supply, narrative, catalyst, and market-structure conditions.",
       "hypothesis": "Matched-control big-move studies can generate measurable precursor hypotheses that improve future strategy discovery without using post-move information.",
-      "target_markets": ["global_multi_asset"],
-      "target_timeframes": ["event", "1h", "1d", "1w"],
+      "target_markets": [
+        "global_multi_asset"
+      ],
+      "target_timeframes": [
+        "event",
+        "1h",
+        "1d",
+        "1w"
+      ],
       "source_fingerprint_required": false,
       "blocker": null,
       "expected_profitability_impact": 0.58,
@@ -134,8 +169,14 @@
       "work_mode": "CHEAP_SCREEN",
       "economic_mechanism": "Liquidity, credit, policy, capital-flow and positioning changes can transmit into asset returns through measurable causal channels.",
       "hypothesis": "Money Intelligence can generate timestamp-defensible, testable strategy hypotheses with incremental predictive value over simple price-only baselines.",
-      "target_markets": ["global_multi_asset"],
-      "target_timeframes": ["1d", "1w", "1m"],
+      "target_markets": [
+        "global_multi_asset"
+      ],
+      "target_timeframes": [
+        "1d",
+        "1w",
+        "1m"
+      ],
       "source_fingerprint_required": false,
       "blocker": null,
       "expected_profitability_impact": 0.55,

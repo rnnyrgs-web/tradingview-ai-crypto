@@ -1,6 +1,6 @@
 {
-  "version": 4,
-  "reason": "Preserve completed historical coordination, close the terminally rejected DISC-VOL-BREAKOUT-001-v1 worker assignments, and align the active specialist execution queue to the next materially distinct ranked hypothesis DISC-LIQUIDITY-MEANREV-001-v1 without changing broker, trade, promotion, or paid-resource authority.",
+  "version": 5,
+  "reason": "Preserve historical coordination, close DISC-LIQUIDITY-MEANREV-001-v1 after its terminal pre-OOS rejection, and align active specialist work to the materially distinct DISC-SQUEEZE-RETENTION-001-v1 hypothesis generated from timestamp-defensible Money Intelligence evidence. Broker/trade/promotion authority and the USD 30 ceiling remain unchanged.",
   "task_updates": {
     "COORD-DATA-005": {
       "status": "DONE",
@@ -190,14 +190,19 @@
       "status": "DONE",
       "work_mode": "CHEAP_SCREEN",
       "fingerprint_id": "DISC-VOL-BREAKOUT-001-v1",
-      "eligible_engines": ["chatgpt", "human"],
+      "eligible_engines": [
+        "chatgpt",
+        "human"
+      ],
       "title": "Own scientific selection and pivot decisions for the volatility-breakout cheap screen",
       "dependencies": [],
       "blockers": [],
       "issue": null,
       "branch": "agent/quant-research",
       "pr": null,
-      "evidence_required": ["preserve the frozen selection result and untouched-OOS lock"],
+      "evidence_required": [
+        "preserve the frozen selection result and untouched-OOS lock"
+      ],
       "completion_rule": "Closed by the terminal pre-OOS selection rejection; do not rescue or tune this exact fingerprint.",
       "completion_evidence": {
         "status": "SUPERSEDED_BY_TERMINAL_SELECTION_REJECTION",
@@ -215,14 +220,20 @@
       "status": "DONE",
       "work_mode": "VALIDATION",
       "fingerprint_id": "DISC-VOL-BREAKOUT-001-v1",
-      "eligible_engines": ["claude", "chatgpt", "human"],
+      "eligible_engines": [
+        "claude",
+        "chatgpt",
+        "human"
+      ],
       "title": "Independently falsify the volatility-breakout selection contract and acceptance gates",
       "dependencies": [],
       "blockers": [],
       "issue": null,
       "branch": "agent/signal-accuracy",
       "pr": null,
-      "evidence_required": ["preserve the frozen rejection and do not open untouched OOS"],
+      "evidence_required": [
+        "preserve the frozen rejection and do not open untouched OOS"
+      ],
       "completion_rule": "Closed because the frozen candidate failed before OOS; no production or promotion authority.",
       "completion_evidence": {
         "status": "SUPERSEDED_BY_TERMINAL_SELECTION_REJECTION",
@@ -240,14 +251,19 @@
       "status": "DONE",
       "work_mode": "CHEAP_SCREEN",
       "fingerprint_id": "DISC-VOL-BREAKOUT-001-v1",
-      "eligible_engines": ["chatgpt", "human"],
+      "eligible_engines": [
+        "chatgpt",
+        "human"
+      ],
       "title": "Provide clean fixed-asset/provenance data for the volatility-breakout cheap screen",
       "dependencies": [],
       "blockers": [],
       "issue": null,
       "branch": "agent/data-market",
       "pr": null,
-      "evidence_required": ["preserve the exact frozen data provenance and hashes"],
+      "evidence_required": [
+        "preserve the exact frozen data provenance and hashes"
+      ],
       "completion_rule": "Closed with the terminal selection evidence; frozen dataset provenance remains durable evidence.",
       "completion_evidence": {
         "status": "SUPERSEDED_BY_TERMINAL_SELECTION_REJECTION",
@@ -266,14 +282,20 @@
       "status": "DONE",
       "work_mode": "AUDIT",
       "fingerprint_id": "DISC-VOL-BREAKOUT-001-v1",
-      "eligible_engines": ["claude-code", "chatgpt", "human"],
+      "eligible_engines": [
+        "claude-code",
+        "chatgpt",
+        "human"
+      ],
       "title": "Adversarially test the volatility-breakout discovery and selection pipeline",
       "dependencies": [],
       "blockers": [],
       "issue": null,
       "branch": "agent/testing-security",
       "pr": null,
-      "evidence_required": ["preserve the frozen rejection and pipeline safety invariants"],
+      "evidence_required": [
+        "preserve the frozen rejection and pipeline safety invariants"
+      ],
       "completion_rule": "Closed after the exact frozen fingerprint failed pre-OOS; no safety gate was weakened.",
       "completion_evidence": {
         "status": "SUPERSEDED_BY_TERMINAL_SELECTION_REJECTION",
@@ -287,10 +309,13 @@
       "id": "COORD-DISC-QUANT-002",
       "priority": 1,
       "owner": "quant-research",
-      "status": "READY",
+      "status": "DONE",
       "work_mode": "CHEAP_SCREEN",
       "fingerprint_id": "DISC-LIQUIDITY-MEANREV-001-v1",
-      "eligible_engines": ["chatgpt", "human"],
+      "eligible_engines": [
+        "chatgpt",
+        "human"
+      ],
       "title": "Freeze and own the liquidity-shock mean-reversion cheap-screen contract",
       "dependencies": [],
       "blockers": [],
@@ -307,16 +332,28 @@
         "no production, paper, broker or promotion authority"
       ],
       "completion_rule": "Advance DISC-LIQUIDITY-MEANREV-001-v1 by one truthful pre-OOS state transition: terminally reject, scientifically block, or freeze exactly one qualifying candidate for deep validation.",
-      "next_task": null
+      "next_task": "COORD-DISC-QUANT-003",
+      "completion_evidence": {
+        "status": "TERMINAL_PRE_OOS_REJECTION",
+        "evidence_ref": "orchestration/evidence/disc_liquidity_meanrev_001_20260919.json",
+        "selection_workflow_run": 35420353644,
+        "passing_instruments": 0,
+        "pooled_validation_mean_net_bps": -45.47562632933707,
+        "untouched_oos_status": "LOCKED_UNTOUCHED_OOS"
+      }
     },
     {
       "id": "COORD-DISC-VAL-002",
       "priority": 1,
       "owner": "signal-accuracy",
-      "status": "READY",
+      "status": "DONE",
       "work_mode": "VALIDATION",
       "fingerprint_id": "DISC-LIQUIDITY-MEANREV-001-v1",
-      "eligible_engines": ["claude", "chatgpt", "human"],
+      "eligible_engines": [
+        "claude",
+        "chatgpt",
+        "human"
+      ],
       "title": "Independently falsify the liquidity mean-reversion selection design",
       "dependencies": [],
       "blockers": [],
@@ -332,16 +369,29 @@
         "document exact evidence that would qualify, reject, or scientifically block the candidate"
       ],
       "completion_rule": "Produce an independent pre-outcome falsification design for the current candidate; do not authorize production or duplicate the implementation owner.",
-      "next_task": null
+      "next_task": "COORD-DISC-VAL-003",
+      "completion_evidence": {
+        "status": "TERMINAL_PRE_OOS_REJECTION",
+        "evidence_ref": "orchestration/evidence/disc_liquidity_meanrev_001_20260919.json",
+        "pooled_validation_profit_factor": 0.45586425443550266,
+        "validation_half_mean_net_bps": [
+          -29.147191892226754,
+          -63.77473388816758
+        ],
+        "untouched_oos_status": "LOCKED_UNTOUCHED_OOS"
+      }
     },
     {
       "id": "COORD-DISC-DATA-002",
       "priority": 1,
       "owner": "data-market",
-      "status": "READY",
+      "status": "DONE",
       "work_mode": "CHEAP_SCREEN",
       "fingerprint_id": "DISC-LIQUIDITY-MEANREV-001-v1",
-      "eligible_engines": ["chatgpt", "human"],
+      "eligible_engines": [
+        "chatgpt",
+        "human"
+      ],
       "title": "Provide timestamp-safe liquidity/volatility-shock data for the mean-reversion screen",
       "dependencies": [],
       "blockers": [],
@@ -357,16 +407,26 @@
         "zero new paid service unless separately approved"
       ],
       "completion_rule": "Provide a defensible frozen data path for the liquidity mean-reversion screen or persist the exact data blocker and cleanest scientifically valid alternative without outcome-driven substitution.",
-      "next_task": null
+      "next_task": "COORD-DISC-DATA-003",
+      "completion_evidence": {
+        "status": "DATA_VERIFIED_SELECTION_REJECTED",
+        "evidence_ref": "orchestration/evidence/disc_liquidity_meanrev_001_20260919.json",
+        "normalized_row_count": 35997,
+        "dataset_sha256": "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f"
+      }
     },
     {
       "id": "COORD-DISC-TEST-002",
       "priority": 1,
       "owner": "testing-security",
-      "status": "READY",
+      "status": "DONE",
       "work_mode": "AUDIT",
       "fingerprint_id": "DISC-LIQUIDITY-MEANREV-001-v1",
-      "eligible_engines": ["claude-code", "chatgpt", "human"],
+      "eligible_engines": [
+        "claude-code",
+        "chatgpt",
+        "human"
+      ],
       "title": "Adversarially test the liquidity mean-reversion discovery pipeline",
       "dependencies": [],
       "blockers": [],
@@ -383,6 +443,125 @@
         "exact-head Security and Reliability success for any code/test change"
       ],
       "completion_rule": "Try to break the current discovery/evidence path and fix only concrete research-safety defects within the research-only allowlist; never merge or authorize trading.",
+      "next_task": "COORD-DISC-TEST-003",
+      "completion_evidence": {
+        "status": "PIPELINE_TESTED_SELECTION_REJECTED",
+        "selection_exact_head_sha": "e652d458401d40d45e098c85680ef96ddbd8ce51",
+        "security_reliability_run": 35420353639,
+        "selection_workflow_run": 35420353644,
+        "untouched_oos_status": "LOCKED_UNTOUCHED_OOS"
+      }
+    },
+    {
+      "id": "COORD-DISC-QUANT-003",
+      "priority": 1,
+      "owner": "quant-research",
+      "status": "READY",
+      "work_mode": "CHEAP_SCREEN",
+      "fingerprint_id": "DISC-SQUEEZE-RETENTION-001-v1",
+      "eligible_engines": [
+        "chatgpt",
+        "human"
+      ],
+      "title": "Freeze the post-squeeze retention/deleveraging continuation cheap-screen contract",
+      "dependencies": [],
+      "blockers": [],
+      "issue": null,
+      "branch": "agent/quant-research",
+      "pr": null,
+      "evidence_required": [
+        "before inspecting outcomes, freeze exact squeeze, forced-flow normalization, retention, entry, exit, hold and no-trade definitions",
+        "predeclare fixed instruments/timeframes, matched large-move baseline, chronology, costs, stress, sample floors and search breadth",
+        "separate hypothesis-generation evidence from selection evidence",
+        "untouched OOS remains locked until one exact candidate passes and is centrally frozen",
+        "if timestamp-safe forced-flow data are unavailable, block scientifically rather than proxying with future/post-hoc data",
+        "failure -> persist why -> pivot; pass -> freeze exactly one fingerprint/dataset",
+        "no production, broker or promotion authority"
+      ],
+      "completion_rule": "Advance v1 by one truthful pre-OOS state transition: reject, scientifically block, or freeze exactly one passing candidate.",
+      "next_task": null
+    },
+    {
+      "id": "COORD-DISC-VAL-003",
+      "priority": 1,
+      "owner": "signal-accuracy",
+      "status": "READY",
+      "work_mode": "VALIDATION",
+      "fingerprint_id": "DISC-SQUEEZE-RETENTION-001-v1",
+      "eligible_engines": [
+        "claude",
+        "chatgpt",
+        "human"
+      ],
+      "title": "Independently falsify squeeze-retention selection design before outcome inspection",
+      "dependencies": [],
+      "blockers": [],
+      "issue": null,
+      "branch": "agent/signal-accuracy",
+      "pr": null,
+      "evidence_required": [
+        "require publication/timestamp-safe forced-flow and leverage inputs",
+        "prove retention/normalization features use only data available by decision time",
+        "require matched equally-large-shock baseline and multiple-testing controls",
+        "require after-cost significance, chronological stability and adequate independent samples",
+        "keep untouched OOS locked and document exact pass/reject/block gates"
+      ],
+      "completion_rule": "Produce independent pre-outcome falsification gates; do not duplicate implementation or authorize trading.",
+      "next_task": null
+    },
+    {
+      "id": "COORD-DISC-DATA-003",
+      "priority": 1,
+      "owner": "data-market",
+      "status": "READY",
+      "work_mode": "CHEAP_SCREEN",
+      "fingerprint_id": "DISC-SQUEEZE-RETENTION-001-v1",
+      "eligible_engines": [
+        "chatgpt",
+        "human"
+      ],
+      "title": "Prove timestamp-safe historical data feasibility for squeeze-retention screen",
+      "dependencies": [],
+      "blockers": [],
+      "issue": null,
+      "branch": "agent/data-market",
+      "pr": null,
+      "evidence_required": [
+        "identify exact public/free sources for price, open interest and forced-flow/liquidation inputs with event/publication timestamps",
+        "record venue, instruments, interval, coverage, missingness, API semantics and immutable hashes",
+        "do not fabricate historical liquidation, spread or open-interest data and do not substitute current snapshots for history",
+        "if exact historical forced-flow data are unavailable, persist blocker and the cleanest scientifically valid alternative before any outcomes are inspected",
+        "zero new paid service without explicit approval"
+      ],
+      "completion_rule": "Return a timestamp-defensible fixed data path or a precise fail-closed blocker; no outcome-driven substitution.",
+      "next_task": null
+    },
+    {
+      "id": "COORD-DISC-TEST-003",
+      "priority": 1,
+      "owner": "testing-security",
+      "status": "READY",
+      "work_mode": "AUDIT",
+      "fingerprint_id": "DISC-SQUEEZE-RETENTION-001-v1",
+      "eligible_engines": [
+        "claude-code",
+        "chatgpt",
+        "human"
+      ],
+      "title": "Adversarially test squeeze-retention chronology and evidence firewall",
+      "dependencies": [],
+      "blockers": [],
+      "issue": null,
+      "branch": "agent/testing-security",
+      "pr": null,
+      "evidence_required": [
+        "prove post-event liquidation/OI values cannot leak into signal construction",
+        "prove matched controls and thresholds cannot expand after outcomes",
+        "prove untouched OOS and one-deep-candidate gates remain locked",
+        "prove rejected fingerprints cannot re-enter active work",
+        "prove broker/trade authority remain false and exact-head Security & Reliability gates any implementation"
+      ],
+      "completion_rule": "Break the proposed evidence path before it can contaminate protected evidence; fix only concrete research-safety defects.",
       "next_task": null
     }
   ]
