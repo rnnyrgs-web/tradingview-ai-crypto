@@ -63,7 +63,7 @@
     "work_astra": {
       "executor": "chatgpt_work",
       "model": "GPT-6 Astra",
-      "reasoning": "High",
+      "reasoning": "Medium",
       "use_for": [
         "substantial multi-file implementation",
         "repository exploration",
@@ -72,12 +72,12 @@
         "long coherent research+engineering tasks"
       ],
       "cost_priority": 5,
-      "setup": "Requires one scheduled Work task created from ChatGPT Work with GPT-6 Astra selected; the current automation API cannot pin Work mode/model."
+      "setup": "Scheduled ChatGPT Work tasks are enabled for this project; requested execution preference is GPT-6 Astra Medium, but the scheduler may not expose a pin to a specific execution model."
     },
     "codex_astra": {
       "executor": "codex",
       "model": "GPT-6 Astra",
-      "reasoning": "High",
+      "reasoning": "Medium",
       "use_for": [
         "pure heavy repository coding",
         "large refactors",
@@ -119,7 +119,7 @@
   ],
   "task_selection": {
     "strategy_lane": "Follow current strategy_discovery_queue and specialist coordination. Reject->learn->record->pivot. Exactly one expensive deep candidate.",
-    "big_move_lane": "Study 90-day large-move events and matched controls; convert recurring precursors into predeclared tests. Rank live assets only from timestamp-defensible evidence.",
+    "big_move_lane": "Study historical 2x+ events reached within 90 days and matched controls; convert recurring pre-move precursors into predeclared tests. Rank current liquid assets only from timestamp-defensible evidence, reporting base rates, lift and uncertainty.",
     "arbitration": "Choose the single action with highest expected information gain/economic value that does not duplicate active work. If one lane is waiting on future evidence, advance the other lane."
   },
   "reporting": {

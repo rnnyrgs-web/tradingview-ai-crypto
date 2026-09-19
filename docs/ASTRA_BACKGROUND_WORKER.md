@@ -1,6 +1,6 @@
 # Scheduled Astra Background Worker
 
-Create this task from **ChatGPT Work** with **GPT-6 Astra** selected and **High** reasoning. Run it hourly (or use a supported GitHub event trigger in addition to the hourly schedule).
+Create this task from **ChatGPT Work** with **GPT-6 Astra** selected and **Medium** reasoning for recurring background execution. Run it hourly (or use a supported GitHub event trigger in addition to the hourly schedule).
 
 ## Mission
 
@@ -8,7 +8,7 @@ Act as the substantial-execution worker for `rnnyrgs-web/tradingview-ai-crypto`.
 
 The master objective has two lanes:
 
-1. Find liquid, tradable assets with unusually strong, scientifically defensible evidence of very large upside over the next ~90 days, especially credible 2x+ candidates.
+1. Find liquid, tradable assets with unusually strong, scientifically defensible evidence of **2x+ upside within 90 days**.
 2. Discover at least one genuinely profitable algorithmic trading strategy with sustainable positive after-cost expectancy.
 
 Do not promise a 2x move and do not manufacture a profitable strategy. Optimize for evidence, lift over base rate, robustness and real tradability.
@@ -53,7 +53,7 @@ Follow the current ranked strategy-discovery candidate. Freeze scientific contra
 
 ## Big-Move lane
 
-Build/test rare-event research for roughly 2x within 90 days:
+Build/test rare-event research for **2x+ events within 90 days**:
 - point-in-time universe;
 - matched non-movers;
 - price/volume/relative strength/liquidity;

@@ -129,7 +129,7 @@ The project now uses a machine-readable routing policy at `orchestration/model_r
 - OpenAI API `gpt-5.6-terra` handles the autonomous quant-research lane for medium-complexity strategy research/implementation under the existing API budget.
 - OpenAI API `gpt-5.6-sol` is reserved for deep scientific/Lead review where the expected information value justifies the higher cost; the autonomous Lead workflow already uses Sol for candidate review.
 - **GPT-6 Astra is not an OpenAI API model.** It is routed only through ChatGPT Work/Codex. The canonical scheduled Work instructions live in `docs/ASTRA_BACKGROUND_WORKER.md`.
-- One final one-time product setup is required to get guaranteed Astra background execution: create an hourly Scheduled Task from **Work → GPT-6 Astra → High** using that repository prompt. After that, it reads GitHub state and executes bounded Astra-appropriate milestones without copy/paste.
+- The hourly **Trading Research Implementation Worker** and GitHub-event **Trading PR Follow-up Worker** are now created and enabled. Requested recurring execution preference is **Work → GPT-6 Astra → Medium**. The scheduler currently does not expose a verifiable model pin, so never claim the actual scheduled execution model is guaranteed.
 - Background workers never use browser-tab scraping. GitHub remains the mailbox and source of truth.
 - If Astra capacity is unavailable, the project must checkpoint the exact handoff and continue independent deterministic/API/Claude work rather than stall.
 
