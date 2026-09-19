@@ -170,3 +170,37 @@ def test_stop_gap_is_filled_at_worse_open_and_target_gap_is_capped():
     assert trade is not None
     assert trade["exit_reason"] == "STOP_GAP"
     assert math.isclose(trade["exit_price"], stop - 1.0, rel_tol=0, abs_tol=1e-9)
+
+
+def test_pooled_halves_use_chronological_time_midpoint_not_trade_count_median():
+    c = _contract()
+    start = 1_700_000_000_000
+    end = start + 100 * 3_600_000
+    midpoint = start + (end - start) // 2
+
+    def trade(ts):
+        return {
+            "signal_ts": ts,
+            "gross_bps": 100.0,
+            "direction": "LONG",
+            "regime": "BULL",
+        }
+
+    evidence = {
+        "A": {
+            "validation": {
+                "start_ts": start,
+                "end_ts": end,
+                "trades": [
+                    trade(start + 5 * 3_600_000),
+                    trade(start + 10 * 3_600_000),
+                    trade(start + 15 * 3_600_000),
+                    trade(start + 90 * 3_600_000),
+                ],
+            }
+        }
+    }
+    pooled = v._pooled_segment(evidence, "validation", c)
+    assert pooled["midpoint_ts"] == midpoint
+    assert pooled["first_half_cost_stress"]["3x"]["trades"] == 3
+    assert pooled["second_half_cost_stress"]["3x"]["trades"] == 1
