@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "information_cutoff": "2026-09-19T02:55:00Z",
+  "information_cutoff": "2026-09-19T02:40:00Z",
   "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
   "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate or broker state changed.",
   "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
