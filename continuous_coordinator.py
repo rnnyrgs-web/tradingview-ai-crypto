@@ -24,6 +24,7 @@ from continuous_specialist_factory import run_factory, snapshot as specialist_fa
 from continuous_worker_army import run_army, snapshot as worker_army_snapshot
 from cross_asset_runner import MIN_LIQUIDITY_SUBSET_COVERAGE
 from deployment_canary import evaluate_canary
+from profitability_learning.acceptance import acceptance_snapshot, run_canonical_acceptance
 from profitability_learning.runtime import refresh_director, director_snapshot as research_director_snapshot
 
 
@@ -56,6 +57,18 @@ _status = {
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def initialize_profitability_acceptance() -> dict:
+    """Replay the sealed Phase-1 completion and retain a compact proof."""
+    result = run_canonical_acceptance()
+    log.info(
+        "profitability_acceptance status=%s fingerprint=%s duplicate_suppressed=%s",
+        result.get("status"),
+        result.get("fingerprint_id"),
+        result.get("persistence", {}).get("duplicate_suppressed"),
+    )
+    return result
 
 
 def validate_production_health(payload: object) -> bool:
@@ -431,6 +444,7 @@ async def lifespan(_: FastAPI):
     _started_monotonic = time.monotonic()
     with _lock:
         _status["started_at"] = _now()
+    initialize_profitability_acceptance()
     tasks = [asyncio.create_task(coordinator_loop(), name="coordinator-watchdog")]
     if WORKER_ARMY_ENABLED:
         tasks.append(asyncio.create_task(run_army(), name="python-worker-army"))
@@ -455,6 +469,11 @@ def director() -> dict:
 @app.get("/factory")
 def factory() -> dict:
     return specialist_factory_snapshot()
+
+
+@app.get("/profitability-acceptance")
+def profitability_acceptance() -> dict:
+    return acceptance_snapshot()
 
 
 @app.get("/")
