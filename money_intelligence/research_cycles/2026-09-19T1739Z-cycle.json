@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-19T17:39:27Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate or broker state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "context_integrity": {
+    "read_current_spec": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_research_cycle_inventory_and_latest_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-19T17:35:59Z",
+    "artifact_cutoff_utc": "2026-09-19T17:39:27Z",
+    "seconds_this_run": 208,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 2139,
+    "minimum_cumulative_seconds_since_last_owner_report": 2347,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted. Schedule gaps are excluded and no time is padded or inferred from article timestamps."
+  },
+  "highest_information_question": "Can the newly enacted U.S. Russia-energy tariff law be represented as a staged, timestamp-defensible policy-hazard process rather than a single headline shock, and does weekend crypto retention remain credible as forced short-covering and aggregate leverage cool?",
+  "fresh_validated_observations": [
+    {
+      "topic": "H.R. 5334 creates an observable pre-implementation policy signal before secondary tariffs can take effect",
+      "label": "PRIMARY-SOURCE POLICY MECHANISM / PRE-MOVE TIMING REFINEMENT",
+      "observed_facts": [
+        "The enrolled text of H.R. 5334 requires the President, within 30 days after enactment, to raise duties on Russian goods including energy to a rate of up to 500% ad valorem.",
+        "Section 113 requires, within 30 days, duties of up to 100% on goods from a qualifying country that knowingly makes new purchases of Russian crude oil or natural gas on or after day 30 and is among the five largest importers over the relevant lookback, or is among the five largest sanctions-evasion facilitators.",
+        "The statute permits rate adjustment above zero and up to 100%, contains a natural-gas exception under specified conditions, and requires periodic redetermination of qualifying countries.",
+        "Section 113(g) requires the President or USTR to submit a written justification to specified congressional committees at least 10 days before imposing or modifying a Section 113 tariff, including the substantive rationale and methodology.",
+        "Section 115 authorizes national-interest waivers subject to certification and congressional reporting. Therefore the enacted statutory ceiling is not the same as a predetermined realized tariff rate."
+      ],
+      "inference": "The market-relevant process is staged: enactment -> country/purchase qualification -> policy-rate selection -> mandatory advance report -> tariff implementation -> possible waiver/modification. The 10-day advance-report requirement creates a cleaner public timestamp for pre-move causal studies than treating Sep. 18 enactment as if the final tariff were already known and effective.",
+      "pre_move_research_rule": "For this law, freeze information at each statutory stage. Capture the first public congressional/USTR justification, selected rate, affected-country determination and waiver state before studying subsequent oil, freight, FX, rates and equity responses. Do not backfill the final tariff into the enactment-day information set.",
+      "capital_flow_chain": "secondary-tariff threat -> exposed importer compares U.S. market access with Russian-energy discount -> possible sourcing shift -> substitution demand for non-Russian crude/LNG plus freight/insurance -> physical differentials and inflation expectations -> yields/FX/current-account effects -> cross-asset repricing; waiver or low selected tariff can interrupt the chain before physical flows change.",
+      "decision_support": "Crude remains WAIT. The law raises energy/rates tail risk but does not justify a weekend directional oil forecast before implementation details, physical-flow changes and open-market price confirmation."
+    },
+    {
+      "topic": "BTC holds the post-squeeze zone while aggregate leverage continues to cool",
+      "label": "OBSERVED FACT / INFERENCE / WAIT",
+      "observed_facts": [
+        "At approximately 17:35Z BTC was $81,521, +1.18%/24h and +5.52%/7d; ETH was $2,647, +2.36%/24h; SOL was $111.58, -0.35%/24h but +9.36%/7d.",
+        "A live aggregate derivatives snapshot showed total crypto open interest around $433.48B, down 2.12%/24h, and perpetual open interest around $432.12B, down 2.13%/24h.",
+        "Average perpetual funding was about 0.0055223, down 26.3%/24h and 12.23%/7d but still materially above the 14-day comparison.",
+        "BTC 24h liquidations were about $59.43M, with approximately $52.75M shorts and $6.68M longs; the latest one-hour window was zero."
+      ],
+      "inference": "Price retention near $81.5K while open interest and funding cool is better continuation evidence than the original short squeeze alone. However, funding remains elevated versus the two-week baseline, aggregate endpoints have shown cross-snapshot inconsistencies, and the U.S. regulated ETF channel is closed on Saturday. This is not sufficient to promote BTC to BUY.",
+      "decision_support": "BTC remains WAIT / TACTICAL MOMENTUM CANDIDATE. Require a reopened U.S.-session test with fresh ETF/secondary-market demand, venue-level OI/funding/basis and controlled leverage."
+    },
+    {
+      "topic": "Privacy-coin matched controls remain positive while ZEC retains extreme excess return",
+      "label": "OBSERVED FACT / MATCHED CONTROL / NO THESIS CHANGE",
+      "observed_facts": [
+        "At approximately 17:36Z ZEC was $1,491.98, +30.98%/7d and +156.93%/30d.",
+        "XMR was $557.36, +5.58%/7d and +32.98%/30d; DASH was $59.22, +6.00%/7d and +77.42%/30d.",
+        "ZEC remained far stronger than privacy peers, but the peer group itself was also positive over the relevant multi-day windows."
+      ],
+      "inference": "A broad privacy-theme rotation remains a valid matched control. ZEC-specific wrapper/free-float/reflexive mechanics may amplify the move, but cannot honestly be treated as the full causal explanation and the amount/timing of genuinely new spot demand remains unknown.",
+      "decision_support": "ZEC/ZCSH remains WAIT / AVOID CHASING."
+    },
+    {
+      "topic": "Saudi weekend security event remains unverified as an energy-supply catalyst",
+      "label": "OBSERVED EVENT / UNKNOWN TRANSMISSION",
+      "observed_facts": [
+        "Contemporaneous Reuters reporting described aerial-danger alerts, booms and smoke/flames near Riyadh airport on Sep. 19, followed by alerts being lifted.",
+        "The exact cause and any effect on energy infrastructure or export logistics were not established at the research cutoff.",
+        "Benchmark crude markets were closed, so there is no defensible weekend Brent/WTI price response to measure."
+      ],
+      "inference": "This is a tail-risk watch item rather than a confirmed oil catalyst. The correct causal state remains UNKNOWN until attribution, physical/logistics impact and open-market pricing are observed.",
+      "decision_support": "No oil thesis change."
+    }
+  ],
+  "daily_big_move_scan": {
+    "market_context": "Saturday: major cash equity, sovereign-bond, FX and benchmark commodity markets are closed. Live crypto is updated; no closed-market move is fabricated from weekend headlines.",
+    "selected_or_retested": [
+      "BTC: near $81.5K after the major short-squeeze impulse faded; lower OI/funding improves continuation quality but does not establish regulated spot accumulation.",
+      "ZEC: still an extreme +31%/7d and +157%/30d mover; XMR/DASH confirm a broader privacy rotation while ZEC-specific excess return remains unexplained in full.",
+      "SOL: +9.4%/7d relative strength remains notable, but no additional thesis promotion is made because wrapper-flow timing and venue-level leverage controls remain incomplete.",
+      "H.R. 5334: treated as a forward causal-policy case with explicit statutory stages and a 10-day advance-report signal rather than a completed price-move case.",
+      "Saudi Riyadh event: logged as UNKNOWN until physical impact and open-market confirmation exist."
+    ],
+    "negative_findings": [
+      "Do not interpret H.R. 5334's maximum authorized rates as already-realized tariffs.",
+      "Do not use Sep. 18 enactment as the sole information timestamp when the statute itself creates later qualification, advance-report, implementation and waiver stages.",
+      "Do not infer a weekend crude move from an unverified Riyadh security event.",
+      "Do not promote BTC to BUY from weekend price retention alone while the U.S. ETF channel is closed and funding remains elevated versus the two-week baseline.",
+      "Do not attribute ZEC's entire move to the wrapper when privacy peers are also strong and wrapper inventory changes can include legacy, in-kind, related-party and corporate-action effects."
+    ]
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "status": "No new immutable directional forecast clears the evidence bar. Existing WAIT/HOLD-research states are preserved and no prior forecast is rewritten."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. Do not churn dashboard_state, learning_ledger or big_move_lab. The staged H.R. 5334 timing insight is materially useful for future point-in-time studies but has not yet produced an observed cross-asset transmission requiring a canonical regime/thesis change. No code change and no signal-system state change were made.",
+  "next_research": [
+    "Monitor congressional/USTR notices required by H.R. 5334 Section 113(g) and freeze each notice before measuring subsequent physical-oil, freight, FX, rates and equity responses.",
+    "Track country qualification, selected tariff rates, waiver use and actual refinery sourcing changes rather than headline statutory maxima.",
+    "On the next U.S. session, capture versioned BTC/ETH/SOL ETF tables plus secondary-market premium/volume and venue-level OI/funding/basis to test whether the rebound becomes durable spot accumulation.",
+    "Continue the split-safe ZCSH holding/share ledger separating legacy inventory, external cash creations, external in-kind creations, related-party transfers, redemptions, fees, price/NAV changes and corporate actions.",
+    "When crude markets reopen, reassess effective deliverable supply and any Saudi security impact using route volumes, differentials, curves, freight/insurance, inventories and confirmed infrastructure status."
+  ],
+  "source_log": [
+    {"publisher":"GovInfo","date":"2026-09-18","topic":"Enrolled H.R. 5334: Russian-goods tariffs, secondary-tariff country test, advance congressional notice and waivers","url":"https://www.govinfo.gov/content/pkg/BILLS-119hr5334enr/html/BILLS-119hr5334enr.htm"},
+    {"publisher":"The White House","date":"2026-09-18","topic":"H.R. 5334 signed into law","url":"https://www.whitehouse.gov/briefings-statements/2026/09/congressional-bill-h-r-5334-signed-into-law/"},
+    {"publisher":"Reuters","date":"2026-09-19","topic":"Riyadh security alerts, booms and smoke near airport; cause not established at cutoff","url":"https://www.reuters.com/"},
+    {"publisher":"CoinMarketCap connected data","date":"2026-09-19T17:35-17:36Z","topic":"Live BTC/ETH/SOL/XRP/LINK/ZEC/XMR/DASH quotes and aggregate derivatives metrics","url":"https://coinmarketcap.com/"}
+  ],
+  "owner_report_gate": "NOT MET. Minimum cumulative directly measured execution since the last owner-facing report is 2,347 seconds, below the required 3,600 seconds. Persist research quietly."
+}
