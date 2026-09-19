@@ -117,3 +117,45 @@ def test_lead_workflow_requires_claude_adversarial_approval():
     # separately maintained regex.
     assert "orchestration.protected_paths" in text
     assert "grep -Eq" not in text
+
+
+def test_lead_wakes_after_all_current_strategy_discovery_workers():
+    text = _read(".github/workflows/autonomous_lead.yml")
+    for workflow_name in (
+        "Cost-Bounded Autonomous Cloud Specialist",
+        "Cost-Bounded Autonomous Claude Research Specialist",
+        "Cost-Bounded Autonomous Claude Code Implementation Specialist",
+        "Strategy Discovery Supervisor",
+        "Residual Momentum Selection",
+    ):
+        assert workflow_name in text
+
+
+def test_autonomous_engine_missions_are_dynamic_and_strategy_discovery_aligned():
+    import json
+
+    claude = json.loads(_read("orchestration/autonomous_specialist_runner_claude.json"))
+    claude_code = json.loads(_read("orchestration/autonomous_specialist_runner_claude_code.json"))
+    openai = json.loads(_read("orchestration/autonomous_specialist_runner.json"))
+
+    claude_mission = claude["roles"]["signal-accuracy"]["mission"]
+    assert "highest-priority READY signal-accuracy task" in claude_mission
+    assert "COORD-VAL-001" not in claude_mission
+    assert "strategy-discovery" in claude_mission
+
+    code_mission = claude_code["roles"]["testing-security"]["mission"]
+    assert "highest-priority READY testing-security task" in code_mission
+    assert "COORD-TEST-001" not in code_mission
+    assert "strategy-discovery" in code_mission
+    assert "never touch production strategy/signal/paper-ledger code" in code_mission.lower()
+    assert set(claude_code["roles"]["testing-security"]["allowed_paths"]) == {
+        "tests/test_*.py",
+        "SECURITY.md",
+        "docs/security_*.md",
+        "resource_recommendations_proposed.json",
+    }
+
+    data_mission = openai["roles"]["data-market"]["mission"]
+    assert "highest-priority READY data-market task" in data_mission
+    assert "point-in-time" in data_mission.lower()
+    assert "point_in_time_universe.py" in openai["roles"]["data-market"]["allowed_paths"]

@@ -114,12 +114,18 @@ def test_blocked_work_is_heavily_discounted():
 
 
 def test_select_next_returns_none_for_a_role_with_no_active_or_queued_task():
-    """WAIT/no-task capability: data-market currently has no
-    READY/IN_PROGRESS/PR_OPEN/QUEUED task (COORD-DATA-007 is BLOCKED), and
-    select_next must return None -- not fabricate or coerce a task -- for
-    that case."""
+    """WAIT/no-task capability remains valid for roles intentionally parked
+    until a strategy candidate earns deep validation."""
     state = load_state()
-    assert select_next(state, "data-market") is None
+    assert select_next(state, "regime-selection") is None
+
+
+def test_select_next_routes_data_market_to_current_discovery_candidate():
+    state = load_state()
+    task = select_next(state, "data-market")
+    assert task is not None
+    assert task["id"] == "COORD-DISC-DATA-001"
+    assert task["fingerprint_id"] == "DISC-VOL-BREAKOUT-001-v1"
 
 
 def test_select_next_returns_the_same_task_as_next_task_for_an_active_role():

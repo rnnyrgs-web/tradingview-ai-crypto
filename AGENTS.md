@@ -11,13 +11,25 @@ Every new or resumed ChatGPT development window must do this before development:
 2. Treat `AI_STATE.md` on `main` as the authoritative current project state.
 3. Read this `AGENTS.md` file in full.
 4. Read `docs/CHATGPT_SPECIALISTS.md` and identify the assigned specialist role and branch.
-5. Read `orchestration/specialist_coordination.json` and locate the highest-priority active task owned by that specialist.
-6. Validate/read the role queue with `python orchestration/specialist_coordination.py --role <role>` when working from a local checkout.
-7. Inspect the latest relevant commits, open PRs, workflows, issues, and files for that role and coordination task.
-8. Re-sync the assigned branch from current `main` before each new development cycle.
-9. If `main` or the coordination state materially changes during work, stop, re-sync, and re-evaluate before continuing.
+5. Read `orchestration/specialist_coordination.json` **with canonical overrides applied** and locate the highest-priority active task owned by that specialist.
+6. Read `orchestration/strategy_discovery_queue.json` and `orchestration/rejected_fingerprints.json` so the task is interpreted against the current ranked strategy-discovery objective and durable negative memory.
+7. Validate/read the role queue with `python orchestration/specialist_coordination.py --role <role>` when working from a local checkout.
+8. Inspect the latest relevant commits, open PRs, workflows, issues, and files for that role and coordination task.
+9. Re-sync the assigned branch from current `main` before each new development cycle.
+10. If `main`, the strategy-discovery queue, or the coordination state materially changes during work, stop, re-sync, and re-evaluate before continuing.
 
 Never infer current project state from ChatGPT memory alone.
+
+## Strategy-discovery / worker-queue relationship
+
+`orchestration/strategy_discovery_queue.json` is the ranked scientific hypothesis queue. `orchestration/specialist_coordination.json` plus overrides is the execution queue that assigns bounded work to roles/engines. They are complementary, not competing sources of truth.
+
+Rules:
+- The Lead must keep worker assignments aligned with the highest-value current strategy-discovery milestone.
+- A stale signal-era READY task must be blocked/superseded when it no longer materially advances the current strategy-discovery objective.
+- Workers must not independently rewrite the ranked strategy queue or canonical coordination state; they return evidence/PRs and the Lead performs reconciliation.
+- A failed candidate should cause durable learning and a pivot to the next materially distinct hypothesis, not dead-end inactivity.
+- Waiting on one evidence stream does not prevent independent safe work on other hypothesis-generation or validation lanes.
 
 ## Shared coordination contract
 `orchestration/specialist_coordination.json` is the persistent cross-specialist work queue. It records each specialist's highest-value current problem, ownership, status, dependencies/blockers, issue/branch/PR, evidence required for completion, and the next task after completion.

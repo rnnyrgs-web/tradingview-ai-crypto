@@ -2,10 +2,12 @@
   "version": 1,
   "enabled": true,
   "objective_id": "UNIVERSAL_SIGNAL_DEVELOPMENT_V1",
-  "primary_mission": "Safely implement and adversarially test the highest-value changes needed to find and validate one strategy with genuine sustainable after-cost profitability. Concentrate engineering on the single active candidate's reproducible backtest and evidence pipeline. Engineering quality, execution realism and protection against overfitting are mandatory; no autonomous live-trading authority.",
+  "primary_mission": "Safely implement and adversarially test the highest-value changes needed to find and validate one strategy with genuine sustainable after-cost profitability. Concentrate engineering on the current strategy-discovery candidate's evidence pipeline while preserving untouched OOS, point-in-time safety, realistic costs, multiple-testing controls and zero trading authority.",
   "engine": "claude-code",
   "engine_role_description": "Implementation / engineering / testing agent. This is the sole autonomous engine permitted to change test or production code under the multi-engine coordination layer -- ChatGPT's existing autonomous_cloud_specialist.yml role and this role must never both be enabled for the same coordination role at once (enforced by each engine's plan step refusing a task_id whose auto/<role>/<task_id> branch already exists).",
-  "autonomous_roles": ["testing-security"],
+  "autonomous_roles": [
+    "testing-security"
+  ],
   "policy": {
     "max_concurrent_agent_runs": 1,
     "max_agent_runs_per_invocation": 1,
@@ -36,26 +38,26 @@
     "own_state_file": "runner_state_claude_code.json"
   },
   "budget": {
-    "project_monthly_ceiling_usd": 30.0,
-    "baseline_infrastructure_reserve_usd": 0.0,
-    "runner_monthly_api_budget_usd": 29.0,
-    "runner_daily_api_budget_usd": 1.0,
-    "pause_buffer_usd": 1.0,
-    "provider_retry_safety_multiplier": 1.0,
-    "fleet_pacing_burst_allowance_usd": 2.0,
-    "fleet_daily_burst_cap_usd": 3.0
+    "project_monthly_ceiling_usd": 30,
+    "baseline_infrastructure_reserve_usd": 0,
+    "runner_monthly_api_budget_usd": 29,
+    "runner_daily_api_budget_usd": 1,
+    "pause_buffer_usd": 1,
+    "provider_retry_safety_multiplier": 1,
+    "fleet_pacing_burst_allowance_usd": 2,
+    "fleet_daily_burst_cap_usd": 3
   },
   "models": {
     "claude-haiku-4-5": {
-      "input_usd_per_million": 1.0,
-      "cached_input_usd_per_million": 0.10,
-      "output_usd_per_million": 5.0,
+      "input_usd_per_million": 1,
+      "cached_input_usd_per_million": 0.1,
+      "output_usd_per_million": 5,
       "enabled": true
     },
     "claude-sonnet-5": {
-      "input_usd_per_million": 2.0,
-      "cached_input_usd_per_million": 0.20,
-      "output_usd_per_million": 10.0,
+      "input_usd_per_million": 2,
+      "cached_input_usd_per_million": 0.2,
+      "output_usd_per_million": 10,
       "enabled": false
     }
   },
@@ -74,7 +76,7 @@
         "docs/security_*.md",
         "resource_recommendations_proposed.json"
       ],
-      "mission": "Own coordination task COORD-TEST-001 as the adversarial implementation/testing engine supporting the one strategy focus. Strengthen tests for the single active candidate limit, coordination schema validation, protected-path enforcement, no-direct-main-write, no-automatic-merge, cost ceilings, broker-disconnected invariants, point-in-time data safety, positive after-cost evaluation, immutable holdouts and prevention of accidental promotion from research-only results into trading authority. Attack the candidate and its evidence pipeline; never merge it, never weaken a gate to make a test pass, never touch production strategy/signal/paper-ledger code outside allowed paths. Missing evidence is WAIT / RESEARCH_ONLY. TURN-BUDGET DISCIPLINE: finish within eight model turns. Turn 1: minimum reads. Turns 2-4: implement the smallest regression test and run the directly relevant test. Turns 5-7: fix directly observed failures and verify once. Turn 8: return READY_FOR_PR, NO_CHANGE, or BLOCKED; no extra exploration."
+      "mission": "Own the highest-priority READY testing-security task selected from canonical coordination state; do not hard-code a legacy task ID. Support finding one strategy with genuine sustainable after-cost profitability by adversarially testing the current strategy-discovery candidate and evidence pipeline. Strengthen tests for untouched-OOS locks, immutable fingerprints, point-in-time safety, realistic after-cost evidence, one-active-deep-candidate limits, rejected-memory enforcement and absence of broker/trade authority. Never touch production strategy/signal/paper-ledger code, never merge your own PR, and never weaken a gate to make tests pass. Missing evidence is WAIT / RESEARCH_ONLY. TURN-BUDGET DISCIPLINE: finish within eight model turns. Turn 1 minimum reads. Turns 2-4 implement the smallest regression test justified by a concrete risk. Turns 5-7 fix directly observed failures and verify once. Turn 8 return READY_FOR_PR, NO_CHANGE, or BLOCKED."
     }
   }
 }

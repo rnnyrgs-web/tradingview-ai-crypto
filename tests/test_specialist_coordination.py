@@ -24,40 +24,33 @@ def test_coordination_state_has_exact_specialist_roster_and_safe_policy():
     assert state["policy"]["insufficient_evidence"] == "WAIT_RESEARCH_ONLY"
 
 
-def test_each_specialist_has_one_obvious_active_task_and_safe_handoff_state():
+def test_strategy_discovery_roles_have_only_current_active_work():
     state = load_state()
-    for role in REQUIRED_ROLES:
+    expected_active = {
+        "quant-research": "COORD-DISC-QUANT-001",
+        "signal-accuracy": "COORD-DISC-VAL-001",
+        "data-market": "COORD-DISC-DATA-001",
+        "testing-security": "COORD-DISC-TEST-001",
+        "regime-selection": None,
+        "execution-microstructure": None,
+        "production-risk": None,
+    }
+    for role, expected_id in expected_active.items():
         active = [
             row for row in role_queue(state, role)
             if row["status"] in {"READY", "IN_PROGRESS", "PR_OPEN"}
         ]
-        # Data-market is intentionally blocked after completing prospective PIT
-        # capture; all other roles keep exactly one active task.
-        if role == "data-market":
-            assert active == []
-            task = next_task(state, role)
-            assert task is None
-            blocked = [row for row in role_queue(state, role) if row["status"] == "BLOCKED"]
-            assert blocked and blocked[0]["id"] == "COORD-DATA-007"
+        if expected_id is None:
+            assert active == [], (role, active)
+            assert next_task(state, role) is None
             continue
         assert len(active) == 1, (role, active)
-        task = next_task(state, role)
-        assert task == active[0]
+        task = active[0]
+        assert task["id"] == expected_id
+        assert next_task(state, role) == task
+        assert task["fingerprint_id"] == "DISC-VOL-BREAKOUT-001-v1"
         assert task["evidence_required"]
         assert task["branch"] == state["roles"][role]["branch"]
-        # A terminal READY task may intentionally have no handoff until its
-        # evidence determines the next separately predeclared step.
-        if task["next_task"] is None:
-            assert task["id"] in {
-                "COORD-QUANT-002",
-                "COORD-REGIME-002",
-                "COORD-EXEC-002",
-                "COORD-RISK-002",
-                "COORD-TEST-002",
-                "COORD-VAL-002",
-            }
-        else:
-            assert task["next_task"]
 
 
 def test_completed_data_provenance_work_is_not_reassigned():
@@ -106,7 +99,7 @@ def test_completed_data_provenance_work_is_not_reassigned():
 
     next_data_task = next(row for row in state["tasks"] if row["id"] == "COORD-DATA-007")
     assert next_data_task["status"] == "BLOCKED"
-    assert next_task(state, "data-market") is None
+    assert next_task(state, "data-market")["id"] == "COORD-DISC-DATA-001"
     assert "matured prospective point-in-time cohorts" in next_data_task["title"]
     requirements = " ".join(next_data_task["evidence_required"]).lower()
     assert "minimum eight independent" in requirements
@@ -118,8 +111,9 @@ def test_completed_data_provenance_work_is_not_reassigned():
 def test_duplicate_active_ownership_is_rejected():
     state = load_state()
     bad = copy.deepcopy(state)
-    queued = next(row for row in bad["tasks"] if row["owner"] == "quant-research" and row["status"] == "QUEUED")
-    queued["status"] = "READY"
+    legacy = next(row for row in bad["tasks"] if row["id"] == "COORD-QUANT-002")
+    legacy["status"] = "READY"
+    legacy["blockers"] = []
     with pytest.raises(RuntimeError, match="duplicate active ownership"):
         validate_state(bad)
 
@@ -167,9 +161,13 @@ def test_safety_policy_cannot_silently_enable_merge_main_broker_or_extra_cost():
             validate_state(bad)
 
 
-def test_compact_snapshot_keeps_role_next_work_small():
+def test_compact_snapshot_keeps_role_next_work_aligned_to_discovery():
     state = load_state()
     snapshot = compact_snapshot(state)
     assert set(snapshot["roles"]) == REQUIRED_ROLES
-    assert snapshot["roles"]["data-market"]["next"] is None
-    assert all(snapshot["roles"][role]["next"] for role in REQUIRED_ROLES if role != "data-market")
+    assert snapshot["roles"]["quant-research"]["next"]["id"] == "COORD-DISC-QUANT-001"
+    assert snapshot["roles"]["signal-accuracy"]["next"]["id"] == "COORD-DISC-VAL-001"
+    assert snapshot["roles"]["data-market"]["next"]["id"] == "COORD-DISC-DATA-001"
+    assert snapshot["roles"]["testing-security"]["next"]["id"] == "COORD-DISC-TEST-001"
+    for role in ("regime-selection", "execution-microstructure", "production-risk"):
+        assert snapshot["roles"][role]["next"] is None

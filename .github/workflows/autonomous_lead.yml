@@ -6,6 +6,10 @@ on:
     workflows:
       - Autonomous Specialist Agents
       - Cost-Bounded Autonomous Cloud Specialist
+      - Cost-Bounded Autonomous Claude Research Specialist
+      - Cost-Bounded Autonomous Claude Code Implementation Specialist
+      - Strategy Discovery Supervisor
+      - Residual Momentum Selection
     types:
       - completed
   schedule:

@@ -66,9 +66,8 @@ def test_missing_required_field_is_rejected(tmp_path):
 def test_coordination_task_declaring_rejected_fingerprint_fails_closed():
     state = load_state()
     bad = copy.deepcopy(state)
-    task = bad["tasks"][0]
+    task = next(row for row in bad["tasks"] if row["id"] == "COORD-DISC-DATA-001")
     task["fingerprint_id"] = "DATA-BASIS-001"
-    task["status"] = "READY"
     with pytest.raises(RuntimeError, match="rejected fingerprint"):
         validate_state(bad)
 
@@ -89,8 +88,6 @@ def test_coordination_task_declaring_rejected_fingerprint_is_fine_when_done():
 def test_coordination_task_with_genuinely_new_fingerprint_is_unaffected():
     state = load_state()
     ok = copy.deepcopy(state)
-    task = ok["tasks"][0]
+    task = next(row for row in ok["tasks"] if row["id"] == "COORD-DISC-DATA-001")
     task["fingerprint_id"] = "DATA-BREADTH-002-GENUINELY-NEW"
-    task["status"] = "READY"
-    task["work_mode"] = "CHEAP_SCREEN"
     validate_state(ok)  # must not raise
