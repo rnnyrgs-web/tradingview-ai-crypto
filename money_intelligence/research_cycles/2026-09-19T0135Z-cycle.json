@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-19T01:35:00Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate or broker state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "highest_information_question": "After the Sep. 18 BTC short-squeeze/deleveraging impulse, is durable spot/institutional buying now broadening enough to support the breakout after forced buying has faded?",
+  "observed_facts": [
+    "Farside's Sep. 18 U.S. spot-BTC ETF row remains incomplete because IBIT is still unreported, but every other listed fund is populated. The reported issuers sum to +$324.6M: FBTC +$310.7M, BITB +$9.7M, ARKB +$1.9M, HODL +$2.3M, and the other reported funds $0. This is therefore at least +$324.6M before the still-unknown IBIT contribution, not a finalized daily total.",
+    "The Sep. 18 partial BTC flow is materially broader than Sep. 17's completed +$159.5M session, which was concentrated in IBIT (+$183.7M) while FBTC and HODL were negative. On Sep. 18, Fidelity alone reports +$310.7M and several additional issuers are positive while no reported issuer is negative at the cutoff.",
+    "Across the completed Sep. 15-17 sessions, BTC ETF flow was -$586.8M (-$450.4M, -$295.9M, +$159.5M). Adding the currently reported Sep. 18 +$324.6M leaves Sep. 15-18 at -$262.2M before IBIT. Thus an eventual Sep. 18 IBIT contribution above +$262.2M would erase the Sep. 15-18 net redemption cluster; a materially negative IBIT print could instead weaken the apparent flow turn.",
+    "Farside's Sep. 18 ETH ETF row is also incomplete. Reported issuers currently sum to +$29.4M (FETH +$26.2M, ETHW +$1.3M, ETHV +$1.9M), while ETHA, ETHB and QETH remain unreported. The final ETH daily flow therefore remains unknown.",
+    "CoinMarketCap's latest quote around 01:32Z placed BTC near $81,172, up about 6.0% over 24 hours; ETH near $2,609 (+6.5%), SOL near $113.34 (+11.4%), XRP near $1.401 (+7.8%) and LINK near $12.27 (+7.2%). BTC dominance remained high near 58.8%.",
+    "BTC remained above $81K after the main forced-liquidation burst had ended. CoinMarketCap's dedicated derivatives feed reported zero BTC liquidations over the latest one-hour and four-hour windows while 24-hour BTC liquidations remained about $259.8M, with approximately $251.8M shorts and $8.0M longs, or about 96.9% short-dominated forced closures.",
+    "Current crypto-derivatives snapshots disagree on the precise 24-hour open-interest change: CoinMarketCap's global snapshot reported total open interest about $461.2B and -0.45%/24h, while its dedicated derivatives endpoint reported about $462.0B and +1.41%/24h. Both show funding materially more positive than the prior comparison window. Because the sign of the OI change conflicts across adjacent provider snapshots, no precise claim about post-squeeze leverage rebuilding is promoted from these aggregate figures.",
+    "The prior direct-venue Kraken observations and the earlier aggregate snapshot remain consistent with price rising during the main Sep. 18 squeeze while open interest fell, and the prior official CFTC data showed substantial public leveraged-fund CME net-short inventory before the move. Those facts support short-covering as an amplifier, not as proof of the move's original catalyst or of future continuation."
+  ],
+  "inferences": [
+    "The evidence for a genuine spot/institutional component to the Sep. 18 BTC move has strengthened materially. A partial +$324.6M ETF creation total outside IBIT, led by a large FBTC inflow and accompanied by several other positive issuers, is harder to reconcile with a narrative of pure derivatives short covering than the prior one-day IBIT-concentrated flow evidence.",
+    "The strongest current causal decomposition is therefore two-stage: discretionary/spot demand and crypto-specific catalysts supplied an initial upward impulse; pre-existing short inventory amplified the move through forced buybacks; after the liquidation burst faded, BTC retained the $80K-$81K area while reported ETF creations broadened. This raises the probability that some durable spot demand is present, but the final IBIT flow and subsequent sessions are still needed before declaring an institutional accumulation regime.",
+    "The Sep. 18 ETF breadth is a meaningful confirmation candidate because it shifts the marginal-buyer evidence from one issuer toward multiple regulated vehicles. It is not yet a completed observed daily flow because IBIT remains missing, and final cross-session accumulation depends materially on that print.",
+    "ETH remains less well confirmed: its partial Sep. 18 flow is positive, but several important issuers are still missing and the prior completed Sep. 17 session was negative. The evidence still favors BTC over ETH on institutional-flow quality.",
+    "Funding becoming more positive after the squeeze is a forward risk. If open interest rebuilds aggressively on the long side while funding stays elevated and spot/ETF demand fades, the market could transition from healthy short removal to crowded long leverage. The current aggregate OI feeds are inconsistent, so this risk is monitored rather than asserted as realized."
+  ],
+  "falsification_and_controls": [
+    "Do not call Sep. 18 BTC ETF flow finalized until IBIT is reported; the +$324.6M figure is the sum of currently reported issuers only.",
+    "Upgrade the durable institutional-accumulation hypothesis only if the final Sep. 18 total remains strongly positive and subsequent completed sessions show persistence/breadth while BTC holds above the post-squeeze breakout zone.",
+    "Downgrade the hypothesis if IBIT reports a sufficiently large redemption to offset the current breadth, if subsequent ETF sessions turn materially negative, or if BTC loses roughly $77K-$78K after forced buying has faded.",
+    "Do not use the conflicting aggregate 24-hour OI percentage signs as evidence for or against fresh leverage until venue-consistent observations resolve the measurement mismatch.",
+    "Preserve the negative finding that a short squeeze by itself does not predict continuation; the new information is the broadening spot-ETF component after the squeeze, not the existence of the squeeze itself."
+  ],
+  "decision_support": {
+    "instrument": "BTC",
+    "action": "WAIT / TACTICAL MOMENTUM CANDIDATE",
+    "horizon": "days to several weeks",
+    "confidence": "MODERATE; upgraded confidence that spot demand contributed, but LOW-MODERATE on a durable institutional accumulation regime until Sep. 18 is finalized and follow-through is observed",
+    "thesis": "BTC's Sep. 18 move was materially squeeze-amplified, but fresh partial ETF evidence now shows at least $324.6M of reported creations outside IBIT with substantially better issuer breadth than Sep. 17. Price is also holding above $81K after the main liquidation burst ended. This is stronger evidence of a discretionary spot component, but final IBIT flow and multi-session persistence are still missing.",
+    "capital_source_destination": "Validated marginal buying included forced short-covering plus reported regulated spot-ETF creations. The source accounts funding those ETF creations and the size of non-ETF discretionary spot demand remain unknown.",
+    "confirmations_required": [
+      "IBIT finalizes without erasing the positive Sep. 18 reported flow and preferably expands the day total",
+      "Several subsequent completed BTC ETF sessions remain positive with issuer breadth",
+      "BTC holds or advances above roughly $80K-$82K after forced liquidations remain normalized",
+      "Venue-consistent open-interest/funding evidence shows leverage rebuilding is controlled rather than crowded",
+      "Timestamp-consistent exchange/on-chain evidence supports absorption rather than distribution"
+    ],
+    "invalidation_or_downgrade": [
+      "Large negative IBIT Sep. 18 flow materially offsets the current +$324.6M reported total",
+      "Material ETF redemptions resume in subsequent sessions",
+      "BTC loses roughly $77K-$78K after the squeeze",
+      "Long-side leverage rebuilds aggressively while funding is expensive and price stalls",
+      "Higher-quality spot/on-chain evidence shows distribution into strength"
+    ],
+    "liquidity_cost_capacity": "BTC is highly liquid relative to crypto, but event-window slippage, funding and basis can change quickly. Research/decision support only; no execution authority."
+  },
+  "big_move_lab_status": "Mechanism confidence improved: the Sep. 18 move now has stronger evidence for both a forced-short-cover amplifier and a genuine spot-ETF demand component. Canonical big_move_lab insertion remains deferred until the exact breakout-start/pre-move cutoff is reconstructed cleanly and the Sep. 18 ETF day is finalized, preventing hindsight contamination.",
+  "prediction_ledger": "No new immutable forward forecast frozen. The action remains WAIT / tactical momentum candidate, so the dashboard scorecard remains frozen=0 and resolved=0.",
+  "canonical_update_decision": "Persist this research-cycle artifact only. Do not update dashboard_state, learning_ledger or big_move_lab yet because Sep. 18 ETF data remain incomplete, the broad Money Intelligence regime and BTC WAIT action have not changed, and a canonical commit now would risk noisy or prematurely finalized state.",
+  "next_priority": [
+    "Re-check the preferred Farside Sep. 18 BTC/ETH tables once IBIT/ETHA/ETHB/QETH are finalized and compute completed multi-session net flows and issuer breadth.",
+    "Track whether BTC retains $80K-$82K after the liquidation impulse stays dormant and reconcile post-squeeze open-interest/funding using venue-consistent data.",
+    "Reconstruct the Sep. 18 breakout start with timestamp-defensible spot, ETF/catalyst and derivatives evidence, then add the case to big_move_lab if the point-in-time cutoff is clean.",
+    "Build matched BTC squeeze controls using pre-move CFTC short inventory, ETF/spot impulses, funding/OI and post-squeeze continuation to test whether short crowding adds predictive information only conditionally on discretionary demand."
+  ],
+  "sources": [
+    "Farside Investors U.S. spot Bitcoin ETF flow table, accessed 2026-09-19 around 01:30Z: https://farside.co.uk/btc/",
+    "Farside Investors U.S. spot Ethereum ETF flow table, accessed 2026-09-19 around 01:30Z: https://farside.co.uk/eth/",
+    "CoinMarketCap connected live quotes/global metrics/derivatives feeds, accessed 2026-09-19 around 01:32Z",
+    "Prior canonical/direct-venue evidence: Kraken BTC/USD perpetual snapshots and U.S. CFTC Traders in Financial Futures positions as of 2026-09-15"
+  ],
+  "reporting_gate": "No owner-facing report. At least 60 minutes of cumulative verifiable research/execution time has still not been established; schedule cadence and artifact timestamps are not treated as duration evidence. Continue quietly."
+}
