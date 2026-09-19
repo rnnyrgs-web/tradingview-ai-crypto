@@ -97,9 +97,9 @@ Canonical specialist coordination must be loaded through `orchestration/coordina
 - `COORD-DATA-006`: **DONE** — prospective point-in-time capture verified; no fabricated historical backfill.
 - `COORD-DATA-007`: **BLOCKED** — wait for enough genuinely matured independent prospective cohorts.
 
-This legacy maturation wait does not block independent strategy discovery or Phase-1 runtime acceptance.
+Do not select another DATA-BREADTH candidate while `COORD-DATA-007` remains blocked on genuine prospective maturation. This legacy maturation wait does not block independent strategy discovery or Phase-1 runtime acceptance.
 
-## SAFETY / COST / ROUTING INVARIANTS
+## SAFETY INVARIANTS
 
 - Broker disconnected; trade/promotion authority **OFF**.
 - Do not rewrite historical predictions, frozen OOS, genuine-forward evidence or rejected fingerprints.
