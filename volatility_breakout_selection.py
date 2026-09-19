@@ -490,8 +490,14 @@ def _pooled_segment(
     contract: dict[str, Any],
 ) -> dict[str, Any]:
     trades = _combine_trades(evidence_by_instrument, segment)
+    segment_start_ts = min(int(evidence[segment]["start_ts"]) for evidence in evidence_by_instrument.values())
+    segment_end_ts = max(int(evidence[segment]["end_ts"]) for evidence in evidence_by_instrument.values())
+    midpoint_ts = segment_start_ts + (segment_end_ts - segment_start_ts) // 2
     if not trades:
         return {
+            "start_ts": segment_start_ts,
+            "end_ts": segment_end_ts,
+            "midpoint_ts": midpoint_ts,
             "cost_stress": _stress_metrics([], contract),
             "first_half_cost_stress": _stress_metrics([], contract),
             "second_half_cost_stress": _stress_metrics([], contract),
@@ -504,11 +510,12 @@ def _pooled_segment(
                 "SHORT": _stress_metrics([], contract),
             },
         }
-    ordered_ts = sorted(int(trade["signal_ts"]) for trade in trades)
-    midpoint_ts = ordered_ts[len(ordered_ts) // 2]
     first = [trade for trade in trades if int(trade["signal_ts"]) < midpoint_ts]
     second = [trade for trade in trades if int(trade["signal_ts"]) >= midpoint_ts]
     return {
+        "start_ts": segment_start_ts,
+        "end_ts": segment_end_ts,
+        "midpoint_ts": midpoint_ts,
         "cost_stress": _stress_metrics(trades, contract),
         "first_half_cost_stress": _stress_metrics(first, contract),
         "second_half_cost_stress": _stress_metrics(second, contract),
