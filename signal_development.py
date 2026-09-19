@@ -10,9 +10,7 @@ ROOT = Path(__file__).resolve().parent
 OBJECTIVE_PATH = ROOT / "orchestration" / "signal_development_objective.json"
 PRIMARY_OBJECTIVE_ID = "UNIVERSAL_SIGNAL_DEVELOPMENT_V1"
 PRIMARY_MISSION = (
-    "Find and validate one strategy with genuine sustainable after-cost profitability for 24h and 7d "
-    "crypto BUY / SELL / WAIT signals; concentrate deep research on that single candidate while genuine "
-    "forward signal accuracy/precision remains the secondary objective."
+    "Find and validate one strategy with genuine sustainable after-cost profitability across tradable liquid assets and any economically meaningful move duration; in parallel build scientifically defensible 90-day 2x+ event intelligence. Legacy 24h/7d crypto BUY / SELL / WAIT dashboard production is retired; genuine forward evidence remains a validation input rather than a display objective."
 )
 VALID_HORIZONS = {"24h", "7d", "both"}
 VALID_CONCLUSIONS = {"supports", "rejects", "unresolved"}

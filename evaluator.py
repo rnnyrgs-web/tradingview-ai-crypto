@@ -102,20 +102,59 @@ def run_evaluation():
         except Exception as e:
             errors.append({"id":sig.get("id"),"error":str(e)})
 
+    prediction_report=run_prediction_drain()
+    errors.extend(prediction_report["errors"])
+    return {
+        "ok":not errors,
+        "checked":len(signals),
+        "updated":updated,
+        "predictions_checked":prediction_report["predictions_checked"],
+        "predictions_updated":prediction_report["predictions_updated"],
+        "errors":errors[:20],
+    }
+
+
+def run_prediction_drain():
+    """Resolve only already-created immutable forecasts.
+
+    This intentionally does not touch the retired trading_signals evaluator and
+    never generates a new opportunity/forecast. It exists only to let pending
+    historical prediction-ledger rows mature after legacy scan generation stops.
+    """
     predictions=fetch_due_predictions()
     predictions_updated=0
+    errors=[]
     for prediction in predictions:
         try:
             candles=get_candles(prediction["symbol"],PREDICTION_OUTCOME_BAR,300)
             due=parse_dt(prediction["due_at"])
-            outcome=close_at_or_after(candles,int(due.timestamp()*1000),max_lag_ms=MAX_PREDICTION_OUTCOME_LAG_MS)
-            entry=f(prediction.get("entry_price")); direction=str(prediction.get("direction","")).upper()
+            outcome=close_at_or_after(
+                candles,
+                int(due.timestamp()*1000),
+                max_lag_ms=MAX_PREDICTION_OUTCOME_LAG_MS,
+            )
+            entry=f(prediction.get("entry_price"))
+            direction=str(prediction.get("direction","")).upper()
             if outcome is None or entry<=0 or direction not in {"LONG","SHORT"}:
                 continue
             result=directional_return(entry,outcome,direction)
-            patch_prediction(prediction["id"],{"outcome_price":outcome,"directional_return_pct":result,"correct":result>0,"resolved_at":iso(now_utc())})
+            patch_prediction(
+                prediction["id"],
+                {
+                    "outcome_price":outcome,
+                    "directional_return_pct":result,
+                    "correct":result>0,
+                    "resolved_at":iso(now_utc()),
+                },
+            )
             predictions_updated+=1
         except Exception as e:
             errors.append({"prediction_id":prediction.get("id"),"error_type":type(e).__name__})
-
-    return {"ok":not errors,"checked":len(signals),"updated":updated,"predictions_checked":len(predictions),"predictions_updated":predictions_updated,"errors":errors[:20]}
+    return {
+        "ok":not errors,
+        "research_only":True,
+        "new_forecasts_created":0,
+        "predictions_checked":len(predictions),
+        "predictions_updated":predictions_updated,
+        "errors":errors[:20],
+    }
