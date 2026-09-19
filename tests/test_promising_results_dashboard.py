@@ -2,8 +2,14 @@
 
 import json
 import ast
+from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
+from uuid import UUID
+
+import pytest
+
+import db
 
 from promising_results_dashboard import build_results_snapshot, render_results_html
 
@@ -182,27 +188,65 @@ def test_closest_research_is_separate_fresh_and_research_only(tmp_path):
 
 
 def _forward_candidate(index):
+    source = {"source_id": "exchange-quote", "publisher": "Example Exchange",
+              "url": "https://example.org/market/quote", "published_at": "2026-09-19T17:58:00Z",
+              "available_at": "2026-09-19T17:58:00Z", "captured_at": "2026-09-19T17:59:00Z",
+              "observed_at": "2026-09-19T17:58:00Z", "reference_price": 2.5}
     return {
         "asset": f"ASSET-{index}", "status": "PROMISING_RESEARCH", "reference_price": 2.5,
-        "observed_at": "2026-09-19T19:00:00Z", "frozen_at": "2026-09-19T18:00:00Z",
+        "forecast_id": index + 1, "scan_id": str(UUID(int=index + 1)),
+        "observed_at": "2026-09-19T17:58:00Z", "frozen_at": "2026-09-19T18:00:00Z",
+        "information_cutoff": "2026-09-19T17:59:00Z",
         "horizon_days": 90, "causal_mechanism": "Documented supply shock may affect marginal demand.",
         "evidence": {"pit_provenance_verified": True, "matched_controls_pass": True,
                      "base_rate_documented": True, "spot_leverage_decomposed": True},
         "evidence_for": ["Timestamped flow"], "evidence_against": ["Leverage may explain the move"],
         "invalidation": "Flow reverses", "next_test": "Observe independent forward cohort",
-        "sources": [{"url": "https://example.org/source"}],
+        "sources": [source],
     }
 
 
-def test_2x_candidates_are_capped_and_reference_price_is_computed(tmp_path):
-    _base(tmp_path, lab={"forward_candidates": [_forward_candidate(i) for i in range(9)]})
+def _immutable_ledger_row(candidate):
+    cutoff = candidate["information_cutoff"]
+    evidence_rows = {flag: {"recorded_at": cutoff, "summary": f"Frozen {flag} evidence",
+                            "source_ids": ["exchange-quote"]} for flag in candidate["evidence"]}
+    return {
+        "id": candidate["forecast_id"], "scan_id": candidate["scan_id"],
+        "symbol": candidate["asset"], "horizon": "90d", "direction": "LONG",
+        "entry_price": 2.5, "created_at": "2026-09-19T18:00:00Z",
+        "due_at": "2026-12-18T18:00:00Z",
+        "calibration": {"big_move_2x": {
+            "information_cutoff": cutoff, "reference_observed_at": candidate["observed_at"],
+            "evidence_captured_at": cutoff, "reference_price": 2.5,
+            "reference_price_source_id": "exchange-quote", "target_multiplier": 2,
+            "target_price": 5.0,
+            "target_definition": "at_least_2x_frozen_reference_within_90_days",
+            "evidence": deepcopy(candidate["evidence"]), "evidence_rows": evidence_rows,
+            "causal_mechanism": candidate["causal_mechanism"],
+            "evidence_for": deepcopy(candidate["evidence_for"]),
+            "evidence_against": deepcopy(candidate["evidence_against"]),
+            "invalidation": candidate["invalidation"], "next_test": candidate["next_test"],
+            "sources": deepcopy(candidate["sources"]),
+        }},
+    }
+
+
+def _serve_ledger(monkeypatch, rows):
+    ledger = {row["id"]: row for row in rows}
+    monkeypatch.setattr(db, "fetch_prediction_by_id", lambda identity: ledger.get(identity))
+
+
+def test_2x_candidates_are_capped_and_reference_price_is_computed(tmp_path, monkeypatch):
+    candidates = [_forward_candidate(i) for i in range(9)]
+    _serve_ledger(monkeypatch, [_immutable_ledger_row(x) for x in candidates])
+    _base(tmp_path, lab={"forward_candidates": candidates})
     candidates = _snapshot(tmp_path)["candidates_2x"]
     assert len(candidates) == 5
     assert all(x["two_x_price"] == 5 for x in candidates)
     assert "VALIDATED_FORECAST" not in render_results_html(_snapshot(tmp_path))
 
 
-def test_2x_stale_malformed_and_unfrozen_cases_fail_closed(tmp_path):
+def test_2x_stale_malformed_and_unfrozen_cases_fail_closed(tmp_path, monkeypatch):
     stale = _forward_candidate(1)
     stale["observed_at"] = "2026-09-17T19:00:00Z"
     malformed = _forward_candidate(2)
@@ -211,8 +255,124 @@ def test_2x_stale_malformed_and_unfrozen_cases_fail_closed(tmp_path):
     unfrozen["frozen_at"] = "2026-09-19T19:30:00Z"
     claimed_validated = _forward_candidate(4)
     claimed_validated["status"] = "VALIDATED_FORECAST"
+    _serve_ledger(monkeypatch, [_immutable_ledger_row(_forward_candidate(i)) for i in (1, 2, 3, 4)])
     _base(tmp_path, lab={"forward_candidates": [stale, malformed, unfrozen, claimed_validated]})
     assert _snapshot(tmp_path)["candidates_2x"] == []
+
+
+def test_forged_backdated_candidate_cannot_enter_without_ledger_row(tmp_path, monkeypatch):
+    candidate = _forward_candidate(0)
+    candidate["frozen_at"] = "2026-09-01T00:00:00Z"
+    _serve_ledger(monkeypatch, [])
+    _base(tmp_path, lab={"forward_candidates": [candidate]})
+    assert _snapshot(tmp_path)["candidates_2x"] == []
+
+
+def test_candidate_without_immutable_forecast_identity_cannot_enter(tmp_path, monkeypatch):
+    candidate = _forward_candidate(0)
+    candidate.pop("forecast_id")
+    monkeypatch.setattr(db, "fetch_prediction_by_id", lambda _: pytest.fail("ledger must not be fetched"))
+    _base(tmp_path, lab={"forward_candidates": [candidate]})
+    assert _snapshot(tmp_path)["candidates_2x"] == []
+
+
+@pytest.mark.parametrize("mutation", ["id", "scan_id", "asset", "price", "horizon", "cutoff", "target"])
+def test_mismatched_immutable_identity_or_target_cannot_enter(tmp_path, monkeypatch, mutation):
+    candidate = _forward_candidate(0)
+    row = _immutable_ledger_row(candidate)
+    if mutation == "id":
+        row["id"] += 1
+    elif mutation == "scan_id":
+        row["scan_id"] = str(UUID(int=50))
+    elif mutation == "asset":
+        row["symbol"] = "OTHER"
+    elif mutation == "price":
+        row["entry_price"] = 3.0
+    elif mutation == "horizon":
+        row["horizon"] = "7d"
+    elif mutation == "cutoff":
+        row["calibration"]["big_move_2x"]["information_cutoff"] = "2026-09-19T19:00:00Z"
+    else:
+        row["calibration"]["big_move_2x"]["target_definition"] = "unclear target"
+    monkeypatch.setattr(db, "fetch_prediction_by_id", lambda _: row)
+    _base(tmp_path, lab={"forward_candidates": [candidate]})
+    assert _snapshot(tmp_path)["candidates_2x"] == []
+
+
+@pytest.mark.parametrize("mutation", ["late_publication", "unknown_availability", "http_url",
+                                      "malformed_url", "malformed_host", "late_evidence",
+                                      "missing_evidence_row", "malformed_evidence_source",
+                                      "late_ledger_creation", "missing_ledger_creation",
+                                      "already_resolved"])
+def test_unsafe_provenance_or_late_evidence_cannot_enter(tmp_path, monkeypatch, mutation):
+    candidate = _forward_candidate(0)
+    row = _immutable_ledger_row(candidate)
+    manifest = row["calibration"]["big_move_2x"]
+    source = manifest["sources"][0]
+    if mutation == "late_publication":
+        source["published_at"] = "2026-09-19T18:01:00Z"
+    elif mutation == "unknown_availability":
+        source.pop("available_at")
+    elif mutation == "http_url":
+        source["url"] = "http://example.org/market/quote"
+    elif mutation == "malformed_url":
+        source["url"] = "https://user:pass@example.org/market/quote"
+    elif mutation == "malformed_host":
+        source["url"] = "https://example..org/market/quote"
+    elif mutation == "late_evidence":
+        manifest["evidence_rows"]["matched_controls_pass"]["recorded_at"] = "2026-09-19T18:01:00Z"
+    elif mutation == "missing_evidence_row":
+        manifest["evidence_rows"].pop("base_rate_documented")
+    elif mutation == "malformed_evidence_source":
+        manifest["evidence_rows"]["base_rate_documented"]["source_ids"] = [{"fake": True}]
+    elif mutation == "late_ledger_creation":
+        row["created_at"] = "2026-09-19T19:00:00Z"
+    elif mutation == "missing_ledger_creation":
+        row.pop("created_at")
+    else:
+        row["resolved_at"] = "2026-09-19T19:00:00Z"
+    candidate["sources"] = deepcopy(manifest["sources"])
+    _serve_ledger(monkeypatch, [row])
+    _base(tmp_path, lab={"forward_candidates": [candidate]})
+    assert _snapshot(tmp_path)["candidates_2x"] == []
+
+
+def test_mutable_lab_flags_alone_cannot_qualify(tmp_path, monkeypatch):
+    candidate = _forward_candidate(0)
+    row = _immutable_ledger_row(candidate)
+    row["calibration"]["big_move_2x"]["evidence"]["pit_provenance_verified"] = False
+    _serve_ledger(monkeypatch, [row])
+    _base(tmp_path, lab={"forward_candidates": [candidate]})
+    assert _snapshot(tmp_path)["candidates_2x"] == []
+
+
+def test_already_moved_retrospective_candidate_stays_outside_forward_list(tmp_path, monkeypatch):
+    candidate = _forward_candidate(0)
+    candidate["retrospective"] = True
+    _serve_ledger(monkeypatch, [_immutable_ledger_row(candidate)])
+    _base(tmp_path, lab={"forward_candidates": [candidate],
+                         "cases": [{"asset": candidate["asset"], "observed_move": "+200%"}]})
+    assert _snapshot(tmp_path)["candidates_2x"] == []
+
+
+def test_valid_immutable_timestamp_safe_candidate_qualifies(tmp_path, monkeypatch):
+    candidate = _forward_candidate(0)
+    row = _immutable_ledger_row(candidate)
+    _serve_ledger(monkeypatch, [row])
+    _base(tmp_path, lab={"forward_candidates": [candidate]})
+    result = _snapshot(tmp_path)["candidates_2x"]
+    assert len(result) == 1
+    assert result[0]["forecast_id"] == row["id"]
+    assert result[0]["two_x_price"] == 5
+    assert "https://example.org/market/quote" in render_results_html(_snapshot(tmp_path))
+
+
+def test_strategy_display_logic_is_independent_of_2x_ledger_failure(tmp_path, monkeypatch):
+    monkeypatch.setattr(db, "fetch_prediction_by_id", lambda _: (_ for _ in ()).throw(RuntimeError("offline")))
+    _base(tmp_path, [_strategy()], [_evidence()], lab={"forward_candidates": [_forward_candidate(0)]})
+    snapshot = _snapshot(tmp_path)
+    assert len(snapshot["strategies"]) == 1
+    assert snapshot["candidates_2x"] == []
 
 
 def test_app_declares_results_route_and_all_three_pages_link_it():

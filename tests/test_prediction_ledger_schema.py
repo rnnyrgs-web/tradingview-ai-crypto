@@ -84,6 +84,31 @@ def test_shadow_prediction_fetch_returns_recent_window_in_chronological_order(mo
     assert [row["id"] for row in rows] == [1, 2, 3]
 
 
+def test_prediction_identity_fetch_is_exact_and_never_fabricates_missing_fields(monkeypatch):
+    class _OneResponse:
+        status_code = 200
+        text = ""
+
+        def json(self):
+            return [{"id": 42, "scan_id": "canonical"}]
+
+    class _OneHTTP:
+        def __init__(self):
+            self.params = None
+
+        def get(self, url, headers=None, params=None):
+            self.params = params
+            return _OneResponse()
+
+    fake = _OneHTTP()
+    monkeypatch.setattr(db, "http", fake)
+    monkeypatch.setattr(db, "configured", lambda: True)
+    assert db.fetch_prediction_by_id(42) == {"id": 42, "scan_id": "canonical"}
+    assert fake.params == {"select": "*", "id": "eq.42", "limit": "1"}
+    assert db.fetch_prediction_by_id("42") is None
+    assert db.fetch_prediction_by_id(-1) is None
+
+
 def test_compacted_research_context_exposes_preforecast_market_fields_without_calibration():
     row = {
         "research_context": {

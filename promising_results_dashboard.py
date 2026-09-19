@@ -13,7 +13,8 @@ import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
+from uuid import UUID
 
 
 ROOT = Path(__file__).resolve().parent
@@ -208,39 +209,133 @@ def _strict_strategies(root: Path, now: datetime) -> list[dict]:
     return result[:STRATEGY_LIMIT]
 
 
+def _https_source(row: Any, cutoff: datetime) -> bool:
+    source = _dict(row)
+    url = _str(source.get("url"))
+    if not url or any(char.isspace() or ord(char) < 32 or char == "\\" for char in url):
+        return False
+    try:
+        parsed = urlsplit(url)
+        valid_host = (parsed.hostname is not None and "." in parsed.hostname
+                      and all(re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?", part)
+                              for part in parsed.hostname.split(".")))
+        if parsed.scheme != "https" or not valid_host or parsed.username or parsed.password or parsed.port == 0:
+            return False
+    except ValueError:
+        return False
+    published = _time(source.get("published_at"))
+    available = _time(source.get("available_at"))
+    captured = _time(source.get("captured_at"))
+    return (bool(_str(source.get("source_id")) and _str(source.get("publisher")))
+            and published is not None and available is not None and captured is not None
+            and published <= available <= captured <= cutoff)
+
+
+def _timely_evidence(manifest: dict, cutoff: datetime, source_ids: set[str]) -> bool:
+    rows = _dict(manifest.get("evidence_rows"))
+    for name in ("pit_provenance_verified", "matched_controls_pass",
+                 "base_rate_documented", "spot_leverage_decomposed"):
+        item = _dict(rows.get(name))
+        timestamp = _time(item.get("recorded_at"))
+        referenced = _list(item.get("source_ids"))
+        if (timestamp is None or timestamp > cutoff or not _str(item.get("summary"))
+                or not referenced or any(not isinstance(source, str) or source not in source_ids
+                                      for source in referenced)):
+            return False
+    return True
+
+
+def _immutable_2x_card(candidate: dict, row: Any, now: datetime) -> dict | None:
+    """Use only canonical ledger data for a forward 2x scientific claim."""
+    row = _dict(row)
+    manifest = _dict(_dict(row.get("calibration")).get("big_move_2x"))
+    evidence = _dict(manifest.get("evidence"))
+    created = _time(row.get("created_at"))  # Must be database-created, not candidate-supplied.
+    cutoff = _time(manifest.get("information_cutoff"))
+    observed = _time(manifest.get("reference_observed_at"))
+    captured = _time(manifest.get("evidence_captured_at"))
+    price = _number(row.get("entry_price"))
+    manifest_price = _number(manifest.get("reference_price"))
+    candidate_price = _number(candidate.get("reference_price"))
+    sources = _list(manifest.get("sources"))
+    source_ids = [_str(_dict(source).get("source_id")) for source in sources]
+    flags = ("pit_provenance_verified", "matched_controls_pass", "base_rate_documented",
+             "spot_leverage_decomposed")
+    try:
+        valid_scan = str(UUID(_str(row.get("scan_id")))) == row.get("scan_id")
+    except ValueError:
+        valid_scan = False
+    if (isinstance(row.get("id"), bool) or not isinstance(row.get("id"), int) or row["id"] <= 0
+            or candidate.get("forecast_id") != row["id"]
+            or not valid_scan or candidate.get("scan_id") != row["scan_id"]
+            or not _str(row.get("symbol")) or candidate.get("asset") != row["symbol"]
+            or row.get("horizon") != "90d" or candidate.get("horizon_days") != 90
+            or row.get("direction") != "LONG"
+            or row.get("resolved_at") is not None
+            or manifest.get("target_multiplier") != 2
+            or manifest.get("target_definition") != "at_least_2x_frozen_reference_within_90_days"
+            or _number(manifest.get("target_price")) != (price * 2 if price is not None else None)
+            or price is None or price <= 0 or manifest_price != price or candidate_price != price
+            or created is None or cutoff is None or observed is None or captured is None
+            or not _fresh(row.get("created_at"), now, MARKET_MAX_AGE)
+            or not observed <= captured <= cutoff <= created <= cutoff + timedelta(minutes=5)
+            or cutoff - observed > timedelta(minutes=15)
+            or _time(candidate.get("frozen_at")) != created
+            or _time(candidate.get("information_cutoff")) != cutoff
+            or _time(candidate.get("observed_at")) != observed
+            or _time(row.get("due_at")) != created + timedelta(days=90)
+            or candidate.get("retrospective") is True
+            or _str(candidate.get("status")).upper() not in {"PROMISING_RESEARCH", "STRONG_WATCH"}
+            or not all(evidence.get(flag) is True for flag in flags)
+            or not all(_dict(candidate.get("evidence")).get(flag) is True for flag in flags)
+            or not _str(manifest.get("causal_mechanism"))
+            or not _list(manifest.get("evidence_for")) or not _list(manifest.get("evidence_against"))
+            or not _str(manifest.get("invalidation")) or not _str(manifest.get("next_test"))
+            or not sources or len(source_ids) != len(set(source_ids))
+            or any(not _https_source(source, cutoff) for source in sources)
+            or not _timely_evidence(manifest, cutoff, set(source_ids))
+            or candidate.get("sources") != sources
+            or manifest.get("reference_price_source_id") not in source_ids):
+        return None
+    price_source = next(source for source in sources
+                        if source["source_id"] == manifest["reference_price_source_id"])
+    if (_number(price_source.get("reference_price")) != price
+            or _time(price_source.get("observed_at")) != observed
+            or _time(price_source.get("published_at")) < observed
+            or _time(price_source.get("available_at")) > cutoff):
+        return None
+    # All scientific text and visuals on a strict card come from the immutable row.
+    card = {key: manifest[key] for key in (
+        "causal_mechanism", "evidence_for", "evidence_against", "invalidation", "next_test")}
+    card.update({"kind": "2x", "title": row["symbol"], "asset": row["symbol"],
+                 "forecast_id": row["id"], "reference_price": price,
+                 "observed_at": manifest["reference_observed_at"], "frozen_at": row["created_at"],
+                 "horizon_days": 90, "two_x_price": price * 2, "sources": sources,
+                 "visuals": _dict(manifest.get("visuals"))})
+    return card
+
+
 def _strict_2x(root: Path, now: datetime) -> list[dict]:
     lab = _read(root / "money_intelligence/big_move_lab.json")
     if lab is None or not isinstance(lab.get("forward_candidates", []), list):
         return []
     result = []
-    for candidate in lab.get("forward_candidates", []):
+    for candidate in lab.get("forward_candidates", [])[:20]:
+        if len(result) >= TWO_X_LIMIT:
+            break
         if not isinstance(candidate, dict) or candidate.get("retrospective") is True:
             continue
-        price = _number(candidate.get("reference_price"))
-        horizon = _number(candidate.get("horizon_days"))
-        status = _str(candidate.get("status")).upper()
-        evidence = _dict(candidate.get("evidence"))
-        # The current local artifacts have no immutable forecast rows. Research
-        # candidates can be shown, but a VALIDATED_FORECAST label is never inferred.
-        if (not _str(candidate.get("asset")) or status not in {"PROMISING_RESEARCH", "STRONG_WATCH"} or price is None or price <= 0
-                or horizon is None or not 0 < horizon <= 90
-                or not _fresh(candidate.get("observed_at"), now, MARKET_MAX_AGE)
-                or not _time(candidate.get("frozen_at"))
-                or _time(candidate["frozen_at"]) > _time(candidate["observed_at"])
-                or evidence.get("pit_provenance_verified") is not True
-                or evidence.get("matched_controls_pass") is not True
-                or evidence.get("base_rate_documented") is not True
-                or evidence.get("spot_leverage_decomposed") is not True
-                or not _str(candidate.get("causal_mechanism"))
-                or not _list(candidate.get("evidence_for")) or not _list(candidate.get("evidence_against"))
-                or not _str(candidate.get("invalidation")) or not _str(candidate.get("next_test"))
-                or not _list(candidate.get("sources"))):
+        identity = candidate.get("forecast_id")
+        if isinstance(identity, bool) or not isinstance(identity, int) or identity <= 0:
             continue
-        card = dict(candidate)
-        card["kind"] = "2x"
-        card["title"] = _str(candidate.get("asset"))
-        card["two_x_price"] = price * 2
-        result.append(card)
+        try:
+            from db import fetch_prediction_by_id
+            row = fetch_prediction_by_id(identity)
+        except (OSError, RuntimeError, ValueError, TypeError):
+            continue
+        card = _immutable_2x_card(candidate, row, now)
+        if card:
+            result.append(card)
     return result[:TWO_X_LIMIT]
 
 

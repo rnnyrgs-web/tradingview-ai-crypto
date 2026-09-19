@@ -91,6 +91,22 @@ def insert_prediction_ledger(rows):
     if r.status_code>=300:
         raise RuntimeError(f"Supabase prediction ledger insert failed: {r.status_code} {r.text}")
 
+def fetch_prediction_by_id(prediction_id):
+    """Read one canonical prediction row for a display-only identity check.
+
+    Select the stored row, including a database-created timestamp if the
+    deployed schema has one. A missing field is handled by the dashboard as
+    ineligible; this method never synthesizes provenance.
+    """
+    if not configured() or isinstance(prediction_id, bool) or not isinstance(prediction_id, int) or prediction_id <= 0:
+        return None
+    params={"select":"*","id":f"eq.{prediction_id}","limit":"1"}
+    r=http.get(f"{SUPABASE_URL}/rest/v1/prediction_ledger",headers=headers(),params=params)
+    if r.status_code>=300:
+        raise RuntimeError(f"Supabase prediction identity fetch failed: {r.status_code} {r.text}")
+    rows=r.json()
+    return rows[0] if isinstance(rows,list) and len(rows)==1 and isinstance(rows[0],dict) else None
+
 def fetch_due_predictions(limit=500):
     if not configured():
         return []
