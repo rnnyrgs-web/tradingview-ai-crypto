@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-19T02:49:00Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "parent_cycle": "money_intelligence/research_cycles/2026-09-19T0230Z-cycle.json",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate or broker state changed.",
+  "purpose": "Persist materially useful cross-asset causal work from the same deep cycle without prematurely changing canonical dashboard/learning/big-move state.",
+  "validated_observations": [
+    {
+      "topic": "AI infrastructure funding dispersion",
+      "facts": [
+        "Crux AI has a $22B bank loan backed by Google TPUs and customer contracts, alongside an initial $5B Blackstone equity investment. The bank group is syndicating the loan and the debt may later be refinanced in the investment-grade bond market.",
+        "Nscale's Sep. 18 SEC S-1 reports $103.4B of active and contracted total contracted value as of Aug. 31, 2026, approximately 461,000 active/contracted GPUs, roughly 10 GW of potential power capacity, a weighted-average contract life of about 5.7 years and weighted-average customer prepayments equal to 23% of active/contracted TCV. Its largest customer represented 52% of H1 2026 revenue.",
+        "Nscale generated $140.6M H1 2026 revenue, up 1,252% YoY, while Reuters reports a $1.02B H1 net loss and $3.1B of agreed convertible-bond financing including $1B from Nvidia.",
+        "Oracle Project Jupiter's approximately $18B of project loans were quoted around 89-91 cents on the dollar on Sep. 18; syndication efforts had stalled amid Oracle leverage/credit concerns and local power/permitting opposition, leaving banks holding more debt than intended."
+      ],
+      "inference": "The AI capital cycle remains extremely large, but funding is no longer a single undifferentiated bullish flow. Tight-money underwriting is differentiating projects by sponsor strength, collateral, contracted cash flows/prepayments, customer concentration, credit rating, permitting/power certainty and syndication liquidity.",
+      "hypothesis": "AI INFRA FUNDING DISPERSION: aggregate AI capex can keep rising while the marginal cost and availability of capital diverge sharply across projects. Physical demand can therefore remain structurally strong even while weaker AI borrowers/project debt underperform.",
+      "falsification": "If lower-quality/high-leverage projects continue to clear financing at the same or better terms as high-quality contracted/collateralized projects across a broad sample, or if project-debt price dispersion does not relate to funding/contract/permitting quality, reject the hypothesis.",
+      "decision_support": "HOLD/RESEARCH the high-quality physical AI chain; WAIT/AVOID extrapolating the theme to every borrower or project. No asset-specific trade frozen."
+    },
+    {
+      "topic": "Fund-flow dataset contradiction",
+      "facts": [
+        "LSEG Lipper reported $23.21B of global equity-fund outflows and $31.44B of U.S. equity-fund outflows in its latest weekly dataset, while sector funds still attracted capital, including technology.",
+        "BofA's Flow Show using EPFR data reported $79.3B into stocks and $63.8B into U.S. stocks for its latest week, while reporting $1B out of investment-grade bonds and $2.5B out of high yield.",
+        "LSEG states its Global Fund Flows data include conventional mutual funds and ETFs and comprehensively cover those products across core markets; EPFR states it tracks globally domiciled mutual funds/ETFs and a very large but separately constructed fund universe. The two products are not the same measurement universe."
+      ],
+      "inference": "Opposite aggregate equity-flow signs from credible datasets are a measurement/universe warning, not evidence that one must be false. The robust cross-dataset information is more useful than the headline aggregate: selective equity/technology demand is present, while corporate-credit fund flows are weakening.",
+      "method_rule_candidate": "When large flow datasets conflict in sign, do not average them or pick the preferred headline. Preserve both, identify universe/timing/methodology differences, and downweight aggregate direction until corroborated by price, breadth, issuance, positioning and other independent evidence.",
+      "unknown": "The exact fund/vehicle components responsible for the current LSEG-versus-EPFR sign divergence have not been decomposed fund by fund."
+    },
+    {
+      "topic": "Corporate credit outflow without broad spread stress",
+      "facts": [
+        "Both BofA/EPFR and LSEG report weakness/redemptions in corporate-credit funds, especially high yield and/or investment grade depending on the dataset.",
+        "ICE BofA U.S. High Yield OAS remained around the high-2% area in the latest available FRED observations; Single-B OAS was 2.77% on Sep. 17 versus 2.85% on Sep. 15, still historically tight rather than signaling broad credit stress.",
+        "Goldman research reported net foreign purchases of U.S. corporate bonds of about $251B through H1 2026 and foreign ownership around 29%, providing a plausible offsetting demand channel even as some fund wrappers redeem."
+      ],
+      "inference": "Fund-wrapper outflows have not yet transmitted into broad credit-spread stress. Other buyers, carry demand, market depth and cross-border demand can absorb redemptions. This is a useful non-move/control case: flow headline != price stress unless market-clearing price/liquidity also deteriorate.",
+      "risk_trigger": "Persistent fund redemptions become materially more important if HY/Single-B OAS widen rapidly at the same time, primary issuance requires much larger concessions, bid-ask/dealer balance-sheet conditions deteriorate, or defaults/recovery expectations worsen.",
+      "decision_support": "MONITOR / UNDERWEIGHT weaker leveraged credit, but do not label the current broad credit market distressed."
+    },
+    {
+      "topic": "Volkswagen Sep. 18 big-price-move candidate",
+      "facts": [
+        "Volkswagen closed down 5.6% on Sep. 18, its biggest one-day drop since Sep. 2025; the European auto sector fell 3.4% while BMW was materially less weak, providing a useful matched-company control.",
+        "Volkswagen's primary ad-hoc release cut 2026 operating return-on-sales guidance to up to 1% from 4.0%-5.5% and estimates around EUR10B of special effects. Adjusted for those special effects, it says full-year operating return on sales would be about 4%, while automotive net cash-flow guidance remained EUR3-6B.",
+        "Reuters reports the deterioration reflects Porsche impairment, weak China demand, U.S. tariffs, restructuring and the shift toward lower-margin EVs; roughly EUR6B of the impairment relates to lowered Porsche mid-term assumptions."
+      ],
+      "causal_chain": "China/US structural pressure + Porsche profitability reset + restructuring -> lower expected durable earnings/asset value -> sector/read-through selling -> VW-specific repricing. The headline <=1% margin is partly accounting/special effects; the price move is more defensibly linked to downgraded medium-term cash-flow/profitability expectations than to simply subtracting EUR10B one-for-one.",
+      "lab_status": "High-information candidate; canonical insertion deferred until pre-announcement expectations/valuation and matched European auto controls are reconstructed timestamp-safely."
+    },
+    {
+      "topic": "Gold allocation evidence",
+      "facts": [
+        "World Gold Council reports global physically backed gold ETFs attracted about $18B in August, the second-largest monthly inflow on record; holdings rose 121 tonnes to a record 4,189 tonnes and AUM reached about $615B.",
+        "LSEG's latest weekly flow report showed roughly $1.17B entering gold/precious-metals commodity funds while energy funds saw redemptions.",
+        "Gold remained resilient around the high-$4.3K/oz area on Sep. 18 despite a strong dollar and U.S. 10-year yields around 5%."
+      ],
+      "inference": "Gold has a validated medium-horizon allocation bid, but it is not an under-owned squeeze story: ETF holdings and futures positioning were already elevated. Structural allocation and fiscal/geopolitical hedging are stronger explanations than simple underweight catch-up.",
+      "decision_support": "HOLD / ACCUMULATE WEAKNESS remains more defensible than chasing vertical strength. No new immutable forecast frozen."
+    },
+    {
+      "topic": "France sovereign matched-control correction",
+      "facts": [
+        "France-Germany 10-year spread reached roughly 104 bp Sep. 18, but Italy-Germany widened by a similar amount over the most recent week; the latest weekly shock was therefore not uniquely French.",
+        "Over a longer Aug.-Sep. window France's relative spread versus Italy widened, consistent with an additional France-specific fiscal/political premium layered on top of a common high-debt euro-duration shock.",
+        "Agence France Tresor's Sep. 17 auctions still cleared with bid-to-cover ratios around 2.22-2.93 for the four nominal OAT lines; ECB officials reported no disorder/tension."
+      ],
+      "correction": "Use France-versus-Italy spread differential, not OAT-Bund alone, as the cleaner country-specific fiscal/political variable during common euro-duration shocks. Do not describe the latest weekly widening as uniquely French or as a current euro funding crisis.",
+      "decision_support": "WAIT / MONITOR sovereign relative-value risk; no frozen short thesis."
+    }
+  ],
+  "cross_case_learning_candidates": [
+    "CAPITAL FLOW IS MULTI-LAYERED: wrapper redemptions, primary issuance, foreign demand, project finance and security-level flows can point in different directions simultaneously. Market-clearing price depends on the marginal buyer/seller, not one flow dataset in isolation.",
+    "FUNDING QUALITY MATTERS MORE AS POLICY TIGHTENS: capital can remain abundant for projects with strong collateral/contracted cash flows while becoming expensive or unavailable for projects with weak credit, execution/permitting risk or poor syndication liquidity.",
+    "OUTFLOW != STRESS: treat fund outflows as a pressure input; require confirming spread, liquidity, issuance-concession or balance-sheet deterioration before upgrading to systemic credit stress."
+  ],
+  "canonical_update_decision": "Do not modify dashboard_state, learning_ledger or big_move_lab in this partial cycle. The AI-funding-dispersion and credit-nonmove insights are strong candidates but should be tested against additional matched cases before canonical promotion. VW and France still need timestamp-safe matched controls. Gold confirms an existing thesis rather than changing the canonical regime.",
+  "prediction_ledger": "No new immutable forward prediction frozen. No prior forecast rewritten.",
+  "next_priority": [
+    "Finalize Sep. 18 BTC and ETH ETF flows once missing issuers report; then reassess whether the BTC move graduated from squeeze/rotation to durable institutional accumulation.",
+    "Build at least one additional AI-project-finance matched pair and compare financing concessions, collateral, contracts, leverage, permitting and sponsor quality before promoting AI funding dispersion to the learning ledger.",
+    "Reconstruct VW pre-announcement consensus/valuation and matched BMW/Mercedes/Porsche moves to separate company-specific fundamental repricing from sector beta.",
+    "Track HY/Single-B OAS and new-issue concessions while fund outflows persist; this is the confirmation gate for the credit-stress hypothesis.",
+    "Decompose the current LSEG/EPFR equity-flow sign conflict by vehicle/domicile if source documentation permits; otherwise retain the conflict as an uncertainty rather than forcing reconciliation."
+  ],
+  "sources": [
+    "Volkswagen primary Sep. 18, 2026 ad-hoc forecast update: https://www.volkswagen-group.com/en/ad-hoc/volkswagen-ag-updates-its-forecast-for-fiscal-year-2026-20701",
+    "Nscale Sep. 18, 2026 SEC S-1: https://www.sec.gov/Archives/edgar/data/2110365/000119312526395475/ck0002110365-20260918.htm",
+    "Reuters Sep. 18 Nscale IPO filing report: https://www.reuters.com/technology/ai-cloud-firm-nscale-files-us-ipo-2026-09-18/",
+    "Reuters Sep. 16 Crux AI financing report: https://www.reuters.com/world/asia-pacific/banks-provide-22-billion-chip-loan-blackstone-alphabet-cloud-venture-bloomberg-2026-09-16/",
+    "Reuters Sep. 18 Oracle Project Jupiter debt report: https://www.reuters.com/business/finance/oracles-18-billion-data-center-debt-under-pressure-ft-reports-2026-09-18/",
+    "Reuters Sep. 18 LSEG Lipper U.S. fund-flow report: https://www.reuters.com/business/us-equity-funds-post-fourth-weekly-outflow-inflation-worries-rate-concerns-2026-09-18/",
+    "Reuters Sep. 18 global LSEG Lipper flow report: https://www.reuters.com/world/china/global-markets-flows-graphic-pix-2026-09-18/",
+    "Reuters Sep. 18 BofA/EPFR Flow Show report: https://www.reuters.com/world/china/investors-buy-us-stocks-fastest-pace-three-months-bofa-says-2026-09-18/",
+    "LSEG fund-data coverage description: https://www.lseg.com/en/data-catalogue/funds",
+    "EPFR current coverage description: https://epfr.com/",
+    "FRED ICE BofA Single-B US High Yield OAS: https://fred.stlouisfed.org/series/BAMLH0A2HYB",
+    "World Gold Council Aug. 2026 ETF commentary: https://www.gold.org/goldhub/research/gold-etfs-holdings-and-flows/2026/09",
+    "Agence France Tresor Sep. 17 OAT auction: https://www.aft.gouv.fr/en/publications/communiques-presse/17-september-2026-issuance-oats"
+  ],
+  "reporting_gate": "No owner-facing report. The cycle produced useful validated research and persisted it, but at least 60 minutes of cumulative verifiable research/execution time has not been established. Continue quietly."
+}
