@@ -2,7 +2,7 @@
   "version": 1,
   "enabled": true,
   "objective_id": "UNIVERSAL_SIGNAL_DEVELOPMENT_V1",
-  "primary_mission": "Continuously support the master research mission while preserving genuine sustainable after-cost profitability as the strategy standard: (A) discover one genuinely profitable algorithmic strategy and (B) improve evidence for liquid assets with unusually large ~90-day upside potential. Execute only the highest-priority READY ChatGPT-eligible coordination task, using deterministic work first and bounded model calls under the shared budget.",
+  "primary_mission": "Continuously support the master research mission while preserving genuine sustainable after-cost profitability as the strategy standard across tradable liquid assets: (A) discover one genuinely profitable algorithmic strategy and (B) improve evidence for liquid assets with unusually large ~90-day upside potential. Execute only the highest-priority READY ChatGPT-eligible coordination task, using deterministic work first and bounded model calls under the shared budget.",
   "autonomous_roles": [
     "data-market",
     "quant-research"
