@@ -8,7 +8,7 @@ QUEUE = Path("orchestration/strategy_discovery_queue.json")
 EVIDENCE = Path("orchestration/evidence/disc_residual_momentum_001_20260919.json")
 
 
-def test_residual_negative_evidence_pivots_next_screen_without_terminal_rejection():
+def test_residual_negative_evidence_stays_deprioritized_as_queue_advances():
     queue = load_queue(QUEUE)
     state = snapshot(queue)
 
@@ -27,5 +27,7 @@ def test_residual_negative_evidence_pivots_next_screen_without_terminal_rejectio
 
     assert state["active_deep_candidate"] is None
     assert state["next_action"]["action"] == "RUN_CHEAP_DETERMINISTIC_SCREEN"
-    assert state["next_action"]["fingerprint_id"] == "DISC-VOL-BREAKOUT-001-v1"
-    assert all(row["fingerprint_id"] != "DISC-RESIDUAL-MOMENTUM-001-v1" for row in state["ranked_cheap_screens"])
+    assert state["next_action"]["fingerprint_id"] == "DISC-LIQUIDITY-MEANREV-001-v1"
+    ranked = {row["fingerprint_id"] for row in state["ranked_cheap_screens"]}
+    assert "DISC-RESIDUAL-MOMENTUM-001-v1" not in ranked
+    assert "DISC-VOL-BREAKOUT-001-v1" not in ranked

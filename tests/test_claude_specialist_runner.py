@@ -90,7 +90,7 @@ def test_atomic_claim_branch_naming_matches_shared_convention():
     identical branch name any other engine would for the same task, so two
     engines racing for the same task_id collide on the same git ref rather
     than each succeeding under a different name."""
-    assert safe_branch("signal-accuracy", "COORD-DISC-VAL-001") == "auto/signal-accuracy/coord-disc-val-001"
+    assert safe_branch("signal-accuracy", "COORD-DISC-VAL-002") == "auto/signal-accuracy/coord-disc-val-002"
 
 
 def test_disabled_config_still_blocks_all_execution():
@@ -108,15 +108,15 @@ def test_plan_selects_the_owned_ready_task_and_no_other_role():
     decision = plan_decision(_config(), _coord(), default_state(), MAIN_SHA, NOW)
     assert decision.run is True
     assert decision.role == "signal-accuracy"
-    assert decision.task_id == "COORD-DISC-VAL-001"
-    assert decision.branch == "auto/signal-accuracy/coord-disc-val-001"
+    assert decision.task_id == "COORD-DISC-VAL-002"
+    assert decision.branch == "auto/signal-accuracy/coord-disc-val-002"
 
 
 def test_no_agent_can_steal_a_healthy_active_task():
     state = default_state()
     state["active_task"] = {
         "role": "signal-accuracy",
-        "task_id": "COORD-DISC-VAL-001",
+        "task_id": "COORD-DISC-VAL-002",
         "phase": "WAITING_CI",
         "base_main_sha": MAIN_SHA,
         "started_at": "2026-09-13T11:00:00Z",
