@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "DISC-RESIDUAL-MOMENTUM-001",
+  "fingerprint_id": "DISC-RESIDUAL-MOMENTUM-001-v1",
+  "evidence_stage": "CHEAP_SCREEN_SELECTION_ONLY",
+  "screen_status": "EXPLORATORY_PRE_OOS_FAIL_SURVIVORSHIP_UNVERIFIED",
+  "research_only": true,
+  "trade_authority": false,
+  "promotion_authority": false,
+  "source_commit_sha": "026cf2191fe96067880bd915c200cdfb06622839",
+  "source_pull_request": 405,
+  "workflow_run_id": 35407813647,
+  "artifact_id": 10572498750,
+  "artifact_name": "residual-momentum-selection-026cf2191fe96067880bd915c200cdfb06622839",
+  "artifact_archive_sha256": "f13e3f295d151e416e77f0de59ad1c6f2704e7ebf0b33e08daf92b81059a7f81",
+  "sealed_payload_sha256": "c27caac95cbab51eb8268260e134aa5e6caa4d6113fe825b1134a1bad47120b0",
+  "contract_sha256": "8d4d4e92d1a835ea86344bd12c26051f29eaa922af3f1a7010ecda275178c153",
+  "dataset": {
+    "source": "OKX /api/v5/market/history-candles",
+    "bar": "1H",
+    "normalized_rows_sha256": "3af6a3a339da415eeeee13be73498e5b3246ef40e3ef411ac96f79fa30e9d298",
+    "normalized_row_count": 87576,
+    "coverage_start": "2026-05-17T01:00:00Z",
+    "coverage_end": "2026-09-18T23:00:00Z",
+    "ranked_symbol_count": 30,
+    "resolved_symbol_count": 30,
+    "missing_ranked_symbols": []
+  },
+  "point_in_time_universe": {
+    "verified": false,
+    "promotion_allowed": false,
+    "reason": "point_in_time_snapshot_manifest_not_configured",
+    "covered_observations": 0,
+    "uncovered_observations": 87576
+  },
+  "selection": {
+    "economic_pre_oos_pass": false,
+    "eligible_for_deep_freeze": false,
+    "terminal_rejection_authorized": false,
+    "supported_liquidity_subsets": 2,
+    "passing_liquidity_subsets": 0,
+    "minimum_passing_liquidity_subsets": 2,
+    "untouched_oos_opened": false,
+    "untouched_oos_status": "LOCKED_UNTOUCHED_OOS"
+  },
+  "liquidity_subsets": {
+    "15": {
+      "passes_pre_oos": false,
+      "challenger_pre_oos_positive": false,
+      "challenger_beats_control_pre_oos": false,
+      "challenger": {
+        "train": {
+          "independent_samples": 36,
+          "mean_rank_ic": -0.050793650793650794,
+          "max_stress_net_top_minus_bottom": -0.006252243752469937,
+          "max_stress_positive_net_spread_rate": 0.4166666666666667
+        },
+        "validation": {
+          "independent_samples": 12,
+          "mean_rank_ic": 0.14761904761904762,
+          "max_stress_net_top_minus_bottom": 0.018822964749862836,
+          "max_stress_positive_net_spread_rate": 0.5833333333333334
+        }
+      },
+      "control": {
+        "train": {
+          "independent_samples": 36,
+          "mean_rank_ic": -0.024603174603174606,
+          "max_stress_net_top_minus_bottom": -0.0007519248853359141,
+          "max_stress_positive_net_spread_rate": 0.5
+        },
+        "validation": {
+          "independent_samples": 12,
+          "mean_rank_ic": 0.16666666666666666,
+          "max_stress_net_top_minus_bottom": 0.01792080004143144,
+          "max_stress_positive_net_spread_rate": 0.6666666666666666
+        }
+      }
+    },
+    "30": {
+      "passes_pre_oos": false,
+      "challenger_pre_oos_positive": false,
+      "challenger_beats_control_pre_oos": false,
+      "challenger": {
+        "train": {
+          "independent_samples": 36,
+          "mean_rank_ic": -0.05456680262019529,
+          "max_stress_net_top_minus_bottom": -0.006416220445838253,
+          "max_stress_positive_net_spread_rate": 0.5
+        },
+        "validation": {
+          "independent_samples": 12,
+          "mean_rank_ic": 0.12406377456433076,
+          "max_stress_net_top_minus_bottom": 0.0070556393128413785,
+          "max_stress_positive_net_spread_rate": 0.5833333333333334
+        }
+      },
+      "control": {
+        "train": {
+          "independent_samples": 36,
+          "mean_rank_ic": -0.049944382647385994,
+          "max_stress_net_top_minus_bottom": -0.004519825948608924,
+          "max_stress_positive_net_spread_rate": 0.3888888888888889
+        },
+        "validation": {
+          "independent_samples": 12,
+          "mean_rank_ic": 0.1327771598071932,
+          "max_stress_net_top_minus_bottom": 0.0017658863225175705,
+          "max_stress_positive_net_spread_rate": 0.5
+        }
+      }
+    }
+  },
+  "interpretation": "The exact frozen residual-momentum cheap screen failed the pre-OOS economic gate on both supported liquidity subsets. Training rank IC and 3x after-cost spread were negative for the challenger on both Top-15 and Top-30, while validation was positive. Historical point-in-time membership is unverified, so this result is preserved as exploratory negative evidence and does not by itself authorize a terminal fingerprint rejection. Untouched OOS remains unopened.",
+  "next_action": "Deprioritize this survivor-limited residual-momentum screen and advance the highest-ranked materially distinct clean-data cheap screen, volatility breakout, while prospective point-in-time universe evidence can mature independently."
+}
