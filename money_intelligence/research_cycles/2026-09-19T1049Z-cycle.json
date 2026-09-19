@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-19T10:49:00Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate or broker state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "prior_canonical_state": {
+    "dashboard_as_of": "2026-09-18T21:34:56Z",
+    "prior_cycle_cutoff": "2026-09-19T10:04:57Z",
+    "regime": "RESTRICTIVE POLICY / SELECTIVE CAPITAL ALLOCATION / EXPECTATION-SENSITIVE PRICING",
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-19T10:42:16Z",
+    "artifact_cutoff_utc": "2026-09-19T10:49:00Z",
+    "seconds_this_run": 404,
+    "prior_minimum_cumulative_seconds_from_recent_cycles_with_explicit_runtime": 2837,
+    "minimum_cumulative_seconds_after_this_cycle": 3241,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly recorded active execution seconds are counted. Schedule gaps and artifacts without explicit runtime are excluded; no padding or idle time is counted."
+  },
+  "highest_information_question": "When a legacy closed-end digital-asset trust converts to an ETF-like creation/redemption structure, does the new NAV-arbitrage channel make wrapper demand/supply materially more transmissive to the underlying asset, and what determines whether that transmission is bullish or bearish?",
+  "fresh_validated_observations": [
+    {
+      "topic": "ZCSH conversion changed the transmission channel from secondary-market premium/discount toward underlying-asset basket mechanics",
+      "label": "OBSERVED FACT / SUPPORTED MECHANISM / PROVISIONAL GENERALIZATION",
+      "observed_facts": [
+        "The current ZCSH SEC prospectus states that only Authorized Participants may create or redeem 10,000-share Baskets. Creations may be cash or in-kind; cash creations require liquidity providers to obtain ZEC for the Trust, while in-kind creations transfer pre-existing ZEC. At the cited prospectus state, redemptions are cash orders and can require disposition/transfer of the Basket Amount.",
+        "The same SEC prospectus reports that during the OTCQX trust era from Oct. 18, 2021 through Jun. 30, 2026, ZCSH reached a maximum 240% premium, maximum 55% discount, average 53% premium and average 19% discount, with 700 business-day closes at a discount. The discount had already narrowed to about 1% by Aug. 20 while conversion was anticipated.",
+        "After the Aug. 25 NYSE Arca listing, YCharts shows the premium/discount generally staying within roughly +/-0.6% through Sep. 17, consistent with a materially tighter NAV-arbitrage regime.",
+        "Grayscale's Sep. 8 primary filing says DCG acquired about $100M of ZCSH shares in exchange for exactly 85,705.32563297 ZEC. This is direct evidence that a large increase in fund assets can occur by transferring legacy inventory rather than by contemporaneous exchange spot buying.",
+        "Grayscale's Sep. 8 release separately described more than $70M of cumulative inflows in the first two weeks as an ETP in addition to the affiliate's approximately $100M in-kind investment, further showing that headline AUM combines economically different sources.",
+        "A secondary mirror of Grayscale daily data reports Sep. 18 holdings near 596,269 ZEC and 7,449,300 shares versus Grayscale's primary Sep. 8 snapshot of 464,514.8551 ZEC and 5,799,300 shares. This implies substantial further share/underlying growth after Sep. 8, but the Sep. 18 holdings should remain provisional until directly captured from the issuer daily file."
+      ],
+      "inference": "The conversion appears to have replaced a large part of the old wrapper-price dislocation channel with a basket-arbitrage channel that can transmit marginal wrapper demand/supply into underlying ZEC acquisition/disposition or AP/liquidity-provider inventory. However, the economic spot impact depends on cash versus in-kind sourcing and on where liquidity providers source or place inventory; ETF/share creation is not synonymous with same-day exchange buying.",
+      "causal_chain": "legacy closed-end wrapper with no efficient redemption -> large wrapper premium/discount can absorb investor demand/supply without one-for-one underlying flow -> conversion/listing plus AP basket mechanism -> wrapper price held close to NAV -> excess wrapper demand can induce creations -> cash creations require ZEC sourcing while in-kind creations transfer existing ZEC -> marginal underlying demand/inventory pressure can rise relative to effective free float -> price move can be amplified by derivatives/short covering; reverse path applies to redemptions/selling.",
+      "matched_controls": [
+        "GBTC conversion is a direction-sign counterexample: SEC/Grayscale filings show roughly $21.5B of 2024 net outflows after uplisting, and Reuters reported BTC fell about 20.6% from the Jan. 11, 2024 post-approval high by Jan. 23 while large GBTC outflows, including bankruptcy-estate selling, offset much of new-ETF demand.",
+        "ETHE conversion is a second counterexample: Reuters reported about $484M left converted Grayscale ETHE on the first trading day while lower-fee new spot Ether products received inflows. Conversion enabled underlying-flow transmission, but the sign was selling rather than buying.",
+        "Current privacy-asset cross-section is a narrative control: connected CoinMarketCap data at about 10:47Z show XMR +10.1% over 7d/+41.3% over 30d and DASH +7.7%/+87.2%, versus ZEC +36.0%/+176.7%. Privacy rotation is real enough to be an alternative driver, but ZEC's excess return remains unusually large and coincides with unique U.S. regulated-wrapper access."
+      ],
+      "alternative_explanations": [
+        "Broad privacy-coin rotation and attention independent of the ETF plumbing.",
+        "Project-specific NU7/governance/network-upgrade attention.",
+        "Momentum and reflexive narrative effects after a very large prior-year rally.",
+        "Derivatives positioning and recurrent short squeezes.",
+        "Broader crypto beta after Sep. 18 risk-on/regulatory developments."
+      ],
+      "unknowns": [
+        "Exact daily cash-versus-in-kind composition of ZCSH creations after Sep. 8.",
+        "Liquidity-provider sourcing venue: exchange spot, OTC, internal inventory or pre-hedged inventory.",
+        "Direct issuer confirmation of Sep. 18 shares outstanding and ZEC held from the daily file.",
+        "True exchange-available ZEC free float and order-book depth across venues.",
+        "How much of the post-conversion price move is wrapper-driven versus broader privacy-sector demand."
+      ],
+      "falsification": "Weaken the general transmission hypothesis if standardized trust-to-ETF cases do not show tighter NAV tracking and stronger linkage between net creations/redemptions and underlying flows after controlling for fees, legacy-holder supply and market beta. For ZEC specifically, weaken the current wrapper-pressure thesis if creations stop or reverse while ZEC continues to outperform similarly without spot absorption or squeeze evidence.",
+      "decision_support": "ZEC/ZCSH remains WAIT / AVOID CHASING. The causal mechanism is better understood, but direction is not safely actionable after the extreme move because wrapper flow can reverse, in-kind flow can overstate fresh cash demand, leverage remains important, and free-float depth is not yet measured robustly."
+    },
+    {
+      "topic": "AUM, net flow and marginal spot demand must be treated as different variables",
+      "label": "DATA-INTEGRITY / CAUSAL-MEASUREMENT LEARNING",
+      "observed_facts": [
+        "ZCSH primary filings show a legacy trust already held about 2.3% of circulating ZEC as of Jun. 30, 2026 before ETF listing; this inventory should not be counted as launch-created demand.",
+        "The Sep. 8 affiliate contribution increased fund assets by about $100M through in-kind ZEC rather than fresh cash.",
+        "Fund AUM can rise because of underlying price appreciation, new shares, legacy inventory transfer or combinations of all three."
+      ],
+      "inference": "For regulated digital-asset wrappers, the causal variable relevant to price is not gross AUM. A better decomposition is: legacy underlying inventory + price appreciation + external cash creations + external in-kind creations + affiliate in-kind creations - redemptions/fees. Marginal spot demand is narrower still: the portion of cash creations and hedging/rebalancing that actually requires new underlying acquisition from marginal sellers.",
+      "method_rule": "For future wrapper/ETF causal studies, freeze daily shares outstanding and underlying units held first; then classify creations/redemptions by cash/in-kind and affiliate/external source where disclosures permit. Never equate AUM growth with net new money or same-day spot demand."
+    },
+    {
+      "topic": "Weekend crypto continuation: short squeeze is fading while leverage remains rebuilt",
+      "label": "OBSERVED FACT / INFERENCE / STILL WAIT",
+      "observed_facts": [
+        "Connected CoinMarketCap around 10:41-10:47Z quoted BTC near $81.2K (+3.9%/24h, +5.0%/7d), ETH near $2.64K (+5.1%/24h), ZEC near $1,568 (+5.6%/24h, +36.0%/7d), SOL near $112 (+5.2%/24h), XRP near $1.42 (+6.4%/24h), LINK near $12.58 (+5.4%/24h) and XMR near $588 (+9.5%/24h).",
+        "Global crypto derivatives open interest was about $457.9B, +6.65% over 24h; perpetual funding about 0.00792 was +141% versus the prior 7d comparison.",
+        "BTC 24h liquidations were about $233.5M, of which about $224.0M were shorts, but the latest 1h window was zero and the latest 4h window only about $2.6M."
+      ],
+      "inference": "The immediate forced-cover impulse has decayed materially, yet price has held while aggregate OI/funding remain elevated/rebuilt. That is stronger than a pure squeeze explanation but still less robust than a spot-led continuation confirmed by several completed U.S. ETF creation sessions with controlled leverage.",
+      "decision_support": "BTC remains WAIT / tactical momentum candidate until the next U.S. spot-ETF sessions resolve whether regulated spot demand persists after the weekend."
+    }
+  ],
+  "daily_big_move_scan": {
+    "market_context": "Saturday: major cash equities, sovereign bonds and commodity benchmark markets are closed. No fabricated weekend traditional-market moves were added; Sep. 18 close-based traditional cases remain in prior cycles and live crypto is updated.",
+    "selected_or_retested": [
+      "ZEC: +36.0%/7d and +176.7%/30d at the live snapshot; wrapper-transmission mechanism deepened with primary prospectus and matched conversion controls.",
+      "XMR and DASH: +10.1%/+41.3% and +7.7%/+87.2% over 7d/30d respectively; confirms a real broader privacy rotation but also provides a matched control for ZEC's much larger excess return.",
+      "BTC: near $81.2K, holding after the main short-liquidation burst while OI/funding rebuild; next U.S. ETF session remains the high-information test.",
+      "GBTC 2024 and ETHE 2024 trust-to-ETF conversions: added as historical sign controls showing that conversion can transmit legacy-holder selling rather than automatically create bullish demand."
+    ],
+    "negative_findings": [
+      "Do not infer 'ETF approval/conversion is bullish' as a general rule; conversion changes transmission, while direction depends on net demand versus unlocked legacy supply, fees and sourcing mechanics.",
+      "Do not equate ETF AUM growth with net flow, and do not equate net creation flow with same-day exchange spot demand.",
+      "Do not attribute ZEC's full move to the wrapper: XMR/DASH confirm a wider privacy-sector rotation.",
+      "Do not call BTC spot-led solely because price remains high after the squeeze; leverage has rebuilt and the U.S. ETF channel is closed for the weekend."
+    ]
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "status": "No new immutable forecast clears the evidence bar. Existing WAIT states are preserved rather than converted into post-hoc directional calls."
+  },
+  "next_research": [
+    "Capture the Grayscale Sep. 18 daily ZCSH holdings file directly and reconcile shares, ZEC held and NAV with secondary mirrors.",
+    "Build a daily ZCSH creation ledger from Aug. 25 onward, separating external cash, external in-kind, affiliate in-kind, legacy inventory, price appreciation, fees and redemptions.",
+    "Estimate effective ZEC free float with venue depth/exchange balances, transparent-pool availability and known custodial holdings; do not treat shielded balances as permanently locked.",
+    "Standardize GBTC, ETHE and ZCSH trust-to-ETF conversion cases: pre-conversion discount/premium, fees, legacy AUM, first 1d/5d/20d net creations/redemptions and underlying price impact relative to matched crypto beta.",
+    "Recheck BTC/ETH ETF flows after the next U.S. session and test price retention against OI/funding normalization."
+  ],
+  "source_log": [
+    {"publisher":"SEC","topic":"ZCSH current prospectus; basket, cash/in-kind and historical premium/discount mechanics","url":"https://www.sec.gov/Archives/edgar/data/1720265/000119312526363603/zcsh__424b3.htm"},
+    {"publisher":"SEC","topic":"DCG Sep. 8 in-kind ZEC contribution","url":"https://www.sec.gov/Archives/edgar/data/1720265/000119312526385317/zcsh-20260908.htm"},
+    {"publisher":"Grayscale / SEC exhibit","topic":"Sep. 8 ZCSH AUM, external inflow and affiliate contribution disclosure","url":"https://www.sec.gov/Archives/edgar/data/1720265/000119312526385317/zcsh-ex99_1.htm"},
+    {"publisher":"Grayscale","topic":"Sep. 8 issuer fund snapshot","url":"https://www.thezcashetf.com/"},
+    {"publisher":"YCharts","topic":"ZCSH AUM/NAV premium history","url":"https://ycharts.com/companies/ZCSH/discount_or_premium_to_nav"},
+    {"publisher":"SEC filing","topic":"GBTC 2024 outflow/appreciation decomposition","url":"https://www.sec.gov/Archives/edgar/data/2073548/000119312525279127/ck0002073548-20251113.htm"},
+    {"publisher":"Reuters","topic":"GBTC first inflow after about $17.46B post-conversion outflows","url":"https://www.reuters.com/business/finance/grayscale-bitcoin-trusts-shares-jump-after-first-inflow-since-january-2024-05-06/"},
+    {"publisher":"Reuters","topic":"ETHE first-day conversion outflow matched control","url":"https://www.reuters.com/technology/us-spot-ether-etfs-see-net-inflows-106-million-first-day-2024-07-24/"},
+    {"publisher":"ZecStats","topic":"live shielded-pool balance and boundary-flow methodology","url":"https://zecstats.org/shielded-percentage"},
+    {"publisher":"zecmetrics","topic":"secondary mirror of current Grayscale daily ZCSH holdings; provisional pending direct issuer capture","url":"https://www.zecmetrics.io/markets"},
+    {"publisher":"CoinMarketCap connected data","topic":"live BTC/ETH/ZEC/XRP/SOL/LINK/XMR/DASH quotes and aggregate derivatives metrics","url":"https://coinmarketcap.com/"}
+  ]
+}
