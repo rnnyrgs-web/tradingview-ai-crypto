@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "reason": "Lead reconciliation after PR #423 established sample-level feasibility but not a timestamp-defensible full historical data contract for DISC-SQUEEZE-RETENTION-001-v1.",
+  "reason": "Lead reconciliation after PR #423 established sample-level feasibility but not a timestamp-defensible full historical data contract for DISC-SQUEEZE-RETENTION-001-v1. Keep independent pre-outcome quant/validation/audit work active while routing data-market to one bounded source-resolution task; no strategy outcomes or untouched OOS may be inspected until the data contract is defensible.",
   "task_updates": {
     "COORD-DISC-DATA-003": {
       "status": "DONE",
@@ -25,12 +25,6 @@
         ]
       },
       "next_task": "COORD-DISC-DATA-004"
-    },
-    "COORD-DISC-QUANT-003": {
-      "status": "BLOCKED",
-      "blockers": [
-        "COORD-DISC-DATA-003 proved only bounded sample structure; a frozen timestamp-safe historical coverage/missingness/units contract is still required before squeeze-retention thresholds or outcomes may be inspected"
-      ]
     }
   },
   "append_tasks": [
@@ -38,33 +32,34 @@
       "id": "COORD-DISC-DATA-004",
       "priority": 1,
       "owner": "data-market",
-      "status": "BLOCKED",
+      "status": "READY",
       "work_mode": "CHEAP_SCREEN",
       "fingerprint_id": "DISC-SQUEEZE-RETENTION-001-v1",
       "eligible_engines": [
         "chatgpt",
         "human"
       ],
-      "title": "Resolve exact historical coverage and semantics for squeeze-retention data",
+      "title": "Resolve or terminally falsify timestamp-safe squeeze-retention data availability",
       "dependencies": [
         "COORD-DISC-DATA-003"
       ],
-      "blockers": [
-        "Need a bounded exact file/prefix enumeration path for the frozen Binance cohort and interval, or equivalent complete gap audit, plus independently defensible venue units. CryptoHFTData documents read-only flat-file listing via temporary dashboard credentials; no credential is stored in the repository and no anonymous complete prefix listing has yet been established. Do not brute-force an unbounded archive or infer missing forced flow as zero."
-      ],
+      "blockers": [],
       "issue": null,
       "branch": "agent/data-market",
       "pr": null,
       "evidence_required": [
         "predeclare the exact historical interval before inspecting strategy outcomes",
+        "first seek a bounded zero-new-cost exact file/prefix enumeration path for the frozen Binance cohort, or an equivalent complete manifest/gap audit; do not require unapproved credentials or a new paid service merely to keep the task actionable",
+        "if CryptoHFTData cannot establish the full contract, investigate only timestamp-defensible alternative sources that preserve the same frozen Binance USDⓈ-M BTCUSDT/ETHUSDT/SOLUSDT semantics; do not silently substitute another venue, instrument or current snapshot history",
         "enumerate every expected object for BTCUSDT/ETHUSDT/SOLUSDT and liquidations/open_interest/mark_price with immutable hashes or an equivalently complete manifest",
         "distinguish source absence, collection outage and zero published liquidation events without fabricating complete liquidation notional",
         "freeze decision-time chronology using collector receipt/public availability semantics only",
         "independently reconcile Binance USDⓈ-M instrument, base/quote/contract and liquidation notional units",
         "keep strategy returns and untouched OOS unopened while resolving the data contract",
+        "if no scientifically defensible zero-new-cost path exists, persist a precise terminal data blocker so the Lead can pivot rather than post-hoc proxying the failed source",
         "zero new paid service without explicit approval"
       ],
-      "completion_rule": "Either return one frozen, timestamp-defensible historical data contract suitable for pre-outcome QUANT-003 design, or persist a precise terminal data blocker and let the Lead pivot to the highest-value materially distinct available-data hypothesis.",
+      "completion_rule": "Either return one frozen, timestamp-defensible historical data contract suitable for pre-outcome QUANT-003 execution, or persist a precise terminal data blocker and let the Lead pivot to the highest-value materially distinct available-data hypothesis. Do not inspect strategy returns or untouched OOS during source resolution.",
       "next_task": null
     }
   ]
