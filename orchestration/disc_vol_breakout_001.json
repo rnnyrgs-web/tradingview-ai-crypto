@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "DISC-VOL-BREAKOUT-001",
+  "fingerprint_id": "DISC-VOL-BREAKOUT-001-v1",
+  "status": "PREDECLARED_SELECTION_ONLY",
+  "research_only": true,
+  "trade_authority": false,
+  "promotion_authority": false,
+  "hypothesis": "A fixed one-hour compression-to-20-bar-breakout rule with volatility-scaled exits has positive incremental after-cost expectancy versus the same breakout rule without compression across a predeclared fixed set of liquid crypto perpetuals.",
+  "economic_mechanism": "Low realized range can reflect temporary order-flow balance; a subsequent close beyond a recent range can reveal a new directional imbalance that persists as liquidity and leveraged positioning adjust.",
+  "source": {
+    "venue": "OKX",
+    "instrument_type": "USDT-margined perpetual swap",
+    "bar_interval": "1H",
+    "completed_bars_only": true,
+    "fixed_instruments": [
+      "BTC-USDT-SWAP",
+      "ETH-USDT-SWAP",
+      "SOL-USDT-SWAP"
+    ],
+    "asset_substitution_allowed": false,
+    "history_bars_per_asset": 12000,
+    "minimum_history_bars_per_asset": 8000,
+    "point_in_time_universe_required": false,
+    "point_in_time_reason": "The instruments are fixed before outcome inspection and are not selected from a historical ranked universe.",
+    "dataset_identity_required": [
+      "exact_source",
+      "instrument_ids",
+      "bar_interval",
+      "coverage_start",
+      "coverage_end",
+      "normalized_row_count",
+      "normalized_rows_sha256",
+      "per_instrument_row_count_and_sha256",
+      "missing_or_invalid_instruments"
+    ]
+  },
+  "primary_rule": {
+    "compression_metric": "ATR(14) / close",
+    "compression_reference_window_bars": 168,
+    "compression_quantile": 0.2,
+    "compression_recency_bars": 6,
+    "breakout_window_bars": 20,
+    "breakout_definition": "At completed bar t, LONG if close[t] is strictly above the highest high of bars t-20..t-1 and at least one of t-6..t-1 was compressed; SHORT is symmetric below the lowest low.",
+    "compression_definition": "A completed bar j is compressed when ATR14[j]/close[j] is <= the 20th percentile of ATR14/close values from the preceding 168 completed bars j-168..j-1.",
+    "atr_window_bars": 14,
+    "decision_timestamp": "completed signal-bar close",
+    "entry": "next completed bar open after the signal; no same-bar entry",
+    "stop_atr_multiple": 1.5,
+    "target_atr_multiple": 3.0,
+    "maximum_hold_bars": 24,
+    "time_exit": "next bar open after 24 full post-entry bars when neither stop nor target fired",
+    "one_position_per_instrument": true,
+    "same_bar_stop_target_collision": "stop_first_pessimistic",
+    "gap_policy": "stop gaps fill at the observed bar open if worse; target gaps receive only the target price",
+    "future_data_policy": "No bar after signal close may enter compression, breakout, ATR, direction, or selection features; future bars are used only for entry/exit labels.",
+    "compression_percentile_method": "linear interpolation on sorted prior-window values at index q*(n-1)",
+    "regime_reporting": "BULL when signal-bar close >= simple mean of closes t-167..t; otherwise BEAR. Reporting is point-in-time and used only for a catastrophic-instability guard."
+  },
+  "baseline": {
+    "id": "NAIVE-20-BAR-BREAKOUT-NO-COMPRESSION",
+    "rule": "Identical direction, next-open entry, ATR stop/target, maximum hold, collision policy and costs, but no compression requirement.",
+    "purpose": "Test whether the compression condition adds incremental economic value rather than merely rediscovering generic breakout behavior."
+  },
+  "falsifier_sensitivities": [
+    {
+      "id": "compression_q15",
+      "compression_quantile": 0.15
+    },
+    {
+      "id": "compression_q25",
+      "compression_quantile": 0.25
+    }
+  ],
+  "costs": {
+    "base_round_trip_bps": 20,
+    "stress_multipliers": [
+      1.0,
+      1.5,
+      2.0,
+      3.0
+    ],
+    "selection_uses_max_stress": true,
+    "interpretation": "Composite conservative proxy for fees, bid/ask spread, slippage, funding/carry uncertainty and adverse selection because historical executable quotes/fills are unavailable.",
+    "fabricated_spread_allowed": false
+  },
+  "chronology": {
+    "split": "60% train / 20% validation / 20% untouched OOS by raw chronological bars",
+    "purge_bars_each_side": 48,
+    "minimum_warmup_bars": 220,
+    "non_overlapping_trades": true,
+    "trade_must_exit_inside_scored_segment": true,
+    "untouched_oos": "LOCKED",
+    "genuine_forward": "NOT_OPENED"
+  },
+  "pre_oos_pass_rule": {
+    "per_instrument_primary_required": [
+      "train completed trades >= 20",
+      "validation completed trades >= 8",
+      "train max-stress mean net bps > 0",
+      "validation max-stress mean net bps > 0",
+      "validation max-stress profit factor > 1",
+      "primary challenger validation max-stress mean net bps >= baseline validation max-stress mean net bps"
+    ],
+    "minimum_passing_instruments": 2,
+    "required_instruments": 3,
+    "pooled_primary_required": [
+      "train completed trades >= 60",
+      "validation completed trades >= 20",
+      "train max-stress mean net bps > 0",
+      "validation max-stress mean net bps > 0",
+      "validation max-stress profit factor > 1",
+      "validation first-half max-stress mean net bps > -20",
+      "validation second-half max-stress mean net bps > -20",
+      "validation max-stress mean net bps >= baseline validation max-stress mean net bps",
+      "for each validation BULL/BEAR regime with >= 8 trades, max-stress mean net bps > -60"
+    ],
+    "sensitivity_required": [
+      "q15 pooled train completed trades >= 40 and validation completed trades >= 12",
+      "q15 pooled train and validation max-stress mean net bps > 0",
+      "q25 pooled train completed trades >= 40 and validation completed trades >= 12",
+      "q25 pooled train and validation max-stress mean net bps > 0",
+      "sensitivities cannot rescue a failing primary rule"
+    ],
+    "all_data_integrity_conditions_required": true
+  },
+  "search_breadth": {
+    "primary_candidate_count": 1,
+    "primary_timeframe_count": 1,
+    "fixed_replication_instruments": 3,
+    "non_selectable_falsifier_sensitivities": 2,
+    "parameter_optimization_allowed": false,
+    "asset_or_timeframe_winner_selection_allowed": false,
+    "post_outcome_parameter_changes_require_new_fingerprint": true,
+    "multiple_testing_policy": "There is one eligible primary fingerprint. Three fixed instruments are mandatory replication cohorts, not winner alternatives. q15/q25 are predeclared non-selectable falsifiers and cannot replace or rescue the q20 primary."
+  },
+  "selection_result_policy": {
+    "on_data_integrity_fail": "INSUFFICIENT_EVIDENCE; keep OOS locked and repair only the exact data deficiency without substituting instruments.",
+    "on_pre_oos_fail": "REJECT_CURRENT_FINGERPRINT; persist negative evidence and pivot to the next materially distinct ranked hypothesis without tuning v1.",
+    "on_pre_oos_pass": "FREEZE_EXACT_FINGERPRINT_AND_DATASET; request single-candidate deep validation; untouched OOS remains unopened until that central transition is canonical.",
+    "attractive_curve_can_bypass_gate": false
+  },
+  "budget": {
+    "new_paid_data_services": false,
+    "new_paid_compute": false,
+    "project_monthly_variable_ceiling_usd": 30
+  },
+  "contract_fingerprint_definition": "SHA-256 of canonical sorted compact JSON of this object with contract_sha256 and contract_fingerprint_definition omitted",
+  "contract_sha256": "46fcc97626c98dd1c37e3ee0eaa1d7c0b07d4d9b1d38ce9d24b91a09dcdad0ce"
+}
