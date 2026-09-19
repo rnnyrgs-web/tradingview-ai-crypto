@@ -104,10 +104,15 @@
       "evidence_required": [
         "capture only universe membership actually knowable at or before each forecast/scan timestamp",
         "persist capture timestamp, source/provenance, normalized symbol set, and eligibility semantics",
-        "never retroactively backfill missing historical universe membership",
-        "no signal, broker, or promotion authority"
+        "never retroactively backfill or infer missing historical universe membership from current survivors",
+        "malformed, stale, missing, or ambiguous snapshots fail closed",
+        "future breadth evaluation uses only snapshots captured before the corresponding forecast",
+        "no signal threshold, strategy fingerprint, paper, broker, or promotion authority",
+        "zero new paid services and no recurring-cost increase",
+        "regression tests prove no retrospective enrichment and preserve point-in-time safety",
+        "exact-head Security and Reliability success"
       ],
-      "completion_rule": "Prospective PIT capture verified; no historical backfill.",
+      "completion_rule": "Start accumulating genuine forward point-in-time universe evidence using existing data paths only. This task may enable future research scoring but cannot itself establish alpha, alter live signals, backfill history, reset paper evidence, connect a broker, or authorize promotion.",
       "completion_evidence": {
         "integration_pr": 306,
         "integration_merge": "718b8e4621f636d47b36695f586226438ffd7e4b",
@@ -135,18 +140,23 @@
         "COORD-DATA-006"
       ],
       "blockers": [
-        "requires genuinely prospective point-in-time universe cohorts to mature; do not backfill or reconstruct missing historical membership"
+        "requires genuinely prospective point-in-time universe cohorts to mature into sufficient non-overlapping 24h and 7d outcomes; do not backfill or reconstruct missing historical membership"
       ],
       "issue": null,
       "branch": "agent/data-market",
       "pr": null,
       "evidence_required": [
         "use only universe snapshots captured before the corresponding forecast",
-        "24h and 7d evaluated separately with non-overlapping observations",
-        "minimum eight independent matured OOS observations per primary horizon",
+        "24h and 7d evaluated separately with non-overlapping full-horizon observations",
+        "minimum eight independent matured OOS observations per primary horizon before scoring",
+        "frozen DATA-BREADTH-001 feature definition and training-only sign/baseline",
+        "incremental after-cost expectancy versus frozen baseline must be positive and stable",
+        "1x/2x/3x realistic execution-cost stress",
+        "OOS-half, liquidity, and regime stability diagnostics",
+        "no threshold mining, survivor reconstruction, or untouched-OOS reuse",
         "negative or insufficient evidence remains WAIT / RESEARCH_ONLY"
       ],
-      "completion_rule": "Remain blocked until authentic prospective cohorts mature; reject quickly if incremental after-cost value is absent or unstable.",
+      "completion_rule": "Remain blocked until authentic prospective cohorts mature. Then reject DATA-BREADTH-001 quickly if incremental after-cost value is absent or unstable; do not tune it to survive.",
       "next_task": null
     },
     {
@@ -155,20 +165,22 @@
       "severity": "HIGH",
       "owner": "signal-accuracy",
       "status": "QUEUED",
-      "title": "Scientifically validate or replace undocumented profitability-priority weights",
+      "title": "Scientifically validate or replace the undocumented profitability-priority weights",
       "dependencies": [],
       "blockers": [],
       "issue": null,
       "branch": "agent/signal-accuracy",
       "pr": null,
       "evidence_required": [
-        "derive a defensible falsifiable methodology for research-priority weights",
-        "include contamination and multiple-testing burden",
-        "preserve untouched-OOS chronology",
-        "preserve WAIT/no-task when no clean experiment exists",
+        "cite or derive a defensible methodology for the weights currently hard-coded in research_director.mission_priority(), or replace them with weights that carry a stated falsifiable rationale",
+        "add explicit graded terms for contamination risk and multiple-testing burden",
+        "any validation or re-derivation must use chronological non-overlapping untouched-OOS-safe evidence and must not retune weights using the same untouched OOS or forward outcomes the weights would then be judged by",
+        "preserve the existing primary/secondary ordering unless evidence justifies changing it",
+        "preserve WAIT/no-task capability when no clean high-value experiment exists",
+        "regression tests pin the new methodology's documented properties",
         "exact-head Security and Reliability success"
       ],
-      "completion_rule": "A defensible methodology or predeclared derivation plan is required before activation.",
+      "completion_rule": "A defensible methodology, or an explicit predeclared plan for deriving one, is required before this task can move past READY.",
       "next_task": null
     },
     {
