@@ -27,8 +27,7 @@ def test_coordination_state_has_exact_specialist_roster_and_safe_policy():
 
 def test_strategy_discovery_roles_have_only_current_active_work():
     state = load_state()
-    active_roles = {"quant-research", "signal-accuracy", "data-market", "testing-security"}
-    active_fingerprints = set()
+    active_roles = {"quant-research"}
 
     for role in REQUIRED_ROLES:
         active = [
@@ -37,20 +36,20 @@ def test_strategy_discovery_roles_have_only_current_active_work():
         ]
         if role not in active_roles:
             assert active == [], (role, active)
-            assert next_task(state, role) is None
             continue
 
         assert len(active) == 1, (role, active)
         task = active[0]
         assert next_task(state, role) == task
         assert task["id"].startswith("COORD-DISC-")
-        assert task["fingerprint_id"]
+        # QUANT-004 selects and freezes a new fingerprint before outcomes.
+        # Requiring one here would force an outcome-driven or placeholder ID.
+        assert task.get("fingerprint_id") is None
         assert task["evidence_required"]
         assert task["branch"] == state["roles"][role]["branch"]
-        active_fingerprints.add(task["fingerprint_id"])
 
-    # All active selection specialists must be aligned to one current candidate.
-    assert len(active_fingerprints) == 1
+    assert next_task(state, "data-market") is None
+    assert next_task(state, "testing-security") is None
 
 def test_completed_data_provenance_work_is_not_reassigned():
     state = load_state()
@@ -98,10 +97,11 @@ def test_completed_data_provenance_work_is_not_reassigned():
 
     next_data_task = next(row for row in state["tasks"] if row["id"] == "COORD-DATA-007")
     assert next_data_task["status"] == "BLOCKED"
-    current = next_task(state, "data-market")
-    assert current["id"].startswith("COORD-DISC-DATA-")
+    assert next_task(state, "data-market") is None
+    current = next_task(state, "quant-research")
+    assert current["id"] == "COORD-DISC-QUANT-004"
     assert current["status"] == "READY"
-    assert current["fingerprint_id"] == next_task(state, "quant-research")["fingerprint_id"]
+    assert current.get("fingerprint_id") is None
     assert "matured prospective point-in-time cohorts" in next_data_task["title"]
     requirements = " ".join(next_data_task["evidence_required"]).lower()
     assert "minimum eight independent" in requirements
@@ -177,4 +177,4 @@ def test_compact_snapshot_keeps_role_next_work_aligned_to_discovery():
         else:
             assert actual is not None
             assert actual["id"] == expected["id"]
-            assert actual["fingerprint_id"] == expected["fingerprint_id"]
+            assert actual.get("fingerprint_id") == expected.get("fingerprint_id")

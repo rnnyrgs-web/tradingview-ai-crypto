@@ -25,13 +25,30 @@ def test_discovery_queue_is_valid_and_research_only():
     assert state["broker_connected"] is False
 
 
-def test_supervisor_ranks_a_cheap_screen_without_opening_oos():
+def test_supervisor_can_wait_when_no_clean_cheap_screen_is_available():
     payload = load_queue()
     ranked = ranked_screens(payload)
+    assert ranked == []
+    state = snapshot(payload)
+    assert state["next_action"] is None
+    assert state["active_deep_candidate"] is None
+    assert state["research_only"] is True
+    assert state["trade_authority"] is False
+    assert state["broker_connected"] is False
+
+
+def test_supervisor_ranks_an_explicit_ready_cheap_screen_without_opening_oos():
+    payload = load_queue()
+    row = next(row for row in payload["candidates"] if row["fingerprint_id"] == "DISC-SQUEEZE-RETENTION-001-v1")
+    row["stage"] = "CHEAP_SCREEN_READY"
+    row["blocker"] = None
+    ranked = ranked_screens(payload)
     assert ranked
-    assert all(row["work_mode"] == "CHEAP_SCREEN" for row in ranked)
+    assert ranked[0]["fingerprint_id"] == "DISC-SQUEEZE-RETENTION-001-v1"
+    assert all(item["work_mode"] == "CHEAP_SCREEN" for item in ranked)
     state = snapshot(payload)
     assert state["next_action"]["action"] == "RUN_CHEAP_DETERMINISTIC_SCREEN"
+    assert state["next_action"]["fingerprint_id"] == "DISC-SQUEEZE-RETENTION-001-v1"
     assert state["active_deep_candidate"] is None
 
 

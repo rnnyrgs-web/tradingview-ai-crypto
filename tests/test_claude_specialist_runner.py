@@ -27,15 +27,14 @@ def _config():
 def _coord():
     return load_coordination()
 
-def _ready_role_task(role):
-    ready = [
+def _owned_discovery_task(role):
+    owned = [
         task for task in _coord()["tasks"]
         if task["owner"] == role
-        and task["status"] == "READY"
         and task["id"].startswith("COORD-DISC-")
     ]
-    assert len(ready) == 1, (role, ready)
-    return ready[0]
+    assert owned, (role, owned)
+    return owned[-1]
 
 
 
@@ -114,18 +113,15 @@ def test_disabled_config_still_blocks_all_execution():
 
 
 
-def test_plan_selects_the_owned_ready_task_and_no_other_role():
-    """Owner-approved bounded runner selects exactly its current discovery task."""
-    expected = _ready_role_task("signal-accuracy")
+def test_plan_waits_when_its_candidate_specific_role_is_parked():
+    """A runner must not invent work before QUANT-004 freezes a candidate."""
     decision = plan_decision(_config(), _coord(), default_state(), MAIN_SHA, NOW)
-    assert decision.run is True
-    assert decision.role == "signal-accuracy"
-    assert decision.task_id == expected["id"]
-    assert decision.branch == safe_branch("signal-accuracy", expected["id"])
+    assert decision.run is False
+    assert decision.reason == "NO_READY_AUTONOMOUS_TASK"
 
 
 def test_no_agent_can_steal_a_healthy_active_task():
-    expected = _ready_role_task("signal-accuracy")
+    expected = _owned_discovery_task("signal-accuracy")
     state = default_state()
     state["active_task"] = {
         "role": "signal-accuracy",

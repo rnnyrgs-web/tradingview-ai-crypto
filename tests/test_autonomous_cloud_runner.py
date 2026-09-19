@@ -58,9 +58,10 @@ def test_coordination_loader_applies_canonical_overrides():
     assert tasks["COORD-DATA-007"]["status"] == "BLOCKED"
     assert tasks["COORD-DISC-DATA-001"]["status"] == "DONE"
 
-    current = _ready_discovery_task_for_role("data-market", coordination)
+    current = _ready_discovery_task_for_role("quant-research", coordination)
     assert current["status"] == "READY"
-    assert current["fingerprint_id"]
+    assert current["id"] == "COORD-DISC-QUANT-004"
+    assert current.get("fingerprint_id") is None
     assert highest_ready_task(_config(), coordination) == current
 
 def test_runner_is_single_execution_multi_role_cost_bounded_and_broker_disconnected():
@@ -112,10 +113,10 @@ def test_runaway_loop_configuration_is_rejected():
 
 
 def test_duplicate_active_task_prevents_second_ownership():
-    task = _ready_discovery_task_for_role("data-market")
+    task = _ready_discovery_task_for_role("quant-research")
     state = default_state()
     state["active_task"] = {
-        "role": "data-market",
+        "role": "quant-research",
         "task_id": task["id"],
         "phase": "WAITING_CI",
         "base_main_sha": MAIN_SHA,
@@ -162,10 +163,10 @@ def test_task_retry_backoff_is_bounded_but_outer_api_retry_is_disabled():
 
 
 def test_stale_main_blocks_active_work():
-    task = _ready_discovery_task_for_role("data-market")
+    task = _ready_discovery_task_for_role("quant-research")
     state = default_state()
     state["active_task"] = {
-        "role": "data-market",
+        "role": "quant-research",
         "task_id": task["id"],
         "phase": "WAITING_CI",
         "base_main_sha": "b" * 40,
@@ -263,11 +264,11 @@ def test_malformed_agent_output_fails_closed():
 
 def test_completion_handoff_clears_discovery_lease_after_lead_marks_task_done():
     coordination = copy.deepcopy(_coord())
-    task = _ready_discovery_task_for_role("data-market", coordination)
+    task = _ready_discovery_task_for_role("quant-research", coordination)
     task["status"] = "DONE"
     state = default_state()
     state["active_task"] = {
-        "role": "data-market",
+        "role": "quant-research",
         "task_id": task["id"],
         "phase": "WAITING_LEAD",
         "base_main_sha": MAIN_SHA,
@@ -276,11 +277,9 @@ def test_completion_handoff_clears_discovery_lease_after_lead_marks_task_done():
     recovered = recover_state(state, coordination, NOW)
     assert recovered["active_task"] is None
 
-    # Completing one role's task must release that lease. Another eligible role
-    # may legitimately become the next bounded task on later queue generations.
-    next_ready = highest_ready_task(_config(), coordination)
-    assert next_ready == _ready_discovery_task_for_role("quant-research", coordination)
-    assert next_ready["id"] != task["id"]
+    # Until QUANT-004 freezes a candidate, no other specialist may invent or
+    # proxy-rescue candidate-specific work merely to keep a runner busy.
+    assert highest_ready_task(_config(), coordination) is None
 
 def test_shutdown_restart_recovers_abandoned_running_lease_without_losing_usage_history():
     state = default_state()
@@ -315,15 +314,15 @@ def test_current_data_coordination_retires_rejected_candidates_and_advances():
 
 
 
-def test_coordination_priority_selects_strategy_discovery_data_task():
+def test_coordination_priority_selects_strategy_discovery_hypothesis_task():
     coordination = _coord()
     task = highest_ready_task(_config(), coordination)
-    current = _ready_discovery_task_for_role("data-market", coordination)
+    current = _ready_discovery_task_for_role("quant-research", coordination)
     assert task == current
-    assert task["owner"] == "data-market"
+    assert task["owner"] == "quant-research"
     assert task["status"] == "READY"
-    assert task["id"].startswith("COORD-DISC-DATA-")
-    assert task["fingerprint_id"]
+    assert task["id"] == "COORD-DISC-QUANT-004"
+    assert task.get("fingerprint_id") is None
 
 def test_legacy_swarm_is_manual_only_and_new_workflow_cannot_merge_main_or_trade():
     legacy = Path(".github/workflows/autonomous_agents.yml").read_text(encoding="utf-8")
@@ -341,15 +340,14 @@ def test_legacy_swarm_is_manual_only_and_new_workflow_cannot_merge_main_or_trade
     assert "gh workflow run security.yml" in cloud
     assert "OPENAI_API_KEY" in cloud
 
-def test_data_resolution_stays_priority_after_bounded_data_task_completes():
+def test_terminal_data_resolution_pivots_to_distinct_hypothesis_freeze():
     coordination = copy.deepcopy(_coord())
     next(row for row in coordination["tasks"] if row["id"] == "COORD-DISC-DATA-003")["status"] = "DONE"
     task = highest_ready_task(_config(), coordination)
-    assert task["id"] == "COORD-DISC-DATA-004"
-    assert task["owner"] == "data-market"
-    assert task["fingerprint_id"] == "DISC-SQUEEZE-RETENTION-001-v1"
-    quant = _ready_discovery_task_for_role("quant-research", coordination)
-    assert quant["id"] == "COORD-DISC-QUANT-003"
+    assert task["id"] == "COORD-DISC-QUANT-004"
+    assert task["owner"] == "quant-research"
+    assert task.get("fingerprint_id") is None
+    assert next(row for row in coordination["tasks"] if row["id"] == "COORD-DISC-DATA-004")["status"] == "DONE"
 
 
 def test_quant_terra_reservation_fits_daily_budget():
@@ -357,4 +355,3 @@ def test_quant_terra_reservation_fits_daily_budget():
     reserve = reserved_cost_usd(config, "quant-research")
     assert reserve > reserved_cost_usd(config, "data-market")
     assert reserve * config["budget"]["provider_retry_safety_multiplier"] <= config["budget"]["runner_daily_api_budget_usd"]
-

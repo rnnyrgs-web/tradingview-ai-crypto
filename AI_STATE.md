@@ -1,86 +1,77 @@
 # AI_STATE.md
 
-Last reconciled: 2026-09-19T05:29Z
-Last updated: 2026-09-19T05:33Z
+Last reconciled: 2026-09-19T06:15Z
+Last updated: 2026-09-19T06:15Z
 
-This is the compact canonical handoff for `rnnyrgs-web/tradingview-ai-crypto`. On every run, verify actual `main` first, then read `UNIFIED_PROFITABILITY_LEAD_SPEC.md`, `AGENTS.md`, the ranked strategy-discovery queue, rejected-fingerprint registry, specialist coordination plus all override layers, `orchestration/model_routing_policy.json`, current Big-Move/Money Intelligence evidence, open PRs, and exact-head CI. GitHub/persistent machine-readable state outranks chat memory.
+This is the compact canonical handoff for `rnnyrgs-web/tradingview-ai-crypto`. On every run, verify actual `main` SHA first, then read `UNIFIED_PROFITABILITY_LEAD_SPEC.md`, `AGENTS.md`, `orchestration/strategy_discovery_queue.json`, `orchestration/rejected_fingerprints.json`, specialist coordination plus all override layers, `orchestration/model_routing_policy.json`, current Big-Move/Money Intelligence evidence, open PRs, latest Strategy Discovery Supervisor snapshot, relevant autonomous-worker state, and exact-head CI. GitHub/persistent machine-readable state outranks chat memory.
 
 ## PRIMARY OBJECTIVE
 
 Find and rigorously validate one algorithmic strategy with sustainable positive after-cost expectancy and useful frequency, while independently improving scientifically defensible 90-day large-upside / 2x-candidate intelligence. Do not call backtests real profit and do not manufacture a 2x forecast.
 
-Exactly one candidate may consume expensive deep-validation capacity at a time. Cheap predeclared screening may reject many candidates. Failure means: explain -> preserve evidence -> learn -> pivot -> continue. A waiting lane must not block independent useful work that cannot contaminate protected evidence.
+Exactly one candidate may consume expensive deep-validation capacity at a time. Cheap predeclared screening may reject many candidates. Failure means explain -> preserve evidence -> learn -> pivot -> continue. A waiting or blocked lane must not stop independent useful work that cannot contaminate protected evidence.
 
 ## CURRENT CANONICAL STRATEGY STATE
 
 - No validated profitable strategy exists.
 - Discovery lifecycle: **SELECTION**.
 - `active_deep_candidate`: **null**.
-- Current ranked candidate: **`DISC-SQUEEZE-RETENTION-001-v1`** (`forced_flow_retention_momentum`).
-- Untouched OOS: **LOCKED / unopened**.
-- Genuine forward evidence for this candidate: **not opened**.
+- There is currently **no scientifically actionable `CHEAP_SCREEN_READY` strategy candidate** after the DATA-004 source-resolution result.
+- `DISC-SQUEEZE-RETENTION-001-v1` is **BLOCKED_DATA_CONTRACT**, not strategy-rejected.
+- `DISC-RESIDUAL-MOMENTUM-001-v1` remains **DEPRIORITIZED_EVIDENCE_LIMITED** because the current-survivor universe prevents promotion-grade point-in-time interpretation.
+- `DISC-FRIZZ-PLAYBIT-EMA-001-v1` remains **BLOCKED_SOURCE_FINGERPRINT**; never approximate it or silently substitute existing FFRIZZ logic.
+- Untouched OOS for all unresolved candidates remains **LOCKED / unopened**.
 - Broker/live authority: **OFF**; research/paper/shadow only.
 - Combined variable paid-project ceiling: approximately **$30/month total** unless the user explicitly changes it.
 
-Economic hypothesis: after an upside move initially amplified by short covering, continuation may have positive after-cost expectancy when forced-flow/leverage normalize while price retains the move, consistent with independent spot/capital demand. This remains a hypothesis, not alpha evidence.
+## DATA-004 RESULT — SQUEEZE/RETENTION SOURCE RESOLUTION
 
-Before any strategy outcomes are inspected, freeze exact squeeze/forced-flow normalization, retention, entry, exit, hold, instruments, chronology, matched baseline, realistic costs/stress, sample floors, search breadth, and multiple-testing treatment. Never replace missing historical forced-flow data with future/current snapshots or post-hoc proxies.
+`COORD-DISC-DATA-004` is **DONE** via PR #431. The exact result is **`TERMINAL_NO_ZERO_COST_TIMESTAMP_SAFE_SOURCE` for the current frozen data contract and approved access**, not a strategy rejection and not evidence that the squeeze/retention economic mechanism is false.
 
-## DATA-003 RESULT AND CURRENT DATA TASK
-
-`COORD-DISC-DATA-003` is **DONE** via PR #423. Its decision is **`INSUFFICIENT_FOR_FROZEN_SCREEN`**, not a strategy rejection and not a data-contract pass.
-
-Verified bounded sample:
-- venue: Binance USDⓈ-M;
+Frozen scope:
+- venue/market semantics: Binance USDⓈ-M;
 - instruments: BTCUSDT / ETHUSDT / SOLUSDT;
-- receipt hour: `2026-09-02T12:00Z`;
-- object families: liquidations / open_interest / mark_price;
-- objects verified: **9/9**;
-- bytes verified: **336,805**;
+- required families: liquidations / open_interest / mark_price;
+- historical interval: `2025-07-01T00:00:00Z` inclusive through `2026-09-01T00:00:00Z` exclusive;
 - strategy outcomes inspected: **false**;
-- untouched OOS opened: **false**.
+- untouched OOS opened: **false**;
+- new paid source authorized: **false**.
 
-Still unproved for promotion-grade research:
-- exact historical coverage and cross-file gap/duplicate behavior;
-- independently defensible archive/publication chronology for historical objects;
-- exact Binance contract/base/quote and liquidation-notional unit semantics;
-- completeness of public liquidation broadcasts, which may only be usable as a declared lower-bound proxy.
+What was learned:
+- the bounded DATA-003 sample proved individual CryptoHFTData objects can exist and be validated, but did not prove complete historical inventory or publication chronology;
+- complete CryptoHFTData prefix/inventory enumeration requires dashboard-generated temporary S3 credentials under the current access path, so anonymous exact-path probing cannot prove the full historical contract;
+- Binance zero-cost alternatives do not provide an equivalent historical forced-liquidation family for the frozen contract;
+- public liquidation broadcasts remain lower-bound observations and cannot be silently treated as complete liquidation notional;
+- missing liquidation objects may not be converted to zero events;
+- no venue/instrument substitution or outcome-driven proxy was used.
 
-`COORD-DISC-DATA-004` is now **READY** and is the highest-value data-market action. Its job is to resolve or terminally falsify timestamp-safe historical data availability without inspecting strategy returns.
+Canonical evidence:
+- PR #431 exact head: `503cbc5402bd0096b327c8aae9481633c354373f`;
+- exact-head Security & Reliability run `35424497257`: **SUCCESS**;
+- verified merge commit: `c51a59dbac604a2e0b2eefa2b68ae025d4c5b0e3`;
+- post-merge Security & Reliability run `35425911144`: **SUCCESS**;
+- source-resolution artifact: `research_data/squeeze_preflight/data004_source_resolution.json`.
 
-DATA-004 rules:
-- predeclare the exact historical interval before outcomes;
-- first use bounded zero-new-cost exact file/prefix enumeration or an equivalent complete manifest/gap audit;
-- if CryptoHFTData cannot establish the contract, investigate only timestamp-defensible alternatives preserving the same frozen Binance USDⓈ-M BTC/ETH/SOL semantics;
-- never silently substitute another venue/instrument;
-- distinguish source absence, collection outage, and zero published liquidation events;
-- never fabricate missing liquidation flow as zero;
-- freeze decision-time chronology using receipt/public-availability semantics;
-- keep strategy returns and untouched OOS unopened;
-- if no defensible zero-new-cost path exists, persist a precise terminal data blocker and pivot rather than rescuing the fingerprint with a post-hoc proxy;
-- no new paid service without explicit approval.
+Reopen `DISC-SQUEEZE-RETENTION-001-v1` only if the documented DATA-004 reopen conditions are satisfied by materially improved timestamp-safe source access. Do not rescue it with another venue, current snapshots, inferred missing liquidation flow, or post-hoc proxying.
 
 ## CURRENT SPECIALIST EXECUTION QUEUE
 
 Canonical coordination must be loaded through `orchestration/coordination_overrides.py`, which applies the historical override ledger and the Lead reconciliation layer. Do **not** read only the base JSON.
 
-Current active discovery assignments for `DISC-SQUEEZE-RETENTION-001-v1`:
-- `COORD-DISC-DATA-004` — **READY**: resolve or terminally falsify timestamp-safe data availability.
-- `COORD-DISC-QUANT-003` — **READY**: independent pre-outcome scientific contract work; if timestamp-safe forced-flow data remain unavailable, block scientifically rather than proxying.
-- `COORD-DISC-VAL-003` — **READY**: independently falsify chronology, matched baseline, sample floors, multiple-testing and acceptance gates.
-- `COORD-DISC-TEST-003` — **READY**: adversarially test leakage, search expansion, OOS lock, rejected-memory and no-trade invariants.
+Current strategy-discovery execution state:
+- `COORD-DISC-DATA-004` — **DONE**: current squeeze-retention data path terminally blocked under current approved zero-new-cost access.
+- `COORD-DISC-QUANT-003` — **BLOCKED**: do not screen or proxy-rescue the data-blocked squeeze fingerprint.
+- `COORD-DISC-VAL-003` — **BLOCKED**: preserve its pre-outcome design, but do not spend additional candidate-specific validation capacity until the data contract reopens or a new candidate is frozen.
+- `COORD-DISC-TEST-003` — **BLOCKED FOR DUPLICATION AVOIDANCE** while generic discovery-firewall hardening PR #432 awaits independent Lead review; the remaining candidate-specific audit waits for a new executable contract.
+- `COORD-DISC-QUANT-004` — **READY** and is the next strategy-discovery action: freeze one materially distinct hypothesis with a demonstrably timestamp-safe available-data path before any returns are inspected.
 
-Independent pre-outcome quant/validation/audit work may continue while DATA-004 is unresolved. It may not open outcomes or weaken the data firewall.
-
-## RECENT CANONICAL COORDINATION CHANGE
-
-PR #426 merged safely after exact-head validation.
-- exact PR head: `28626e74a7db98ffe694ed316d9b08f6a73bb43e`;
-- Security & Reliability run `35423941357`: **SUCCESS**;
-- Liquidity Mean Reversion Selection run `35423941355`: **SUCCESS**;
-- verified merge commit: `deb71c7e6db9a0d59f6513060acc1f69472c5abb`.
-
-PR #426 does not add profitability evidence. It reconciles the durable mailbox so stale DATA-003 execution stops and DATA-004 becomes the actionable data-market task while the scientific firewall remains intact.
+`COORD-DISC-QUANT-004` must:
+- choose a genuinely different economic mechanism rather than tuning/rescuing a rejected or blocked exact fingerprint;
+- use data families already demonstrably available under current approved access;
+- freeze market/venue, instruments, timeframe, signal definition, entry, exit, hold, no-trade rules, chronology, train/validation split, untouched-OOS boundary, benchmark, realistic costs/stress, sample floors, search breadth and multiple-testing treatment **before** outcome inspection;
+- state an economic mechanism and explicit falsification rule;
+- preserve durable rejected-fingerprint memory and evidence-limited lanes;
+- either add exactly one highest-ranked `CHEAP_SCREEN_READY` candidate with the complete frozen contract or persist a precise reason why none is defensible yet.
 
 ## DURABLE NEGATIVE MEMORY
 
@@ -91,9 +82,30 @@ Do not rescue rejected exact fingerprints without materially new data or a genui
 - `DISC-VOL-BREAKOUT-001-v1`;
 - `DISC-LIQUIDITY-MEANREV-001-v1`.
 
-`DISC-RESIDUAL-MOMENTUM-001-v1` remains evidence-limited/deprioritized rather than terminally rejected because the current-survivor universe prevents promotion-grade point-in-time interpretation. Its untouched OOS remains locked.
+The volatility-breakout and liquidity-shock mean-reversion failures remain durable pre-OOS rejections; untouched OOS stayed locked. `DISC-SQUEEZE-RETENTION-001-v1` is **not** in this rejected registry because the mechanism was never tested: its required data contract failed first.
 
-The liquidity-shock mean-reversion rejection remains durable: 0/3 passing fixed instruments; pooled train and validation expectancy were materially negative at 3x costs; untouched OOS stayed locked. Do not tune that v1 using its rejected outcomes.
+## 90-DAY BIG-MOVE / MONEY INTELLIGENCE LANE
+
+Big-Move Intelligence and Money Intelligence remain independent hypothesis/evidence generators when they cannot contaminate protected strategy evidence.
+
+Rules:
+- study historical roughly-2x-within-90-days events and other large moves against outcome-blind matched pre-event controls;
+- use point-in-time-safe universes and covariates where possible;
+- optimize for top-ranked precision/lift, PR-AUC/calibration, realized forward returns, tradability and regime stability rather than raw accuracy;
+- label OBSERVED FACT / INFERENCE / HYPOTHESIS / FORECAST / UNKNOWN;
+- preserve failed precursors and never rewrite them after outcomes;
+- never retroactively call an already-moved asset an early prediction;
+- only produce a ranked Big-Move Evidence Profile when current evidence is strong enough to support it.
+
+Current truth: there is **no promotion-grade 90-day 2x candidate**. Latest Money Intelligence evidence remains hypothesis-generation evidence, not a frozen forecast.
+
+PR #433 is **OPEN / NOT CANONICAL** and therefore must not be described as deployed functionality. It implements a DEVELOPMENT-only deterministic 2x-within-90d event/matched-control lab with explicit censoring and outcome-blind control construction. Its exact head `bc68d0c3d6aefe01bd67170539d8caaa7b047f63` passed Security & Reliability run `35425535682`. Independent Lead review is still required before merge; even if merged, infrastructure alone is not market evidence and does not create a current 2x candidate.
+
+## OTHER OPEN RESEARCH-INTEGRITY WORK
+
+PR #432 is **OPEN / NOT MERGED**. It hardens strategy-discovery public boundaries so rejected fingerprints, unsafe policy flags, or multiple deep candidates cannot bypass loader validation. Its existence does not complete candidate-specific TEST-003 and does not create profitability evidence. Avoid duplicate worker execution while it awaits independent Lead review.
+
+The latest Strategy Discovery Supervisor snapshot before DATA-004 completion still ranked squeeze-retention because it was generated from earlier canonical state. After this reconciliation, the supervisor should show no actionable cheap screen until QUANT-004 freezes a new candidate. A stale snapshot must not override newer merged state.
 
 ## PRESERVED DATA-BREADTH HANDOFF
 
@@ -103,34 +115,15 @@ The liquidity-shock mean-reversion rejection remains durable: 0/3 passing fixed 
 
 Do not select another DATA-BREADTH candidate while `COORD-DATA-007` remains blocked on genuine prospective maturation. This legacy breadth maturation wait does not block strategy discovery.
 
-## 90-DAY BIG-MOVE / MONEY INTELLIGENCE LANE
-
-Big-Move Intelligence and Money Intelligence remain independent hypothesis/evidence generators when they cannot contaminate protected strategy evidence.
-
-Rules:
-- study historical large-upside / roughly-2x-within-90-days events against matched pre-event controls;
-- use point-in-time-safe universes where possible;
-- optimize for precision/lift, PR-AUC/calibration, forward returns, tradability and regime stability rather than raw accuracy;
-- label OBSERVED FACT / INFERENCE / HYPOTHESIS / FORECAST / UNKNOWN;
-- preserve failed precursors and never rewrite them after outcomes;
-- never retroactively call an already-moved asset an early prediction;
-- only produce a ranked Big-Move Evidence Profile when current evidence is strong enough to support it.
-
-There is currently **no promotion-grade 90-day 2x candidate** in canonical state. Recent Money Intelligence observations remain generator evidence unless converted into predeclared matched-control tests.
-
-## FRIZZ / PLAYBIT EMA LANE
-
-`DISC-FRIZZ-PLAYBIT-EMA-001-v1` remains **BLOCKED_SOURCE_FINGERPRINT**. Pin/fingerprint the exact published indicator/source/rules before any screen. Never approximate it or silently substitute existing FFRIZZ logic.
-
 ## COST / INFRASTRUCTURE / MODEL ROUTING
 
 - Obey `orchestration/model_routing_policy.json`.
 - Deterministic Python/GitHub Actions first when possible.
 - API routing uses GPT-5.6 Luna/Terra/Sol only within approved budgets.
 - GPT-6 Astra belongs to ChatGPT Work/Codex, not the OpenAI API; never claim an API Astra run.
-- One autonomous cloud specialist run at a time; branch-isolated; cannot merge itself or trade.
+- One autonomous cloud specialist model run at a time; branch-isolated; cannot merge itself or trade.
 - Do not add OpenAI/Anthropic spend merely to relay work between sessions.
-- Supabase Pro is approved by the user, but do not claim the organization has actually been upgraded without runtime evidence. The egress/query/window/throttling safeguards from PRs #413/#414 remain mandatory; do not reintroduce unbounded resolved-ledger polling or broad repeated reads.
+- Supabase Pro is approved by the user, but egress/query/window/throttling safeguards from PRs #413/#414 remain mandatory; do not reintroduce unbounded resolved-ledger polling or broad repeated reads.
 
 ## SAFETY INVARIANTS
 
@@ -146,12 +139,12 @@ There is currently **no promotion-grade 90-day 2x candidate** in canonical state
 
 ## EXACT NEXT STEP
 
-Execute **`COORD-DISC-DATA-004`** as the primary data-market task: establish one bounded, timestamp-defensible historical data contract for the frozen Binance BTCUSDT/ETHUSDT/SOLUSDT squeeze-retention inputs, or persist a precise terminal blocker and pivot to the next materially distinct available-data hypothesis. Do not inspect strategy outcomes or untouched OOS during source resolution.
+Execute **`COORD-DISC-QUANT-004`**: freeze the next materially distinct strategy hypothesis that can be tested using a timestamp-defensible data path already available under approved access, without inspecting candidate returns while choosing the contract. Only after that contract is frozen may the deterministic cheap screen run.
 
-In parallel, independent QUANT-003 / VAL-003 / TEST-003 pre-outcome work may continue only within their existing evidence firewalls. If DATA-004 succeeds, freeze the full scientific contract before any cheap screen. If it fails, preserve why and pivot without post-hoc source substitution.
+Independent Big-Move/Money Intelligence work may continue in parallel when it cannot contaminate protected strategy evidence. PR #433 may be independently reviewed/integrated on its own evidence, but it is not a substitute for selecting a testable strategy candidate.
 
 ## STATUS VOCABULARY
 
 Do not conflate IMPLEMENTED / TESTED / MERGED / DEPLOYED / BACKTESTED / OOS TESTED / ROBUSTNESS TESTED / CROSS-ENGINE VERIFIED / FORWARD TESTED / LIVE TESTED / VALIDATED PROFITABLE.
 
-Current truth: **no validated profitable strategy, no promotion-grade 90-day 2x candidate, untouched OOS locked for the active squeeze-retention candidate, broker/live authority off.**
+Current truth: **no validated profitable strategy, no promotion-grade 90-day 2x candidate, no active deep candidate, squeeze-retention scientifically data-blocked before outcomes, untouched OOS locked, broker/live authority off.**
