@@ -1,0 +1,72 @@
+name: Liquidity Mean Reversion Selection
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "liquidity_mean_reversion_selection.py"
+      - "orchestration/disc_liquidity_meanrev_001.json"
+      - "tests/test_liquidity_mean_reversion_selection.py"
+      - ".github/workflows/liquidity_mean_reversion_selection.yml"
+  push:
+    branches: [main]
+    paths:
+      - "liquidity_mean_reversion_selection.py"
+      - "orchestration/disc_liquidity_meanrev_001.json"
+      - ".github/workflows/liquidity_mean_reversion_selection.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: liquidity-mean-reversion-selection-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  selection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      RESEARCH_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RESEARCH_COMMIT_SHA }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+      - name: Verify frozen selection-only regression tests
+        run: pytest -q tests/test_liquidity_mean_reversion_selection.py
+      - name: Run frozen liquidity-mean-reversion cheap screen
+        run: |
+          python liquidity_mean_reversion_selection.py \
+            --output liquidity_mean_reversion_selection.json \
+            --dataset-output liquidity_mean_reversion_selection_dataset.json.gz
+      - name: Assert research-only authority and untouched-OOS lock
+        run: |
+          python - <<'PY'
+          import json
+          payload = json.load(open("liquidity_mean_reversion_selection.json", encoding="utf-8"))["payload"]
+          selection = payload["selection"]
+          assert payload["research_only"] is True
+          assert payload["trade_authority"] is False
+          assert payload["promotion_authority"] is False
+          assert selection["untouched_oos_opened"] is False
+          assert selection["genuine_forward_opened"] is False
+          assert selection["untouched_oos"]["status"] == "LOCKED_UNTOUCHED_OOS"
+          assert selection["screen_stage"] == "SELECTION_ONLY"
+          PY
+      - name: Upload immutable selection evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: liquidity-mean-reversion-selection-${{ env.RESEARCH_COMMIT_SHA }}
+          path: |
+            liquidity_mean_reversion_selection.json
+            liquidity_mean_reversion_selection_dataset.json.gz
+          if-no-files-found: error
+          retention-days: 90
