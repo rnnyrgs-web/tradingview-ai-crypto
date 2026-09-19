@@ -43,8 +43,9 @@ def test_coordination_loader_applies_canonical_overrides():
     tasks = {task["id"]: task for task in coordination["tasks"]}
     assert tasks["COORD-DATA-005"]["status"] == "DONE"
     assert tasks["COORD-DATA-007"]["status"] == "BLOCKED"
-    assert tasks["COORD-DISC-DATA-001"]["status"] == "READY"
-    assert highest_ready_task(_config(), coordination)["id"] == "COORD-DISC-DATA-001"
+    assert tasks["COORD-DISC-DATA-001"]["status"] == "DONE"
+    assert tasks["COORD-DISC-DATA-002"]["status"] == "READY"
+    assert highest_ready_task(_config(), coordination)["id"] == "COORD-DISC-DATA-002"
 
 
 def test_v1_is_single_agent_cost_bounded_and_broker_disconnected():
@@ -88,7 +89,7 @@ def test_duplicate_active_task_prevents_second_ownership():
     state = default_state()
     state["active_task"] = {
         "role": "data-market",
-        "task_id": "COORD-DISC-DATA-001",
+        "task_id": "COORD-DISC-DATA-002",
         "phase": "WAITING_CI",
         "base_main_sha": MAIN_SHA,
         "started_at": "2026-09-09T03:30:00Z",
@@ -137,7 +138,7 @@ def test_stale_main_blocks_active_work():
     state = default_state()
     state["active_task"] = {
         "role": "data-market",
-        "task_id": "COORD-DISC-DATA-001",
+        "task_id": "COORD-DISC-DATA-002",
         "phase": "WAITING_CI",
         "base_main_sha": "b" * 40,
         "started_at": "2026-09-09T03:30:00Z",
@@ -234,12 +235,12 @@ def test_malformed_agent_output_fails_closed():
 
 def test_completion_handoff_clears_discovery_lease_after_lead_marks_task_done():
     coordination = copy.deepcopy(_coord())
-    task = next(row for row in coordination["tasks"] if row["id"] == "COORD-DISC-DATA-001")
+    task = next(row for row in coordination["tasks"] if row["id"] == "COORD-DISC-DATA-002")
     task["status"] = "DONE"
     state = default_state()
     state["active_task"] = {
         "role": "data-market",
-        "task_id": "COORD-DISC-DATA-001",
+        "task_id": "COORD-DISC-DATA-002",
         "phase": "WAITING_LEAD",
         "base_main_sha": MAIN_SHA,
         "started_at": "2026-09-08T20:00:00Z",
@@ -283,8 +284,8 @@ def test_current_data_coordination_retires_rejected_candidates_and_advances():
 
 def test_coordination_priority_selects_strategy_discovery_data_task():
     task = highest_ready_task(_config(), _coord())
-    assert task["id"] == "COORD-DISC-DATA-001"
-    assert task["fingerprint_id"] == "DISC-VOL-BREAKOUT-001-v1"
+    assert task["id"] == "COORD-DISC-DATA-002"
+    assert task["fingerprint_id"] == "DISC-LIQUIDITY-MEANREV-001-v1"
 
 
 def test_legacy_swarm_is_manual_only_and_new_workflow_cannot_merge_main_or_trade():
