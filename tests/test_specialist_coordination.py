@@ -39,8 +39,13 @@ def test_phase_two_has_exactly_one_active_owned_milestone():
 
     assert set(active_by_role) == {"quant-research"}
     assert [row["id"] for row in active_by_role["quant-research"]] == [
-        "COORD-MI-CAUSAL-001"
+        "COORD-MI-CAUSAL-002"
     ]
+    completed = next(row for row in state["tasks"] if row["id"] == "COORD-MI-CAUSAL-001")
+    assert completed["status"] == "DONE"
+    assert completed["pr"] == 454
+    assert completed["completion_evidence"]["phase_2_complete"] is False
+    assert completed["completion_evidence"]["broker_or_live_authority"] is False
     assert next_task(state, "quant-research")["issue"] == 451
     assert next_task(state, "data-market") is None
     assert next_task(state, "testing-security") is None
@@ -97,7 +102,7 @@ def test_completed_data_provenance_work_is_not_reassigned():
     assert rejected["fingerprint_id"] == "DISC-BTC-LEADLAG-001-v1"
     assert rejected["completion_evidence"]["decision"] == "REJECTED_PRE_OOS"
     assert rejected["completion_evidence"]["untouched_oos_opened"] is False
-    assert next_task(state, "quant-research")["id"] == "COORD-MI-CAUSAL-001"
+    assert next_task(state, "quant-research")["id"] == "COORD-MI-CAUSAL-002"
     assert "matured prospective point-in-time cohorts" in next_data_task["title"]
     requirements = " ".join(next_data_task["evidence_required"]).lower()
     assert "minimum eight independent" in requirements
