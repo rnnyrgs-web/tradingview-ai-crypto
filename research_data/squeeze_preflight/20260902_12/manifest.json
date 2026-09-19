@@ -1,0 +1,110 @@
+[
+  {
+    "symbol": "BTCUSDT",
+    "family": "liquidations",
+    "object_path": "binance_futures/2026-09-02/12/BTCUSDT_liquidations.parquet",
+    "url": "https://api.cryptohftdata.com/v1/download?file=binance_futures/2026-09-02/12/BTCUSDT_liquidations.parquet",
+    "acquired_at": "2026-09-19T04:54:24.804431+00:00",
+    "http_status": 200,
+    "status": "downloaded",
+    "size_bytes": 5537,
+    "sha256": "67940d2d81aac6fe631b412293ce96d5ec64ea82d6563b85ff865718b0b330b5",
+    "file": "BTCUSDT_liquidations.parquet"
+  },
+  {
+    "symbol": "BTCUSDT",
+    "family": "open_interest",
+    "object_path": "binance_futures/2026-09-02/12/BTCUSDT_open_interest.parquet",
+    "url": "https://api.cryptohftdata.com/v1/download?file=binance_futures/2026-09-02/12/BTCUSDT_open_interest.parquet",
+    "acquired_at": "2026-09-19T04:54:44.466251+00:00",
+    "http_status": 200,
+    "status": "downloaded",
+    "size_bytes": 11673,
+    "sha256": "aa1c328a2fcb932da7c6da63ab53294e0af192db57b6f3ae0fe8783450f25062",
+    "file": "BTCUSDT_open_interest.parquet"
+  },
+  {
+    "symbol": "BTCUSDT",
+    "family": "mark_price",
+    "object_path": "binance_futures/2026-09-02/12/BTCUSDT_mark_price.parquet",
+    "url": "https://api.cryptohftdata.com/v1/download?file=binance_futures/2026-09-02/12/BTCUSDT_mark_price.parquet",
+    "acquired_at": "2026-09-19T04:55:06.314914+00:00",
+    "http_status": 200,
+    "status": "downloaded",
+    "size_bytes": 98300,
+    "sha256": "10786dab45241a1cdf185b9edd390d8618d01c72ffb43d99141eed8c26f380bc",
+    "file": "BTCUSDT_mark_price.parquet"
+  },
+  {
+    "symbol": "ETHUSDT",
+    "family": "liquidations",
+    "object_path": "binance_futures/2026-09-02/12/ETHUSDT_liquidations.parquet",
+    "url": "https://api.cryptohftdata.com/v1/download?file=binance_futures/2026-09-02/12/ETHUSDT_liquidations.parquet",
+    "acquired_at": "2026-09-19T04:55:18.287876+00:00",
+    "http_status": 200,
+    "status": "downloaded",
+    "size_bytes": 5479,
+    "sha256": "29e59c2cd8890d605e5308bcaeef6f8aa9800c220b6c423338b155f3353467cf",
+    "file": "ETHUSDT_liquidations.parquet"
+  },
+  {
+    "symbol": "ETHUSDT",
+    "family": "open_interest",
+    "object_path": "binance_futures/2026-09-02/12/ETHUSDT_open_interest.parquet",
+    "url": "https://api.cryptohftdata.com/v1/download?file=binance_futures/2026-09-02/12/ETHUSDT_open_interest.parquet",
+    "acquired_at": "2026-09-19T04:55:29.394575+00:00",
+    "http_status": 200,
+    "status": "downloaded",
+    "size_bytes": 12112,
+    "sha256": "4e917d377a2ea91730d2970353e1c86e008eba7669b0761d71803f0ee4a12be8",
+    "file": "ETHUSDT_open_interest.parquet"
+  },
+  {
+    "symbol": "ETHUSDT",
+    "family": "mark_price",
+    "object_path": "binance_futures/2026-09-02/12/ETHUSDT_mark_price.parquet",
+    "url": "https://api.cryptohftdata.com/v1/download?file=binance_futures/2026-09-02/12/ETHUSDT_mark_price.parquet",
+    "acquired_at": "2026-09-19T04:55:43.198250+00:00",
+    "http_status": 200,
+    "status": "downloaded",
+    "size_bytes": 92829,
+    "sha256": "4525f6703fa6c56ade5f734680d4933500b261846fbf9ccc3f18124443edbe78",
+    "file": "ETHUSDT_mark_price.parquet"
+  },
+  {
+    "symbol": "SOLUSDT",
+    "family": "liquidations",
+    "object_path": "binance_futures/2026-09-02/12/SOLUSDT_liquidations.parquet",
+    "url": "https://api.cryptohftdata.com/v1/download?file=binance_futures/2026-09-02/12/SOLUSDT_liquidations.parquet",
+    "acquired_at": "2026-09-19T04:55:55.334627+00:00",
+    "http_status": 200,
+    "status": "downloaded",
+    "size_bytes": 4672,
+    "sha256": "45789fa9829a1f051f9a2705409ca45ddc186c7acedf7757fc96268bec83f7f4",
+    "file": "SOLUSDT_liquidations.parquet"
+  },
+  {
+    "symbol": "SOLUSDT",
+    "family": "open_interest",
+    "object_path": "binance_futures/2026-09-02/12/SOLUSDT_open_interest.parquet",
+    "url": "https://api.cryptohftdata.com/v1/download?file=binance_futures/2026-09-02/12/SOLUSDT_open_interest.parquet",
+    "acquired_at": "2026-09-19T04:56:07.693221+00:00",
+    "http_status": 200,
+    "status": "downloaded",
+    "size_bytes": 11656,
+    "sha256": "113bbb8ee6a4f7ee2adaa4556b0a1028acc75642723e66e4c7da8ccfea21c8e8",
+    "file": "SOLUSDT_open_interest.parquet"
+  },
+  {
+    "symbol": "SOLUSDT",
+    "family": "mark_price",
+    "object_path": "binance_futures/2026-09-02/12/SOLUSDT_mark_price.parquet",
+    "url": "https://api.cryptohftdata.com/v1/download?file=binance_futures/2026-09-02/12/SOLUSDT_mark_price.parquet",
+    "acquired_at": "2026-09-19T04:56:19.503073+00:00",
+    "http_status": 200,
+    "status": "downloaded",
+    "size_bytes": 94547,
+    "sha256": "693cb4638defd69d94d8500baf5b20abe49b6ca830a0f2ede7cc829fbe37793e",
+    "file": "SOLUSDT_mark_price.parquet"
+  }
+]
