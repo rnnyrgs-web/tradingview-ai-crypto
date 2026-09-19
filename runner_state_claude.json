@@ -1,7 +1,7 @@
 {
   "active_task": null,
-  "last_seen_main_sha": "8e53b5cdf8b7352b3d8f96ebec52618a9beefb48",
-  "next_eligible_at": "2026-09-19T06:27:20Z",
+  "last_seen_main_sha": "c51a59dbac604a2e0b2eefa2b68ae025d4c5b0e3",
+  "next_eligible_at": "2026-09-19T18:29:28Z",
   "paused_reason": "MODEL_EXECUTION_FAILURE",
   "runs": [
     {
@@ -161,6 +161,19 @@
       "started_at": "2026-09-18T18:27:14Z",
       "status": "BLOCKED",
       "task_id": "COORD-VAL-001"
+    },
+    {
+      "actual_cost_usd": 0.057741,
+      "cached_input_tokens": 0,
+      "finished_at": "2026-09-19T06:29:28Z",
+      "input_tokens": 54966,
+      "model": "claude-haiku-4-5",
+      "output_tokens": 555,
+      "reserved_cost_usd": 0.42,
+      "role": "signal-accuracy",
+      "started_at": "2026-09-19T06:29:20Z",
+      "status": "BLOCKED",
+      "task_id": "COORD-DISC-VAL-003"
     }
   ],
   "task_failures": {
