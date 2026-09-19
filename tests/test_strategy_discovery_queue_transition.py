@@ -26,10 +26,11 @@ def test_residual_negative_evidence_stays_deprioritized_as_queue_advances():
     assert evidence["point_in_time_universe"]["verified"] is False
 
     assert state["active_deep_candidate"] is None
-    assert state["next_action"] is None
+    assert state["next_action"]["action"] == "RUN_CHEAP_DETERMINISTIC_SCREEN"
+    assert state["next_action"]["fingerprint_id"] == "DISC-BTC-LEADLAG-001-v1"
     blocked = {row["hypothesis_id"]: row for row in state["blocked_lanes"]}
     assert blocked["DISC-SQUEEZE-RETENTION-001"]["stage"] == "BLOCKED_DATA_CONTRACT"
     ranked = {row["fingerprint_id"] for row in state["ranked_cheap_screens"]}
-    assert not ranked
+    assert ranked == {"DISC-BTC-LEADLAG-001-v1"}
     assert "DISC-RESIDUAL-MOMENTUM-001-v1" not in ranked
     assert "DISC-VOL-BREAKOUT-001-v1" not in ranked

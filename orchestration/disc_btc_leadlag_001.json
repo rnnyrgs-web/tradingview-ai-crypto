@@ -1,0 +1,228 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "DISC-BTC-LEADLAG-001",
+  "fingerprint_id": "DISC-BTC-LEADLAG-001-v1",
+  "status": "PREDECLARED_SELECTION_ONLY",
+  "research_only": true,
+  "trade_authority": false,
+  "promotion_authority": false,
+  "hypothesis": "After an unusually large completed one-hour BTC move, ETH and SOL that have not yet incorporated their own pre-event beta-implied share of that move exhibit positive next-six-hour same-direction after-cost expectancy versus trading every identical BTC impulse without the underreaction condition.",
+  "economic_mechanism": "BTC is the deepest crypto price-discovery market and often absorbs market-wide information and capital-flow shocks first. When a fixed liquid follower has not yet reflected the response implied by its strictly trailing BTC beta, delayed cross-venue and cross-asset information diffusion may create short-lived continuation as arbitrageurs and allocators rebalance. The underreaction requirement, fixed followers, and no opposite-direction rescue distinguish this from generic momentum, cross-sectional winner selection, breakout, squeeze, funding, and shock-reversal hypotheses.",
+  "source": {
+    "venue": "OKX",
+    "instrument_type": "USDT-margined perpetual swap",
+    "endpoint": "/api/v5/market/history-candles",
+    "bar_interval": "1H",
+    "completed_bars_only": true,
+    "leader_instrument": "BTC-USDT-SWAP",
+    "fixed_follower_instruments": ["ETH-USDT-SWAP", "SOL-USDT-SWAP"],
+    "required_instruments": ["BTC-USDT-SWAP", "ETH-USDT-SWAP", "SOL-USDT-SWAP"],
+    "asset_substitution_allowed": false,
+    "frozen_dataset_ref": "orchestration/evidence/liquidity_meanrev_001_cache/dataset.json.gz",
+    "normalized_rows_sha256": "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f",
+    "source_evidence_ref": "orchestration/evidence/disc_liquidity_meanrev_001_20260919.json",
+    "coverage_start_utc": "2025-05-07T05:00:00+00:00",
+    "coverage_end_utc": "2026-09-19T03:00:00+00:00",
+    "normalized_row_count": 35997,
+    "minimum_history_bars_per_instrument": 8000,
+    "point_in_time_universe_required": false,
+    "point_in_time_reason": "BTC is the predeclared leader and ETH/SOL are both mandatory fixed replication followers. No historical universe ranking, membership backfill, or asset winner selection is permitted.",
+    "data_availability_verification": "The referenced immutable selection dataset already passed chronological, hourly-grid, fixed-instrument and normalized-row hashing checks. Prior strategy outcomes were not used to choose this lead-lag rule; the new runner must verify the exact dataset identity before computing this fingerprint's signals or returns.",
+    "dataset_identity_required": ["exact_source", "required_instrument_ids", "bar_interval", "common_timestamp_intersection", "coverage_start", "coverage_end", "normalized_row_count", "normalized_rows_sha256", "per_instrument_row_count_and_sha256", "missing_duplicate_or_invalid_rows"]
+  },
+  "primary_rule": {
+    "return_definition": "close[t] / close[t-1] - 1 on aligned completed hourly bars",
+    "trailing_window_bars": 168,
+    "leader_volatility_estimator": "sample standard deviation of BTC completed hourly returns over t-168..t-1; signal-bar return excluded",
+    "leader_impulse_absolute_return_floor": 0.01,
+    "leader_impulse_sigma_multiple": 2.0,
+    "leader_impulse_definition": "abs(BTC return[t]) must be strictly greater than both 1.0% and 2.0 times trailing BTC sigma",
+    "follower_beta_definition": "through-origin ordinary least-squares slope sum(BTC_return_i * follower_return_i) / sum(BTC_return_i ** 2) over the 168 aligned completed returns t-168..t-1; neither series is centered, intercept is fixed to zero, and signal-bar returns excluded",
+    "follower_beta_estimator": {
+      "type": "OLS_THROUGH_ORIGIN",
+      "formula": "sum(btc_return_i * follower_return_i) / sum(btc_return_i ** 2)",
+      "window": "168 aligned completed returns t-168..t-1",
+      "centering": "NONE",
+      "intercept": 0,
+      "signal_bar_excluded": true,
+      "zero_denominator_policy": "NO_TRADE"
+    },
+    "follower_beta_min": 0.5,
+    "follower_beta_max": 2.0,
+    "beta_outside_range_policy": "NO_TRADE",
+    "beta_zero_variance_policy": "NO_TRADE",
+    "underreaction_gap_definition": "Let s=sign(BTC return[t]). The beta-implied gap is s * (beta * BTC return[t] - follower return[t]).",
+    "underreaction_gap_min": 0.005,
+    "opposite_move_guard": "No trade when s * follower return[t] is below -0.005; v1 never treats a large opposite follower move as underreaction.",
+    "direction": "LONG follower when the qualifying BTC impulse is positive; SHORT follower when it is negative",
+    "decision_timestamp": "close of completed aligned signal bar t after both leader and follower bars exist",
+    "entry": "follower open at aligned bar t+1; no same-bar entry",
+    "holding_period_bars": 6,
+    "exit": "follower open at aligned bar t+7, after six full one-hour post-entry bars; no stop or target in v1",
+    "one_position_per_follower": true,
+    "cross_follower_positions_allowed": true,
+    "no_trade_rules": ["missing, duplicated, off-grid, non-hourly or non-common timestamps", "non-finite or non-positive OHLC values", "fewer than 168 strictly prior aligned returns", "zero BTC trailing variance", "follower beta outside [0.5, 2.0]", "follower direction-adjusted signal-bar return below -0.5%", "an existing position in the same follower has not exited"],
+    "future_data_policy": "No t+1 or later bar may enter impulse, volatility, beta, gap, direction, eligibility, regime or selection features. Future bars are used only for next-open entry and the frozen exit label.",
+    "regime_reporting": "BULL when BTC signal-bar close is at or above the simple mean of BTC closes t-167..t; otherwise BEAR. Reporting only; never a selector in v1."
+  },
+  "baseline": {
+    "id": "FOLLOWER-ON-BTC-IMPULSE-NO-UNDERREACTION",
+    "rule": "For each fixed follower, use the identical BTC impulse, direction, aligned next-open entry, six-hour exit, chronology and costs, but omit follower beta, implied-gap and opposite-move conditions.",
+    "purpose": "Test whether strictly pre-event beta-defined follower underreaction adds incremental economic value beyond generic continuation after a large BTC move."
+  },
+  "falsifier_sensitivities": [
+    {"id": "underreaction_gap_35bps", "underreaction_gap_min": 0.0035},
+    {"id": "underreaction_gap_65bps", "underreaction_gap_min": 0.0065}
+  ],
+  "costs": {
+    "base_round_trip_bps": 20,
+    "base_component_bps_round_trip": {
+      "fees": 10,
+      "spread": 4,
+      "slippage": 4,
+      "funding_carry": 2
+    },
+    "nav_debit_timing": {
+      "entry": "one half of fees, spread and slippage",
+      "exit": "remaining half of fees, spread and slippage plus all funding_carry"
+    },
+    "stress_multipliers": [1.0, 1.5, 2.0, 3.0],
+    "selection_uses_max_stress": true,
+    "component_application": "Every component is a non-negative debit allocated to each trade in money terms from its entry notional. Stress multiplies every component proportionally. Funding/carry is a conservative fixed debit for the six-hour hold regardless of direction because timestamp-safe historical funding payments are unavailable.",
+    "interpretation": "Predeclared conservative research proxies, not observed fills or an execution-quality claim. The four components reconcile exactly to the 20 bps base round trip because timestamp-safe executable quotes, fills and funding payments are unavailable.",
+    "fabricated_spread_allowed": false
+  },
+  "portfolio_economics": {
+    "initial_capital_usd": 100000,
+    "position_sizing_basis": "decision-time marked NAV immediately before the entry timestamp",
+    "per_position_nav_fraction": 0.25,
+    "max_concurrent_positions": 2,
+    "max_gross_exposure_nav_fraction": 0.5,
+    "gross_exposure_definition": "sum of absolute point-in-time marked position values",
+    "capacity_policy": "NO_TRADE when the full 25% NAV entry would breach either cap; never resize",
+    "simultaneous_follower_allocation": "For one qualifying BTC event, ETH and SOL independently receive 25% of decision-time NAV when both are eligible; unallocated capital remains idle with zero interest.",
+    "leverage": 1.0,
+    "external_cash_flows_allowed": false,
+    "common_event_id_definition": "BTC-USDT-SWAP|signal_bar_close_utc|BTC_direction",
+    "same_btc_event_shared_across_followers": true,
+    "event_overlap_policy": "ETH and SOL trades from the same BTC impulse share one event_id. A later BTC event may open only a follower whose prior position has exited; portfolio concurrency and gross-exposure caps always apply.",
+    "nav_marking": {
+      "frequency": "EVERY_ALIGNED_COMPLETED_HOUR",
+      "timestamp_order": "process exits, then entries, then produce one reconciled NAV row for the timestamp",
+      "open_positions": "LATEST_POINT_IN_TIME_CLOSE",
+      "fills": "entry and exit use the frozen follower open prices; costs are debited at the associated trade and reconciled to NAV",
+      "endpoints": "initial and final NAV rows are flat, and the final NAV equals initial capital plus summed trade gross PnL less explicit costs"
+    },
+    "short_collateral": {
+      "convention": "FULLY_COLLATERALIZED_LINEAR_1X",
+      "reserved_cash": "entry notional is reserved as collateral while the short is open",
+      "gross_pnl_formula": "notional * (entry_price - exit_price) / entry_price",
+      "borrow_interest": "none beyond the frozen funding_carry cost component",
+      "insolvency_policy": "NAV is never floored or replenished; zero NAV is terminal and fails the experiment"
+    },
+    "required_profitability_learning_artifacts": [
+      "versioned_contract",
+      "trade_records",
+      "hourly_reconciled_nav",
+      "analysis"
+    ],
+    "profitability_learning_mapping": {
+      "training_split": "TRAINING",
+      "validation_split": "CHRONOLOGICAL_VALIDATION",
+      "initial_capital": 100000,
+      "search_budget": 2,
+      "cost_keys": ["fees", "spread", "slippage", "funding_carry"],
+      "required_trade_fields": ["trade_id", "event_id", "decision_at", "entry_at", "exit_at", "asset", "timeframe", "direction", "notional", "gross_pnl", "costs", "features"],
+      "required_equity_fields": ["timestamp", "nav", "gross_exposure"]
+    }
+  },
+  "chronology": {
+    "alignment": "inner join the three required instruments by exact completed hourly timestamp before any feature or split calculation",
+    "split": "60% train / 20% validation / 20% untouched OOS by aligned raw chronological timestamps",
+    "purge_bars_each_side": 24,
+    "minimum_warmup_bars": 220,
+    "non_overlapping_trades_per_follower": true,
+    "trade_must_exit_inside_scored_segment": true,
+    "untouched_oos": "LOCKED",
+    "genuine_forward": "NOT_OPENED"
+  },
+  "pre_oos_pass_rule": {
+    "per_follower_primary_required": ["train completed trades >= 12", "validation completed trades >= 5", "train max-stress mean net bps > 0", "validation max-stress mean net bps > 0", "validation max-stress profit factor > 1", "primary challenger validation max-stress mean net bps >= same-follower baseline validation max-stress mean net bps"],
+    "minimum_passing_followers": 2,
+    "required_followers": 2,
+    "pooled_primary_required": ["train completed trades >= 24", "validation completed trades >= 10", "train max-stress mean net bps > 0", "validation max-stress mean net bps > 0", "validation max-stress profit factor > 1", "validation first-half max-stress mean net bps > -20", "validation second-half max-stress mean net bps > -20", "validation max-stress mean net bps >= pooled baseline validation max-stress mean net bps", "for each validation BULL/BEAR regime with >= 5 trades, max-stress mean net bps > -60"],
+    "sensitivity_required": ["35bps-gap pooled train completed trades >= 16 and validation completed trades >= 6", "35bps-gap pooled train and validation max-stress mean net bps > 0", "65bps-gap pooled train completed trades >= 16 and validation completed trades >= 6", "65bps-gap pooled train and validation max-stress mean net bps > 0", "sensitivities cannot replace, tune or rescue a failing 50bps primary rule"],
+    "all_data_integrity_conditions_required": true
+  },
+  "falsification": {
+    "primary_falsification_rule": "Reject v1 before untouched OOS if either mandatory follower fails its primary sample/economic gate, the pooled primary gate fails, either non-selectable sensitivity fails, or the underreaction challenger fails to match the corresponding no-underreaction baseline.",
+    "insufficient_data_rule": "If the immutable source identity, exact timestamp alignment or minimum raw history fails, return INSUFFICIENT_EVIDENCE without substituting assets, changing dates or opening OOS.",
+    "mechanism_interpretation": "A fail falsifies this exact fixed BTC-to-ETH/SOL six-hour underreaction contract only. It does not prove all cross-asset price discovery instantaneous or absent."
+  },
+  "search_breadth": {
+    "primary_candidate_count": 1,
+    "primary_timeframe_count": 1,
+    "fixed_leader_count": 1,
+    "mandatory_replication_followers": 2,
+    "non_selectable_falsifier_sensitivities": 2,
+    "parameter_optimization_allowed": false,
+    "asset_or_timeframe_winner_selection_allowed": false,
+    "post_outcome_parameter_changes_require_new_fingerprint": true,
+    "multiple_testing_policy": "There is one eligible primary fingerprint in this contract, but it is the second primary strategy family examined on dataset 047c098b... . ETH and SOL are mandatory replication cohorts, not selectable alternatives. The 35bps/65bps gap variants are non-selectable falsifiers and cannot replace or rescue the predeclared 50bps primary. Reused train/validation evidence is exploratory only; promotion requires the separately frozen fresh chronological confirmation below."
+  },
+  "sequential_reuse_control": {
+    "dataset_reused_by_prior_primary_fingerprints": ["DISC-LIQUIDITY-MEANREV-001-v1"],
+    "cumulative_primary_trial_index_on_dataset": 2,
+    "cumulative_family_registry": [
+      {
+        "trial_index": 1,
+        "fingerprint_id": "DISC-LIQUIDITY-MEANREV-001-v1",
+        "family": "liquidity-shock mean reversion",
+        "result": "REJECTED_PRE_OOS"
+      },
+      {
+        "trial_index": 2,
+        "fingerprint_id": "DISC-BTC-LEADLAG-001-v1",
+        "family": "cross-asset delayed price discovery",
+        "result": "NOT_RUN"
+      }
+    ],
+    "correction_choice": "DEMOTE_REUSED_HISTORY_AND_REQUIRE_FRESH_CHRONOLOGICAL_CONFIRMATION",
+    "reused_train_validation_classification": "EXPLORATORY_DEVELOPMENT_ONLY",
+    "reused_history_can_support_promotion": false,
+    "historical_untouched_oos_policy": "REMAINS_LOCKED; it cannot substitute for the predeclared genuine-forward confirmation",
+    "fresh_confirmation": {
+      "evidence_class": "GENUINE_FORWARD",
+      "start_strictly_after_utc": "2026-09-19T03:00:00+00:00",
+      "same_frozen_fingerprint_required": true,
+      "minimum_independent_btc_events": 20,
+      "minimum_completed_trades_per_follower": 8,
+      "both_followers_required": true,
+      "max_stress_after_cost_net_pnl_positive_required": true,
+      "pooled_max_stress_profit_factor_above": 1.0,
+      "automatic_promotion_authority": false
+    }
+  },
+  "selection_result_policy": {
+    "on_data_integrity_fail": "INSUFFICIENT_EVIDENCE; keep OOS locked and repair only the exact data deficiency without substituting instruments or dates.",
+    "on_pre_oos_fail": "REJECT_CURRENT_FINGERPRINT; persist negative evidence and pivot to a materially distinct hypothesis without tuning v1.",
+    "on_pre_oos_pass": "EXPLORATORY_SCREEN_SURVIVES; register this exact fingerprint as the single deep candidate for predeclared genuine-forward confirmation strictly after 2026-09-19T03:00:00+00:00. Reused historical evidence cannot promote it, and historical untouched OOS remains locked.",
+    "attractive_curve_can_bypass_gate": false
+  },
+  "provenance": {
+    "coordination_task": "COORD-DISC-QUANT-004",
+    "contract_frozen_before_candidate_returns": true,
+    "candidate_returns_inspected": false,
+    "untouched_oos_opened": false,
+    "genuine_forward_opened": false,
+    "rejected_memory_checked": ["DATA-BASIS-001", "DATA-FUNDING-001", "ACC-002", "DISC-VOL-BREAKOUT-001-v1", "DISC-LIQUIDITY-MEANREV-001-v1"],
+    "evidence_limited_lanes_checked": ["DISC-RESIDUAL-MOMENTUM-001-v1", "DISC-SQUEEZE-RETENTION-001-v1", "DISC-FRIZZ-PLAYBIT-EMA-001-v1"]
+  },
+  "budget": {
+    "new_paid_data_services": false,
+    "new_paid_compute": false,
+    "project_monthly_variable_ceiling_usd": 30
+  },
+  "contract_fingerprint_definition": "SHA-256 of canonical sorted compact JSON of this object with contract_sha256 and contract_fingerprint_definition omitted",
+  "contract_sha256": "8d991f723c65a583b1d3188aa7f4f77493d08cfd198ee6aa4be508294d770989"
+}
