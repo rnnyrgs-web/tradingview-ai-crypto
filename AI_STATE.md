@@ -1,6 +1,7 @@
 # AI_STATE.md
 
 Last reconciled: 2026-09-19T06:15Z
+Last updated: 2026-09-19T06:15Z
 
 This is the compact canonical handoff for `rnnyrgs-web/tradingview-ai-crypto`. On every run, verify actual `main` SHA first, then read `UNIFIED_PROFITABILITY_LEAD_SPEC.md`, `AGENTS.md`, `orchestration/strategy_discovery_queue.json`, `orchestration/rejected_fingerprints.json`, specialist coordination plus all override layers, `orchestration/model_routing_policy.json`, current Big-Move/Money Intelligence evidence, open PRs, latest Strategy Discovery Supervisor snapshot, relevant autonomous-worker state, and exact-head CI. GitHub/persistent machine-readable state outranks chat memory.
 
@@ -124,7 +125,7 @@ Do not select another DATA-BREADTH candidate while `COORD-DATA-007` remains bloc
 - Do not add OpenAI/Anthropic spend merely to relay work between sessions.
 - Supabase Pro is approved by the user, but egress/query/window/throttling safeguards from PRs #413/#414 remain mandatory; do not reintroduce unbounded resolved-ledger polling or broad repeated reads.
 
-## SAFETY / SCIENTIFIC INVARIANTS
+## SAFETY INVARIANTS
 
 - Broker disconnected; no real-order authority or fund transfer.
 - Do not rewrite historical predictions, frozen OOS, genuine-forward evidence, or rejected fingerprints.
