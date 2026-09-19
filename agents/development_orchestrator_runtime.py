@@ -17,7 +17,8 @@ from urllib.parse import quote
 import httpx
 
 from agents.autonomous_cloud_runner import budget_gate, default_state
-from agents.development_orchestrator import WORKFLOW, run_existing_review_cycle
+from agents.development_orchestrator import (WORKFLOW, parse_lead_execution_issue,
+                                             run_existing_review_cycle)
 from orchestration.specialist_coordination import load_state
 from orchestration.shared_budget import (
     FLEET_COORDINATION_PATH,
@@ -33,6 +34,7 @@ STATE_BRANCH = "automation/specialist-runner-state"
 REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 TASK_ID_RE = re.compile(r"^[A-Z0-9][A-Z0-9_-]{2,99}$")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+REQUEST_RE = re.compile(r"^[0-9a-f]{24}$")
 
 
 class GitHubAPI:
@@ -88,12 +90,70 @@ class GitHubAPI:
         items = payload.get("items") if isinstance(payload, dict) else None
         if not isinstance(items, list):
             raise RuntimeError("malformed review issue search")
+        if isinstance(payload.get("total_count"), int) and payload["total_count"] > 100:
+            raise RuntimeError("review issue search is incomplete")
         exact = [item for item in items if isinstance(item, dict)
                  and item.get("title") == f"autonomous-review: {head_sha}"
                  and item.get("state") == "open"]
         if len(exact) > 1:
             raise RuntimeError("ambiguous exact-head review issues")
         return exact[0] if exact else None
+
+    def get_lead_review_execution(self, head_sha: str, branch: str) -> dict:
+        if not SHA_RE.fullmatch(head_sha):
+            raise ValueError("invalid reviewed SHA")
+        response = self.client.get(
+            "https://api.github.com/search/issues",
+            params={"q": f'repo:{self.repo} is:issue in:title "autonomous-review-attempt: {head_sha}"',
+                    "per_page": 100},
+            headers=self._headers(),
+        )
+        if response.status_code != 200:
+            raise RuntimeError(f"review execution lookup failed: HTTP {response.status_code}")
+        payload = response.json()
+        items = payload.get("items") if isinstance(payload, dict) else None
+        if not isinstance(items, list):
+            raise RuntimeError("malformed review execution search")
+        if isinstance(payload.get("total_count"), int) and payload["total_count"] > 100:
+            raise RuntimeError("review execution search is incomplete")
+        exact = [item for item in items if isinstance(item, dict)
+                 and re.fullmatch(r"autonomous-review-attempt: " + head_sha + r" run=[1-9][0-9]*",
+                                  str(item.get("title"))) and item.get("state") == "open"]
+        if not exact:
+            return {"status": "MISSING"}
+        if len(exact) != 1:
+            raise RuntimeError("ambiguous exact-head review executions")
+        parsed = parse_lead_execution_issue(exact[0], head_sha=head_sha, branch=branch)
+        if parsed is None:
+            raise RuntimeError("malformed exact-head review execution receipt")
+        run = self._get(f"/actions/runs/{parsed['run_id']}")
+        if (not isinstance(run, dict) or run.get("id") != parsed["run_id"]
+                or run.get("name") != "Autonomous Lead Integrator"
+                or run.get("head_sha") != parsed["main_sha"]
+                or run.get("head_branch") != "main"):
+            raise RuntimeError("review receipt does not match Lead workflow run")
+        if run.get("status") in {"queued", "in_progress"}:
+            return {"status": "RUNNING", "run_id": parsed["run_id"]}
+        if run.get("status") != "completed":
+            raise RuntimeError("malformed Lead workflow run status")
+        if parsed["status"] == "STARTED":
+            return {"status": "FAILED", "run_id": parsed["run_id"]}
+        if parsed["status"] == "APPROVED" and run.get("conclusion") != "success":
+            raise RuntimeError("approved receipt has failed workflow run")
+        if parsed["status"] in {"REJECTED", "FAILED"} and run.get("conclusion") == "success":
+            raise RuntimeError("failed review receipt has successful workflow run")
+        return {key: value for key, value in parsed.items() if key in {"status", "run_id", "outcomes"}}
+
+    def lead_can_review(self, branch: str, head_sha: str, main_sha: str) -> bool:
+        if not branch.startswith("auto/") or not SHA_RE.fullmatch(head_sha) or not SHA_RE.fullmatch(main_sha):
+            return False
+        comparison = self._get(f"/compare/{main_sha}...{head_sha}")
+        if not isinstance(comparison, dict):
+            raise RuntimeError("malformed Lead review route comparison")
+        merge_base = comparison.get("merge_base_commit")
+        return (isinstance(merge_base, dict) and merge_base.get("sha") == main_sha
+                and isinstance(comparison.get("ahead_by"), int)
+                and comparison["ahead_by"] > 0)
 
     def branch_exists(self, branch: str) -> bool:
         if not branch.startswith("auto/"):
@@ -120,7 +180,9 @@ class GitHubAPI:
             raise RuntimeError(f"review request was not acknowledged: HTTP {response.status_code}")
 
     def dispatch_workflow(self, workflow: str, inputs: dict[str, str]) -> None:
-        if workflow != WORKFLOW or set(inputs) != {"task_id"} or not TASK_ID_RE.fullmatch(inputs["task_id"]):
+        if (workflow != WORKFLOW or set(inputs) != {"task_id", "orchestrator_request_id"}
+                or not TASK_ID_RE.fullmatch(inputs["task_id"])
+                or not REQUEST_RE.fullmatch(inputs["orchestrator_request_id"])):
             raise ValueError("unsupported workflow dispatch")
         response = self.client.post(
             self.base + f"/actions/workflows/{WORKFLOW}/dispatches",
@@ -128,6 +190,53 @@ class GitHubAPI:
         )
         if response.status_code != 204:
             raise RuntimeError(f"workflow dispatch was not acknowledged: HTTP {response.status_code}")
+
+    def find_dispatch_run(self, task_id: str, request_ids: list[str],
+                          main_sha: str, earliest_at: datetime) -> dict | None:
+        if (not TASK_ID_RE.fullmatch(task_id) or not SHA_RE.fullmatch(main_sha)
+                or not request_ids or any(not REQUEST_RE.fullmatch(value) for value in request_ids)
+                or earliest_at.tzinfo is None):
+            raise ValueError("malformed dispatch lookup identity")
+        titles = {f"Cloud specialist task={task_id} request={value}": value
+                  for value in request_ids}
+        matches: list[dict] = []
+        complete = False
+        for page in range(1, 6):
+            payload = self._get(f"/actions/workflows/{WORKFLOW}/runs",
+                                params={"event": "workflow_dispatch", "branch": "main",
+                                        "per_page": 100, "page": page})
+            runs = payload.get("workflow_runs") if isinstance(payload, dict) else None
+            if not isinstance(runs, list):
+                raise RuntimeError("malformed dispatch run listing")
+            for run in runs:
+                if not isinstance(run, dict):
+                    raise RuntimeError("malformed dispatch run")
+                try:
+                    created = datetime.fromisoformat(run["created_at"].replace("Z", "+00:00"))
+                    if created.tzinfo is None:
+                        raise ValueError("naive dispatch run timestamp")
+                except (KeyError, AttributeError, ValueError) as exc:
+                    raise RuntimeError("malformed dispatch run timestamp") from exc
+                request_id = titles.get(run.get("display_title"))
+                if request_id and run.get("head_sha") != main_sha:
+                    raise RuntimeError("dispatch request ID appeared on a different main head")
+                if request_id and run.get("event") != "workflow_dispatch":
+                    raise RuntimeError("dispatch request ID appeared on a non-dispatch run")
+                if request_id:
+                    matches.append({"id": run.get("id"), "request_id": request_id,
+                                    "task_id": task_id, "head_sha": main_sha,
+                                    "status": run.get("status"),
+                                    "conclusion": run.get("conclusion")})
+                if created < earliest_at:
+                    complete = True
+            if len(runs) < 100 or complete:
+                complete = True
+                break
+        if not complete:
+            raise RuntimeError("dispatch run listing incomplete; absence not proven")
+        if len(matches) > 1:
+            raise RuntimeError("ambiguous exact dispatch runs")
+        return matches[0] if matches else None
 
 
 class GitHubStateStore:

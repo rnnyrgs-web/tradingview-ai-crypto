@@ -94,6 +94,18 @@ jobs:
       - name: Stop when candidate queue is empty
         if: steps.select.outputs.branch == ''
         run: echo "Queue empty; nothing to review."
+      - id: review_attempt
+        name: Record exact-head review execution start
+        if: steps.select.outputs.branch != ''
+        env:
+          BRANCH: ${{ steps.select.outputs.branch }}
+          HEAD_SHA: ${{ steps.select.outputs.sha }}
+        run: |
+          MAIN_SHA="$(git rev-parse origin/main)"
+          printf 'Candidate branch: `%s`\nExact reviewed SHA: `%s`\nWorkflow run: `%s`\nWorkflow main SHA: `%s`\nOutcome: `STARTED`\n' "$BRANCH" "$HEAD_SHA" "$GITHUB_RUN_ID" "$MAIN_SHA" >/tmp/autonomous-review-attempt.md
+          URL="$(gh issue create --repo "$GITHUB_REPOSITORY" --title "autonomous-review-attempt: $HEAD_SHA run=$GITHUB_RUN_ID" --body-file /tmp/autonomous-review-attempt.md)"
+          echo "issue=${URL##*/}" >> "$GITHUB_OUTPUT"
+          echo "main_sha=$MAIN_SHA" >> "$GITHUB_OUTPUT"
       - name: Require exact candidate Security and Reliability success
         if: steps.select.outputs.branch != ''
         env:
@@ -157,6 +169,7 @@ jobs:
           echo "Lead review:" && cat /tmp/lead-review.json
           echo "Claude adversarial review:" && cat /tmp/claude-adversarial-review.json
       - name: Record approved review-only candidate
+        id: approval_record
         if: steps.select.outputs.branch != ''
         env:
           BRANCH: ${{ steps.select.outputs.branch }}
@@ -174,3 +187,50 @@ jobs:
             echo "- Claude adversarial AI: APPROVE"
             echo "- Merge: DISABLED / MANUAL LEAD INTEGRATION REQUIRED"
           } >> "$GITHUB_STEP_SUMMARY"
+      - name: Finalize exact-head review execution
+        if: always() && steps.review_attempt.outputs.issue != ''
+        env:
+          BRANCH: ${{ steps.select.outputs.branch }}
+          HEAD_SHA: ${{ steps.select.outputs.sha }}
+          MAIN_SHA: ${{ steps.review_attempt.outputs.main_sha }}
+          ISSUE_NUMBER: ${{ steps.review_attempt.outputs.issue }}
+          APPROVAL_STEP_OUTCOME: ${{ steps.approval_record.outcome }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          entries = (
+              ("Autonomous Security review:", Path("/tmp/security-review.json")),
+              ("Autonomous Lead review:", Path("/tmp/lead-review.json")),
+              ("Independent Claude adversarial review:", Path("/tmp/claude-adversarial-review.json")),
+          )
+          verdicts = []
+          for _, path in entries:
+              try:
+                  value = json.loads(path.read_text(encoding="utf-8"))
+                  if not isinstance(value.get("approve"), bool) or value.get("risk") not in {"low", "medium", "high"}:
+                      raise ValueError("invalid reviewer verdict")
+              except (OSError, ValueError, AttributeError):
+                  value = None
+              verdicts.append(value)
+          if all(value is not None for value in verdicts) and any(not value["approve"] for value in verdicts):
+              outcome = "REJECTED"
+          elif all(value is not None and value["approve"] for value in verdicts) and os.environ["APPROVAL_STEP_OUTCOME"] == "success":
+              outcome = "APPROVED"
+          else:
+              outcome = "FAILED"
+          lines = [
+              f"Candidate branch: `{os.environ['BRANCH']}`",
+              f"Exact reviewed SHA: `{os.environ['HEAD_SHA']}`",
+              f"Workflow run: `{os.environ['GITHUB_RUN_ID']}`",
+              f"Workflow main SHA: `{os.environ['MAIN_SHA']}`",
+              f"Outcome: `{outcome}`",
+          ]
+          for (label, _), value in zip(entries, verdicts):
+              if value is not None:
+                  lines += ["", label, "```json", json.dumps(value, sort_keys=True), "```"]
+          Path("/tmp/autonomous-review-attempt.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
+          gh issue edit "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file /tmp/autonomous-review-attempt.md

@@ -23,6 +23,9 @@ from orchestration.specialist_coordination import validate_state
 REVIEW_LANES = ("security", "lead", "claude-adversarial")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 STALE_AFTER = timedelta(days=7)
+REVIEW_EVIDENCE_WAIT = timedelta(hours=2)
+DISPATCH_VISIBILITY_WAIT = timedelta(minutes=5)
+MAX_DISPATCH_ATTEMPTS = 2
 WORKFLOW = "autonomous_cloud_specialist.yml"
 
 
@@ -34,6 +37,7 @@ class Lifecycle(str, Enum):
     REVIEWING = "REVIEWING"
     REVISION_REQUIRED = "REVISION_REQUIRED"
     READY_FOR_INTEGRATION = "READY_FOR_INTEGRATION"
+    MANUAL_REVIEW_REQUIRED = "MANUAL_REVIEW_REQUIRED"
     BLOCKED = "BLOCKED"
     DONE = "DONE"
 
@@ -141,6 +145,51 @@ def parse_existing_lead_review(issue: dict[str, Any], *, head_sha: str, branch: 
             return None
         results[lane] = "APPROVE"
     return results
+
+
+def parse_lead_execution_issue(issue: dict[str, Any], *, head_sha: str,
+                               branch: str) -> dict[str, Any] | None:
+    """Validate the existing Lead workflow's exact-head execution receipt."""
+    if not isinstance(issue, dict) or not SHA_RE.fullmatch(head_sha):
+        return None
+    title = re.fullmatch(r"autonomous-review-attempt: " + re.escape(head_sha)
+                         + r" run=([1-9][0-9]*)", str(issue.get("title")))
+    body = issue.get("body")
+    if (not title or issue.get("state") != "open"
+            or (issue.get("user") or {}).get("login") != "github-actions[bot]"
+            or not isinstance(body, str)
+            or f"Candidate branch: `{branch}`" not in body
+            or f"Exact reviewed SHA: `{head_sha}`" not in body
+            or f"Workflow run: `{title.group(1)}`" not in body):
+        return None
+    main_match = re.search(r"^Workflow main SHA: `([0-9a-f]{40})`$", body, re.MULTILINE)
+    if not main_match:
+        return None
+    marker = re.search(r"^Outcome: `(STARTED|APPROVED|REJECTED|FAILED)`$", body, re.MULTILINE)
+    if not marker:
+        return None
+    result: dict[str, Any] = {"status": marker.group(1), "run_id": int(title.group(1)),
+                              "main_sha": main_match.group(1)}
+    if result["status"] == "REJECTED":
+        labels = ("Autonomous Security review:", "Autonomous Lead review:",
+                  "Independent Claude adversarial review:")
+        outcomes: dict[str, str] = {}
+        for lane, label in zip(REVIEW_LANES, labels):
+            match = re.search(re.escape(label) + r"\s*```json\s*(.*?)\s*```", body, re.DOTALL)
+            if not match:
+                return None
+            try:
+                verdict = json.loads(match.group(1))
+            except json.JSONDecodeError:
+                return None
+            if (not isinstance(verdict, dict) or not isinstance(verdict.get("approve"), bool)
+                    or verdict.get("risk") not in {"low", "medium", "high"}):
+                return None
+            outcomes[lane] = "APPROVE" if verdict["approve"] else "REJECT"
+        if all(value == "APPROVE" for value in outcomes.values()):
+            return None
+        result["outcomes"] = outcomes
+    return result
 
 
 def _head(pr: dict[str, Any]) -> str | None:
@@ -307,6 +356,112 @@ def _review_for_task(state: dict[str, Any], task_id: str, pr_number: int, head_s
     return prior[-1] if prior else None
 
 
+def _dispatch_request_id(task_id: str, main_sha: str, attempt_number: int) -> str:
+    raw = json.dumps([task_id, main_sha, attempt_number], separators=(",", ":"))
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:24]
+
+
+def _dispatch_attempt(task_id: str, main_sha: str, number: int, now: datetime) -> dict[str, str]:
+    return {"request_id": _dispatch_request_id(task_id, main_sha, number),
+            "requested_at": _iso(now)}
+
+
+def _send_dispatch(api: Any, store: Any, state: dict[str, Any], task_id: str,
+                   workflow: str, branch: str, main_sha: str, now: datetime,
+                   *, retry: bool) -> CycleResult:
+    updated = copy.deepcopy(state)
+    prior = updated["dispatches"].get(task_id)
+    attempts = list(prior["attempts"]) if retry else []
+    attempt = _dispatch_attempt(task_id, main_sha, len(attempts) + 1, now)
+    attempts.append(attempt)
+    inputs = {"task_id": task_id, "orchestrator_request_id": attempt["request_id"]}
+    updated["dispatches"][task_id] = {
+        "status": "REQUESTED", "branch": branch, "workflow": workflow,
+        "main_sha": main_sha, "attempts": attempts,
+    }
+    store.save(updated)
+    try:
+        api.dispatch_workflow(workflow, inputs)
+    except Exception:
+        # GitHub can accept a dispatch and still lose the acknowledgment.
+        # The next cycle checks exact run evidence before any retry.
+        return CycleResult(Lifecycle.RUNNING, "DISPATCH_OUTCOME_UNKNOWN", task_id)
+    acknowledged = copy.deepcopy(updated)
+    acknowledged["dispatches"][task_id]["status"] = "DISPATCHED"
+    store.save(acknowledged)
+    return CycleResult(Lifecycle.CLAIMED,
+                       "DISPATCH_RETRIED" if retry else "DISPATCHED", task_id)
+
+
+def _reconcile_dispatch(api: Any, store: Any, budget: Any, runner_config: dict[str, Any],
+                        state: dict[str, Any], task_id: str, main_sha: str,
+                        now: datetime) -> CycleResult:
+    intent = state["dispatches"].get(task_id)
+    if (not isinstance(intent, dict) or intent.get("workflow") != WORKFLOW
+            or intent.get("main_sha") != main_sha
+            or intent.get("branch") != safe_branch("data-market", task_id)
+            or intent.get("status") not in {"REQUESTED", "DISPATCHED", "OBSERVED", "BLOCKED"}
+            or not isinstance(intent.get("attempts"), list)
+            or not intent["attempts"]
+            or len(intent["attempts"]) > MAX_DISPATCH_ATTEMPTS):
+        return CycleResult(Lifecycle.BLOCKED, "MALFORMED_DISPATCH_INTENT", task_id)
+    attempts = intent["attempts"]
+    try:
+        stamps = [datetime.fromisoformat(a["requested_at"].replace("Z", "+00:00"))
+                  for a in attempts]
+        ids = [a["request_id"] for a in attempts]
+        if (any(stamp.tzinfo is None or stamp > now for stamp in stamps)
+                or any(not re.fullmatch(r"[0-9a-f]{24}", rid) for rid in ids)
+                or len(set(ids)) != len(ids)):
+            raise ValueError("malformed attempts")
+    except (KeyError, TypeError, AttributeError, ValueError):
+        return CycleResult(Lifecycle.BLOCKED, "MALFORMED_DISPATCH_INTENT", task_id)
+    run = api.find_dispatch_run(task_id, ids, main_sha, stamps[0])
+    if run is not None:
+        if (not isinstance(run, dict) or run.get("request_id") not in ids
+                or run.get("task_id") != task_id or run.get("head_sha") != main_sha
+                or not isinstance(run.get("id"), int) or run["id"] <= 0
+                or run.get("status") not in {"queued", "in_progress", "completed"}):
+            return CycleResult(Lifecycle.BLOCKED, "MALFORMED_DISPATCH_RUN", task_id)
+        if run["status"] == "completed" and run.get("conclusion") not in {
+            "success", "failure", "cancelled", "timed_out", "action_required"
+        }:
+            return CycleResult(Lifecycle.BLOCKED, "MALFORMED_DISPATCH_RUN", task_id)
+        observed = copy.deepcopy(state)
+        failed = run["status"] == "completed" and run.get("conclusion") != "success"
+        observed["dispatches"][task_id]["status"] = "BLOCKED" if failed else "OBSERVED"
+        observed["dispatches"][task_id]["run_id"] = run["id"]
+        observed["dispatches"][task_id]["run_status"] = run["status"]
+        observed["dispatches"][task_id]["run_conclusion"] = run.get("conclusion")
+        if observed != state:
+            store.save(observed)
+        if failed:
+            return CycleResult(Lifecycle.BLOCKED, "WORKFLOW_FAILED", task_id)
+        if run["status"] == "completed":
+            return CycleResult(Lifecycle.RUNNING, "WORKFLOW_COMPLETED_AWAIT_CANONICAL_STATE", task_id)
+        return CycleResult(Lifecycle.CLAIMED, "DISPATCH_RUN_ADOPTED", task_id)
+    if api.branch_exists(intent["branch"]):
+        return CycleResult(Lifecycle.CLAIMED, "TASK_BRANCH_EXISTS", task_id)
+    if intent["status"] == "OBSERVED":
+        return CycleResult(Lifecycle.CLAIMED, "DISPATCH_RUN_PREVIOUSLY_OBSERVED", task_id)
+    if intent["status"] == "BLOCKED":
+        reason = "WORKFLOW_FAILED" if intent.get("run_conclusion") else "DISPATCH_RETRY_EXHAUSTED"
+        return CycleResult(Lifecycle.BLOCKED, reason, task_id)
+    if now - stamps[-1] <= DISPATCH_VISIBILITY_WAIT:
+        return CycleResult(Lifecycle.RUNNING, "DISPATCH_VISIBILITY_WAIT", task_id)
+    if len(attempts) >= MAX_DISPATCH_ATTEMPTS:
+        blocked = copy.deepcopy(state)
+        blocked["dispatches"][task_id]["status"] = "BLOCKED"
+        store.save(blocked)
+        return CycleResult(Lifecycle.BLOCKED, "DISPATCH_RETRY_EXHAUSTED", task_id)
+    if not budget.can_dispatch(runner_config, "data-market", now):
+        return CycleResult(Lifecycle.READY, "SHARED_BUDGET_DENIED", task_id)
+    if api.current_main_sha() != main_sha:
+        return CycleResult(None, "MAIN_CHANGED", task_id)
+    return _send_dispatch(api, store, state, task_id, WORKFLOW,
+                          intent["branch"], main_sha, now, retry=True)
+
+
 def run_existing_review_cycle(
     coordination: dict[str, Any], routing_policy: dict[str, Any], runner_config: dict[str, Any],
     api: Any, store: Any, budget: Any, now: datetime, expected_main_sha: str,
@@ -352,9 +507,35 @@ def run_existing_review_cycle(
             return CycleResult(decision.lifecycle, reason, task_id, head)
 
         key = review_identity(task_id, number, head)
+        execution = api.get_lead_review_execution(head, head_ref)
+        if not isinstance(execution, dict) or execution.get("status") not in {
+            "MISSING", "RUNNING", "REJECTED", "FAILED", "APPROVED"
+        }:
+            return CycleResult(Lifecycle.BLOCKED, "MALFORMED_REVIEW_EXECUTION", task_id, head)
         outcomes = parse_existing_lead_review(api.get_review_issue(head),
                                               head_sha=head, branch=head_ref)
+        if execution["status"] == "REJECTED":
+            if outcomes is not None:
+                return CycleResult(Lifecycle.BLOCKED, "CONTRADICTORY_REVIEW_EVIDENCE", task_id, head)
+            try:
+                rejected = add_review_record(state, task_id=task_id, pr_number=number,
+                                             head_sha=head, ci_state="success",
+                                             outcomes=execution.get("outcomes"), now=now)
+            except (TypeError, ValueError):
+                return CycleResult(Lifecycle.BLOCKED, "MALFORMED_REVIEW_EXECUTION", task_id, head)
+            rejected["review_attempts"][key] = {
+                "status": "REJECTED", "task_id": task_id, "pr_number": number,
+                "head_sha": head, "run_id": execution.get("run_id"), "completed_at": _iso(now),
+            }
+            if api.current_main_sha() != expected_main_sha:
+                return CycleResult(None, "MAIN_CHANGED", task_id, head)
+            store.save(rejected)
+            return CycleResult(Lifecycle.REVISION_REQUIRED, "REVIEW_REJECTED", task_id, head)
         if outcomes is not None:
+            if execution["status"] == "FAILED":
+                return CycleResult(Lifecycle.BLOCKED, "CONTRADICTORY_REVIEW_EVIDENCE", task_id, head)
+            if execution["status"] == "RUNNING":
+                return CycleResult(Lifecycle.REVIEWING, "REVIEW_WORKFLOW_RUNNING", task_id, head)
             if api.get_pr(number).get("head", {}).get("sha") != head:
                 return CycleResult(Lifecycle.AWAITING_REVIEW, "HEAD_CHANGED", task_id, head)
             if api.current_main_sha() != expected_main_sha:
@@ -368,8 +549,66 @@ def run_existing_review_cycle(
             store.save(completed)
             return CycleResult(Lifecycle.READY_FOR_INTEGRATION,
                                "EXACT_HEAD_REVIEW_IMPORTED", task_id, head)
+        if execution["status"] in {"FAILED", "APPROVED"}:
+            if execution["status"] == "APPROVED":
+                if not (isinstance(state["review_attempts"].get(key), dict)
+                        and state["review_attempts"][key].get("status") == "BLOCKED"):
+                    missing = copy.deepcopy(state)
+                    missing["review_attempts"][key] = {
+                        "status": "BLOCKED", "task_id": task_id,
+                        "pr_number": number, "head_sha": head,
+                        "reason": "APPROVAL_RECEIPT_MISSING", "checked_at": _iso(now),
+                    }
+                    store.save(missing)
+                return CycleResult(Lifecycle.BLOCKED, "APPROVAL_RECEIPT_MISSING", task_id, head)
+            if (isinstance(state["review_attempts"].get(key), dict)
+                    and state["review_attempts"][key].get("status") == "BLOCKED"):
+                return CycleResult(Lifecycle.BLOCKED, "REVIEW_WORKFLOW_FAILED", task_id, head)
+            blocked = copy.deepcopy(state)
+            blocked["review_attempts"][key] = {
+                "status": "BLOCKED", "task_id": task_id, "pr_number": number,
+                "head_sha": head, "run_id": execution.get("run_id"),
+                "failed_at": _iso(now),
+            }
+            if state["review_attempts"].get(key) != blocked["review_attempts"][key]:
+                store.save(blocked)
+            return CycleResult(Lifecycle.BLOCKED, "REVIEW_WORKFLOW_FAILED", task_id, head)
+        if execution["status"] == "RUNNING":
+            return CycleResult(Lifecycle.REVIEWING, "REVIEW_WORKFLOW_RUNNING", task_id, head)
+        if not api.lead_can_review(head_ref, head, expected_main_sha):
+            manual = copy.deepcopy(state)
+            manual["review_attempts"][key] = {
+                "status": "MANUAL_REVIEW_REQUIRED", "task_id": task_id,
+                "pr_number": number, "head_sha": head,
+            }
+            if state["review_attempts"].get(key) != manual["review_attempts"][key]:
+                store.save(manual)
+            return CycleResult(Lifecycle.MANUAL_REVIEW_REQUIRED,
+                               "MANUAL_REVIEW_REQUIRED", task_id, head)
         if key in state["review_attempts"]:
-            return CycleResult(Lifecycle.REVIEWING, "WAIT_FOR_INDEPENDENT_REVIEW", task_id, head)
+            attempt = state["review_attempts"][key]
+            if not isinstance(attempt, dict) or attempt.get("head_sha") != head:
+                return CycleResult(Lifecycle.BLOCKED, "MALFORMED_REVIEW_ATTEMPT", task_id, head)
+            if attempt.get("status") == "BLOCKED":
+                return CycleResult(Lifecycle.BLOCKED, "REVIEW_WORKFLOW_FAILED", task_id, head)
+            if attempt.get("status") == "MANUAL_REVIEW_REQUIRED":
+                return CycleResult(Lifecycle.MANUAL_REVIEW_REQUIRED,
+                                   "MANUAL_REVIEW_REQUIRED", task_id, head)
+            try:
+                requested_at = datetime.fromisoformat(attempt["requested_at"].replace("Z", "+00:00"))
+                if requested_at.tzinfo is None or requested_at > now:
+                    raise ValueError("invalid review request timestamp")
+            except (KeyError, AttributeError, ValueError):
+                return CycleResult(Lifecycle.BLOCKED, "MALFORMED_REVIEW_ATTEMPT", task_id, head)
+            if now - requested_at <= REVIEW_EVIDENCE_WAIT:
+                return CycleResult(Lifecycle.AWAITING_REVIEW,
+                                   "REVIEW_EVIDENCE_MISSING", task_id, head)
+            timed_out = copy.deepcopy(state)
+            timed_out["review_attempts"][key]["status"] = "MANUAL_REVIEW_REQUIRED"
+            timed_out["review_attempts"][key]["timed_out_at"] = _iso(now)
+            store.save(timed_out)
+            return CycleResult(Lifecycle.MANUAL_REVIEW_REQUIRED,
+                               "REVIEW_EVIDENCE_TIMEOUT", task_id, head)
         requested = copy.deepcopy(state)
         requested["review_attempts"][key] = {
             "status": "REQUESTED", "task_id": task_id, "pr_number": number,
@@ -389,6 +628,12 @@ def run_existing_review_cycle(
     if not any(task["status"] == "READY" for task in coordination["tasks"]):
         return CycleResult(None, "NO_READY_TASK")
 
+    ready = sorted((task for task in coordination["tasks"] if task["status"] == "READY"),
+                   key=lambda task: (int(task.get("priority", 999999)), task["id"]))
+    if ready[0]["id"] in state["dispatches"]:
+        return _reconcile_dispatch(api, store, budget, runner_config, state,
+                                   ready[0]["id"], expected_main_sha, now)
+
     claimed = set()
     for task in coordination["tasks"]:
         if task["status"] == "READY":
@@ -401,17 +646,7 @@ def run_existing_review_cycle(
     if not dispatch.run:
         return CycleResult(Lifecycle.READY if dispatch.task_id else None,
                            dispatch.reason, dispatch.task_id)
-    intent = copy.deepcopy(state)
-    intent["dispatches"][dispatch.task_id] = {
-        "status": "REQUESTED", "branch": dispatch.branch,
-        "workflow": dispatch.workflow, "inputs": dispatch.inputs,
-        "requested_at": _iso(now),
-    }
     if api.current_main_sha() != expected_main_sha:
         return CycleResult(None, "MAIN_CHANGED", dispatch.task_id)
-    store.save(intent)
-    api.dispatch_workflow(dispatch.workflow, dispatch.inputs)
-    sent = copy.deepcopy(intent)
-    sent["dispatches"][dispatch.task_id]["status"] = "DISPATCHED"
-    store.save(sent)
-    return CycleResult(Lifecycle.CLAIMED, "DISPATCHED", dispatch.task_id)
+    return _send_dispatch(api, store, state, dispatch.task_id, dispatch.workflow,
+                          dispatch.branch, expected_main_sha, now, retry=False)

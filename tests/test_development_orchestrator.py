@@ -15,6 +15,7 @@ from agents.development_orchestrator import (
     reconcile_candidate,
     review_identity,
     parse_existing_lead_review,
+    parse_lead_execution_issue,
     run_existing_review_cycle,
     select_successor,
     verify_dispatch_task,
@@ -29,12 +30,21 @@ NEW_HEAD = "b" * 40
 
 def _ready_task(coordination: dict, *, role: str = "data-market") -> dict:
     task = copy.deepcopy(next(row for row in coordination["tasks"] if row["owner"] == role))
-    task.update(id="COORD-TEST-ORCH-001", status="READY", priority=1,
+    task.update(id="COORD-TEST-ORCH-001", status="READY", priority=0,
                 dependencies=[], blockers=[], fingerprint_id=None, pr=None,
                 eligible_engines=["chatgpt"], engine_claim=None, work_mode="AUDIT")
     task.pop("completion_evidence", None)
     coordination["tasks"].append(task)
     return task
+
+
+def _idle_coordination() -> dict:
+    coordination = load_state()
+    for task in coordination["tasks"]:
+        if task["status"] == "READY":
+            task["status"] = "BLOCKED"
+            task["blockers"] = ["test-only idle queue"]
+    return coordination
 
 
 def _pr(head: str = HEAD) -> dict:
@@ -119,8 +129,8 @@ def test_review_record_identity_is_idempotent_and_contains_required_fields():
     }
 
 
-def _existing_review_issue(head: str = HEAD) -> dict:
-    body = ("Candidate branch: `auto/data-market/coord-test-orch-001`\n"
+def _existing_review_issue(head: str = HEAD, branch: str = "auto/data-market/coord-test-orch-001") -> dict:
+    body = (f"Candidate branch: `{branch}`\n"
             f"Exact reviewed SHA: `{head}`\n\n"
             "Security and Reliability: PASS on exact candidate SHA.\n\n"
             "Autonomous Security review:\n```json\n{\"approve\":true,\"risk\":\"low\"}\n```\n"
@@ -139,6 +149,31 @@ def test_existing_three_lane_review_issue_requires_exact_head_and_bot_provenance
     assert parse_existing_lead_review(issue, head_sha=NEW_HEAD, branch=branch) is None
     issue["user"]["login"] = "untrusted-user"
     assert parse_existing_lead_review(issue, head_sha=HEAD, branch=branch) is None
+
+
+def _lead_attempt_issue(status: str = "REJECTED", head: str = HEAD,
+                        branch: str = "auto/data-market/coord-test-orch-001") -> dict:
+    body = (f"Candidate branch: `{branch}`\nExact reviewed SHA: `{head}`\n"
+            f"Workflow run: `91`\nWorkflow main SHA: `{'c' * 40}`\nOutcome: `{status}`\n")
+    if status == "REJECTED":
+        body += ("\nAutonomous Security review:\n```json\n{\"approve\":true,\"risk\":\"low\"}\n```\n"
+                 "\nAutonomous Lead review:\n```json\n{\"approve\":false,\"risk\":\"high\"}\n```\n"
+                 "\nIndependent Claude adversarial review:\n```json\n{\"approve\":true,\"risk\":\"low\"}\n```\n")
+    return {"title": f"autonomous-review-attempt: {head} run=91", "body": body,
+            "user": {"login": "github-actions[bot]"}, "state": "open"}
+
+
+def test_lead_attempt_receipt_binds_bot_branch_head_run_and_three_lanes():
+    issue = _lead_attempt_issue()
+    assert parse_lead_execution_issue(issue, head_sha=HEAD,
+                                      branch="auto/data-market/coord-test-orch-001") == {
+        "status": "REJECTED", "run_id": 91, "main_sha": "c" * 40,
+        "outcomes": {"security": "APPROVE", "lead": "REJECT", "claude-adversarial": "APPROVE"}}
+    assert parse_lead_execution_issue(issue, head_sha=NEW_HEAD,
+                                      branch="auto/data-market/coord-test-orch-001") is None
+    issue["user"]["login"] = "untrusted-user"
+    assert parse_lead_execution_issue(issue, head_sha=HEAD,
+                                      branch="auto/data-market/coord-test-orch-001") is None
 
 
 def test_duplicate_claim_is_rejected():
@@ -162,7 +197,7 @@ def test_unsupported_engine_route_returns_wait():
 
 
 def test_blocked_and_ineligible_tasks_do_not_dispatch():
-    coordination = load_state()
+    coordination = _idle_coordination()
     blocked = _ready_task(coordination)
     blocked["status"] = "BLOCKED"
     blocked["blockers"] = ["evidence missing"]
@@ -194,7 +229,7 @@ def test_exact_task_id_is_sent_and_verified_by_receiving_runner():
 
 
 def test_no_clean_successor_returns_wait_and_no_merge_action():
-    decision = select_successor(load_state(), _policy(), _config(), set(), {}, True)
+    decision = select_successor(_idle_coordination(), _policy(), _config(), set(), {}, True)
     assert decision.run is False
     assert decision.reason == "NO_READY_TASK"
     assert not hasattr(decision, "merge")
@@ -208,6 +243,18 @@ def test_orchestrator_workflow_has_no_merge_or_trading_step():
         assert forbidden not in workflow
 
 
+def test_existing_lead_workflow_records_exact_review_start_and_terminal_outcome():
+    lead = Path(".github/workflows/autonomous_lead.yml").read_text(encoding="utf-8")
+    cloud = Path(".github/workflows/autonomous_cloud_specialist.yml").read_text(encoding="utf-8")
+    assert "autonomous-review-attempt: $HEAD_SHA run=$GITHUB_RUN_ID" in lead
+    assert "Outcome: `STARTED`" in lead
+    assert 'outcome = "REJECTED"' in lead
+    assert 'outcome = "FAILED"' in lead
+    assert "if: always() && steps.review_attempt.outputs.issue != ''" in lead
+    assert "gh issue edit \"$ISSUE_NUMBER\"" in lead
+    assert "run-name: Cloud specialist task=${{ inputs.task_id }} request=${{ inputs.orchestrator_request_id }}" in cloud
+
+
 class _API:
     def __init__(self):
         self.repo = "rnnyrgs-web/tradingview-ai-crypto"
@@ -218,6 +265,10 @@ class _API:
         self.sent: list[tuple[str, dict]] = []
         self.requests: list[tuple[str, int, str]] = []
         self.review_issue: dict | None = None
+        self.review_execution: dict = {"status": "MISSING"}
+        self.lead_reviewable = True
+        self.dispatch_runs: list[dict] = []
+        self.dispatch_error = False
 
     def current_main_sha(self):
         return self.main_sha
@@ -235,22 +286,41 @@ class _API:
     def get_review_issue(self, head):
         return self.review_issue
 
+    def get_lead_review_execution(self, head, branch):
+        return self.review_execution
+
+    def lead_can_review(self, branch, head, main_sha):
+        return self.lead_reviewable and branch.startswith("auto/")
+
     def branch_exists(self, branch):
         return branch in self.branches
 
     def dispatch_workflow(self, workflow, inputs):
         self.sent.append((workflow, inputs))
+        if self.dispatch_error:
+            raise RuntimeError("dispatch acknowledgment lost")
+
+    def find_dispatch_run(self, task_id, request_ids, main_sha, earliest_at):
+        matches = [run for run in self.dispatch_runs if run["request_id"] in request_ids
+                   and run["task_id"] == task_id and run["head_sha"] == main_sha]
+        if len(matches) > 1:
+            raise RuntimeError("ambiguous exact dispatch runs")
+        return matches[0] if matches else None
 
 
 class _Store:
     def __init__(self):
         self.value = {"version": 1, "reviews": {}, "dispatches": {}, "review_attempts": {}, "runs": []}
         self.writes = 0
+        self.fail_on_write: int | None = None
 
     def load(self):
         return copy.deepcopy(self.value)
 
     def save(self, value):
+        if self.fail_on_write == self.writes + 1:
+            self.writes += 1
+            raise RuntimeError("durable CAS write failed")
         self.value = copy.deepcopy(value)
         self.writes += 1
 
@@ -279,7 +349,7 @@ def test_existing_review_cycle_requests_once_then_imports_exact_three_lane_recei
     second = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
                                        budget, NOW, api.main_sha)
     assert first.reason == "REVIEW_REQUESTED"
-    assert second.reason == "WAIT_FOR_INDEPENDENT_REVIEW"
+    assert second.reason == "REVIEW_EVIDENCE_MISSING"
     assert api.requests == [(task["id"], 501, HEAD)]
     api.review_issue = _existing_review_issue()
     third = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
@@ -307,6 +377,174 @@ def test_existing_review_cycle_rejects_issue_for_old_head():
     assert api.requests == [(task["id"], 501, NEW_HEAD)]
 
 
+def test_rejected_exact_head_review_becomes_revision_required_once():
+    coordination, task = _pr_open_coordination()
+    api, store, budget = _API(), _Store(), _Budget()
+    api.review_execution = {"status": "REJECTED", "outcomes": {
+        "security": "APPROVE", "lead": "REJECT", "claude-adversarial": "APPROVE"}}
+    first = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                      budget, NOW, api.main_sha)
+    second = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                       budget, NOW, api.main_sha)
+    assert first.lifecycle is second.lifecycle is Lifecycle.REVISION_REQUIRED
+    assert first.reason == "REVIEW_REJECTED"
+    assert store.value["reviews"][review_identity(task["id"], 501, HEAD)]["outcome"] == "REJECT"
+    assert api.requests == []
+
+
+def test_failed_review_execution_blocks_and_missing_evidence_times_out():
+    coordination, task = _pr_open_coordination()
+    api, store, budget = _API(), _Store(), _Budget()
+    api.review_execution = {"status": "FAILED", "run_id": 91}
+    failed = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                       budget, NOW, api.main_sha)
+    assert failed.lifecycle is Lifecycle.BLOCKED
+    assert failed.reason == "REVIEW_WORKFLOW_FAILED"
+    assert store.value["reviews"] == {}
+    api.review_execution = {"status": "MISSING"}
+    waiting = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                        budget, NOW, api.main_sha)
+    assert waiting.lifecycle is Lifecycle.BLOCKED
+    assert api.requests == []
+
+    fresh_store = _Store()
+    first = run_existing_review_cycle(coordination, _policy(), _config(), api, fresh_store,
+                                      budget, NOW, api.main_sha)
+    timeout = run_existing_review_cycle(coordination, _policy(), _config(), api, fresh_store,
+                                        budget, NOW + timedelta(hours=3), api.main_sha)
+    assert first.reason == "REVIEW_REQUESTED"
+    assert timeout.reason == "REVIEW_EVIDENCE_TIMEOUT"
+    assert timeout.lifecycle is Lifecycle.MANUAL_REVIEW_REQUIRED
+    assert fresh_store.value["reviews"] == {}
+    assert len(api.requests) == 1
+
+
+def test_completed_approval_without_exact_head_receipt_is_durably_blocked():
+    coordination, task = _pr_open_coordination()
+    api, store, budget = _API(), _Store(), _Budget()
+    api.review_execution = {"status": "APPROVED", "run_id": 91}
+    first = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                      budget, NOW, api.main_sha)
+    writes = store.writes
+    second = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                       budget, NOW + timedelta(minutes=1), api.main_sha)
+    assert first.reason == second.reason == "APPROVAL_RECEIPT_MISSING"
+    assert first.lifecycle is second.lifecycle is Lifecycle.BLOCKED
+    assert store.writes == writes
+    assert store.value["review_attempts"][review_identity(task["id"], 501, HEAD)]["status"] == "BLOCKED"
+    assert store.value["reviews"] == {}
+
+
+def test_supported_review_route_reports_running_and_unsupported_route_waits_manual():
+    coordination, task = _pr_open_coordination()
+    api, store, budget = _API(), _Store(), _Budget()
+    first = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                      budget, NOW, api.main_sha)
+    api.review_execution = {"status": "RUNNING", "run_id": 92}
+    running = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                        budget, NOW, api.main_sha)
+    assert first.reason == "REVIEW_REQUESTED"
+    assert running.lifecycle is Lifecycle.REVIEWING
+    assert running.reason == "REVIEW_WORKFLOW_RUNNING"
+    api.review_issue = _existing_review_issue()
+    still_running = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                              budget, NOW, api.main_sha)
+    assert still_running.lifecycle is Lifecycle.REVIEWING
+    assert store.value["reviews"] == {}
+    api.review_issue = None
+
+    manual_store = _Store()
+    api.pr["head"]["ref"] = task["branch"]
+    api.lead_reviewable = False
+    api.review_execution = {"status": "MISSING"}
+    manual = run_existing_review_cycle(coordination, _policy(), _config(), api, manual_store,
+                                       budget, NOW, api.main_sha)
+    assert manual.lifecycle is Lifecycle.MANUAL_REVIEW_REQUIRED
+    assert manual.reason == "MANUAL_REVIEW_REQUIRED"
+    assert manual_store.value["review_attempts"][review_identity(task["id"], 501, HEAD)]["status"] == "MANUAL_REVIEW_REQUIRED"
+    assert len(api.requests) == 1
+    api.review_issue = _existing_review_issue(branch=task["branch"])
+    imported = run_existing_review_cycle(coordination, _policy(), _config(), api, manual_store,
+                                         budget, NOW, api.main_sha)
+    assert imported.lifecycle is Lifecycle.READY_FOR_INTEGRATION
+
+
+def test_dispatch_post_failure_recovers_only_after_proven_absence_and_one_retry():
+    coordination = load_state()
+    task = _ready_task(coordination)
+    api, store, budget = _API(), _Store(), _Budget()
+    api.dispatch_error = True
+    first = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                      budget, NOW, api.main_sha)
+    immediate = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                          budget, NOW + timedelta(minutes=1), api.main_sha)
+    api.dispatch_error = False
+    retried = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                        budget, NOW + timedelta(minutes=6), api.main_sha)
+    again = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                      budget, NOW + timedelta(minutes=7), api.main_sha)
+    assert first.reason == "DISPATCH_OUTCOME_UNKNOWN"
+    assert immediate.reason == "DISPATCH_VISIBILITY_WAIT"
+    assert retried.reason == "DISPATCH_RETRIED"
+    assert again.reason == "DISPATCH_VISIBILITY_WAIT"
+    assert len(api.sent) == 2
+    assert [call[1]["task_id"] for call in api.sent] == [task["id"], task["id"]]
+    assert api.sent[0][1]["orchestrator_request_id"] != api.sent[1][1]["orchestrator_request_id"]
+    exhausted = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                           budget, NOW + timedelta(minutes=12), api.main_sha)
+    repeated = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                          budget, NOW + timedelta(minutes=13), api.main_sha)
+    assert exhausted.reason == repeated.reason == "DISPATCH_RETRY_EXHAUSTED"
+    assert exhausted.lifecycle is repeated.lifecycle is Lifecycle.BLOCKED
+    assert len(api.sent) == 2
+
+
+def test_dispatch_run_is_adopted_when_post_succeeds_but_receipt_save_fails():
+    coordination = load_state()
+    task = _ready_task(coordination)
+    api, store, budget = _API(), _Store(), _Budget()
+    store.fail_on_write = 2
+    with pytest.raises(RuntimeError, match="durable CAS"):
+        run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                  budget, NOW, api.main_sha)
+    assert store.value["dispatches"][task["id"]]["status"] == "REQUESTED"
+    request_id = api.sent[0][1]["orchestrator_request_id"]
+    api.dispatch_runs = [{"id": 123, "request_id": request_id,
+                          "task_id": task["id"], "head_sha": api.main_sha,
+                          "status": "queued"}]
+    store.fail_on_write = None
+    adopted = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                        budget, NOW + timedelta(minutes=1), api.main_sha)
+    assert adopted.reason == "DISPATCH_RUN_ADOPTED"
+    assert store.value["dispatches"][task["id"]]["run_id"] == 123
+    assert len(api.sent) == 1
+    api.dispatch_runs = []
+    remembered = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                            budget, NOW + timedelta(minutes=20), api.main_sha)
+    assert remembered.reason == "DISPATCH_RUN_PREVIOUSLY_OBSERVED"
+    assert len(api.sent) == 1
+
+
+def test_completed_failed_dispatch_is_durable_blocker_without_retry():
+    coordination = load_state()
+    task = _ready_task(coordination)
+    api, store, budget = _API(), _Store(), _Budget()
+    run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                              budget, NOW, api.main_sha)
+    request_id = api.sent[0][1]["orchestrator_request_id"]
+    api.dispatch_runs = [{"id": 124, "request_id": request_id,
+                          "task_id": task["id"], "head_sha": api.main_sha,
+                          "status": "completed", "conclusion": "failure"}]
+    first = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                      budget, NOW + timedelta(minutes=1), api.main_sha)
+    second = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                       budget, NOW + timedelta(minutes=2), api.main_sha)
+    assert first.reason == second.reason == "WORKFLOW_FAILED"
+    assert first.lifecycle is second.lifecycle is Lifecycle.BLOCKED
+    assert store.value["dispatches"][task["id"]]["status"] == "BLOCKED"
+    assert len(api.sent) == 1
+
+
 def test_safe_cycle_dispatches_once_and_waits_for_canonical_claim():
     coordination = load_state()
     task = _ready_task(coordination)
@@ -316,8 +554,10 @@ def test_safe_cycle_dispatches_once_and_waits_for_canonical_claim():
     second = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
                                        budget, NOW, api.main_sha)
     assert first.reason == "DISPATCHED"
-    assert second.reason == "TASK_ALREADY_CLAIMED"
-    assert api.sent == [("autonomous_cloud_specialist.yml", {"task_id": task["id"]})]
+    assert second.reason == "DISPATCH_VISIBILITY_WAIT"
+    assert len(api.sent) == 1
+    assert api.sent[0][0] == "autonomous_cloud_specialist.yml"
+    assert api.sent[0][1]["task_id"] == task["id"]
     assert store.value["dispatches"][task["id"]]["status"] == "DISPATCHED"
 
 
@@ -352,7 +592,7 @@ def test_safe_cycle_malformed_state_and_failed_ci_do_not_review():
 
 def test_safe_cycle_without_canonical_successor_waits():
     api, store, budget = _API(), _Store(), _Budget()
-    result = run_existing_review_cycle(load_state(), _policy(), _config(), api, store,
+    result = run_existing_review_cycle(_idle_coordination(), _policy(), _config(), api, store,
                                        budget, NOW, api.main_sha)
     assert result.reason == "NO_READY_TASK"
     assert api.sent == []
@@ -405,9 +645,11 @@ def test_real_dispatch_adapter_requires_exact_workflow_and_github_acknowledgment
 
     client = Client()
     api = GitHubAPI("rnnyrgs-web/tradingview-ai-crypto", "token", client)
-    api.dispatch_workflow("autonomous_cloud_specialist.yml", {"task_id": "COORD-TEST-001"})
+    api.dispatch_workflow("autonomous_cloud_specialist.yml", {
+        "task_id": "COORD-TEST-001", "orchestrator_request_id": "a" * 24})
     assert client.calls[0][0].endswith("/actions/workflows/autonomous_cloud_specialist.yml/dispatches")
-    assert client.calls[0][1]["json"] == {"ref": "main", "inputs": {"task_id": "COORD-TEST-001"}}
+    assert client.calls[0][1]["json"] == {"ref": "main", "inputs": {
+        "task_id": "COORD-TEST-001", "orchestrator_request_id": "a" * 24}}
     with pytest.raises(ValueError):
         api.dispatch_workflow("unsafe.yml", {"task_id": "COORD-TEST-001"})
 
@@ -466,6 +708,111 @@ def test_review_issue_lookup_requires_unambiguous_exact_title():
     client.items.append(copy.deepcopy(client.items[0]))
     with pytest.raises(RuntimeError, match="ambiguous"):
         api.get_review_issue(HEAD)
+
+
+def test_lead_execution_adapter_checks_exact_bot_receipt_and_workflow_run():
+    from agents.development_orchestrator_runtime import GitHubAPI
+
+    class Response:
+        status_code = 200
+
+        def __init__(self, payload):
+            self.payload = payload
+
+        def json(self):
+            return self.payload
+
+    class Client:
+        def __init__(self):
+            self.issue = _lead_attempt_issue()
+            self.status = "completed"
+            self.conclusion = "failure"
+
+        def get(self, url, **kwargs):
+            if url.endswith("/actions/runs/91"):
+                return Response({"id": 91, "name": "Autonomous Lead Integrator",
+                                 "head_sha": "c" * 40, "head_branch": "main",
+                                 "status": self.status, "conclusion": self.conclusion})
+            assert url == "https://api.github.com/search/issues"
+            return Response({"items": [self.issue]})
+
+    client = Client()
+    api = GitHubAPI("rnnyrgs-web/tradingview-ai-crypto", "token", client)
+    rejected = api.get_lead_review_execution(HEAD, "auto/data-market/coord-test-orch-001")
+    assert rejected["status"] == "REJECTED"
+    assert rejected["outcomes"]["lead"] == "REJECT"
+    client.issue = _lead_attempt_issue("STARTED")
+    client.status, client.conclusion = "in_progress", None
+    assert api.get_lead_review_execution(HEAD, "auto/data-market/coord-test-orch-001")["status"] == "RUNNING"
+    client.status, client.conclusion = "completed", "failure"
+    assert api.get_lead_review_execution(HEAD, "auto/data-market/coord-test-orch-001")["status"] == "FAILED"
+
+
+def test_lead_route_requires_auto_branch_forked_from_current_main():
+    from agents.development_orchestrator_runtime import GitHubAPI
+
+    class Response:
+        status_code = 200
+
+        def __init__(self, sha):
+            self.sha = sha
+
+        def json(self):
+            return {"merge_base_commit": {"sha": self.sha}, "ahead_by": 1}
+
+    class Client:
+        def __init__(self):
+            self.base = "c" * 40
+
+        def get(self, url, **kwargs):
+            assert "/compare/" in url
+            return Response(self.base)
+
+    client = Client()
+    api = GitHubAPI("rnnyrgs-web/tradingview-ai-crypto", "token", client)
+    assert api.lead_can_review("auto/data-market/task", HEAD, "c" * 40)
+    assert not api.lead_can_review("agent/data-market", HEAD, "c" * 40)
+    client.base = "d" * 40
+    assert not api.lead_can_review("auto/data-market/task", HEAD, "c" * 40)
+
+
+def test_dispatch_run_adapter_requires_exact_run_name_head_and_complete_listing():
+    from agents.development_orchestrator_runtime import GitHubAPI
+
+    class Response:
+        status_code = 200
+
+        def __init__(self, runs):
+            self.runs = runs
+
+        def json(self):
+            return {"workflow_runs": self.runs}
+
+    class Client:
+        def __init__(self):
+            self.runs = []
+
+        def get(self, url, **kwargs):
+            assert url.endswith("/actions/workflows/autonomous_cloud_specialist.yml/runs")
+            return Response(self.runs)
+
+    client = Client()
+    api = GitHubAPI("rnnyrgs-web/tradingview-ai-crypto", "token", client)
+    request_id = "a" * 24
+    assert api.find_dispatch_run("COORD-TEST-001", [request_id], "c" * 40, NOW) is None
+    client.runs = [{"id": 99, "display_title": f"Cloud specialist task=COORD-TEST-001 request={request_id}",
+                    "head_sha": "c" * 40, "status": "queued", "conclusion": None,
+                    "event": "workflow_dispatch",
+                    "created_at": "2026-09-19T16:01:00Z"}]
+    assert api.find_dispatch_run("COORD-TEST-001", [request_id], "c" * 40, NOW)["id"] == 99
+    client.runs[0]["head_sha"] = "d" * 40
+    with pytest.raises(RuntimeError, match="different main head"):
+        api.find_dispatch_run("COORD-TEST-001", [request_id], "c" * 40, NOW)
+    client.runs = [{"id": index, "display_title": "unrelated", "head_sha": "c" * 40,
+                    "event": "workflow_dispatch", "status": "completed", "conclusion": "success",
+                    "created_at": "2026-09-19T16:01:00Z"} for index in range(100)]
+    with pytest.raises(RuntimeError, match="incomplete"):
+        api.find_dispatch_run("COORD-TEST-001", [request_id], "c" * 40, NOW)
 
 
 def test_dispatch_preflight_reads_shared_fleet_spend_and_denies_over_ceiling(monkeypatch):
