@@ -17,6 +17,7 @@ def test_canonical_registry_loads_with_required_fields():
     assert "DATA-BASIS-001" in ids
     assert "DATA-FUNDING-001" in ids
     assert "DISC-VOL-BREAKOUT-001-v1" in ids
+    assert "DISC-LIQUIDITY-MEANREV-001-v1" in ids
     for entry in entries:
         assert entry["do_not_resubmit_same_fingerprint"] is True
         assert entry["reconsideration_conditions"]
@@ -29,12 +30,14 @@ def test_is_rejected_fingerprint_exact_match_only():
     assert is_rejected_fingerprint("DATA-BASIS-001") is True
     assert is_rejected_fingerprint("DATA-FUNDING-001") is True
     assert is_rejected_fingerprint("DISC-VOL-BREAKOUT-001-v1") is True
+    assert is_rejected_fingerprint("DISC-LIQUIDITY-MEANREV-001-v1") is True
     # A genuinely different hypothesis must not be barred merely because its
     # name resembles a rejected one (prefix/substring match is not enough).
     assert is_rejected_fingerprint("DATA-BASIS-002") is False
     assert is_rejected_fingerprint("DATA-BASIS-001-V2") is False
     assert is_rejected_fingerprint("DATA-FUNDING") is False
     assert is_rejected_fingerprint("DISC-VOL-BREAKOUT-002-v1") is False
+    assert is_rejected_fingerprint("DISC-LIQUIDITY-MEANREV-002-v1") is False
     assert is_rejected_fingerprint("UNRELATED-CANDIDATE") is False
 
 
@@ -69,7 +72,7 @@ def test_missing_required_field_is_rejected(tmp_path):
 def test_coordination_task_declaring_rejected_fingerprint_fails_closed():
     state = load_state()
     bad = copy.deepcopy(state)
-    task = next(row for row in bad["tasks"] if row["id"] == "COORD-DISC-DATA-002")
+    task = next(row for row in bad["tasks"] if row["id"] == "COORD-DISC-DATA-003")
     task["fingerprint_id"] = "DATA-BASIS-001"
     with pytest.raises(RuntimeError, match="rejected fingerprint"):
         validate_state(bad)
@@ -90,6 +93,6 @@ def test_coordination_task_declaring_rejected_fingerprint_is_fine_when_done():
 def test_coordination_task_with_genuinely_new_fingerprint_is_unaffected():
     state = load_state()
     ok = copy.deepcopy(state)
-    task = next(row for row in ok["tasks"] if row["id"] == "COORD-DISC-DATA-002")
+    task = next(row for row in ok["tasks"] if row["id"] == "COORD-DISC-DATA-003")
     task["fingerprint_id"] = "DATA-BREADTH-002-GENUINELY-NEW"
     validate_state(ok)  # must not raise
