@@ -6,7 +6,9 @@ on:
       - lead/coord-disc-data-003-deterministic
     paths:
       - tools/verify_cryptohftdata_preflight.py
+      - tools/verify_cryptohftdata_preflight_compat.py
       - tests/test_verify_cryptohftdata_preflight.py
+      - tests/test_verify_cryptohftdata_compat.py
       - .github/workflows/cryptohftdata_preflight.yml
   workflow_dispatch:
 
@@ -33,14 +35,14 @@ jobs:
       - name: Install deterministic verifier dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pyarrow
+          pip install pytest pyarrow zstandard
       - name: Run verifier unit tests
-        run: pytest -q tests/test_verify_cryptohftdata_preflight.py
+        run: pytest -q tests/test_verify_cryptohftdata_preflight.py tests/test_verify_cryptohftdata_compat.py
       - name: Run pre-outcome source verification
         id: verify
         continue-on-error: true
         run: |
-          python tools/verify_cryptohftdata_preflight.py \
+          python tools/verify_cryptohftdata_preflight_compat.py \
             --output-json artifacts/research/cryptohftdata_preflight_report.json \
             --output-md artifacts/research/cryptohftdata_preflight_report.md
       - name: Upload immutable verification report
