@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-19T12:06:16Z",
+  "status": "MATERIAL_RESEARCH_UPDATE_REPORTING_GATE_MET",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate or broker state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "context_integrity": {
+    "read_current_spec": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_all_listed_research_cycle_artifacts_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-19T11:59:30Z",
+    "artifact_cutoff_utc": "2026-09-19T12:06:16Z",
+    "seconds_this_run": 406,
+    "prior_minimum_cumulative_seconds_from_recent_cycles_with_explicit_runtime": 3241,
+    "minimum_cumulative_seconds_after_this_cycle": 3647,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": true,
+    "method": "Only directly recorded active execution time from the current automation window plus prior cycle artifacts with explicit runtime is counted. Schedule gaps are excluded."
+  },
+  "highest_information_question": "How can wrapper-flow research distinguish genuine creations/redemptions from mechanical corporate actions, and does weekend crypto continuation remain supported after forced short-covering fades and leverage rebuilds?",
+  "fresh_validated_observations": [
+    {
+      "topic": "ZCSH 3-for-1 split creates a deterministic false-flow hazard for any raw share-count creation ledger",
+      "label": "PRIMARY-SOURCE FACT / DATA-INTEGRITY LEARNING / GENERALIZABLE METHOD RULE",
+      "observed_facts": [
+        "The Zcash ETF filed an SEC Form 8-K on Sep. 18 announcing a 3-for-1 forward share split. The record date is Sep. 28, payment is after the Sep. 29 close, and split-adjusted trading begins before the Sep. 30 open.",
+        "The issuer states explicitly that the split does not change total investment value: shares outstanding rise proportionally while NAV per share falls to approximately one-third.",
+        "The ticker and CUSIP remain unchanged, so a naive time series keyed only by security identifier can mistake the corporate-action jump in shares outstanding for new creations.",
+        "The current ZCSH prospectus uses 10,000-share creation/redemption baskets and determines basket ZEC from ZEC held divided by shares outstanding. A split therefore mechanically changes per-share and per-basket share arithmetic without creating economic demand.",
+        "Using the current provisional secondary Sep. 18 snapshot only as an illustration (7,449,300 shares and $117.71 NAV/share), a 3-for-1 split would mechanically produce 22,347,900 shares and about $39.24 NAV/share with unchanged AUM near $876.9M. A naive delta-shares times post-split NAV calculation would fabricate roughly $584.6M of apparent inflow even though true economic flow is zero."
+      ],
+      "inference": "Corporate actions must be a first-class adjustment in wrapper/ETF flow reconstruction. Raw changes in shares outstanding are not creations when a split/reverse split is effective. This is especially important for the planned ZCSH daily creation ledger because the Sep. 30 share-count discontinuity is known in advance.",
+      "method_rule": "Before computing wrapper creations/redemptions from share counts, detect and freeze split/reverse-split factors from issuer/SEC filings. Normalize shares, NAV/share, ZEC/share and basket units to a common split-adjusted basis. Around the effective date, require reconciliation of AUM and underlying units held; if economic AUM/underlying is unchanged while shares mechanically change, classify the delta as CORPORATE_ACTION, not FLOW.",
+      "decision_support": "No asset-direction change. This is a research-integrity guardrail that prevents a very large false bullish flow signal."
+    },
+    {
+      "topic": "Weekend BTC continuation remains above the squeeze zone, but leverage has rebuilt and funding is more expensive",
+      "label": "OBSERVED FACT / INFERENCE / WAIT",
+      "observed_facts": [
+        "CoinMarketCap at about 11:59-12:00Z quoted BTC near $81,280 (+4.24%/24h, +5.10%/7d), ETH near $2,639 (+5.29%/24h), SOL near $111.86 (+5.81%), XRP near $1.436 (+8.53%) and LINK near $12.53 (+5.91%).",
+        "The dedicated derivatives feed showed total crypto open interest near $462.31B, up about 4.79% over 24h, and perpetual funding around 0.00793, up about 16% over 24h and about 99% versus the prior seven-day comparison.",
+        "BTC 24h liquidations remained short-dominated at about $223.9M shorts versus $9.3M longs, but the latest 1h window was zero and the latest 4h window only about $1.07M."
+      ],
+      "inference": "The immediate forced-cover impulse has largely faded while price remains near $81K, which is stronger than a pure squeeze-only explanation. However, leverage and funding have rebuilt, so continuation quality is now more dependent on fresh spot/ETF absorption when U.S. markets reopen. The risk has shifted from short-cover dependence toward crowded-long vulnerability if OI/funding keep rising while spot demand stalls.",
+      "data_quality_warning": "CoinMarketCap's aggregate global snapshot and dedicated derivatives endpoint have shown inconsistent 24h open-interest percentage changes across adjacent snapshots. Preserve endpoint timestamps and do not merge them into a single precise leverage claim without venue-level reconciliation.",
+      "decision_support": "BTC remains WAIT / TACTICAL MOMENTUM CANDIDATE, not an immutable BUY."
+    },
+    {
+      "topic": "ZEC excess return remains partly asset-specific but broader privacy rotation is a real matched control",
+      "label": "OBSERVED FACT / INFERENCE / WAIT",
+      "observed_facts": [
+        "At about 12:00Z ZEC was near $1,542, +34.0% over 7d and +172.5% over 30d.",
+        "XMR was about +10.5% over 7d and +40.4% over 30d; DASH about +7.2% over 7d and +86.6% over 30d."
+      ],
+      "inference": "The privacy narrative is broad enough that ZEC's move cannot be attributed entirely to ZCSH plumbing. ZEC still shows much larger excess return than the matched privacy peers, so regulated-wrapper access/free-float/short-covering remains a plausible incremental mechanism rather than a complete explanation.",
+      "decision_support": "ZEC/ZCSH remains WAIT / AVOID CHASING after the extreme move."
+    },
+    {
+      "topic": "Fresh Saudi security escalation raises energy tail risk, but no new oil-price conclusion is defensible while benchmark cash markets are closed",
+      "label": "OBSERVED FACT / UNKNOWN / RISK-STATE UPDATE",
+      "observed_facts": [
+        "Reuters reported on Sep. 19 that Saudi civil defence issued and later lifted danger alerts around Riyadh and Al-Kharj after booms were heard; Reuters video/eyewitness reporting showed smoke and later flames near Riyadh airport. The cause was not established at the information cutoff.",
+        "Reuters notes the escalation occurs amid Houthi attacks on Saudi Arabia and threats to Red Sea shipping while Strait of Hormuz traffic remains heavily impaired.",
+        "Separately, Sep. 18 trade reporting says Aramco has arranged roughly 60M barrels of Sep-Oct Gulf-port exports using ship-to-ship transfers near Sohar, a substitution channel that has helped cool benchmark crude despite the Yanbu/East-West disruption."
+      ],
+      "inference": "Saudi logistics substitution is currently buffering benchmark crude, but the geopolitical system remains fragile and geographically broadening security risk raises the probability that substitution capacity itself could become constrained. That is a tail-risk state, not evidence that Brent has already repriced higher.",
+      "decision_support": "Crude remains WAIT. Reassess when physical-route data and open-market pricing are available; do not manufacture a weekend benchmark move."
+    },
+    {
+      "topic": "China's demand problem remains structurally distinct from its AI/export strength",
+      "label": "OBSERVED COMMENTARY / LOW-WEIGHT POLICY SIGNAL",
+      "observed_facts": [
+        "PBOC monetary-policy committee member Huang Yiping said Sep. 19 that wider AI deployment could deepen China's strong-supply/weak-demand imbalance and argued for stronger consumption policy and central-government borrowing to repair local-government, financial-institution and corporate balance sheets.",
+        "This is adviser commentary, not an announced PBOC or State Council policy action."
+      ],
+      "inference": "AI/export strength can support production and external earnings without repairing domestic balance sheets or household demand. China's capital-flow model should therefore keep external competitiveness and domestic credit-demand weakness as separate state variables rather than treating AI export strength as evidence of broad domestic reflation.",
+      "decision_support": "Research implication only; no China asset forecast is frozen."
+    }
+  ],
+  "daily_big_move_scan": {
+    "market_context": "Saturday: major cash equity, sovereign-bond and commodity benchmark markets are closed. Traditional-market price moves are not fabricated; Sep. 18 closes remain the latest completed session and live crypto is updated.",
+    "selected_or_retested": [
+      "ZEC: +34%/7d and +172%/30d; wrapper-flow accounting deepened with a primary-source corporate-action adjustment requirement.",
+      "XMR/DASH: positive privacy-theme controls; confirm broader narrative rotation while ZEC retains large excess return.",
+      "BTC: near $81.3K after the main short-liquidation burst, but OI/funding rebuilt; next U.S. ETF session is the key continuation test.",
+      "Saudi energy-security tail: fresh Riyadh alerts/smoke/flames are a risk-state update, not a completed commodity-price case because benchmark oil markets are closed."
+    ],
+    "negative_findings": [
+      "Do not infer ETF inflow from a raw increase in shares outstanding across a split/reverse split.",
+      "Do not equate AUM growth with net flow or net flow with same-day exchange spot demand.",
+      "Do not attribute ZEC's full move to ZCSH because privacy peers are also strong.",
+      "Do not call BTC spot-led solely from weekend price retention while leverage/funding rebuild and the U.S. ETF channel is closed.",
+      "Do not infer an oil price move from weekend security headlines before physical impact and market pricing are observed."
+    ]
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "status": "No new immutable directional forecast clears the evidence bar. Existing WAIT states remain intact and no prior forecast was rewritten."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle now. Do not churn dashboard_state, learning_ledger or big_move_lab in the same run: the broad regime/action states are unchanged, and the most material new result is a research-integrity method guardrail for the forthcoming ZCSH split. Promote that rule canonically when the creation-ledger implementation is updated or when a clean atomic learning-ledger edit can be made without overwrite risk.",
+  "next_research": [
+    "Implement split/reverse-split normalization in the ZCSH creation ledger before Sep. 30 and add a unit test/no-flow reconciliation case.",
+    "Capture Grayscale's direct daily ZCSH holdings file and reconcile Sep. 18 shares/ZEC/NAV against secondary mirrors.",
+    "After the next U.S. trading session, recheck BTC/ETH ETF flows, BTC price retention and venue-level OI/funding/basis.",
+    "Continue estimating effective ZEC free float/order-book depth and separate cash creations from in-kind transfers.",
+    "Monitor Saudi physical export/loadings, route availability, freight/insurance and any confirmed infrastructure damage after the Sep. 19 security escalation."
+  ],
+  "source_log": [
+    {"publisher":"SEC","date":"2026-09-18","topic":"ZCSH 3-for-1 forward split","url":"https://www.sec.gov/Archives/edgar/data/1720265/000119312526395068/zcsh-20260918.htm"},
+    {"publisher":"SEC","date":"2026-08","topic":"ZCSH creation/redemption basket mechanics","url":"https://www.sec.gov/Archives/edgar/data/1720265/000119312526363603/zcsh__424b3.htm"},
+    {"publisher":"CoinMarketCap connected data","date":"2026-09-19","topic":"BTC/ETH/ZEC/XMR/DASH/XRP/SOL/LINK quotes and aggregate derivatives","url":"https://coinmarketcap.com/"},
+    {"publisher":"Reuters","date":"2026-09-19","topic":"Riyadh alerts/smoke near airport amid Houthi escalation","url":"https://www.reuters.com/world/middle-east/saudi-civil-defence-sends-all-clear-after-danger-warning-capital-riyadh-2026-09-19/"},
+    {"publisher":"Reuters","date":"2026-09-18","topic":"Aramco Gulf/Sohar substitution exports","url":"https://www.reuters.com/business/energy/aramco-boost-exports-strait-hormuz-60-million-bbl-september-october-traders-say-2026-09-18/"},
+    {"publisher":"Reuters","date":"2026-09-19","topic":"PBOC adviser on AI, demand imbalance and balance-sheet repair","url":"https://www.reuters.com/world/asia-pacific/china-central-bank-adviser-says-ai-could-deepen-supply-demand-imbalance-2026-09-19/"}
+  ],
+  "owner_report_gate": "MET. Cumulative directly recorded execution time is at least 3,647 seconds and this cycle contains a material research-integrity discovery with direct relevance to the active ZCSH flow study."
+}

@@ -135,12 +135,20 @@ python -m profitability_learning --db /approved/persistent/research.sqlite snaps
 python -m profitability_learning --db /approved/persistent/research.sqlite export memory-checkpoint.json
 ```
 
-Set `PROFITABILITY_LEARNING_DB` to that initialized persistent path for runtime
-integration. Unconfigured runtime says WAIT_MEMORY_NOT_CONFIGURED. A configured
-missing/corrupt store blocks completion; factory/coordinator feedback reports
-WAIT_MEMORY_UNAVAILABLE and emits no learned missions. It never silently resets
-to an empty cache. Local/GitHub jobs can instead export/import versioned archives
-through an existing approved state transport. No new paid API or model is needed.
+Set `PROFITABILITY_LEARNING_DB` to that initialized persistent path to explicitly
+use SQLite. When it is unset, a deployment with the already-approved Supabase
+service-role channel uses the private `profitability_learning_events` append-only
+table and version-checked atomic append RPC. Concurrent writers re-read and
+reclassify against the newest evidence before committing, preserving the same
+cumulative scientific semantics as the transactional SQLite backend. The table
+has RLS enabled, grants no anonymous or
+authenticated-user access, and neither the table nor RPC has trading authority.
+If neither backend is configured, runtime says WAIT_MEMORY_NOT_CONFIGURED. A
+configured missing/corrupt/unreachable store blocks completion; factory/coordinator
+feedback reports WAIT_MEMORY_UNAVAILABLE and emits no learned missions or runnable
+candidates. It never silently resets to an empty cache. Local/GitHub jobs can
+instead export/import versioned archives through an existing approved state
+transport. No new paid API or model is needed.
 
 ## Status and next action
 

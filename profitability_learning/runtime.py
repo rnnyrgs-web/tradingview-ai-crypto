@@ -16,7 +16,15 @@ _director_state = None
 
 def _configured_memory():
     path = os.getenv("PROFITABILITY_LEARNING_DB", "").strip()
-    return Memory(path, create=False) if path else None
+    if path:
+        return Memory(path, create=False)
+    # Production already has an approved service-role Supabase channel. Prefer
+    # it to an ephemeral local file and fail closed if its schema is unavailable.
+    import db
+    if db.configured():
+        from .supabase_memory import SupabaseMemory
+        return SupabaseMemory()
+    return None
 
 
 def complete_experiment(experiment, *, ablation=None):
