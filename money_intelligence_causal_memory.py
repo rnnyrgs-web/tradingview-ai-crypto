@@ -18,7 +18,7 @@ import tempfile
 from typing import Iterable, Literal
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 EPISTEMIC_LEVELS = {"fact", "inference"}
 EVIDENCE_KINDS = {"support", "contradiction"}
 RESEARCH_LANES = {"big_move", "strategy_component"}
@@ -77,6 +77,11 @@ class PointInTimeObservation:
     available_at: str
     retrieved_at: str
     source_id: str
+    subject_id: str
+    currency: str
+    measurement_window_hours: int
+    venue: str
+    max_age_hours: int
     revision_id: str = ""
     provenance_uri: str = ""
 
@@ -85,8 +90,23 @@ class PointInTimeObservation:
             raise CausalMemoryError("observation_id and metric_name are required")
         if not math.isfinite(float(self.value)):
             raise CausalMemoryError("observation value must be finite")
-        if not self.source_id.strip():
-            raise CausalMemoryError("source_id is required")
+        if not all(
+            value.strip()
+            for value in (
+                self.source_id,
+                self.subject_id,
+                self.currency,
+                self.unit,
+                self.venue,
+            )
+        ):
+            raise CausalMemoryError(
+                "source_id, subject_id, currency, unit, and venue are required"
+            )
+        if self.measurement_window_hours <= 0 or self.max_age_hours <= 0:
+            raise CausalMemoryError(
+                "measurement_window_hours and max_age_hours must be positive"
+            )
         observed = _parse_time(self.observed_at)
         available = _parse_time(self.available_at)
         retrieved = _parse_time(self.retrieved_at)
@@ -140,6 +160,7 @@ class FrozenHypothesis:
     created_at: str
     source_observation_ids: tuple[str, ...]
     family_id: str
+    evaluation_method: str
     family_size: int = 1
     alpha: float = 0.05
 
@@ -152,8 +173,14 @@ class FrozenHypothesis:
             raise CausalMemoryError("horizon_hours must be positive")
         if not self.falsifier.strip():
             raise CausalMemoryError("a predeclared falsifier is required")
-        if not self.family_id.strip() or self.family_size <= 0:
-            raise CausalMemoryError("family_id and positive family_size are required")
+        if (
+            not self.family_id.strip()
+            or not self.evaluation_method.strip()
+            or self.family_size <= 0
+        ):
+            raise CausalMemoryError(
+                "family_id, evaluation_method, and positive family_size are required"
+            )
         if not 0.0 < float(self.alpha) < 1.0:
             raise CausalMemoryError("alpha must be between zero and one")
         chain = _normalise_tuple(self.mechanism_chain, field_name="mechanism_chain")
@@ -189,6 +216,7 @@ class FrozenHypothesis:
             "lanes": list(self.lanes),
             "source_observation_ids": list(self.source_observation_ids),
             "family_id": self.family_id,
+            "evaluation_method": self.evaluation_method,
             "family_size": self.family_size,
             "alpha": self.alpha,
         }
@@ -202,8 +230,10 @@ class EvidenceEvent:
     evaluated_at: str
     kind: Literal["support", "contradiction"]
     matched_controls: tuple[str, ...]
-    source_observation_ids: tuple[str, ...]
-    weight: float = 1.0
+    outcome_observation_ids: tuple[str, ...]
+    control_observation_ids: tuple[str, ...]
+    evaluation_method: str
+    sample_size: int
     confirmatory: bool = True
     p_value: float | None = None
     note: str = ""
@@ -213,8 +243,10 @@ class EvidenceEvent:
             raise CausalMemoryError("event_id and hypothesis_id are required")
         if self.kind not in EVIDENCE_KINDS:
             raise CausalMemoryError("evidence kind must be support or contradiction")
-        if not math.isfinite(float(self.weight)) or float(self.weight) <= 0:
-            raise CausalMemoryError("evidence weight must be finite and positive")
+        if not self.evaluation_method.strip() or self.sample_size <= 0:
+            raise CausalMemoryError(
+                "evaluation_method and positive sample_size are required"
+            )
         if self.p_value is not None and not 0.0 <= float(self.p_value) <= 1.0:
             raise CausalMemoryError("p_value must be in [0, 1]")
         object.__setattr__(self, "evaluated_at", _normalise_time(self.evaluated_at))
@@ -225,12 +257,35 @@ class EvidenceEvent:
         )
         object.__setattr__(
             self,
-            "source_observation_ids",
-            _normalise_tuple(self.source_observation_ids, field_name="source_observation_ids"),
+            "outcome_observation_ids",
+            _normalise_tuple(
+                self.outcome_observation_ids, field_name="outcome_observation_ids"
+            ),
         )
-        object.__setattr__(self, "weight", float(self.weight))
+        object.__setattr__(
+            self,
+            "control_observation_ids",
+            _normalise_tuple(
+                self.control_observation_ids, field_name="control_observation_ids"
+            ),
+        )
+        if set(self.outcome_observation_ids) & set(self.control_observation_ids):
+            raise CausalMemoryError("outcome and control observations must be disjoint")
+        if not self.outcome_observation_ids or not self.control_observation_ids:
+            raise CausalMemoryError(
+                "outcome_observation_ids and control_observation_ids cannot be empty"
+            )
         if self.p_value is not None:
             object.__setattr__(self, "p_value", float(self.p_value))
+
+    @property
+    def evidence_weight(self) -> float:
+        """Bounded scoring weight; callers cannot tune confidence magnitude."""
+        return 1.0
+
+    @property
+    def fingerprint(self) -> str:
+        return "mi-evidence-v1:" + _sha256(asdict(self))
 
 
 @dataclass(frozen=True)
@@ -299,6 +354,10 @@ class CausalRepricingMemory:
                 raise CausalMemoryError(
                     f"source observation {source_id} was not point-in-time available"
                 )
+            if _parse_time(observation.retrieved_at) > cutoff:
+                raise CausalMemoryError(
+                    f"source observation {source_id} was not yet retrieved by the system"
+                )
 
     def register_claim(self, claim: EpistemicClaim) -> bool:
         self._require_sources_available(claim.source_observation_ids, claim.created_at)
@@ -353,14 +412,78 @@ class CausalRepricingMemory:
             raise CausalMemoryError(
                 "evidence controls must exactly match the frozen matched-control contract"
             )
-        self._require_sources_available(event.source_observation_ids, event.evaluated_at)
+        if event.evaluation_method != hypothesis.evaluation_method:
+            raise CausalMemoryError(
+                "evidence evaluation method must match the frozen hypothesis contract"
+            )
+        evaluation_sources = (
+            event.outcome_observation_ids + event.control_observation_ids
+        )
+        formation_sources = set(hypothesis.source_observation_ids)
+        if formation_sources & set(evaluation_sources):
+            raise CausalMemoryError(
+                "confirmatory evidence cannot reuse hypothesis-formation observations"
+            )
+        self._require_sources_available(evaluation_sources, event.evaluated_at)
         if _parse_time(event.evaluated_at) < _parse_time(hypothesis.created_at):
             raise CausalMemoryError("evidence cannot predate the frozen hypothesis")
+        frozen_at = _parse_time(hypothesis.created_at)
+        for source_id in evaluation_sources:
+            observation = self.observations[source_id]
+            if _parse_time(observation.observed_at) < frozen_at:
+                raise CausalMemoryError(
+                    "outcome/control observations must begin after hypothesis freeze"
+                )
+        observations = [
+            self.observations[source_id] for source_id in evaluation_sources
+        ]
+        comparison_keys = {
+            (
+                observation.subject_id,
+                observation.currency,
+                observation.unit,
+                observation.measurement_window_hours,
+                observation.venue,
+            )
+            for observation in observations
+        }
+        if len(comparison_keys) != 1:
+            raise CausalMemoryError(
+                "outcome/control observations must be subject, unit, window, and venue comparable"
+            )
+        outcome_mean = sum(
+            self.observations[source_id].value
+            for source_id in event.outcome_observation_ids
+        ) / len(event.outcome_observation_ids)
+        control_mean = sum(
+            self.observations[source_id].value
+            for source_id in event.control_observation_ids
+        ) / len(event.control_observation_ids)
+        observed_effect = outcome_mean - control_mean
+        supports_direction = (
+            observed_effect > 0
+            if hypothesis.direction == "positive"
+            else observed_effect < 0
+        )
+        if (event.kind == "support") != supports_direction:
+            raise CausalMemoryError(
+                "evidence kind conflicts with the observed effect direction"
+            )
         if event.kind == "support" and event.confirmatory:
             adjusted_alpha = hypothesis.alpha / hypothesis.family_size
             if event.p_value is None or event.p_value > adjusted_alpha:
                 raise CausalMemoryError(
                     "confirmatory support must pass the frozen Bonferroni family threshold"
+                )
+        for existing in self.events.values():
+            if (
+                existing.hypothesis_id == event.hypothesis_id
+                and existing.outcome_observation_ids == event.outcome_observation_ids
+                and existing.control_observation_ids == event.control_observation_ids
+                and existing.event_id != event.event_id
+            ):
+                raise CausalMemoryError(
+                    "evaluation observations already consumed by another evidence event"
                 )
         return self._append_immutable(self.events, event.event_id, event)
 
@@ -378,7 +501,9 @@ class CausalRepricingMemory:
             if event_time > cutoff:
                 continue
             age_days = max(0.0, (cutoff - event_time).total_seconds() / 86400.0)
-            decayed_weight = event.weight * (0.5 ** (age_days / self.half_life_days))
+            decayed_weight = event.evidence_weight * (
+                0.5 ** (age_days / self.half_life_days)
+            )
             if event.kind == "contradiction":
                 net -= decayed_weight
                 contradiction_count += 1
@@ -408,13 +533,21 @@ class CausalRepricingMemory:
         ]
         return tuple(sorted(events, key=lambda event: (event.evaluated_at, event.event_id)))
 
-    def latest_metric(self, metric_name: str, *, as_of: str) -> PointInTimeObservation | None:
+    def latest_metric(
+        self,
+        metric_name: str,
+        *,
+        as_of: str,
+        subject_id: str | None = None,
+    ) -> PointInTimeObservation | None:
         cutoff = _parse_time(as_of)
         candidates = [
             observation
             for observation in self.observations.values()
             if observation.metric_name == metric_name
             and _parse_time(observation.available_at) <= cutoff
+            and _parse_time(observation.retrieved_at) <= cutoff
+            and (subject_id is None or observation.subject_id == subject_id)
         ]
         if not candidates:
             return None
@@ -433,6 +566,7 @@ class CausalRepricingMemory:
         ratio_name: str,
         numerator_metric: str,
         denominator_metric: str,
+        subject_id: str,
         as_of: str,
     ) -> RelativeImpact:
         if ratio_name not in RELATIVE_IMPACT_RATIOS:
@@ -449,6 +583,59 @@ class CausalRepricingMemory:
                 denominator_observation_id=(denominator.observation_id if denominator else None),
                 value=None,
                 reason="point_in_time_input_unavailable",
+                as_of=normalised_as_of,
+            )
+        if numerator.subject_id != subject_id or denominator.subject_id != subject_id:
+            return RelativeImpact(
+                ratio_name=ratio_name,
+                numerator_observation_id=numerator.observation_id,
+                denominator_observation_id=denominator.observation_id,
+                value=None,
+                reason="subject_mismatch",
+                as_of=normalised_as_of,
+            )
+        if (
+            numerator.currency != denominator.currency
+            or numerator.unit != denominator.unit
+        ):
+            return RelativeImpact(
+                ratio_name=ratio_name,
+                numerator_observation_id=numerator.observation_id,
+                denominator_observation_id=denominator.observation_id,
+                value=None,
+                reason="currency_or_unit_mismatch",
+                as_of=normalised_as_of,
+            )
+        if numerator.measurement_window_hours != denominator.measurement_window_hours:
+            return RelativeImpact(
+                ratio_name=ratio_name,
+                numerator_observation_id=numerator.observation_id,
+                denominator_observation_id=denominator.observation_id,
+                value=None,
+                reason="measurement_window_mismatch",
+                as_of=normalised_as_of,
+            )
+        if numerator.venue != denominator.venue:
+            return RelativeImpact(
+                ratio_name=ratio_name,
+                numerator_observation_id=numerator.observation_id,
+                denominator_observation_id=denominator.observation_id,
+                value=None,
+                reason="venue_mismatch",
+                as_of=normalised_as_of,
+            )
+        cutoff = _parse_time(normalised_as_of)
+        if any(
+            (cutoff - _parse_time(observation.observed_at)).total_seconds()
+            > observation.max_age_hours * 3600
+            for observation in (numerator, denominator)
+        ):
+            return RelativeImpact(
+                ratio_name=ratio_name,
+                numerator_observation_id=numerator.observation_id,
+                denominator_observation_id=denominator.observation_id,
+                value=None,
+                reason="stale_input",
                 as_of=normalised_as_of,
             )
         if denominator.value <= 0:
@@ -510,6 +697,46 @@ class CausalRepricingMemory:
             return None
         if any(_parse_time(event.evaluated_at) >= latest_support for event in contradictions):
             return None
+        evidence_events: list[dict[str, object]] = []
+        for event in sorted(relevant, key=lambda item: (item.evaluated_at, item.event_id)):
+            outcome_mean = sum(
+                self.observations[source_id].value
+                for source_id in event.outcome_observation_ids
+            ) / len(event.outcome_observation_ids)
+            control_mean = sum(
+                self.observations[source_id].value
+                for source_id in event.control_observation_ids
+            ) / len(event.control_observation_ids)
+            evidence_events.append(
+                {
+                    "event_id": event.event_id,
+                    "event_fingerprint": event.fingerprint,
+                    "kind": event.kind,
+                    "evaluated_at": event.evaluated_at,
+                    "confirmatory": event.confirmatory,
+                    "evaluation_method": event.evaluation_method,
+                    "sample_size": event.sample_size,
+                    "matched_controls": list(event.matched_controls),
+                    "outcome_observation_ids": list(event.outcome_observation_ids),
+                    "control_observation_ids": list(event.control_observation_ids),
+                    "outcome_provenance_fingerprints": [
+                        self.observations[source_id].provenance_fingerprint
+                        for source_id in event.outcome_observation_ids
+                    ],
+                    "control_provenance_fingerprints": [
+                        self.observations[source_id].provenance_fingerprint
+                        for source_id in event.control_observation_ids
+                    ],
+                    "raw_p_value": event.p_value,
+                    "adjusted_p_value": (
+                        min(1.0, event.p_value * hypothesis.family_size)
+                        if event.p_value is not None
+                        else None
+                    ),
+                    "bounded_evidence_weight": event.evidence_weight,
+                    "observed_effect": outcome_mean - control_mean,
+                }
+            )
         return {
             "schema_version": SCHEMA_VERSION,
             "lane": lane,
@@ -519,7 +746,22 @@ class CausalRepricingMemory:
             "as_of": _normalise_time(as_of),
             "research_confidence": snapshot.score,
             "source_observation_ids": list(hypothesis.source_observation_ids),
+            "formation_provenance_fingerprints": [
+                self.observations[source_id].provenance_fingerprint
+                for source_id in hypothesis.source_observation_ids
+            ],
             "mechanism_chain": list(hypothesis.mechanism_chain),
+            "frozen_test_contract": {
+                "falsifier": hypothesis.falsifier,
+                "matched_controls": list(hypothesis.matched_controls),
+                "family_id": hypothesis.family_id,
+                "family_size": hypothesis.family_size,
+                "alpha": hypothesis.alpha,
+                "evaluation_method": hypothesis.evaluation_method,
+                "direction": hypothesis.direction,
+                "horizon_hours": hypothesis.horizon_hours,
+            },
+            "evidence_events": evidence_events,
             "research_only": True,
             "trading_authority": False,
             "promotion_authority": False,
@@ -607,7 +849,12 @@ class CausalRepricingMemory:
             for raw in document.get("events", []):
                 raw = dict(raw)
                 raw["matched_controls"] = tuple(raw["matched_controls"])
-                raw["source_observation_ids"] = tuple(raw["source_observation_ids"])
+                raw["outcome_observation_ids"] = tuple(
+                    raw["outcome_observation_ids"]
+                )
+                raw["control_observation_ids"] = tuple(
+                    raw["control_observation_ids"]
+                )
                 memory.record_evidence(EvidenceEvent(**raw))
             memory.rejected_fingerprints.update(persisted_rejected)
         except (KeyError, TypeError, CausalMemoryError) as exc:
