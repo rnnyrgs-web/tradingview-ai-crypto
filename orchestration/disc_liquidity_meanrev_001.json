@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "DISC-LIQUIDITY-MEANREV-001",
+  "fingerprint_id": "DISC-LIQUIDITY-MEANREV-001-v1",
+  "status": "PREDECLARED_SELECTION_ONLY",
+  "research_only": true,
+  "trade_authority": false,
+  "promotion_authority": false,
+  "hypothesis": "A large completed one-hour price shock accompanied by unusually high quote volume and unusually wide intrabar range reflects temporary forced-order-flow/liquidity overshoot and has positive next-six-hour opposite-direction after-cost expectancy versus the same large-return reversal without liquidity filters.",
+  "economic_mechanism": "Forced liquidations, urgent inventory transfer, and temporary order-book depletion can push price beyond short-run equilibrium. If the shock is both large relative to recent volatility and accompanied by abnormal participation and range expansion, part of the move may mean-revert as liquidity replenishes.",
+  "source": {
+    "venue": "OKX",
+    "instrument_type": "USDT-margined perpetual swap",
+    "bar_interval": "1H",
+    "completed_bars_only": true,
+    "fixed_instruments": ["BTC-USDT-SWAP", "ETH-USDT-SWAP", "SOL-USDT-SWAP"],
+    "asset_substitution_allowed": false,
+    "history_bars_per_asset": 12000,
+    "minimum_history_bars_per_asset": 8000,
+    "point_in_time_universe_required": false,
+    "point_in_time_reason": "The three instruments are fixed before outcome inspection and are mandatory replication cohorts, not winners selected from a historical ranked universe.",
+    "dataset_identity_required": ["exact_source", "instrument_ids", "bar_interval", "coverage_start", "coverage_end", "normalized_row_count", "normalized_rows_sha256", "per_instrument_row_count_and_sha256", "missing_or_invalid_instruments"]
+  },
+  "primary_rule": {
+    "return_definition": "close[t] / close[t-1] - 1",
+    "volatility_window_bars": 168,
+    "volatility_estimator": "sample standard deviation of completed one-hour returns ending at t-1; signal-bar return excluded",
+    "absolute_return_floor": 0.015,
+    "sigma_multiple": 2.0,
+    "shock_threshold": "abs(return[t]) must be strictly greater than both absolute_return_floor and sigma_multiple * trailing_sigma",
+    "quote_volume_window_bars": 168,
+    "quote_volume_ratio_min": 1.5,
+    "quote_volume_ratio": "signal-bar quote_volume divided by median quote_volume of t-168..t-1",
+    "range_window_bars": 168,
+    "range_ratio_min": 1.5,
+    "normalized_range": "(high-low)/previous_close",
+    "range_ratio": "signal normalized_range divided by median normalized_range of t-168..t-1",
+    "direction": "LONG after a qualifying negative shock; SHORT after a qualifying positive shock",
+    "decision_timestamp": "completed signal-bar close",
+    "entry": "next completed bar open after the signal; no same-bar entry",
+    "holding_period_bars": 6,
+    "exit": "open of the bar six full one-hour bars after entry; no stop or target in v1",
+    "one_position_per_instrument": true,
+    "future_data_policy": "No bar after signal close may enter return, volatility, quote-volume, range, direction, regime, or selection features. Future bars are used only for entry/exit labels.",
+    "regime_reporting": "BULL when signal-bar close >= simple mean of closes t-167..t; otherwise BEAR. Reporting only; never a selector in v1."
+  },
+  "baseline": {
+    "id": "LARGE-RETURN-REVERSAL-NO-LIQUIDITY-FILTERS",
+    "rule": "Identical absolute-return floor, trailing-volatility shock threshold, opposite direction, next-open entry, six-hour exit, chronology and costs, but no quote-volume-ratio or range-ratio requirement.",
+    "purpose": "Test whether abnormal participation/range adds incremental economic value rather than merely rediscovering generic short-horizon reversal."
+  },
+  "falsifier_sensitivities": [
+    {"id": "sigma_1_75", "sigma_multiple": 1.75},
+    {"id": "sigma_2_25", "sigma_multiple": 2.25}
+  ],
+  "costs": {
+    "base_round_trip_bps": 20,
+    "stress_multipliers": [1.0, 1.5, 2.0, 3.0],
+    "selection_uses_max_stress": true,
+    "interpretation": "Composite conservative proxy for fees, bid/ask spread, slippage, funding/carry uncertainty and adverse selection because historical executable quotes/fills are unavailable.",
+    "fabricated_spread_allowed": false
+  },
+  "chronology": {
+    "split": "60% train / 20% validation / 20% untouched OOS by raw chronological bars",
+    "purge_bars_each_side": 24,
+    "minimum_warmup_bars": 220,
+    "non_overlapping_trades": true,
+    "trade_must_exit_inside_scored_segment": true,
+    "untouched_oos": "LOCKED",
+    "genuine_forward": "NOT_OPENED"
+  },
+  "pre_oos_pass_rule": {
+    "per_instrument_primary_required": ["train completed trades >= 15", "validation completed trades >= 5", "train max-stress mean net bps > 0", "validation max-stress mean net bps > 0", "validation max-stress profit factor > 1", "primary challenger validation max-stress mean net bps >= baseline validation max-stress mean net bps"],
+    "minimum_passing_instruments": 2,
+    "required_instruments": 3,
+    "pooled_primary_required": ["train completed trades >= 45", "validation completed trades >= 15", "train max-stress mean net bps > 0", "validation max-stress mean net bps > 0", "validation max-stress profit factor > 1", "validation first-half max-stress mean net bps > -20", "validation second-half max-stress mean net bps > -20", "validation max-stress mean net bps >= baseline validation max-stress mean net bps", "for each validation BULL/BEAR regime with >= 6 trades, max-stress mean net bps > -60"],
+    "sensitivity_required": ["sigma_1_75 pooled train completed trades >= 30 and validation completed trades >= 10", "sigma_1_75 pooled train and validation max-stress mean net bps > 0", "sigma_2_25 pooled train completed trades >= 30 and validation completed trades >= 10", "sigma_2_25 pooled train and validation max-stress mean net bps > 0", "sensitivities cannot rescue a failing primary rule"],
+    "all_data_integrity_conditions_required": true
+  },
+  "search_breadth": {
+    "primary_candidate_count": 1,
+    "primary_timeframe_count": 1,
+    "fixed_replication_instruments": 3,
+    "non_selectable_falsifier_sensitivities": 2,
+    "parameter_optimization_allowed": false,
+    "asset_or_timeframe_winner_selection_allowed": false,
+    "post_outcome_parameter_changes_require_new_fingerprint": true,
+    "multiple_testing_policy": "There is one eligible primary fingerprint. Three fixed instruments are mandatory replication cohorts, not winner alternatives. Sigma sensitivities are predeclared non-selectable falsifiers and cannot replace or rescue the sigma-2.0 primary."
+  },
+  "selection_result_policy": {
+    "on_data_integrity_fail": "INSUFFICIENT_EVIDENCE; keep OOS locked and repair only the exact fixed-instrument data deficiency without substituting instruments.",
+    "on_pre_oos_fail": "REJECT_CURRENT_FINGERPRINT; persist negative evidence and pivot to the next materially distinct ranked hypothesis without tuning v1.",
+    "on_pre_oos_pass": "FREEZE_EXACT_FINGERPRINT_AND_DATASET; request single-candidate deep validation; untouched OOS remains unopened until that central transition is canonical.",
+    "attractive_curve_can_bypass_gate": false
+  },
+  "budget": {"new_paid_data_services": false, "new_paid_compute": false, "project_monthly_variable_ceiling_usd": 30},
+  "contract_fingerprint_definition": "SHA-256 of canonical sorted compact JSON of this object with contract_sha256 and contract_fingerprint_definition omitted",
+  "contract_sha256": "19252de4464fc997632b0500fded857bc58d5bdad49d6f72e3660eba75a28b57"
+}
