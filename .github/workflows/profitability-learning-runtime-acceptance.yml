@@ -6,13 +6,20 @@ on:
     branches: [main]
     paths:
       - .github/workflows/profitability-learning-runtime-acceptance.yml
+      - Dockerfile
+      - requirements.txt
       - app.py
+      - config.py
       - btc_leadlag_selection.py
+      - volatility_breakout_selection.py
       - db.py
       - profitability_learning/**
       - orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz
+      - orchestration/rejected_fingerprints.json
+      - orchestration/signal_development_objective.json
       - research_artifact.py
       - research_heavy_experiment_scheduler.py
+      - signal_development.py
       - supabase/migrations/**
 
 permissions:
@@ -73,5 +80,49 @@ jobs:
             fi
             sleep 10
           done
+          echo "last_http_status=$status" >&2
+          if jq -e 'type == "object"' "$response" >/dev/null 2>&1; then
+            jq -c '{
+              ok: .ok?,
+              deployed_sha: .deployed_sha?,
+              fingerprint_id: .fingerprint_id?,
+              screen_status: .screen_status?,
+              completion: {
+                training: {
+                  experiment_id: .completion.training.experiment_id?,
+                  outcome: .completion.training.outcome?,
+                  persistence_status: .completion.training.persistence_status?
+                },
+                validation: {
+                  experiment_id: .completion.validation.experiment_id?,
+                  outcome: .completion.validation.outcome?,
+                  persistence_status: .completion.validation.persistence_status?
+                }
+              },
+              persistence: {
+                replay_idempotent: .persistence.replay_idempotent?,
+                target_experiment_count: .persistence.target_experiment_count?
+              },
+              learning_consumption: {
+                rejected_exact_fingerprint: .learning_consumption.rejected_exact_fingerprint?,
+                queue_feedback_reason: .learning_consumption.queue_feedback_reason?,
+                heavy_dispatch_selected_count: .learning_consumption.heavy_dispatch_selected_count?,
+                component_observation_count: .learning_consumption.component_observation_count?,
+                matched_learning_mission_count:
+                  ((.learning_consumption.matched_learning_missions? // []) | length)
+              },
+              evidence_boundaries: {
+                untouched_oos_opened: .evidence_boundaries.untouched_oos_opened?,
+                genuine_forward_opened: .evidence_boundaries.genuine_forward_opened?
+              },
+              safety: {
+                trade_authority: .safety.trade_authority?,
+                promotion_authority: .safety.promotion_authority?,
+                broker_connected: .safety.broker_connected?
+              }
+            }' "$response" >&2
+          else
+            echo "response_not_json" >&2
+          fi
           echo "Exact deployed-SHA Profitability Learning acceptance did not pass" >&2
           exit 1
