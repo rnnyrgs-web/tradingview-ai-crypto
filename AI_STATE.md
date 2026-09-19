@@ -1,6 +1,7 @@
 # AI_STATE.md
 
 Last reconciled: 2026-09-19T05:29Z
+Last updated: 2026-09-19T05:32Z
 
 This is the compact canonical handoff for `rnnyrgs-web/tradingview-ai-crypto`. On every run, verify actual `main` first, then read `UNIFIED_PROFITABILITY_LEAD_SPEC.md`, `AGENTS.md`, the ranked strategy-discovery queue, rejected-fingerprint registry, specialist coordination plus all override layers, `orchestration/model_routing_policy.json`, current Big-Move/Money Intelligence evidence, open PRs, and exact-head CI. GitHub/persistent machine-readable state outranks chat memory.
 
@@ -100,7 +101,7 @@ The liquidity-shock mean-reversion rejection remains durable: 0/3 passing fixed 
 - `COORD-DATA-006`: **DONE** — prospective point-in-time capture verified; no fabricated historical backfill.
 - `COORD-DATA-007`: **BLOCKED** — wait for enough genuinely matured independent prospective cohorts.
 
-This legacy breadth maturation wait does not block strategy discovery.
+Do not select another DATA-BREADTH candidate while `COORD-DATA-007` remains blocked on genuine prospective maturation. This legacy breadth maturation wait does not block strategy discovery.
 
 ## 90-DAY BIG-MOVE / MONEY INTELLIGENCE LANE
 
@@ -129,9 +130,9 @@ There is currently **no promotion-grade 90-day 2x candidate** in canonical state
 - GPT-6 Astra belongs to ChatGPT Work/Codex, not the OpenAI API; never claim an API Astra run.
 - One autonomous cloud specialist run at a time; branch-isolated; cannot merge itself or trade.
 - Do not add OpenAI/Anthropic spend merely to relay work between sessions.
-- Supabase Pro is approved, but the egress/query/window/throttling safeguards from PRs #413/#414 remain mandatory; do not reintroduce unbounded resolved-ledger polling or broad repeated reads.
+- Supabase Pro is approved by the user, but do not claim the organization has actually been upgraded without runtime evidence. The egress/query/window/throttling safeguards from PRs #413/#414 remain mandatory; do not reintroduce unbounded resolved-ledger polling or broad repeated reads.
 
-## SAFETY / SCIENTIFIC INVARIANTS
+## SAFETY INVARIANTS
 
 - Broker disconnected; no real-order authority or fund transfer.
 - Do not rewrite historical predictions, frozen OOS, genuine-forward evidence, or rejected fingerprints.
@@ -143,7 +144,7 @@ There is currently **no promotion-grade 90-day 2x candidate** in canonical state
 - One attractive backtest/OOS result grants no production or live authority.
 - If frozen rigorous criteria genuinely pass, report the success clearly with exact evidence and limitations.
 
-## EXACT NEXT ACTION
+## EXACT NEXT STEP
 
 Execute **`COORD-DISC-DATA-004`** as the primary data-market task: establish one bounded, timestamp-defensible historical data contract for the frozen Binance BTCUSDT/ETHUSDT/SOLUSDT squeeze-retention inputs, or persist a precise terminal blocker and pivot to the next materially distinct available-data hypothesis. Do not inspect strategy outcomes or untouched OOS during source resolution.
 
