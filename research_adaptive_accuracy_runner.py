@@ -312,8 +312,19 @@ def _ffrizz_forward_collection():
     }
 
 
+def _bounded_limit(name, default, minimum, maximum):
+    try:
+        value = int(os.getenv(name, str(default)))
+    except (TypeError, ValueError):
+        value = default
+    return max(minimum, min(value, maximum))
+
+
 def main():
-    rows = fetch_shadow_predictions(limit=10000)
+    # Adaptive diagnostics need enough recent resolved evidence to falsify a
+    # hypothesis, not a full historical table download every cycle.
+    ledger_limit = _bounded_limit("RESEARCH_ADAPTIVE_LEDGER_LIMIT", 500, 100, 2000)
+    rows = fetch_shadow_predictions(limit=ledger_limit)
     report = build_runner_report(rows)
     report["ffrizz_forward_collection"] = _ffrizz_forward_collection()
     summary_path = os.getenv("RESEARCH_ADAPTIVE_ACCURACY_SUMMARY_PATH", "").strip()
