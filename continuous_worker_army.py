@@ -40,6 +40,14 @@ LEARNING_DIAGNOSTICS_RECHECK_SECONDS = max(
     300,
     min(int(os.getenv("WORKER_ARMY_LEARNING_RECHECK_SECONDS", "3600")), 21600),
 )
+EXPERIMENT_FACTORY_RECHECK_SECONDS = max(
+    300,
+    min(int(os.getenv("WORKER_ARMY_EXPERIMENT_FACTORY_RECHECK_SECONDS", "3600")), 21600),
+)
+ADAPTIVE_ACCURACY_MIN_RECHECK_SECONDS = max(
+    300,
+    min(int(os.getenv("WORKER_ARMY_ADAPTIVE_ACCURACY_RECHECK_SECONDS", "3600")), 21600),
+)
 log = logging.getLogger("uvicorn.error")
 
 
@@ -269,6 +277,24 @@ def _success_recheck_delay_seconds(spec: WorkerSpec, evidence) -> int:
         # this every 5 seconds previously reread hundreds/thousands of Supabase rows
         # continuously and exhausted the free egress quota.
         return LEARNING_DIAGNOSTICS_RECHECK_SECONDS
+    if spec.script == "research_experiment_factory_runner.py":
+        # Queue generation uses the same resolved/paper evidence as learning. New
+        # durable outcomes do not arrive at five-second frequency.
+        return EXPERIMENT_FACTORY_RECHECK_SECONDS
+    if spec.script == "research_adaptive_accuracy_runner.py":
+        # Keep adaptive research alive 24/7, but prevent it from polling a large
+        # database evidence window continuously. Genuine failures still use the
+        # error backoff path and are not hidden by this successful-cycle throttle.
+        base = ADAPTIVE_ACCURACY_MIN_RECHECK_SECONDS
+        if isinstance(evidence, dict):
+            conclusion = str(evidence.get("evidence_conclusion") or "")
+            if conclusion in {
+                "no_dispatchable_hypothesis",
+                "deferred_repeat_no_material_new_evidence",
+                "pending_validation",
+            }:
+                return max(base, ADAPTIVE_IDLE_RECHECK_SECONDS)
+        return base
     if not isinstance(evidence, dict):
         return REST_SECONDS
     if spec.script == "cross_asset_runner.py":
@@ -283,14 +309,6 @@ def _success_recheck_delay_seconds(spec: WorkerSpec, evidence) -> int:
         )
         if pure_history_block:
             return NATURAL_HISTORY_RECHECK_SECONDS
-    if spec.script == "research_adaptive_accuracy_runner.py":
-        conclusion = str(evidence.get("evidence_conclusion") or "")
-        if conclusion in {
-            "no_dispatchable_hypothesis",
-            "deferred_repeat_no_material_new_evidence",
-            "pending_validation",
-        }:
-            return ADAPTIVE_IDLE_RECHECK_SECONDS
     return REST_SECONDS
 
 
