@@ -23,3 +23,12 @@ def test_runtime_acceptance_runs_automatically_after_relevant_main_changes():
         "supabase/migrations/**",
     ):
         assert f"- {path}" in workflow
+
+
+def test_runtime_acceptance_failure_reports_only_bounded_diagnostics():
+    workflow = WORKFLOW.read_text(encoding="utf-8")
+
+    assert 'echo "Last acceptance HTTP status: $status"' in workflow
+    assert "del(.detail)" in workflow
+    assert "{ok, deployed_sha, fingerprint_id, screen_status}" in workflow
+    assert 'echo "Last acceptance response was not valid JSON"' in workflow
