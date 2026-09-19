@@ -10,6 +10,17 @@ from orchestration.rejected_fingerprints import (
 from orchestration.specialist_coordination import load_state, validate_state
 
 
+ACTIVE_STATUSES = {"READY", "IN_PROGRESS", "PR_OPEN"}
+
+
+def _active_discovery_task(state):
+    return next(
+        row
+        for row in state["tasks"]
+        if row["status"] in ACTIVE_STATUSES and row["id"].startswith("COORD-DISC-")
+    )
+
+
 def test_canonical_registry_loads_with_required_fields():
     entries = load_rejected_fingerprints()
     assert len(entries) >= 3
@@ -66,19 +77,14 @@ def test_missing_required_field_is_rejected(tmp_path):
         load_rejected_fingerprints(path)
 
 
-
 def test_coordination_task_declaring_rejected_fingerprint_fails_closed():
     state = load_state()
     bad = copy.deepcopy(state)
-    task = next(
-        row for row in bad["tasks"]
-        if row["owner"] == "data-market"
-        and row["status"] in {"READY", "IN_PROGRESS", "PR_OPEN"}
-        and row["id"].startswith("COORD-DISC-")
-    )
+    task = _active_discovery_task(bad)
     task["fingerprint_id"] = "DATA-BASIS-001"
     with pytest.raises(RuntimeError, match="rejected fingerprint"):
         validate_state(bad)
+
 
 def test_coordination_task_declaring_rejected_fingerprint_is_fine_when_done():
     # A DONE task recording historical rejection evidence must not be blocked:
@@ -92,16 +98,9 @@ def test_coordination_task_declaring_rejected_fingerprint_is_fine_when_done():
     validate_state(ok)  # must not raise
 
 
-
 def test_coordination_task_with_genuinely_new_fingerprint_is_unaffected():
     state = load_state()
     ok = copy.deepcopy(state)
-    task = next(
-        row for row in ok["tasks"]
-        if row["owner"] == "data-market"
-        and row["status"] in {"READY", "IN_PROGRESS", "PR_OPEN"}
-        and row["id"].startswith("COORD-DISC-")
-    )
+    task = _active_discovery_task(ok)
     task["fingerprint_id"] = "DATA-BREADTH-002-GENUINELY-NEW"
     validate_state(ok)  # must not raise
-
