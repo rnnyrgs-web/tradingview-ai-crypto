@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "information_cutoff": "2026-09-19T02:30:00Z",
+  "information_cutoff": "2026-09-19T02:55:00Z",
   "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
   "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate or broker state changed.",
   "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
@@ -13,39 +13,63 @@
     "The CFTC states that Commitments of Traders data are generally published Friday at 3:30 p.m. Eastern using positions from the preceding Tuesday. Therefore the report with positions as of Sep. 15 would normally have become public only at 19:30Z Sep. 18, after BTC had already crossed $80K during the U.S. market open. Sep. 15 COT positions must not be used as a pre-move predictor for the Sep. 18 breakout.",
     "The latest public CFTC TFF snapshot that was safely available before the Sep. 18 U.S.-session breakout was the Sep. 8 report. It showed CME standard-Bitcoin leveraged funds long 5,146 contracts and short 13,038, net short 7,892 standard contracts, approximately 39,460 BTC equivalent before spreads/hedges. This was a pre-move short-crowding state, but not proof of directional bearish exposure because cash-and-carry/basis hedges can create futures shorts against spot longs.",
     "CoinDesk's Sep. 18 live coverage recorded BTC just below $78K in the earlier session and above $80K around the opening minutes of the U.S. market day; later it reported roughly $238M of BTC shorts liquidated as BTC reached about $81K. This establishes the squeeze as a post-impulse amplifier rather than a pre-move causal label.",
-    "A useful matched episode occurred Aug. 19-24. Farside records BTC ETF inflows of +$517.2M Aug. 19, +$606.3M Aug. 20, +$307.5M Aug. 21 and +$337.6M Aug. 24. CoinDesk reported a record short squeeze around Aug. 20, while BTC continued higher and reached roughly $81.2K by Aug. 24. The episode therefore combined forced short covering with already-observable, persistent regulated spot demand."
+    "A useful matched episode occurred Aug. 19-24. Farside records BTC ETF inflows of +$517.2M Aug. 19, +$606.3M Aug. 20, +$307.5M Aug. 21 and +$337.6M Aug. 24. CoinDesk reported a record short squeeze around Aug. 20, while BTC continued higher and reached roughly $81.2K by Aug. 24. The episode therefore combined forced short covering with already-observable, persistent regulated spot demand.",
+    "France's 10-year sovereign spread over Germany reached about 104 bp on Sep. 18, the first three-digit premium since 2012. Reuters reports the spread has risen about 40 bp since June and France's borrowing costs have risen faster than other developed sovereigns during the recent global selloff.",
+    "Agence France Tresor reports negotiable government debt outstanding of about EUR2.904T at Aug. 31 and a Sep. 18 TEC-10 reference rate of 4.47%; its Sep. 17 medium-term OAT auction placed EUR12.991B with bid-to-cover ratios between 2.22 and 2.93 across the four lines, showing market access remained functional despite the repricing.",
+    "The French government is now trying to move the deficit from about 5.4% of GDP in 2026 toward 5.0% in 2027 through roughly EUR54B of savings, while weak growth, higher energy costs, rising debt service and a fragmented parliament make implementation uncertain. Reuters reports debt-service costs are already expected to exceed prior plans by EUR4.5B this year and a further EUR10B next year.",
+    "ECB President Lagarde said on Sep. 18 that she saw no market disorder or tension and pushed back on a mechanical energy-price-to-rate-hike interpretation. This is important negative evidence against labeling the French spread widening a current euro-system funding crisis."
   ],
   "inferences": [
-    "The current Sep. 18 causal decomposition remains two-stage: a discretionary/spot/regulatory impulse moved price into vulnerable short positioning, then forced short-covering amplified the move. BTC holding above $81K after the forced-flow window ended strengthens the case that the move was not sustained solely by liquidations.",
+    "The current Sep. 18 BTC causal decomposition remains two-stage: a discretionary/spot/regulatory impulse moved price into vulnerable short positioning, then forced short-covering amplified the move. BTC holding above $81K after the forced-flow window ended strengthens the case that the move was not sustained solely by liquidations.",
     "Point-in-time integrity requires correcting the positioning evidence: Sep. 15 CFTC data are valid post-move mechanism context but were not public before the breakout. Any pre-move causal-lab case must use Sep. 8 or earlier public CFTC data. This correction reduces hindsight contamination without removing the short-crowding hypothesis because the Sep. 8 report itself showed substantial leveraged-fund net-short futures inventory.",
     "The Aug. 20 matched episode supports a conditional rather than standalone squeeze hypothesis: short crowding can amplify an upside move, but continuation was stronger when multi-session ETF creations were already broad and persistent. The current Sep. 18 episode is directionally similar, but its key ETF day is still incomplete and therefore has not yet reached the same evidence quality.",
     "Funding is rising while aggregate open interest remains below the prior 24-hour level. That is consistent with a market transitioning from short removal toward more expensive long exposure, but it does not yet prove destabilizing long crowding because open interest has not rebuilt above its prior level and BTC is still holding the breakout area.",
-    "No broad crypto-liquidity expansion is validated. Current evidence supports capital rotation and regulated spot demand plus forced-flow amplification more strongly than a system-wide stablecoin/liquidity surge."
+    "No broad crypto-liquidity expansion is validated. Current evidence supports capital rotation and regulated spot demand plus forced-flow amplification more strongly than a system-wide stablecoin/liquidity surge.",
+    "The French OAT move contains both a global duration component and a France-specific fiscal/political risk premium. The matched relative move versus Germany is the cleaner causal signal: energy and global rates raised the common discount-rate floor, while weaker French fiscal credibility, political fragmentation and election risk increased the compensation required specifically for French duration.",
+    "France is not yet a validated systemic euro crisis: primary issuance still cleared with healthy bid-to-cover, the ECB reports no disorder, and there is no evidence here of impaired market access. The more defensible interpretation is a repricing of sovereign relative value and fiscal credibility, with a potential adverse feedback loop if higher refinancing costs persist long enough to worsen the deficit path."
   ],
   "hypotheses": [
     {
       "id": "btc-short-crowding-plus-spot-demand-conditional-continuation",
       "status": "SUPPORTED_CANDIDATE / NOT YET PREDICTIVE",
       "claim": "Pre-existing short crowding increases upside convexity only conditionally on a genuine discretionary spot/catalyst impulse; durable post-squeeze continuation is more likely when regulated spot flows remain positive and broad after forced buying fades.",
-      "inputs_available_before_move": [
-        "Latest actually-published CFTC leveraged-fund positioning, not merely the latest as-of date",
-        "Completed ETF creations/redemptions available before the move",
-        "Funding/open interest/basis available before the move",
-        "Regulatory/macro catalysts and price relative strength",
-        "Nearby liquidity/resistance levels"
-      ],
+      "inputs_available_before_move": ["Latest actually-published CFTC leveraged-fund positioning, not merely the latest as-of date", "Completed ETF creations/redemptions available before the move", "Funding/open interest/basis available before the move", "Regulatory/macro catalysts and price relative strength", "Nearby liquidity/resistance levels"],
       "predicted_effect": "Given a positive spot/catalyst impulse, greater public short crowding should increase immediate right-tail move magnitude; persistence should depend more on post-impulse spot/ETF demand than on liquidation size itself.",
       "matched_control": "Aug. 20, 2026 short squeeze with accelerating ETF inflows and multi-session continuation versus future episodes with comparable short crowding but weak/negative spot flows.",
       "falsification": "In a timestamp-safe matched sample, public pre-move short crowding adds no information to upside-tail magnitude conditional on spot impulse, or post-squeeze continuation is unrelated to persistent spot/ETF demand after controlling for volatility/liquidity/regime.",
       "base_rate_status": "UNKNOWN; historical matched sample remains incomplete."
+    },
+    {
+      "id": "france-sovereign-risk-premium-fiscal-feedback",
+      "status": "SUPPORTED_CANDIDATE / REGIME-SPECIFIC / NOT YET FORECAST",
+      "claim": "When a high-debt sovereign with weak growth enters a global rate/energy shock while fiscal consolidation credibility deteriorates, its spread versus a close monetary-union safe benchmark can widen materially beyond the common duration move; persistence depends on political budget credibility and whether higher interest expense begins reinforcing the fiscal deficit.",
+      "inputs_available_before_move": ["France-Germany 10y spread and change versus other euro sovereigns", "Budget deficit/debt trajectory and debt-service revisions", "Election/parliament budget-pass probabilities", "AFT auction demand and market-access metrics", "ECB disorder/TPI language", "Energy and ECB path expectations"],
+      "predicted_effect": "Idiosyncratic fiscal/political deterioration should widen OAT-Bund spreads even after controlling for common euro duration moves; credible consolidation or ECB/systemic backstop signals should cap or reverse the spread.",
+      "matched_control": "Compare Spain/Italy and prior France episodes under similar euro-area rate shocks but different fiscal/growth/political trajectories.",
+      "falsification": "The France-Germany spread closes despite unchanged fiscal/political concerns, or matched euro-sovereign moves show the widening is fully explained by generic duration/energy beta rather than France-specific risk.",
+      "base_rate_status": "UNKNOWN; historical matched sovereign sample not yet built."
     }
   ],
+  "cross_asset_big_move_scan": {
+    "france_oat_20260918": {
+      "status": "HIGH-INFORMATION CANDIDATE FOR CANONICAL BIG-MOVE LAB",
+      "move": "France 10y spread over Germany reached roughly 104 bp, first above 100 bp since 2012; Reuters also reported French 10y yields around 4.573% during the Sep. 18 session.",
+      "catalyst": "Global energy/rate selloff intersecting with a worsening 2026 fiscal path, a difficult EUR54B 2027 consolidation plan and rising 2027 election/political uncertainty.",
+      "transmission_mechanism": "Higher common rates raise sovereign refinancing cost; France-specific fiscal/political uncertainty raises required relative risk premium; higher debt service worsens fiscal arithmetic, which can reflexively require more consolidation or higher future borrowing.",
+      "amplifiers": ["Large refinancing stock", "Weak growth", "Fragmented parliament", "Election tail risk", "Energy-import inflation/growth shock", "Relative-value and benchmark reallocation"],
+      "capital_source_destination": "Observed price action is consistent with capital demanding greater compensation for OATs relative to Bunds and other euro sovereigns. Exact account-level source/destination flows remain UNKNOWN.",
+      "negative_controls": ["AFT auctions still cleared with meaningful bid-to-cover, so market access was not impaired", "Lagarde reported no market disorder/tension", "Italy also weakened but France's spread moved much more, supporting an idiosyncratic component"],
+      "decision_support": "WAIT / MONITOR SOVEREIGN RELATIVE-VALUE RISK; no direct trade thesis frozen because 104 bp may already embed substantial fiscal/political premium and ECB/political responses are nonlinear.",
+      "canonical_insertion_gate": "Add to big_move_lab after reconstructing a timestamp-safe pre-move spread path and matched Italy/Spain controls; avoid treating the 2012 threshold itself as predictive."
+    }
+  },
   "negative_findings_and_corrections": [
     "Do not use Sep. 15 CFTC positions as evidence that was available before the Sep. 18 U.S.-session breakout; normal COT publication timing places release after the move. Use Sep. 8 as the last safely public pre-move snapshot unless a different timestamped publication record proves otherwise.",
     "Do not treat a large futures net short as pure bearish direction; leveraged-fund shorts can be basis hedges against long spot/ETF exposure.",
     "Do not treat price-up/open-interest-down as a continuation predictor. It diagnoses position closure and amplification more directly than it predicts what follows.",
     "Do not finalize Sep. 18 BTC ETF flow while IBIT remains missing. The current +$324.6M is a partial reported total.",
-    "Do not infer a broad crypto-liquidity regime from the rally alone; the leverage flush, partial ETF demand and asset-specific regulatory catalysts can explain the move without system-wide monetary expansion."
+    "Do not infer a broad crypto-liquidity regime from the rally alone; the leverage flush, partial ETF demand and asset-specific regulatory catalysts can explain the move without system-wide monetary expansion.",
+    "Do not call the French spread move a euro crisis merely because it crossed a 2012 level; issuance remained functional and the ECB reported no disorder."
   ],
   "decision_support": {
     "instrument": "BTC",
@@ -54,28 +78,17 @@
     "confidence": "MODERATE on near-term strength; MODERATE-HIGH that short covering amplified Sep. 18; LOW-MODERATE on a durable institutional accumulation regime until Sep. 18 flow is finalized and follow-through is observed",
     "thesis": "Price has retained the $81K area after forced short liquidations fell to zero in the latest 1h/4h windows, and currently reported Sep. 18 ETF creations outside IBIT are broad and large. This strengthens the spot-demand interpretation, but the key ETF day remains incomplete and funding has become more expensive, so the evidence still does not justify upgrading to a clean BUY thesis.",
     "capital_source_destination": "Validated marginal buyers include forced short-coverers and reported regulated spot-ETF creations. The underlying accounts funding ETF creations and the scale of non-ETF discretionary spot demand remain UNKNOWN.",
-    "confirmations_required": [
-      "Final Sep. 18 IBIT flow leaves the session strongly positive",
-      "Subsequent completed BTC ETF sessions remain positive with issuer breadth",
-      "BTC holds or advances above roughly $80K-$82K after liquidations remain normalized",
-      "Open interest rebuild is controlled and funding does not become extreme while price stalls",
-      "Timestamp-consistent exchange/on-chain evidence supports absorption rather than distribution"
-    ],
-    "invalidation_or_downgrade": [
-      "Final Sep. 18 IBIT flow materially offsets the reported +$324.6M",
-      "ETF redemptions resume across subsequent completed sessions",
-      "BTC loses roughly $77K-$78K after forced buying has ended",
-      "Open interest rebuilds aggressively on the long side while funding rises and price stops advancing",
-      "Higher-quality spot/on-chain data show distribution into strength"
-    ],
+    "confirmations_required": ["Final Sep. 18 IBIT flow leaves the session strongly positive", "Subsequent completed BTC ETF sessions remain positive with issuer breadth", "BTC holds or advances above roughly $80K-$82K after liquidations remain normalized", "Open interest rebuild is controlled and funding does not become extreme while price stalls", "Timestamp-consistent exchange/on-chain evidence supports absorption rather than distribution"],
+    "invalidation_or_downgrade": ["Final Sep. 18 IBIT flow materially offsets the reported +$324.6M", "ETF redemptions resume across subsequent completed sessions", "BTC loses roughly $77K-$78K after forced buying has ended", "Open interest rebuilds aggressively on the long side while funding rises and price stops advancing", "Higher-quality spot/on-chain data show distribution into strength"],
     "liquidity_cost_capacity": "BTC is highly liquid relative to crypto, but funding, basis and event-window slippage can change quickly. Research/decision support only; no execution authority."
   },
-  "big_move_lab_status": "READYING WITH POINT-IN-TIME CORRECTION. The Sep. 18 BTC case now has enough mechanism evidence for eventual insertion, but the pre-move positioning field must use the Sep. 8 CFTC report rather than Sep. 15 because the latter was not public until after the breakout. Canonical insertion remains deferred until Sep. 18 ETF flow is finalized and the exact pre-move information cutoff is frozen.",
+  "big_move_lab_status": "READYING WITH POINT-IN-TIME CORRECTION. The Sep. 18 BTC case now has enough mechanism evidence for eventual insertion, but the pre-move positioning field must use the Sep. 8 CFTC report rather than Sep. 15 because the latter was not public until after the breakout. France OAT/Bund widening is also a high-information candidate, but canonical insertion is deferred until matched euro-sovereign controls and a timestamp-safe pre-move path are built.",
   "prediction_ledger": "No new immutable forward forecast frozen. Dashboard scorecard remains frozen=0 and resolved=0.",
-  "canonical_update_decision": "Persist this research-cycle artifact only. Do not update dashboard_state, learning_ledger or big_move_lab yet: the broad regime and BTC WAIT action are unchanged, Sep. 18 ETF flow is incomplete, and the point-in-time CFTC correction should be incorporated when the BTC big-move case is finalized rather than creating a noisy intermediate canonical state.",
+  "canonical_update_decision": "Persist this research-cycle artifact only. Do not update dashboard_state, learning_ledger or big_move_lab yet: the broad regime and BTC WAIT action are unchanged, Sep. 18 ETF flow is incomplete, and both BTC/France causal-lab candidates still need point-in-time/matched-control completion. This avoids noisy or prematurely finalized canonical state.",
   "next_priority": [
     "Re-check Farside until Sep. 18 IBIT and the major ETH issuers are finalized; then compute completed Sep. 15-18 and Sep. 17-18 flows and issuer breadth.",
     "Build a timestamp-safe matched BTC squeeze sample beginning with Aug. 20 and Sep. 18, using only CFTC reports actually published before each move, completed pre-move ETF flows, leverage state and 1d/3d/5d continuation.",
+    "Build matched France/Italy/Spain sovereign controls around Sep. 2026 to decompose generic euro-duration beta from fiscal/political spread beta.",
     "Track BTC price retention, funding and open-interest rebuild after the forced-flow window; distinguish spot-led continuation from new leveraged-long crowding.",
     "Resolve exchange/on-chain flow disagreement with a timestamp-consistent higher-quality source before using those variables for confirmation.",
     "Once Sep. 18 ETF flow is final, insert the BTC case into big_move_lab only if the pre-move cutoff remains clean."
@@ -87,7 +100,10 @@
     "CFTC Commitments of Traders publication policy: reports generally release Friday 3:30 p.m. Eastern using prior Tuesday data: https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm",
     "CFTC Traders in Financial Futures futures-only report for positions as of 2026-09-08: https://www.cftc.gov/dea/futures/financial_lf.htm",
     "CoinDesk Sep. 18, 2026 live BTC/crypto coverage for breakout chronology and liquidation context",
-    "Farside historical BTC ETF table for Aug. 19-24, 2026 matched episode"
+    "Farside historical BTC ETF table for Aug. 19-24, 2026 matched episode",
+    "Reuters Sep. 18, 2026 France OAT/Bund fiscal-risk explainer: https://www.reuters.com/business/finance/why-frances-budget-problems-have-driven-its-bond-risk-premium-2012-highs-2026-09-18/",
+    "Agence France Tresor current debt/TEC-10 and Sep. 17 OAT auction data: https://www.aft.gouv.fr/en",
+    "Reuters Sep. 18, 2026 Lagarde comments on energy-driven rate bets and absence of market disorder"
   ],
   "reporting_gate": "No owner-facing report. At least 60 minutes of cumulative verifiable research/execution time has not been established; schedule cadence and artifact timestamps are not treated as duration evidence. Continue quietly."
 }
