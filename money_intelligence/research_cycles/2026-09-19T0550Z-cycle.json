@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-19T05:50:09Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate or broker state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-19T05:46:22Z",
+    "artifact_cutoff_utc": "2026-09-19T05:50:09Z",
+    "seconds_this_run": 227,
+    "reporting_gate": "NOT MET. Only directly observed execution time is counted; schedule gaps and artifact timestamps outside a directly observed run are not treated as research duration."
+  },
+  "highest_information_question": "Which apparent capital-flow signals are durable discretionary reallocations rather than temporary forced flow, and where are physical/logistical or financing bottlenecks changing the destination and clearing price of capital?",
+  "fresh_validated_observations": [
+    {
+      "topic": "BTC is retaining the Sep. 18 breakout after the forced-buying window normalized",
+      "label": "OBSERVED FACT / INFERENCE",
+      "facts": [
+        "CoinMarketCap quoted BTC at about $80,993 at 2026-09-19T05:48Z, +4.56% over 24 hours, while ETH was about $2,626, +5.86%.",
+        "CoinMarketCap global derivatives data showed total crypto open interest around $454.62B, down 4.04% over 24 hours; perpetual open interest was around $453.25B, down 4.07%.",
+        "Average perpetual funding was about 0.0063863, still materially higher over seven days but slightly lower versus the immediately preceding 24-hour comparison.",
+        "BTC liquidations were about $266.68M over 24 hours, of which about $257.74M were shorts; the latest one-hour window was zero and the latest four-hour window only about $1.54M.",
+        "The previously finalized Sep. 18 U.S. spot-BTC ETF flow was +$433.0M, bringing Sep. 17-18 to +$592.5M but leaving Sep. 15-18 around -$153.8M after the earlier redemption cluster."
+      ],
+      "inference": "The forced short-cover impulse is no longer sufficient to explain price retention by itself. Regulated spot creations are a validated contributor to the move, but two positive ETF sessions still do not establish a durable institutional accumulation regime because the broader four-session balance remains slightly negative and no longer-history base rate has been established.",
+      "decision_support": "BTC remains WAIT / TACTICAL MOMENTUM CANDIDATE, not an immutable BUY. Upgrade only after additional completed positive ETF sessions plus controlled leverage and price retention; downgrade if ETF redemptions resume or BTC loses the breakout after forced buying is dormant."
+    },
+    {
+      "topic": "Oil benchmark easing can coexist with severe regional/grade scarcity",
+      "label": "OBSERVED FACT / SUPPORTED MECHANISM DEEPENING",
+      "facts": [
+        "Reuters reported Sep. 18 that Saudi Aramco plans roughly 60 million barrels of Gulf-port exports during September and October using ship-to-ship transfers near Sohar, Oman, approximately 1-1.5 mb/d, offsetting part of the Yanbu/East-West disruption.",
+        "Reuters reported Japanese refiners had secured adequate crude supplies through November via the workaround even as supertanker freight costs remained exceptionally high.",
+        "At the same time, Reuters reported Russian ESPO crude above $120/bbl with a roughly $20-$30/bbl premium to Brent as Chinese refiners competed for replacement barrels."
+      ],
+      "inference": "Commodity scarcity is a vector across route, location, grade, freight and product rather than one scalar global shortage. Logistics substitution can lower benchmark Brent scarcity premium while simultaneously shifting scarcity rent into accessible grades such as ESPO and into freight/insurance. This strengthens the existing effective-deliverable-supply hypothesis and explains why benchmark direction alone can understate physical stress.",
+      "matched_control": "Brent easing versus ESPO premium expansion is a same-regime internal control: the common geopolitical shock persisted, but assets with different deliverability constraints repriced differently.",
+      "decision_support": "Maintain WAIT on a simple Brent directional trade. Monitor route-specific physical differentials, freight and product cracks for the more persistent inflation signal."
+    },
+    {
+      "topic": "AI capex remains abundant, but financing and permitting quality are increasingly first-order allocation variables",
+      "label": "SUPPORTED / PROVISIONAL CROSS-CASE LEARNING",
+      "facts": [
+        "Reuters reported Crusoe raised $3.9B at a $30.9B post-money valuation for AI infrastructure, another large equity-capital allocation into physical compute capacity.",
+        "Reuters reported RoboTechnik is preparing an approximately $800M Hong Kong secondary listing, with proceeds intended for R&D, capacity expansion and related growth in equipment serving photovoltaics and silicon-photonics/data-center infrastructure.",
+        "Nscale's Sep. 18 SEC S-1 reports about $103.4B of active and contracted TCV and roughly 461,000 active/contracted GPUs, while its largest customer represented 52% of H1 2026 revenue and weighted-average customer prepayments were about 23% of active/contracted TCV.",
+        "CoreWeave's Sep. 17 SEC filings show access to a multi-billion-dollar 2033 convertible financing while also preserving up to 35 million shares of ATM/forward equity capacity, demonstrating capital access but also meaningful instrument optionality/dilution and an existing high-coupon debt stack.",
+        "Reuters reported Oracle Project Jupiter's roughly $18B project loans trading around 89-91 cents with stalled syndication amid sponsor-credit, power/permitting and execution concerns.",
+        "Reuters reported Virginia tightening its data-center accountability framework as political, power and environmental constraints intensify."
+      ],
+      "inference": "The AI investment boom is not equivalent to uniformly easy financing. Capital is still flowing strongly into compute/data-center/tooling capacity, but sponsor credit, contracted/prepaid cash flows, collateral, customer concentration, power/permitting certainty, local political constraints and instrument structure increasingly determine financing cost and secondary performance. Regulatory/power externalities can therefore become a binding capital-allocation bottleneck even when aggregate AI capex keeps rising.",
+      "negative_finding": "Do not compare headline coupons across convertibles, secured project loans and straight debt as if they were equivalent prices of credit; embedded equity optionality, collateral and maturity materially change economics.",
+      "decision_support": "HOLD / RESEARCH FOR BUY candidates in high-quality physical AI infrastructure; WAIT/AVOID generic theme extrapolation to every borrower/project. No individual-asset BUY is frozen."
+    },
+    {
+      "topic": "Gold strength still has a plausible forced-positioning component",
+      "label": "OBSERVED FACT / ALTERNATIVE EXPLANATION",
+      "facts": [
+        "Reuters reported spot gold at about $4,390/oz on Sep. 18, up roughly 1.2%, even with the dollar near a seven-week high and the U.S. 10-year yield around 5%.",
+        "The same report attributed part of the move to easing oil/inflation fears and unwinding of short positions established around the Fed tightening event."
+      ],
+      "inference": "Gold's resilience remains supportive of the existing structural allocation thesis, but a single session should not be treated as pure discretionary strategic inflow because short-covering and changing inflation expectations can amplify price. This is another example of forced flow as amplifier rather than complete cause.",
+      "decision_support": "No canonical action change; HOLD / ACCUMULATE WEAKNESS remains more defensible than chasing a vertical move."
+    }
+  ],
+  "daily_big_move_scan": {
+    "selected_or_retested": [
+      "BTC Sep. 18-19 retention: forced short-covering has largely normalized while price remains near $81K and finalized ETF demand was strongly positive on Sep. 18; continuation remains conditional on subsequent completed spot-flow sessions.",
+      "Brent versus ESPO relative pricing: benchmark crude eased while a highly accessible replacement grade carried an extreme premium, strengthening the route/location/grade deliverability mechanism.",
+      "Gold Sep. 18 resilience: informative, but short-covering is a credible amplifier and the move does not yet warrant a new canonical case.",
+      "Volkswagen Sep. 18 fundamental gap: prior cycle's primary-source reconstruction remains ready for eventual canonical Big-Move Lab promotion; no contradictory evidence found in this window."
+    ],
+    "no_new_case": [
+      "No additional global-market move after the U.S. Friday close cleared the bar for a distinct new causal case during this short window."
+    ]
+  },
+  "prediction_ledger": "No new immutable forecast frozen. Existing canonical scorecard remains frozen=0 and resolved=0; no prior forecast was rewritten.",
+  "canonical_update_decision": "Persist this cycle only. The fresh evidence strengthens existing oil-deliverability, BTC squeeze-plus-spot-demand and AI funding-dispersion mechanisms but does not change the broad dashboard regime or decision actions. Avoid noisy canonical churn; promote the already-mature Volkswagen and AI-funding entries in a later clean atomic canonical update after re-fetching latest state.",
+  "next_priority": [
+    "Observe the next completed U.S. spot-BTC and ETH ETF sessions and test whether Sep. 17-18 becomes a durable multi-session accumulation regime or fades.",
+    "Build the timestamp-safe BTC squeeze matched sample using pre-publication positioning, pre-move ETF flows, funding/open interest/basis and 1d/3d/5d continuation.",
+    "Promote Volkswagen Sep. 18 into the canonical Big-Move Lab and AI funding dispersion into the learning ledger in one clean state update when concurrency/noise risk is low.",
+    "Extend oil matched controls using Brent versus ESPO/other grades, freight, inventory and product cracks to quantify when route substitution moves scarcity rent rather than eliminating it.",
+    "Test AI financing dispersion on a larger matched set with explicit controls for convert optionality, collateral, maturity, sponsor credit, contracted cash flow/prepayments, customer concentration and permitting/power certainty."
+  ],
+  "sources": [
+    "CoinMarketCap connected BTC/ETH quote and global-derivatives feeds, accessed 2026-09-19T05:48Z",
+    "Farside Investors finalized Sep. 18 BTC/ETH flows as preserved in the immediately preceding canonical research cycle",
+    "Reuters Sep. 18 2026 Aramco Gulf-export workaround report: https://www.reuters.com/business/energy/aramco-boost-exports-strait-hormuz-60-million-bbl-september-october-traders-say-2026-09-18/",
+    "Reuters Sep. 18 2026 ESPO physical-crude report: https://www.reuters.com/business/energy/russian-espo-oil-price-exceeds-120-per-barrel-traders-say-data-shows-2026-09-18/",
+    "Reuters Sep. 17 2026 Crusoe financing report: https://www.reuters.com/business/ai-infrastructure-provider-crusoe-valued-309-billion-latest-funding-round-2026-09-17/",
+    "Reuters Sep. 18 2026 RoboTechnik listing report: https://www.reuters.com/world/asia-pacific/chinas-robotechnik-launch-800-million-hong-kong-listing-september-21-sources-say-2026-09-18/",
+    "Nscale Sep. 18 2026 SEC S-1: https://www.sec.gov/Archives/edgar/data/2110365/000119312526395475/ck0002110365-20260918.htm",
+    "CoreWeave Sep. 17 2026 SEC financing/equity-distribution filings: https://www.sec.gov/Archives/edgar/data/1769628/000176962826000429/crwv-20260917.htm and https://www.sec.gov/Archives/edgar/data/1769628/000162828026062362/coreweave-424b5.htm",
+    "Reuters Sep. 18 2026 Oracle Project Jupiter debt report: https://www.reuters.com/business/finance/oracles-18-billion-data-center-debt-under-pressure-ft-reports-2026-09-18/",
+    "Reuters Sep. 18 2026 Virginia data-center restrictions report: https://www.reuters.com/world/us/virginia-tightens-data-center-restrictions-amid-political-backlash-2026-09-18/",
+    "Reuters Sep. 18 2026 gold report: https://www.reuters.com/business/gold-extends-gains-scale-one-week-high-crude-prices-ease-2026-09-18/"
+  ],
+  "reporting_gate": "No owner-facing report. The required 60 minutes of cumulative verifiable research/execution time has not been established; continue quietly."
+}
