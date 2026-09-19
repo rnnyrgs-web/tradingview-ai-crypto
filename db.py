@@ -115,13 +115,21 @@ def _iso_to_epoch_ms(value):
 
 
 def _expose_preforecast_market_fields(row):
-    """Expose prospective ledger provenance without fabricating historical fields."""
+    """Expose prospective ledger provenance without fabricating historical fields.
+
+    Older resolved rows may have verbose calibration JSON compacted away after the
+    scientifically useful point-in-time context is copied into research_context.
+    Recent rows still expose the same information directly from calibration.
+    """
     if not isinstance(row, dict):
         return row
+    research_context = row.get("research_context")
     calibration = row.get("calibration")
-    if not isinstance(calibration, dict):
-        return row
-    context = calibration.get("preforecast_market_context")
+    context = None
+    if isinstance(research_context, dict):
+        context = research_context.get("preforecast_market_context")
+    if not isinstance(context, dict) and isinstance(calibration, dict):
+        context = calibration.get("preforecast_market_context")
     if not isinstance(context, dict):
         return row
     market = context.get("market_consensus")
@@ -157,7 +165,7 @@ def fetch_resolved_predictions(limit=5000):
     if not configured():
         return []
     params={
-        "select":"due_at,resolved_at,horizon,score,market_regime,correct,directional_return_pct,strategy_identity,action_at_forecast,calibration",
+        "select":"due_at,resolved_at,horizon,score,market_regime,correct,directional_return_pct,strategy_identity,action_at_forecast,research_context",
         "resolved_at":"not.is.null","order":"resolved_at.desc","limit":str(max(1,min(int(limit),10000)))
     }
     r=http.get(f"{SUPABASE_URL}/rest/v1/prediction_ledger",headers=headers(),params=params)
@@ -177,7 +185,7 @@ def fetch_shadow_predictions(limit=500):
         return []
     bounded_limit=max(1,min(int(limit),2000))
     params={
-        "select":"id,due_at,resolved_at,scan_id,symbol,horizon,direction,entry_price,score,market_regime,strategy_identity,action_at_forecast,directional_return_pct,correct,calibration",
+        "select":"id,due_at,resolved_at,scan_id,symbol,horizon,direction,entry_price,score,market_regime,strategy_identity,action_at_forecast,directional_return_pct,correct,research_context,calibration",
         "resolved_at":"not.is.null",
         "order":"resolved_at.desc",
         "limit":str(bounded_limit),
