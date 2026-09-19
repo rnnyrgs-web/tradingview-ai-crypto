@@ -106,6 +106,24 @@ def research_observability(
         internal_error("research_observability", e, "Research observability unavailable")
 
 
+@app.post("/research/profitability-learning/acceptance")
+def profitability_learning_runtime_acceptance(
+    x_scan_secret: Optional[str] = Header(default=None),
+):
+    """Replay only the repository-sealed rejected pre-OOS acceptance artifact."""
+    verify_secret(None, x_scan_secret)
+    try:
+        from profitability_learning.acceptance import run_rejected_leadlag_acceptance
+
+        return run_rejected_leadlag_acceptance()
+    except Exception as e:
+        internal_error(
+            "profitability_learning_runtime_acceptance",
+            e,
+            "Profitability Learning runtime acceptance failed",
+        )
+
+
 @app.get("/selective-precision")
 def selective_precision_observability(
     secret: Optional[str] = None,
