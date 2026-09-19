@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-19T2030Z",
+  "information_cutoff": "2026-09-19T20:30:52Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "context_integrity": {
+    "read_current_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-19T20:25:42Z",
+    "artifact_cutoff_utc": "2026-09-19T20:30:52Z",
+    "seconds_this_run": 310,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 775,
+    "minimum_cumulative_seconds_since_last_owner_report": 1085,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted; schedule gaps, idle time and article timestamps are excluded."
+  },
+  "highest_information_question": "Can listed crypto-treasury wrappers be modeled as a causal capital-flow bridge into or out of the underlying asset, and which observable financing/capital-structure states distinguish real marginal flow from legal capacity, narrative repricing or dilution?",
+  "fresh_validated_observations": [
+    {
+      "topic": "Treasury-wrapper capital flow is balance-sheet mediated rather than mechanical",
+      "label": "PRIMARY-SOURCE MATCHED-CONTROL / CAUSAL-MECHANISM DEEPENING",
+      "observed_facts": [
+        "Strategy disclosed on June 8, 2026 that 1,550 BTC purchased for $101.3M were funded using proceeds from ATM share sales. Multiple other Strategy filings use the same explicit ATM-proceeds-to-BTC-acquisition linkage.",
+        "Strategy disclosed on July 6, 2026 that it sold 1,363 BTC for $80.8M on June 29-30 and 2,225 BTC for $135.2M on July 1-5, with sale proceeds used to fund preferred-stock distributions and replenish its USD reserve. This provides a reverse-direction control: treasury-company obligations can turn the wrapper into underlying-asset supply rather than demand.",
+        "Sharplink disclosed in June 2026 that it raised $75M in a registered direct offering and intended to use proceeds to acquire ETH; its August operating update said a portion funded about 10,000 ETH. Earlier Sharplink filings explicitly state ETH purchases were made using ATM proceeds.",
+        "StablecoinX's September 17 waiver changes legal usability of its ENA treasury, but actual ENA disposition still requires the Funding Sale process or other Foundation consent. Legal capacity therefore does not itself identify realized market flow."
+      ],
+      "inference": "For listed crypto-treasury wrappers the causal bridge is financing/cash obligation -> net proceeds or cash need -> board/contractual allocation decision -> underlying acquisition/disposition -> venue/counterparty -> price impact. Wrapper price, registered issuance capacity, legal unlocks or treasury size alone are insufficient flow predictors.",
+      "candidate_method_rule": "Track FINANCING_EVENT, NET_PROCEEDS, ISSUE_PRICE_OR_PREMIUM_TO_TREASURY_VALUE, DECLARED_USE_OF_PROCEEDS, ACTUAL_UNDERLYING_ACQUISITION_OR_SALE, EXECUTION_WINDOW, OBLIGATION_CASH_NEED and POST-TRANSACTION ASSET_PER_DILUTED_SHARE separately. Treat registered capacity and legal permission as optionality, not realized flow.",
+      "matched_controls": [
+        "Strategy ATM-funded BTC purchases show positive wrapper-financing -> underlying-demand transmission.",
+        "Strategy BTC sales for preferred distributions/USD reserve show the same wrapper can create underlying supply when cash obligations dominate.",
+        "Sharplink equity financing followed by ETH acquisition shows the positive-financing channel outside BTC.",
+        "StablecoinX waiver without a disclosed Funding Sale is a current legal-capacity-without-realized-flow control."
+      ],
+      "status": "SUPPORTED_PROVISIONAL across BTC, ETH and ENA treasury-wrapper structures; predictive return value still untested."
+    },
+    {
+      "topic": "StablecoinX warrant overhang is path-dependent and is not an immediate Sep. 20 dilution event",
+      "label": "PRIMARY-SOURCE CAPITAL-STRUCTURE / NEGATIVE FINDING",
+      "observed_facts": [
+        "StablecoinX had 24,029,375 Class A shares outstanding as of August 28 and registered up to 19,124,586 additional Class A shares underlying warrants: 11.5M public warrants and 3.267679M Sponsor Tranche A warrants at $11.50, plus 4.356907M Sponsor Tranche B warrants at $15.00.",
+        "Sponsor warrants become exercisable 30 days after August 21, 2026 and may be cashlessly exercised while held by sponsors/permitted transferees. Their cashless formula requires Fair Market Value above the applicable strike to produce positive share value; Fair Market Value is a ten-trading-day average ending three trading days before notice.",
+        "USDE closed $10.19 on September 18 after $7.71 September 17 and $6.20 September 16. The sponsor exercise date therefore should not be modeled as an automatic dilution cliff merely because it arrives; the economics still depend on the trailing FMV versus $11.50/$15 strikes and holder action.",
+        "Public warrants have a separate $10 redemption pathway only after the common stock closes at or above $10 for 20 trading days within a 30-trading-day window, followed by at least 30 days' notice. Only September 18 in the latest observed sequence closed above $10, so this trigger is not currently satisfied.",
+        "If the $10 redemption condition were eventually satisfied, the SEC-filed table implies about 0.257 shares per public warrant at a $10 Redemption FMV with roughly 57 months remaining, or approximately 2.96M shares if all 11.5M public warrants used that cashless exercise ratio, about 12.3% of the current Class A share count. This is a contingent scenario, not current dilution.",
+        "If all outstanding warrants were instead exercised for cash, StablecoinX says it could receive about $235.2M. Cashless exercises generate no such proceeds."
+      ],
+      "inference": "Warrants create a nonlinear feedback state rather than a fixed supply number. A persistent equity rally can move warrants into the money, create exercise/redemption incentives and potentially add shares; cash exercise can also provide capital that might be allocated to ENA, while cashless exercise adds shares without funding. The sign for ENA-per-share and ENA spot demand therefore depends on exercise mode and use of proceeds.",
+      "practical_monitor": [
+        "Count qualifying >=$10 closes toward the public-warrant 20-of-30 trigger.",
+        "Track 10-trading-day FMV versus $11.50/$15 sponsor strikes once sponsor warrants become exercisable.",
+        "Track warrant exercises/transfers, actual cash proceeds and declared use of proceeds.",
+        "Do not convert warrant registration into realized dilution or ENA buying before these states occur."
+      ]
+    },
+    {
+      "topic": "ENA weekend continuation remains idiosyncratic while broad crypto leverage falls",
+      "label": "LIVE BIG-MOVE CAUSAL LAB / OBSERVED FACT + PROVISIONAL INFERENCE",
+      "observed_facts": [
+        "At about 20:25 UTC ENA was approximately $0.20735, +22.78%/24h, +46.85%/7d and +89.63%/30d, with about $865M 24h volume against roughly $2.09B market capitalization.",
+        "Matched major-crypto controls were much quieter: BTC +0.30%/24h, ETH +0.22%, SOL -2.19%, XRP +1.90% and LINK +1.11%. ZEC was -0.71%/24h despite remaining +30.89%/7d.",
+        "Connected global derivatives data showed aggregate crypto open interest around $438.3B, down about 4.9%/24h, while BTC 24h liquidations had fallen to about $44.2M with the latest 1h/4h windows at zero.",
+        "ENA is extending on a Saturday while StablecoinX cash equity is closed. That weakens any explanation in which same-session USDE equity order flow mechanically causes the token move, although shared narrative/reflexive expectations can persist across venues."
+      ],
+      "inference": "The current ENA move remains strongly asset-specific rather than broad-beta. Earlier secondary evidence of ENA-specific perp crowding remains plausible, but the broad market is deleveraging rather than levering up. This increases the importance of direct ENA venue-level spot/perp decomposition before attributing the continuation to leverage or spot accumulation.",
+      "data_quality_warning": "Connected aggregate derivatives snapshots have varied across adjacent intraday pulls; small percentage changes should not be overinterpreted. Direct venue ENA data remain the next required test."
+    },
+    {
+      "topic": "Middle-East security escalation still lacks a validated new deliverable-barrel loss",
+      "label": "FRESH EVENT / OBSERVED FACT + UNKNOWN TRANSMISSION",
+      "observed_facts": [
+        "Reuters reported September 19 Houthi claims of missile/drone attacks on Riyadh and an Aramco facility in Yanbu and separately observed flames/black smoke near Riyadh airport.",
+        "The exact cause of the Riyadh airport fire was still unclear in Reuters reporting, and no primary Saudi confirmation of new physical Yanbu oil-logistics damage from the September 19 claim was available at the cutoff.",
+        "Benchmark crude markets are closed for the weekend, preventing an open-market confirmation of changed expected deliverable supply."
+      ],
+      "inference": "The event raises tail risk but does not yet justify upgrading crude from WAIT. The existing effective-deliverable-supply framework remains the correct test: verify new route/capacity loss, physical differentials, alternative logistics and reopened futures before assigning price impact."
+    }
+  ],
+  "causal_chain": {
+    "world_to_price": "Crypto-treasury narrative/regulation -> listed wrapper financing or legal monetization capacity -> actual financing proceeds or cash obligation -> explicit capital-allocation decision -> underlying token acquisition/disposition -> venue/counterparty execution -> marginal spot supply/demand -> token price -> treasury value per diluted share -> wrapper valuation/premium-discount -> capacity/incentive for further financing or monetization -> reflexive feedback.",
+    "catalyst_vs_mechanism_vs_amplifier": {
+      "catalysts": ["StablecoinX Sep. 17 waiver filing", "USDE/ENA price repricing", "Treasury-company financing filings"],
+      "transmission_mechanism": "Realized balance-sheet financing or cash need combined with a documented use-of-proceeds / treasury-disposition decision.",
+      "amplifiers": ["Wrapper premium/discount", "Warrant exercise/redemption", "Perpetual leverage", "Narrative attention", "Thin free float", "Token-treasury mark-to-market reflexivity"]
+    }
+  },
+  "matched_controls_and_negative_findings": [
+    "Do not infer underlying crypto buying from equity registration, warrant capacity, a stock rally or a legal unlock alone.",
+    "Do not infer Sep. 20 sponsor-warrant exercisability creates immediate StablecoinX dilution; exercise economics remain strike/FMV and holder-action dependent.",
+    "Do not infer the public-warrant $10 redemption state from a single $10.19 close; the contract requires 20 qualifying trading days in a 30-day window.",
+    "Do not infer ENA continuation is broad crypto beta; major controls are nearly flat and aggregate open interest is down.",
+    "Do not attribute current ENA appreciation to active fee-switch buybacks; the $7.5B USDe activation threshold remains unmet in the previously validated primary-source work.",
+    "Do not infer new Saudi supply loss from attack claims until physical damage and reopened crude pricing confirm the transmission."
+  ],
+  "decision_support": [
+    {
+      "asset": "ENA",
+      "action": "WAIT / AVOID CHASING",
+      "horizon": "days to weeks",
+      "confidence": "MODERATE-HIGH that current evidence does not clear BUY; LOW on short direction",
+      "plausible_range": "Not frozen; current realized volatility and uncertain spot/perp composition make a narrow range misleading.",
+      "why": "The move is strongly idiosyncratic and persistent, but active fee-switch buybacks remain absent, legal treasury unlock creates future supply optionality, and direct venue evidence is still insufficient to prove spot-led accumulation. Momentum can continue, but expected value after a near-90% 30-day move is not demonstrably favorable enough to chase.",
+      "confirmation_for_upgrade": "Direct venue evidence of spot-led buying with controlled ENA funding/OI; durable USDe growth toward the fee-switch threshold; no disorderly unlock/treasury sales; improving protocol cash-flow capture.",
+      "risk_confirmation": "Perp OI/funding expands while spot absorption stalls, or disclosed external Funding Sales/unlock distribution arrive into weakening demand."
+    },
+    {
+      "asset": "StablecoinX Class A / USDE",
+      "action": "WAIT / NO EDGE",
+      "horizon": "days to months",
+      "confidence": "MODERATE-HIGH that simple gross-token-NAV arbitrage is unsafe; LOW on direction",
+      "plausible_range": "Not frozen because historical daily volatility is extreme and capital-structure state is nonlinear.",
+      "why": "Waiver improves treasury usability, but warrant/registered resale overhang, governance, treasury-sale controls and ENA dependence make the discount structurally ambiguous. The near-term warrant risk is conditional rather than automatic.",
+      "confirmation_for_upgrade": "Audited/current treasury reconciliation, clear capital-return/use-of-proceeds policy, actual value-accretive financing or buyback execution, and lower dilution uncertainty.",
+      "invalidation": "Adverse ENA move, material exercised/resale supply without compensating asset-per-share growth, or treasury monetization at poor terms."
+    }
+  ],
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "status": "No immutable directional forecast clears the evidence bar. New work improves causal accounting and identifies a path-dependent warrant state, not a sufficiently calibrated trade forecast."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. The treasury-wrapper financing rule now has primary-source matched controls across Strategy BTC and Sharplink ETH plus the StablecoinX legal-capacity control and is close to canonical-learning quality, but predictive return value and broader cross-wrapper robustness remain untested. Avoid churning dashboard_state, learning_ledger or big_move_lab in this short cycle. No code or signal-system state changed.",
+  "next_research": [
+    "Promote the treasury-wrapper financing/disposition rule only after a larger primary-source matched sample tests whether financing premium/discount, net proceeds and use-of-proceeds have timestamp-safe predictive value for underlying flow and wrapper relative returns.",
+    "Build a StablecoinX warrant-state monitor: >=$10 qualifying-close count, sponsor 10-day FMV versus strikes, public/sponsor exercises, cash versus cashless mode, proceeds and use of proceeds.",
+    "Obtain direct venue ENA spot and perpetual open interest, funding, basis, liquidation and aggressive-flow data for the Sep. 17-19 event window.",
+    "Reconcile the latest exact StablecoinX ENA treasury and liabilities before using gross-token-per-share arithmetic as more than an illustration.",
+    "On the next U.S. cash session, continue BTC/ETH/SOL regulated-flow persistence testing and test whether weekend ENA strength survives reopening of USDE equity/warrant trading.",
+    "At crude reopen, verify whether September 19 Saudi security events changed physical deliverability before changing the oil WAIT state."
+  ],
+  "sources": [
+    "https://www.sec.gov/Archives/edgar/data/1050446/000119312526260709/mstr-20260504.htm",
+    "https://www.sec.gov/Archives/edgar/data/1050446/000119312526295586/mstr-20260706.htm",
+    "https://www.sec.gov/Archives/edgar/data/1050446/000119312526389858/mstr-20260914.htm",
+    "https://www.sec.gov/Archives/edgar/data/1981535/000149315226029804/form8-k.htm",
+    "https://www.sec.gov/Archives/edgar/data/1981535/000149315226036741/ex99-1.htm",
+    "https://www.sec.gov/Archives/edgar/data/2080215/000121390026095808/ea0303782-s1_stable.htm",
+    "https://www.sec.gov/Archives/edgar/data/2080215/000121390026100751/ea030568601ex10-1.htm",
+    "https://gov.ethenafoundation.com/t/ena-fee-switch-activation/830",
+    "https://www.reuters.com/world/middle-east/saudi-civil-defence-sends-all-clear-after-danger-warning-capital-riyadh-2026-09-19/",
+    "CoinMarketCap connected quotes and derivatives snapshot at approximately 2026-09-19T20:25Z"
+  ],
+  "owner_report_gate": "NOT MET. Minimum cumulative directly measured active execution since the last owner-facing report is 1,085 seconds, below the required 3,600 seconds. Persist research quietly."
+}
