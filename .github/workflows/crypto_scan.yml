@@ -15,4 +15,4 @@ jobs:
         run: |
           echo "Legacy 15-minute signal/opportunity generation is retired."
           echo "Current priorities are profitable strategy discovery and 90-day 2x+ research."
-          echo "No /scan or /evaluate request was sent."
+          echo "No legacy production endpoint request was sent."
