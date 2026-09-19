@@ -1,7 +1,7 @@
 import json
 
-from orchestration.coordination_overrides import apply_coordination_overrides
-from orchestration.specialist_coordination import COORDINATION_PATH, validate_state
+from orchestration.coordination_overrides import ROOT, apply_coordination_overrides
+from orchestration.specialist_coordination import validate_state
 
 
 def _tasks_by_id(payload):
@@ -9,7 +9,8 @@ def _tasks_by_id(payload):
 
 
 def test_lead_reconciliation_stops_stale_squeeze_data_execution():
-    base = json.loads(COORDINATION_PATH.read_text(encoding="utf-8"))
+    coordination_path = ROOT / "orchestration" / "specialist_coordination.json"
+    base = json.loads(coordination_path.read_text(encoding="utf-8"))
     resolved = apply_coordination_overrides(base)
     validate_state(resolved)
     tasks = _tasks_by_id(resolved)
