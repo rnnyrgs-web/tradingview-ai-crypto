@@ -13,13 +13,18 @@ def test_runtime_acceptance_runs_automatically_after_relevant_main_changes():
     assert "paths:" in workflow
     for path in (
         ".github/workflows/profitability-learning-runtime-acceptance.yml",
+        "Dockerfile",
+        "requirements.txt",
         "app.py",
+        "config.py",
         "btc_leadlag_selection.py",
+        "volatility_breakout_selection.py",
         "db.py",
         "profitability_learning/**",
         "orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz",
         "research_artifact.py",
         "research_heavy_experiment_scheduler.py",
+        "signal_development.py",
         "supabase/migrations/**",
     ):
         assert f"- {path}" in workflow
