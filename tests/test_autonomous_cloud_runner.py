@@ -44,8 +44,9 @@ def test_coordination_loader_applies_canonical_overrides():
     assert tasks["COORD-DATA-005"]["status"] == "DONE"
     assert tasks["COORD-DATA-007"]["status"] == "BLOCKED"
     assert tasks["COORD-DISC-DATA-001"]["status"] == "DONE"
-    assert tasks["COORD-DISC-DATA-002"]["status"] == "READY"
-    assert highest_ready_task(_config(), coordination)["id"] == "COORD-DISC-DATA-002"
+    assert tasks["COORD-DISC-DATA-002"]["status"] == "DONE"
+    assert tasks["COORD-DISC-DATA-003"]["status"] == "READY"
+    assert highest_ready_task(_config(), coordination)["id"] == "COORD-DISC-DATA-003"
 
 
 def test_runner_is_single_execution_multi_role_cost_bounded_and_broker_disconnected():
@@ -99,7 +100,7 @@ def test_duplicate_active_task_prevents_second_ownership():
     state = default_state()
     state["active_task"] = {
         "role": "data-market",
-        "task_id": "COORD-DISC-DATA-002",
+        "task_id": "COORD-DISC-DATA-003",
         "phase": "WAITING_CI",
         "base_main_sha": MAIN_SHA,
         "started_at": "2026-09-09T03:30:00Z",
@@ -148,7 +149,7 @@ def test_stale_main_blocks_active_work():
     state = default_state()
     state["active_task"] = {
         "role": "data-market",
-        "task_id": "COORD-DISC-DATA-002",
+        "task_id": "COORD-DISC-DATA-003",
         "phase": "WAITING_CI",
         "base_main_sha": "b" * 40,
         "started_at": "2026-09-09T03:30:00Z",
@@ -245,12 +246,12 @@ def test_malformed_agent_output_fails_closed():
 
 def test_completion_handoff_clears_discovery_lease_after_lead_marks_task_done():
     coordination = copy.deepcopy(_coord())
-    task = next(row for row in coordination["tasks"] if row["id"] == "COORD-DISC-DATA-002")
+    task = next(row for row in coordination["tasks"] if row["id"] == "COORD-DISC-DATA-003")
     task["status"] = "DONE"
     state = default_state()
     state["active_task"] = {
         "role": "data-market",
-        "task_id": "COORD-DISC-DATA-002",
+        "task_id": "COORD-DISC-DATA-003",
         "phase": "WAITING_LEAD",
         "base_main_sha": MAIN_SHA,
         "started_at": "2026-09-08T20:00:00Z",
@@ -258,7 +259,7 @@ def test_completion_handoff_clears_discovery_lease_after_lead_marks_task_done():
     recovered = recover_state(state, coordination, NOW)
     assert recovered["active_task"] is None
     next_ready = highest_ready_task(_config(), coordination)
-    assert next_ready["id"] == "COORD-DISC-QUANT-002"
+    assert next_ready["id"] == "COORD-DISC-QUANT-003"
     assert next_ready["owner"] == "quant-research"
 
 
@@ -296,17 +297,17 @@ def test_current_data_coordination_retires_rejected_candidates_and_advances():
 
 def test_coordination_priority_selects_strategy_discovery_data_task_first():
     task = highest_ready_task(_config(), _coord())
-    assert task["id"] == "COORD-DISC-DATA-002"
-    assert task["fingerprint_id"] == "DISC-LIQUIDITY-MEANREV-001-v1"
+    assert task["id"] == "COORD-DISC-DATA-003"
+    assert task["fingerprint_id"] == "DISC-SQUEEZE-RETENTION-001-v1"
 
 
 def test_quant_role_becomes_eligible_after_data_task_completes():
     coordination = copy.deepcopy(_coord())
-    next(row for row in coordination["tasks"] if row["id"] == "COORD-DISC-DATA-002")["status"] = "DONE"
+    next(row for row in coordination["tasks"] if row["id"] == "COORD-DISC-DATA-003")["status"] = "DONE"
     task = highest_ready_task(_config(), coordination)
-    assert task["id"] == "COORD-DISC-QUANT-002"
+    assert task["id"] == "COORD-DISC-QUANT-003"
     assert task["owner"] == "quant-research"
-    assert task["fingerprint_id"] == "DISC-LIQUIDITY-MEANREV-001-v1"
+    assert task["fingerprint_id"] == "DISC-SQUEEZE-RETENTION-001-v1"
 
 
 def test_quant_terra_reservation_fits_daily_budget():
