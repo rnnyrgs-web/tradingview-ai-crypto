@@ -92,6 +92,15 @@ The old liquidity tasks are closed DONE with their negative evidence. Active dis
 
 Do not allow stale signal-era work or rejected fingerprints to consume these roles while this candidate is active in selection.
 
+## SAFETY INVARIANTS
+
+- `COORD-DATA-005`: **DONE**; its historical point-in-time limitation remains durable negative/provenance memory.
+- `COORD-DATA-006`: **DONE**; preserve the verified prospective point-in-time capture evidence and all of its provenance fields.
+- `COORD-DATA-007`: **BLOCKED** until authentic prospective cohorts mature. Do not select another DATA-BREADTH candidate or reconstruct/backfill missing historical membership to bypass that maturation gate.
+- Current `COORD-DISC-*` data work is a separate strategy-discovery lane and does not reopen the blocked DATA-BREADTH fingerprint.
+- Use the canonical coordination loader plus append-only overrides; do **not** read only the base JSON and treat overridden historical rows as current.
+- Broker/live authority remains OFF. Untouched OOS stays locked until a frozen candidate passes the required selection gate, and rejected fingerprints remain terminal unless their recorded reconsideration conditions are genuinely met.
+
 ## API / INFRASTRUCTURE STATE
 
 The API-backed autonomous cloud specialist most recently paused cleanly because the OpenAI organization spend limit was exhausted. Do **not** add or increase OpenAI/Anthropic API spend merely to coordinate sessions. Prefer this scheduled Lead, GitHub state, deterministic Python/GitHub Actions, and already-approved infrastructure.
@@ -119,7 +128,7 @@ Important chronology during this Lead cycle:
 
 Do not merge on an earlier green SHA.
 
-## EXACT NEXT ACTION
+## EXACT NEXT STEP
 
 1. Verify PR #416 final head and current `main` have no conflicting ownership change.
 2. Require exact-head Security & Reliability success on the final PR head.
