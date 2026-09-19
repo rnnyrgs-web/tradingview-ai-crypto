@@ -93,7 +93,8 @@ def _candidate_feedback(candidate, memory):
         reason = "matched_family_economic_evidence"
     if sf and sf in memory.get("rejected_fingerprints", []):
         factor, reason = 0.0, "rejected_exact_fingerprint"
-    return {"factor": factor, "reason": reason, "changes_eligibility": False, **SAFE}
+    return {"factor": factor, "reason": reason,
+            "changes_eligibility": reason == "rejected_exact_fingerprint", **SAFE}
 
 
 def apply_queue_feedback(queue):
@@ -111,7 +112,10 @@ def apply_queue_feedback(queue):
     for row in result.get("experiments", []):
         feedback = _candidate_feedback(row, state["memory"])
         row["learning_feedback"] = feedback
-        row["information_priority"] = float(row.get("information_priority", 0)) * feedback["factor"]
+        # Re-entry must not compound the same evidence penalty a second time.
+        base = float(row.get("base_information_priority", row.get("information_priority", 0)))
+        row["base_information_priority"] = base
+        row["information_priority"] = base * feedback["factor"]
     result["experiments"].sort(key=lambda r: (-r["information_priority"], str(r.get("experiment_id", ""))))
     return result
 
@@ -141,8 +145,10 @@ def refresh_director(army):
             row["priority"] *= matched["factor"]
             row["learning_feedback"] = matched
         by_id = {m["mission_id"]: m for m in result["missions"]}
-        # Preserve the legacy eligible/claimed set; only reorder those same rows.
-        result["next_missions"] = sorted([deepcopy(by_id[m["mission_id"]]) for m in result["next_missions"]],
+        # Never broaden legacy eligibility or disturb active claims. A remembered
+        # exact rejection is a veto, not a low-priority runnable experiment.
+        result["next_missions"] = sorted([deepcopy(by_id[m["mission_id"]]) for m in result["next_missions"]
+            if by_id[m["mission_id"]]["learning_feedback"]["reason"] != "rejected_exact_fingerprint"],
                                         key=lambda m: (-m["priority"], m["mission_id"]))
         for item in feedback["missions"]:
             mission = build_mission(lane="profitability-learning", horizon="fresh_chronological",
@@ -158,6 +164,9 @@ def refresh_director(army):
         result["missions"].sort(key=lambda m: (-m["priority"], m["mission_id"]))
     # These missions request contract/review work. They never enter next_missions,
     # claim an existing heavy slot or alter canonical strategy selection.
+    if feedback["status"] in {"AVAILABLE", "WAIT_MEMORY_UNAVAILABLE"}:
+        # The reporting surface must not revive rejected/stale recommendations.
+        result["daily_lead_report"]["highest_priority_next_missions"] = deepcopy(result["next_missions"])
     result["daily_lead_report"]["profitability_learning"] = feedback
     with _lock:
         _director_state = deepcopy(result)
