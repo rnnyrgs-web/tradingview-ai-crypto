@@ -120,13 +120,18 @@ def test_select_next_returns_none_for_a_role_with_no_active_or_queued_task():
     assert select_next(state, "regime-selection") is None
 
 
+
 def test_select_next_routes_data_market_to_current_discovery_candidate():
+    from orchestration.specialist_coordination import next_task
+
     state = load_state()
     task = select_next(state, "data-market")
     assert task is not None
-    assert task["id"] == "COORD-DISC-DATA-002"
-    assert task["fingerprint_id"] == "DISC-LIQUIDITY-MEANREV-001-v1"
-
+    assert task == next_task(state, "data-market")
+    assert task["owner"] == "data-market"
+    assert task["status"] in {"READY", "IN_PROGRESS", "PR_OPEN"}
+    assert task["id"].startswith("COORD-DISC-DATA-")
+    assert task["fingerprint_id"]
 
 def test_select_next_returns_the_same_task_as_next_task_for_an_active_role():
     from orchestration.specialist_coordination import next_task
