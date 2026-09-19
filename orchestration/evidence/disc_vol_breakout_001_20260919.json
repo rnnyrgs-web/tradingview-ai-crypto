@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "DISC-VOL-BREAKOUT-001",
+  "fingerprint_id": "DISC-VOL-BREAKOUT-001-v1",
+  "status": "REJECTED_SELECTION_PRE_OOS_FAIL",
+  "research_only": true,
+  "trade_authority": false,
+  "promotion_authority": false,
+  "contract_sha256": "46fcc97626c98dd1c37e3ee0eaa1d7c0b07d4d9b1d38ce9d24b91a09dcdad0ce",
+  "selection_pr": 409,
+  "selection_exact_head_sha": "ef8563b9f1bdb7caa3a3949ec578760104bf31be",
+  "selection_merge_sha": "6e356d7189833174cb48b2f19c99793fa9561855",
+  "security_reliability_run": 35410589790,
+  "selection_workflow_run": 35410589787,
+  "artifact_id": 10574257098,
+  "artifact_archive_sha256": "f6ed0cfcf9be12bbb4b78181a1a89cf22acebc13631850024213ba0438e4b051",
+  "payload_sha256": "189aac9d685005919d9068abe5ee0edefcddc2b2643c7176ead811129d927e0e",
+  "dataset": {
+    "source": "OKX /api/v5/market/history-candles",
+    "bar": "1H",
+    "instruments": [
+      "BTC-USDT-SWAP",
+      "ETH-USDT-SWAP",
+      "SOL-USDT-SWAP"
+    ],
+    "normalized_row_count": 35997,
+    "coverage_start_utc": "2025-05-07T01:00:00+00:00",
+    "coverage_end_utc": "2026-09-18T23:00:00+00:00",
+    "normalized_rows_sha256": "2547c3a96641f215ebe3853f01db47cd1f4daa72f3387642135a0973579d705d",
+    "per_instrument": {
+      "BTC-USDT-SWAP": {
+        "rows": 11999,
+        "rows_sha256": "266f64c6359912f573d334ef9d61274bce181931e047e47bdb4be31d823d0c42"
+      },
+      "ETH-USDT-SWAP": {
+        "rows": 11999,
+        "rows_sha256": "3b554cba74e43bcfd575ab625930fb2399e2562129cb4d9c84e57cf88999fd45"
+      },
+      "SOL-USDT-SWAP": {
+        "rows": 11999,
+        "rows_sha256": "443e70886ace665b999d6025e03058c2eed4bea7602a17f5ffcdf0172005e9e0"
+      }
+    }
+  },
+  "selection": {
+    "screen_status": "PRE_OOS_FAIL",
+    "economic_pre_oos_pass": false,
+    "passing_instruments": 0,
+    "minimum_passing_instruments": 2,
+    "eligible_for_deep_freeze": false,
+    "terminal_rejection_authorized": true,
+    "max_stress_round_trip_cost_bps": 60.0,
+    "pooled_train": {
+      "trades": 361,
+      "mean_net_bps": -52.747011544646945,
+      "profit_factor": 0.5070940478272642
+    },
+    "pooled_validation": {
+      "trades": 105,
+      "mean_net_bps": -54.49376287378724,
+      "profit_factor": 0.4210223498563804
+    },
+    "baseline_validation": {
+      "trades": 271,
+      "mean_net_bps": -44.83134732415943,
+      "profit_factor": 0.5623811247693684
+    },
+    "validation_halves_mean_net_bps": [
+      -50.247555633205096,
+      -60.61620122067312
+    ],
+    "validation_regimes": {
+      "BULL": {
+        "trades": 51,
+        "mean_net_bps": -38.46888473644638
+      },
+      "BEAR": {
+        "trades": 54,
+        "mean_net_bps": -69.62837000349805
+      }
+    },
+    "falsifier_sensitivities": {
+      "compression_q15": {
+        "passes": false,
+        "train_mean_net_bps": -62.069949691616706,
+        "validation_mean_net_bps": -55.506427884996576
+      },
+      "compression_q25": {
+        "passes": false,
+        "train_mean_net_bps": -59.222360269721825,
+        "validation_mean_net_bps": -49.257785757246324
+      }
+    },
+    "instrument_results": {
+      "BTC-USDT-SWAP": {
+        "passes": false,
+        "train_mean_net_bps": -68.23512071921343,
+        "validation_mean_net_bps": -56.2007168818896,
+        "baseline_validation_mean_net_bps": -50.22153762419512
+      },
+      "ETH-USDT-SWAP": {
+        "passes": false,
+        "train_mean_net_bps": -36.1935574102969,
+        "validation_mean_net_bps": -46.92047018978898,
+        "baseline_validation_mean_net_bps": -42.11949550931467
+      },
+      "SOL-USDT-SWAP": {
+        "passes": false,
+        "train_mean_net_bps": -54.31959056232948,
+        "validation_mean_net_bps": -60.20948796073293,
+        "baseline_validation_mean_net_bps": -42.093968728334126
+      }
+    },
+    "pooled_failure_reasons": [
+      "POOLED_TRAIN_EXPECTANCY",
+      "POOLED_VALIDATION_EXPECTANCY",
+      "POOLED_VALIDATION_PROFIT_FACTOR",
+      "VALIDATION_FIRST_HALF_INSTABILITY",
+      "VALIDATION_SECOND_HALF_INSTABILITY",
+      "POOLED_NO_INCREMENTAL_VALIDATION_VALUE",
+      "BEAR_REGIME_CATASTROPHIC"
+    ],
+    "untouched_oos_status": "LOCKED_UNTOUCHED_OOS",
+    "untouched_oos_opened": false,
+    "genuine_forward_opened": false
+  },
+  "interpretation": "The exact predeclared compression-to-20-bar-breakout fingerprint failed cleanly before untouched OOS. It had negative 3x-cost train and validation expectancy on all three fixed instruments, worse pooled validation expectancy than the frozen no-compression breakout baseline, negative chronological validation halves, and both q15/q25 falsifier sensitivities failed. This fingerprint is terminally rejected; do not tune or rescue it from these outcomes.",
+  "next_action": "Advance the ranked queue to DISC-LIQUIDITY-MEANREV-001-v1 and freeze its full scientific contract before inspecting new outcomes."
+}
