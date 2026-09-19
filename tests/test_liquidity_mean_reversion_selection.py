@@ -209,7 +209,7 @@ def test_terminal_task_handoff_releases_old_lease_and_routes_phase_two_work():
     assert decision.run is True
     assert decision.reason == "READY"
     assert decision.role == "quant-research"
-    assert decision.task_id == "COORD-MI-CAUSAL-001"
+    assert decision.task_id == "COORD-MI-CAUSAL-002"
 
 
 def test_frozen_sample_cost_and_sensitivity_gates_cannot_be_bypassed():
