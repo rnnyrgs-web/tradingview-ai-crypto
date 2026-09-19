@@ -25,13 +25,12 @@ def test_discovery_queue_is_valid_and_research_only():
     assert state["broker_connected"] is False
 
 
-def test_supervisor_selects_the_single_frozen_cheap_screen():
+def test_supervisor_has_no_screenable_candidate_after_rejection():
     payload = load_queue()
     ranked = ranked_screens(payload)
-    assert [row["fingerprint_id"] for row in ranked] == ["DISC-BTC-LEADLAG-001-v1"]
+    assert ranked == []
     state = snapshot(payload)
-    assert state["next_action"]["action"] == "RUN_CHEAP_DETERMINISTIC_SCREEN"
-    assert state["next_action"]["fingerprint_id"] == "DISC-BTC-LEADLAG-001-v1"
+    assert state["next_action"] is None
     assert state["active_deep_candidate"] is None
     assert state["research_only"] is True
     assert state["trade_authority"] is False
@@ -43,17 +42,22 @@ def test_supervisor_ranks_multiple_explicit_ready_screens_without_opening_oos():
     row = next(row for row in payload["candidates"] if row["fingerprint_id"] == "DISC-SQUEEZE-RETENTION-001-v1")
     row["stage"] = "CHEAP_SCREEN_READY"
     row["blocker"] = None
+    second = dict(row)
+    second["hypothesis_id"] = "DISC-SYNTHETIC-READY-001"
+    second["fingerprint_id"] = "DISC-SYNTHETIC-READY-001-v1"
+    second["expected_profitability_impact"] = 0.01
+    payload["candidates"].append(second)
     ranked = ranked_screens(payload)
     assert ranked
     assert {item["fingerprint_id"] for item in ranked} == {
-        "DISC-BTC-LEADLAG-001-v1",
         "DISC-SQUEEZE-RETENTION-001-v1",
+        "DISC-SYNTHETIC-READY-001-v1",
     }
-    assert ranked[0]["fingerprint_id"] == "DISC-BTC-LEADLAG-001-v1"
+    assert ranked[0]["fingerprint_id"] == "DISC-SQUEEZE-RETENTION-001-v1"
     assert all(item["work_mode"] == "CHEAP_SCREEN" for item in ranked)
     state = snapshot(payload)
     assert state["next_action"]["action"] == "RUN_CHEAP_DETERMINISTIC_SCREEN"
-    assert state["next_action"]["fingerprint_id"] == "DISC-BTC-LEADLAG-001-v1"
+    assert state["next_action"]["fingerprint_id"] == "DISC-SQUEEZE-RETENTION-001-v1"
     assert state["active_deep_candidate"] is None
 
 

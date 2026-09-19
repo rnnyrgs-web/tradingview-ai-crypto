@@ -1,6 +1,7 @@
 # AI_STATE.md
 
 Last reconciled: 2026-09-19T11:24Z
+Last updated: 2026-09-19T11:24Z
 
 This is the compact canonical handoff for `rnnyrgs-web/tradingview-ai-crypto`. Verify actual `main` SHA first on every run, then read `UNIFIED_PROFITABILITY_LEAD_SPEC.md`, `AGENTS.md`, `AUTONOMOUS_RESEARCH_DIRECTOR_STATUS.md`, `docs/ASTRA_BACKGROUND_WORKER.md`, strategy/rejected/coordination state including overrides, `orchestration/model_routing_policy.json`, current Money Intelligence / Big-Move artifacts, open PRs, active ownership, and exact-head CI. GitHub durable state outranks chat memory.
 
@@ -82,7 +83,25 @@ Older open PRs must be revalidated against current main before any integration; 
 
 PR #432 (strategy-discovery firewall), PR #433 (development-only Big-Move event lab), PR #441 (superseded older AI_STATE reconciliation), and other stale PRs are **not canonical merely because they are open**. Review them against current main and current scientific objectives before deciding whether to supersede, rebase, integrate, or close.
 
-## COST / SAFETY / MODEL ROUTING
+## PRESERVED DATA-BREADTH HANDOFF
+
+- `COORD-DATA-005`: **DONE** — breadth evaluator integrated; historical point-in-time history unavailable.
+- `COORD-DATA-006`: **DONE** — prospective point-in-time capture verified; no fabricated historical backfill.
+- `COORD-DATA-007`: **BLOCKED** — wait for enough genuinely matured independent prospective cohorts.
+
+Do not select another DATA-BREADTH candidate while `COORD-DATA-007` remains blocked on genuine prospective maturation. This legacy breadth maturation wait does not block strategy discovery.
+
+Canonical specialist coordination must be loaded through `orchestration/coordination_overrides.py`, which applies the historical override ledger and the Lead reconciliation layer. Do **not** read only the base JSON.
+
+## SAFETY INVARIANTS
+
+- Broker disconnected; trade/promotion authority **OFF**.
+- Do not rewrite historical predictions, frozen OOS, genuine-forward evidence, or rejected fingerprints.
+- Use isolated branches for changes and require exact-head Security & Reliability before merge.
+- Runtime-affecting work also requires actual deployed/runtime-SHA verification.
+- Missing/stale/malformed/future/ambiguous evidence fails closed to WAIT / RESEARCH_ONLY.
+
+## COST / MODEL ROUTING
 
 - Broker disconnected; trade/promotion authority **OFF**.
 - Combined variable paid-project ceiling remains approximately **$30/month** unless the user explicitly changes it.
@@ -97,3 +116,7 @@ PR #432 (strategy-discovery firewall), PR #433 (development-only Big-Move event 
 ## STATUS
 
 Current truth: **no validated profitable strategy; `DISC-BTC-LEADLAG-001-v1` rejected pre-OOS; no promotion-grade 90-day 2x candidate; Phase 1 not yet live-runtime accepted; Phase 2 gated; untouched OOS/forward for the rejected lead-lag fingerprint remain unopened; broker/live authority off.**
+
+## EXACT NEXT STEP
+
+Complete the Phase-1 acceptance action above through issue #438. Do not freeze a successor strategy or begin Phase 2 until the merged runtime path is proven on the actual durable/deployed channel, or a precise blocker is recorded.

@@ -21,8 +21,8 @@ def test_lead_reconciliation_closes_stale_data_task_and_routes_safe_followup():
     assert tasks["COORD-DISC-DATA-003"]["completion_evidence"]["untouched_oos_opened"] is False
 
     # The unavailable source closes candidate-specific work without turning a
-    # data-contract failure into a strategy rejection. Exactly one distinct,
-    # pre-outcome hypothesis-freezing task remains actionable.
+    # data-contract failure into a strategy rejection. The successor task is
+    # now historical DONE evidence for the independently merged rejection.
     assert tasks["COORD-DISC-QUANT-003"]["status"] == "BLOCKED"
     assert tasks["COORD-DISC-VAL-003"]["status"] == "BLOCKED"
     assert tasks["COORD-DISC-TEST-003"]["status"] == "BLOCKED"
@@ -32,6 +32,7 @@ def test_lead_reconciliation_closes_stale_data_task_and_routes_safe_followup():
     assert tasks["COORD-DISC-DATA-004"]["completion_rule"].startswith("Either return one frozen")
     assert "Do not inspect strategy returns or untouched OOS" in tasks["COORD-DISC-DATA-004"]["completion_rule"]
     assert tasks["COORD-DISC-DATA-004"]["completion_evidence"]["untouched_oos_opened"] is False
-    assert tasks["COORD-DISC-QUANT-004"]["status"] == "READY"
-    assert tasks["COORD-DISC-QUANT-004"].get("fingerprint_id") is None
-    assert "before inspecting candidate returns" in " ".join(tasks["COORD-DISC-QUANT-004"]["evidence_required"])
+    assert tasks["COORD-DISC-QUANT-004"]["status"] == "DONE"
+    assert tasks["COORD-DISC-QUANT-004"]["fingerprint_id"] == "DISC-BTC-LEADLAG-001-v1"
+    assert tasks["COORD-DISC-QUANT-004"]["completion_evidence"]["decision"] == "REJECTED_PRE_OOS"
+    assert tasks["COORD-DISC-QUANT-004"]["completion_evidence"]["untouched_oos_opened"] is False

@@ -14,45 +14,6 @@
   },
   "candidates": [
     {
-      "hypothesis_id": "DISC-BTC-LEADLAG-001",
-      "fingerprint_id": "DISC-BTC-LEADLAG-001-v1",
-      "family": "cross_asset_price_discovery_leadlag",
-      "lane": "cheap_screen",
-      "stage": "REJECTED_PRE_OOS",
-      "work_mode": "CHEAP_SCREEN",
-      "economic_mechanism": "BTC may absorb market-wide information and capital-flow shocks before fixed liquid followers; a follower that has not incorporated its strictly trailing beta-implied response may continue in the BTC impulse direction as arbitrageurs and allocators rebalance.",
-      "hypothesis": "After a predeclared large completed one-hour BTC impulse, fixed ETH and SOL followers satisfying a strictly pre-event beta-defined underreaction gap have positive next-six-hour same-direction after-cost expectancy versus trading every identical BTC impulse without the underreaction condition.",
-      "target_markets": ["OKX BTC/ETH/SOL USDT perpetual swaps"],
-      "target_timeframes": ["1h signal / 6h hold"],
-      "source_fingerprint_required": false,
-      "blocker": "Terminal pre-OOS rejection on the exact frozen v1 fingerprint. Do not tune or reopen it. Historical untouched OOS and genuine-forward evidence remain unopened.",
-      "contract_ref": "orchestration/disc_btc_leadlag_001.json",
-      "source_evidence_ref": "orchestration/evidence/disc_liquidity_meanrev_001_20260919.json",
-      "selection_evidence_ref": "orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz",
-      "selection_pr": 442,
-      "selection_merge_sha": "9368dfe0d3f22573b5331b1086547c3884330b1b",
-      "selection_decision": "REJECTED_PRE_OOS",
-      "selection_summary": {
-        "training_pooled_trades": 102,
-        "training_3x_mean_net_bps": -68.95,
-        "training_3x_profit_factor": 0.420,
-        "validation_pooled_trades": 24,
-        "validation_3x_mean_net_bps": -113.69,
-        "validation_3x_profit_factor": 0.097,
-        "untouched_oos_opened": false,
-        "genuine_forward_opened": false
-      },
-      "expected_profitability_impact": 0.0,
-      "expected_information_gain": 0.0,
-      "falsification_value": 1.0,
-      "sample_readiness": 0.0,
-      "compute_cost": 0.0,
-      "validation_requirements": [
-        "exact fingerprint is terminally rejected unless materially new data or a genuinely different frozen mechanism creates a new fingerprint",
-        "preserve historical untouched OOS and genuine-forward lock"
-      ]
-    },
-    {
       "hypothesis_id": "DISC-RESIDUAL-MOMENTUM-001",
       "fingerprint_id": "DISC-RESIDUAL-MOMENTUM-001-v1",
       "family": "residual_momentum",

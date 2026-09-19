@@ -25,28 +25,15 @@ def test_coordination_state_has_exact_specialist_roster_and_safe_policy():
 
 
 
-def test_strategy_discovery_roles_have_only_current_active_work():
+def test_strategy_discovery_has_no_active_specialist_work_during_lead_runtime_acceptance():
     state = load_state()
-    active_roles = {"quant-research"}
 
     for role in REQUIRED_ROLES:
         active = [
             row for row in role_queue(state, role)
             if row["status"] in {"READY", "IN_PROGRESS", "PR_OPEN"}
         ]
-        if role not in active_roles:
-            assert active == [], (role, active)
-            continue
-
-        assert len(active) == 1, (role, active)
-        task = active[0]
-        assert next_task(state, role) == task
-        assert task["id"].startswith("COORD-DISC-")
-        # QUANT-004 selects and freezes a new fingerprint before outcomes.
-        # Requiring one here would force an outcome-driven or placeholder ID.
-        assert task.get("fingerprint_id") is None
-        assert task["evidence_required"]
-        assert task["branch"] == state["roles"][role]["branch"]
+        assert active == [], (role, active)
 
     assert next_task(state, "data-market") is None
     assert next_task(state, "testing-security") is None
@@ -98,10 +85,12 @@ def test_completed_data_provenance_work_is_not_reassigned():
     next_data_task = next(row for row in state["tasks"] if row["id"] == "COORD-DATA-007")
     assert next_data_task["status"] == "BLOCKED"
     assert next_task(state, "data-market") is None
-    current = next_task(state, "quant-research")
-    assert current["id"] == "COORD-DISC-QUANT-004"
-    assert current["status"] == "READY"
-    assert current.get("fingerprint_id") is None
+    rejected = next(row for row in state["tasks"] if row["id"] == "COORD-DISC-QUANT-004")
+    assert rejected["status"] == "DONE"
+    assert rejected["fingerprint_id"] == "DISC-BTC-LEADLAG-001-v1"
+    assert rejected["completion_evidence"]["decision"] == "REJECTED_PRE_OOS"
+    assert rejected["completion_evidence"]["untouched_oos_opened"] is False
+    assert next_task(state, "quant-research") is None
     assert "matured prospective point-in-time cohorts" in next_data_task["title"]
     requirements = " ".join(next_data_task["evidence_required"]).lower()
     assert "minimum eight independent" in requirements
@@ -115,7 +104,19 @@ def test_duplicate_active_ownership_is_rejected():
     bad = copy.deepcopy(state)
     legacy = next(row for row in bad["tasks"] if row["id"] == "COORD-QUANT-002")
     legacy["status"] = "READY"
+    legacy["work_mode"] = "CHEAP_SCREEN"
     legacy["blockers"] = []
+    current = copy.deepcopy(next(row for row in bad["tasks"] if row["id"] == "COORD-DISC-QUANT-004"))
+    current.update(
+        {
+            "id": "COORD-DISC-QUANT-TEST",
+            "status": "READY",
+            "fingerprint_id": "DISC-TEST-GENUINELY-NEW-v1",
+            "pr": None,
+        }
+    )
+    current.pop("completion_evidence", None)
+    bad["tasks"].append(current)
     with pytest.raises(RuntimeError, match="duplicate active ownership"):
         validate_state(bad)
 

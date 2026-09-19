@@ -146,13 +146,14 @@ def test_verified_source_metadata_and_immutable_dataset_are_present():
     assert dataset["coverage_end_utc"] == contract["source"]["coverage_end_utc"]
 
 
-def test_queue_exposes_exactly_one_new_screenable_candidate():
+def test_queue_does_not_expose_terminally_rejected_candidate():
     queue = load_queue(QUEUE_PATH)
     state = snapshot(queue)
-    ranked = state["ranked_cheap_screens"]
-    assert len(ranked) == 1
-    assert ranked[0]["fingerprint_id"] == "DISC-BTC-LEADLAG-001-v1"
-    assert state["next_action"]["action"] == "RUN_CHEAP_DETERMINISTIC_SCREEN"
-    assert state["next_action"]["fingerprint_id"] == "DISC-BTC-LEADLAG-001-v1"
+    assert state["ranked_cheap_screens"] == []
+    assert state["next_action"] is None
+    assert all(
+        row["fingerprint_id"] != "DISC-BTC-LEADLAG-001-v1"
+        for row in queue["candidates"]
+    )
     assert state["active_deep_candidate"] is None
     assert state["trade_authority"] is False

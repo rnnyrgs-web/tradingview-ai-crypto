@@ -10,15 +10,21 @@ from orchestration.rejected_fingerprints import (
 from orchestration.specialist_coordination import load_state, validate_state
 
 
-ACTIVE_STATUSES = {"READY", "IN_PROGRESS", "PR_OPEN"}
-
-
-def _active_discovery_task(state):
-    return next(
-        row
-        for row in state["tasks"]
-        if row["status"] in ACTIVE_STATUSES and row["id"].startswith("COORD-DISC-")
+def _append_active_discovery_task(state):
+    """Create an isolated active task without requiring canonical work to be open."""
+    source = next(row for row in state["tasks"] if row["id"] == "COORD-DISC-QUANT-004")
+    task = copy.deepcopy(source)
+    task.update(
+        {
+            "id": "COORD-DISC-QUANT-TEST",
+            "status": "READY",
+            "fingerprint_id": "DISC-TEST-GENUINELY-NEW-v1",
+            "pr": None,
+        }
     )
+    task.pop("completion_evidence", None)
+    state["tasks"].append(task)
+    return task
 
 
 def test_canonical_registry_loads_with_required_fields():
@@ -28,6 +34,7 @@ def test_canonical_registry_loads_with_required_fields():
     assert "DATA-BASIS-001" in ids
     assert "DATA-FUNDING-001" in ids
     assert "DISC-VOL-BREAKOUT-001-v1" in ids
+    assert "DISC-BTC-LEADLAG-001-v1" in ids
     for entry in entries:
         assert entry["do_not_resubmit_same_fingerprint"] is True
         assert entry["reconsideration_conditions"]
@@ -80,7 +87,7 @@ def test_missing_required_field_is_rejected(tmp_path):
 def test_coordination_task_declaring_rejected_fingerprint_fails_closed():
     state = load_state()
     bad = copy.deepcopy(state)
-    task = _active_discovery_task(bad)
+    task = _append_active_discovery_task(bad)
     task["fingerprint_id"] = "DATA-BASIS-001"
     with pytest.raises(RuntimeError, match="rejected fingerprint"):
         validate_state(bad)
@@ -101,6 +108,6 @@ def test_coordination_task_declaring_rejected_fingerprint_is_fine_when_done():
 def test_coordination_task_with_genuinely_new_fingerprint_is_unaffected():
     state = load_state()
     ok = copy.deepcopy(state)
-    task = _active_discovery_task(ok)
+    task = _append_active_discovery_task(ok)
     task["fingerprint_id"] = "DATA-BREADTH-002-GENUINELY-NEW"
     validate_state(ok)  # must not raise
