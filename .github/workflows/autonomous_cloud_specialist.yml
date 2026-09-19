@@ -1,7 +1,17 @@
 name: Cost-Bounded Autonomous Cloud Specialist
+run-name: Cloud specialist task=${{ inputs.task_id }} request=${{ inputs.orchestrator_request_id }}
 
 on:
   workflow_dispatch:
+    inputs:
+      task_id:
+        description: Exact canonical coordination task ID to run
+        required: false
+        type: string
+      orchestrator_request_id:
+        description: Durable Orchestrator V1 dispatch identity
+        required: false
+        type: string
   schedule:
     - cron: "41 * * * *"
 
@@ -111,10 +121,13 @@ jobs:
 
       - id: plan
         name: Select at most one READY autonomous task
+        env:
+          REQUESTED_TASK_ID: ${{ inputs.task_id }}
         run: |
           python agents/autonomous_cloud_runner.py plan \
             --state /tmp/runner_state.json \
             --main-sha '${{ steps.meta.outputs.main_sha }}' \
+            --task-id "$REQUESTED_TASK_ID" \
             --output /tmp/decision.json
           RUN="$(jq -r '.run' /tmp/decision.json)"
           echo "run=$RUN" >> "$GITHUB_OUTPUT"

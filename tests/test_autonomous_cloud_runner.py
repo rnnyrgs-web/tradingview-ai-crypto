@@ -140,6 +140,18 @@ def test_duplicate_active_task_prevents_second_ownership():
     assert decision.run is False
     assert decision.reason == "ACTIVE_TASK_WAITING_CI"
 
+
+def test_workflow_dispatch_task_id_must_match_canonical_selected_task():
+    coordination, task = _coord_with_ready_discovery_task()
+    accepted = plan_decision(_config(), coordination, default_state(), MAIN_SHA, NOW,
+                             requested_task_id=task["id"])
+    assert accepted.run is True
+    assert accepted.task_id == task["id"]
+    refused = plan_decision(_config(), coordination, default_state(), MAIN_SHA, NOW,
+                            requested_task_id="COORD-WRONG-001")
+    assert refused.run is False
+    assert refused.reason == "DISPATCH_TASK_ID_MISMATCH"
+
 def test_api_cost_limit_reserves_worst_case_before_model_call():
     config = _config()
     state = default_state()

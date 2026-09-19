@@ -1,0 +1,43 @@
+name: Development Orchestrator V1
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - Autonomous Lead Integrator
+      - Cost-Bounded Autonomous Cloud Specialist
+    types:
+      - completed
+  schedule:
+    - cron: "13 * * * *"
+
+permissions:
+  actions: write
+  contents: write
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: development-orchestrator-v1
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PYTHONPATH: ${{ github.workspace }}
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install GitHub API client
+        run: python -m pip install 'httpx>=0.27,<1'
+      - name: Reconcile one bounded development step
+        run: python -m agents.development_orchestrator_runtime --main-sha "$(git rev-parse HEAD)"
