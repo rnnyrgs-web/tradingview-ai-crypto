@@ -54,7 +54,7 @@
       "fingerprint_id": "DISC-SQUEEZE-RETENTION-001-v1",
       "family": "forced_flow_retention_momentum",
       "lane": "cheap_screen",
-      "stage": "CHEAP_SCREEN_READY",
+      "stage": "BLOCKED_DATA_CONTRACT",
       "work_mode": "CHEAP_SCREEN",
       "economic_mechanism": "If a large upside move is initially amplified by short-covering but price remains elevated after forced-flow activity and leverage normalize, independent spot/capital demand may be carrying the move and continuation may have positive expectancy.",
       "hypothesis": "A predeclared post-squeeze retention/deleveraging filter identifies continuation after large upside moves with positive after-cost expectancy versus equally large price shocks without retention and leverage-normalization confirmation.",
@@ -67,13 +67,13 @@
         "24h"
       ],
       "source_fingerprint_required": false,
-      "blocker": null,
+      "blocker": "DATA-004 terminally established no scientifically defensible zero-new-cost timestamp-safe historical forced-flow source for the frozen Binance USDⓈ-M BTCUSDT/ETHUSDT/SOLUSDT interval 2025-07-01T00:00Z through 2026-09-01T00:00Z under current access. CryptoHFTData complete prefix inventory requires dashboard-generated temporary S3 credentials; anonymous exact-path probing cannot prove complete inventory or historical publication chronology. Binance zero-cost alternatives do not provide the matching historical forced-liquidation family, and public liquidation broadcasts remain lower-bound observations. Strategy outcomes and untouched OOS were not opened. This blocks v1 under the current data contract but is not a strategy rejection; reopen only under the documented DATA-004 conditions or freeze a genuinely different hypothesis.",
       "generator_evidence_ref": "money_intelligence/research_cycles/2026-09-19T0357Z-cycle.json",
       "generator_evidence_note": "Money Intelligence observed BTC retaining a large Sep. 18 gain after the main short-liquidation impulse normalized and explicitly queued a timestamp-safe BTC squeeze matched sample; this is hypothesis-generation evidence only, not strategy evidence.",
       "expected_profitability_impact": 0.67,
       "expected_information_gain": 0.9,
       "falsification_value": 0.93,
-      "sample_readiness": 0.62,
+      "sample_readiness": 0.15,
       "compute_cost": 0.4,
       "validation_requirements": [
         "timestamp_safe_forced_flow_data",
@@ -86,7 +86,10 @@
         "realistic_cost_stress",
         "genuine_forward_shadow"
       ],
-      "data_preflight_ref": "docs/research/squeeze_retention_data_preflight_20260919.md"
+      "data_preflight_ref": "docs/research/squeeze_retention_data_preflight_20260919.md",
+      "data_resolution_ref": "research_data/squeeze_preflight/data004_source_resolution.json",
+      "data_resolution_pr": 431,
+      "data_resolution_merge_sha": "c51a59dbac604a2e0b2eefa2b68ae025d4c5b0e3"
     },
     {
       "hypothesis_id": "DISC-FRIZZ-PLAYBIT-EMA-001",
