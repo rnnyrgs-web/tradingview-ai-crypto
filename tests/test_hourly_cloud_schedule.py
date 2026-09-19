@@ -20,6 +20,19 @@ def test_cloud_specialist_checks_hourly_but_model_cooldown_stays_12h():
     assert config["policy"]["trade_authority"] is False
 
 
+def test_cloud_specialist_installs_budget_http_dependency_before_reservation():
+    workflow = (ROOT / ".github/workflows/autonomous_cloud_specialist.yml").read_text(encoding="utf-8")
+    requirements = (ROOT / "requirements.txt").read_text(encoding="utf-8")
+    install_step = """      - name: Install fleet budget HTTP client
+        if: steps.credential_gate.outputs.execute == 'true'
+        run: python -m pip install 'httpx>=0.27,<1'
+"""
+
+    assert install_step in workflow
+    assert workflow.index(install_step) < workflow.index("      - id: fleet_budget")
+    assert "httpx>=0.27,<1" in requirements
+
+
 def test_hourly_review_asks_improvement_question_without_relaxing_budget_or_authority():
     config = json.loads((ROOT / "orchestration/autonomous_specialist_runner.json").read_text(encoding="utf-8"))
     question = config["policy"]["hourly_self_improvement_question"].lower()
