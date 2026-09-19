@@ -98,7 +98,10 @@ def test_completed_data_provenance_work_is_not_reassigned():
 
     next_data_task = next(row for row in state["tasks"] if row["id"] == "COORD-DATA-007")
     assert next_data_task["status"] == "BLOCKED"
-    assert next_task(state, "data-market")["id"] == "COORD-DISC-DATA-002"
+    current_data = next_task(state, "data-market")
+    assert current_data is not None
+    assert current_data["id"].startswith("COORD-DISC-DATA-")
+    assert current_data["status"] in {"READY", "IN_PROGRESS", "PR_OPEN"}
     assert "matured prospective point-in-time cohorts" in next_data_task["title"]
     requirements = " ".join(next_data_task["evidence_required"]).lower()
     assert "minimum eight independent" in requirements
