@@ -48,4 +48,34 @@ def test_prediction_ledger_chronology_still_orders_by_resolved_at(monkeypatch):
     db.fetch_resolved_predictions()
     assert fake.calls[-1]["params"]["order"] == "resolved_at.desc"
     db.fetch_shadow_predictions()
-    assert fake.calls[-1]["params"]["order"] == "resolved_at.asc"
+    assert fake.calls[-1]["params"]["order"] == "resolved_at.desc"
+    assert int(fake.calls[-1]["params"]["limit"]) <= 2000
+
+
+def test_shadow_prediction_fetch_returns_recent_window_in_chronological_order(monkeypatch):
+    class _RowsResponse:
+        status_code = 200
+        text = "[]"
+
+        def json(self):
+            return [
+                {"id": 3, "resolved_at": "2026-09-03T00:00:00+00:00"},
+                {"id": 2, "resolved_at": "2026-09-02T00:00:00+00:00"},
+                {"id": 1, "resolved_at": "2026-09-01T00:00:00+00:00"},
+            ]
+
+    class _RowsHTTP:
+        def __init__(self):
+            self.params = None
+
+        def get(self, url, headers=None, params=None):
+            self.params = dict(params or {})
+            return _RowsResponse()
+
+    fake = _RowsHTTP()
+    monkeypatch.setattr(db, "http", fake)
+    monkeypatch.setattr(db, "configured", lambda: True)
+    rows = db.fetch_shadow_predictions(limit=999999)
+    assert fake.params["order"] == "resolved_at.desc"
+    assert fake.params["limit"] == "2000"
+    assert [row["id"] for row in rows] == [1, 2, 3]
