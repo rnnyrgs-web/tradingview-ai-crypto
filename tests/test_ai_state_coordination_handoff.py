@@ -4,19 +4,18 @@ import json
 from continuous_coordinator import parse_state_last_updated
 
 
+
 def test_authoritative_ai_state_tracks_effective_data_market_handoff():
     text = Path("AI_STATE.md").read_text(encoding="utf-8")
 
-    # Regression for the PR #322 state-drift incident: the durable base
-    # coordination JSON still contains the historical COORD-DATA-005 READY row,
-    # while the canonical loader applies the later append-only override that
-    # marks DATA-BREADTH selection/capture complete and DATA-007 blocked.
+    # Durable state must preserve the historical DATA-BREADTH maturation gate
+    # while allowing a separate strategy-discovery data task to advance.
     assert "## SAFETY INVARIANTS" in text
     assert "## EXACT NEXT STEP" in text
     assert "`COORD-DATA-005`: **DONE**" in text
     assert "`COORD-DATA-006`: **DONE**" in text
     assert "`COORD-DATA-007`: **BLOCKED**" in text
-    assert "Do not select another data candidate" in text
+    assert "Do not select another DATA-BREADTH candidate" in text
     assert "do **not** read only the base json" in text.lower()
 
     stale_claims = (
@@ -27,17 +26,16 @@ def test_authoritative_ai_state_tracks_effective_data_market_handoff():
 
 
 def test_data_market_backlog_respects_data_breadth_maturation_gate():
-    """Prevent a READY backlog row from bypassing the authoritative data freeze."""
+    """Prevent DATA-BREADTH backlog work from bypassing its prospective-maturation gate."""
     text = Path("AI_STATE.md").read_text(encoding="utf-8")
     backlog = json.loads(Path("orchestration/priority_backlog.json").read_text(encoding="utf-8"))
     acc005 = next(item for item in backlog["items"] if item["id"] == "ACC-005")
 
     assert "`COORD-DATA-007`: **BLOCKED**" in text
-    assert "Do not select another data candidate" in text
+    assert "Do not select another DATA-BREADTH candidate" in text
     assert acc005["owner"] == "data-market"
     assert acc005["status"] == "BLOCKED"
     assert "DATA-BREADTH-001" in acc005["block_reason"]
-
 
 def test_authoritative_ai_state_preserves_coordinator_freshness_contract():
     """Regression for PR #325: coordinator must parse the real state header."""
