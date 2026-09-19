@@ -1,7 +1,7 @@
 # AI_STATE.md
 
-Last reconciled: 2026-09-19T00:18Z
-Last updated: 2026-09-19T00:18Z
+Last reconciled: 2026-09-19T03:36Z
+Last updated: 2026-09-19T03:36Z
 
 This is the authoritative compact handoff for agents working on `rnnyrgs-web/tradingview-ai-crypto`. Read the current default-branch `UNIFIED_PROFITABILITY_LEAD_SPEC.md` first and obey it as the exhaustive operating contract. Also obey the merged `SIGNAL_BACKTEST_CHARTS_SPEC.md`. When this file conflicts with an older chat summary, stale branch note, or stale base coordination row, verify current GitHub/runtime evidence and use the canonical coordination loader state. Do **not** read only the base JSON and treat an overridden historical task row as current.
 
@@ -200,17 +200,18 @@ Profitability means net expectancy after realistic fees, spread, slippage, fundi
 
 ## CURRENT CANONICAL STATE
 
-- Reconciled GitHub `main`: **`0414a6faf941b30531a67f941997d80668b11a97`**, the merge commit for PR #406.
-- PR #405 is merged. It froze and executed the selection-only cheap screen for `DISC-RESIDUAL-MOMENTUM-001-v1`; exact-head Security & Reliability and the Residual Momentum Selection workflow both passed.
-- The sealed residual-momentum artifact from workflow run `35407813647` / artifact `10572498750` recorded **0/2 passing Top-15/Top-30 pre-OOS liquidity subsets**, negative challenger training rank IC and negative 3x after-cost spread on both subsets, **untouched OOS still locked**, and **historical point-in-time membership unverified**. Therefore it is preserved as exploratory negative evidence and **deprioritized**, not terminally rejected solely from survivor-biased evidence.
-- Commit `1241ee9391d738ac01405cdfa169b5f66e367580` persists that evidence and advances the ranked queue to **`DISC-VOL-BREAKOUT-001-v1`** as the next materially distinct cheap-screen candidate.
-- PR #406 aligns the autonomous worker execution queue to that current strategy-discovery state. Stale signal-era/ACC-002 assignments are blocked or retired; Quant, Validation, Data and Testing roles now point at the current volatility-breakout candidate. OpenAI/Claude/Claude Code missions are dynamic rather than hard-coded to legacy task IDs.
-- Claude Code remains narrowly scoped to adversarial testing/security paths. Substantial implementation work that exceeds those boundaries should be delegated through ChatGPT Work/Codex or an explicit Lead-controlled implementation milestone rather than silently widening autonomous authority.
-- The Autonomous Lead now wakes after the OpenAI specialist, Claude Research, Claude Code, Strategy Discovery Supervisor and selection workflow completions, in addition to its hourly schedule.
-- PR #403 remains the canonical Strategy Discovery Supervisor foundation: ranked machine-readable queue, rejected-fingerprint memory, one-deep-candidate maximum, Frizz lane, Big-Move and Money Intelligence generators, and zero trade authority.
+- Reconciled GitHub `main`: **`1530084efee2535e0074eb3af88b4417be8b35f2`**, the merge commit for PR #414.
+- PR #405 froze and executed `DISC-RESIDUAL-MOMENTUM-001-v1`. It produced 0/2 passing pre-OOS liquidity subsets on the sealed selection artifact; historical point-in-time membership was unverified, so untouched OOS stayed locked and the candidate was deprioritized rather than terminally rejected solely from survivor-biased evidence.
+- PR #410 formally rejected `DISC-VOL-BREAKOUT-001-v1` at pre-OOS selection and advanced the ranked strategy-discovery queue to **`DISC-LIQUIDITY-MEANREV-001-v1`**. Untouched OOS remains locked.
+- Canonical discovery execution tasks are now `COORD-DISC-QUANT-002`, `COORD-DISC-VAL-002`, `COORD-DISC-DATA-002`, and `COORD-DISC-TEST-002`, all READY for the liquidity-shock mean-reversion cheap-screen milestone.
+- PR #403 remains the Strategy Discovery Supervisor foundation: ranked queue, rejected-fingerprint memory, one-deep-candidate maximum, Frizz lane, Big-Move and Money Intelligence generators, and zero trade authority.
+- PR #406 keeps scheduled OpenAI/Claude/Claude Code execution aligned to the strategy-discovery queue rather than stale signal-era tasks.
+- **Supabase egress incident:** the Free-plan project was driven far beyond its bandwidth allowance by a hot resolved-prediction polling loop. Database statement evidence showed the old full shadow-ledger query had been called about **142,136 times**. PR #413 bounded the shadow ledger to a recent window and throttled learning diagnostics; PR #414 completed the fix for experiment-factory and adaptive-accuracy workers. Successful data-heavy research cycles now recheck hourly by default, resolved-ledger reads default to 500 recent rows with a hard 2,000-row cap, and paper-history reads are bounded.
+- Exact PR #414 Security & Reliability passed, and both Render services were verified live on exact commit `1530084efee2535e0074eb3af88b4417be8b35f2`. The old ascending full-ledger query stopped increasing after deployment; the replacement bounded descending query is active.
+- The Supabase organization is still on the **Free** plan. Code changes can stop new runaway egress but cannot erase bandwidth already accrued in the current billing period. Do not upgrade or incur paid Supabase spend without explicit user approval.
 - Broker/live authority remains **OFF**. Research/paper/shadow only. `live_promotions.json` must remain empty unless every canonical gate and explicit authorization allow otherwise.
-- Combined variable paid-project ceiling remains approximately **$30/month total** across approved paid project resources. No change in this reconciliation raises that ceiling.
-- `main` is still not branch-protected. Direct commits therefore remain an integration risk; exact-head validation and isolated branches remain required for proposed changes.
+- Combined variable paid-project ceiling remains approximately **$30/month total** unless the user explicitly changes it.
+- `main` is still not branch-protected. Use isolated branches and exact-head verification before merge.
 
 ## CURRENT PROFITABILITY EVIDENCE — ACC-002 REJECTED; NO VALIDATED EDGE YET
 
@@ -228,22 +229,22 @@ Latest recorded mixed paper-account snapshot in issue #112 was losing overall an
 
 ## SINGLE HIGHEST-VALUE BOTTLENECK
 
-The worker/queue coordination drift is now fixed. The highest-value bottleneck is **turning `DISC-VOL-BREAKOUT-001-v1` from a ranked hypothesis into truthful cheap-screen evidence on a scientifically clean, frozen data/rule contract**.
+The highest-value research bottleneck is now **turning `DISC-LIQUIDITY-MEANREV-001-v1` into truthful cheap-screen evidence under a frozen liquidity-shock mean-reversion contract**.
 
-The residual-momentum screen already produced useful negative information and has been deprioritized. Do not spend another cycle rescuing its exact survivor-limited screen unless materially new evidence changes the scientific question.
+Residual momentum is deprioritized and volatility breakout is rejected. Do not rescue either exact fingerprint without materially new data or a genuinely different scientific mechanism.
 
-For volatility breakout, the immediate research problem is to predeclare:
-- exact compression and breakout definitions;
-- exact entry/exit/holding logic;
-- one simple primary parameterization plus explicitly declared sensitivity/falsifier checks;
-- a predeclared fixed asset set and timeframe(s), preferably using long-lived highly liquid instruments so the first screen does not depend on reconstructing a historical ranked universe;
-- exact source/provenance/time coverage;
-- realistic costs and stress multipliers;
-- chronological purged/non-overlapping train/validation boundaries;
-- explicit search breadth and multiple-testing treatment;
-- pass/fail criteria that cannot be changed after outcomes are inspected.
+For liquidity mean reversion, freeze before outcome inspection:
+- exact liquidity/volatility shock definition;
+- exact mean-reversion entry, exit, stop and holding logic;
+- exact asset set / venue / timeframe;
+- timestamp-safe data and missing-data rules;
+- cost/slippage assumptions and stress levels;
+- chronological purged/non-overlapping train/validation design;
+- regime/subperiod stability requirements;
+- declared parameter/search breadth and multiple-testing treatment;
+- explicit success/failure criteria.
 
-Old crypto signal generation, dashboard polish, alert features and signal-P&L presentation remain deprioritized unless directly required to validate or later operationalize a strategy that has genuinely earned validation.
+Operationally, **Supabase egress must stay bounded**. Do not reintroduce full-ledger polling, five-second database diagnostics, or broad unbounded `select *` research reads merely to increase activity.
 
 ## CANONICAL DATA-MARKET HANDOFF
 
@@ -257,19 +258,18 @@ Do not select another data candidate while DATA-BREADTH-001 is awaiting that pro
 
 ## EXACT NEXT STEP
 
-**Run the volatility-breakout discovery milestone next.**
+**Execute the liquidity-shock mean-reversion cheap-screen milestone next.**
 
-1. Freeze the full scientific contract for `DISC-VOL-BREAKOUT-001-v1` **before** inspecting its new selection outcomes.
-2. Prefer a small predeclared fixed set of long-lived liquid instruments for the first screen unless genuine point-in-time universe membership is available; do not substitute assets after seeing results.
-3. Implement only the minimum deterministic research code needed to evaluate the frozen rule.
-4. Run cheap train/validation selection evidence first with realistic costs, non-overlapping observations, subperiod/regime stability, sufficient samples and declared multiple-testing/search breadth. Untouched OOS stays locked.
-5. If the candidate fails, preserve the exact failure evidence, update the ranked queue, and pivot to the next materially distinct hypothesis such as `DISC-LIQUIDITY-MEANREV-001-v1`.
-6. If the candidate genuinely passes every predefined selection gate, recognize the success, freeze the exact fingerprint/data contract, and promote **only that one candidate** into deep validation.
-7. Quant/Validation/Data/Testing background workers should use their new `COORD-DISC-*` assignments to support this candidate without duplicating each other.
-8. Big-Move Intelligence and Money Intelligence may continue producing timestamp-defensible testable hypotheses in parallel where they cannot contaminate protected evidence.
-9. Frizz/PlayBit EMA remains blocked only on its exact source/rule fingerprint; when that source is pinned, activate its dedicated asset/timeframe screen under the same anti-data-mining discipline.
+1. Read the current ranked discovery queue and `COORD-DISC-*-002` tasks.
+2. Freeze `DISC-LIQUIDITY-MEANREV-001-v1` completely before inspecting new outcomes.
+3. Implement the minimum deterministic screen using timestamp-safe market/liquidity inputs and realistic costs.
+4. Run pre-OOS train/validation evidence only; untouched OOS stays locked.
+5. If it fails, preserve the exact evidence and automatically pivot to the highest-value materially distinct next hypothesis.
+6. If it genuinely passes every predeclared selection gate, freeze exactly that candidate and dataset as the sole deep-validation candidate.
+7. Keep Frizz blocked until the exact PlayBit EMA source/rules are fingerprinted; Big-Move and Money Intelligence may continue independent hypothesis generation.
+8. Keep the Supabase egress safeguards from PRs #413/#414 intact. If more historical evidence is needed, prefer bounded/cached/local artifacts rather than repeatedly downloading the full database ledger.
 
-**Tool routing:** use Sol as the Lead for state inspection, scientific decisions, PR review and next-milestone design. Use Work/Codex for substantial bounded implementation that requires sustained repository work, multiple files, tests/CI/debugging or web/app interaction. Work must checkpoint to GitHub/AI_STATE rather than becoming a separate source of truth.
+**Tool routing:** Sol leads scientific decisions, state reconciliation and review. Work/Codex handles substantial bounded multi-file implementation/testing. GitHub/AI_STATE remain the durable source of truth.
 
 ## CROSS-ENGINE / INFRASTRUCTURE STATUS
 
