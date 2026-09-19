@@ -1,7 +1,7 @@
 # AI_STATE.md
 
-Last reconciled: 2026-09-18T23:51Z
-Last updated: 2026-09-18T23:51Z
+Last reconciled: 2026-09-19T00:18Z
+Last updated: 2026-09-19T00:18Z
 
 This is the authoritative compact handoff for agents working on `rnnyrgs-web/tradingview-ai-crypto`. Read the current default-branch `UNIFIED_PROFITABILITY_LEAD_SPEC.md` first and obey it as the exhaustive operating contract. Also obey the merged `SIGNAL_BACKTEST_CHARTS_SPEC.md`. When this file conflicts with an older chat summary, stale branch note, or stale base coordination row, verify current GitHub/runtime evidence and use the canonical coordination loader state. Do **not** read only the base JSON and treat an overridden historical task row as current.
 
@@ -200,20 +200,17 @@ Profitability means net expectancy after realistic fees, spread, slippage, fundi
 
 ## CURRENT CANONICAL STATE
 
-- Reconciled GitHub `main`: **`b84fc2c560db56f0b53ee4864e6633b000a3f4fb`**. PR #403 is merged after exact-head Security & Reliability and Strategy Discovery Supervisor checks passed.
-- PR #403 persists ACC-002 in `orchestration/rejected_fingerprints.json`, adds `orchestration/strategy_discovery_queue.json`, adds deterministic `strategy_discovery_supervisor.py`, and schedules the zero-model-API `Strategy Discovery Supervisor` GitHub workflow. It enforces one deep candidate, keeps broker/trade authority off, and provides a ranked shared queue for future ChatGPT/Work/worker runs.
-- The queue currently has three materially distinct cheap-screen candidates plus independent Big-Move and Money Intelligence generators. The dedicated Frizz/PlayBit EMA lane is present but intentionally fail-closed until the exact published source/rules are pinned and fingerprinted; do not substitute the existing FFRIZZ family.
-- PR #399 is merged and makes the result-oriented command language plus the high-agency strategic-achiever lead behavior canonical for all future sessions.
-- PR #396 is merged and adds immutable ACC-002 evidence-contract helpers for exact normalized-row hashes, ranked-universe/missing-symbol evidence, split timestamp boundaries, full pre-OOS predicate details, and declared search breadth.
-- PR #397 is merged and produced the fixed 24h ACC-002 SELECTION audit on exact commit `6e95408c...`.
-- The sealed ACC-002 audit is now reconciled: GitHub Actions run `35405308190` completed successfully and uploaded artifact `acc002-selection-evidence-6e95408c88b389bbb100bb8841a97695b785ef9a` with archive digest `sha256:5ad033ac97e057aafea0f4e72faca08c52ee19547f584c050f3ecf1126965efd`.
-- That audit recorded dataset SHA-256 `896a127376c80972d07f58ca605a5673f186a2d9ea7ffda8f5266dc67b11890e`, **eligible_candidate_count = 0**, **point_in_time_membership_verified = false**, `research_only=true`, `trade_authority=false`, and `untouched_oos_status=LOCKED_UNTOUCHED_OOS`.
-- Therefore the current ACC-002 screen is **formally rejected at selection**. Untouched OOS remains unopened. This is a learning/pivot event, not a stop condition.
-- Both Render services (`crypto-continuous-coordinator` and `tradingview-ai-crypto`) were last verified **live on exact commit `c897f0ee...`** after PR #388. Do not claim a newer production deployment without exact deployed-SHA evidence.
-- `main` is still not branch-protected. Direct commits therefore remain a governance/integration risk; always verify actual head before acting and require exact-head validation for proposed changes.
-- Canonical lifecycle remains **SELECTION** with **no active deep strategy candidate frozen yet**.
+- Reconciled GitHub `main`: **`0414a6faf941b30531a67f941997d80668b11a97`**, the merge commit for PR #406.
+- PR #405 is merged. It froze and executed the selection-only cheap screen for `DISC-RESIDUAL-MOMENTUM-001-v1`; exact-head Security & Reliability and the Residual Momentum Selection workflow both passed.
+- The sealed residual-momentum artifact from workflow run `35407813647` / artifact `10572498750` recorded **0/2 passing Top-15/Top-30 pre-OOS liquidity subsets**, negative challenger training rank IC and negative 3x after-cost spread on both subsets, **untouched OOS still locked**, and **historical point-in-time membership unverified**. Therefore it is preserved as exploratory negative evidence and **deprioritized**, not terminally rejected solely from survivor-biased evidence.
+- Commit `1241ee9391d738ac01405cdfa169b5f66e367580` persists that evidence and advances the ranked queue to **`DISC-VOL-BREAKOUT-001-v1`** as the next materially distinct cheap-screen candidate.
+- PR #406 aligns the autonomous worker execution queue to that current strategy-discovery state. Stale signal-era/ACC-002 assignments are blocked or retired; Quant, Validation, Data and Testing roles now point at the current volatility-breakout candidate. OpenAI/Claude/Claude Code missions are dynamic rather than hard-coded to legacy task IDs.
+- Claude Code remains narrowly scoped to adversarial testing/security paths. Substantial implementation work that exceeds those boundaries should be delegated through ChatGPT Work/Codex or an explicit Lead-controlled implementation milestone rather than silently widening autonomous authority.
+- The Autonomous Lead now wakes after the OpenAI specialist, Claude Research, Claude Code, Strategy Discovery Supervisor and selection workflow completions, in addition to its hourly schedule.
+- PR #403 remains the canonical Strategy Discovery Supervisor foundation: ranked machine-readable queue, rejected-fingerprint memory, one-deep-candidate maximum, Frizz lane, Big-Move and Money Intelligence generators, and zero trade authority.
 - Broker/live authority remains **OFF**. Research/paper/shadow only. `live_promotions.json` must remain empty unless every canonical gate and explicit authorization allow otherwise.
-- Combined variable paid-project ceiling remains approximately **$30/month total** across approved paid project resources. Do not raise it or add paid services without explicit user authorization.
+- Combined variable paid-project ceiling remains approximately **$30/month total** across approved paid project resources. No change in this reconciliation raises that ceiling.
+- `main` is still not branch-protected. Direct commits therefore remain an integration risk; exact-head validation and isolated branches remain required for proposed changes.
 
 ## CURRENT PROFITABILITY EVIDENCE — ACC-002 REJECTED; NO VALIDATED EDGE YET
 
@@ -231,18 +228,22 @@ Latest recorded mixed paper-account snapshot in issue #112 was losing overall an
 
 ## SINGLE HIGHEST-VALUE BOTTLENECK
 
-The strategy-discovery coordination foundation is now implemented and merged. The bottleneck has moved from architecture to **producing truthful cheap-screen evidence for the highest-ranked materially distinct candidate without opening untouched OOS prematurely**.
+The worker/queue coordination drift is now fixed. The highest-value bottleneck is **turning `DISC-VOL-BREAKOUT-001-v1` from a ranked hypothesis into truthful cheap-screen evidence on a scientifically clean, frozen data/rule contract**.
 
-`strategy_discovery_supervisor.py` deterministically ranks eligible cheap screens while enforcing:
-- exact rejected-fingerprint exclusion;
-- one active deep-validation candidate maximum;
-- research-only / broker-disconnected operation;
-- independent hypothesis-generator lanes;
-- explicit blocked state for the Frizz/PlayBit EMA lane until its exact source is pinned.
+The residual-momentum screen already produced useful negative information and has been deprioritized. Do not spend another cycle rescuing its exact survivor-limited screen unless materially new evidence changes the scientific question.
 
-Under the current frozen queue, `DISC-RESIDUAL-MOMENTUM-001-v1` ranks first among immediately screenable candidates. That ranking is a research-priority decision, not evidence that the strategy works.
+For volatility breakout, the immediate research problem is to predeclare:
+- exact compression and breakout definitions;
+- exact entry/exit/holding logic;
+- one simple primary parameterization plus explicitly declared sensitivity/falsifier checks;
+- a predeclared fixed asset set and timeframe(s), preferably using long-lived highly liquid instruments so the first screen does not depend on reconstructing a historical ranked universe;
+- exact source/provenance/time coverage;
+- realistic costs and stress multipliers;
+- chronological purged/non-overlapping train/validation boundaries;
+- explicit search breadth and multiple-testing treatment;
+- pass/fail criteria that cannot be changed after outcomes are inspected.
 
-Old crypto signal generation, dashboard polish, alert features, and signal-P&L presentation remain deprioritized unless they are strictly necessary to validate or later operationalize a genuinely validated strategy.
+Old crypto signal generation, dashboard polish, alert features and signal-P&L presentation remain deprioritized unless directly required to validate or later operationalize a strategy that has genuinely earned validation.
 
 ## CANONICAL DATA-MARKET HANDOFF
 
@@ -256,18 +257,19 @@ Do not select another data candidate while DATA-BREADTH-001 is awaiting that pro
 
 ## EXACT NEXT STEP
 
-**Execute the first bounded cheap deterministic screen from the merged strategy-discovery queue; do not reopen ACC-002.**
+**Run the volatility-breakout discovery milestone next.**
 
-1. Freeze the complete implementation/data/cost/chronology contract for `DISC-RESIDUAL-MOMENTUM-001-v1` before inspecting selection outcomes.
-2. Reuse existing residual-momentum implementation only after verifying it matches the frozen hypothesis; otherwise make the smallest isolated implementation needed.
-3. Bind exact dataset/provenance/time window and point-in-time universe treatment. If historical membership cannot be defended, fail closed rather than silently using survivors.
-4. Run only cheap selection/falsification evidence first, with realistic costs, non-overlapping observations, stability checks and declared search breadth. Untouched OOS stays locked unless the predefined selection gate passes.
-5. If the candidate fails, persist the exact fingerprint and failure mechanism in rejected memory, then advance to the next materially distinct ranked cheap-screen hypothesis.
-6. If it passes, freeze the exact fingerprint and promote **only that one candidate** into deep validation/OOS/robustness/cross-engine/forward evidence.
-7. In parallel, keep Big-Move Intelligence and Money Intelligence generating testable hypotheses where they cannot contaminate protected evidence.
-8. Pin and fingerprint the exact TradingView PlayBit EMA source/rules before activating its dedicated lane. The public page identifies it as an open-source two-EMA indicator, but the current repository does not yet contain the exact source-code/rule fingerprint; do not approximate it.
+1. Freeze the full scientific contract for `DISC-VOL-BREAKOUT-001-v1` **before** inspecting its new selection outcomes.
+2. Prefer a small predeclared fixed set of long-lived liquid instruments for the first screen unless genuine point-in-time universe membership is available; do not substitute assets after seeing results.
+3. Implement only the minimum deterministic research code needed to evaluate the frozen rule.
+4. Run cheap train/validation selection evidence first with realistic costs, non-overlapping observations, subperiod/regime stability, sufficient samples and declared multiple-testing/search breadth. Untouched OOS stays locked.
+5. If the candidate fails, preserve the exact failure evidence, update the ranked queue, and pivot to the next materially distinct hypothesis such as `DISC-LIQUIDITY-MEANREV-001-v1`.
+6. If the candidate genuinely passes every predefined selection gate, recognize the success, freeze the exact fingerprint/data contract, and promote **only that one candidate** into deep validation.
+7. Quant/Validation/Data/Testing background workers should use their new `COORD-DISC-*` assignments to support this candidate without duplicating each other.
+8. Big-Move Intelligence and Money Intelligence may continue producing timestamp-defensible testable hypotheses in parallel where they cannot contaminate protected evidence.
+9. Frizz/PlayBit EMA remains blocked only on its exact source/rule fingerprint; when that source is pinned, activate its dedicated asset/timeframe screen under the same anti-data-mining discipline.
 
-The hourly Unified Profitability Lead automation has been updated to read this queue/state and use GitHub as the shared mailbox. Coordination should not add OpenAI/Anthropic API spend merely to relay work between ChatGPT sessions.
+**Tool routing:** use Sol as the Lead for state inspection, scientific decisions, PR review and next-milestone design. Use Work/Codex for substantial bounded implementation that requires sustained repository work, multiple files, tests/CI/debugging or web/app interaction. Work must checkpoint to GitHub/AI_STATE rather than becoming a separate source of truth.
 
 ## CROSS-ENGINE / INFRASTRUCTURE STATUS
 
