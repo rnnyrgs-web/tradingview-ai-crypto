@@ -122,18 +122,19 @@ The previous Supabase egress incident remains bounded by merged query/window/thr
 
 ## LEGACY SIGNAL RETIREMENT / DATA HYGIENE
 
-User approved retiring the old signal/dashboard pipeline and removing redundant stored signal snapshots.
+Legacy signal/dashboard production is now **retired and deployed**.
 
-- 15-minute legacy scan generation is being retired.
-- Legacy signal/system/paper dashboard routes become HTTP 410 while Mission Control + Money Intelligence stay available.
-- The web process no longer runs the paid continuous-AI observer or the legacy paper loop.
-- Existing unresolved prediction-ledger rows may drain through the temporary research-only resolver; no new legacy forecasts are generated.
-- `crypto_opportunities` is classified as redundant legacy presentation state and may be truncated after the retirement deploy is verified.
-- `prediction_ledger` is NOT trash wholesale: keep it until pending forecasts mature, then compact scientifically useful evidence and preserve provenance before deleting JSON-heavy redundancy.
-- Bulk historical research belongs in compressed Parquet/object storage + DuckDB/Polars, not repeated Supabase JSON reads.
-- Do not delete historical 2x+ event/control data, immutable experiment/rejection evidence, OOS/forward proof, or point-in-time provenance.
+- PR #422 retired the scheduled 15-minute scan, legacy signal/system/paper dashboard routes, paid continuous-AI web observer, and legacy paper-trading runtime.
+- No new legacy opportunity/forecast generation has occurred since the final pre-retirement scan at 2026-09-19 04:51Z.
+- `crypto_opportunities` and `trading_signals` have been truncated to zero rows.
+- PR #424 compacted `prediction_ledger` without discarding scientifically useful evidence: point-in-time universe snapshots were archived, compact `research_context` was preserved, verbose resolved calibration payloads were pruned, and bounded reads no longer request unnecessary JSON blobs.
+- Current public Supabase relation footprint is about **204 MB**, down from roughly half a gigabyte before cleanup.
+- `prediction_ledger` still contains unresolved immutable legacy forecasts; the temporary research-only resolver may let them mature, but it cannot generate new forecasts.
+- Do not delete historical 2x+ event/control data, immutable experiment/rejection evidence, protected OOS/forward proof, or point-in-time provenance.
+- Bulk historical research belongs in compressed Parquet/object storage + DuckDB/Polars rather than repeated large Supabase JSON reads.
 
 See `docs/LEGACY_SIGNAL_RETIREMENT.md`.
+
 
 ## 24/7 BACKGROUND MODEL ORCHESTRATION
 
@@ -180,20 +181,12 @@ when complete. Require a fresh exact-head check before any merge.
 
 ## EXACT NEXT STEP
 
-1. Reconcile current main and PR #416 head; preserve independent work and do not
-   reopen the rejected liquidity fingerprint. If unmerged, finish exact-head
-   Security & Reliability, cached replay and discovery-supervisor checks, then
-   integrate through the Lead path with an expected-head guard. Do not merge on
-   an earlier green SHA.
-2. Continue `COORD-DISC-DATA-003` using the recorded squeeze-retention data
-   preflight. No unbounded Supabase reads, repeated historical downloads or paid
-   service expansion. The current adapter's missing historical liquidation
-   input must not become a fabricated feature.
-3. Freeze the next full scientific contract and exact timestamp/provenance
-   semantics before its outcomes. Keep prior OOS intervals protected across
-   hypotheses. Run only train/validation; no central deep candidate exists.
-4. Frizz remains source-fingerprint blocked; independent Money/Big-Move
-   generators may proceed without touching protected evidence.
+1. Continue `DISC-SQUEEZE-RETENTION-001-v1` without opening outcomes. PR #423 proved the sampled free archive is structurally real but still insufficient for a frozen screen because publication chronology, missing-hour semantics, full historical coverage and venue-unit semantics are not yet defensible.
+2. Resolve `COORD-DISC-DATA-003` first: establish timestamp/publication-safe price + OI + forced-flow/liquidation history, or persist a precise scientific blocker. Do not proxy missing liquidation history with future/current data.
+3. Only after the data contract is defensible may QUANT/VAL/TEST freeze the full squeeze-retention scientific contract and run train/validation. Untouched OOS remains locked and no central deep candidate exists.
+4. Independent Big-Move Intelligence should continue studying **2x+ events within 90 days** with matched non-movers and point-in-time precursors. Money Intelligence may continue independent hypothesis generation without contaminating protected strategy evidence.
+5. Keep legacy signal/dashboard production retired. Let the temporary pending-prediction drain finish existing immutable rows; no new legacy forecasts are permitted.
+
 
 ## STATUS VOCABULARY
 
