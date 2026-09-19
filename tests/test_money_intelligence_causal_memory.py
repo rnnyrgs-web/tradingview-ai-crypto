@@ -226,6 +226,45 @@ def test_evidence_weight_is_bounded_and_derived_not_caller_controlled():
         memory.record_evidence(duplicate_test)
 
 
+def test_evidence_reuse_guard_is_order_insensitive_for_observation_sets():
+    memory = _memory_with_hypothesis()
+    for observation_id, metric_name, value in (
+        ("outcome-2", "forward_return_72h", 0.07),
+        ("control-2", "matched_control_return_72h", 0.02),
+    ):
+        memory.register_observation(
+            _observation(
+                observation_id,
+                metric_name,
+                value,
+                observed_at="2026-09-02T01:00:00Z",
+                available_at="2026-09-02T04:00:00Z",
+                retrieved_at="2026-09-02T05:00:00Z",
+                currency="ratio",
+                measurement_window_hours=72,
+            )
+        )
+
+    first = EvidenceEvent(
+        **{
+            **_support("multi-source").__dict__,
+            "outcome_observation_ids": ("outcome", "outcome-2"),
+            "control_observation_ids": ("control", "control-2"),
+        }
+    )
+    memory.record_evidence(first)
+    reordered = EvidenceEvent(
+        **{
+            **first.__dict__,
+            "event_id": "multi-source-reordered",
+            "outcome_observation_ids": tuple(reversed(first.outcome_observation_ids)),
+            "control_observation_ids": tuple(reversed(first.control_observation_ids)),
+        }
+    )
+    with pytest.raises(CausalMemoryError, match="evaluation observations already consumed"):
+        memory.record_evidence(reordered)
+
+
 def test_point_in_time_chronology_and_narrative_separation_fail_closed():
     with pytest.raises(CausalMemoryError):
         _observation(
@@ -459,6 +498,39 @@ def test_relative_impact_rejects_stale_inputs():
     )
     assert ratio.value is None
     assert ratio.reason == "stale_input"
+
+
+def test_relative_impact_selects_latest_metric_within_requested_subject():
+    memory = CausalRepricingMemory()
+    memory.register_observation(_observation("btc-flow", "flow_24h", 20.0))
+    memory.register_observation(_observation("btc-float", "float_usd", 100.0))
+    for observation_id, metric_name, value in (
+        ("eth-flow", "flow_24h", 90.0),
+        ("eth-float", "float_usd", 300.0),
+    ):
+        memory.register_observation(
+            _observation(
+                observation_id,
+                metric_name,
+                value,
+                subject_id="ETH-USD",
+                observed_at="2026-09-01T03:00:00Z",
+                available_at="2026-09-01T04:00:00Z",
+                retrieved_at="2026-09-01T05:00:00Z",
+            )
+        )
+
+    ratio = memory.relative_impact(
+        ratio_name="flow_float",
+        numerator_metric="flow_24h",
+        denominator_metric="float_usd",
+        subject_id="BTC-USD",
+        as_of="2026-09-02T00:00:00Z",
+    )
+    assert ratio.reason == "ok"
+    assert ratio.numerator_observation_id == "btc-flow"
+    assert ratio.denominator_observation_id == "btc-float"
+    assert ratio.value == pytest.approx(0.2)
 
 
 def test_supported_finding_can_feed_research_lanes_but_has_zero_authority():
