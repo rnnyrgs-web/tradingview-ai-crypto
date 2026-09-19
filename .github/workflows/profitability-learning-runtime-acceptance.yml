@@ -1,0 +1,61 @@
+name: Profitability Learning Runtime Acceptance
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: profitability-learning-runtime-acceptance
+  cancel-in-progress: false
+
+jobs:
+  exact-deployed-sha:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Await exact deployed SHA and verify durable learning loop
+        env:
+          ACCEPTANCE_URL: https://tradingview-ai-crypto.onrender.com/research/profitability-learning/acceptance
+          SCAN_SECRET: ${{ secrets.SCAN_SECRET }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main"
+          test -n "$SCAN_SECRET"
+          response="$(mktemp)"
+          for attempt in $(seq 1 30); do
+            status="$(curl --silent --show-error \
+              --output "$response" --write-out '%{http_code}' \
+              --request POST \
+              --header "X-Scan-Secret: $SCAN_SECRET" \
+              --connect-timeout 10 --max-time 45 \
+              "$ACCEPTANCE_URL" || true)"
+            if [ "$status" = "200" ] && jq -e --arg sha "$GITHUB_SHA" '
+              .ok == true and
+              .deployed_sha == $sha and
+              .fingerprint_id == "DISC-BTC-LEADLAG-001-v1" and
+              .screen_status == "PRE_OOS_FAIL" and
+              .completion.training.outcome == "LEARN_AND_PIVOT" and
+              .completion.validation.outcome == "LEARN_AND_PIVOT" and
+              .completion.training.persistence_status == "PERSISTED" and
+              .completion.validation.persistence_status == "PERSISTED" and
+              .persistence.replay_idempotent == true and
+              .learning_consumption.rejected_exact_fingerprint == true and
+              .learning_consumption.queue_feedback_reason == "rejected_exact_fingerprint" and
+              .learning_consumption.queue_feedback_changes_eligibility == true and
+              .learning_consumption.heavy_dispatch_selected_count == 0 and
+              (.learning_consumption.component_observation_count >= 1) and
+              (.learning_consumption.mission_ids | length >= 1) and
+              .evidence_boundaries.untouched_oos_opened == false and
+              .evidence_boundaries.genuine_forward_opened == false and
+              .safety.trade_authority == false and
+              .safety.promotion_authority == false and
+              .safety.broker_connected == false
+            ' "$response" >/dev/null; then
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Exact deployed-SHA Profitability Learning acceptance did not pass" >&2
+          exit 1
