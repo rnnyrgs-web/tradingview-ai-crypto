@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
-from research_experiment_factory_runner import build_factory_report
+from research_experiment_factory_runner import _bounded_limit, build_factory_report
 
 
 def test_factory_runner_builds_research_only_queue(monkeypatch, tmp_path):
@@ -32,3 +32,12 @@ def test_factory_runner_builds_research_only_queue(monkeypatch, tmp_path):
     assert report["automatic_execution_authority"] is False
     assert report["resolved_samples"] == 30
     assert report["experiment_queue"]["experiment_count"] >= 1
+
+
+def test_experiment_factory_fetch_limits_are_bounded(monkeypatch):
+    monkeypatch.setenv("RESEARCH_EXPERIMENT_LEDGER_LIMIT", "999999")
+    assert _bounded_limit("RESEARCH_EXPERIMENT_LEDGER_LIMIT", 500, 100, 2000) == 2000
+    monkeypatch.setenv("RESEARCH_EXPERIMENT_LEDGER_LIMIT", "10")
+    assert _bounded_limit("RESEARCH_EXPERIMENT_LEDGER_LIMIT", 500, 100, 2000) == 100
+    monkeypatch.setenv("RESEARCH_EXPERIMENT_LEDGER_LIMIT", "bad")
+    assert _bounded_limit("RESEARCH_EXPERIMENT_LEDGER_LIMIT", 500, 100, 2000) == 500

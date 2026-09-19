@@ -83,10 +83,18 @@ def test_pure_acc002_insufficient_history_gets_long_recheck_without_masking_othe
     assert army._success_recheck_delay_seconds(cross, mixed) == army.REST_SECONDS
 
 
-def test_adaptive_idle_state_uses_bounded_recheck_delay():
+def test_adaptive_accuracy_uses_slow_success_recheck_to_bound_supabase_egress():
     adaptive = next(worker for worker in army.WORKERS if worker.name == "adaptive-accuracy")
+    assert army.ADAPTIVE_ACCURACY_MIN_RECHECK_SECONDS >= 300
+    assert (
+        army._success_recheck_delay_seconds(adaptive, {"evidence_conclusion": "validation_failed"})
+        == army.ADAPTIVE_ACCURACY_MIN_RECHECK_SECONDS
+    )
     evidence = {"evidence_conclusion": "deferred_repeat_no_material_new_evidence"}
-    assert army._success_recheck_delay_seconds(adaptive, evidence) == army.ADAPTIVE_IDLE_RECHECK_SECONDS
+    assert army._success_recheck_delay_seconds(adaptive, evidence) == max(
+        army.ADAPTIVE_ACCURACY_MIN_RECHECK_SECONDS,
+        army.ADAPTIVE_IDLE_RECHECK_SECONDS,
+    )
 
 
 def test_explicit_symbol_workers_disable_forced_symbol_duplication(monkeypatch):
@@ -149,3 +157,10 @@ def test_learning_diagnostics_uses_slow_success_recheck_to_bound_supabase_egress
     assert army.LEARNING_DIAGNOSTICS_RECHECK_SECONDS >= 300
     assert army._success_recheck_delay_seconds(learning, {"ok": True}) == army.LEARNING_DIAGNOSTICS_RECHECK_SECONDS
     assert army._success_recheck_delay_seconds(learning, None) == army.LEARNING_DIAGNOSTICS_RECHECK_SECONDS
+
+
+def test_experiment_factory_uses_slow_success_recheck_to_bound_supabase_egress():
+    factory = next(worker for worker in army.WORKERS if worker.name == "experiment-factory")
+    assert army.EXPERIMENT_FACTORY_RECHECK_SECONDS >= 300
+    assert army._success_recheck_delay_seconds(factory, {"ok": True}) == army.EXPERIMENT_FACTORY_RECHECK_SECONDS
+    assert army._success_recheck_delay_seconds(factory, None) == army.EXPERIMENT_FACTORY_RECHECK_SECONDS
