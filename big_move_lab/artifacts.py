@@ -82,6 +82,8 @@ def verify_bundle(path, *, expected_dataset_hash):
         expected_files |= {f"{name}.parquet" for name in TABLES}
     if set(manifest["files"]) != expected_files:
         raise ValueError("unexpected artifact files")
+    if {entry.name for entry in path.iterdir()} != expected_files | {"manifest.json"}:
+        raise ValueError("unexpected files in artifact directory")
     data = {k: manifest[k] for k in ("schema_version", "target", "as_of", "hashes", "dataset_hash", "summary")}
     for filename in sorted(expected_files):
         file_path = path/filename

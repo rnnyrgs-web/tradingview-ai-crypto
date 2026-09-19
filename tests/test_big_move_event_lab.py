@@ -322,3 +322,37 @@ def test_manifest_cannot_relabel_verified_dataset(lab, tmp_path):
     path.write_text(json.dumps(manifest))
     with pytest.raises(ValueError, match="identity"):
         verify_bundle(tmp_path / "bundle", expected_dataset_hash=data["dataset_hash"])
+
+
+@pytest.mark.parametrize("high,hit", [(0.3, True), (0.29999999999999993, False)])
+def test_exact_decimal_thresholds_and_immediately_below(lab, high, hit):
+    prices = bars()
+    for bar in prices:
+        bar.update(open=0.1, high=0.1, low=0.08, close=0.1)
+    prices[1]["high"] = high
+    row = run(lab, snapshots=[snapshot(price=0.1)], prices=prices)["labels"][0]
+    assert row["reached_3x"] is hit
+    assert row["days_to_3x"] == (2 if hit else None)
+    if hit:
+        assert row["maximum_90d_price_multiple"] == 3
+        assert row["max_forward_90d_return"] == 2
+
+
+def test_manifest_cannot_hide_tampered_parquet(lab, tmp_path):
+    import json
+    pytest.importorskip("pyarrow")
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    from big_move_lab.artifacts import verify_bundle, write_bundle
+    data = run(lab)
+    path = tmp_path / "bundle"
+    write_bundle(path, contract(), data, parquet=True)
+    labels = pq.read_table(path / "labels.parquet").to_pylist()
+    labels[0]["reached_2x"] = True
+    pq.write_table(pa.Table.from_pylist(labels), path / "labels.parquet")
+    manifest = json.loads((path / "manifest.json").read_text())
+    manifest["parquet"] = False
+    manifest["files"] = {k: v for k, v in manifest["files"].items() if not k.endswith(".parquet")}
+    (path / "manifest.json").write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="unexpected"):
+        verify_bundle(path, expected_dataset_hash=data["dataset_hash"])

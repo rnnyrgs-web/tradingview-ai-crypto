@@ -5,6 +5,7 @@ import hashlib
 import json
 import math
 from datetime import datetime, timedelta, timezone
+from fractions import Fraction
 
 TARGET = "2X_PLUS_EVENT_90D"
 HORIZONS = (30, 60, 90)
@@ -191,9 +192,13 @@ def prepare_bars(contract, bars):
 def label_snapshot(contract, snapshot, bars, as_of):
     decision = timestamp(snapshot["decision_time"])
     price = snapshot["features"]["price"]
+    # Classify the decimal values supplied by the source exactly. Binary float
+    # division can turn an exact 0.3 / 0.1 boundary into 2.9999999999999996.
+    exact_price = Fraction(str(price))
     future = [b for b in bars if decision <= timestamp(b["start"]) and
               timestamp(b["end"]) <= min(decision+timedelta(days=90), as_of) and
               timestamp(b["available_at"]) <= as_of]
+    multiples = {b["start"]: Fraction(str(b["high"]))/exact_price for b in future}
     row = {k: snapshot[k] for k in ("snapshot_id", "asset_id", "venue", "decision_time")}
     row.update(target=TARGET, starting_price=price, starting_timestamp=snapshot["decision_time"],
                liquidity_usd=snapshot["features"]["liquidity_usd"], tradable=True,
@@ -208,15 +213,15 @@ def label_snapshot(contract, snapshot, bars, as_of):
         # Unique aligned fixed-width bars, all contained in the interval: count proves density.
         complete[horizon] = as_of >= end and len(horizon_bars) == expected
         row[f"coverage_{horizon}d"] = "COMPLETE" if complete[horizon] else "CENSORED"
-        row[f"max_forward_{horizon}d_return"] = (max(b["high"] for b in horizon_bars)/price-1
+        row[f"max_forward_{horizon}d_return"] = (float(max(multiples[b["start"]] for b in horizon_bars)-1)
                                                  if complete[horizon] else None)
-        row[f"forward_{horizon}d_return"] = horizon_bars[-1]["close"]/price-1 if complete[horizon] else None
+        row[f"forward_{horizon}d_return"] = float(Fraction(str(horizon_bars[-1]["close"]))/exact_price-1) if complete[horizon] else None
     row["status"] = "COMPLETE" if complete[90] else "CENSORED"
-    observed_max = max((b["high"]/price for b in future), default=None)
+    observed_max = float(max(multiples.values())) if multiples else None
     row["observed_maximum_price_multiple"] = observed_max
     row["maximum_90d_price_multiple"] = observed_max if complete[90] else None
     for threshold in THRESHOLDS:
-        hit = next((b for b in future if b["high"]/price >= threshold), None)
+        hit = next((b for b in future if multiples[b["start"]] >= threshold), None)
         row[f"observed_reached_{threshold}x"] = hit is not None
         row[f"reached_{threshold}x"] = hit is not None if complete[90] else None
         measurable = hit is not None and complete[90]

@@ -111,6 +111,9 @@ liquidity measurement window, volatility estimator, regime/sector mapping,
 listing policy, raw source hashes and receipt/publication evidence in the
 upstream source manifest before this contract is used on real observations.
 The builder does not derive or certify those covariates.
+Threshold classification uses exact ratios of the source's supplied decimal
+values, so an exact 0.3 / 0.1 boundary counts as 3x without a floating-point
+tolerance that could accidentally include values below the threshold.
 
 ```bash
 python -m big_move_lab --contract audited-contract.json \
@@ -144,3 +147,45 @@ Synthetic checks do not establish a predictive edge, a historical event count,
 or a current candidate. A gap/delisting may leave censoring informative;
 therefore full-cohort base rate is suppressed whenever any label is censored,
 and even the reported complete-case rate carries a survival-bias warning.
+
+## Validation and durable handoff
+
+Status: IMPLEMENTED / TESTED, pending independent Lead integration and exact-head
+GitHub CI recorded on the PR. This worker does not merge its own work.
+Full user scope is preserved in
+`autonomous_research_lab_upgrade_brief_20260919.md`; this foundation completes
+the executable event/control portion, not all sections A–K.
+
+Evidence from this implementation:
+- Baseline: 971 passed, 1 skipped with application dependencies available.
+- Original event tests reproduced missing implementation; first GREEN: 32 passed.
+- Artifact/boundary extension RED: 5 failed, 34 passed; GREEN after fixes.
+- Final focused suite with real PyArrow: 49 passed.
+- Final full applicable suite: 1,020 passed, 1 skipped.
+- Bandit on the new module and committed-secret scan passed; git diff check passed.
+- Independent read-only review of local commit `8bb778f` reran all 46 then-current
+  focused tests and reproduced two P2 defects: exact decimal threshold rounding,
+  and a manifest downgrade hiding an unverified Parquet file. Regression RED:
+  2 failed, 1 passed; fixes classify exact source-decimal ratios and reject
+  undeclared directory entries. Both regression paths are now GREEN. No review
+  of real historical provenance or prediction quality is claimed.
+
+During implementation main advanced to `239bd14d02bb88c503199fcf2561317f821b336f`.
+The verified delta from the original base was one independent Money Intelligence
+cycle JSON; no shared code, AI_STATE, scientific queue or ownership change.
+The milestone remained compatible and non-overlapping. PR #431 owns terminal
+squeeze-data resolution; PR #432 owns discovery-guard hardening.
+
+Autonomy observation at recovery: the existing hourly Strategy Discovery
+Supervisor had a successful scheduled run (`35424713196`); existing specialist
+and Lead workflows were present, with mixed Lead results and review-only merge
+behavior. This PR adds no scheduled run, paid API call, merge authority or runtime
+deployment. An existing schedule is not proof of uninterrupted productive work.
+
+Exact next action after independently gated Lead integration: claim a separate
+source-audit milestone for the 2x+ lane, establish a timestamp-defensible full
+historical DEVELOPMENT universe including non-survivors and source manifests,
+then run the builder. If required matching covariates are unavailable, record
+that data blocker and propose a new reviewed narrower contract; do not insert
+defaults or claim supported current candidates. Work may continue independently
+of the strategy lane. No user-only blocker was found for this software milestone.
