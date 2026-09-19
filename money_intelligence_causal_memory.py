@@ -839,11 +839,11 @@ class CausalRepricingMemory:
                     pass
 
     @classmethod
-    def load(cls, path: str | Path) -> "CausalRepricingMemory":
-        try:
-            document = json.loads(Path(path).read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError) as exc:
-            raise CausalMemoryError("causal memory is unreadable or corrupt") from exc
+    def from_document(cls, document: object) -> "CausalRepricingMemory":
+        """Validate and restore one digest-bound durable memory document."""
+        if not isinstance(document, dict):
+            raise CausalMemoryError("causal memory document must be an object")
+        document = dict(document)
         if document.get("schema_version") != SCHEMA_VERSION:
             raise CausalMemoryError("unsupported causal-memory schema version")
         supplied_digest = document.pop("content_digest", None)
@@ -891,3 +891,11 @@ class CausalRepricingMemory:
                 "causal memory failed scientific-contract validation"
             ) from exc
         return memory
+
+    @classmethod
+    def load(cls, path: str | Path) -> "CausalRepricingMemory":
+        try:
+            document = json.loads(Path(path).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise CausalMemoryError("causal memory is unreadable or corrupt") from exc
+        return cls.from_document(document)
