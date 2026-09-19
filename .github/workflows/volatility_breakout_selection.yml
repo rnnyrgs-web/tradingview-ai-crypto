@@ -1,0 +1,72 @@
+name: Volatility Breakout Selection
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "volatility_breakout_selection.py"
+      - "orchestration/disc_vol_breakout_001.json"
+      - "tests/test_volatility_breakout_selection.py"
+      - ".github/workflows/volatility_breakout_selection.yml"
+  push:
+    branches: [main]
+    paths:
+      - "volatility_breakout_selection.py"
+      - "orchestration/disc_vol_breakout_001.json"
+      - ".github/workflows/volatility_breakout_selection.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: volatility-breakout-selection-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  selection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      RESEARCH_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RESEARCH_COMMIT_SHA }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+      - name: Verify frozen selection-only regression tests
+        run: pytest -q tests/test_volatility_breakout_selection.py
+      - name: Run frozen volatility-breakout cheap screen
+        run: |
+          python volatility_breakout_selection.py \
+            --output volatility_breakout_selection.json \
+            --dataset-output volatility_breakout_selection_dataset.json.gz
+      - name: Assert research-only authority and untouched-OOS lock
+        run: |
+          python - <<'PY'
+          import json
+          payload = json.load(open("volatility_breakout_selection.json", encoding="utf-8"))["payload"]
+          selection = payload["selection"]
+          assert payload["research_only"] is True
+          assert payload["trade_authority"] is False
+          assert payload["promotion_authority"] is False
+          assert selection["untouched_oos_opened"] is False
+          assert selection["genuine_forward_opened"] is False
+          assert selection["untouched_oos"]["status"] == "LOCKED_UNTOUCHED_OOS"
+          assert selection["screen_stage"] == "SELECTION_ONLY"
+          PY
+      - name: Upload immutable selection evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: volatility-breakout-selection-${{ env.RESEARCH_COMMIT_SHA }}
+          path: |
+            volatility_breakout_selection.json
+            volatility_breakout_selection_dataset.json.gz
+          if-no-files-found: error
+          retention-days: 90
