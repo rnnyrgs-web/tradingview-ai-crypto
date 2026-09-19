@@ -341,13 +341,15 @@ def test_legacy_swarm_is_manual_only_and_new_workflow_cannot_merge_main_or_trade
     assert "gh workflow run security.yml" in cloud
     assert "OPENAI_API_KEY" in cloud
 
-def test_quant_role_becomes_eligible_after_data_task_completes():
+def test_data_resolution_stays_priority_after_bounded_data_task_completes():
     coordination = copy.deepcopy(_coord())
     next(row for row in coordination["tasks"] if row["id"] == "COORD-DISC-DATA-003")["status"] = "DONE"
     task = highest_ready_task(_config(), coordination)
-    assert task["id"] == "COORD-DISC-QUANT-003"
-    assert task["owner"] == "quant-research"
+    assert task["id"] == "COORD-DISC-DATA-004"
+    assert task["owner"] == "data-market"
     assert task["fingerprint_id"] == "DISC-SQUEEZE-RETENTION-001-v1"
+    quant = _ready_discovery_task_for_role("quant-research", coordination)
+    assert quant["id"] == "COORD-DISC-QUANT-003"
 
 
 def test_quant_terra_reservation_fits_daily_budget():
