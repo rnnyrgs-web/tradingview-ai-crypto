@@ -85,7 +85,7 @@ def test_protected_paths_still_fail_closed_for_this_engine():
 
 
 def test_atomic_claim_branch_naming_matches_shared_convention():
-    assert safe_branch("testing-security", "COORD-DISC-TEST-001") == "auto/testing-security/coord-disc-test-001"
+    assert safe_branch("testing-security", "COORD-DISC-TEST-002") == "auto/testing-security/coord-disc-test-002"
 
 
 def test_disabled_config_still_blocks_all_execution():
@@ -103,15 +103,15 @@ def test_plan_selects_the_owned_ready_task_and_no_other_role():
     decision = plan_decision(_config(), _coord(), default_state(), MAIN_SHA, NOW)
     assert decision.run is True
     assert decision.role == "testing-security"
-    assert decision.task_id == "COORD-DISC-TEST-001"
-    assert decision.branch == "auto/testing-security/coord-disc-test-001"
+    assert decision.task_id == "COORD-DISC-TEST-002"
+    assert decision.branch == "auto/testing-security/coord-disc-test-002"
 
 
 def test_no_agent_can_steal_a_healthy_active_task():
     state = default_state()
     state["active_task"] = {
         "role": "testing-security",
-        "task_id": "COORD-DISC-TEST-001",
+        "task_id": "COORD-DISC-TEST-002",
         "phase": "WAITING_CI",
         "base_main_sha": MAIN_SHA,
         "started_at": "2026-09-13T11:00:00Z",
