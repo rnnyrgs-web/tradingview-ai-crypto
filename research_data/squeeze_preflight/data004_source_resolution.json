@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "task_id": "COORD-DISC-DATA-004",
+  "fingerprint_id": "DISC-SQUEEZE-RETENTION-001-v1",
+  "reviewed_at": "2026-09-19T05:35:00Z",
+  "decision": "TERMINAL_NO_ZERO_COST_TIMESTAMP_SAFE_SOURCE",
+  "decision_scope": "current approved access, venue, cohort and scientific contract",
+  "frozen_interval": {
+    "start_inclusive": "2025-07-01T00:00:00Z",
+    "end_exclusive": "2026-09-01T00:00:00Z"
+  },
+  "venue": "Binance USDⓈ-M perpetuals",
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT"
+  ],
+  "families": [
+    "liquidations",
+    "open_interest",
+    "mark_price"
+  ],
+  "chronology": {
+    "decision_time_field": "received_time",
+    "event_timestamp_is_availability": false,
+    "estimated_hour_close_plus_15m_is_availability": false,
+    "strategy_outcomes_used": false
+  },
+  "inventory_contract": {
+    "hour_count": 10248,
+    "dense_objects_expected": 61488,
+    "liquidation_symbol_hours_to_classify": 30744,
+    "dense_families_required_each_symbol_hour": [
+      "open_interest",
+      "mark_price"
+    ],
+    "liquidation_files_are_sparse": true,
+    "missing_liquidation_means_zero_notional": false,
+    "sha256_required": true,
+    "s3_etag_accepted_as_sha256": false,
+    "legacy_object_suffix_before_2026_08_19": ".parquet.zst",
+    "object_suffix_from_2026_08_19": ".parquet"
+  },
+  "source_reviews": [
+    {
+      "source": "CryptoHFTData",
+      "status": "BLOCKED_CURRENT_ACCESS",
+      "facts": [
+        "The provider documents hourly files, history beginning 2025-06-28, and approximate availability fifteen minutes after each hour.",
+        "Liquidation files are sparse by design and exist only when the venue published at least one liquidation event for the symbol and hour.",
+        "Public liquidation broadcasts may be throttled or sampled, so their totals are lower bounds.",
+        "Complete prefix listing requires short-lived S3 credentials generated after dashboard login.",
+        "The fixed nine-object sample verified row structure and immutable hashes but did not prove complete historical coverage or historical archive availability."
+      ],
+      "blockers": [
+        "No anonymous complete prefix inventory or immutable full-period manifest is available.",
+        "Guessing every REST path would be a rate-limited brute-force substitute for a complete listing and cannot distinguish an unavailable object from a collection outage.",
+        "Approximate hour-plus-fifteen-minute availability is not per-object historical publication proof.",
+        "The verified sample contained open-interest snapshots received up to about 41.7 hours after their exchange timestamps, so event time cannot be backdated into decision time."
+      ],
+      "sources": [
+        "https://www.cryptohftdata.com/docs",
+        "https://www.cryptohftdata.com/docs/flat-file-introduction",
+        "https://www.cryptohftdata.com/docs/flat-file-aws-cli",
+        "https://www.cryptohftdata.com/datasets/binance-liquidation-data",
+        "https://www.cryptohftdata.com/datasets/binance-open-interest-data"
+      ]
+    },
+    {
+      "source": "Binance USDⓈ-M REST market data",
+      "status": "SEMANTIC_AND_COVERAGE_MISMATCH",
+      "facts": [
+        "The official open-interest statistics endpoint documents only the latest one month of data.",
+        "The official market-data catalogue does not provide a public historical forced-liquidation endpoint equivalent to the required cohort."
+      ],
+      "blockers": [
+        "One month of open-interest history cannot cover the frozen interval.",
+        "The required historical forced-flow family cannot be reconstructed from current or user force-order endpoints."
+      ],
+      "sources": [
+        "https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/market-data"
+      ]
+    },
+    {
+      "source": "Binance Data Collection",
+      "status": "SEMANTIC_MISMATCH",
+      "facts": [
+        "The official public archive exposes USDⓈ-M mark-price klines and metrics/open-interest style files with dated objects.",
+        "The reviewed public daily and monthly USDⓈ-M catalogues do not expose an equivalent historical liquidation-event family."
+      ],
+      "blockers": [
+        "Price and open-interest archives cannot replace the predeclared forced-flow input without changing the economic hypothesis after selection."
+      ],
+      "sources": [
+        "https://data.binance.vision/?prefix=data/futures/um/daily/",
+        "https://data.binance.vision/?prefix=data/futures/um/monthly/",
+        "https://data.binance.vision/?prefix=data/futures/um/monthly/markPriceKlines/"
+      ]
+    }
+  ],
+  "terminal_blockers": [
+    "complete_prefix_inventory_unavailable_without_account_authorization",
+    "historical_object_publication_chronology_unproved",
+    "liquidation_absence_cannot_be_separated_from_collection_outage_without_complete_inventory_and_dense-stream_health",
+    "official_zero_cost_alternative_lacks_matching_historical_forced_flow",
+    "liquidation_broadcasts_are_lower_bound_not_complete_market_notional"
+  ],
+  "reopen_conditions": [
+    "A complete CryptoHFTData prefix inventory plus immutable SHA-256 hashes and historical receipt semantics is supplied under already-authorized access.",
+    "A zero-cost source is found that preserves the same Binance USDⓈ-M instruments, frozen interval, received-time chronology and lower-bound forced-flow semantics.",
+    "The Lead selects a materially distinct available-data hypothesis under a new frozen fingerprint."
+  ],
+  "strategy_outcomes_inspected": false,
+  "untouched_oos_opened": false,
+  "new_paid_service_authorized": false,
+  "broker_or_live_authority": false,
+  "next_action": "LEAD_PIVOT_TO_DISTINCT_AVAILABLE_DATA_HYPOTHESIS"
+}

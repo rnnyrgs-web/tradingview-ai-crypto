@@ -38,8 +38,9 @@ is relaxed. No protected coordination/configuration file is edited.
 
 ## Verification
 
-Tests use real in-memory queues copied from canonical state; mutations are
-synthetic and are never written back. Before implementation, the new suite
+The original tests used real in-memory queues copied from canonical state;
+mutations were synthetic and never written back. The compatibility follow-up
+below isolates unit fixtures from mutable candidate readiness. Before implementation, the new suite
 reported **83 failed / 16 passed**. After the minimal fix:
 
 - 99 new adversarial/positive-control cases passed.
@@ -82,3 +83,38 @@ contract exist, extend TEST-003 with future-row perturbation, publication-time
 boundary, frozen-controls/search-breadth and OOS-open denial tests against the
 actual screen. If the source is blocked, preserve the blocker and let the Lead
 pivot without modifying rejected fingerprints. Broker/live remains disabled.
+
+## Compatibility follow-up (2026-09-19)
+
+Main advanced to `c51a59dbac604a2e0b2eefa2b68ae025d4c5b0e3`, recording
+DATA-004's terminal source blocker. Pending Lead PR #435 at
+`dc9533024122f23f5d8dbffb1c476e212927d0eb` correctly removes the old
+candidate from screen-ready state. This supersedes the original DATA-004
+continuation above: do not reopen the blocked source or its outcomes.
+
+An isolated local combination of the original PR #432 head and pending #435
+reproduced **3 failed / 96 passed** in this PR's new suite. Two rejection tests
+raised `StopIteration` before exercising the guard; a positive-control test
+assumed a real cheap-screen action existed. The production guard was correct;
+the unit fixtures were incorrectly coupled to the evolving research queue.
+
+The repair uses a fully explicit synthetic test-only queue for public-boundary
+cases. A separate integration test still reads canonical state and checks safe
+read-only behavior without assuming a candidate is ready. A valid synthetic
+single-deep continuation positive control is now retained as a regression test.
+No strategy state, production code or scientific rule is changed in this follow-up.
+
+Verification after repair:
+
+- Firewall suite: **101 passed**.
+- Current-main plus PR #432 full suite: **1,078 passed / 1 skipped**.
+- Pending #435 plus repaired PR #432 full suite: **1,079 passed / 1 skipped**.
+- Both skips are the optional VectorBT test because VectorBT is not installed.
+- The earlier exact-head CI success is historical, not authority for this new
+  head. Updated exact-head CI and review results belong in the PR handoff.
+
+Only the current-main integration is published in PR #432; #435 is tested in a
+local compatibility branch, not merged or published by this worker. Independent
+Lead should apply the pending coordination pivot through its review process and
+select the new available-data hypothesis. This PR is generic guard hardening;
+it does not make the blocked squeeze-retention TEST-003 task executable again.
