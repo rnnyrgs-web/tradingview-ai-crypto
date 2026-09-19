@@ -48,15 +48,19 @@ def test_coordination_loader_applies_canonical_overrides():
     assert highest_ready_task(_config(), coordination)["id"] == "COORD-DISC-DATA-002"
 
 
-def test_v1_is_single_agent_cost_bounded_and_broker_disconnected():
+def test_runner_is_single_execution_multi_role_cost_bounded_and_broker_disconnected():
     config = _config()
-    assert config["autonomous_roles"] == ["data-market"]
+    assert config["autonomous_roles"] == ["data-market", "quant-research"]
     assert config["policy"]["max_concurrent_agent_runs"] == 1
     assert config["policy"]["max_agent_runs_per_invocation"] == 1
     assert config["roles"]["data-market"]["max_turns"] <= 8
     assert config["roles"]["data-market"]["max_output_tokens_per_turn"] <= 2000
+    assert config["roles"]["quant-research"]["max_turns"] <= 8
+    assert config["roles"]["quant-research"]["max_output_tokens_per_turn"] <= 2000
     assert "point_in_time_universe.py" in config["roles"]["data-market"]["allowed_paths"]
     assert "strategy-discovery" in config["roles"]["data-market"]["mission"].lower()
+    assert config["roles"]["quant-research"]["model"] == "gpt-5.6-terra"
+    assert config["models"]["gpt-5.6-terra"]["enabled"] is True
     assert config["policy"]["automatic_merge"] is False
     assert config["policy"]["trade_authority"] is False
     assert config["policy"]["broker_connected"] is False
@@ -81,6 +85,12 @@ def test_runaway_loop_configuration_is_rejected():
         validate_config(bad)
     bad = copy.deepcopy(config)
     bad["roles"]["data-market"]["max_turns"] = 9
+    with pytest.raises(PolicyError):
+        validate_config(bad)
+    bad = copy.deepcopy(config)
+    bad["autonomous_roles"] = ["data-market", "quant-research", "signal-accuracy", "testing-security"]
+    bad["roles"]["signal-accuracy"] = copy.deepcopy(bad["roles"]["quant-research"])
+    bad["roles"]["testing-security"] = copy.deepcopy(bad["roles"]["quant-research"])
     with pytest.raises(PolicyError):
         validate_config(bad)
 
@@ -282,10 +292,26 @@ def test_current_data_coordination_retires_rejected_candidates_and_advances():
     assert tasks["COORD-DATA-007"]["status"] == "BLOCKED"
 
 
-def test_coordination_priority_selects_strategy_discovery_data_task():
+def test_coordination_priority_selects_strategy_discovery_data_task_first():
     task = highest_ready_task(_config(), _coord())
     assert task["id"] == "COORD-DISC-DATA-002"
     assert task["fingerprint_id"] == "DISC-LIQUIDITY-MEANREV-001-v1"
+
+
+def test_quant_role_becomes_eligible_after_data_task_completes():
+    coordination = copy.deepcopy(_coord())
+    next(row for row in coordination["tasks"] if row["id"] == "COORD-DISC-DATA-002")["status"] = "DONE"
+    task = highest_ready_task(_config(), coordination)
+    assert task["id"] == "COORD-DISC-QUANT-002"
+    assert task["owner"] == "quant-research"
+    assert task["fingerprint_id"] == "DISC-LIQUIDITY-MEANREV-001-v1"
+
+
+def test_quant_terra_reservation_fits_daily_budget():
+    config = _config()
+    reserve = reserved_cost_usd(config, "quant-research")
+    assert reserve > reserved_cost_usd(config, "data-market")
+    assert reserve * config["budget"]["provider_retry_safety_multiplier"] <= config["budget"]["runner_daily_api_budget_usd"]
 
 
 def test_legacy_swarm_is_manual_only_and_new_workflow_cannot_merge_main_or_trade():
