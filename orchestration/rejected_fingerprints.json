@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "description": "Canonical, machine-checkable durable negative memory for rejected research fingerprints. Exact rejected fingerprints must not re-enter selection/deep validation without materially new data or a genuinely different frozen scientific/economic hypothesis. Full immutable evidence remains available at the referenced commits/artifacts/evidence files.",
   "entries": [
     {
@@ -8,19 +8,9 @@
       "coordination_task": "COORD-DATA-003",
       "hypothesis": "Exact-shared-timestamp completed-candle OKX mark/index basis carries incremental after-cost predictive value for 24h/7d direction.",
       "economic_mechanism": "Persistent mark-index basis dislocations proxy funding/positioning pressure that mean-reverts or continues predictably enough to survive realistic trading costs.",
-      "horizons_evaluated": [
-        "24h",
-        "7d"
-      ],
-      "sample_sizes": {
-        "24h_oos_samples": 134,
-        "7d_oos_samples": 19
-      },
-      "rejection_evidence": {
-        "24h_avg_net_bps": -8.490253160921695,
-        "7d_avg_net_bps": -51.210226000078,
-        "evaluation_window_hours": 8000
-      },
+      "horizons_evaluated": ["24h", "7d"],
+      "sample_sizes": {"24h_oos_samples": 134, "7d_oos_samples": 19},
+      "rejection_evidence": {"24h_avg_net_bps": -8.490253160921695, "7d_avg_net_bps": -51.210226000078, "evaluation_window_hours": 8000},
       "rejection_reason": "The predeclared 8,000-hour chronological evidence window falsified both primary horizons after realistic costs: negative average net expectancy on 24h and on 7d.",
       "rejection_date": "2026-09-11",
       "rejection_pr": 291,
@@ -34,25 +24,9 @@
       "coordination_task": "COORD-DATA-004",
       "hypothesis": "Funding-rate-derived positioning pressure carries incremental after-cost predictive value for 24h/7d direction beyond the frozen training-only baseline.",
       "economic_mechanism": "Extreme or persistent funding rates proxy crowded positioning that mean-reverts or precedes liquidation cascades predictably enough to survive realistic trading costs.",
-      "horizons_evaluated": [
-        "24h",
-        "7d"
-      ],
-      "sample_sizes": {
-        "24h_oos_samples": 38,
-        "7d_oos_samples": 6,
-        "7d_minimum_required_oos_samples": 8
-      },
-      "rejection_evidence": {
-        "24h_directional_hit_rate": 0.5,
-        "24h_avg_net_bps": 43.56917973482839,
-        "24h_incremental_vs_training_only_baseline_bps": 0,
-        "24h_oos_half_avg_net_bps": [
-          91.54259508197315,
-          -4.404235612316374
-        ],
-        "7d_status": "REJECTED_INSUFFICIENT_INDEPENDENT_OOS"
-      },
+      "horizons_evaluated": ["24h", "7d"],
+      "sample_sizes": {"24h_oos_samples": 38, "7d_oos_samples": 6, "7d_minimum_required_oos_samples": 8},
+      "rejection_evidence": {"24h_directional_hit_rate": 0.5, "24h_avg_net_bps": 43.56917973482839, "24h_incremental_vs_training_only_baseline_bps": 0, "24h_oos_half_avg_net_bps": [91.54259508197315, -4.404235612316374], "7d_status": "REJECTED_INSUFFICIENT_INDEPENDENT_OOS"},
       "rejection_reason": "Zero incremental 24h OOS expectancy versus the frozen training-only baseline despite a positive headline return, and unstable across OOS halves (+91.5bps then -4.4bps); 7d fell below the predeclared independent-sample floor.",
       "rejection_date": "2026-09-11",
       "rejection_pr": 298,
@@ -66,27 +40,9 @@
       "coordination_task": "STRATEGY-SELECTION-ACC-002",
       "hypothesis": "Predeclared 24h relative-strength variants (4,16,64), (6,24,72), and (8,32,96) produce stable positive after-cost selection evidence across both supported liquidity subsets.",
       "economic_mechanism": "Cross-sectional relative strength may persist because information and capital diffuse unevenly across liquid crypto assets, creating continuation that survives realistic costs.",
-      "horizons_evaluated": [
-        "24h"
-      ],
-      "sample_sizes": {
-        "predeclared_variants": 3,
-        "supported_liquidity_subsets": 2,
-        "eligible_candidates": 0
-      },
-      "rejection_evidence": {
-        "selection_artifact": "acc002-selection-evidence-6e95408c88b389bbb100bb8841a97695b785ef9a",
-        "archive_sha256": "5ad033ac97e057aafea0f4e72faca08c52ee19547f584c050f3ecf1126965efd",
-        "dataset_sha256": "896a127376c80972d07f58ca605a5673f186a2d9ea7ffda8f5266dc67b11890e",
-        "eligible_candidate_count": 0,
-        "point_in_time_membership_verified": false,
-        "untouched_oos_status": "LOCKED_UNTOUCHED_OOS",
-        "variant_results": {
-          "4_16_64": "REJECTED_STABILITY_0_OF_2_SUBSETS",
-          "6_24_72": "REJECTED_STABILITY_1_OF_2_SUBSETS",
-          "8_32_96": "REJECTED_STABILITY_0_OF_2_SUBSETS"
-        }
-      },
+      "horizons_evaluated": ["24h"],
+      "sample_sizes": {"predeclared_variants": 3, "supported_liquidity_subsets": 2, "eligible_candidates": 0},
+      "rejection_evidence": {"selection_artifact": "acc002-selection-evidence-6e95408c88b389bbb100bb8841a97695b785ef9a", "archive_sha256": "5ad033ac97e057aafea0f4e72faca08c52ee19547f584c050f3ecf1126965efd", "dataset_sha256": "896a127376c80972d07f58ca605a5673f186a2d9ea7ffda8f5266dc67b11890e", "eligible_candidate_count": 0, "point_in_time_membership_verified": false, "untouched_oos_status": "LOCKED_UNTOUCHED_OOS", "variant_results": {"4_16_64": "REJECTED_STABILITY_0_OF_2_SUBSETS", "6_24_72": "REJECTED_STABILITY_1_OF_2_SUBSETS", "8_32_96": "REJECTED_STABILITY_0_OF_2_SUBSETS"}},
       "rejection_reason": "No predeclared variant passed the required stability rule across both supported liquidity subsets. The superficially positive Top-30 result for (6,24,72) failed Top-15 and is ineligible. Untouched OOS remains unopened.",
       "rejection_date": "2026-09-18",
       "rejection_commit": "6e95408c88b389bbb100bb8841a97695b785ef9a",
@@ -99,43 +55,9 @@
       "coordination_task": "COORD-DISC-QUANT-001",
       "hypothesis": "A fixed one-hour compression-to-20-bar-breakout rule with volatility-scaled exits has positive incremental after-cost expectancy versus the same breakout rule without compression across a predeclared fixed set of liquid crypto perpetuals.",
       "economic_mechanism": "Low realized range can reflect temporary order-flow balance; a subsequent close beyond a recent range can reveal a new directional imbalance that persists as liquidity and leveraged positioning adjust.",
-      "horizons_evaluated": [
-        "1H bars with maximum 24 full post-entry bars"
-      ],
-      "sample_sizes": {
-        "fixed_instruments": 3,
-        "passing_instruments": 0,
-        "pooled_train_trades": 361,
-        "pooled_validation_trades": 105,
-        "falsifier_sensitivities": 2
-      },
-      "rejection_evidence": {
-        "contract_sha256": "46fcc97626c98dd1c37e3ee0eaa1d7c0b07d4d9b1d38ce9d24b91a09dcdad0ce",
-        "selection_pr": 409,
-        "selection_exact_head_sha": "ef8563b9f1bdb7caa3a3949ec578760104bf31be",
-        "selection_workflow_run": 35410589787,
-        "artifact_id": 10574257098,
-        "artifact_archive_sha256": "f6ed0cfcf9be12bbb4b78181a1a89cf22acebc13631850024213ba0438e4b051",
-        "payload_sha256": "189aac9d685005919d9068abe5ee0edefcddc2b2643c7176ead811129d927e0e",
-        "dataset_sha256": "2547c3a96641f215ebe3853f01db47cd1f4daa72f3387642135a0973579d705d",
-        "normalized_row_count": 35997,
-        "coverage_start_utc": "2025-05-07T01:00:00+00:00",
-        "coverage_end_utc": "2026-09-18T23:00:00+00:00",
-        "max_stress_round_trip_bps": 60.0,
-        "pooled_train_mean_net_bps": -52.747011544646945,
-        "pooled_train_profit_factor": 0.5070940478272642,
-        "pooled_validation_mean_net_bps": -54.49376287378724,
-        "pooled_validation_profit_factor": 0.4210223498563804,
-        "baseline_validation_mean_net_bps": -44.83134732415943,
-        "validation_half_mean_net_bps": [
-          -50.247555633205096,
-          -60.61620122067312
-        ],
-        "compression_q15_pass": false,
-        "compression_q25_pass": false,
-        "untouched_oos_status": "LOCKED_UNTOUCHED_OOS",
-        "untouched_oos_opened": false
-      },
+      "horizons_evaluated": ["1H bars with maximum 24 full post-entry bars"],
+      "sample_sizes": {"fixed_instruments": 3, "passing_instruments": 0, "pooled_train_trades": 361, "pooled_validation_trades": 105, "falsifier_sensitivities": 2},
+      "rejection_evidence": {"contract_sha256": "46fcc97626c98dd1c37e3ee0eaa1d7c0b07d4d9b1d38ce9d24b91a09dcdad0ce", "selection_pr": 409, "selection_exact_head_sha": "ef8563b9f1bdb7caa3a3949ec578760104bf31be", "selection_workflow_run": 35410589787, "artifact_id": 10574257098, "artifact_archive_sha256": "f6ed0cfcf9be12bbb4b78181a1a89cf22acebc13631850024213ba0438e4b051", "payload_sha256": "189aac9d685005919d9068abe5ee0edefcddc2b2643c7176ead811129d927e0e", "dataset_sha256": "2547c3a96641f215ebe3853f01db47cd1f4daa72f3387642135a0973579d705d", "normalized_row_count": 35997, "coverage_start_utc": "2025-05-07T01:00:00+00:00", "coverage_end_utc": "2026-09-18T23:00:00+00:00", "max_stress_round_trip_bps": 60.0, "pooled_train_mean_net_bps": -52.747011544646945, "pooled_train_profit_factor": 0.5070940478272642, "pooled_validation_mean_net_bps": -54.49376287378724, "pooled_validation_profit_factor": 0.4210223498563804, "baseline_validation_mean_net_bps": -44.83134732415943, "validation_half_mean_net_bps": [-50.247555633205096, -60.61620122067312], "compression_q15_pass": false, "compression_q25_pass": false, "untouched_oos_status": "LOCKED_UNTOUCHED_OOS", "untouched_oos_opened": false},
       "rejection_reason": "The frozen fixed-instrument selection screen failed cleanly before untouched OOS: 0/3 instruments passed; pooled train and validation expectancy were strongly negative after 3x cost stress; validation profit factor was below 1; both chronological validation halves were negative; the challenger was worse than the already-losing no-compression baseline; the BEAR regime failed the catastrophic-instability guard; and both predeclared q15/q25 falsifier sensitivities also failed.",
       "rejection_date": "2026-09-19",
       "rejection_pr": 409,
@@ -149,48 +71,30 @@
       "coordination_task": "COORD-DISC-QUANT-002",
       "hypothesis": "A large completed one-hour price shock accompanied by unusually high quote volume and unusually wide intrabar range reflects temporary forced-order-flow/liquidity overshoot and has positive next-six-hour opposite-direction after-cost expectancy versus the same large-return reversal without liquidity filters.",
       "economic_mechanism": "Forced liquidations, urgent inventory transfer, and temporary order-book depletion can push price beyond short-run equilibrium; liquidity replenishment may then produce mean reversion.",
-      "horizons_evaluated": [
-        "1H signals with next-open entry and fixed 6H hold"
-      ],
-      "sample_sizes": {
-        "fixed_instruments": 3,
-        "passing_instruments": 0,
-        "pooled_train_trades": 425,
-        "pooled_validation_trades": 123,
-        "falsifier_sensitivities": 2
-      },
-      "rejection_evidence": {
-        "evidence_ref": "orchestration/evidence/disc_liquidity_meanrev_001_20260919.json",
-        "contract_sha256": "19252de4464fc997632b0500fded857bc58d5bdad49d6f72e3660eba75a28b57",
-        "selection_pr": 416,
-        "selection_exact_head_sha": "e652d458401d40d45e098c85680ef96ddbd8ce51",
-        "selection_workflow_run": 35420353644,
-        "artifact_id": 10577901325,
-        "artifact_digest": "sha256:085d46fabd899241e05865dd1bac39a9adf695ee68e1835203a9889080203df6",
-        "dataset_sha256": "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f",
-        "normalized_row_count": 35997,
-        "coverage_start_utc": "2025-05-07T05:00:00+00:00",
-        "coverage_end_utc": "2026-09-19T03:00:00+00:00",
-        "max_stress_round_trip_bps": 60.0,
-        "pooled_train_mean_net_bps": -88.8701757246473,
-        "pooled_train_profit_factor": 0.33095130918422955,
-        "pooled_validation_mean_net_bps": -45.47562632933707,
-        "pooled_validation_profit_factor": 0.45586425443550266,
-        "baseline_validation_mean_net_bps": -47.07456025740364,
-        "validation_half_mean_net_bps": [
-          -29.147191892226754,
-          -63.77473388816758
-        ],
-        "sigma_1_75_pass": false,
-        "sigma_2_25_pass": false,
-        "untouched_oos_status": "LOCKED_UNTOUCHED_OOS",
-        "untouched_oos_opened": false
-      },
+      "horizons_evaluated": ["1H signals with next-open entry and fixed 6H hold"],
+      "sample_sizes": {"fixed_instruments": 3, "passing_instruments": 0, "pooled_train_trades": 425, "pooled_validation_trades": 123, "falsifier_sensitivities": 2},
+      "rejection_evidence": {"evidence_ref": "orchestration/evidence/disc_liquidity_meanrev_001_20260919.json", "contract_sha256": "19252de4464fc997632b0500fded857bc58d5bdad49d6f72e3660eba75a28b57", "selection_pr": 416, "selection_exact_head_sha": "e652d458401d40d45e098c85680ef96ddbd8ce51", "selection_workflow_run": 35420353644, "artifact_id": 10577901325, "artifact_digest": "sha256:085d46fabd899241e05865dd1bac39a9adf695ee68e1835203a9889080203df6", "dataset_sha256": "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f", "normalized_row_count": 35997, "coverage_start_utc": "2025-05-07T05:00:00+00:00", "coverage_end_utc": "2026-09-19T03:00:00+00:00", "max_stress_round_trip_bps": 60.0, "pooled_train_mean_net_bps": -88.8701757246473, "pooled_train_profit_factor": 0.33095130918422955, "pooled_validation_mean_net_bps": -45.47562632933707, "pooled_validation_profit_factor": 0.45586425443550266, "baseline_validation_mean_net_bps": -47.07456025740364, "validation_half_mean_net_bps": [-29.147191892226754, -63.77473388816758], "sigma_1_75_pass": false, "sigma_2_25_pass": false, "untouched_oos_status": "LOCKED_UNTOUCHED_OOS", "untouched_oos_opened": false},
       "rejection_reason": "The frozen v1 screen failed broadly before OOS: 0/3 fixed instruments passed; all three had negative 3x-cost train and validation expectancy; pooled train and validation expectancy were negative with validation PF 0.456; both validation halves were negative; both sigma falsifier sensitivities were negative. Liquidity filters slightly improved validation versus the baseline but remained strongly unprofitable.",
       "rejection_date": "2026-09-19",
       "rejection_pr": 416,
       "do_not_resubmit_same_fingerprint": true,
       "reconsideration_conditions": "Do not tune the shock threshold, volume/range filters, hold, fixed assets, or 1H timeframe using these rejected outcomes. Reconsider only with materially new data or a genuinely different frozen economic/scientific hypothesis under a new fingerprint."
+    },
+    {
+      "fingerprint_id": "DISC-BTC-LEADLAG-001-v1",
+      "fingerprint_version": 1,
+      "coordination_task": "COORD-DISC-QUANT-004",
+      "hypothesis": "After a predeclared large completed one-hour BTC impulse, fixed ETH and SOL followers satisfying a strictly pre-event beta-defined underreaction gap have positive next-six-hour same-direction after-cost expectancy versus trading every identical BTC impulse without the underreaction condition.",
+      "economic_mechanism": "BTC may absorb market-wide information and capital-flow shocks before fixed liquid followers; delayed follower price discovery could persist while arbitrageurs and allocators rebalance.",
+      "horizons_evaluated": ["1H signal with next-open entry and fixed 6H hold"],
+      "sample_sizes": {"training_pooled_trades": 102, "validation_pooled_trades": 24, "training_ETH_trades": 50, "validation_ETH_trades": 10, "training_SOL_trades": 52, "validation_SOL_trades": 14},
+      "rejection_evidence": {"contract_sha256": "8d991f723c65a583b1d3188aa7f4f77493d08cfd198ee6aa4be508294d770989", "dataset_sha256": "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f", "evidence_ref": "orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz", "evidence_payload_sha256": "9a73a00e6052783525b77ec36527bc5fb12c2891ebd300da00ff744fd3e4951c", "selection_pr": 442, "selection_exact_head_sha": "722c2615f8b87368e84b7e576fe5cc853bb9c2cd", "merge_sha": "9368dfe0d3f22573b5331b1086547c3884330b1b", "exact_head_security_and_reliability_run": 35436865197, "max_stress_round_trip_bps": 60.0, "training_3x_mean_net_bps": -68.95, "training_3x_profit_factor": 0.420, "validation_3x_mean_net_bps": -113.69, "validation_3x_profit_factor": 0.097, "base_cost_training_mean_net_bps": -28.95, "base_cost_validation_mean_net_bps": -73.69, "no_underreaction_validation_3x_mean_net_bps": -75.31, "underreaction_training_compounded_return_lift_percentage_points": 6.03, "full_training_after_cost_return_pct": -16.30, "untouched_oos_status": "LOCKED_UNTOUCHED_OOS", "untouched_oos_opened": false, "genuine_forward_opened": false},
+      "rejection_reason": "The exact frozen BTC-to-ETH/SOL delayed-price-discovery screen failed before untouched OOS. Training and validation expectancy were negative even at base cost and became strongly negative at the required 3x cost stress; validation profit factor was 0.097, both followers were negative, and both fixed 35/65 bps falsifiers were negative. The underreaction component showed a development-only positive ablation association in training, but the full strategy still lost 16.30% after costs and the component evidence cannot rescue or re-open this exact fingerprint.",
+      "rejection_date": "2026-09-19",
+      "rejection_pr": 442,
+      "rejection_commit": "9368dfe0d3f22573b5331b1086547c3884330b1b",
+      "do_not_resubmit_same_fingerprint": true,
+      "reconsideration_conditions": "Do not tune the BTC impulse threshold, 50 bps underreaction gap, through-origin beta rule/range, ETH/SOL follower set, 1H/6H timing, cost model, or date boundaries using the rejected outcomes. Any successor must be a fresh fingerprint with a materially different frozen mechanism or materially new timestamp-safe data and fresh chronological validation; historical untouched OOS and genuine-forward evidence from v1 remain unopened."
     }
   ]
 }
