@@ -257,7 +257,9 @@ def test_completion_handoff_clears_discovery_lease_after_lead_marks_task_done():
     }
     recovered = recover_state(state, coordination, NOW)
     assert recovered["active_task"] is None
-    assert highest_ready_task(_config(), coordination) is None
+    next_ready = highest_ready_task(_config(), coordination)
+    assert next_ready["id"] == "COORD-DISC-QUANT-002"
+    assert next_ready["owner"] == "quant-research"
 
 
 def test_shutdown_restart_recovers_abandoned_running_lease_without_losing_usage_history():
