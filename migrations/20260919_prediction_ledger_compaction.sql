@@ -39,7 +39,7 @@ set research_context = jsonb_strip_nulls(
 )
 where resolved_at is not null
   and calibration is not null
-  and (research_context is null or research_context = '{}'::jsonb);
+  and research_context is null;
 
 with keep_recent as (
   select id
@@ -49,9 +49,9 @@ with keep_recent as (
   limit 2000
 )
 update public.prediction_ledger
-set calibration = null
+set calibration = '{}'::jsonb
 where resolved_at is not null
-  and calibration is not null
+  and calibration <> '{}'::jsonb
   and id not in (select id from keep_recent);
 
 comment on column public.prediction_ledger.research_context is
