@@ -25,6 +25,8 @@ PR #446 (`Add exact deployed Profitability Learning runtime acceptance`) was ind
 
 Integration merge on `main`: `f3ab73e5714be23d82295a0f79ea606cf5d13528`. Post-merge Security & Reliability `verify` run `35448367392` passed on that exact SHA.
 
+Deployment precondition is satisfied on that exact SHA: Render web service deploy `dep-dan9jnijnfac738m5d60` became live at `2026-09-19T14:19:35Z`, and coordinator deploy `dep-dan9jnijnfac738m5d00` became live at `2026-09-19T14:19:40Z`.
+
 Merged runtime-acceptance path now:
 - exposes a POST-only, `X-Scan-Secret`-protected acceptance endpoint with no caller-selected research payload;
 - binds to the sealed rejected `DISC-BTC-LEADLAG-001-v1` artifact, frozen contract SHA, frozen dataset SHA and `PRE_OOS_FAIL` state;
@@ -38,7 +40,7 @@ Merged runtime-acceptance path now:
 
 Do not duplicate PR #446. The next action is deployed-runtime proof against the exact currently deployed `main` SHA:
 
-1. wait until the deployed service reports the exact current `main` SHA through `RENDER_GIT_COMMIT`;
+1. deployment precondition **SATISFIED**: both Render services are live on exact `main` SHA `f3ab73e5714be23d82295a0f79ea606cf5d13528` through `RENDER_GIT_COMMIT`;
 2. dispatch `.github/workflows/profitability-learning-runtime-acceptance.yml` (`Profitability Learning Runtime Acceptance`) on `main`;
 3. require the workflow attestation to prove the deployed SHA equals the workflow `GITHUB_SHA`;
 4. independently inspect the two exact target durable experiment rows and confirm one-row multiplicity, stable input/full-row digests and exact replay idempotency;
