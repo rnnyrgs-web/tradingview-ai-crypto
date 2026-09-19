@@ -19,6 +19,11 @@ def _observation(source_id: str = "source-a") -> PointInTimeObservation:
         available_at="2026-09-01T01:00:00Z",
         retrieved_at="2026-09-01T02:00:00Z",
         source_id=source_id,
+        subject_id="BTC-USD",
+        currency="USD",
+        measurement_window_hours=24,
+        venue="coinbase",
+        max_age_hours=72,
         revision_id="r1",
         provenance_uri="source://fixture",
     )
@@ -37,6 +42,7 @@ def _hypothesis(hypothesis_id: str = "H1") -> FrozenHypothesis:
         created_at="2026-09-02T00:00:00Z",
         source_observation_ids=("flow",),
         family_id="FLOW-SCARCITY-001",
+        evaluation_method="matched_control_mean_difference_v1",
         family_size=2,
         alpha=0.05,
     )
@@ -47,6 +53,27 @@ def test_rejected_historical_hypothesis_survives_restart_and_stays_ineligible(tm
     memory.register_observation(_observation())
     hypothesis = _hypothesis()
     memory.register_hypothesis(hypothesis)
+    for observation_id, metric_name, value in (
+        ("outcome", "forward_return_72h", 0.08),
+        ("control", "matched_control_return_72h", 0.01),
+    ):
+        memory.register_observation(
+            PointInTimeObservation(
+                observation_id=observation_id,
+                metric_name=metric_name,
+                value=value,
+                unit="ratio",
+                observed_at="2026-09-02T01:00:00Z",
+                available_at="2026-09-02T04:00:00Z",
+                retrieved_at="2026-09-02T05:00:00Z",
+                source_id="test-source",
+                subject_id="BTC-USD",
+                currency="ratio",
+                measurement_window_hours=72,
+                venue="coinbase",
+                max_age_hours=72,
+            )
+        )
     memory.record_evidence(
         EvidenceEvent(
             event_id="support-1",
@@ -54,7 +81,10 @@ def test_rejected_historical_hypothesis_survives_restart_and_stays_ineligible(tm
             evaluated_at="2026-09-03T00:00:00Z",
             kind="support",
             matched_controls=("market_beta", "volatility_regime"),
-            source_observation_ids=("flow",),
+            outcome_observation_ids=("outcome",),
+            control_observation_ids=("control",),
+            evaluation_method="matched_control_mean_difference_v1",
+            sample_size=40,
             p_value=0.01,
         )
     )
