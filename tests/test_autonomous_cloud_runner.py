@@ -37,6 +37,19 @@ def _config():
 def _coord():
     return load_coordination()
 
+def _ready_discovery_task_for_role(role, coordination=None):
+    coordination = coordination or _coord()
+    ready = [
+        task for task in coordination["tasks"]
+        if task["owner"] == role
+        and task["status"] == "READY"
+        and task["id"].startswith("COORD-DISC-")
+    ]
+    assert len(ready) == 1, (role, ready)
+    return ready[0]
+
+
+
 
 def test_coordination_loader_applies_canonical_overrides():
     coordination = _coord()
@@ -44,9 +57,11 @@ def test_coordination_loader_applies_canonical_overrides():
     assert tasks["COORD-DATA-005"]["status"] == "DONE"
     assert tasks["COORD-DATA-007"]["status"] == "BLOCKED"
     assert tasks["COORD-DISC-DATA-001"]["status"] == "DONE"
-    assert tasks["COORD-DISC-DATA-002"]["status"] == "READY"
-    assert highest_ready_task(_config(), coordination)["id"] == "COORD-DISC-DATA-002"
 
+    current = _ready_discovery_task_for_role("data-market", coordination)
+    assert current["status"] == "READY"
+    assert current["fingerprint_id"]
+    assert highest_ready_task(_config(), coordination) == current
 
 def test_v1_is_single_agent_cost_bounded_and_broker_disconnected():
     config = _config()
@@ -85,11 +100,13 @@ def test_runaway_loop_configuration_is_rejected():
         validate_config(bad)
 
 
+
 def test_duplicate_active_task_prevents_second_ownership():
+    task = _ready_discovery_task_for_role("data-market")
     state = default_state()
     state["active_task"] = {
         "role": "data-market",
-        "task_id": "COORD-DISC-DATA-002",
+        "task_id": task["id"],
         "phase": "WAITING_CI",
         "base_main_sha": MAIN_SHA,
         "started_at": "2026-09-09T03:30:00Z",
@@ -97,7 +114,6 @@ def test_duplicate_active_task_prevents_second_ownership():
     decision = plan_decision(_config(), _coord(), state, MAIN_SHA, NOW)
     assert decision.run is False
     assert decision.reason == "ACTIVE_TASK_WAITING_CI"
-
 
 def test_api_cost_limit_reserves_worst_case_before_model_call():
     config = _config()
@@ -134,11 +150,13 @@ def test_task_retry_backoff_is_bounded_but_outer_api_retry_is_disabled():
     assert retry_delay_seconds(config, 99) == 300
 
 
+
 def test_stale_main_blocks_active_work():
+    task = _ready_discovery_task_for_role("data-market")
     state = default_state()
     state["active_task"] = {
         "role": "data-market",
-        "task_id": "COORD-DISC-DATA-002",
+        "task_id": task["id"],
         "phase": "WAITING_CI",
         "base_main_sha": "b" * 40,
         "started_at": "2026-09-09T03:30:00Z",
@@ -146,7 +164,6 @@ def test_stale_main_blocks_active_work():
     decision = plan_decision(_config(), _coord(), state, MAIN_SHA, NOW)
     assert decision.run is False
     assert decision.reason == "STALE_MAIN_WITH_ACTIVE_TASK"
-
 
 def test_branch_isolation_rejects_main_and_wrong_role():
     assert safe_branch("data-market", "COORD-DATA-001") == "auto/data-market/coord-data-001"
@@ -233,22 +250,26 @@ def test_malformed_agent_output_fails_closed():
         validate_outcome_dict({"status": "READY_FOR_PR", "summary": ""})
 
 
+
 def test_completion_handoff_clears_discovery_lease_after_lead_marks_task_done():
     coordination = copy.deepcopy(_coord())
-    task = next(row for row in coordination["tasks"] if row["id"] == "COORD-DISC-DATA-002")
+    task = _ready_discovery_task_for_role("data-market", coordination)
     task["status"] = "DONE"
     state = default_state()
     state["active_task"] = {
         "role": "data-market",
-        "task_id": "COORD-DISC-DATA-002",
+        "task_id": task["id"],
         "phase": "WAITING_LEAD",
         "base_main_sha": MAIN_SHA,
         "started_at": "2026-09-08T20:00:00Z",
     }
     recovered = recover_state(state, coordination, NOW)
     assert recovered["active_task"] is None
-    assert highest_ready_task(_config(), coordination) is None
 
+    # Completing one role's task must release that lease. Another eligible role
+    # may legitimately become the next bounded task on later queue generations.
+    next_ready = highest_ready_task(_config(), coordination)
+    assert next_ready is None or next_ready["id"] != task["id"]
 
 def test_shutdown_restart_recovers_abandoned_running_lease_without_losing_usage_history():
     state = default_state()
@@ -282,11 +303,16 @@ def test_current_data_coordination_retires_rejected_candidates_and_advances():
     assert tasks["COORD-DATA-007"]["status"] == "BLOCKED"
 
 
-def test_coordination_priority_selects_strategy_discovery_data_task():
-    task = highest_ready_task(_config(), _coord())
-    assert task["id"] == "COORD-DISC-DATA-002"
-    assert task["fingerprint_id"] == "DISC-LIQUIDITY-MEANREV-001-v1"
 
+def test_coordination_priority_selects_strategy_discovery_data_task():
+    coordination = _coord()
+    task = highest_ready_task(_config(), coordination)
+    current = _ready_discovery_task_for_role("data-market", coordination)
+    assert task == current
+    assert task["owner"] == "data-market"
+    assert task["status"] == "READY"
+    assert task["id"].startswith("COORD-DISC-DATA-")
+    assert task["fingerprint_id"]
 
 def test_legacy_swarm_is_manual_only_and_new_workflow_cannot_merge_main_or_trade():
     legacy = Path(".github/workflows/autonomous_agents.yml").read_text(encoding="utf-8")
