@@ -91,7 +91,7 @@ No immutable new forecast currently clears the evidence bar.
 
 Older PRs must be revalidated against current main before any integration. Do not merge merely because an old CI run was green. PR #441 is this AI_STATE reconciliation branch; older state in its prior commits was superseded when the branch was reset onto `f3ab73e...`. Other stale PRs such as #432/#433 remain non-canonical until independently re-reviewed against current objectives and current main.
 
-Canonical specialist coordination must be loaded through `orchestration/coordination_overrides.py`; do not rely on base JSON alone.
+Canonical specialist coordination must be loaded through `orchestration/coordination_overrides.py`; do **not** read only the base JSON.
 
 ## PRESERVED DATA-BREADTH HANDOFF
 
