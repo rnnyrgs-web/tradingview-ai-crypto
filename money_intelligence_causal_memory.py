@@ -1,8 +1,8 @@
 """Point-in-time Money Intelligence causal-repricing research memory.
 
-This module is intentionally research-only.  It provides a deterministic,
-append-only evidence contract for causal/repricing hypotheses without granting
-broker, trading, OOS-opening, or promotion authority.
+Research-only scientific memory. It grants no broker, trading, OOS-opening, or
+promotion authority. Hypotheses are frozen before outcomes and evidence is
+append-only, chronology checked, provenance bound, and replay safe.
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ class CausalMemoryError(ValueError):
 
 
 class ReplayConflictError(CausalMemoryError):
-    """Raised when an immutable event id is replayed with different content."""
+    """Raised when an immutable id is replayed with different content."""
 
 
 def _parse_time(value: str) -> datetime:
@@ -98,6 +98,10 @@ class PointInTimeObservation:
         object.__setattr__(self, "available_at", _normalise_time(self.available_at))
         object.__setattr__(self, "retrieved_at", _normalise_time(self.retrieved_at))
         object.__setattr__(self, "value", float(self.value))
+
+    @property
+    def provenance_fingerprint(self) -> str:
+        return _sha256(asdict(self))
 
 
 @dataclass(frozen=True)
@@ -173,9 +177,8 @@ class FrozenHypothesis:
 
     @property
     def fingerprint(self) -> str:
-        # Deliberately exclude created_at: changing only a timestamp may not evade an
-        # exact rejected-fingerprint veto.  Fresh point-in-time provenance/design does.
-        frozen_design = {
+        """Frozen design fingerprint; timestamp-only changes cannot evade rejection."""
+        design = {
             "schema_version": SCHEMA_VERSION,
             "statement": self.statement,
             "mechanism_chain": list(self.mechanism_chain),
@@ -189,7 +192,7 @@ class FrozenHypothesis:
             "family_size": self.family_size,
             "alpha": self.alpha,
         }
-        return f"mi-causal-v1:{_sha256(frozen_design)}"
+        return f"mi-causal-v1:{_sha256(design)}"
 
 
 @dataclass(frozen=True)
@@ -301,15 +304,46 @@ class CausalRepricingMemory:
         self._require_sources_available(claim.source_observation_ids, claim.created_at)
         return self._append_immutable(self.claims, claim.claim_id, claim)
 
+    def effective_fingerprint(self, hypothesis: FrozenHypothesis) -> str:
+        """Bind a frozen design to the exact PIT source provenance it consumed."""
+        source_provenance: list[str] = []
+        for source_id in hypothesis.source_observation_ids:
+            observation = self.observations.get(source_id)
+            if observation is None:
+                raise CausalMemoryError(f"unknown source observation: {source_id}")
+            source_provenance.append(observation.provenance_fingerprint)
+        return "mi-causal-pit-v1:" + _sha256(
+            {
+                "design_fingerprint": hypothesis.fingerprint,
+                "source_provenance": source_provenance,
+            }
+        )
+
+    def _is_rejected(self, hypothesis: FrozenHypothesis) -> bool:
+        return (
+            hypothesis.fingerprint in self.rejected_fingerprints
+            or self.effective_fingerprint(hypothesis) in self.rejected_fingerprints
+        )
+
     def register_hypothesis(self, hypothesis: FrozenHypothesis) -> bool:
         self._require_sources_available(
             hypothesis.source_observation_ids, hypothesis.created_at
         )
-        if hypothesis.fingerprint in self.rejected_fingerprints:
+        if self._is_rejected(hypothesis):
             raise CausalMemoryError("exact rejected hypothesis fingerprint is ineligible")
         return self._append_immutable(
             self.hypotheses, hypothesis.hypothesis_id, hypothesis
         )
+
+    def reject_hypothesis(self, hypothesis_id: str) -> tuple[str, str]:
+        """Persist both frozen-design and provenance-bound rejection fingerprints."""
+        hypothesis = self.hypotheses.get(hypothesis_id)
+        if hypothesis is None:
+            raise CausalMemoryError(f"unknown hypothesis: {hypothesis_id}")
+        design = hypothesis.fingerprint
+        effective = self.effective_fingerprint(hypothesis)
+        self.rejected_fingerprints.update((design, effective))
+        return design, effective
 
     def record_evidence(self, event: EvidenceEvent) -> bool:
         hypothesis = self.hypotheses.get(event.hypothesis_id)
@@ -402,7 +436,9 @@ class CausalRepricingMemory:
         as_of: str,
     ) -> RelativeImpact:
         if ratio_name not in RELATIVE_IMPACT_RATIOS:
-            raise CausalMemoryError("relative impact ratio must be flow_float or flow_liquidity")
+            raise CausalMemoryError(
+                "relative impact ratio must be flow_float or flow_liquidity"
+            )
         normalised_as_of = _normalise_time(as_of)
         numerator = self.latest_metric(numerator_metric, as_of=normalised_as_of)
         denominator = self.latest_metric(denominator_metric, as_of=normalised_as_of)
@@ -447,7 +483,7 @@ class CausalRepricingMemory:
             raise CausalMemoryError(f"unknown hypothesis: {hypothesis_id}")
         if lane not in RESEARCH_LANES or lane not in hypothesis.lanes:
             raise CausalMemoryError("lane is not declared by the frozen research contract")
-        if hypothesis.fingerprint in self.rejected_fingerprints:
+        if self._is_rejected(hypothesis):
             return None
         snapshot = self.confidence(hypothesis_id, as_of=as_of)
         if snapshot.score < minimum_score:
@@ -478,7 +514,8 @@ class CausalRepricingMemory:
             "schema_version": SCHEMA_VERSION,
             "lane": lane,
             "hypothesis_id": hypothesis.hypothesis_id,
-            "hypothesis_fingerprint": hypothesis.fingerprint,
+            "hypothesis_fingerprint": self.effective_fingerprint(hypothesis),
+            "design_fingerprint": hypothesis.fingerprint,
             "as_of": _normalise_time(as_of),
             "research_confidence": snapshot.score,
             "source_observation_ids": list(hypothesis.source_observation_ids),
@@ -541,8 +578,13 @@ class CausalRepricingMemory:
         supplied_digest = document.pop("content_digest", None)
         if not supplied_digest or supplied_digest != _sha256(document):
             raise CausalMemoryError("causal-memory content digest mismatch")
+
+        # Historical hypotheses must remain loadable after later rejection. Rejection
+        # blocks fresh admission and lane emission; it must not make durable memory
+        # unrecoverable after a restart.
+        persisted_rejected = tuple(str(value) for value in document.get("rejected_fingerprints", []))
         memory = cls(
-            rejected_fingerprints=document.get("rejected_fingerprints", []),
+            rejected_fingerprints=(),
             half_life_days=float(document["half_life_days"]),
         )
         try:
@@ -554,7 +596,12 @@ class CausalRepricingMemory:
                 memory.register_claim(EpistemicClaim(**raw))
             for raw in document.get("hypotheses", []):
                 raw = dict(raw)
-                for field in ("mechanism_chain", "matched_controls", "lanes", "source_observation_ids"):
+                for field in (
+                    "mechanism_chain",
+                    "matched_controls",
+                    "lanes",
+                    "source_observation_ids",
+                ):
                     raw[field] = tuple(raw[field])
                 memory.register_hypothesis(FrozenHypothesis(**raw))
             for raw in document.get("events", []):
@@ -562,6 +609,9 @@ class CausalRepricingMemory:
                 raw["matched_controls"] = tuple(raw["matched_controls"])
                 raw["source_observation_ids"] = tuple(raw["source_observation_ids"])
                 memory.record_evidence(EvidenceEvent(**raw))
+            memory.rejected_fingerprints.update(persisted_rejected)
         except (KeyError, TypeError, CausalMemoryError) as exc:
-            raise CausalMemoryError("causal memory failed scientific-contract validation") from exc
+            raise CausalMemoryError(
+                "causal memory failed scientific-contract validation"
+            ) from exc
         return memory
