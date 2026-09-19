@@ -310,7 +310,8 @@ def evaluate_selection_from_histories(histories: dict[str, list[dict[str, Any]]]
             raise ValueError(f"INSUFFICIENT_HISTORY:{len(next(iter(clean.values())))}<{minimum}")
         bounds = _split_bounds(len(next(iter(clean.values()))), contract)
     except (ValueError, StopIteration) as exc:
-        return {**base, "data_integrity_ok": False, "data_errors": [str(exc)], "variants": {}, "screen_status": "INSUFFICIENT_EVIDENCE", "economic_pre_oos_pass": False, "failure_reasons": ["DATA_INTEGRITY_OR_HISTORY"]}
+        # B105 is a false positive on this scientific pass/fail field, not a credential.
+        return {**base, "data_integrity_ok": False, "data_errors": [str(exc)], "variants": {}, "screen_status": "INSUFFICIENT_EVIDENCE", "economic_pre_oos_pass": False, "failure_reasons": ["DATA_INTEGRITY_OR_HISTORY"]}  # nosec B105
     variants = {"baseline": (0.0, True), "sensitivity_35bps": (0.0035, False), "primary_50bps": (0.005, False), "sensitivity_65bps": (0.0065, False)}
     output: dict[str, Any] = {}
     rich: dict[str, Any] = {}
