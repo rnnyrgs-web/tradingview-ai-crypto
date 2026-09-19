@@ -177,15 +177,29 @@ jobs:
         run: |
           test "$BRANCH" != "main" -a "$BRANCH" != "master"
           if git ls-remote --exit-code --heads origin "refs/heads/$BRANCH" >/dev/null 2>&1; then
-            echo "Existing task branch detected; refusing to overwrite autonomous work."
-            exit 1
+            echo "Existing task branch detected; preserving it and waiting instead of overwriting autonomous work."
+            echo "execute=false" >> "$GITHUB_OUTPUT"
+            echo "wait_reason=EXISTING_TASK_BRANCH" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
           git config user.name "autonomous-cloud-specialist"
           git config user.email "actions@users.noreply.github.com"
           git checkout -b "$BRANCH" "$MAIN_SHA"
+          echo "execute=true" >> "$GITHUB_OUTPUT"
+          echo "wait_reason=" >> "$GITHUB_OUTPUT"
+
+      - name: Record controlled WAIT when task branch already exists
+        if: steps.credential_gate.outputs.execute == 'true' && steps.branch.outputs.execute == 'false'
+        run: |
+          {
+            echo "### Controlled WAIT — existing autonomous task branch"
+            echo "- Branch: `${{ steps.plan.outputs.branch }}`"
+            echo "- Existing work was preserved and not overwritten."
+            echo "- No model execution was started in this cycle."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Install bounded Agents SDK runtime
-        if: steps.credential_gate.outputs.execute == 'true'
+        if: steps.credential_gate.outputs.execute == 'true' && steps.branch.outputs.execute == 'true'
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
@@ -193,7 +207,7 @@ jobs:
 
       - id: agent
         name: Run one bounded specialist Agents SDK cycle
-        if: steps.credential_gate.outputs.execute == 'true'
+        if: steps.credential_gate.outputs.execute == 'true' && steps.branch.outputs.execute == 'true'
         continue-on-error: true
         run: |
           set +e
@@ -213,7 +227,7 @@ jobs:
           exit "$STATUS"
 
       - name: Pause cleanly when organization spend limit is exhausted
-        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outputs.quota_exhausted == 'true'
+        if: steps.credential_gate.outputs.execute == 'true' && steps.branch.outputs.execute == 'true' && steps.agent.outputs.quota_exhausted == 'true'
         run: |
           python - <<'PY'
           import json
@@ -225,7 +239,7 @@ jobs:
           PY
 
       - name: Account conservatively for failed model execution
-        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'failure' && steps.agent.outputs.quota_exhausted != 'true'
+        if: steps.credential_gate.outputs.execute == 'true' && steps.branch.outputs.execute == 'true' && steps.agent.outcome == 'failure' && steps.agent.outputs.quota_exhausted != 'true'
         run: |
           python agents/autonomous_cloud_state.py mark-failure \
             --state /tmp/runner_state.json \
@@ -233,7 +247,7 @@ jobs:
 
       - id: result
         name: Read structured agent outcome
-        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'success' && steps.agent.outputs.quota_exhausted != 'true'
+        if: steps.credential_gate.outputs.execute == 'true' && steps.branch.outputs.execute == 'true' && steps.agent.outcome == 'success' && steps.agent.outputs.quota_exhausted != 'true'
         run: |
           STATUS="$(jq -r '.outcome.status' /tmp/agent_result.json)"
           test "$STATUS" = "READY_FOR_PR" -o "$STATUS" = "NO_CHANGE" -o "$STATUS" = "BLOCKED"
@@ -360,5 +374,5 @@ jobs:
           exit "$WRITE_STATUS"
 
       - name: Fail workflow after bounded agent failure
-        if: steps.credential_gate.outputs.execute == 'true' && steps.agent.outcome == 'failure' && steps.agent.outputs.quota_exhausted != 'true'
+        if: steps.credential_gate.outputs.execute == 'true' && steps.branch.outputs.execute == 'true' && steps.agent.outcome == 'failure' && steps.agent.outputs.quota_exhausted != 'true'
         run: exit 1
