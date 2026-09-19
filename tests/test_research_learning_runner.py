@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 import research_learning_state
-from research_learning_runner import build_learning_report
+from research_learning_runner import _bounded_limit, build_learning_report
 
 
 def test_runner_report_combines_accuracy_profitability_diagnostics(tmp_path, monkeypatch):
@@ -48,3 +48,12 @@ def test_runner_report_combines_accuracy_profitability_diagnostics(tmp_path, mon
     assert report["selective_wait_fusion"]["untouched_oos_opened"] is False
     assert report["selective_wait_fusion"]["trade_authority"] is False
     assert report["research_memory"]["lesson_count"] == 1
+
+
+def test_learning_fetch_limits_are_bounded(monkeypatch):
+    monkeypatch.setenv("RESEARCH_LEARNING_LEDGER_LIMIT", "999999")
+    assert _bounded_limit("RESEARCH_LEARNING_LEDGER_LIMIT", 500, 100, 2000) == 2000
+    monkeypatch.setenv("RESEARCH_LEARNING_LEDGER_LIMIT", "10")
+    assert _bounded_limit("RESEARCH_LEARNING_LEDGER_LIMIT", 500, 100, 2000) == 100
+    monkeypatch.setenv("RESEARCH_LEARNING_LEDGER_LIMIT", "not-an-int")
+    assert _bounded_limit("RESEARCH_LEARNING_LEDGER_LIMIT", 500, 100, 2000) == 500

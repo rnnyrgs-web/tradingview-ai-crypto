@@ -142,3 +142,10 @@ def test_reentry_waiting_for_heavy_lane_is_explicitly_queued_and_healthy():
     finally:
         army._status["workers"] = previous_workers
         army._status["active_jobs"] = previous_active
+
+
+def test_learning_diagnostics_uses_slow_success_recheck_to_bound_supabase_egress():
+    learning = next(worker for worker in army.WORKERS if worker.name == "learning-diagnostics")
+    assert army.LEARNING_DIAGNOSTICS_RECHECK_SECONDS >= 300
+    assert army._success_recheck_delay_seconds(learning, {"ok": True}) == army.LEARNING_DIAGNOSTICS_RECHECK_SECONDS
+    assert army._success_recheck_delay_seconds(learning, None) == army.LEARNING_DIAGNOSTICS_RECHECK_SECONDS

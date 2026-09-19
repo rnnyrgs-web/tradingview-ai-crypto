@@ -165,20 +165,29 @@ def fetch_resolved_predictions(limit=5000):
         raise RuntimeError(f"Supabase resolved prediction fetch failed: {r.status_code} {r.text}")
     return [_expose_preforecast_market_fields(row) for row in r.json()]
 
-def fetch_shadow_predictions(limit=10000):
-    """Read immutable resolved forward forecasts for shadow-readiness analysis."""
+def fetch_shadow_predictions(limit=500):
+    """Read a bounded recent window of immutable resolved forward forecasts.
+
+    The learning worker only needs enough recent chronology for diagnostics. Reading
+    the full 10k-row ledger every few seconds caused runaway Supabase egress. Fetch
+    newest-first so a small limit stays fresh, then restore chronological order for
+    downstream non-overlap calculations.
+    """
     if not configured():
         return []
+    bounded_limit=max(1,min(int(limit),2000))
     params={
         "select":"id,due_at,resolved_at,scan_id,symbol,horizon,direction,entry_price,score,market_regime,strategy_identity,action_at_forecast,directional_return_pct,correct,calibration",
         "resolved_at":"not.is.null",
-        "order":"resolved_at.asc",
-        "limit":str(max(1,min(int(limit),10000))),
+        "order":"resolved_at.desc",
+        "limit":str(bounded_limit),
     }
     r=http.get(f"{SUPABASE_URL}/rest/v1/prediction_ledger",headers=headers(),params=params)
     if r.status_code>=300:
         raise RuntimeError(f"Supabase shadow prediction fetch failed: {r.status_code} {r.text}")
-    return [_expose_preforecast_market_fields(row) for row in r.json()]
+    rows=[_expose_preforecast_market_fields(row) for row in r.json()]
+    rows.reverse()
+    return rows
 
 def patch_prediction(prediction_id, fields):
     if not configured() or not fields:

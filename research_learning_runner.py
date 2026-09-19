@@ -101,9 +101,21 @@ def build_learning_report(rows, paper_trades=None):
     }
 
 
+def _bounded_limit(name, default, minimum, maximum):
+    try:
+        value = int(os.getenv(name, str(default)))
+    except (TypeError, ValueError):
+        value = default
+    return max(minimum, min(value, maximum))
+
+
 def main():
-    rows = fetch_shadow_predictions(limit=10000)
-    paper_trades = fetch_all_paper_trades(limit=10000)
+    # Keep the worker useful while making Supabase egress proportional to fresh
+    # evidence, not to the entire historical ledger on every cycle.
+    ledger_limit = _bounded_limit("RESEARCH_LEARNING_LEDGER_LIMIT", 500, 100, 2000)
+    paper_limit = _bounded_limit("RESEARCH_LEARNING_PAPER_LIMIT", 500, 50, 2000)
+    rows = fetch_shadow_predictions(limit=ledger_limit)
+    paper_trades = fetch_all_paper_trades(limit=paper_limit)
     report = build_learning_report(rows, paper_trades)
     summary_path = os.getenv("RESEARCH_LEARNING_SUMMARY_PATH", "").strip()
     if summary_path:
