@@ -27,10 +27,10 @@ def test_coordination_state_has_exact_specialist_roster_and_safe_policy():
 def test_strategy_discovery_roles_have_only_current_active_work():
     state = load_state()
     expected_active = {
-        "quant-research": "COORD-DISC-QUANT-001",
-        "signal-accuracy": "COORD-DISC-VAL-001",
-        "data-market": "COORD-DISC-DATA-001",
-        "testing-security": "COORD-DISC-TEST-001",
+        "quant-research": "COORD-DISC-QUANT-002",
+        "signal-accuracy": "COORD-DISC-VAL-002",
+        "data-market": "COORD-DISC-DATA-002",
+        "testing-security": "COORD-DISC-TEST-002",
         "regime-selection": None,
         "execution-microstructure": None,
         "production-risk": None,
@@ -48,7 +48,7 @@ def test_strategy_discovery_roles_have_only_current_active_work():
         task = active[0]
         assert task["id"] == expected_id
         assert next_task(state, role) == task
-        assert task["fingerprint_id"] == "DISC-VOL-BREAKOUT-001-v1"
+        assert task["fingerprint_id"] == "DISC-LIQUIDITY-MEANREV-001-v1"
         assert task["evidence_required"]
         assert task["branch"] == state["roles"][role]["branch"]
 
@@ -99,7 +99,7 @@ def test_completed_data_provenance_work_is_not_reassigned():
 
     next_data_task = next(row for row in state["tasks"] if row["id"] == "COORD-DATA-007")
     assert next_data_task["status"] == "BLOCKED"
-    assert next_task(state, "data-market")["id"] == "COORD-DISC-DATA-001"
+    assert next_task(state, "data-market")["id"] == "COORD-DISC-DATA-002"
     assert "matured prospective point-in-time cohorts" in next_data_task["title"]
     requirements = " ".join(next_data_task["evidence_required"]).lower()
     assert "minimum eight independent" in requirements
@@ -165,9 +165,9 @@ def test_compact_snapshot_keeps_role_next_work_aligned_to_discovery():
     state = load_state()
     snapshot = compact_snapshot(state)
     assert set(snapshot["roles"]) == REQUIRED_ROLES
-    assert snapshot["roles"]["quant-research"]["next"]["id"] == "COORD-DISC-QUANT-001"
-    assert snapshot["roles"]["signal-accuracy"]["next"]["id"] == "COORD-DISC-VAL-001"
-    assert snapshot["roles"]["data-market"]["next"]["id"] == "COORD-DISC-DATA-001"
-    assert snapshot["roles"]["testing-security"]["next"]["id"] == "COORD-DISC-TEST-001"
+    assert snapshot["roles"]["quant-research"]["next"]["id"] == "COORD-DISC-QUANT-002"
+    assert snapshot["roles"]["signal-accuracy"]["next"]["id"] == "COORD-DISC-VAL-002"
+    assert snapshot["roles"]["data-market"]["next"]["id"] == "COORD-DISC-DATA-002"
+    assert snapshot["roles"]["testing-security"]["next"]["id"] == "COORD-DISC-TEST-002"
     for role in ("regime-selection", "execution-microstructure", "production-risk"):
         assert snapshot["roles"][role]["next"] is None
