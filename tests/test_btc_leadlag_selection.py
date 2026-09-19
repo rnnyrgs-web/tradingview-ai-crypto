@@ -69,6 +69,20 @@ def test_signal_uses_through_origin_beta_and_no_future_bar():
     assert _signal(poisoned, 230, "ETH-USDT-SWAP", contract, gap_min=0.005) == before
 
 
+def test_no_underreaction_baseline_does_not_require_follower_beta():
+    contract = _load_contract()
+    histories = _histories(260, impulse=230)
+    btc, eth = histories["BTC-USDT-SWAP"], histories["ETH-USDT-SWAP"]
+    for i in range(62, 230):
+        btc_return = float(btc[i]["close"]) / float(btc[i - 1]["close"]) - 1
+        open_price = float(eth[i - 1]["close"])
+        close = open_price * (1 + 3 * btc_return)
+        eth[i].update(open=open_price, high=max(open_price, close) * 1.001, low=min(open_price, close) * 0.999, close=close)
+    clean = _validate_histories(histories, contract, exact_dataset=False)
+    assert _signal(clean, 230, "ETH-USDT-SWAP", contract, gap_min=0.005, baseline=True)["eligible"] is True
+    assert _signal(clean, 230, "ETH-USDT-SWAP", contract, gap_min=0.005)["reason"] == "BETA_OUTSIDE_RANGE"
+
+
 def test_next_open_six_hour_portfolio_reconciles_and_shares_event():
     contract = _load_contract()
     histories = _validate_histories(_histories(), contract, exact_dataset=False)

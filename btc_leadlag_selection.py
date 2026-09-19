@@ -117,13 +117,16 @@ def _signal(histories: dict[str, list[dict[str, float | int]]], i: int, follower
     if sigma <= 0 or not (abs(btc_return) > float(rule["leader_impulse_absolute_return_floor"]) and abs(btc_return) > float(rule["leader_impulse_sigma_multiple"]) * sigma):
         return {"eligible": False, "reason": "NO_BTC_IMPULSE"}
     direction = 1 if btc_return > 0 else -1
+    regime_closes = [float(row["close"]) for row in btc[i - 167:i + 1]]
+    regime = "BULL" if float(btc[i]["close"]) >= statistics.mean(regime_closes) else "BEAR"
+    if baseline:
+        return {"eligible": True, "direction": "LONG" if direction > 0 else "SHORT", "direction_value": direction, "btc_return": btc_return, "sigma": sigma, "beta": None, "follower_return": None, "gap": None, "regime": regime}
     denominator = sum(value * value for value in x)
     if denominator <= 0:
         return {"eligible": False, "reason": "ZERO_BETA_DENOMINATOR"}
     beta = sum(a * b for a, b in zip(x, y)) / denominator
     follower_return = float(follower_returns[i])
     gap = direction * (beta * btc_return - follower_return)
-    regime_closes = [float(row["close"]) for row in btc[i - 167:i + 1]]
     result = {
         "eligible": True,
         "direction": "LONG" if direction > 0 else "SHORT",
@@ -133,10 +136,8 @@ def _signal(histories: dict[str, list[dict[str, float | int]]], i: int, follower
         "beta": beta,
         "follower_return": follower_return,
         "gap": gap,
-        "regime": "BULL" if float(btc[i]["close"]) >= statistics.mean(regime_closes) else "BEAR",
+        "regime": regime,
     }
-    if baseline:
-        return result
     if not float(rule["follower_beta_min"]) <= beta <= float(rule["follower_beta_max"]):
         return {**result, "eligible": False, "reason": "BETA_OUTSIDE_RANGE"}
     if direction * follower_return < -0.005:
@@ -238,8 +239,8 @@ def _simulate_segment(histories: dict[str, list[dict[str, float | int]]], start:
                 "event_id": event_id, "decision_at": decision_at, "entry_at": decision_at,
                 "asset": follower, "timeframe": "1H", "direction": signal["direction"], "notional": notional,
                 "features": {name: {"value": value, "available_at": decision_at} for name, value in {
-                    "regime": signal["regime"], "beta_band": f"{signal['beta']:.6f}",
-                    "gap_band": f"{signal['gap']:.6f}", "btc_direction": signal["direction"],
+                    "regime": signal["regime"], "beta_band": "OMITTED" if signal["beta"] is None else f"{signal['beta']:.6f}",
+                    "gap_band": "OMITTED" if signal["gap"] is None else f"{signal['gap']:.6f}", "btc_direction": signal["direction"],
                 }.items()},
                 "direction_value": signal["direction_value"], "entry_price": entry_price,
                 "exit_index": index + int(contract["primary_rule"]["holding_period_bars"]), "entry_cost": entry_cost,
