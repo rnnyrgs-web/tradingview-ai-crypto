@@ -271,6 +271,21 @@ Do not select another data candidate while DATA-BREADTH-001 is awaiting that pro
 
 **Tool routing:** Sol leads scientific decisions, state reconciliation and review. Work/Codex handles substantial bounded multi-file implementation/testing. GitHub/AI_STATE remain the durable source of truth.
 
+## 24/7 BACKGROUND MODEL ORCHESTRATION
+
+The project now uses a machine-readable routing policy at `orchestration/model_routing_policy.json`.
+
+- Deterministic Python/GitHub Actions handle repeatable screening, backtests, data transforms and state validation.
+- OpenAI API `gpt-5.6-luna` handles routine bounded tasks.
+- OpenAI API `gpt-5.6-terra` handles the autonomous quant-research lane for medium-complexity strategy research/implementation under the existing API budget.
+- OpenAI API `gpt-5.6-sol` is reserved for deep scientific/Lead review where the expected information value justifies the higher cost; the autonomous Lead workflow already uses Sol for candidate review.
+- **GPT-6 Astra is not an OpenAI API model.** It is routed only through ChatGPT Work/Codex. The canonical scheduled Work instructions live in `docs/ASTRA_BACKGROUND_WORKER.md`.
+- One final one-time product setup is required to get guaranteed Astra background execution: create an hourly Scheduled Task from **Work → GPT-6 Astra → High** using that repository prompt. After that, it reads GitHub state and executes bounded Astra-appropriate milestones without copy/paste.
+- Background workers never use browser-tab scraping. GitHub remains the mailbox and source of truth.
+- If Astra capacity is unavailable, the project must checkpoint the exact handoff and continue independent deterministic/API/Claude work rather than stall.
+
+The OpenAI cloud specialist may own both `data-market` and `quant-research` READY tasks but remains strictly **one model run at a time**, one task per invocation, branch-isolated, budget-gated, unable to merge its own PR, and unable to trade. It selects the highest-priority READY ChatGPT-eligible task; after the current data task is complete, the liquidity-mean-reversion quant task becomes eligible automatically.
+
 ## CROSS-ENGINE / INFRASTRUCTURE STATUS
 
 - PRs #390–#392 established research-only VectorBT/Nautilus/LEAN reconciliation infrastructure. This is validation tooling, not an edge.
