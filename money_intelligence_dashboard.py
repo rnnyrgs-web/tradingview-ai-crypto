@@ -116,7 +116,7 @@ section{{margin:22px 0}} h2{{font-size:18px;margin:0 0 9px}} .section-note{{colo
 .world{{font-size:15px;line-height:1.55;color:#dbe6ef}}
 .footer{{margin-top:28px;color:#71879a;font-size:11px;border-top:1px solid #17293a;padding-top:13px}}
 </style></head><body><div class="wrap">
-<header><div><h1>Money Intelligence</h1><div class="subtitle">Independent world · economy · money · credit · capital-flow research. This dashboard does not read or alter crypto signal decisions.</div></div><div class="nav"><a href="/dashboard">System</a><a href="/dashboard/signals">Signals</a><a class="active" href="/dashboard/money">Money Intelligence</a></div></header>
+<header><div><h1>Money Intelligence</h1><div class="subtitle">Independent world · economy · money · credit · capital-flow research. This dashboard does not read or alter crypto signal decisions.</div></div><div class="nav"><a href="/dashboard">Mission Control</a><a href="/dashboard/results">Promising Results</a><a class="active" href="/dashboard/money">Money Intelligence</a></div></header>
 <div class="banner"><div class="status">Research state: {_esc(status)}</div><div class="time">As of: {_esc(as_of)} · Refreshes every 5 minutes</div></div>
 <div class="metrics">{metrics}</div>
 <section><h2>World money map</h2><div class="section-note">Current causal assessment of the monetary, credit and risk regime.</div><div class="banner world">{_esc(world.get('summary') or 'No validated world-money assessment has been published yet.')}</div></section>

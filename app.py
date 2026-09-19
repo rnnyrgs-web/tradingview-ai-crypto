@@ -15,6 +15,7 @@ from market_data import build_universe
 from money_intelligence_dashboard import money_dashboard_page
 from operational_monitor import health_snapshot, record_error
 from production_validation import validate_live_strategy
+from promising_results_dashboard import results_dashboard_page
 from research_observability import snapshot as research_observability_snapshot
 from selective_precision_observability import resolved_selective_precision_snapshot
 from shadow_readiness import assess_shadow_readiness, canary_review_decision
@@ -62,6 +63,7 @@ def root():
         "service": "Trading Research Engine",
         "version": STRATEGY_VERSION,
         "mission_control": "/dashboard",
+        "promising_results": "/dashboard/results",
         "money_intelligence": "/dashboard/money",
         "legacy_signal_pipeline": "RETIRED",
         "endpoints": [
@@ -173,6 +175,14 @@ def dashboard_money(request: Request):
         return money_dashboard_page(request)
     except Exception as e:
         internal_error("dashboard_money", e, "Money Intelligence dashboard unavailable")
+
+
+@app.get("/dashboard/results")
+def dashboard_results(request: Request):
+    try:
+        return results_dashboard_page(request)
+    except Exception as e:
+        internal_error("dashboard_results", e, "Promising Results dashboard unavailable")
 
 
 @app.get("/dashboard/system")
