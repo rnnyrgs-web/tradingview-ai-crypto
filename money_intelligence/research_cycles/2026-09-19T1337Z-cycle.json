@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-19T13:37:53Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate or broker state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "context_integrity": {
+    "read_current_spec": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-19T13:30:55Z",
+    "artifact_cutoff_utc": "2026-09-19T13:37:53Z",
+    "seconds_this_run": 418,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 389,
+    "minimum_cumulative_seconds_since_last_owner_report": 807,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly recorded active execution time after the last owner-facing report is counted. Schedule gaps are excluded; no padding or idle time is counted."
+  },
+  "highest_information_question": "Do Sep. 18 regulated crypto-wrapper flows represent a durable capital rotation into BTC/ETH/SOL, or a one-session rebound amplified by prior short covering and leverage rebuild, and how should mutable ETF trackers be handled without rewriting point-in-time evidence?",
+  "fresh_validated_observations": [
+    {
+      "topic": "Sep. 18 BTC ETF flow is strongly corroborated at +$433.0M, while the live Farside table has regressed to a partial +$324.6M state",
+      "label": "OBSERVED FACT / DATA-AVAILABILITY INTEGRITY / STILL WAIT",
+      "observed_facts": [
+        "The current live Farside BTC table shows Sep. 18 as +$324.6M because the IBIT cell is currently missing, while FBTC is +$310.7M, BITB +$9.7M, ARKB +$1.9M and HODL +$2.3M.",
+        "A timestamped Farside social-feed relay and DefiLlama's Sep. 18 snapshot preserve a completed-looking +$433.0M total with IBIT +$108.4M and FBTC +$310.7M; the remaining named funds account for the balance.",
+        "Using the completed-looking +$433.0M point-in-time snapshot, Sep. 14-18 BTC ETF net flow is about +$6.1M: +159.9 -450.4 -295.9 +159.5 +433.0. That is effectively flat relative to BTC's current approximately $1.63T market capitalization.",
+        "BTC was about $81,175 at 13:31Z, +3.89%/24h and +5.04%/7d. Aggregate crypto open interest was about $453.97B, +3.62%/24h, while average perpetual funding was about 0.00794 and about +98% versus the prior seven-day comparison. BTC liquidations were $114.0M over 24h, mostly shorts, but the latest 1h and 4h windows were zero."
+      ],
+      "inference": "Friday's BTC advance has genuine regulated spot-vehicle demand support and is no longer well described as a pure forced-short-cover event. But the weekly ETF total is approximately flat and leverage/funding remain rebuilt, so one strong session does not establish a durable accumulation regime.",
+      "method_rule": "For mutable ETF trackers, preserve the timestamped completed-looking state and later regressed state separately. Do not overwrite a previously captured value merely because the live webpage loses issuer cells. Mark the current table partial and resolve using issuer/independent corroboration.",
+      "decision_support": "BTC remains WAIT / TACTICAL MOMENTUM CANDIDATE. Upgrade only after several completed positive sessions with issuer breadth, price retention after squeeze effects cease, and controlled venue-grade leverage."
+    },
+    {
+      "topic": "ETH Sep. 18 flow improved, but weekly regulated flow remains negative",
+      "label": "OBSERVED FACT / RELATIVE-FLOW CONTROL / WAIT",
+      "observed_facts": [
+        "The current Farside ETH table has regressed to a partial Sep. 18 total of +$29.4M with ETHA and another major issuer missing.",
+        "The timestamped completed-looking Sep. 18 snapshot preserved by DefiLlama/Farside-sourced data is +$143.7M, including ETHA +$114.3M and FETH +$26.2M.",
+        "Using that completed-looking snapshot, Sep. 14-18 ETH ETF net flow is about -$140.6M.",
+        "ETH was about $2,635 at 13:32Z, +5.13%/24h and +3.84%/7d."
+      ],
+      "inference": "ETH participated strongly in the crypto rebound, but the weekly regulated-flow picture remains weaker than BTC and SOL. The move cannot yet be called institutionally led on a persistent basis.",
+      "decision_support": "ETH remains WAIT / RESEARCH. Require consecutive positive completed sessions and improved relative strength before promoting a directional thesis."
+    },
+    {
+      "topic": "SOL has the strongest Sep. 18 and weekly ETF flow intensity relative to market capitalization among BTC/ETH/SOL, but concentration makes the signal provisional",
+      "label": "OBSERVED FACT / CROSS-SECTIONAL CANDIDATE / NOT YET CANONICAL",
+      "observed_facts": [
+        "DefiLlama's Farside-sourced Sep. 18 snapshot records +$47.6M of Solana ETF net flow. The live Farside SOL page currently shows missing Sep. 18 issuer cells and a 0.0 total, another example of mutable tracker regression.",
+        "Combining Sep. 14-18 completed-looking observations gives about +$60.7M of weekly SOL ETF net flow.",
+        "At a live SOL market capitalization of about $65.46B, Sep. 18 flow is approximately 0.0727% of market cap and the five-session flow is approximately 0.0927%. By the same simple denominator, BTC Sep. 18 is about 0.0266% and its week about 0.00037%; ETH Sep. 18 is about 0.0447% and its week about -0.0437%.",
+        "SOL was about $111.44 at 13:32Z, +5.24%/24h and +9.39%/7d, stronger over seven days than BTC (+5.04%) and ETH (+3.84%).",
+        "The Sep. 18 SOL flow was concentrated in one product/issuer in the preserved snapshot rather than broad across the product set."
+      ],
+      "inference": "The cross-section is directionally consistent with the hypothesis that regulated-flow intensity relative to asset size can matter for short-horizon relative strength. But one week, one issuer concentration and unresolved cash/in-kind/staking mechanics are insufficient to establish a predictive rule.",
+      "hypothesis": "When comparable regulated crypto wrappers are open and market beta is controlled, net external creation flow scaled by economically available float or market capitalization may explain part of cross-sectional 1d-5d relative returns better than raw flow dollars.",
+      "falsification": "Reject or materially weaken if a broader timestamp-safe sample shows no incremental relationship after controlling for prior momentum, beta, volatility, valuation/narrative catalysts, free float, cash-versus-in-kind mechanics and derivatives positioning.",
+      "decision_support": "SOL remains HOLD / WAIT FOR VALIDATION at theme level; no BUY is frozen from one week of ETF flow."
+    },
+    {
+      "topic": "Weekend privacy-asset strength remains broad while ZEC retains extreme excess return",
+      "label": "OBSERVED FACT / MATCHED CONTROL / NO THESIS CHANGE",
+      "observed_facts": [
+        "At 13:32Z ZEC was about $1,534, +33.1%/7d and +171.5%/30d; XMR about $578, +8.7%/7d and +38.7%/30d; DASH about $59.88, +6.6%/7d and +86.4%/30d.",
+        "The broader privacy basket remains positive, so ZEC's move cannot be attributed solely to ZCSH wrapper mechanics.",
+        "The primary SEC ZCSH prospectus reconfirms that creations may be cash or in-kind, while the Sep. 8 DCG transaction was an explicitly in-kind 85,705.32563297 ZEC contribution. AUM/share creation therefore cannot be equated with contemporaneous exchange spot buying."
+      ],
+      "inference": "ZEC's unique wrapper/free-float channel plausibly amplifies a broader privacy rotation, but exact marginal spot demand remains unmeasured.",
+      "decision_support": "ZEC/ZCSH remains WAIT / AVOID CHASING."
+    }
+  ],
+  "daily_big_move_scan": {
+    "market_context": "Saturday: major cash equity, sovereign-bond and commodity benchmark markets are closed. No weekend traditional-market prices are fabricated; live crypto is updated.",
+    "selected_or_retested": [
+      "BTC: +3.9%/24h and +5.0%/7d, holding after immediate liquidation impulse ceased; Sep. 18 ETF demand is corroborated but week-level flow is essentially flat.",
+      "ETH: +5.1%/24h; Sep. 18 ETF inflow rebound does not erase a negative week.",
+      "SOL: +5.2%/24h and +9.4%/7d; Sep. 18 and weekly ETF flow intensity relative to market cap is strongest among BTC/ETH/SOL in the preserved snapshot, but concentrated.",
+      "XRP: +8.5%/24h; selected as a high-beta crypto mover but not assigned an ETF-flow explanation because the current-day source-of-flow decomposition is not validated.",
+      "ZEC/XMR/DASH: privacy rotation persists; ZEC remains the extreme excess-return case."
+    ],
+    "negative_findings": [
+      "Do not treat a mutable live ETF table as immutable ground truth when issuer cells disappear after a completed-looking snapshot was captured.",
+      "Do not call one positive BTC ETF session a durable accumulation regime when the five-session net is approximately flat.",
+      "Do not call ETH institutionally led while the completed-looking weekly ETF total remains negative.",
+      "Do not promote SOL from a one-week flow-to-market-cap relationship; issuer concentration and creation mechanics remain confounders.",
+      "Do not fabricate weekend moves for closed traditional markets."
+    ]
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "status": "No new immutable forecast clears the evidence bar. Existing WAIT/HOLD-research states are preserved and no prior forecast is rewritten."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. Do not churn dashboard_state, learning_ledger or big_move_lab: ETF tracker revision risk is already known, while the SOL flow-intensity relationship is a new but one-week cross-sectional candidate that requires a larger timestamp-safe sample before canonical promotion.",
+  "next_research": [
+    "After the next U.S. session, capture issuer-level BTC/ETH/SOL flow states at multiple timestamps and reconcile any tracker regressions against issuer or archived point-in-time sources.",
+    "Build a timestamp-safe 20-60 session panel for BTC/ETH/SOL regulated flows scaled by market cap and, where measurable, economically available free float; test 1d/3d/5d excess returns against beta, momentum and leverage controls.",
+    "Determine cash-versus-in-kind and staking mechanics for the main SOL products before interpreting creations as marginal spot demand.",
+    "Reconcile venue-level BTC/SOL open interest, funding and basis rather than relying on aggregate percentage changes that have shown adjacent-snapshot inconsistencies.",
+    "Continue ZCSH split-safe creation-ledger work before Sep. 30 and preserve corporate-action normalization.",
+    "When traditional markets reopen, reassess Saudi physical logistics, oil curves/differentials and any confirmed infrastructure damage rather than inferring a weekend Brent move."
+  ],
+  "source_log": [
+    {"publisher":"Farside Investors","date":"2026-09-19 live view","topic":"BTC ETF daily flows; Sep. 18 live row currently partial","url":"https://farside.co.uk/btc/"},
+    {"publisher":"Farside Investors","date":"2026-09-19 live view","topic":"ETH ETF daily flows; Sep. 18 live row currently partial","url":"https://farside.co.uk/eth/"},
+    {"publisher":"Farside Investors","date":"2026-09-19 live view","topic":"SOL ETF daily flows; Sep. 18 live row currently missing","url":"https://farside.co.uk/sol/"},
+    {"publisher":"DefiLlama","date":"2026-09-18 snapshot","topic":"Farside-sourced completed-looking BTC/ETH/SOL ETF flows","url":"https://defillama.com/etfs"},
+    {"publisher":"Blockchain.News / Farside social relay","date":"2026-09-19","topic":"Timestamped Sep. 18 BTC +$433M Farside flow snapshot","url":"https://blockchain.news/flashnews/bitcoin-etf-433m-net-inflows-sep-18"},
+    {"publisher":"SEC","date":"2026-08","topic":"ZCSH cash/in-kind creation and cash-redemption mechanics","url":"https://www.sec.gov/Archives/edgar/data/1720265/000119312526363603/zcsh__424b3.htm"},
+    {"publisher":"SEC","date":"2026-09-08","topic":"DCG 85,705.32563297 ZEC in-kind contribution","url":"https://www.sec.gov/Archives/edgar/data/1720265/000119312526385317/zcsh-20260908.htm"},
+    {"publisher":"CoinMarketCap connected data","date":"2026-09-19T13:31-13:32Z","topic":"Live BTC/ETH/SOL/XRP/LINK/ZEC/XMR/DASH quotes and aggregate derivatives metrics","url":"https://coinmarketcap.com/"}
+  ],
+  "owner_report_gate": "NOT MET. Minimum cumulative directly recorded execution since the last owner-facing report is 807 seconds, below the required 3,600 seconds. Persist research quietly."
+}
