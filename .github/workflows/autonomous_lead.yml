@@ -132,23 +132,77 @@ jobs:
           # generation time and by every reviewer), not a separately
           # maintained regex, so this check cannot drift from theirs again.
           python -m orchestration.protected_paths --base origin/main --head "origin/$BRANCH"
-      - name: Independent security review
+      - id: security_review
+        name: Independent security review
         if: steps.select.outputs.branch != ''
-        run: python agents/autonomous_orchestrator.py review --reviewer security --diff /tmp/candidate.diff --output /tmp/security-review.json
-      - name: Independent lead review
-        if: steps.select.outputs.branch != ''
-        run: python agents/autonomous_orchestrator.py review --reviewer lead --diff /tmp/candidate.diff --output /tmp/lead-review.json
-      - name: Independent Claude adversarial review
-        if: steps.select.outputs.branch != '' && steps.claude_credential_gate.outputs.available == 'true'
-        run: python agents/autonomous_orchestrator.py review --reviewer claude-adversarial --diff /tmp/candidate.diff --output /tmp/claude-adversarial-review.json
+        run: |
+          set +e
+          python agents/autonomous_orchestrator.py review --reviewer security --diff /tmp/candidate.diff --output /tmp/security-review.json 2>&1 | tee /tmp/security-review.log
+          STATUS=${PIPESTATUS[0]}
+          set -e
+          if [ "$STATUS" -eq 0 ]; then
+            echo "wait=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if grep -Eqi '429 Too Many Requests|rate[ -]?limit|temporarily unavailable' /tmp/security-review.log; then
+            echo "wait=true" >> "$GITHUB_OUTPUT"
+            echo "Transient reviewer throttling detected; candidate remains unapproved and this cycle will WAIT without a red workflow failure."
+            exit 0
+          fi
+          exit "$STATUS"
+      - id: lead_review
+        name: Independent lead review
+        if: steps.select.outputs.branch != '' && steps.security_review.outputs.wait != 'true'
+        run: |
+          set +e
+          python agents/autonomous_orchestrator.py review --reviewer lead --diff /tmp/candidate.diff --output /tmp/lead-review.json 2>&1 | tee /tmp/lead-review.log
+          STATUS=${PIPESTATUS[0]}
+          set -e
+          if [ "$STATUS" -eq 0 ]; then
+            echo "wait=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if grep -Eqi '429 Too Many Requests|rate[ -]?limit|temporarily unavailable' /tmp/lead-review.log; then
+            echo "wait=true" >> "$GITHUB_OUTPUT"
+            echo "Transient reviewer throttling detected; candidate remains unapproved and this cycle will WAIT without a red workflow failure."
+            exit 0
+          fi
+          exit "$STATUS"
+      - id: claude_review
+        name: Independent Claude adversarial review
+        if: steps.select.outputs.branch != '' && steps.security_review.outputs.wait != 'true' && steps.lead_review.outputs.wait != 'true' && steps.claude_credential_gate.outputs.available == 'true'
+        run: |
+          set +e
+          python agents/autonomous_orchestrator.py review --reviewer claude-adversarial --diff /tmp/candidate.diff --output /tmp/claude-adversarial-review.json 2>&1 | tee /tmp/claude-adversarial-review.log
+          STATUS=${PIPESTATUS[0]}
+          set -e
+          if [ "$STATUS" -eq 0 ]; then
+            echo "wait=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if grep -Eqi '429 Too Many Requests|rate[ -]?limit|temporarily unavailable' /tmp/claude-adversarial-review.log; then
+            echo "wait=true" >> "$GITHUB_OUTPUT"
+            echo "Transient reviewer throttling detected; candidate remains unapproved and this cycle will WAIT without a red workflow failure."
+            exit 0
+          fi
+          exit "$STATUS"
+      - name: Record controlled WAIT for transient reviewer throttling
+        if: steps.select.outputs.branch != '' && (steps.security_review.outputs.wait == 'true' || steps.lead_review.outputs.wait == 'true' || steps.claude_review.outputs.wait == 'true')
+        run: |
+          {
+            echo "### Controlled WAIT — reviewer API throttled"
+            echo "- Candidate was **not approved** and was **not merged**."
+            echo "- Safety gates remain fail-closed."
+            echo "- The next scheduled Lead cycle may retry when API capacity is available."
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Fail closed if Claude adversarial review could not run
-        if: steps.select.outputs.branch != '' && steps.claude_credential_gate.outputs.available != 'true'
+        if: steps.select.outputs.branch != '' && steps.security_review.outputs.wait != 'true' && steps.lead_review.outputs.wait != 'true' && steps.claude_credential_gate.outputs.available != 'true'
         run: |
           echo "ANTHROPIC_API_KEY is not configured, so the required independent Claude adversarial review cannot run."
           echo "No candidate can be approved until it is added as a repository secret and RESOURCE-REC-001 in resource_recommendations_proposed.json is explicitly decided."
           exit 1
       - name: Require all three independent reviewers to approve
-        if: steps.select.outputs.branch != ''
+        if: steps.select.outputs.branch != '' && steps.security_review.outputs.wait != 'true' && steps.lead_review.outputs.wait != 'true' && steps.claude_review.outputs.wait != 'true'
         run: |
           jq -e '.approve == true' /tmp/security-review.json
           jq -e '.approve == true' /tmp/lead-review.json
@@ -157,7 +211,7 @@ jobs:
           echo "Lead review:" && cat /tmp/lead-review.json
           echo "Claude adversarial review:" && cat /tmp/claude-adversarial-review.json
       - name: Record approved review-only candidate
-        if: steps.select.outputs.branch != ''
+        if: steps.select.outputs.branch != '' && steps.security_review.outputs.wait != 'true' && steps.lead_review.outputs.wait != 'true' && steps.claude_review.outputs.wait != 'true'
         env:
           BRANCH: ${{ steps.select.outputs.branch }}
           HEAD_SHA: ${{ steps.select.outputs.sha }}
