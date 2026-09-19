@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "objective": "Continuously maximize scientifically credible progress toward (A) finding liquid assets with unusually strong evidence of very large upside over ~90 days, especially potential 2x+ moves, and (B) discovering at least one genuinely profitable after-cost algorithmic trading strategy.",
+  "invariants": {
+    "github_is_source_of_truth": true,
+    "max_active_deep_strategy_candidates": 1,
+    "broker_connected": false,
+    "trade_authority": false,
+    "automatic_merge_by_specialists": false,
+    "preserve_untouched_oos": true,
+    "preserve_rejected_fingerprints": true,
+    "supabase_bulk_polling_forbidden": true
+  },
+  "routes": {
+    "deterministic": {
+      "executor": "github_actions_python",
+      "use_for": [
+        "data transforms",
+        "cheap deterministic screens",
+        "backtests",
+        "artifact validation",
+        "queue/state checks"
+      ],
+      "cost_priority": 1
+    },
+    "api_luna": {
+      "executor": "openai_api",
+      "model": "gpt-5.6-luna",
+      "reasoning": "medium",
+      "use_for": [
+        "routine extraction",
+        "small provenance/data tasks",
+        "classification",
+        "bounded low-risk repo edits"
+      ],
+      "cost_priority": 2
+    },
+    "api_terra": {
+      "executor": "openai_api",
+      "model": "gpt-5.6-terra",
+      "reasoning": "high",
+      "use_for": [
+        "medium-complexity research synthesis",
+        "hypothesis drafting",
+        "bounded implementation where Luna is insufficient"
+      ],
+      "cost_priority": 3
+    },
+    "api_sol": {
+      "executor": "openai_api",
+      "model": "gpt-5.6-sol",
+      "reasoning": "high",
+      "use_for": [
+        "deep scientific review",
+        "experiment design",
+        "falsification",
+        "architecture/decision review",
+        "highest-value ambiguous research decisions"
+      ],
+      "cost_priority": 4,
+      "constraint": "Use sparingly within the approved API budget; prefer deterministic/Luna/Terra when equivalent."
+    },
+    "work_astra": {
+      "executor": "chatgpt_work",
+      "model": "GPT-6 Astra",
+      "reasoning": "High",
+      "use_for": [
+        "substantial multi-file implementation",
+        "repository exploration",
+        "backtesting milestone implementation",
+        "CI/debugging",
+        "long coherent research+engineering tasks"
+      ],
+      "cost_priority": 5,
+      "setup": "Requires one scheduled Work task created from ChatGPT Work with GPT-6 Astra selected; the current automation API cannot pin Work mode/model."
+    },
+    "codex_astra": {
+      "executor": "codex",
+      "model": "GPT-6 Astra",
+      "reasoning": "High",
+      "use_for": [
+        "pure heavy repository coding",
+        "large refactors",
+        "test/debug loops"
+      ],
+      "cost_priority": 5,
+      "setup": "Optional separate Codex automation/manual task; keep GitHub handoff canonical."
+    }
+  },
+  "routing_rules": [
+    {
+      "if": "task can be answered by deterministic code/data without model judgment",
+      "then": "deterministic"
+    },
+    {
+      "if": "routine low-risk interpretation or small bounded data task",
+      "then": "api_luna"
+    },
+    {
+      "if": "medium-complexity research synthesis but not a large implementation",
+      "then": "api_terra"
+    },
+    {
+      "if": "deep scientific decision, falsification, experiment design, or ambiguous high-value review",
+      "then": "api_sol"
+    },
+    {
+      "if": "substantial multi-file implementation/backtest/CI-debug milestone",
+      "then": "work_astra"
+    },
+    {
+      "if": "mostly pure heavy coding/refactor/testing",
+      "then": "codex_astra"
+    },
+    {
+      "if": "Astra task is unavailable or capacity-limited",
+      "then": "checkpoint exact handoff in GitHub and continue independent deterministic/API work rather than stalling"
+    }
+  ],
+  "task_selection": {
+    "strategy_lane": "Follow current strategy_discovery_queue and specialist coordination. Reject->learn->record->pivot. Exactly one expensive deep candidate.",
+    "big_move_lane": "Study 90-day large-move events and matched controls; convert recurring precursors into predeclared tests. Rank live assets only from timestamp-defensible evidence.",
+    "arbitration": "Choose the single action with highest expected information gain/economic value that does not duplicate active work. If one lane is waiting on future evidence, advance the other lane."
+  },
+  "reporting": {
+    "quiet_by_default": true,
+    "notify_on": [
+      "materially strong big-move candidate",
+      "strategy passes a major evidence gate",
+      "critical incident",
+      "user-only blocker",
+      "justified paid-data recommendation"
+    ]
+  }
+}
