@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-19T1819Z",
+  "information_cutoff": "2026-09-19T18:19:04Z",
+  "status": "MATERIAL_VALIDATED_UPDATE_OWNER_REPORT_ELIGIBLE",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate or broker state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "context_integrity": {
+    "read_current_spec": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_recent_research_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-19T17:57:52Z",
+    "artifact_cutoff_utc": "2026-09-19T18:19:04Z",
+    "seconds_this_run": 1272,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 2347,
+    "minimum_cumulative_seconds_since_last_owner_report": 3619,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": true,
+    "method": "Only directly measured active runtime is counted. Schedule gaps are excluded; no padding or idle time is counted."
+  },
+  "highest_information_question": "Is the current crypto rebound becoming durable spot/regulatory-product accumulation rather than a squeeze, and which causal clocks and financing structures prevent false attribution in wrapper, AI-capex and energy-policy research?",
+  "fresh_validated_observations": [
+    {
+      "topic": "Sep. 18 U.S. crypto ETP demand improved materially, but persistence remains unproven",
+      "label": "OBSERVED FACT / INFERENCE / WAIT",
+      "observed_facts": [
+        "Finalized Farside data show U.S. spot BTC ETFs received +$433.0M on Sep. 18, broadly distributed across IBIT +$108.4M, FBTC +$310.7M, BITB +$9.7M, ARKB +$1.9M and HODL +$2.3M, with no negative issuer print that session.",
+        "BTC ETF net flow over Sep. 14-18 was only about +$6.1M because Sep. 15-16 redemptions nearly offset the later inflows.",
+        "ETH ETFs received +$143.7M on Sep. 18 but remained approximately -$140.6M over Sep. 14-18.",
+        "SOL ETFs received +$47.6M on Sep. 18 and approximately +$60.7M over Sep. 14-18, but the Sep. 18 flow was concentrated entirely in BSOL.",
+        "At approximately 17:57-17:58Z BTC was $81,468.69 (+0.73%/24h, +5.54%/7d). Aggregate crypto open interest was about $432.81B (-2.02%/24h); perpetual funding about 0.0051652, down 30.94%/24h but still 217.54% above the 14-day comparison. BTC 24h liquidations were $59.43M, dominated by $52.75M shorts, while the latest one-hour window was zero.",
+        "Direct DefiLlama stablecoin data showed total stablecoin capitalization around $304.985B, roughly -0.09% over seven days and +1.18% over 30 days."
+      ],
+      "inference": "BTC holding near $81.5K while open interest/funding cool and the forced short-cover impulse fades is better continuation evidence than the original squeeze alone. Broad Sep. 18 BTC ETF demand is a real regulated-product confirmation, but one strong session and a roughly flat five-session net total do not establish a durable accumulation regime. Flat seven-day stablecoin supply also argues against describing the rebound as a broad new crypto-liquidity wave.",
+      "decision_support": "BTC remains WAIT / TACTICAL MOMENTUM CONFIRMATION CANDIDATE, not BUY. ETH remains WAIT. SOL remains WAIT because recent regulated demand is issuer-concentrated.",
+      "confirmations": [
+        "Several additional completed broad positive BTC ETF sessions",
+        "BTC holds above roughly $80K-$82K during liquid U.S. sessions",
+        "Venue-level OI/funding/basis remain controlled while price rises",
+        "Spot/exchange/on-chain absorption broadens beyond one product/session"
+      ],
+      "invalidation": "BTC falls through roughly $77K-$78K while ETF redemptions resume and leverage rebuilds without spot breadth."
+    },
+    {
+      "topic": "Wrapper/access catalysts require a multi-stage causal clock; launch day is not the causal timestamp",
+      "label": "PRIMARY-SOURCE METHOD LEARNING / MATCHED CONTROLS / REJECTED POST-HOC PATTERN",
+      "observed_facts": [
+        "Grayscale's Aug. 18 ZCSH registration amendment disclosed that the sponsor was in discussions with DCG International, an indirect wholly owned DCG subsidiary, to acquire shares through an Authorized Participant or designee in exchange for approximately 200,000 ZEC after effectiveness.",
+        "ZEC closed around $507.79 on Aug. 18, $563.54 on Aug. 19, $569.06 on Aug. 20 and $733.63 on Aug. 21, a roughly 44.5% increase from Aug. 18 to Aug. 21 before actual ETF trading began.",
+        "A Sep. 21 8-K announced anticipated NYSE Arca listing on or about Aug. 25, the SEC Notice of Effectiveness is dated Aug. 24 at 4:00 PM, and ZEC then fell about 7.4% on the Aug. 25 launch session after having already repriced sharply beforehand.",
+        "Matched control: on the first U.S. spot BTC ETF session, aggregate ETF flow was strongly positive while BTC itself finished slightly negative; access/flow therefore did not impose a deterministic positive same-day return.",
+        "Matched control: the first U.S. spot ETH ETF session had positive net flow and a modest positive underlying return, showing the control set is mixed rather than supporting a fixed launch-day sign rule."
+      ],
+      "inference": "Market-access events are expectation-sensitive processes: filing/anticipation -> amendment -> approval/effectiveness -> listing -> AP order -> underlying acquisition/hedging -> settlement -> finalized published flow. Price can capitalize expected access before the legal launch, and launch-day flow can coexist with either positive or negative underlying returns.",
+      "rejected_pattern": "Reject the post-hoc statement 'the ETF launch caused the ZEC rally' as too coarse. The repricing began materially before legal effectiveness and launch.",
+      "method_rule_candidate": "Freeze each wrapper/access stage separately and attribute price impact only to information that was public/available at that stage. Never use finalized launch-day flow as the sole causal timestamp or automatically equate it with contemporaneous exchange spot buying.",
+      "decision_support": "ZEC/ZCSH remains WAIT / AVOID CHASING."
+    },
+    {
+      "topic": "AI infrastructure financing is bifurcated by risk structure rather than uniformly easy or uniformly tight",
+      "label": "PRIMARY-SOURCE CAPITAL-STRUCTURE LEARNING / PROVISIONAL GENERALIZATION",
+      "observed_facts": [
+        "Loans tied to the approximately $18B Project Jupiter/Oracle-leased New Mexico data-center financing were quoted around 89-91 cents as resyndication stalled amid local permitting/water/air issues and concerns about Oracle leverage and credit quality.",
+        "Oracle reports very large AI demand/backlog but is also using customer prepayments and customer-supplied hardware; company disclosures say roughly $75B of such arrangements reduce capital Oracle itself must raise.",
+        "Oracle also disclosed about $260B of additional lease commitments, substantially for data centers, not yet on the balance sheet at its fiscal year-end, illustrating the scale and duration of infrastructure obligations.",
+        "CoreWeave's $8.5B DDTL 4.0 was non-recourse/ring-fenced, secured by HPC infrastructure and an associated customer contract, and was described by the company as meaningfully oversubscribed; by contrast, its unsecured debt has carried much higher coupons around 8.5%-9.625%.",
+        "Alphabet disclosed tens of billions of dollars of data-center credit-derivative/backstop exposure; Meta disclosed large residual-value-guarantee exposure on a campus structure; Nvidia disclosed large supply/capacity commitments and multi-year AI-cloud commitments designed partly to enable buildout.",
+        "IEA data show physical constraints remain material: more than 2,500 GW of projects and loads are waiting in grid queues, while data centers are expected to account for a large share of U.S. electricity-demand growth."
+      ],
+      "inference": "Capital is not simply leaving or flooding AI infrastructure. Financing clears according to who bears residual construction, permitting, customer, power and credit risk. Contract-backed, collateralized/non-recourse, prepaid/customer-supplied or guaranteed structures can attract capital even while exposed project debt trades at discounts.",
+      "causal_chain": "durable customer contract/prepayment/guarantee/vendor backstop -> lower or transferred lender expected loss -> stronger rating/spread/capital access -> build proceeds; versus concentrated customer + permitting/power delay + weaker parent credit + duration mismatch -> syndication stalls -> banks retain exposure -> debt discounts -> higher marginal cost of capital -> project/equity/refinancing pressure",
+      "risk_transfer_warning": "Guarantees and backstops do not eliminate risk; they transfer/circularize it to the guarantor, vendor, hyperscaler or equity. Research must identify the final residual-risk bearer.",
+      "decision_support": "AI infrastructure remains SELECTIVE HOLD / RESEARCH FOR BUY CANDIDATES, not a blanket long. Prefer durable contracted/prepaid cash flows, strong collateral/ring-fencing, strong balance sheets and bottleneck pricing power; WAIT/REDUCE/AVOID highly leveraged structures with unresolved syndication, permitting/power constraints, customer concentration or contract-vs-asset duration mismatch. No issuer-level BUY or SHORT clears the valuation/evidence bar yet."
+    },
+    {
+      "topic": "Energy-sanctions stringency is endogenous to physical scarcity and political energy-price constraints",
+      "label": "PRIMARY-SOURCE POLICY MECHANISM / HISTORICAL MATCHED CONTROL / WAIT",
+      "observed_facts": [
+        "The White House confirmed H.R. 5334 was signed Sep. 18, expanding sanctions/tariff authority related to Russia and Iran while preserving meaningful Presidential waiver/discretion mechanisms.",
+        "The statute creates staged implementation and country-qualification conditions rather than an instantaneous mechanical removal of Russian energy from world supply.",
+        "During the 2026 Hormuz/Iran supply shock, the U.S. repeatedly granted or extended temporary Russian-oil trading waivers to increase effective deliverable supply and contain energy prices; the waiver was later allowed to expire when Iranian supply/de-escalation improved and oil prices fell.",
+        "Current ESPO crude has traded at unusually high outright prices and large premiums as Chinese refiners substitute toward Russian barrels because Middle-East/Saudi supply is impaired."
+      ],
+      "inference": "Sanctions enforcement is partly a policy reaction function to physical scarcity and political energy costs. Statutory authority is not equivalent to realized barrel removal. In severe scarcity, enforcement can be waived/relaxed to increase effective supply; when supply conditions improve, sanctions can tighten again.",
+      "method_rule_candidate": "Model energy sanctions with a scenario tree for qualification, selected rate, enforcement, waiver, substitution and physical sourcing rather than mapping headline statutory maxima directly into lost barrels or price targets.",
+      "decision_support": "Crude remains WAIT / FAT-TAIL EVENT RISK. H.R. 5334 raises medium-term policy tail risk but does not justify a directional oil call before actual implementation, waiver state and physical buyer response are observed."
+    },
+    {
+      "topic": "BitMEX Sep. 23 closure is not a fresh major BTC/ETH derivatives liquidation deadline",
+      "label": "PRIMARY-SOURCE MARKET-STRUCTURE NEGATIVE FINDING",
+      "observed_facts": [
+        "BitMEX's official Sep. 3 wind-down notice set all remaining major XBT/ETH perpetual and futures contracts to reduce-only before delisting and early settlement on Sep. 16 at 12:00 UTC.",
+        "BitMEX's Sep. 15/16 update states those remaining XBTUSD, XBTUSDT, ETHUSD, ETHUSDT and XBT/ETH futures positions were closed out and the contracts delisted on Sep. 16.",
+        "The full exchange operational closure remains scheduled for Sep. 23 at 04:00 UTC, but the major derivatives settlement event has already happened.",
+        "Earlier in 2026 BitMEX had meaningful derivatives open-interest share, but activity and listings were wound down progressively before final closure."
+      ],
+      "inference": "Do not treat Sep. 23 as if a large stock of major BitMEX BTC/ETH perpetual positions will suddenly be force-liquidated. The relevant forced-flow window was progressively front-loaded into reduce-only/delisting settlements, especially Sep. 16. Sep. 23 is primarily an operational exchange-closure milestone unless fresh evidence shows material remaining instruments/balances with price-impact capacity.",
+      "decision_support": "No standalone BTC/ETH directional thesis from the Sep. 23 BitMEX closure."
+    }
+  ],
+  "daily_big_move_scan": {
+    "market_context": "Saturday: major cash equity, sovereign-bond, FX and benchmark commodity markets are closed. Live crypto is updated; Friday traditional-market cases remain the latest completed observations and no weekend benchmark moves are fabricated.",
+    "selected_or_retested": [
+      "BTC: about $81.5K, +5.5%/7d; price retention plus falling OI/funding and broad +$433M finalized Sep. 18 ETF demand improve the quality of the rebound, but five-session net ETF flow is approximately flat and stablecoin supply is flat over seven days.",
+      "ZEC: about $1,492, +31.1%/7d and +157.8%/30d; historical wrapper timeline shows the move began before effectiveness/launch, rejecting a simple launch-day causal story.",
+      "XMR/DASH: positive privacy controls but far weaker than ZEC, preserving both broad-theme and ZEC-specific-amplifier explanations.",
+      "AI infrastructure credit: Project Jupiter debt discounts versus oversubscribed ring-fenced CoreWeave financing provide a matched financing-structure contrast under the same broad AI-demand regime.",
+      "Energy policy: H.R. 5334 treated as staged policy optionality with endogenous enforcement, not completed physical-flow shock.",
+      "BitMEX: future-event list corrected; major XBT/ETH derivatives were already settled Sep. 16, so Sep. 23 should not be modeled as a new major-perp force-close shock."
+    ],
+    "negative_findings": [
+      "Do not promote BTC to BUY from one strong finalized ETF session; the Sep. 14-18 BTC ETF net is only about +$6M and stablecoin supply is not expanding materially.",
+      "Do not treat finalized ETF flow as a public pre-move signal or identical to same-day exchange spot buying.",
+      "Do not use wrapper launch day as the causal clock when filings, expected access, contribution plans and effectiveness are already public before launch.",
+      "Do not infer that AI infrastructure credit is uniformly easy or uniformly stressed; financing structure and residual-risk bearer determine clearing conditions.",
+      "Do not map statutory Russia-energy tariff maxima directly into lost barrels; enforcement/waivers and substitution are endogenous.",
+      "Do not infer an oil move from unverified weekend Saudi security headlines before physical impact and open-market pricing.",
+      "Do not treat Sep. 23 BitMEX exchange closure as a new major BTC/ETH derivatives liquidation event after official Sep. 16 settlement of the remaining major contracts.",
+      "Secondary ETF aggregators can lag finalized issuer-table updates; preserve source/version timestamps and prefer direct finalized tables."
+    ]
+  },
+  "candidate_learning_promotions": [
+    {
+      "proposed_id": "MI-L-20260919-012",
+      "status": "supported_method_rule_candidate",
+      "claim": "Market-access/wrapper catalysts are multi-stage and expectation-sensitive; price can reprice before effectiveness/listing, and positive launch-day net flow does not imply a deterministic positive launch-day underlying return."
+    },
+    {
+      "proposed_id": "MI-L-20260919-013",
+      "status": "supported_regime_specific_provisional",
+      "claim": "AI-infrastructure financing is structure-selective: contract collateral, non-recourse ring-fencing, prepayments and guarantees can attract capital while exposed project/parent risk trades stressed; research must identify the residual-risk bearer."
+    },
+    {
+      "proposed_id": "MI-L-20260919-014",
+      "status": "supported_regime_specific_provisional",
+      "claim": "Energy-sanctions enforcement is endogenous to physical scarcity and political energy costs; statutory authority is not equivalent to realized supply removal, and waivers can expand effective supply during acute shocks."
+    }
+  ],
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "status": "No new immutable directional forecast clears the evidence bar. Existing WAIT/research states are preserved and no prior forecast was rewritten."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle as the smallest safe state change. Do not churn dashboard_state, learning_ledger or big_move_lab in the same run: the broad regime is unchanged, while the material new results are causal/method learnings that should be promoted atomically when the Phase-2 persistent evidence/mechanism store can preserve provenance and contradiction state without rewriting append-only history. No code change and no signal-system state change were made.",
+  "next_research": [
+    "After the next U.S. trading session, capture versioned BTC/ETH/SOL direct ETF tables, secondary-market premium/volume and venue-level OI/funding/basis to test whether Sep. 18 becomes durable spot accumulation.",
+    "Build a timestamp-safe wrapper/access event dataset across BTC, ETH, ZEC and future launches: filing, amendment, approval/effectiveness, listing, AP order, acquisition/hedge, settlement, publication and price windows.",
+    "Complete the split-safe ZCSH shares/ZEC/NAV ledger before Sep. 30, separating legacy inventory, external cash creation, external in-kind creation, related-party transfer, redemptions, fees and corporate actions.",
+    "Build an AI-infrastructure financing matrix with recourse, collateral, customer concentration, contract-vs-asset duration, prepayments, guarantees/backstops, permitting/power state, secondary debt pricing and final residual-risk bearer.",
+    "Track H.R. 5334 qualification notices, selected tariff rates, waivers and actual India/China/refinery sourcing changes; measure ESPO/Urals/Brent/Dubai differentials, freight and inflation/rates responses only after timestamped implementation events.",
+    "Use BitMEX Sep. 16 settlement as the relevant derivatives wind-down timestamp; only escalate Sep. 23 if primary evidence shows a material remaining price-impact channel."
+  ],
+  "source_log": [
+    {"publisher":"Farside Investors","date":"2026-09-19 capture of finalized Sep. 18","topic":"U.S. BTC ETF issuer-level flows","url":"https://farside.co.uk/btc/"},
+    {"publisher":"Farside Investors","date":"2026-09-19 capture of finalized Sep. 18","topic":"U.S. ETH ETF issuer-level flows","url":"https://farside.co.uk/eth/"},
+    {"publisher":"Farside Investors","date":"2026-09-19 capture of finalized Sep. 18","topic":"U.S. SOL ETF issuer-level flows","url":"https://farside.co.uk/sol/"},
+    {"publisher":"DefiLlama","date":"2026-09-19","topic":"Stablecoin supply and changes","url":"https://defillama.com/stablecoins"},
+    {"publisher":"CoinMarketCap connected data","date":"2026-09-19T17:57-17:58Z","topic":"Crypto prices, dominance, aggregate OI/funding/liquidations","url":"https://coinmarketcap.com/"},
+    {"publisher":"SEC / Grayscale Zcash ETF","date":"2026-08-18","topic":"ZCSH registration amendment and contemplated DCG International contribution","url":"https://www.sec.gov/Archives/edgar/data/1720265/"},
+    {"publisher":"SEC","date":"2026-08-24","topic":"ZCSH Notice of Effectiveness","url":"https://www.sec.gov/"},
+    {"publisher":"Oracle","date":"FY2026 filings/current 2026 disclosures","topic":"RPO, customer prepayments, financing, lease commitments","url":"https://www.oracle.com/investor/"},
+    {"publisher":"CoreWeave","date":"2026 financing disclosures","topic":"Non-recourse DDTL and unsecured financing","url":"https://investors.coreweave.com/"},
+    {"publisher":"Alphabet","date":"Q2 2026 filing","topic":"Data-center credit derivatives/backstops and guarantees","url":"https://abc.xyz/investor/"},
+    {"publisher":"Meta","date":"2026 filing","topic":"Data-center residual-value guarantee structure","url":"https://investor.atmeta.com/"},
+    {"publisher":"NVIDIA","date":"2026 filing","topic":"Supply/capacity and AI-cloud commitments","url":"https://investor.nvidia.com/"},
+    {"publisher":"IEA","date":"2026","topic":"Grid queues, data-center electricity-demand growth and investment constraints","url":"https://www.iea.org/"},
+    {"publisher":"The White House","date":"2026-09-18","topic":"H.R. 5334 signed into law","url":"https://www.whitehouse.gov/"},
+    {"publisher":"GovInfo","date":"2026-09-18","topic":"Enrolled H.R. 5334 statutory text","url":"https://www.govinfo.gov/"},
+    {"publisher":"BitMEX","date":"2026-09-03 and 2026-09-15/16","topic":"Remaining derivatives reduce-only, delisting and settlement completed Sep. 16","url":"https://www.bitmex.com/blog/reduce-only-september"}
+  ],
+  "forbidden_state_touched": {
+    "signal_engine": false,
+    "signal_confidence": false,
+    "paper_trades": false,
+    "promotion_gates": false,
+    "broker_state": false,
+    "real_money_trades": false
+  },
+  "owner_report_gate": "MET. Minimum cumulative directly measured active execution since the last owner-facing report is 3,619 seconds, exceeding the 3,600-second gate, and this cycle contains materially important validated causal/method changes."
+}
