@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-19T16:11:19Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate or broker state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "context_integrity": {
+    "read_current_spec": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_research_cycle_inventory_and_latest_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-19T16:03:41Z",
+    "artifact_cutoff_utc": "2026-09-19T16:11:19Z",
+    "seconds_this_run": 458,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 1681,
+    "minimum_cumulative_seconds_since_last_owner_report": 2139,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly recorded active execution time after the last owner-facing report is counted. Schedule gaps are excluded; no padding or idle time is counted."
+  },
+  "highest_information_question": "Can wrapper-flow causality distinguish genuinely new outside capital and contemporaneous market demand from legacy inventory, related-party in-kind transfers, settlement timing and corporate actions; and does the newly enacted U.S. Russia-energy sanctions/tariff law create a real 30-day cross-asset catalyst or mainly policy optionality because tariff size and waivers remain discretionary?",
+  "fresh_validated_observations": [
+    {
+      "topic": "ZCSH Sep. 8 related-party in-kind transaction demonstrates why source-of-funds and transaction sequence must be explicit",
+      "label": "PRIMARY-SOURCE CAUSAL DECOMPOSITION / METHOD REFINEMENT / NO ASSET-PROMOTION",
+      "observed_facts": [
+        "Grayscale's Sep. 8 SEC 8-K states that DCG acquired ZCSH shares worth approximately $100M through an Authorized Participant or designee by exchanging exactly 85,705.32563297 ZEC. The contribution was in kind, not cash.",
+        "The accompanying issuer release identifies the investor as DCG International Investments Ltd., an indirect wholly owned subsidiary of Digital Currency Group; DCG is the indirect parent of the sponsor. This is therefore a related-party inventory transfer, not demonstrated new outside capital entering the ZEC ecosystem.",
+        "The issuer release says the fund had cumulative inflows above $70M during the first two weeks after uplisting in addition to the approximately $100M DCG transaction; the two categories should not be merged because their funding sources and likely market impact differ.",
+        "The issuer's Sep. 8 product snapshot showed 5,799,300 shares, 464,514.8551 ZEC and 0.08009844 ZEC/share. Adding the exact DCG contribution produces 550,220.18073297 ZEC, consistent with the sponsor's later same-day statement that the fund held more than 550,000 ZEC.",
+        "At the Sep. 8 ZEC/share ratio, 85,705.32563297 ZEC corresponds almost exactly to 1,070,000 shares, or 107 10,000-share baskets. That sequencing strongly suggests the date-only Sep. 8 issuer snapshot was an earlier state than the later transaction/all-in holding state.",
+        "The current prospectus allows cash and in-kind creations and specifies trade-date order cutoffs with settlement generally on T+1 or T+2. Therefore two records labeled only 'Sep. 8' can represent economically different states and cannot safely be merged without transaction/order/settlement timestamps.",
+        "The vehicle also existed before the Aug. 25 ETF uplisting with substantial legacy ZEC inventory. Consequently, post-uplisting AUM or total ZEC holdings cannot be interpreted as if the entire balance were newly purchased from the market after launch."
+      ],
+      "inference": "Wrapper inventory growth must be decomposed by source-of-funds and transfer mode. Related-party in-kind contributions can raise trust holdings and shares without contemporaneous outside cash entering the asset or an exchange spot purchase. Third-party in-kind creations may also reflect inventory acquired or hedged earlier. The economically relevant price-impact time is the sourcing/hedging window, not automatically the trust settlement or public flow date.",
+      "method_rule": "For each wrapper holding/share change classify at least: LEGACY_INVENTORY; EXTERNAL_CASH_CREATION; EXTERNAL_IN_KIND_CREATION; RELATED_PARTY_IN_KIND; REDEMPTION; SPONSOR_FEE/ACCRUAL; PRICE_NAV_CHANGE; CORPORATE_ACTION. Record order timestamp, trade date, settlement date, publication time and party relationship where available. Do not describe total wrapper holdings as 'coins bought' unless acquisition from outside existing inventory is independently demonstrated.",
+      "decision_support": "ZEC/ZCSH remains WAIT / AVOID CHASING. This finding improves causal accounting but does not establish the amount or timing of marginal ZEC spot demand."
+    },
+    {
+      "topic": "H.R. 5334 creates a 30-day Russia-energy trade-policy catalyst, but headline maximum tariffs are not deterministic realized tariffs",
+      "label": "PRIMARY-SOURCE POLICY FACT / FORWARD RISK STATE / NO WEEKEND PRICE CLAIM",
+      "observed_facts": [
+        "The White House confirmed that the President signed H.R. 5334, the Lindsey O. Graham Sanctioning Russia and Iran Act of 2026, on Sep. 18.",
+        "The enrolled law requires action no later than 30 days after enactment on Russian goods and on goods from certain major Russian-energy purchasing or sanctions-evasion countries, while authorizing duty rates up to statutory maxima rather than fixing one universal realized rate immediately.",
+        "The law's country test targets major buyers of new Russian crude/gas after the 30-day threshold and major facilitators of sanctions evasion, while the President/USTR retain modification authority and the President has a national-interest waiver mechanism with congressional reporting.",
+        "Contemporaneous Reuters reporting identifies India and China as highly exposed major Russian-oil buyers and shows Indian officials/refiners already seeking exemptions or quotas because substitution could raise fuel/refining costs and disrupt trade with the United States.",
+        "Russian ESPO crude was already above $120/bbl in Sep. 18 reporting, with Chinese refiners bidding aggressively amid Middle-East supply disruption. This means sanctions policy is interacting with an already stressed physical supply system rather than a normal oil market."
+      ],
+      "inference": "The law creates a real forward distribution shift but not a mechanical immediate '100% tariff' shock. Aggressive implementation could redirect India/China/Turkey and other exposed buyers away from Russian supply, increase substitution demand for non-Russian grades, freight and insurance, widen location/grade differentials and add inflation pressure. Conversely, waivers, low selected rates or delayed enforcement could substantially mute the effect because policymakers face the same global oil-price constraint that has caused flexibility in prior episodes.",
+      "matched_controls": [
+        "In August 2025, a U.S. tariff escalation tied to India's Russian-oil purchases did not cause an immediate INR collapse; the rupee was roughly flat as traders anticipated official support, showing that tariff headlines can be absorbed by expectations and intervention.",
+        "During the March 2026 Hormuz disruption, the United States granted India a temporary waiver to buy Russian oil to help stabilize global supply and prices. This is a direct control showing that national-interest/energy-price constraints can override maximal sanctions pressure."
+      ],
+      "causal_chain": "U.S. secondary-tariff threat -> exposed importer weighs U.S. export-market access versus discounted Russian energy -> possible reduction/re-routing of Russian purchases -> substitution demand for Middle-East/Atlantic/Americas crude and LNG + freight/insurance -> physical differentials/inflation expectations -> yields/central-bank path/FX/current-account effects -> cross-asset repricing; waiver or low tariff can interrupt the chain before physical flow changes.",
+      "capital_flow_watch": "Monitor Indian and Chinese refinery sourcing, Urals/ESPO/Dubai/Brent differentials, tanker freight/insurance, INR/CNH, India refining margins/equities, inflation breakevens and 10Y yields, plus White House/USTR implementation and waiver notices. The Sep. 24 U.S.-China summit can turn the statute into bargaining leverage rather than immediate physical-flow change.",
+      "decision_support": "Energy/rates tail risk increases at the policy-distribution level, but crude remains WAIT because benchmark markets are closed and implementation details/waivers are unresolved. No immutable directional forecast is frozen."
+    },
+    {
+      "topic": "Weekend BTC retention is increasingly independent of the initial squeeze, while leverage is cooling rather than expanding",
+      "label": "OBSERVED FACT / INFERENCE / WAIT",
+      "observed_facts": [
+        "At about 16:06Z BTC was approximately $81,526, +0.87%/24h and +5.39%/7d; ETH about $2,637, +1.88%/24h; SOL about $111.39, approximately flat over 24h but +9.23%/7d.",
+        "Connected derivatives data showed total crypto open interest about $449.21B, down 0.66%/24h and essentially flat over 7d; perpetual OI was about $447.83B, down 0.68%/24h.",
+        "Average perpetual funding was about 0.0059592, down 8.33%/24h but still roughly 162% above the 14-day comparison.",
+        "BTC 24h liquidations were about $49.5M, with $43.0M shorts and $6.5M longs; the latest 1h and 4h windows were zero and 24h forced liquidation was about 80% lower than the preceding 24h window."
+      ],
+      "inference": "BTC continuing to hold near $81.5K while the forced-short-cover impulse has largely disappeared and aggregate OI is cooling is higher-quality continuation evidence than the initial breakout. Positive funding versus the two-week baseline still warns against declaring a clean spot-led regime, and the U.S. ETF channel is closed on Saturday.",
+      "decision_support": "BTC remains WAIT / TACTICAL MOMENTUM CANDIDATE, not BUY. The next high-information test remains U.S.-session ETF/spot breadth with controlled venue-level leverage after markets reopen."
+    },
+    {
+      "topic": "Privacy rotation remains a valid control while ZEC keeps extreme excess return",
+      "label": "OBSERVED FACT / MATCHED CONTROL / NO THESIS CHANGE",
+      "observed_facts": [
+        "At about 16:06Z ZEC was approximately $1,512, +32.82%/7d and +165.18%/30d.",
+        "XMR was approximately $568.74, +7.52%/7d and +35.63%/30d; DASH about $59.23, +5.35%/7d and +82.22%/30d.",
+        "XMR was negative over the latest 24h while ZEC remained positive, so ZEC-specific excess return persists even as the broader privacy narrative remains visible over longer windows."
+      ],
+      "inference": "A broad privacy-theme rotation is still a legitimate matched control; ZEC-specific wrapper/free-float/reflexive mechanics remain plausible amplifiers, but the exact marginal spot-demand contribution is still UNKNOWN.",
+      "decision_support": "ZEC/ZCSH remains WAIT / AVOID CHASING."
+    }
+  ],
+  "daily_big_move_scan": {
+    "market_context": "Saturday: major cash equity, sovereign-bond and benchmark commodity markets are closed. No weekend moves are fabricated for those markets; live crypto is updated and Friday traditional-market cases remain the latest completed price observations.",
+    "selected_or_retested": [
+      "ZEC: still +32.8%/7d and +165.2%/30d; causal attribution improved by separating related-party in-kind inventory from outside capital and same-day transaction states.",
+      "BTC: about $81.5K with squeeze liquidations nearly gone and aggregate OI cooling; continuation quality improves but regulated U.S. spot demand cannot be tested until reopening.",
+      "SOL: +9.2%/7d relative strength persists, but no additional wrapper-flow promotion is made because cash/in-kind and single-issuer concentration remain confounders.",
+      "Russia-energy sanctions law: added as a forward causal-risk case rather than a completed price-move case because statutory implementation begins over the coming 30 days and traditional markets are closed."
+    ],
+    "negative_findings": [
+      "Do not equate ZCSH total ZEC holdings or AUM with post-uplisting spot buying; substantial legacy inventory existed and the Sep. 8 approximately $100M contribution was related-party in kind.",
+      "Do not merge same-calendar-date issuer holdings, transaction releases and settlement states without intraday/order/settlement timestamps.",
+      "Do not call the newly enacted Russia sanctions law an immediate realized 100% tariff; statutory maxima, country qualification, modification and national-interest waiver authority make implementation endogenous.",
+      "Do not infer a weekend Brent move from sanctions/Riyadh headlines before physical impact and open-market pricing are observed.",
+      "Do not upgrade BTC to BUY solely because it holds above the squeeze zone while the U.S. ETF channel is closed and funding remains above its recent baseline."
+    ]
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "status": "No new immutable directional forecast clears the evidence bar. Existing WAIT/HOLD-research states are preserved and no prior forecast is rewritten."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. Do not churn dashboard_state, learning_ledger or big_move_lab. The ZCSH source-of-funds decomposition materially deepens MI-L-20260919-011 but is consistent with its existing cash/in-kind/AP-timing rule; the Russia-energy law is materially important but still a forward policy-risk distribution whose market transmission depends on implementation, waivers and physical substitution. Revisit canonical promotion when new independent evidence changes a current thesis or implementation produces observable market/flow effects. No code change and no signal-system state change were made.",
+  "next_research": [
+    "Reconstruct a split-safe, timestamped ZCSH holding/share ledger that separates legacy inventory, external cash creations, external in-kind creations, related-party in-kind transfers, redemptions, fees, price/NAV changes and corporate actions; preserve order/trade/settlement/publication timestamps.",
+    "Locate issuer/AP evidence for the Sep. 8 post-settlement share count and determine whether subsequent third-party creation growth was cash or in kind before attributing marginal spot demand.",
+    "Track H.R. 5334 implementation over the next 30 days, including country qualification, chosen tariff rates, 10-day congressional notices, waiver use and any buyer-side sourcing changes; compare physical oil differentials and freight before/after each timestamped policy step.",
+    "On the next U.S. session, capture versioned BTC/ETH/SOL ETF tables plus secondary-market premium/volume and venue-level OI/funding/basis to test whether Friday's rebound develops into durable spot accumulation.",
+    "When crude markets reopen, reassess Saudi/Russian effective deliverable supply using route volumes, Urals/ESPO/Dubai/Brent differentials, curves, freight/insurance, inventories and confirmed infrastructure status rather than headline capacity alone."
+  ],
+  "source_log": [
+    {"publisher":"SEC / Grayscale Zcash ETF","date":"2026-09-08","topic":"DCG related-party in-kind contribution of 85,705.32563297 ZEC","url":"https://www.sec.gov/Archives/edgar/data/1720265/000119312526385317/zcsh-20260908.htm"},
+    {"publisher":"SEC / Grayscale Zcash ETF","date":"2026-09-08","topic":"Issuer release: related-party identity, >$70M additional inflows, >550k ZEC after transaction","url":"https://www.sec.gov/Archives/edgar/data/1720265/000119312526385317/zcsh-ex99_1.htm"},
+    {"publisher":"Grayscale / The Zcash ETF","date":"2026-09-08","topic":"Point-in-time product snapshot: AUM, shares, ZEC held and ZEC/share","url":"https://etfs.grayscale.com/zcsh"},
+    {"publisher":"SEC / Grayscale Zcash ETF prospectus","date":"2026-08","topic":"Cash/in-kind creation mechanics, basket size, trade and settlement timing","url":"https://www.sec.gov/Archives/edgar/data/1720265/000119312526363603/zcsh__424b3.htm"},
+    {"publisher":"The White House","date":"2026-09-18","topic":"H.R. 5334 signed into law","url":"https://www.whitehouse.gov/briefings-statements/2026/09/congressional-bill-h-r-5334-signed-into-law/"},
+    {"publisher":"GovInfo","date":"2026-09-18 enrolled law","topic":"H.R. 5334 tariff-country tests, timing, modification and waiver provisions","url":"https://www.govinfo.gov/content/pkg/BILLS-119hr5334enr/html/BILLS-119hr5334enr.htm"},
+    {"publisher":"Reuters","date":"2026-09-18","topic":"Russia sanctions law and India policy/energy dilemma","url":"https://www.reuters.com/business/energy/new-us-sanctions-bill-russia-puts-indias-modi-bind-2026-09-18/"},
+    {"publisher":"Reuters","date":"2026-09-18","topic":"ESPO above $120 amid Chinese demand and Middle-East supply stress","url":"https://www.reuters.com/business/energy/russian-espo-oil-price-exceeds-120-per-barrel-traders-say-data-shows-2026-09-18/"},
+    {"publisher":"CoinMarketCap connected data","date":"2026-09-19T16:06Z","topic":"Live BTC/ETH/SOL/XRP/LINK/ZEC/XMR/DASH quotes and aggregate derivatives metrics","url":"https://coinmarketcap.com/"}
+  ],
+  "owner_report_gate": "NOT MET. Minimum cumulative directly recorded execution since the last owner-facing report is 2,139 seconds, below the required 3,600 seconds. Persist research quietly."
+}
