@@ -5,6 +5,7 @@ import db
 import pytest
 
 from profitability_learning.contracts import fingerprint
+from profitability_learning.memory import Memory
 from profitability_learning.runtime import (
     apply_queue_feedback,
     complete_experiment,
@@ -13,6 +14,7 @@ from profitability_learning.runtime import (
 from profitability_learning.supabase_memory import SupabaseMemory
 from research_experiment_factory_runner import build_heavy_dispatch_plan
 from test_profitability_learning import experiment
+from test_profitability_learning_memory import later
 
 
 class Response:
@@ -28,6 +30,9 @@ class FakeSupabase:
     def __init__(self):
         self.rows = []
         self.available = True
+        self.before_append = None
+        self.append_attempts = 0
+        self.force_stale = False
 
     def get(self, url, **_kwargs):
         if not self.available:
@@ -37,18 +42,37 @@ class FakeSupabase:
     def post(self, url, *, json, **_kwargs):
         if not self.available:
             return Response(503, {"message": "unavailable"})
+        self.append_attempts += 1
         old = next((row for row in self.rows if row["event_id"] == json["p_event_id"]), None)
         if old is not None:
             if old["event_kind"] != json["p_event_kind"] or old["digest"] != json["p_digest"]:
                 return Response(409, {"message": "immutable conflict"})
-            return Response(payload=False)
+            return Response(payload="EXISTS")
+        if self.before_append is not None:
+            callback, self.before_append = self.before_append, None
+            callback(self)
+        actual_sequence = self.rows[-1]["sequence"] if self.rows else 0
+        if self.force_stale:
+            return Response(payload="STALE")
+        if (json["p_expected_count"], json["p_expected_sequence"]) != (len(self.rows), actual_sequence):
+            return Response(payload="STALE")
         self.rows.append({
+            "sequence": actual_sequence + 1,
             "event_id": json["p_event_id"],
             "event_kind": json["p_event_kind"],
             "digest": json["p_digest"],
             "payload": deepcopy(json["p_payload"]),
         })
-        return Response(payload=True)
+        return Response(payload="APPENDED")
+
+    def inject_experiment(self, payload):
+        self.rows.append({
+            "sequence": self.rows[-1]["sequence"] + 1 if self.rows else 1,
+            "event_id": payload["experiment_id"],
+            "event_kind": "experiment",
+            "digest": fingerprint(payload),
+            "payload": deepcopy(payload),
+        })
 
 
 @pytest.fixture
@@ -96,6 +120,35 @@ def test_durable_rejection_blocks_exact_fingerprint_dispatch(supabase):
     assert build_heavy_dispatch_plan(queue)["selected"] == []
 
 
+def test_stale_completion_is_reclassified_against_concurrent_evidence(supabase, tmp_path):
+    frozen = experiment([-10, -10, -10])
+    frozen["contract"]["mechanism_falsifier"] = {
+        "metric": "after_cost_expectancy_money",
+        "maximum": 0,
+        "minimum_independent_replications": 2,
+    }
+    complete_experiment(frozen)
+
+    # Prepare the immutable result another worker commits after this worker's
+    # read but before its append. The retry must classify against that evidence.
+    local = Memory(tmp_path / "concurrent.sqlite")
+    local.complete(frozen)
+    concurrent = local.complete(later(frozen, 60))
+    supabase.before_append = lambda fake: fake.inject_experiment(concurrent)
+
+    result = complete_experiment(later(frozen, 30))
+    assert result["outcome"] == "MECHANISM_DEAD"
+    assert supabase.append_attempts == 3  # initial seed, stale append, successful retry
+
+
+def test_repeated_stale_writes_fail_closed_after_bounded_retries(supabase):
+    supabase.force_stale = True
+    with pytest.raises(ValueError, match="changed during completion"):
+        complete_experiment(experiment())
+    assert supabase.append_attempts == 3
+    assert supabase.rows == []
+
+
 def test_outage_and_corrupt_event_fail_closed(supabase):
     supabase.available = False
     assert factory_feedback()["status"] == "WAIT_MEMORY_UNAVAILABLE"
@@ -119,7 +172,8 @@ def test_transport_exception_fails_closed(supabase):
 
 
 def test_migration_is_private_append_only_and_bounded():
-    sql = (Path(__file__).parents[1] / "supabase/migrations/20260919115951_profitability_learning_events.sql").read_text()
+    migrations = Path(__file__).parents[1] / "supabase/migrations"
+    sql = "\n".join(path.read_text() for path in sorted(migrations.glob("*profitability_learning*.sql")))
     required = [
         "enable row level security",
         "revoke all on table public.profitability_learning_events from public, anon, authenticated",
@@ -128,5 +182,10 @@ def test_migration_is_private_append_only_and_bounded():
         "pg_advisory_xact_lock",
         "immutable profitability-learning event conflict",
         "profitability-learning memory full",
+        "append_profitability_learning_event_v2",
+        "p_expected_count",
+        "p_expected_sequence",
+        "profitability_learning_events:append:v2",
+        "return 'STALE'",
     ]
     assert all(fragment in sql for fragment in required)

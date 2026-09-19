@@ -138,7 +138,10 @@ python -m profitability_learning --db /approved/persistent/research.sqlite expor
 Set `PROFITABILITY_LEARNING_DB` to that initialized persistent path to explicitly
 use SQLite. When it is unset, a deployment with the already-approved Supabase
 service-role channel uses the private `profitability_learning_events` append-only
-table and atomic append RPC. The table has RLS enabled, grants no anonymous or
+table and version-checked atomic append RPC. Concurrent writers re-read and
+reclassify against the newest evidence before committing, preserving the same
+cumulative scientific semantics as the transactional SQLite backend. The table
+has RLS enabled, grants no anonymous or
 authenticated-user access, and neither the table nor RPC has trading authority.
 If neither backend is configured, runtime says WAIT_MEMORY_NOT_CONFIGURED. A
 configured missing/corrupt/unreachable store blocks completion; factory/coordinator
