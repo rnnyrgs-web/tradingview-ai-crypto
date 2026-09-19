@@ -22,6 +22,11 @@ def _observation(
     observed_at: str = "2026-09-01T00:00:00Z",
     available_at: str = "2026-09-01T01:00:00Z",
     retrieved_at: str = "2026-09-01T02:00:00Z",
+    subject_id: str = "BTC-USD",
+    currency: str = "USD",
+    measurement_window_hours: int = 24,
+    venue: str = "coinbase",
+    max_age_hours: int = 72,
 ) -> PointInTimeObservation:
     return PointInTimeObservation(
         observation_id=observation_id,
@@ -34,6 +39,11 @@ def _observation(
         source_id="test-source",
         revision_id="r1",
         provenance_uri="source://fixture",
+        subject_id=subject_id,
+        currency=currency,
+        measurement_window_hours=measurement_window_hours,
+        venue=venue,
+        max_age_hours=max_age_hours,
     )
 
 
@@ -50,6 +60,7 @@ def _hypothesis(source_ids=("flow",)) -> FrozenHypothesis:
         created_at="2026-09-02T00:00:00Z",
         source_observation_ids=tuple(source_ids),
         family_id="FLOW-SCARCITY-001",
+        evaluation_method="matched_control_mean_difference_v1",
         family_size=2,
         alpha=0.05,
     )
@@ -62,8 +73,10 @@ def _support(event_id="support-1", evaluated_at="2026-09-03T00:00:00Z") -> Evide
         evaluated_at=evaluated_at,
         kind="support",
         matched_controls=("market_beta", "volatility_regime"),
-        source_observation_ids=("flow",),
-        weight=1.0,
+        outcome_observation_ids=("outcome",),
+        control_observation_ids=("control",),
+        evaluation_method="matched_control_mean_difference_v1",
+        sample_size=40,
         confirmatory=True,
         p_value=0.01,
     )
@@ -73,7 +86,144 @@ def _memory_with_hypothesis(*, half_life_days=30.0) -> CausalRepricingMemory:
     memory = CausalRepricingMemory(half_life_days=half_life_days)
     memory.register_observation(_observation("flow"))
     memory.register_hypothesis(_hypothesis())
+    memory.register_observation(
+        _observation(
+            "outcome",
+            "forward_return_72h",
+            0.08,
+            observed_at="2026-09-02T01:00:00Z",
+            available_at="2026-09-02T04:00:00Z",
+            retrieved_at="2026-09-02T05:00:00Z",
+            currency="ratio",
+            measurement_window_hours=72,
+        )
+    )
+    memory.register_observation(
+        _observation(
+            "control",
+            "matched_control_return_72h",
+            0.01,
+            observed_at="2026-09-02T01:00:00Z",
+            available_at="2026-09-02T04:00:00Z",
+            retrieved_at="2026-09-02T05:00:00Z",
+            currency="ratio",
+            measurement_window_hours=72,
+        )
+    )
+    memory.register_observation(
+        _observation(
+            "adverse-outcome",
+            "forward_return_72h",
+            -0.08,
+            observed_at="2026-09-02T01:00:00Z",
+            available_at="2026-09-02T04:00:00Z",
+            retrieved_at="2026-09-02T05:00:00Z",
+            currency="ratio",
+            measurement_window_hours=72,
+        )
+    )
     return memory
+
+
+def test_system_retrieval_time_blocks_late_backfill_from_earlier_decisions():
+    memory = CausalRepricingMemory()
+    memory.register_observation(
+        _observation(
+            "late",
+            available_at="2026-09-01T01:00:00Z",
+            retrieved_at="2026-09-05T00:00:00Z",
+        )
+    )
+    assert memory.latest_metric("flow_24h", as_of="2026-09-02T00:00:00Z") is None
+
+    with pytest.raises(CausalMemoryError, match="retrieved"):
+        memory.register_claim(
+            EpistemicClaim(
+                claim_id="late-claim",
+                level="fact",
+                text="This backfill was not in the system yet.",
+                created_at="2026-09-02T00:00:00Z",
+                source_observation_ids=("late",),
+            )
+        )
+
+
+def test_confirmatory_evidence_cannot_reuse_formation_or_pre_freeze_observations():
+    memory = _memory_with_hypothesis()
+    circular = EvidenceEvent(
+        event_id="circular",
+        hypothesis_id="H1",
+        evaluated_at="2026-09-03T00:00:00Z",
+        kind="support",
+        matched_controls=("market_beta", "volatility_regime"),
+        outcome_observation_ids=("flow",),
+        control_observation_ids=("control",),
+        evaluation_method="matched_control_mean_difference_v1",
+        sample_size=40,
+        p_value=0.01,
+    )
+    with pytest.raises(CausalMemoryError, match="formation"):
+        memory.record_evidence(circular)
+
+    memory.register_observation(
+        _observation(
+            "old-outcome",
+            "forward_return_72h",
+            0.08,
+            observed_at="2026-09-01T03:00:00Z",
+            available_at="2026-09-01T04:00:00Z",
+            retrieved_at="2026-09-01T05:00:00Z",
+            currency="ratio",
+            measurement_window_hours=72,
+        )
+    )
+    pre_freeze = EvidenceEvent(
+        **{
+            **_support("pre-freeze").__dict__,
+            "outcome_observation_ids": ("old-outcome",),
+        }
+    )
+    with pytest.raises(CausalMemoryError, match="after hypothesis freeze"):
+        memory.record_evidence(pre_freeze)
+
+
+def test_evidence_label_must_match_observed_direction_against_controls():
+    memory = _memory_with_hypothesis()
+    memory.register_observation(
+        _observation(
+            "losing-outcome",
+            "forward_return_72h",
+            -0.08,
+            observed_at="2026-09-02T01:00:00Z",
+            available_at="2026-09-02T04:00:00Z",
+            retrieved_at="2026-09-02T05:00:00Z",
+            currency="ratio",
+            measurement_window_hours=72,
+        )
+    )
+    mislabeled = EvidenceEvent(
+        **{
+            **_support("mislabeled").__dict__,
+            "outcome_observation_ids": ("losing-outcome",),
+        }
+    )
+    with pytest.raises(CausalMemoryError, match="observed effect direction"):
+        memory.record_evidence(mislabeled)
+
+
+def test_evidence_weight_is_bounded_and_derived_not_caller_controlled():
+    memory = _memory_with_hypothesis()
+    event = _support()
+    assert not hasattr(event, "weight")
+    memory.record_evidence(event)
+    snapshot = memory.confidence("H1", as_of=event.evaluated_at)
+    assert snapshot.decayed_net_evidence == pytest.approx(1.0)
+
+    duplicate_test = EvidenceEvent(
+        **{**event.__dict__, "event_id": "support-duplicate"}
+    )
+    with pytest.raises(CausalMemoryError, match="evaluation observations already consumed"):
+        memory.record_evidence(duplicate_test)
 
 
 def test_point_in_time_chronology_and_narrative_separation_fail_closed():
@@ -107,7 +257,10 @@ def test_point_in_time_chronology_and_narrative_separation_fail_closed():
         evaluated_at="2026-09-04T00:00:00Z",
         kind="contradiction",
         matched_controls=("market_beta", "volatility_regime"),
-        source_observation_ids=("future",),
+        outcome_observation_ids=("future",),
+        control_observation_ids=("control",),
+        evaluation_method="matched_control_mean_difference_v1",
+        sample_size=40,
     )
     with pytest.raises(CausalMemoryError, match="point-in-time available"):
         memory.record_evidence(future_event)
@@ -137,7 +290,10 @@ def test_matched_controls_and_multiple_testing_are_predeclared_not_post_hoc():
         evaluated_at="2026-09-03T00:00:00Z",
         kind="support",
         matched_controls=("market_beta",),
-        source_observation_ids=("flow",),
+        outcome_observation_ids=("outcome",),
+        control_observation_ids=("control",),
+        evaluation_method="matched_control_mean_difference_v1",
+        sample_size=40,
         p_value=0.01,
     )
     with pytest.raises(CausalMemoryError, match="exactly match"):
@@ -149,7 +305,10 @@ def test_matched_controls_and_multiple_testing_are_predeclared_not_post_hoc():
         evaluated_at="2026-09-03T00:00:00Z",
         kind="support",
         matched_controls=("market_beta", "volatility_regime"),
-        source_observation_ids=("flow",),
+        outcome_observation_ids=("outcome",),
+        control_observation_ids=("control",),
+        evaluation_method="matched_control_mean_difference_v1",
+        sample_size=40,
         p_value=0.04,
     )
     with pytest.raises(CausalMemoryError, match="Bonferroni"):
@@ -161,7 +320,10 @@ def test_matched_controls_and_multiple_testing_are_predeclared_not_post_hoc():
         evaluated_at="2026-09-03T00:00:00Z",
         kind="support",
         matched_controls=("market_beta", "volatility_regime"),
-        source_observation_ids=("flow",),
+        outcome_observation_ids=("outcome",),
+        control_observation_ids=("control",),
+        evaluation_method="matched_control_mean_difference_v1",
+        sample_size=40,
         confirmatory=False,
         p_value=None,
     )
@@ -184,8 +346,10 @@ def test_confidence_can_gain_lose_and_decay_toward_neutral():
             evaluated_at="2026-09-04T00:00:00Z",
             kind="contradiction",
             matched_controls=("market_beta", "volatility_regime"),
-            source_observation_ids=("flow",),
-            weight=2.0,
+            outcome_observation_ids=("adverse-outcome",),
+            control_observation_ids=("control",),
+            evaluation_method="matched_control_mean_difference_v1",
+            sample_size=40,
         )
     )
     after_contradiction = memory.confidence("H1", as_of="2026-09-04T00:00:00Z")
@@ -216,6 +380,7 @@ def test_flow_relative_impact_requires_point_in_time_denominator():
         ratio_name="flow_float",
         numerator_metric="flow_24h",
         denominator_metric="float_usd",
+        subject_id="BTC-USD",
         as_of="2026-09-02T00:00:00Z",
     )
     assert missing.value is None
@@ -226,6 +391,7 @@ def test_flow_relative_impact_requires_point_in_time_denominator():
         ratio_name="flow_float",
         numerator_metric="flow_24h",
         denominator_metric="float_usd",
+        subject_id="BTC-USD",
         as_of="2026-09-02T00:00:00Z",
     )
     assert available.value == pytest.approx(0.2)
@@ -244,9 +410,55 @@ def test_flow_relative_impact_requires_point_in_time_denominator():
         ratio_name="flow_liquidity",
         numerator_metric="flow_24h",
         denominator_metric="liquidity_usd",
+        subject_id="BTC-USD",
         as_of="2026-09-04T00:00:00Z",
     )
     assert unavailable.value is None
+
+
+@pytest.mark.parametrize(
+    ("override", "reason"),
+    [
+        ({"subject_id": "ETH-USD"}, "subject_mismatch"),
+        ({"currency": "EUR"}, "currency_or_unit_mismatch"),
+        ({"measurement_window_hours": 1}, "measurement_window_mismatch"),
+        ({"venue": "kraken"}, "venue_mismatch"),
+    ],
+)
+def test_relative_impact_rejects_incomparable_inputs(override, reason):
+    memory = CausalRepricingMemory()
+    memory.register_observation(_observation("flow", "flow_24h", 20.0))
+    memory.register_observation(
+        _observation("float", "float_usd", 100.0, **override)
+    )
+    ratio = memory.relative_impact(
+        ratio_name="flow_float",
+        numerator_metric="flow_24h",
+        denominator_metric="float_usd",
+        subject_id="BTC-USD",
+        as_of="2026-09-02T00:00:00Z",
+    )
+    assert ratio.value is None
+    assert ratio.reason == reason
+
+
+def test_relative_impact_rejects_stale_inputs():
+    memory = CausalRepricingMemory()
+    memory.register_observation(
+        _observation("flow", "flow_24h", 20.0, max_age_hours=1)
+    )
+    memory.register_observation(
+        _observation("float", "float_usd", 100.0, max_age_hours=1)
+    )
+    ratio = memory.relative_impact(
+        ratio_name="flow_float",
+        numerator_metric="flow_24h",
+        denominator_metric="float_usd",
+        subject_id="BTC-USD",
+        as_of="2026-09-02T00:00:00Z",
+    )
+    assert ratio.value is None
+    assert ratio.reason == "stale_input"
 
 
 def test_supported_finding_can_feed_research_lanes_but_has_zero_authority():
@@ -260,6 +472,23 @@ def test_supported_finding_can_feed_research_lanes_but_has_zero_authority():
     assert artifact["trading_authority"] is False
     assert artifact["promotion_authority"] is False
     assert artifact["oos_opening_authority"] is False
+    assert artifact["frozen_test_contract"] == {
+        "falsifier": "matched-control excess return <= 0 after costs",
+        "matched_controls": ["market_beta", "volatility_regime"],
+        "family_id": "FLOW-SCARCITY-001",
+        "family_size": 2,
+        "alpha": 0.05,
+        "evaluation_method": "matched_control_mean_difference_v1",
+        "direction": "positive",
+        "horizon_hours": 72,
+    }
+    assert artifact["evidence_events"][0]["event_id"] == "support-1"
+    assert artifact["evidence_events"][0]["event_fingerprint"]
+    assert artifact["evidence_events"][0]["outcome_observation_ids"] == ["outcome"]
+    assert artifact["evidence_events"][0]["control_observation_ids"] == ["control"]
+    assert artifact["evidence_events"][0]["outcome_provenance_fingerprints"]
+    assert artifact["evidence_events"][0]["control_provenance_fingerprints"]
+    assert artifact["evidence_events"][0]["adjusted_p_value"] == pytest.approx(0.02)
 
     memory.record_evidence(
         EvidenceEvent(
@@ -268,8 +497,10 @@ def test_supported_finding_can_feed_research_lanes_but_has_zero_authority():
             evaluated_at="2026-09-04T00:00:00Z",
             kind="contradiction",
             matched_controls=("market_beta", "volatility_regime"),
-            source_observation_ids=("flow",),
-            weight=0.25,
+            outcome_observation_ids=("adverse-outcome",),
+            control_observation_ids=("control",),
+            evaluation_method="matched_control_mean_difference_v1",
+            sample_size=40,
         )
     )
     assert (
