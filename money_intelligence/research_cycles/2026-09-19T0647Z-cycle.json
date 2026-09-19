@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-19T06:47:40Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate or broker state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-19T06:42:37Z",
+    "artifact_cutoff_utc": "2026-09-19T06:47:40Z",
+    "seconds_this_run": 303,
+    "reporting_gate": "NOT MET. Only directly observed execution time is counted; schedule gaps and prior artifact timestamps are not assumed to be research duration."
+  },
+  "highest_information_question": "For large commodity and risk-asset moves, which apparent shocks persist because the market cannot substitute supply/funding, and which fade because inventories, logistics, spare capacity or forced-flow normalization absorb the shock?",
+  "fresh_validated_observations": [
+    {
+      "topic": "Oil-disruption persistence matched-control study materially strengthens the effective-deliverable-supply mechanism",
+      "label": "SUPPORTED / REGIME-SPECIFIC / CROSS-EPISODE DEEPENING",
+      "observed_controls": [
+        "2019 Abqaiq/Khurais: EIA records an immediate roughly 5.7 mb/d crude disruption, about 6% of global supply, and the largest one-day crude-price increase in a decade. Saudi Arabia quickly restored production capacity, met customers partly from inventories/reduced refinery intake, and EIA records prices back near pre-attack levels by end-September/early October.",
+        "2021 Suez blockage: roughly 5 mb/d of oil and products normally used the Suez/SUMED route around that period. The blockage generated a sharp but short-lived oil-price reaction because the physical issue was a transit delay with an available Cape reroute and the vessel was refloated within days; price attention then reverted to OPEC+/demand.",
+        "2011 Libya: IEA estimated 132 million barrels of light-sweet crude had been removed by end-May and expected Libyan supply to remain largely unavailable for the rest of 2011. Grade-specific scarcity and persistence were large enough that IEA members released 60 million barrels, 2 mb/d for 30 days, explicitly to bridge the gap until replacement production arrived.",
+        "2022 Russia invasion: IEA initially estimated up to 3 mb/d could be shut in while only Saudi Arabia/UAE had substantial immediately usable spare capacity and OECD industry inventories were 335.6 million barrels below the 2017-2021 average, the lowest since 2014. This was a much less substitutable starting state and produced a more persistent global energy-price shock; emergency stock releases were historically large.",
+        "2026 Yanbu/Hormuz regime: the current Saudi disruption is physically real, yet benchmark Brent eased as alternative Gulf loadings and ship-to-ship exports near Sohar restored effective deliverability. At the same time, accessible replacement grades such as ESPO carried extreme premiums and freight/insurance remained stressed, showing scarcity rent can migrate across grade/location/freight instead of disappearing."
+      ],
+      "inference": "Across qualitatively matched episodes, headline gross disrupted capacity is insufficient to forecast price persistence. The stronger causal state vector is expected outage duration plus effective substitution capacity: inventories/emergency stocks, spare production, alternative routes, grade/refinery compatibility, freight/insurance capacity, and demand elasticity. When these buffers are credible, benchmark spikes tend to decay faster; when several buffers are simultaneously constrained, scarcity is more persistent and can spread into product/grade premiums.",
+      "alternative_explanations": [
+        "Global demand regimes differ materially across 2005/2011/2019/2021/2022/2026.",
+        "Monetary policy, USD and financial positioning contaminate event-window price changes.",
+        "Emergency-stock announcements are endogenous responses to severe shocks, not independent treatments.",
+        "The present study is qualitative and not yet a timestamp-safe statistical event study."
+      ],
+      "falsification": "Weaken the mechanism if a larger matched sample shows gross disrupted capacity predicts 5d/20d benchmark and physical-premium persistence at least as well as substitution/inventory/duration variables after controlling for demand and macro regime.",
+      "decision_support": "Maintain WAIT on simple headline-driven Brent extrapolation. For future disruptions, prioritize effective deliverable supply and route/grade/product/freight controls before assigning a persistent inflation or commodity-price thesis."
+    },
+    {
+      "topic": "BTC continues to hold the breakout after the forced-buying impulse largely normalized",
+      "label": "OBSERVED FACT / INFERENCE",
+      "facts": [
+        "CoinMarketCap quoted BTC near $81,059 at 2026-09-19T06:43Z, +4.64% over 24 hours and +4.87% over seven days; ETH was about $2,627, +5.81% over 24 hours.",
+        "Global crypto derivatives open interest was about $452.2B, down 5.27% over 24 hours; perpetual open interest was about $450.86B, down 5.29%.",
+        "Average perpetual funding was about 0.0064488, positive and roughly 53% higher versus the prior seven-day comparison, while BTC 24-hour liquidations were about $266.67M, of which about $257.73M were shorts.",
+        "The latest one-hour BTC liquidation window was zero and four-hour liquidations were only about $1.07M, so the large short-covering impulse was no longer active at cutoff.",
+        "The prior finalized Sep. 18 U.S. spot-BTC ETF flow was +$433.0M, making Sep. 17-18 +$592.5M, while Sep. 15-18 remained about -$153.8M after the preceding redemption cluster."
+      ],
+      "inference": "Price retention with materially lower open interest and dormant near-term liquidations further weakens a pure-short-squeeze explanation. Regulated spot creations are a validated contributor, but the multi-session flow history remains too short and the four-session balance still slightly negative, so a durable institutional-accumulation regime is not established.",
+      "matched_non_move": "BTC holding near $81K while the immediate liquidation impulse faded is a useful post-forced-flow control. The next completed ETF sessions after the weekend are the higher-information test.",
+      "decision_support": "BTC remains WAIT / TACTICAL MOMENTUM CANDIDATE, not an immutable BUY. Upgrade only with additional completed positive ETF breadth, controlled leverage and spot/exchange absorption; downgrade on renewed ETF redemptions or failure of the breakout after forced flow is inactive."
+    },
+    {
+      "topic": "Daily equity big-move scan adds a clean positive fundamental-surprise control and a market-structure/valuation rumor candidate",
+      "label": "BIG-MOVE LAB CANDIDATES",
+      "cases": [
+        {
+          "asset": "LPP SA",
+          "move": "about +8% on Sep. 18 while STOXX 600 fell about 1.1%",
+          "observed_fact": "LPP's primary release reported Q2 revenue +18% YoY in constant currencies to PLN6.6B, e-commerce +16.4%, gross margin +3.7 pp to 57.7%, EBITDA +42%, EBIT +57% and net profit +48% to PLN768M; the company raised 2026 gross-margin, EBITDA-margin and net-profit-margin targets. Market reporting put net profit above consensus.",
+          "inference": "The residual move versus a weak European tape is consistent with a genuine upward revision in expected earnings power driven by broad-based demand plus margin improvement, not merely factor beta. This is a useful positive matched control against Volkswagen's same-day negative estimate-reset gap.",
+          "pre_move_predictor_status": "The release itself is a catalyst, not a pre-move predictor. Earlier Q1 profitability improvement and expansion were public but did not mechanically imply the magnitude of the Q2 beat; no pre-release edge is claimed."
+        },
+        {
+          "asset": "Airtel Africa",
+          "move": "about -11.3% on Sep. 18 versus FTSE 100 about -1.45%",
+          "observed_fact": "Market reporting attributed the move to reports that Airtel Money could target at least about $800M of IPO proceeds and an $8B-$9B valuation, lower than previously discussed targets. Trading volume was reported far above its recent average.",
+          "inference": "If confirmed, the price gap is consistent with a lower implied monetization/value realization for the fintech subsidiary and weaker external price discovery than investors had embedded. Because the key deal terms were attributed to unnamed sources and remain changeable, this is not promoted to a canonical causal case yet.",
+          "unknown": "No company-confirmed revised IPO terms were validated in this window."
+        }
+      ]
+    }
+  ],
+  "daily_big_move_scan": {
+    "selected_or_retested": [
+      "BTC Sep. 18-19 breakout retention after liquidations normalized: constructive but still conditional on durable spot/ETF demand.",
+      "LPP Sep. 18 +~8% versus STOXX 600 -~1.1%: clean positive earnings/margin-revision control, with no pre-release predictive edge claimed.",
+      "Volkswagen Sep. 18 -5.6% remains a mature negative fundamental-estimate-reset candidate from prior cycles.",
+      "Airtel Africa Sep. 18 -11.3%: potentially high-information subsidiary-valuation/IPO price-discovery event, but rumor-sourced terms keep it provisional.",
+      "Brent 2026 reversal retested against Abqaiq 2019, Libya 2011, Suez 2021 and Russia 2022 controls; effective substitution/duration/inventory variables remain the stronger persistence hypothesis."
+    ],
+    "negative_findings": [
+      "A large gross oil-supply or transit disruption is not by itself a reliable persistence predictor.",
+      "A strong earnings-day gap does not imply a pre-event forecasting edge when the material information arrived in the release itself.",
+      "Rumor-driven IPO valuation reports must not be promoted to fact or immutable causal learning without issuer/filing confirmation."
+    ]
+  },
+  "prediction_ledger": "No new immutable forecast frozen. Canonical scorecard remains frozen=0 and resolved=0; no prior prediction was rewritten.",
+  "canonical_update_decision": "Persist this research cycle only. The historical oil matched controls materially strengthen the existing effective-deliverable-supply hypothesis, but a larger timestamp-safe quantitative event study is still needed before upgrading it beyond supported/regime-specific. LPP and Airtel Africa are retained as daily Big-Move candidates rather than forcing noisy canonical edits.",
+  "next_priority": [
+    "Build a timestamp-safe commodity-disruption event table with pre-event inventories/spare capacity/route substitutes, expected outage duration and 1d/5d/20d benchmark plus physical-differential outcomes; test whether effective substitution variables add explanatory/predictive value over gross disrupted capacity.",
+    "After the next completed U.S. spot-BTC/ETH ETF session, test whether the Sep. 17-18 reversal becomes persistent breadth or reverts; keep leverage/funding and exchange/on-chain controls separate from ETF flow.",
+    "Promote Volkswagen into the canonical Big-Move Lab only in a clean atomic canonical edit; pair it with LPP as a same-day positive/negative fundamental-surprise control if source/timestamp details remain defensible.",
+    "Continue AI-infrastructure financing dispersion work with explicit controls for collateral, convert optionality, sponsor credit, contracted/prepaid revenue, customer concentration, power/permitting and syndication liquidity.",
+    "Seek issuer/filing confirmation of Airtel Money IPO valuation/size before treating the Airtel Africa move as a canonical case."
+  ],
+  "sources": [
+    "U.S. EIA Sep. 23 2019 Abqaiq analysis: https://www.eia.gov/TODAYINENERGY/detail.php?id=41413",
+    "U.S. EIA Oct. 2019 Short-Term Energy Outlook / Saudi restoration and inventory substitution: https://www.eia.gov/outlooks/steo/archives/oct19.pdf",
+    "IEA Jun. 22 2011 Libya collective action: https://www.iea.org/news/iea-makes-60-million-barrels-of-oil-available-to-market-to-offset-libyan-disruption",
+    "IEA Mar. 16 2022 Oil Market Report: https://www.iea.org/reports/oil-market-report-march-2022",
+    "IEA Apr. 2022 Oil Market Report / emergency stocks: https://www.iea.org/reports/oil-market-report-april-2022",
+    "U.S. EIA world oil transit chokepoints: https://www.eia.gov/international/analysis/special-topics/World_Oil_Transit_Chokepoints",
+    "U.S. EIA petroleum-product trade mechanics: https://www.eia.gov/finance/markets/products/trade.php",
+    "LPP primary Q2 2026 release, Sep. 17 2026: https://www.lpp.com/en/press-releases/a-marked-acceleration-in-lpps-revenue-growth-both-sales-channels-recorded-double-digit-growth-in-the-second-quarter-of-2026/",
+    "Reuters Sep. 18 2026 European market close / VW, Airtel Africa and LPP moves: https://www.reuters.com/markets/europe/european-shares-inch-lower-telecoms-energy-shares-dip-2026-09-18/",
+    "CoinMarketCap connected quote and global-derivatives feeds, accessed through 2026-09-19T06:43Z",
+    "Farside Sep. 18 finalized BTC/ETH flows as preserved in prior canonical research cycles"
+  ],
+  "reporting_gate": "No owner-facing report. The required 60 minutes of cumulative verifiable research/execution time has not been established; continue quietly."
+}
