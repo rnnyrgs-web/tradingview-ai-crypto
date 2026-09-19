@@ -28,3 +28,11 @@ def test_runtime_acceptance_runs_automatically_after_relevant_main_changes():
         "supabase/migrations/**",
     ):
         assert f"- {path}" in workflow
+
+
+def test_runtime_acceptance_failure_diagnostics_are_sanitized():
+    workflow = WORKFLOW.read_text(encoding="utf-8")
+
+    assert 'last_http_status=$status' in workflow
+    assert "response_not_json" in workflow
+    assert 'cat "$response"' not in workflow
