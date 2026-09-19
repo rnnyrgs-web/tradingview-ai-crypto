@@ -146,6 +146,27 @@ def _experiment_count(snapshot: dict[str, Any]) -> int:
     return len(memory.get("experiments", [])) if isinstance(memory, dict) else 0
 
 
+def _target_experiment_state(
+    snapshot: dict[str, Any], expected_input_digests: dict[str, str]
+) -> dict[str, dict[str, str]]:
+    memory = snapshot.get("memory")
+    if not isinstance(memory, dict):
+        raise ValueError("durable profitability memory is unavailable")
+    experiments = memory.get("experiments")
+    if not isinstance(experiments, list):
+        raise ValueError("durable profitability experiment memory is malformed")
+    state = {}
+    for experiment_id, input_digest in expected_input_digests.items():
+        rows = [row for row in experiments if row.get("experiment_id") == experiment_id]
+        if len(rows) != 1 or rows[0].get("input_digest") != input_digest:
+            raise ValueError("canonical acceptance target experiment multiplicity or identity changed")
+        state[experiment_id] = {
+            "input_digest": input_digest,
+            "row_digest": fingerprint(rows[0]),
+        }
+    return state
+
+
 def run_rejected_leadlag_acceptance(
     *, artifact_path: Path = ARTIFACT_PATH, require_deployed_sha: bool = True
 ) -> dict[str, Any]:
@@ -157,21 +178,25 @@ def run_rejected_leadlag_acceptance(
         raise ValueError("durable profitability memory is unavailable")
 
     first = persist_selection(selection)
-    after_first = learning_snapshot()
-    first_state_digest = fingerprint(after_first["memory"])
-    replay = persist_selection(selection)
-    after_replay = learning_snapshot()
-    replay_state_digest = fingerprint(after_replay["memory"])
-
     training = first["training"]
     validation = first["validation"]
     if training.get("persistence_status") != "PERSISTED" or validation.get("persistence_status") != "PERSISTED":
         raise ValueError("canonical acceptance completion did not persist")
+    expected_input_digests = {
+        training["experiment_id"]: training["input_digest"],
+        validation["experiment_id"]: validation["input_digest"],
+    }
+    after_first = learning_snapshot()
+    first_target_state = _target_experiment_state(after_first, expected_input_digests)
+
+    replay = persist_selection(selection)
+    after_replay = learning_snapshot()
+    replay_target_state = _target_experiment_state(after_replay, expected_input_digests)
     if replay["training"].get("input_digest") != training.get("input_digest"):
         raise ValueError("canonical acceptance training replay changed identity")
     if replay["validation"].get("input_digest") != validation.get("input_digest"):
         raise ValueError("canonical acceptance validation replay changed identity")
-    if first_state_digest != replay_state_digest:
+    if first_target_state != replay_target_state:
         raise ValueError("canonical acceptance replay was not idempotent")
 
     candidate = _admission_probe(selection)
@@ -194,7 +219,16 @@ def run_rejected_leadlag_acceptance(
         for observation in observations
         if observation.get("experiment_id") == training["experiment_id"]
     )
-    mission_ids = [mission["id"] for mission in factory.get("missions", [])]
+    matched_learning_missions = [
+        {
+            "id": mission["id"],
+            "mode": mission.get("mode"),
+            "source_experiment_id": mission.get("source_experiment_id"),
+        }
+        for mission in factory.get("missions", [])
+        if mission.get("mode") == "LEARN"
+        and mission.get("source_experiment_id") == training["experiment_id"]
+    ]
     if training.get("outcome") != "LEARN_AND_PIVOT" or validation.get("outcome") != "LEARN_AND_PIVOT":
         raise ValueError("canonical rejected completion classification changed")
     if (strategy_fingerprint not in memory.get("rejected_fingerprints", [])
@@ -204,8 +238,8 @@ def run_rejected_leadlag_acceptance(
         raise ValueError("durable rejected-fingerprint admission veto failed")
     if (factory.get("status") != "AVAILABLE"
             or component_observations < 1
-            or not mission_ids):
-        raise ValueError("durable component or mission learning was not consumed")
+            or not matched_learning_missions):
+        raise ValueError("durable component or exact training learning mission was not consumed")
 
     return {
         "ok": True,
@@ -228,9 +262,10 @@ def run_rejected_leadlag_acceptance(
             "before_experiment_count": _experiment_count(before),
             "after_first_experiment_count": _experiment_count(after_first),
             "after_replay_experiment_count": _experiment_count(after_replay),
-            "state_digest_after_first": first_state_digest,
-            "state_digest_after_replay": replay_state_digest,
-            "replay_idempotent": first_state_digest == replay_state_digest,
+            "target_state_digest_after_first": fingerprint(first_target_state),
+            "target_state_digest_after_replay": fingerprint(replay_target_state),
+            "target_experiment_count": len(first_target_state),
+            "replay_idempotent": first_target_state == replay_target_state,
         },
         "learning_consumption": {
             "strategy_fingerprint": strategy_fingerprint,
@@ -240,7 +275,8 @@ def run_rejected_leadlag_acceptance(
             "heavy_dispatch_selected_count": dispatch["selected_count"],
             "component_observation_count": component_observations,
             "interaction_observation_count": interaction_observations,
-            "mission_ids": mission_ids,
+            "mission_ids": [mission["id"] for mission in matched_learning_missions],
+            "matched_learning_missions": matched_learning_missions,
         },
         "evidence_boundaries": {
             "candidate_returns_already_inspected": True,

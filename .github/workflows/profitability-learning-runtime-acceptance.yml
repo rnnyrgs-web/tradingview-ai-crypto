@@ -32,6 +32,7 @@ jobs:
               --connect-timeout 10 --max-time 45 \
               "$ACCEPTANCE_URL" || true)"
             if [ "$status" = "200" ] && jq -e --arg sha "$GITHUB_SHA" '
+              .completion.training.experiment_id as $training_id |
               .ok == true and
               .deployed_sha == $sha and
               .fingerprint_id == "DISC-BTC-LEADLAG-001-v1" and
@@ -41,12 +42,15 @@ jobs:
               .completion.training.persistence_status == "PERSISTED" and
               .completion.validation.persistence_status == "PERSISTED" and
               .persistence.replay_idempotent == true and
+              .persistence.target_experiment_count == 2 and
               .learning_consumption.rejected_exact_fingerprint == true and
               .learning_consumption.queue_feedback_reason == "rejected_exact_fingerprint" and
               .learning_consumption.queue_feedback_changes_eligibility == true and
               .learning_consumption.heavy_dispatch_selected_count == 0 and
               (.learning_consumption.component_observation_count >= 1) and
-              (.learning_consumption.mission_ids | length >= 1) and
+              (.learning_consumption.matched_learning_missions | any(
+                .mode == "LEARN" and .source_experiment_id == $training_id
+              )) and
               .evidence_boundaries.untouched_oos_opened == false and
               .evidence_boundaries.genuine_forward_opened == false and
               .safety.trade_authority == false and

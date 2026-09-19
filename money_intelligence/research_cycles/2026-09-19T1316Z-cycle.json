@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-19T13:16:29Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate or broker state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "context_integrity": {
+    "read_current_spec": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-19T13:10:00Z",
+    "artifact_cutoff_utc": "2026-09-19T13:16:29Z",
+    "seconds_this_run": 389,
+    "minimum_cumulative_seconds_since_last_owner_report": 389,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly recorded active execution time after the last owner-facing report is counted. Schedule gaps are excluded; no padding or idle time is counted."
+  },
+  "highest_information_question": "Can expectation-relative policy-path surprise be made more forecastable with genuinely decision-time-public positioning or market-structure proxies, given that final-week COT crowding can be observed before an event but published only after the move?",
+  "fresh_validated_observations": [
+    {
+      "topic": "BOJ Sep. 18 yen selloff: final-week JPY crowding is a useful causal amplifier but not a valid public pre-move predictor",
+      "label": "OBSERVED FACT / CAUSAL DIAGNOSTIC / DATA-AVAILABILITY METHOD LEARNING",
+      "observed_facts": [
+        "The BOJ raised the policy rate 25 bp to 1.25% on Sep. 18 in a widely expected 7-2 decision; USD/JPY subsequently rose as high as about 158.05, roughly a 1.3% dollar gain, as the vote/guidance was interpreted as less hawkish than required for a rapid follow-on path.",
+        "CFTC Traders in Financial Futures data as of Tue Sep. 15 show Japanese-yen asset-manager positioning at 118,873 longs versus 65,028 shorts, net +53,845 JPY, and leveraged funds at 110,302 longs versus 87,132 shorts, net +23,170 JPY.",
+        "Versus Sep. 8, the Sep. 15 report implies an unusually large one-week swing toward JPY longs: asset-manager net positioning shifted about +54,415 contracts and leveraged-fund net positioning about +72,268 contracts.",
+        "The publicly available Sep. 8 state was materially different: asset managers were approximately flat net (-570 contracts) and leveraged funds were about -49,098 JPY net short.",
+        "CFTC states that COT reports generally reflect Tuesday positions but are normally released Friday at 3:30 p.m. ET. The Sep. 18 BOJ decision occurred during Friday Asia hours, before the normal release time for the Sep. 15 snapshot. Therefore the final-week crowding state was not a timestamp-defensible public input before the move."
+      ],
+      "inference": "A less-hawkish-than-expected future-path signal plausibly triggered an unwind of newly crowded JPY longs, amplifying the relative-rate repricing. However, the Sep. 15 CFTC snapshot can only be used as a post-event causal diagnostic, not scored as a public predictor of the BOJ move.",
+      "method_rule": "Every positioning series used for pre-move research must carry both observation/as-of timestamp and publication/availability timestamp. A data point dated before an event is not decision-time evidence if it was published afterward. COT Tuesday snapshots released Friday must not be credited as pre-move predictors for Friday-Asia events unless an earlier public release is proven.",
+      "matched_controls": [
+        "Jun. 15, 2026 BOJ: widely expected hike from 0.75% to 1.0%; yen was broadly steady rather than rallying sharply despite pre-event publicly available CFTC data showing large JPY shorts. This supports action-sign weakness but does not establish a positioning rule.",
+        "Dec. 19, 2025 BOJ: yen fell about 1% after a hike to 0.75% with cautious/vague guidance. Government-shutdown reporting delays meant the Dec. 16 COT snapshot was published after the event, making it another clear availability-time counterexample."
+      ],
+      "falsification": "Weaken the expectation-adjusted path-plus-positioning amplifier hypothesis if a timestamp-safe event sample shows headline action size/sign explaining FX reactions at least as well as path/guidance surprise and genuinely public pre-event positioning proxies.",
+      "decision_support": "No new JPY trade thesis. Existing WAIT on chasing USD/JPY is preserved because intervention risk is high and the predictive positioning variable is not yet validated in real time."
+    },
+    {
+      "topic": "Gold Sep. 18 rally should not be generalized as a broad managed-money short squeeze",
+      "label": "OBSERVED FACT / NEGATIVE FINDING / CAUSAL DECOMPOSITION",
+      "observed_facts": [
+        "Spot gold rose about 1.2% on Sep. 18 to roughly $4,390 while the dollar remained strong, giving the move high information value.",
+        "CFTC disaggregated gold futures/options data as of Sep. 15 show managed money with 145,837 longs and only 8,777 shorts, net directional long about +137,060 contracts; managed-money shorts were not broadly dominant.",
+        "Weekly global commodity-fund data showed about $1.17B of inflows concentrated in gold/precious metals, while energy funds had outflows."
+      ],
+      "inference": "Tactical short covering may have contributed at dealer/options or other cohort levels, but the broad explanation 'gold rallied because speculators were heavily short' is not supported by managed-money CFTC state. A better current decomposition is strategic/fund demand plus macro repricing, with tactical covering as a possible amplifier rather than the primary validated cause.",
+      "data_availability_warning": "The Sep. 15 CFTC snapshot is primarily a post-event diagnostic for the Sep. 18 move because normal Friday publication timing occurs after much of the trading session. It must not be credited as a public pre-move predictor without a proven earlier release.",
+      "decision_support": "No new immutable gold forecast is added. Preserve the prior structural research view while continuing to test source-of-flow and positioning cohorts."
+    },
+    {
+      "topic": "Mainland Chinese household capital can reach U.S. Treasuries, gold and U.S. mega-cap technology through legal MRF channels, but the channel is highly product-specific",
+      "label": "OBSERVED FACT / SOURCE-OF-FUNDS CANDIDATE / NOT YET CANONICAL",
+      "observed_facts": [
+        "Reuters reported Sep. 15 that Pictet Strategic Income Fund assets grew from about $1.6B to $5.1B in 2026, with roughly 60% of AUM from mainland Chinese retail investors through Mutual Recognition of Funds access.",
+        "Morningstar-tracked H1 2026 flows into that fund were reported at roughly HK$16.3B ($2.08B). The fund holds exposures including U.S. Treasuries, gold and U.S. mega-cap technology.",
+        "SFC annual reporting shows the broader Hong Kong MRF channel can reverse sign: Hong Kong MRF funds experienced net redemptions of RMB35.4B in the year to Mar. 31, 2026 after very large net subscriptions in the prior year."
+      ],
+      "inference": "A specific legal flow chain exists: mainland household deposits/savings -> MRF-distributed global fund -> foreign government bonds/gold/U.S. mega-cap equities. Falling domestic deposit yields and tighter enforcement against illegal offshore channels can change the relative attractiveness of this legal route. But one large product cannot be generalized to the entire MRF channel because aggregate flows have been volatile and sign-changing.",
+      "unknowns": [
+        "Exact SFC aggregate MRF net flows for Apr-Jun 2026 and Pictet's share of those flows.",
+        "How much of the fund's capital came directly from deposits versus other asset sales.",
+        "Whether the current allocation mix persists after FX hedging costs and relative yields change."
+      ],
+      "decision_support": "Research implication only; no China, gold, Treasury or U.S. equity forecast is frozen from this channel yet."
+    },
+    {
+      "topic": "AI electricity demand creates a structural nuclear-fuel/enrichment capital chain, but supportive policy is not sufficient for a near-term equity BUY",
+      "label": "PRIMARY-SOURCE STRUCTURAL FACT / MATCHED NON-MOVER / VALUATION CAUTION",
+      "observed_facts": [
+        "DOE awarded $2.7B in Jan. 2026 domestic uranium-enrichment contracts, including $900M each for Centrus/HALEU, General Matter/HALEU and Orano Federal/LEU.",
+        "DOE/NNSA selected Amentum in July for negotiations around a proposed 1 GW AI data center with roughly 2 GW of on-site power generation at Savannah River Site, with natural gas bridging toward nuclear generation.",
+        "U.S. law restricts Russian uranium imports and the current waiver window ends no later than Jan. 1, 2028, increasing policy pressure for domestic enrichment capacity.",
+        "Despite structurally supportive policy/fuel-security news, Centrus (LEU) closed around $145.23 on Sep. 18 versus about $185.53 on Sep. 8, roughly a 22% decline over that span."
+      ],
+      "inference": "The structural chain AI/data-center electricity demand + energy security + Russian supply restrictions -> nuclear capacity -> LEU/HALEU demand -> domestic enrichment bottleneck -> public/private capacity spending is credible. But the LEU equity non-move/decline is a useful control showing that valuation, expectations, project execution and prior positioning can dominate positive structural news over short horizons.",
+      "decision_support": "HOLD / RESEARCH FOR BUY CANDIDATES at theme level; no individual-equity BUY until valuation, backlog, capacity economics and expectation embedding are mapped."
+    },
+    {
+      "topic": "Accenture-Anthropic AI evaluation investment is a strategic-optionality catalyst, not a disclosed $1B Accenture revenue contract",
+      "label": "PRIMARY-SOURCE FACT / ACCOUNTING CAUTION / BIG-MOVE CANDIDATE",
+      "observed_facts": [
+        "Anthropic and Accenture announced Sep. 18 that each company expects to invest at least $1B over five years to build embedded AI evaluation capacity and related services.",
+        "Accenture shares rose about 7%-9% after hours following the announcement."
+      ],
+      "inference": "The price reaction plausibly reflects strategic optionality and expectations that AI evaluation/safety becomes a monetizable enterprise-services category. The disclosed bilateral investment commitment is not equivalent to $1B of contracted Accenture revenue and should not be modeled as such.",
+      "confirmations": ["Next-session price/volume follow-through", "Disclosed bookings/revenue attributable to the program", "Evidence that evaluation spending scales across customers"],
+      "invalidation": "If bookings/revenue fail to materialize or the after-hours move reverses without fundamental follow-through, treat the event largely as narrative repricing.",
+      "decision_support": "WAIT; preserve as a big-move case candidate rather than promoting an equity thesis."
+    },
+    {
+      "topic": "Weekend crypto: price is holding after forced-covering fades, but positive funding and rebuilt OI increase crowded-long vulnerability",
+      "label": "OBSERVED FACT / INFERENCE / WAIT",
+      "observed_facts": [
+        "At about 13:09-13:10Z, BTC was about $81,238 (+4.17%/24h), ETH $2,639 (+5.66%), SOL $111.62 (+5.74%), XRP $1.442 (+9.06%), LINK $12.51 (+6.08%), ZEC $1,529.60 (+4.66%), XMR $580.89 (+8.59%) and DASH $59.75 (+2.18%).",
+        "Total crypto derivatives open interest was about $451.83B, +4.61%/24h, while perpetual funding was about 0.0079902, +19.06%/24h and +96.81% versus the prior seven-day comparison.",
+        "BTC 24h liquidations were about $114.02M, with $105.51M shorts versus $8.51M longs, but the latest 4h and 1h windows were zero."
+      ],
+      "inference": "The immediate squeeze impulse has materially decayed while BTC remains near $81K, which is stronger than a pure forced-cover explanation. However, leverage and funding remain elevated/rebuilt, so the next high-information test is whether fresh spot/ETF absorption appears when U.S. markets reopen. If OI/funding rise further without spot breadth, crowded-long reversal risk increases.",
+      "data_quality_warning": "Aggregate derivatives endpoints have shown inconsistent adjacent-snapshot OI levels/percentage changes; preserve endpoint timestamps and avoid false precision until venue-level reconciliation.",
+      "decision_support": "BTC remains WAIT / TACTICAL MOMENTUM CANDIDATE, not a BUY. ZEC remains WAIT / AVOID CHASING; XMR/DASH continue to confirm a broader privacy rotation."
+    }
+  ],
+  "daily_big_move_scan": {
+    "market_context": "Saturday: major cash equity, sovereign-bond and commodity benchmark markets are closed. Traditional-market Friday moves are studied from completed sessions; live crypto is updated without fabricating weekend traditional prices.",
+    "selected_or_retested": [
+      "USD/JPY Sep. 18: +~1.3% dollar move after a BOJ hike; causal study deepened with CFTC positioning and publication-time audit.",
+      "Gold Sep. 18: +~1.2% despite strong USD; broad managed-money short-squeeze story rejected by CFTC cohort state.",
+      "Accenture Sep. 18 after hours: +~7%-9% after Anthropic partnership/investment announcement; accounting interpretation constrained to strategic optionality until revenue evidence appears.",
+      "Centrus/LEU: roughly -22% from Sep. 8 to Sep. 18 despite supportive nuclear/enrichment policy; negative-response control for structural-theme versus equity-price extrapolation.",
+      "BTC/ZEC/XMR/DASH weekend continuation: crypto remains live; squeeze versus spot-demand decomposition continues.",
+      "Volkswagen Sep. 18: about -5.6% after major 2026 margin warning and impairments; captured but deprioritized because the fundamental cash-flow catalyst is comparatively direct."
+    ],
+    "negative_findings": [
+      "Do not score an as-of-before-event dataset as a pre-move predictor unless its publication/availability timestamp also precedes the event decision time.",
+      "Do not explain the Sep. 18 gold rally as broad managed-money short covering; CFTC managed money was strongly net long.",
+      "Do not infer broad Chinese MRF outflows from one high-growth fund; the channel has shown aggregate sign reversals and product concentration.",
+      "Do not infer a near-term enrichment-equity BUY from supportive nuclear policy alone; LEU is a live negative-price control.",
+      "Do not treat each side's $1B Accenture-Anthropic investment commitment as disclosed Accenture revenue.",
+      "Do not upgrade BTC to spot-led BUY while the U.S. ETF channel is closed and leverage/funding remain elevated."
+    ]
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "status": "No new immutable forecast clears the evidence bar. Existing WAIT/HOLD-research states are preserved and no prior forecast is rewritten."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. Do not churn dashboard_state, learning_ledger or big_move_lab in this run. The publication-time audit is important and likely generalizable, but should be promoted canonically after at least one more cross-event validation or an atomic ledger update. No code change and no signal-system state change were made.",
+  "next_research": [
+    "Find genuinely decision-time-public JPY positioning/market-structure proxies such as option risk reversals/skew, intraday futures price/open-interest, or broker positioning, then test matched BOJ events.",
+    "Extract exact SFC Table D6 Apr-Jun 2026 MRF aggregate flows and estimate the Pictet fund's share of the legal cross-border channel.",
+    "For gold, distinguish managed-money COT state from dealer/options/tactical short-covering and locate free timestamp-safe skew/gamma evidence.",
+    "After the next U.S. session, finalize BTC/ETH ETF flows and test price retention against OI/funding normalization.",
+    "Implement/verify split-safe ZCSH creation-ledger normalization before the Sep. 30 effective date.",
+    "Check Accenture next-session follow-through and later bookings/revenue disclosures; keep investment commitment separate from contracted revenue.",
+    "Map enrichment-company valuation, backlog, capacity expansion economics and government-contract timing before any asset-level thesis."
+  ],
+  "source_log": [
+    {"publisher":"CFTC","date":"2026-09-18 release / 2026-09-15 positions","topic":"Japanese yen Traders in Financial Futures positioning","url":"https://www.cftc.gov/dea/futures/financial_lf.htm"},
+    {"publisher":"CFTC","topic":"COT publication timing methodology","url":"https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm"},
+    {"publisher":"Reuters","date":"2026-09-18","topic":"BOJ hike and yen selloff","url":"https://www.reuters.com/world/asia-pacific/boj-raises-interest-rates-31-year-high-widely-expected-move-2026-09-18/"},
+    {"publisher":"Reuters","date":"2026-09-17","topic":"Pre-BOJ expectations and need for hawkish guidance","url":"https://www.reuters.com/markets/currencies/yen-weak-ahead-boj-decision-rate-hike-expected-2026-09-17/"},
+    {"publisher":"CFTC","date":"2026-09-18 release / 2026-09-15 positions","topic":"Gold disaggregated managed-money positioning","url":"https://www.cftc.gov/dea/futures/deacmxlf.htm"},
+    {"publisher":"Reuters","date":"2026-09-18","topic":"Gold rally and weekly commodity-fund flows","url":"https://www.reuters.com/markets/commodities/"},
+    {"publisher":"Reuters","date":"2026-09-15","topic":"Pictet MRF mainland-China retail capital into global assets","url":"https://www.reuters.com/world/china/"},
+    {"publisher":"Hong Kong SFC","topic":"Mutual Recognition of Funds statistics and annual reports","url":"https://www.sfc.hk/en/Regulatory-functions/Products/List-of-publicly-offered-investment-products/Mutual-Recognition-of-Funds"},
+    {"publisher":"U.S. Department of Energy","date":"2026-01-05","topic":"$2.7B domestic uranium-enrichment awards","url":"https://www.energy.gov/"},
+    {"publisher":"U.S. Department of Energy / NNSA","date":"2026-07-20","topic":"Savannah River AI data-center and power project selection","url":"https://www.energy.gov/nnsa/"},
+    {"publisher":"Anthropic","date":"2026-09-18","topic":"Accenture partnership and investment commitment","url":"https://www.anthropic.com/"},
+    {"publisher":"Accenture","date":"2026-09-18","topic":"Anthropic partnership and investment commitment","url":"https://newsroom.accenture.com/"},
+    {"publisher":"CoinMarketCap connected data","date":"2026-09-19","topic":"Live BTC/ETH/SOL/XRP/LINK/ZEC/XMR/DASH and aggregate derivatives","url":"https://coinmarketcap.com/"}
+  ],
+  "owner_report_gate": "NOT MET. Only 389 seconds of directly recorded execution have accumulated since the last owner-facing Money Intelligence report; continue research quietly until at least 3,600 seconds and a material update coexist."
+}

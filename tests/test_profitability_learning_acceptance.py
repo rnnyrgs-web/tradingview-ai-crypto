@@ -41,6 +41,11 @@ def test_exact_rejected_artifact_persists_and_is_consumed_after_replay(durable_r
     assert result["persistence"]["before_experiment_count"] == 0
     assert result["persistence"]["after_first_experiment_count"] == 2
     assert result["persistence"]["after_replay_experiment_count"] == 2
+    assert result["persistence"]["target_experiment_count"] == 2
+    assert (
+        result["persistence"]["target_state_digest_after_first"]
+        == result["persistence"]["target_state_digest_after_replay"]
+    )
     assert result["persistence"]["replay_idempotent"] is True
     assert len(durable_runtime.rows) == 2
     assert result["completion"]["training"]["outcome"] == "LEARN_AND_PIVOT"
@@ -54,6 +59,13 @@ def test_exact_rejected_artifact_persists_and_is_consumed_after_replay(durable_r
     assert result["learning_consumption"]["heavy_dispatch_selected_count"] == 0
     assert result["learning_consumption"]["component_observation_count"] >= 1
     assert result["learning_consumption"]["mission_ids"]
+    assert result["learning_consumption"]["matched_learning_missions"] == [
+        {
+            "id": result["learning_consumption"]["mission_ids"][0],
+            "mode": "LEARN",
+            "source_experiment_id": result["completion"]["training"]["experiment_id"],
+        }
+    ]
 
     assert result["evidence_boundaries"] == {
         "candidate_returns_already_inspected": True,
@@ -96,6 +108,55 @@ def test_acceptance_fails_closed_if_rejected_fingerprint_enters_dispatch(
         lambda _queue: {"selected_count": 1},
     )
     with pytest.raises(ValueError, match="admission veto"):
+        acceptance.run_rejected_leadlag_acceptance()
+
+
+def test_replay_idempotency_allows_unrelated_concurrent_append(
+    durable_runtime, monkeypatch
+):
+    import profitability_learning.acceptance as acceptance
+    from profitability_learning.runtime import complete_experiment
+    from test_profitability_learning import experiment
+
+    original = acceptance.persist_selection
+    calls = 0
+
+    def persist_with_concurrent_evidence(selection):
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            complete_experiment(experiment([10, 10, 10]))
+        return original(selection)
+
+    monkeypatch.setattr(acceptance, "persist_selection", persist_with_concurrent_evidence)
+    result = acceptance.run_rejected_leadlag_acceptance()
+
+    assert result["persistence"]["after_first_experiment_count"] == 2
+    assert result["persistence"]["after_replay_experiment_count"] == 3
+    assert result["persistence"]["replay_idempotent"] is True
+    assert len(durable_runtime.rows) == 3
+
+
+def test_acceptance_rejects_only_unrelated_preexisting_missions(
+    durable_runtime, monkeypatch
+):
+    import profitability_learning.acceptance as acceptance
+
+    monkeypatch.setattr(
+        acceptance,
+        "factory_feedback",
+        lambda: {
+            "status": "AVAILABLE",
+            "missions": [
+                {
+                    "id": "learning-unrelated",
+                    "mode": "LEARN",
+                    "source_experiment_id": "unrelated-experiment",
+                }
+            ],
+        },
+    )
+    with pytest.raises(ValueError, match="exact training learning mission"):
         acceptance.run_rejected_leadlag_acceptance()
 
 
