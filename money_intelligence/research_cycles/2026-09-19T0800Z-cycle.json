@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-19T08:00:42Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate or broker state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-19T07:55:37Z",
+    "artifact_cutoff_utc": "2026-09-19T08:00:42Z",
+    "seconds_this_run": 305,
+    "minimum_cumulative_seconds_from_recent_cycles_with_explicit_runtime": 1670,
+    "reporting_gate": "NOT MET. This count includes only directly recorded execution seconds from the 03:57Z, 05:11Z, 05:50Z, 06:47Z and current cycles. Schedule gaps and artifacts without explicit runtime are not counted."
+  },
+  "highest_information_question": "Can the expectation-adjusted-policy-surprise hypothesis and the effective-deliverable-supply hypothesis survive matched historical controls rather than merely explaining the current 2026 regime?",
+  "fresh_validated_observations": [
+    {
+      "topic": "Historical central-bank controls materially strengthen expectation-adjusted full-policy-package reasoning",
+      "label": "SUPPORTED / PROVISIONAL / CROSS-EPISODE DEEPENING",
+      "observed_controls": [
+        "SNB 2015-01-15: the SNB simultaneously cut its deposit rate to -0.75% and unexpectedly abandoned the CHF1.20/EUR floor. The nominal rate action was easing, yet the franc appreciated violently; Reuters reported an almost 30% intraday gain versus the euro. The binding surprise was removal of the FX-price commitment, not the sign of the rate change.",
+        "BOJ 2022-12-20: the BOJ left the short policy rate at -0.1% and its 10-year target around zero but unexpectedly widened the 10-year yield band from +/-25 bp to +/-50 bp. Reuters reported USD/JPY falling about 3.1% intraday. The unchanged policy-rate sign missed the tightening information embedded in the YCC regime change.",
+        "ECB 2024-06-06: the ECB delivered a heavily telegraphed 25 bp rate cut, but raised inflation projections and refused to pre-commit to further cuts. The euro rose and German yields rose about 6-7 bp. The expected easing action contained little marginal information; the future path/inflation package was relatively hawkish.",
+        "RBA 2023-05-02: markets were heavily positioned for no change, but the RBA unexpectedly hiked 25 bp and warned more tightening might be required. AUD rose about 1% and Australian three-year futures fell sharply. Here the headline rate sign worked because the action itself was an expectation surprise.",
+        "BOE 2023-09-21: after 14 consecutive hikes, the BOE unexpectedly/knife-edge held Bank Rate at 5.25% in a 5-4 vote after a downside inflation surprise. Sterling extended losses to the weakest level since March. Again, the market responded to the expectation-relative path shift rather than merely to the unchanged level."
+      ],
+      "inference": "The stronger general rule is broader than 'future rate path beats action sign': short-horizon FX/rates repricing is driven by the expectation-adjusted change in the full policy constraint set—policy-rate path, YCC/asset-purchase regime, FX intervention commitment, vote/guidance and reaction function. A nominal hike/cut/hold is only informative to the extent it changes that expected package.",
+      "matched_control_logic": "RBA May-2023 provides a positive control where the action sign and expectation surprise point the same way. SNB 2015, BOJ 2022 and ECB 2024 are counterexamples to naive action-sign heuristics. BOE 2023 is a hold-path surprise. Together they reduce the risk that the 2026 FOMC/BOJ observations are one-off anecdotes.",
+      "alternative_explanations": [
+        "Some event windows include concurrent macro releases and global risk moves.",
+        "The historical sample is intentionally information-rich rather than exhaustive and is not yet statistically representative.",
+        "Different policy instruments are not directly commensurable without a common expectation-surprise metric."
+      ],
+      "falsification": "Weaken the hypothesis if a larger timestamp-safe sample with pre-event probabilities/OIS and standardized event windows shows nominal action size/sign explains 30m/1d/5d FX/rate responses at least as well as expectation-adjusted full-policy-package surprise.",
+      "decision_support": "For scheduled central-bank events, do not trade or forecast from hike/cut/hold labels alone. Freeze the pre-event distribution and relevant unconventional-policy commitments first, then measure what actually changed."
+    },
+    {
+      "topic": "Katrina 2005 is a high-information control that separates persistent physical damage from persistent benchmark crude inflation",
+      "label": "SUPPORTED / REGIME-SPECIFIC / CROSS-EPISODE DEEPENING",
+      "facts": [
+        "EIA documents that Katrina/Rita ultimately reduced Gulf crude production by more than 162 million barrels through June 2006, damaged 457 underwater pipelines, and left more than 2 mb/d of refinery capacity offline even as late as 2005-10-10. Physical damage was therefore prolonged, not a brief outage.",
+        "IEA's 2005 collective action made 60 million barrels available over 30 days, about 2.1 mb/d initially, with roughly 94% from stock draw. Importantly, the contribution included about 683 kb/d of refined products, directly targeting the downstream bottleneck rather than only replacing crude.",
+        "IEA later concluded that the disruption was addressed through emergency stocks, lower-than-expected demand, worldwide refinery flexibility and additional producer supply.",
+        "Contemporaneous EIA Brent daily prices did not show a persistent global crude-price explosion: Brent was about $66.23 on Aug. 26, $66.80 on Aug. 31, $64.16 on Sep. 6, $62.62 on Sep. 9 and $60.48 by Sep. 16 even though physical infrastructure remained impaired."
+      ],
+      "inference": "Expected outage duration alone is insufficient. A long physical outage can coexist with fading benchmark crude risk premium when emergency stocks, product substitution, refinery flexibility, alternate supply and demand response restore effective deliverability. This strengthens the existing state-vector model: inventory/emergency stocks + spare production + route/product/grade substitution + refinery flexibility + freight + demand elasticity are more causally relevant than gross damaged capacity or repair duration alone.",
+      "matched_controls": {
+        "Abqaiq_2019": "Immediate roughly 5.7 mb/d disruption (~6% global supply); Brent first-session jump ~11.7%, but rapid restoration/inventory substitution brought the benchmark close to pre-event levels within roughly two weeks.",
+        "Libya_2011": "132 million barrels of light-sweet crude removed by end-May, little expectation of near-term restoration, and grade substitution constraints; Brent remained materially above the pre-shock level and IEA released 60 million barrels as a bridge.",
+        "Russia_2022": "Potential ~3 mb/d loss with only Saudi/UAE substantial immediately usable spare capacity and OECD stocks 335.6 million barrels below the 2017-2021 average; Brent response was much more persistent.",
+        "Suez_2021": "Transit blockage had an available Cape reroute and was cleared within days; benchmark oil response was short-lived."
+      },
+      "negative_finding": "Do not use gross disrupted barrels, infrastructure damage severity, or estimated repair duration in isolation as a persistent-oil-price predictor.",
+      "next_test": "Create a timestamp-safe event table with pre-event commercial/emergency inventories, usable spare capacity, product/refinery flexibility, alternate-route capacity, expected outage duration and 1d/5d/20d benchmark plus physical-differential outcomes."
+    },
+    {
+      "topic": "Sep. 18 BTC flow evidence is strong but the preferred tracker currently has a live-table inconsistency",
+      "label": "OBSERVED FACT / SOURCE-CONFLICT / FAIL-CLOSED",
+      "facts": [
+        "At 07:55-07:56Z CoinMarketCap quoted BTC about $81,109 (+4.36%/24h), ETH about $2,627 (+5.53%), SOL about $111.69 (+5.60%), XRP about $1.412 (+6.36%) and LINK about $12.30 (+4.04%).",
+        "Global crypto derivatives open interest was about $451.42B, down 4.84%/24h; perpetual OI about $450.05B, down 4.87%. Average funding was about 0.007062 and +71% versus the prior seven-day comparison. BTC liquidations were about $262.6M/24h, $253.7M shorts, while the latest one-hour and four-hour windows were both zero.",
+        "BTC therefore continued to hold near $81K after the immediate forced-short-covering impulse had gone dormant and while aggregate OI remained materially lower, which is inconsistent with a pure squeeze-only explanation.",
+        "The live Farside Sep. 18 table at this cutoff displays IBIT as missing and therefore only a partial +$324.6M BTC total; its ETH table likewise shows only a partial +$29.4M because ETHA and other entries are missing.",
+        "However, multiple contemporaneous Sep. 19 reports citing SoSoValue—and several reports explicitly citing the previously populated Farside print—report Sep. 18 BTC net inflow of about $433.0M (FBTC $310.7M, IBIT $108.4M) and ETH net inflow about $143.7M (ETHA $114.3M, FETH $26.2M)."
+      ],
+      "inference": "The weight of secondary contemporaneous evidence supports the previously captured +$433M BTC / +$144M ETH figures, but the preferred live tracker is presently incomplete. Therefore the research system should preserve the source inconsistency rather than pretending the current Farside table independently confirms the finalized totals. The broader causal conclusion remains unchanged: spot ETF demand materially contributed to the Sep. 18 move, but two positive sessions are not enough to establish a durable accumulation regime.",
+      "decision_support": "BTC remains WAIT / TACTICAL MOMENTUM CANDIDATE. Do not upgrade to immutable BUY until subsequent completed ETF sessions, controlled leverage, price retention and exchange/on-chain spot absorption confirm persistence."
+    },
+    {
+      "topic": "CAD provides a live relative-policy-path confirmation without a large one-day shock",
+      "label": "OBSERVED FACT / PROVISIONAL CONTROL",
+      "facts": [
+        "Reuters reported USD/CAD around 1.4010 on Sep. 18, with CAD weakening for an eighth consecutive session and reaching its weakest intraday level since Aug. 7.",
+        "The Bank of Canada held its policy rate at 2.25% on Sep. 2, while the Fed raised its target range to 3.75%-4.00% on Sep. 16, widening the relative front-end rate advantage toward USD."
+      ],
+      "inference": "The persistent CAD weakness is directionally consistent with the relative-policy-path mechanism and is useful as a low-drama control beside the more event-driven JPY example. It is not a standalone trade signal because oil, Canada-US trade tensions and risk sentiment also matter.",
+      "falsification": "Weaken if CAD remains weak despite a sustained narrowing of US-Canada front-end yield differentials after controlling for oil and trade-risk news."
+    }
+  ],
+  "daily_big_move_scan": {
+    "selected_or_retested": [
+      "BTC Sep. 18-19 breakout retention: price holds near $81K after 1h/4h forced liquidations fall to zero and OI remains lower; spot-flow evidence supportive but source-tracker completeness remains a data-quality caveat.",
+      "SNB Jan-2015 CHF shock: ~30% intraday CHF surge despite a simultaneous rate cut; clean historical evidence that the binding regime surprise can dominate the nominal action sign.",
+      "BOJ Dec-2022 YCC surprise: JPY ~3% appreciation despite unchanged short policy rate; another clean unconventional-policy control.",
+      "ECB Jun-2024 expected cut: euro and Bund yields rose because inflation/path guidance was relatively hawkish; useful priced-action control.",
+      "RBA May-2023 surprise hike: AUD ~1% higher; positive control where action sign was informative precisely because it was unexpected.",
+      "Katrina 2005 oil shock: severe and persistent physical damage but fading Brent benchmark premium because emergency product/crude stocks, refinery flexibility, alternate supply and demand response restored effective deliverability."
+    ],
+    "negative_findings": [
+      "Nominal central-bank hike/cut/hold labels are not sufficient predictors without the pre-event expectation distribution and the full policy package.",
+      "Large physical commodity damage does not imply a persistent benchmark price shock when substitution buffers are elastic.",
+      "A short squeeze can amplify BTC, but current price retention after liquidations cease does not by itself prove a durable institutional accumulation regime.",
+      "A live automatically updated ETF table can temporarily lose delayed issuer entries; point-in-time source snapshots and independent cross-checks are required before declaring a finalized flow."
+    ]
+  },
+  "prediction_ledger": "No new immutable forecast frozen. Canonical scorecard remains frozen=0 and resolved=0; no prediction was rewritten.",
+  "canonical_update_decision": "Persist this research cycle only. The central-bank and Katrina matched controls materially deepen existing hypotheses, but the next safe canonical change should wait for a more systematic event table rather than churning dashboard state. Preserve the ETF source inconsistency explicitly and do not alter prior immutable research-cycle records.",
+  "next_priority": [
+    "Build the central-bank event table with pre-event probability/OIS or documented consensus, full-policy surprise classification and 30m/1d/5d FX/rates responses; include matched controls where the nominal action sign succeeds and fails.",
+    "Build the commodity-disruption table with pre-event stocks/spare capacity/refinery-product flexibility/route substitutes and 1d/5d/20d benchmark plus physical-premium outcomes.",
+    "Recheck Sep. 18 BTC/ETH ETF totals after the tracker stabilizes or via issuer/SoSoValue primary-quality data; do not let an automatically incomplete table silently overwrite a prior point-in-time observation.",
+    "After the next U.S. ETF trading session, test whether BTC's Sep. 17-18 regulated spot demand persists once forced-covering is fully absent and funding remains elevated.",
+    "Continue AI-infrastructure financing-dispersion work, especially sponsor credit, collateral, contracted/prepaid revenue, customer concentration, power/permitting and secondary loan prices."
+  ],
+  "sources": [
+    "Swiss National Bank Jan. 15 2015 press release and policy chronicle: https://www.snb.ch/en/publications/communication/press-releases/2015/pre_20150115",
+    "Reuters Jan. 15 2015 CHF reaction (republished): https://www.investing.com/news/economy-news/swiss-franc-jumps-30-percent-after-swiss-national-bank-dumps-euro-ceiling-323603",
+    "Bank of Japan Dec. 20 2022 statement: https://www.boj.or.jp/en/mopo/mpmdeci/state_2022/k221220a.htm",
+    "Reuters Dec. 20 2022 JPY reaction (republished): https://www.brecorder.com/news/40215538/yen-soars-to-4-month-peak-after-surprise-boj-policy-tweak",
+    "ECB Jun. 6 2024 decision: https://www.ecb.europa.eu/press/pr/date/2024/html/ecb.mp240606~2148ecdb3c.en.html",
+    "Reuters Jun. 6 2024 market reaction: https://www.reuters.com/markets/global-markets-wrapup-1-2024-06-06/",
+    "RBA May 2 2023 minutes: https://www.rba.gov.au/monetary-policy/rba-board-minutes/2023/2023-05-02.html",
+    "Reuters May 2 2023 AUD reaction (republished): https://www.brecorder.com/news/40239887",
+    "Bank of England Sep. 2023 Monetary Policy Report: https://www.bankofengland.co.uk/monetary-policy-report/2023/november-2023",
+    "Reuters Sep. 21 2023 GBP reaction (republished): https://economictimes.indiatimes.com/markets/forex/sterling-drops-to-lowest-since-march-after-boe-holds-rates/articleshow/103845857.cms",
+    "EIA 2005 hurricane impact study: https://www.eia.gov/naturalgas/articles/hurricanesindex.php",
+    "IEA Sep. 6 2005 Katrina collective response: https://www.iea.org/news/contributions-of-iea-member-countries-to-the-hurricane-katrina-oil-supply-disruption",
+    "IEA Dec. 25 2005 conclusion: https://www.iea.org/news/conclusion-of-iea-collective-action",
+    "IEA Jun. 22 2011 Libya action: https://www.iea.org/news/iea-makes-60-million-barrels-of-oil-available-to-market-to-offset-libyan-disruption",
+    "IEA Mar. 16 2022 Russia OMR: https://www.iea.org/reports/oil-market-report-march-2022",
+    "Farside live BTC/ETH flow tables accessed Sep. 19 2026: https://farside.co.uk/btc/ and https://farside.co.uk/eth/",
+    "SoSoValue-reported Sep. 18 BTC flow cross-check: https://en.bloomingbit.io/feed/news/120655",
+    "CoinMarketCap connected quotes and global derivatives feeds accessed 2026-09-19T07:55Z",
+    "Bank of Canada Sep. 2 2026 decision: https://www.bankofcanada.ca/2026/09/fad-press-release-2026-09-02/",
+    "Reuters Sep. 18 2026 CAD market reaction: https://www.reuters.com/business/canadian-dollar-extends-weekly-decline-weighed-by-wider-yield-spreads-2026-09-18/"
+  ],
+  "reporting_gate": "No owner-facing report. The required 60 minutes of cumulative verifiable research/execution time has not been established; continue quietly."
+}
