@@ -41,9 +41,22 @@ def build_factory_report(rows, paper_trades=None):
     }
 
 
+def _bounded_limit(name, default, minimum, maximum):
+    try:
+        value = int(os.getenv(name, str(default)))
+    except (TypeError, ValueError):
+        value = default
+    return max(minimum, min(value, maximum))
+
+
 def main():
-    rows = fetch_shadow_predictions(limit=10000)
-    paper_trades = fetch_all_paper_trades(limit=10000)
+    # A strategy queue only needs a bounded recent evidence window. Pulling the
+    # entire prediction/paper ledgers on every lightweight cycle created large
+    # repeated database egress without adding independent information.
+    ledger_limit = _bounded_limit("RESEARCH_EXPERIMENT_LEDGER_LIMIT", 500, 100, 2000)
+    paper_limit = _bounded_limit("RESEARCH_EXPERIMENT_PAPER_LIMIT", 500, 50, 2000)
+    rows = fetch_shadow_predictions(limit=ledger_limit)
+    paper_trades = fetch_all_paper_trades(limit=paper_limit)
     report = build_factory_report(rows, paper_trades)
     summary_path = os.getenv("RESEARCH_EXPERIMENT_SUMMARY_PATH", "").strip()
     if summary_path:
