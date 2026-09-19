@@ -27,6 +27,17 @@ def _config():
 def _coord():
     return load_coordination()
 
+def _ready_role_task(role):
+    ready = [
+        task for task in _coord()["tasks"]
+        if task["owner"] == role
+        and task["status"] == "READY"
+        and task["id"].startswith("COORD-DISC-")
+    ]
+    assert len(ready) == 1, (role, ready)
+    return ready[0]
+
+
 
 def _disabled_config():
     """Test-local copy of the real config with enabled=False.
@@ -102,21 +113,23 @@ def test_disabled_config_still_blocks_all_execution():
     assert decision.reason == "RUNNER_DISABLED"
 
 
+
 def test_plan_selects_the_owned_ready_task_and_no_other_role():
-    """Owner approved recurring Anthropic usage within the shared $30/month
-    ceiling (RESOURCE-REC-001), so the real config is enabled=true."""
+    """Owner-approved bounded runner selects exactly its current discovery task."""
+    expected = _ready_role_task("signal-accuracy")
     decision = plan_decision(_config(), _coord(), default_state(), MAIN_SHA, NOW)
     assert decision.run is True
     assert decision.role == "signal-accuracy"
-    assert decision.task_id == "COORD-DISC-VAL-002"
-    assert decision.branch == "auto/signal-accuracy/coord-disc-val-002"
+    assert decision.task_id == expected["id"]
+    assert decision.branch == safe_branch("signal-accuracy", expected["id"])
 
 
 def test_no_agent_can_steal_a_healthy_active_task():
+    expected = _ready_role_task("signal-accuracy")
     state = default_state()
     state["active_task"] = {
         "role": "signal-accuracy",
-        "task_id": "COORD-DISC-VAL-002",
+        "task_id": expected["id"],
         "phase": "WAITING_CI",
         "base_main_sha": MAIN_SHA,
         "started_at": "2026-09-13T11:00:00Z",
@@ -124,7 +137,6 @@ def test_no_agent_can_steal_a_healthy_active_task():
     decision = plan_decision(_config(), _coord(), state, MAIN_SHA, NOW)
     assert decision.run is False
     assert decision.reason == "ACTIVE_TASK_WAITING_CI"
-
 
 def test_reserved_cost_uses_verified_haiku_pricing_and_full_turn_ceiling():
     config = _config()
