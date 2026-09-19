@@ -207,7 +207,7 @@ def test_terminal_task_handoff_releases_old_lease_for_materially_distinct_candid
     state["active_task"] = {"role": "data-market", "task_id": "COORD-DISC-DATA-002", "phase": "WAITING_CI", "base_main_sha": "a" * 40, "started_at": "2026-09-19T04:00:00Z"}
     decision = plan_decision(load_config(), load_coordination(), state, "a" * 40, datetime(2026, 9, 19, 4, 10, tzinfo=timezone.utc))
     assert decision.run is True
-    assert decision.task_id == "COORD-DISC-DATA-003"
+    assert decision.task_id == "COORD-DISC-DATA-004"
 
 
 def test_frozen_sample_cost_and_sensitivity_gates_cannot_be_bypassed():
