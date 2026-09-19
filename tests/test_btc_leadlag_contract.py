@@ -65,6 +65,74 @@ def test_signal_is_strictly_past_based_and_incremental_to_frozen_baseline():
     assert contract["costs"]["stress_multipliers"][-1] == 3.0
 
 
+def test_beta_estimator_is_unambiguously_through_origin_and_fail_closed():
+    estimator = _contract()["primary_rule"]["follower_beta_estimator"]
+    assert estimator == {
+        "type": "OLS_THROUGH_ORIGIN",
+        "formula": "sum(btc_return_i * follower_return_i) / sum(btc_return_i ** 2)",
+        "window": "168 aligned completed returns t-168..t-1",
+        "centering": "NONE",
+        "intercept": 0,
+        "signal_bar_excluded": True,
+        "zero_denominator_policy": "NO_TRADE",
+    }
+
+
+def test_portfolio_economics_can_reconcile_trade_cost_and_hourly_nav_evidence():
+    contract = _contract()
+    economics = contract["portfolio_economics"]
+    assert economics["initial_capital_usd"] == 100000
+    assert economics["per_position_nav_fraction"] == 0.25
+    assert economics["max_concurrent_positions"] == 2
+    assert economics["max_gross_exposure_nav_fraction"] == 0.5
+    assert economics["gross_exposure_definition"] == (
+        "sum of absolute point-in-time marked position values"
+    )
+    assert economics["capacity_policy"] == (
+        "NO_TRADE when the full 25% NAV entry would breach either cap; never resize"
+    )
+    assert economics["leverage"] == 1.0
+    assert economics["external_cash_flows_allowed"] is False
+    assert economics["common_event_id_definition"] == (
+        "BTC-USDT-SWAP|signal_bar_close_utc|BTC_direction"
+    )
+    assert economics["same_btc_event_shared_across_followers"] is True
+    assert economics["nav_marking"]["frequency"] == "EVERY_ALIGNED_COMPLETED_HOUR"
+    assert economics["nav_marking"]["open_positions"] == "LATEST_POINT_IN_TIME_CLOSE"
+    assert economics["short_collateral"]["convention"] == "FULLY_COLLATERALIZED_LINEAR_1X"
+    assert economics["required_profitability_learning_artifacts"] == [
+        "versioned_contract",
+        "trade_records",
+        "hourly_reconciled_nav",
+        "analysis",
+    ]
+    costs = contract["costs"]["base_component_bps_round_trip"]
+    assert costs == {"fees": 10, "spread": 4, "slippage": 4, "funding_carry": 2}
+    assert sum(costs.values()) == contract["costs"]["base_round_trip_bps"]
+    assert contract["costs"]["nav_debit_timing"] == {
+        "entry": "one half of fees, spread and slippage",
+        "exit": "remaining half of fees, spread and slippage plus all funding_carry",
+    }
+
+
+def test_reused_development_history_is_not_fresh_confirmation_evidence():
+    reuse = _contract()["sequential_reuse_control"]
+    assert reuse["dataset_reused_by_prior_primary_fingerprints"] == [
+        "DISC-LIQUIDITY-MEANREV-001-v1"
+    ]
+    assert reuse["cumulative_primary_trial_index_on_dataset"] == 2
+    assert reuse["reused_train_validation_classification"] == (
+        "EXPLORATORY_DEVELOPMENT_ONLY"
+    )
+    assert reuse["reused_history_can_support_promotion"] is False
+    assert reuse["fresh_confirmation"]["evidence_class"] == "GENUINE_FORWARD"
+    assert reuse["fresh_confirmation"]["start_strictly_after_utc"] == (
+        "2026-09-19T03:00:00+00:00"
+    )
+    assert reuse["fresh_confirmation"]["minimum_independent_btc_events"] == 20
+    assert reuse["fresh_confirmation"]["minimum_completed_trades_per_follower"] == 8
+
+
 def test_verified_source_metadata_and_immutable_dataset_are_present():
     contract = _contract()
     evidence = json.loads(SOURCE_EVIDENCE_PATH.read_text(encoding="utf-8"))

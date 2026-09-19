@@ -36,15 +36,18 @@ The later selection runner must re-verify that identity and align all three inst
 The machine-readable contract in `orchestration/disc_btc_leadlag_001.json` freezes:
 
 - one-hour BTC impulse definition;
-- strictly prior 168-hour BTC volatility and follower beta;
+- strictly prior 168-hour BTC volatility and a through-origin, uncentered follower beta (`sum(x*y)/sum(x*x)`) with zero intercept and fail-closed zero denominator;
 - fixed beta bounds and underreaction gap;
 - opposite-move no-trade guard;
 - next-open follower entry and six-hour hold;
 - identical no-underreaction baseline;
 - ETH and SOL as mandatory replication cohorts;
 - 60/20/20 chronology with purging and untouched OOS locked;
-- 20 bps round-trip cost proxy stressed to 3x;
+- a $100,000 closed portfolio, 25% decision-time-NAV sizing per follower, two-position/50% gross-exposure caps, shared BTC event identity, fully collateralized 1x shorts, and hourly reconciled NAV;
+- an explicit 20 bps round-trip decomposition (10 fees, 4 spread, 4 slippage, 2 funding/carry) stressed proportionally to 3x;
 - sample floors, regime/half stability, two non-selectable gap sensitivities, and all pass/fail rules;
-- one eligible primary fingerprint with no parameter, asset, timeframe, or date optimization.
+- one eligible primary fingerprint with no parameter, asset, timeframe, or date optimization;
+- the cumulative reused-dataset trial registry: this is primary family trial two after rejected liquidity mean reversion, so reused train/validation is exploratory only and cannot promote the candidate;
+- genuine-forward confirmation strictly after 2026-09-19 03:00 UTC, with at least 20 independent BTC events and 8 completed trades per mandatory follower, before any promotion review.
 
-The next bounded task is deterministic implementation and pre-OOS train/validation screening of this exact fingerprint. A fail must be preserved without tuning v1. A pass may only request a canonical one-candidate deep-validation transition; it still cannot open untouched OOS automatically.
+The next bounded task is deterministic implementation and exploratory train/validation screening of this exact fingerprint. The runner must emit versioned `profitability_learning` contract, trade, hourly NAV, and analysis artifacts whose costs and final NAV reconcile exactly. A fail must be preserved without tuning v1. A historical pass may only register this exact fingerprint as the single deep candidate for the frozen genuine-forward confirmation; reused history cannot promote it and historical untouched OOS remains locked.
