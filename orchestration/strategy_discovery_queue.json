@@ -18,7 +18,7 @@
       "fingerprint_id": "DISC-RESIDUAL-MOMENTUM-001-v1",
       "family": "residual_momentum",
       "lane": "cheap_screen",
-      "stage": "CHEAP_SCREEN_READY",
+      "stage": "DEPRIORITIZED_EVIDENCE_LIMITED",
       "work_mode": "CHEAP_SCREEN",
       "economic_mechanism": "Asset-specific momentum remaining after removing broad market movement may persist because idiosyncratic information and flows diffuse gradually.",
       "hypothesis": "Residualized cross-sectional momentum has positive incremental after-cost expectancy across predeclared liquid universes and chronological splits.",
@@ -31,7 +31,8 @@
         "1d"
       ],
       "source_fingerprint_required": false,
-      "blocker": null,
+      "blocker": "Frozen cheap screen DISC-RESIDUAL-MOMENTUM-001-v1 produced 0/2 passing Top-15/Top-30 pre-OOS subsets on exact artifact 10572498750; challenger training rank IC and 3x after-cost spread were negative on both subsets. Historical point-in-time membership is unverified, so the screen is exploratory negative evidence only: keep OOS locked, do not deep-freeze, and do not terminally reject solely from survivor-biased evidence. Pivot to the next materially distinct clean-data screen.",
+      "evidence_ref": "orchestration/evidence/disc_residual_momentum_001_20260919.json",
       "expected_profitability_impact": 0.72,
       "expected_information_gain": 0.88,
       "falsification_value": 0.9,
