@@ -52,11 +52,11 @@
 
 **Interfaces:**
 - Consumes: `orchestration/disc_btc_leadlag_001.json`, the immutable gzip dataset, `research_artifact.sha256_hex`, `seal_research_payload`, and `profitability_learning.analytics.analyze`.
-- Produces: `evaluate_selection_from_histories(histories, contract, generated_at)`, `run(generated_at=None)`, and a CLI that writes a sealed JSON evidence envelope.
+- Produces: `evaluate_selection_from_histories(histories, contract, generated_at)`, `run(generated_at=None)`, `persist_selection(selection)`, and a CLI that writes a sealed JSON evidence envelope only while persisting completion to an initialized durable learning database.
 
 - [x] Write failing tests for exact contract/dataset validation, through-origin beta, future-bar isolation, next-open/six-hour execution, common event identity, NAV/cost reconciliation, capacity fail-closed behavior, and locked protected evidence.
 - [x] Run `python -m pytest tests/test_btc_leadlag_selection.py -q` and verify failure because the module is absent.
-- [x] Implement strict alignment/identity checks, point-in-time signal generation, closed-portfolio simulation, cost-stress metrics, frozen gates, and rich primary 3x train/validation experiments.
+- [x] Implement strict alignment/identity checks, point-in-time signal generation, closed-portfolio simulation, cost-stress metrics, frozen gates, rich primary 3x train/validation experiments, the predeclared underreaction ablation, and shared-runtime persistence/admission feedback.
 - [x] Re-run `python -m pytest tests/test_btc_leadlag_selection.py tests/test_profitability_learning.py -q` and verify all focused tests pass.
 
 ### Task 3: Execute and preserve the exploratory result

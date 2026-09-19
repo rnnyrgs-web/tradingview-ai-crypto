@@ -10,6 +10,7 @@ import copy
 import gzip
 import json
 import math
+import os
 import statistics
 from datetime import datetime, timezone
 from pathlib import Path
@@ -160,14 +161,16 @@ def _learning_strategy(contract: dict[str, Any], gap_min: float, baseline: bool)
 
 def _experiment_contract(contract: dict[str, Any], histories: dict[str, list[dict[str, float | int]]], start: int, end: int, split: str, generated_at: datetime, gap_min: float, baseline: bool) -> dict[str, Any]:
     strategy = _learning_strategy(contract, gap_min, baseline)
-    ablations = [fingerprint(component) for component in strategy["components"]]
+    ablations = ([fingerprint(component) for component in strategy["components"]
+                  if component["kind"] == "underreaction"] if not baseline else [])
     return {
         "schema_version": 1, "strategy": strategy, "strategy_fingerprint": fingerprint(strategy),
         "family": "cross-asset delayed price discovery", "dataset_id": "OKX-BTC-ETH-SOL-1H-20260919",
         "dataset_sha256": FROZEN_DATASET_SHA256, "split": split, "initial_capital": 100000.0,
         "cost_model": "fixed 20bps round trip multiplied by stress; explicit fee/spread/slippage/carry",
-        "provenance_ref": "orchestration/disc_btc_leadlag_001.json", "minimum_events": 2, "search_budget": 2,
-        "mining_dimensions": ["asset", "regime", "direction"], "ablation_components": ablations, "interaction_pairs": [],
+        "provenance_ref": "orchestration/disc_btc_leadlag_001.json",
+        "minimum_events": 12 if split == "TRAINING" else 5, "search_budget": 2,
+        "mining_dimensions": [], "ablation_components": ablations, "interaction_pairs": [],
         "start": _iso(int(histories["BTC-USDT-SWAP"][start]["ts"])), "end": _iso(int(histories["BTC-USDT-SWAP"][end - 1]["ts"])),
         "frozen_at": FROZEN_AT, "outcomes_observed_at": generated_at.astimezone(timezone.utc).isoformat(),
         "retrospective_development_only": True, "historical_outcomes_inspected_before_freeze": False,
@@ -198,6 +201,10 @@ def _simulate_segment(histories: dict[str, list[dict[str, float | int]]], start:
         return capital + unrealized, exposure
 
     for index in range(start + 1, end):
+        # Eligibility is decided at the previous completed close.  A position
+        # that is still open then cannot make a new signal eligible merely
+        # because it exits at the following entry open.
+        active_at_decision = set(active)
         for follower in sorted(list(active)):
             position = active[follower]
             if position["exit_index"] != index:
@@ -216,7 +223,8 @@ def _simulate_segment(histories: dict[str, list[dict[str, float | int]]], start:
         candidates = []
         if signal_index >= max(start, int(contract["chronology"]["minimum_warmup_bars"])):
             for follower in followers:
-                if follower in active or index + int(contract["primary_rule"]["holding_period_bars"]) >= end:
+                if (follower in active_at_decision or follower in active
+                        or index + int(contract["primary_rule"]["holding_period_bars"]) >= end):
                     continue
                 signal = signal_cache[(signal_index, follower)] if signal_cache is not None else _signal(histories, signal_index, follower, contract, gap_min=gap_min, baseline=baseline, returns_cache=returns_cache)
                 if signal.get("eligible"):
@@ -232,11 +240,12 @@ def _simulate_segment(histories: dict[str, list[dict[str, float | int]]], start:
             entry_cost = notional * (float(component_bps["fees"]) + float(component_bps["spread"]) + float(component_bps["slippage"])) * cost_multiplier / 20_000
             capital -= entry_cost
             current_exposure += notional
-            decision_at = _iso(int(histories[follower][index]["ts"]))
+            decision_at = _iso(int(histories["BTC-USDT-SWAP"][signal_index]["ts"]))
+            entry_at = _iso(int(histories[follower][index]["ts"]))
             event_id = f"BTC-USDT-SWAP|{decision_at}|BTC_{signal['direction']}"
             active[follower] = {
                 "trade_id": f"{split}|{follower}|{decision_at}|{gap_min:g}|{cost_multiplier:g}",
-                "event_id": event_id, "decision_at": decision_at, "entry_at": decision_at,
+                "event_id": event_id, "decision_at": decision_at, "entry_at": entry_at,
                 "asset": follower, "timeframe": "1H", "direction": signal["direction"], "notional": notional,
                 "features": {name: {"value": value, "available_at": decision_at} for name, value in {
                     "regime": signal["regime"], "beta_band": "OMITTED" if signal["beta"] is None else f"{signal['beta']:.6f}",
@@ -310,11 +319,15 @@ def evaluate_selection_from_histories(histories: dict[str, list[dict[str, Any]]]
             raise ValueError(f"INSUFFICIENT_HISTORY:{len(next(iter(clean.values())))}<{minimum}")
         bounds = _split_bounds(len(next(iter(clean.values()))), contract)
     except (ValueError, StopIteration) as exc:
-        # B105 is a false positive on this scientific pass/fail field, not a credential.
-        return {**base, "data_integrity_ok": False, "data_errors": [str(exc)], "variants": {}, "screen_status": "INSUFFICIENT_EVIDENCE", "economic_pre_oos_pass": False, "failure_reasons": ["DATA_INTEGRITY_OR_HISTORY"]}  # nosec B105
+        pre_oos_pass = False
+        return {**base, "data_integrity_ok": False, "data_errors": [str(exc)],
+                "variants": {}, "screen_status": "INSUFFICIENT_EVIDENCE",
+                "economic_pre_oos_pass": pre_oos_pass,
+                "failure_reasons": ["DATA_INTEGRITY_OR_HISTORY"]}
     variants = {"baseline": (0.0, True), "sensitivity_35bps": (0.0035, False), "primary_50bps": (0.005, False), "sensitivity_65bps": (0.0065, False)}
     output: dict[str, Any] = {}
     rich: dict[str, Any] = {}
+    baseline_training: dict[str, Any] | None = None
     for name, (gap, baseline) in variants.items():
         returns_cache = {asset: _returns(rows) for asset, rows in clean.items()}
         signal_cache = {
@@ -331,6 +344,8 @@ def evaluate_selection_from_histories(histories: dict[str, list[dict[str, Any]]]
                 by_segment[segment] = metrics
                 if name == "primary_50bps" and float(multiplier) == 3.0:
                     rich[segment] = {"experiment": experiment}
+                elif name == "baseline" and segment == "training" and float(multiplier) == 3.0:
+                    baseline_training = experiment
             output[name][f"{float(multiplier):g}x"] = by_segment
     provisional = {"variants": output}
     passed, reasons = _gate(provisional, contract)
@@ -338,7 +353,65 @@ def evaluate_selection_from_histories(histories: dict[str, list[dict[str, Any]]]
         segment["experiment"]["status"] = "PASSED" if passed else "REJECTED"
         segment["experiment"]["failure_reasons"] = [] if passed else list(reasons)
         segment["analysis"] = analyze(segment["experiment"])
-    return {**base, "data_integrity_ok": True, "data_errors": [], "bounds": bounds, "variants": output, "rich_primary_max_stress": rich, "screen_status": "EXPLORATORY_SCREEN_SURVIVES" if passed else "PRE_OOS_FAIL", "economic_pre_oos_pass": passed, "failure_reasons": reasons, "reused_history_can_support_promotion": False, "exact_next_action": ("Freeze genuine-forward observation strictly after 2026-09-19T03:00:00+00:00; require 20 independent BTC events and 8 trades per follower before review." if passed else "Record this exact fingerprint as rejected pre-OOS and pivot to a materially distinct mechanism without tuning v1.")}
+    if baseline_training is None:
+        raise RuntimeError("missing frozen baseline ablation evidence")
+    return {**base, "data_integrity_ok": True, "data_errors": [], "bounds": bounds,
+            "variants": output, "rich_primary_max_stress": rich,
+            "learning_artifacts": {"training_baseline_experiment": baseline_training},
+            "screen_status": "EXPLORATORY_SCREEN_SURVIVES" if passed else "PRE_OOS_FAIL",
+            "economic_pre_oos_pass": passed, "failure_reasons": reasons,
+            "reused_history_can_support_promotion": False,
+            "exact_next_action": ("Freeze genuine-forward observation strictly after 2026-09-19T03:00:00+00:00; require 20 independent BTC events and 8 trades per follower before review." if passed else "Record this exact fingerprint as rejected pre-OOS and pivot to a materially distinct mechanism without tuning v1.")}
+
+
+def _training_ablation(selection: dict[str, Any]) -> dict[str, Any]:
+    full = copy.deepcopy(selection["rich_primary_max_stress"]["training"]["experiment"])
+    baseline = copy.deepcopy(selection["learning_artifacts"]["training_baseline_experiment"])
+    contract = copy.deepcopy(full["contract"])
+    omitted = list(contract["ablation_components"])
+    if len(omitted) != 1:
+        raise ValueError("exactly the frozen underreaction component may be ablated")
+    full["contract"] = {**copy.deepcopy(contract), "ablation_components": [],
+                        "interaction_pairs": []}
+    baseline_strategy = baseline["contract"]["strategy"]
+    baseline["contract"] = {
+        **copy.deepcopy(contract),
+        "strategy": baseline_strategy,
+        "strategy_fingerprint": fingerprint(baseline_strategy),
+        "ablation_components": [],
+        "interaction_pairs": [],
+    }
+    return {
+        "schema_version": 1,
+        "contract": contract,
+        "variants": [
+            {"omitted": [], "experiment": full},
+            {"omitted": omitted, "experiment": baseline},
+        ],
+        "research_only": True,
+        "trade_authority": False,
+        "promotion_authority": False,
+        "automatic_execution_authority": False,
+        "broker_connected": False,
+    }
+
+
+def persist_selection(selection: dict[str, Any]) -> dict[str, Any]:
+    """Persist evaluator completion through the shared Phase-1 learning hook."""
+    from profitability_learning.runtime import complete_experiment, factory_feedback
+
+    training = selection["rich_primary_max_stress"]["training"]["experiment"]
+    validation = selection["rich_primary_max_stress"]["validation"]["experiment"]
+    return {
+        "training": complete_experiment(training, ablation=_training_ablation(selection)),
+        "validation": complete_experiment(validation),
+        "factory_feedback": factory_feedback(),
+        "research_only": True,
+        "trade_authority": False,
+        "promotion_authority": False,
+        "automatic_execution_authority": False,
+        "broker_connected": False,
+    }
 
 
 def _load_frozen_dataset(path: Path = DATASET_PATH) -> dict[str, Any]:
@@ -366,11 +439,31 @@ def run(generated_at: datetime | None = None) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", default="btc_leadlag_selection.json")
+    parser.add_argument("--memory-db", required=True,
+                        help="Existing initialized profitability-learning SQLite database")
+    parser.add_argument("--generated-at", required=True,
+                        help="UTC timestamp when the frozen outcomes were first evaluated")
     args = parser.parse_args()
-    envelope = run()
-    Path(args.output).write_text(json.dumps(envelope, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    from profitability_learning.memory import Memory
+    Memory(args.memory_db, create=False)
+    os.environ["PROFITABILITY_LEARNING_DB"] = args.memory_db
+    envelope = run(datetime.fromisoformat(args.generated_at))
+    persistence = persist_selection(envelope["payload"]["selection"])
+    output = Path(args.output)
+    if output.suffix == ".gz":
+        with gzip.open(output, "wt", encoding="utf-8") as handle:
+            json.dump(envelope, handle, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    else:
+        output.write_text(json.dumps(envelope, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     result = envelope["payload"]["selection"]
-    print(json.dumps({"fingerprint_id": result["fingerprint_id"], "screen_status": result["screen_status"], "economic_pre_oos_pass": result["economic_pre_oos_pass"], "untouched_oos_opened": result["untouched_oos_opened"]}, sort_keys=True))
+    print(json.dumps({"fingerprint_id": result["fingerprint_id"],
+                      "screen_status": result["screen_status"],
+                      "economic_pre_oos_pass": result["economic_pre_oos_pass"],
+                      "untouched_oos_opened": result["untouched_oos_opened"],
+                      "training_experiment_id": persistence["training"]["experiment_id"],
+                      "validation_experiment_id": persistence["validation"]["experiment_id"],
+                      "persistence_status": persistence["training"]["persistence_status"]},
+                     sort_keys=True))
     return 0
 
 

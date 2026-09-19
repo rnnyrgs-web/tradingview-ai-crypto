@@ -7,14 +7,18 @@ from pathlib import Path
 import pytest
 
 from btc_leadlag_selection import (
+    _iso,
     _load_contract,
     _signal,
     _simulate_segment,
     _validate_histories,
     evaluate_selection_from_histories,
+    persist_selection,
     run,
 )
 from profitability_learning.contracts import validate_experiment
+from profitability_learning.memory import Memory
+from profitability_learning.runtime import apply_queue_feedback
 from research_artifact import verify_research_envelope
 
 
@@ -96,10 +100,74 @@ def test_next_open_six_hour_portfolio_reconciles_and_shares_event():
     eth, sol = experiment["trades"]
     assert eth["event_id"] == sol["event_id"]
     assert eth["entry_at"] == sol["entry_at"]
+    signal_at = _iso(histories["BTC-USDT-SWAP"][230]["ts"])
+    entry_at = _iso(histories["BTC-USDT-SWAP"][231]["ts"])
+    assert eth["decision_at"] == signal_at
+    assert eth["entry_at"] == entry_at
+    assert eth["decision_at"] < eth["entry_at"]
+    assert all(value["available_at"] == signal_at for value in eth["features"].values())
     assert eth["notional"] == pytest.approx(sol["notional"])
     assert eth["exit_at"] > eth["entry_at"]
     assert experiment["equity"][0]["gross_exposure"] == 0
     assert experiment["equity"][-1]["gross_exposure"] == 0
+
+
+def test_real_completion_persists_economics_component_memory_and_rejection(monkeypatch, tmp_path):
+    path = tmp_path / "profitability-learning.sqlite"
+    Memory(path)
+    monkeypatch.setenv("PROFITABILITY_LEARNING_DB", str(path))
+    selection = run(datetime(2026, 9, 19, 10, tzinfo=timezone.utc))["payload"]["selection"]
+
+    first = persist_selection(selection)
+    replay = persist_selection(selection)
+    assert replay["training"]["experiment_id"] == first["training"]["experiment_id"]
+    assert first["training"]["persistence_status"] == "PERSISTED"
+    assert first["training"]["component_evidence"]
+    assert first["training"]["component_evidence"][0]["component"]["kind"] == "underreaction"
+    snapshot = Memory(path, create=False).snapshot()
+    assert len(snapshot["experiments"]) == 2
+
+    candidate = {
+        "experiment_id": "repeat-rejected-fingerprint",
+        "family": first["training"]["contract"]["family"],
+        "strategy_fingerprint": first["training"]["contract"]["strategy_fingerprint"],
+        "information_priority": 1.0,
+    }
+    feedback = apply_queue_feedback({"experiments": [candidate]})["experiments"][0]
+    assert feedback["information_priority"] == 0
+    assert feedback["learning_feedback"]["reason"] == "rejected_exact_fingerprint"
+
+
+def test_signal_while_position_is_open_cannot_reenter_at_same_exit_open():
+    contract = _load_contract()
+    histories = _histories()
+    for asset, move in (("BTC-USDT-SWAP", 0.03),
+                        ("ETH-USDT-SWAP", 0.005),
+                        ("SOL-USDT-SWAP", 0.005)):
+        prior = histories[asset][235]["close"]
+        close = prior * (1 + move)
+        histories[asset][236].update(
+            open=prior, high=max(prior, close) * 1.001,
+            low=min(prior, close) * 0.999, close=close,
+        )
+        prior = close
+        for index in range(237, len(histories[asset])):
+            close = prior * (1 + (0.0002 if index % 2 else -0.0002))
+            histories[asset][index].update(
+                open=prior, high=max(prior, close) * 1.001,
+                low=min(prior, close) * 0.999, close=close,
+            )
+            prior = close
+    clean = _validate_histories(histories, contract, exact_dataset=False)
+    experiment = _simulate_segment(
+        clean, 220, 270, contract, split="TRAINING", gap_min=0.0,
+        baseline=True, cost_multiplier=3.0,
+        generated_at=datetime(2026, 9, 19, 10, tzinfo=timezone.utc),
+    )
+    assert len(experiment["trades"]) == 2
+    assert {trade["decision_at"] for trade in experiment["trades"]} == {
+        _iso(clean["BTC-USDT-SWAP"][230]["ts"])
+    }
 
 
 def test_bad_alignment_and_capacity_fail_closed():
