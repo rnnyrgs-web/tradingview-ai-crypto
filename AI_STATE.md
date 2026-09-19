@@ -120,6 +120,21 @@ The API-backed autonomous cloud specialist most recently paused cleanly because 
 
 The previous Supabase egress incident remains bounded by merged query/window/throttling fixes. Do not reintroduce unbounded resolved-ledger polling or broad repeated database reads. The Supabase organization remains on the Free plan; do not upgrade without explicit user approval.
 
+## LEGACY SIGNAL RETIREMENT / DATA HYGIENE
+
+User approved retiring the old signal/dashboard pipeline and removing redundant stored signal snapshots.
+
+- 15-minute legacy scan generation is being retired.
+- Legacy signal/system/paper dashboard routes become HTTP 410 while Mission Control + Money Intelligence stay available.
+- The web process no longer runs the paid continuous-AI observer or the legacy paper loop.
+- Existing unresolved prediction-ledger rows may drain through the temporary research-only resolver; no new legacy forecasts are generated.
+- `crypto_opportunities` is classified as redundant legacy presentation state and may be truncated after the retirement deploy is verified.
+- `prediction_ledger` is NOT trash wholesale: keep it until pending forecasts mature, then compact scientifically useful evidence and preserve provenance before deleting JSON-heavy redundancy.
+- Bulk historical research belongs in compressed Parquet/object storage + DuckDB/Polars, not repeated Supabase JSON reads.
+- Do not delete historical 2x+ event/control data, immutable experiment/rejection evidence, OOS/forward proof, or point-in-time provenance.
+
+See `docs/LEGACY_SIGNAL_RETIREMENT.md`.
+
 ## 24/7 BACKGROUND MODEL ORCHESTRATION
 
 The project now uses a machine-readable routing policy at `orchestration/model_routing_policy.json`.
