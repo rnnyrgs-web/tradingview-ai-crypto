@@ -161,6 +161,82 @@ def _snapshot(events):
             "interactions": interactions, "rejected_fingerprints": sorted(rejected), **SAFE}
 
 
+def _prepare_completion(events, experiment, *, ablation=None):
+    """Build one immutable completion from a validated event snapshot.
+
+    Storage adapters call this before their atomic append. Keeping the economic
+    classification here prevents the durable Supabase path and local SQLite path
+    from drifting into different scientific semantics.
+    """
+    result = analyze(experiment)
+    c = result["contract"]
+    result["input_digest"] = fingerprint({"experiment": experiment, "ablation": ablation})
+    if ablation is not None:
+        if ablation["contract"] != c:
+            raise ValueError("ablation contract mismatch")
+        effects = component_effects(ablation)
+        full = next(x["experiment"] for x in ablation["variants"] if not x["omitted"])
+        if any(full[k] != experiment[k] for k in ("trades", "equity", "status", "failure_reasons")):
+            raise ValueError("ablation full strategy does not match completed experiment")
+        result["component_evidence"] = effects["components"]
+        result["interaction_evidence"] = effects["interactions"]
+    result["conditional_hypotheses"] = mine_conditions(experiment)["conditions"] if c["split"] in DEVELOPMENT else []
+    old = next((x["payload"] for x in events if x["id"] == result["experiment_id"]), None)
+    if old is not None:
+        if old.get("input_digest") != result["input_digest"]:
+            raise ValueError("immutable experiment conflict")
+        return old, False
+    if result["metrics"]:
+        enough = result["metrics"]["independent_event_count"] >= c["minimum_events"]
+        if enough and experiment["status"] == "REJECTED":
+            result["outcome"] = "LEARN_AND_PIVOT"
+        elif enough and experiment["status"] == "PASSED" and result["metrics"]["net_pnl"] > 0:
+            result["outcome"] = "SUCCESS_LEARN"
+        falsifier = c.get("mechanism_falsifier")
+        if falsifier is not None:
+            if (not isinstance(falsifier, dict) or falsifier.get("metric") != "after_cost_expectancy_money"
+                    or falsifier.get("maximum") != 0 or type(falsifier.get("minimum_independent_replications")) is not int
+                    or falsifier["minimum_independent_replications"] < 2):
+                raise ValueError("unsupported frozen mechanism falsifier")
+            prior = [x["payload"] for x in events if x["kind"] == "experiment"] + [result]
+            failed = [r for r in prior if r["contract"]["strategy"]["mechanism"] == c["strategy"]["mechanism"]
+                and r["contract"].get("mechanism_falsifier") == falsifier
+                and r["contract"]["split"] in DEVELOPMENT and r["source_status"] == "REJECTED"
+                and r["metrics"].get("independent_event_count", 0) >= r["contract"]["minimum_events"]
+                and r["metrics"].get("after_cost_expectancy_money", 1) <= 0]
+            if c["split"] in DEVELOPMENT and len(_independent(failed)) >= falsifier["minimum_independent_replications"]:
+                result["outcome"] = "MECHANISM_DEAD"
+    result["next_research_question"] = {
+        "INFRA_DATA_FAILURE": "Establish the missing timestamp-safe data contract before testing economic edge.",
+        "INCONCLUSIVE": "Resolve the stated evidence limitations with a predeclared independent sample.",
+        "MECHANISM_DEAD": "Explore a materially different economic mechanism; preserve this failed mechanism.",
+        "LEARN_AND_PIVOT": "Test a materially distinct mechanism or component replacement on fresh chronological data.",
+        "SUCCESS_LEARN": "Replicate the frozen economic mechanism independently; investigate return concentration.",
+    }[result["outcome"]]
+    from .evolution import generate_hypotheses
+    result["successor_hypotheses"] = generate_hypotheses(result)
+    _validate_event(result["experiment_id"], "experiment", result)
+    return result, True
+
+
+def _legacy_event(lesson):
+    """Normalize sparse legacy evidence identically for every durable backend."""
+    ident = text(lesson.get("fingerprint"), "legacy fingerprint")
+    outcome = lesson.get("outcome")
+    if not isinstance(outcome, str):
+        raise ValueError("legacy outcome required")
+    payload = {"schema_version": 1, "source_fingerprint": ident,
+        "experiment_id": (lesson.get("evidence_summary") or {}).get("experiment_id") if isinstance(lesson.get("evidence_summary"), dict) else None,
+        "source_digest": fingerprint(lesson), "source_outcome": outcome,
+        "outcome": "INFRA_DATA_FAILURE" if outcome in {"infra_data_failure", "insufficient_history"} else "INCONCLUSIVE",
+        "hypothesis": lesson.get("hypothesis"), "evidence_summary": lesson.get("evidence_summary"),
+        "limitations": ["Missing frozen economic contract, full trade costs, reconciled NAV and component ablations"],
+        "next_research_question": lesson.get("recommended_next_test"), **SAFE}
+    event_id = "legacy-" + payload["source_digest"]
+    _validate_event(event_id, "legacy", payload)
+    return event_id, payload
+
+
 class Memory:
     def __init__(self, path, *, create=True):
         self.path = Path(path)
@@ -217,57 +293,12 @@ class Memory:
             return _snapshot(self._read(conn))
 
     def complete(self, experiment, *, ablation=None):
-        result = analyze(experiment)
-        c = result["contract"]
-        result["input_digest"] = fingerprint({"experiment": experiment, "ablation": ablation})
-        if ablation is not None:
-            if ablation["contract"] != c:
-                raise ValueError("ablation contract mismatch")
-            effects = component_effects(ablation)
-            full = next(x["experiment"] for x in ablation["variants"] if not x["omitted"])
-            if any(full[k] != experiment[k] for k in ("trades", "equity", "status", "failure_reasons")):
-                raise ValueError("ablation full strategy does not match completed experiment")
-            result["component_evidence"] = effects["components"]
-            result["interaction_evidence"] = effects["interactions"]
-        result["conditional_hypotheses"] = mine_conditions(experiment)["conditions"] if c["split"] in DEVELOPMENT else []
         with self._connect() as conn:
             conn.execute("BEGIN IMMEDIATE")
             events = self._read(conn)
-            old = next((x["payload"] for x in events if x["id"] == result["experiment_id"]), None)
-            if old is not None:
-                if old.get("input_digest") != result["input_digest"]:
-                    raise ValueError("immutable experiment conflict")
-                return old
-            if result["metrics"]:
-                enough = result["metrics"]["independent_event_count"] >= c["minimum_events"]
-                if enough and experiment["status"] == "REJECTED":
-                    result["outcome"] = "LEARN_AND_PIVOT"
-                elif enough and experiment["status"] == "PASSED" and result["metrics"]["net_pnl"] > 0:
-                    result["outcome"] = "SUCCESS_LEARN"
-                falsifier = c.get("mechanism_falsifier")
-                if falsifier is not None:
-                    if (not isinstance(falsifier, dict) or falsifier.get("metric") != "after_cost_expectancy_money"
-                            or falsifier.get("maximum") != 0 or type(falsifier.get("minimum_independent_replications")) is not int
-                            or falsifier["minimum_independent_replications"] < 2):
-                        raise ValueError("unsupported frozen mechanism falsifier")
-                    prior = [x["payload"] for x in events if x["kind"] == "experiment"] + [result]
-                    failed = [r for r in prior if r["contract"]["strategy"]["mechanism"] == c["strategy"]["mechanism"]
-                        and r["contract"].get("mechanism_falsifier") == falsifier
-                        and r["contract"]["split"] in DEVELOPMENT and r["source_status"] == "REJECTED"
-                        and r["metrics"].get("independent_event_count", 0) >= r["contract"]["minimum_events"]
-                        and r["metrics"].get("after_cost_expectancy_money", 1) <= 0]
-                    if c["split"] in DEVELOPMENT and len(_independent(failed)) >= falsifier["minimum_independent_replications"]:
-                        result["outcome"] = "MECHANISM_DEAD"
-            result["next_research_question"] = {
-                "INFRA_DATA_FAILURE": "Establish the missing timestamp-safe data contract before testing economic edge.",
-                "INCONCLUSIVE": "Resolve the stated evidence limitations with a predeclared independent sample.",
-                "MECHANISM_DEAD": "Explore a materially different economic mechanism; preserve this failed mechanism.",
-                "LEARN_AND_PIVOT": "Test a materially distinct mechanism or component replacement on fresh chronological data.",
-                "SUCCESS_LEARN": "Replicate the frozen economic mechanism independently; investigate return concentration.",
-            }[result["outcome"]]
-            from .evolution import generate_hypotheses
-            result["successor_hypotheses"] = generate_hypotheses(result)
-            self._insert(conn, result["experiment_id"], "experiment", result)
+            result, is_new = _prepare_completion(events, experiment, ablation=ablation)
+            if is_new:
+                self._insert(conn, result["experiment_id"], "experiment", result)
         return result
 
     def save_proposal(self, proposal):
@@ -281,21 +312,11 @@ class Memory:
 
     def record_legacy(self, lesson):
         """Sparse legacy outcomes never masquerade as portfolio/component evidence."""
-        ident = text(lesson.get("fingerprint"), "legacy fingerprint")
-        outcome = lesson.get("outcome")
-        if not isinstance(outcome, str):
-            raise ValueError("legacy outcome required")
-        payload = {"schema_version": 1, "source_fingerprint": ident,
-            "experiment_id": (lesson.get("evidence_summary") or {}).get("experiment_id") if isinstance(lesson.get("evidence_summary"), dict) else None,
-            "source_digest": fingerprint(lesson), "source_outcome": outcome,
-            "outcome": "INFRA_DATA_FAILURE" if outcome in {"infra_data_failure", "insufficient_history"} else "INCONCLUSIVE",
-            "hypothesis": lesson.get("hypothesis"), "evidence_summary": lesson.get("evidence_summary"),
-            "limitations": ["Missing frozen economic contract, full trade costs, reconciled NAV and component ablations"],
-            "next_research_question": lesson.get("recommended_next_test"), **SAFE}
+        event_id, payload = _legacy_event(lesson)
         with self._connect() as conn:
             conn.execute("BEGIN IMMEDIATE")
             self._read(conn)
-            self._insert(conn, "legacy-" + payload["source_digest"], "legacy", payload)
+            self._insert(conn, event_id, "legacy", payload)
         return payload
 
     def export(self):
