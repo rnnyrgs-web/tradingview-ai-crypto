@@ -2,6 +2,18 @@ name: Profitability Learning Runtime Acceptance
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/profitability-learning-runtime-acceptance.yml
+      - app.py
+      - btc_leadlag_selection.py
+      - db.py
+      - profitability_learning/**
+      - orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz
+      - research_artifact.py
+      - research_heavy_experiment_scheduler.py
+      - supabase/migrations/**
 
 permissions:
   contents: read
