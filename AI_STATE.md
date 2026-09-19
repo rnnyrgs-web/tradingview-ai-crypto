@@ -1,7 +1,7 @@
 # AI_STATE.md
 
 Last reconciled: 2026-09-19T05:29Z
-Last updated: 2026-09-19T05:32Z
+Last updated: 2026-09-19T05:33Z
 
 This is the compact canonical handoff for `rnnyrgs-web/tradingview-ai-crypto`. On every run, verify actual `main` first, then read `UNIFIED_PROFITABILITY_LEAD_SPEC.md`, `AGENTS.md`, the ranked strategy-discovery queue, rejected-fingerprint registry, specialist coordination plus all override layers, `orchestration/model_routing_policy.json`, current Big-Move/Money Intelligence evidence, open PRs, and exact-head CI. GitHub/persistent machine-readable state outranks chat memory.
 
@@ -62,7 +62,7 @@ DATA-004 rules:
 
 ## CURRENT SPECIALIST EXECUTION QUEUE
 
-Canonical coordination must be loaded through `orchestration/coordination_overrides.py`, which applies the historical override ledger and the Lead reconciliation layer.
+Canonical coordination must be loaded through `orchestration/coordination_overrides.py`, which applies the historical override ledger and the Lead reconciliation layer. Do **not** read only the base JSON.
 
 Current active discovery assignments for `DISC-SQUEEZE-RETENTION-001-v1`:
 - `COORD-DISC-DATA-004` — **READY**: resolve or terminally falsify timestamp-safe data availability.
