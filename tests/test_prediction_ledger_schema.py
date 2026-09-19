@@ -27,7 +27,8 @@ def test_resolved_prediction_query_matches_production_schema(monkeypatch):
     assert "created_at" not in select
     assert "due_at" in select
     assert "resolved_at" in select
-    assert "calibration" in select
+    assert "research_context" in select
+    assert "calibration" not in select
 
 
 def test_shadow_prediction_query_matches_production_schema(monkeypatch):
@@ -39,6 +40,8 @@ def test_shadow_prediction_query_matches_production_schema(monkeypatch):
     assert "created_at" not in select
     assert "scan_id" in select
     assert "resolved_at" in select
+    assert "research_context" in select
+    assert "calibration" in select
 
 
 def test_prediction_ledger_chronology_still_orders_by_resolved_at(monkeypatch):
@@ -79,3 +82,31 @@ def test_shadow_prediction_fetch_returns_recent_window_in_chronological_order(mo
     assert fake.params["order"] == "resolved_at.desc"
     assert fake.params["limit"] == "2000"
     assert [row["id"] for row in rows] == [1, 2, 3]
+
+
+def test_compacted_research_context_exposes_preforecast_market_fields_without_calibration():
+    row = {
+        "research_context": {
+            "preforecast_market_context": {
+                "captured_at": "2026-09-19T00:00:10Z",
+                "market_consensus": {
+                    "recorded": True,
+                    "reliable_at_forecast": True,
+                    "independent_source_count": 2,
+                    "required_source_count": 2,
+                    "price_range_bps": 4.5,
+                    "max_quote_age_seconds": 8,
+                    "accepted_exchange_names": ["kraken", "okx"],
+                    "accepted_observations": [
+                        {"exchange": "kraken", "observed_ms": 1789776000000},
+                        {"exchange": "okx", "observed_ms": 1789776005000},
+                    ],
+                },
+            }
+        }
+    }
+    exposed = db._expose_preforecast_market_fields(row)
+    assert exposed["market_consensus_reliable"] is True
+    assert exposed["market_consensus_timestamp_safe"] is True
+    assert exposed["market_consensus_source_count"] == 2
+    assert exposed["market_consensus_accepted_exchange_names"] == ["kraken", "okx"]

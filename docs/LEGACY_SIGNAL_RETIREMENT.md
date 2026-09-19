@@ -58,3 +58,19 @@ RETIRE/COMPACT:
 ## Safety
 
 No live broker/trade authority is introduced by this cleanup. Scientific evidence is preserved before destructive compaction. Bulk historical research should use compressed Parquet/object storage + DuckDB/Polars rather than repeated large Supabase JSON reads.
+
+
+## Prediction-ledger compaction
+
+After the high-volume legacy scan was retired, the remaining large relation is the
+scientifically useful prediction ledger. It is compacted rather than discarded.
+
+The compaction migration:
+- adds `research_context` for the point-in-time market context and action diagnostics that matter scientifically;
+- archives the sparse preforecast universe snapshots separately by `scan_id`;
+- leaves unresolved forecasts untouched;
+- keeps the newest 2,000 resolved full calibration payloads for recent diagnostics;
+- clears older verbose calibration JSON only after the compact context is copied.
+
+Resolved-summary readers no longer request the full calibration blob, reducing egress.
+The bounded recent shadow reader can still use full calibration for the newest window.
