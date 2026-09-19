@@ -25,16 +25,23 @@ def test_coordination_state_has_exact_specialist_roster_and_safe_policy():
 
 
 
-def test_strategy_discovery_has_no_active_specialist_work_during_lead_runtime_acceptance():
+def test_phase_two_has_exactly_one_active_owned_milestone():
     state = load_state()
 
+    active_by_role = {}
     for role in REQUIRED_ROLES:
         active = [
             row for row in role_queue(state, role)
             if row["status"] in {"READY", "IN_PROGRESS", "PR_OPEN"}
         ]
-        assert active == [], (role, active)
+        if active:
+            active_by_role[role] = active
 
+    assert set(active_by_role) == {"quant-research"}
+    assert [row["id"] for row in active_by_role["quant-research"]] == [
+        "COORD-MI-CAUSAL-001"
+    ]
+    assert next_task(state, "quant-research")["issue"] == 451
     assert next_task(state, "data-market") is None
     assert next_task(state, "testing-security") is None
 
@@ -90,7 +97,7 @@ def test_completed_data_provenance_work_is_not_reassigned():
     assert rejected["fingerprint_id"] == "DISC-BTC-LEADLAG-001-v1"
     assert rejected["completion_evidence"]["decision"] == "REJECTED_PRE_OOS"
     assert rejected["completion_evidence"]["untouched_oos_opened"] is False
-    assert next_task(state, "quant-research") is None
+    assert next_task(state, "quant-research")["id"] == "COORD-MI-CAUSAL-001"
     assert "matured prospective point-in-time cohorts" in next_data_task["title"]
     requirements = " ".join(next_data_task["evidence_required"]).lower()
     assert "minimum eight independent" in requirements

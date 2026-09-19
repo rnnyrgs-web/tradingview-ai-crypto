@@ -12,6 +12,12 @@ from orchestration.specialist_coordination import load_state, validate_state
 
 def _append_active_discovery_task(state):
     """Create an isolated active task without requiring canonical work to be open."""
+    for existing in state["tasks"]:
+        if (
+            existing["owner"] == "quant-research"
+            and existing["status"] in {"READY", "IN_PROGRESS", "PR_OPEN"}
+        ):
+            existing["status"] = "DONE"
     source = next(row for row in state["tasks"] if row["id"] == "COORD-DISC-QUANT-004")
     task = copy.deepcopy(source)
     task.update(

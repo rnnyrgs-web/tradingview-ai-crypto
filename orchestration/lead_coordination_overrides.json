@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "reason": "Lead reconciliation after merged PR #442 terminally rejected DISC-BTC-LEADLAG-001-v1 before untouched OOS while proving the evaluator -> durable profitability-learning completion -> exact rejected-fingerprint admission-veto path. Preserve all prior data-blocked/rejected outcomes, close stale COORD-DISC-QUANT-004 ownership, keep OOS/forward locked, and make issue #438 Phase-1 live-runtime acceptance the architectural bottleneck before advancing to Phase 2.",
+  "reason": "Lead reconciliation after exact-deployed Phase-1 Profitability Learning acceptance succeeded on main 6d8dce267e35f079c7e91d7538419509bd2d059e (runtime acceptance run 35454496075). Preserve all prior rejected/data-blocked strategy outcomes and OOS/forward locks, close Phase 1 after canonical state reconciliation, and route the earliest incomplete overnight-program phase to issue #451: persistent point-in-time Money Intelligence + causal-repricing/reflexivity memory with contradiction, confidence decay, matched controls and provenance-bound downstream research hypotheses.",
   "task_updates": {
     "COORD-DISC-DATA-003": {
       "status": "DONE",
@@ -134,6 +134,35 @@
         "genuine_forward_opened": false,
         "next_architecture_issue": 438
       },
+      "next_task": null
+    },
+    {
+      "id": "COORD-MI-CAUSAL-001",
+      "priority": 1,
+      "owner": "quant-research",
+      "status": "READY",
+      "work_mode": "AUDIT",
+      "eligible_engines": ["chatgpt", "human"],
+      "title": "Implement persistent point-in-time Money Intelligence and causal-repricing memory core",
+      "dependencies": [],
+      "blockers": [],
+      "issue": 451,
+      "branch": "agent/quant-research",
+      "pr": null,
+      "evidence_required": [
+        "immutable/versioned point-in-time evidence with observation, publication/availability cutoff and source provenance",
+        "stable mechanism IDs with confidence gain, confidence loss, contradiction memory and explicit staleness/decay",
+        "machine-readable separation of fact, inference, hypothesis and supported mechanism",
+        "frozen causal chain, expected direction/timing, falsifier, transmission variables and matched-control design before outcome evaluation",
+        "relative-impact variables such as flow/float, flow/free-float, flow/liquidity, flow/ADV or positioning concentration only when denominators and timestamps are genuinely defensible",
+        "missing/non-comparable denominators remain UNKNOWN rather than outcome-supporting imputations",
+        "deterministic auditable updater with repeated-testing/search-breadth restrictions",
+        "restart/replay idempotency and malformed/corrupt/outage state fail closed",
+        "provenance-bound new Big-Move and strategy-component hypothesis emission with fresh fingerprints and zero authority to rescue rejected exact strategies",
+        "no broker/trade/promotion authority and no new paid service",
+        "exact-head Security and Reliability success before integration; deployed/runtime acceptance if runtime-affecting"
+      ],
+      "completion_rule": "Implement the smallest coherent Phase-2 core and prove, using synthetic or already-inspected bounded evidence, that one mechanism can gain confidence, lose confidence on contradiction/control evidence, decay when stale, persist/replay safely, and emit a provenance-bound downstream research hypothesis without narrative leakage or trading authority. Do not call Phase 2 complete until the persistent runtime path genuinely consumes this memory.",
       "next_task": null
     }
   ]

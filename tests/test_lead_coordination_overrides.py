@@ -36,3 +36,15 @@ def test_lead_reconciliation_closes_stale_data_task_and_routes_safe_followup():
     assert tasks["COORD-DISC-QUANT-004"]["fingerprint_id"] == "DISC-BTC-LEADLAG-001-v1"
     assert tasks["COORD-DISC-QUANT-004"]["completion_evidence"]["decision"] == "REJECTED_PRE_OOS"
     assert tasks["COORD-DISC-QUANT-004"]["completion_evidence"]["untouched_oos_opened"] is False
+
+    phase_two = tasks["COORD-MI-CAUSAL-001"]
+    assert phase_two["status"] == "READY"
+    assert phase_two["owner"] == "quant-research"
+    assert phase_two["issue"] == 451
+    assert phase_two["pr"] is None
+    assert phase_two["blockers"] == []
+    requirements = " ".join(phase_two["evidence_required"]).lower()
+    assert "contradiction memory" in requirements
+    assert "staleness/decay" in requirements
+    assert "missing/non-comparable denominators remain unknown" in requirements
+    assert "no broker/trade/promotion authority" in requirements
