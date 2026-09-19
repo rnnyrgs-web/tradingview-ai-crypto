@@ -11,6 +11,7 @@ on:
       - "orchestration/rejected_fingerprints.json"
       - "orchestration/rejected_fingerprints.py"
       - "tests/test_strategy_discovery_supervisor.py"
+      - "tests/test_rejected_fingerprints.py"
       - ".github/workflows/strategy_discovery_supervisor.yml"
 
 permissions:
