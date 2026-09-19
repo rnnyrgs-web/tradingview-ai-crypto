@@ -140,12 +140,14 @@
       "id": "COORD-MI-CAUSAL-001",
       "priority": 1,
       "owner": "quant-research",
-      "status": "READY",
+      "status": "BLOCKED",
       "work_mode": "AUDIT",
       "eligible_engines": ["chatgpt", "human"],
       "title": "Implement persistent point-in-time Money Intelligence and causal-repricing memory core",
       "dependencies": [],
-      "blockers": [],
+      "blockers": [
+        "Activation is gated only on independent merge of the Phase-1 completion / Phase-2 routing reconciliation PR #452. After that merge, the Lead must clear this routing-only blocker and make this the active Phase-2 implementation task without reopening any rejected strategy fingerprint."
+      ],
       "issue": 451,
       "branch": "agent/quant-research",
       "pr": null,
