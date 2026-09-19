@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "reason": "Lead reconciliation after DATA-004 terminally established that DISC-SQUEEZE-RETENTION-001-v1 has no scientifically defensible zero-new-cost timestamp-safe historical forced-flow source under the current frozen Binance cohort and approved access. Preserve the hypothesis as data-blocked rather than rejected, stop stale candidate-specific workers, keep untouched OOS locked, and route quant research to freeze one materially distinct available-data hypothesis before any new outcome screen.",
+  "reason": "Lead reconciliation after merged PR #442 terminally rejected DISC-BTC-LEADLAG-001-v1 before untouched OOS while proving the evaluator -> durable profitability-learning completion -> exact rejected-fingerprint admission-veto path. Preserve all prior data-blocked/rejected outcomes, close stale COORD-DISC-QUANT-004 ownership, keep OOS/forward locked, and make issue #438 Phase-1 live-runtime acceptance the architectural bottleneck before advancing to Phase 2.",
   "task_updates": {
     "COORD-DISC-DATA-003": {
       "status": "DONE",
@@ -29,7 +29,7 @@
     "COORD-DISC-QUANT-003": {
       "status": "BLOCKED",
       "blockers": [
-        "DATA-004 terminally found no zero-new-cost timestamp-safe historical forced-flow source for the exact frozen Binance BTCUSDT/ETHUSDT/SOLUSDT squeeze-retention contract under current approved access. Do not substitute another venue, infer missing liquidations, or inspect returns to rescue v1."
+        "DISC-SQUEEZE-RETENTION-001-v1 remains scientifically blocked by the frozen data contract. Do not substitute venues, infer missing liquidations, or inspect returns to rescue v1."
       ],
       "completion_evidence": {
         "status": "SCIENTIFICALLY_BLOCKED_BY_DATA_CONTRACT",
@@ -38,19 +38,19 @@
         "strategy_outcomes_inspected": false,
         "untouched_oos_opened": false
       },
-      "next_task": "COORD-DISC-QUANT-004"
+      "next_task": null
     },
     "COORD-DISC-VAL-003": {
       "status": "BLOCKED",
       "blockers": [
-        "The current squeeze-retention fingerprint cannot reach a valid cheap screen under the DATA-004 source result. Preserve its pre-outcome validation design, but do not spend additional candidate-specific validation capacity until the data contract reopens or a new frozen hypothesis is selected."
+        "The squeeze-retention fingerprint cannot reach a valid cheap screen under DATA-004. Preserve its pre-outcome design; spend no further candidate-specific validation capacity unless the data contract legitimately reopens."
       ],
       "next_task": null
     },
     "COORD-DISC-TEST-003": {
       "status": "BLOCKED",
       "blockers": [
-        "Candidate-specific squeeze-retention execution is data-blocked. Generic discovery-firewall hardening already has open PR #432 with exact-head Security & Reliability success; avoid duplicate worker execution while that independent Lead review is pending."
+        "Candidate-specific squeeze-retention execution remains data-blocked. Generic firewall work is independent and must not be confused with candidate evidence."
       ],
       "next_task": null
     }
@@ -63,14 +63,9 @@
       "status": "DONE",
       "work_mode": "CHEAP_SCREEN",
       "fingerprint_id": "DISC-SQUEEZE-RETENTION-001-v1",
-      "eligible_engines": [
-        "chatgpt",
-        "human"
-      ],
+      "eligible_engines": ["chatgpt", "human"],
       "title": "Resolve or terminally falsify timestamp-safe squeeze-retention data availability",
-      "dependencies": [
-        "COORD-DISC-DATA-003"
-      ],
+      "dependencies": ["COORD-DISC-DATA-003"],
       "blockers": [],
       "issue": null,
       "branch": "agent/data-market",
@@ -110,31 +105,35 @@
       "id": "COORD-DISC-QUANT-004",
       "priority": 1,
       "owner": "quant-research",
-      "status": "READY",
+      "status": "DONE",
       "work_mode": "CHEAP_SCREEN",
-      "eligible_engines": [
-        "chatgpt",
-        "human"
-      ],
-      "title": "Freeze the next materially distinct available-data strategy hypothesis",
-      "dependencies": [
-        "COORD-DISC-DATA-004"
-      ],
+      "fingerprint_id": "DISC-BTC-LEADLAG-001-v1",
+      "eligible_engines": ["chatgpt", "human"],
+      "title": "Freeze and execute the next materially distinct available-data strategy hypothesis",
+      "dependencies": ["COORD-DISC-DATA-004"],
       "blockers": [],
-      "issue": null,
+      "issue": 438,
       "branch": "agent/quant-research",
-      "pr": null,
+      "pr": 442,
       "evidence_required": [
         "select a materially distinct economic mechanism rather than tuning or proxy-rescuing any rejected or data-blocked exact fingerprint",
-        "use only timestamp-defensible data families already demonstrably available under current approved access; prefer simple official or immutable price/volume/market data unless a stronger existing source is already verified",
-        "before inspecting candidate returns, freeze exact market/venue, instruments, timeframe, signal definition, entry, exit, holding period, no-trade rules, chronology, train/validation split, untouched-OOS boundary, benchmark, realistic costs and stress multipliers",
-        "predeclare sample floors, search breadth, parameter grid if any, and multiple-testing treatment before outcomes",
-        "state the economic mechanism and explicit falsification criteria; a mechanism that only restates past price performance is insufficient",
-        "check durable rejected_fingerprints and evidence-limited lanes before assigning a new fingerprint so no rejected exact fingerprint is silently reopened",
-        "do not open untouched OOS or genuine forward evidence during hypothesis selection",
-        "if no candidate can be frozen without outcome-driven choices, persist that fact and let Big-Move/Money Intelligence continue generating measurable hypotheses rather than inventing busywork"
+        "use only timestamp-defensible data families already demonstrably available under current approved access",
+        "freeze exact market, venue, instruments, timeframe, signal, execution, chronology, splits, OOS boundary, benchmark, costs, sample floors and search breadth before outcomes",
+        "preserve exact contract and dataset fingerprints through deterministic evaluation",
+        "keep historical untouched OOS and genuine-forward evidence locked on pre-OOS failure",
+        "persist truthful reconciled trade/NAV evidence through profitability learning",
+        "record terminal rejection without tuning and prevent exact-fingerprint readmission",
+        "no production, broker, promotion or paid-data expansion"
       ],
-      "completion_rule": "Either add exactly one highest-ranked CHEAP_SCREEN_READY candidate with a fully frozen pre-outcome scientific contract and verified timestamp-safe data path, or persist a precise scientific reason why no current candidate is defensible. No deep validation, OOS opening, broker authority or paid-data expansion.",
+      "completion_rule": "Preserve the exact frozen outcome, keep untouched OOS/forward locked on failure, and feed truthful trade/NAV evidence through profitability learning without tuning the rejected fingerprint.",
+      "completion_evidence": {
+        "decision": "REJECTED_PRE_OOS",
+        "screen_exact_head_sha": "722c2615f8b87368e84b7e576fe5cc853bb9c2cd",
+        "merge_sha": "9368dfe0d3f22573b5331b1086547c3884330b1b",
+        "untouched_oos_opened": false,
+        "genuine_forward_opened": false,
+        "next_architecture_issue": 438
+      },
       "next_task": null
     }
   ]

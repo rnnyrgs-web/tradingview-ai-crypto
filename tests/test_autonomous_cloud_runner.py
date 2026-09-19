@@ -37,18 +37,25 @@ def _config():
 def _coord():
     return load_coordination()
 
-def _ready_discovery_task_for_role(role, coordination=None):
-    coordination = coordination or _coord()
-    ready = [
+def _coord_with_ready_discovery_task():
+    coordination = copy.deepcopy(_coord())
+    completed = next(
         task for task in coordination["tasks"]
-        if task["owner"] == role
-        and task["status"] == "READY"
-        and task["id"].startswith("COORD-DISC-")
-    ]
-    assert len(ready) == 1, (role, ready)
-    return ready[0]
-
-
+        if task["id"] == "COORD-DISC-QUANT-004"
+    )
+    task = copy.deepcopy(completed)
+    task.update(
+        {
+            "id": "COORD-DISC-QUANT-TEST",
+            "status": "READY",
+            "fingerprint_id": None,
+            "issue": None,
+            "pr": None,
+        }
+    )
+    task.pop("completion_evidence", None)
+    coordination["tasks"].append(task)
+    return coordination, task
 
 
 def test_coordination_loader_applies_canonical_overrides():
@@ -58,11 +65,11 @@ def test_coordination_loader_applies_canonical_overrides():
     assert tasks["COORD-DATA-007"]["status"] == "BLOCKED"
     assert tasks["COORD-DISC-DATA-001"]["status"] == "DONE"
 
-    current = _ready_discovery_task_for_role("quant-research", coordination)
-    assert current["status"] == "READY"
-    assert current["id"] == "COORD-DISC-QUANT-004"
-    assert current.get("fingerprint_id") is None
-    assert highest_ready_task(_config(), coordination) == current
+    current = tasks["COORD-DISC-QUANT-004"]
+    assert current["status"] == "DONE"
+    assert current["fingerprint_id"] == "DISC-BTC-LEADLAG-001-v1"
+    assert current["completion_evidence"]["decision"] == "REJECTED_PRE_OOS"
+    assert highest_ready_task(_config(), coordination) is None
 
 def test_runner_is_single_execution_multi_role_cost_bounded_and_broker_disconnected():
     config = _config()
@@ -113,7 +120,7 @@ def test_runaway_loop_configuration_is_rejected():
 
 
 def test_duplicate_active_task_prevents_second_ownership():
-    task = _ready_discovery_task_for_role("quant-research")
+    coordination, task = _coord_with_ready_discovery_task()
     state = default_state()
     state["active_task"] = {
         "role": "quant-research",
@@ -122,7 +129,7 @@ def test_duplicate_active_task_prevents_second_ownership():
         "base_main_sha": MAIN_SHA,
         "started_at": "2026-09-09T03:30:00Z",
     }
-    decision = plan_decision(_config(), _coord(), state, MAIN_SHA, NOW)
+    decision = plan_decision(_config(), coordination, state, MAIN_SHA, NOW)
     assert decision.run is False
     assert decision.reason == "ACTIVE_TASK_WAITING_CI"
 
@@ -163,7 +170,7 @@ def test_task_retry_backoff_is_bounded_but_outer_api_retry_is_disabled():
 
 
 def test_stale_main_blocks_active_work():
-    task = _ready_discovery_task_for_role("quant-research")
+    coordination, task = _coord_with_ready_discovery_task()
     state = default_state()
     state["active_task"] = {
         "role": "quant-research",
@@ -172,7 +179,7 @@ def test_stale_main_blocks_active_work():
         "base_main_sha": "b" * 40,
         "started_at": "2026-09-09T03:30:00Z",
     }
-    decision = plan_decision(_config(), _coord(), state, MAIN_SHA, NOW)
+    decision = plan_decision(_config(), coordination, state, MAIN_SHA, NOW)
     assert decision.run is False
     assert decision.reason == "STALE_MAIN_WITH_ACTIVE_TASK"
 
@@ -264,8 +271,8 @@ def test_malformed_agent_output_fails_closed():
 
 def test_completion_handoff_clears_discovery_lease_after_lead_marks_task_done():
     coordination = copy.deepcopy(_coord())
-    task = _ready_discovery_task_for_role("quant-research", coordination)
-    task["status"] = "DONE"
+    task = next(row for row in coordination["tasks"] if row["id"] == "COORD-DISC-QUANT-004")
+    assert task["status"] == "DONE"
     state = default_state()
     state["active_task"] = {
         "role": "quant-research",
@@ -314,15 +321,12 @@ def test_current_data_coordination_retires_rejected_candidates_and_advances():
 
 
 
-def test_coordination_priority_selects_strategy_discovery_hypothesis_task():
+def test_coordination_priority_waits_after_terminal_strategy_rejection():
     coordination = _coord()
-    task = highest_ready_task(_config(), coordination)
-    current = _ready_discovery_task_for_role("quant-research", coordination)
-    assert task == current
-    assert task["owner"] == "quant-research"
-    assert task["status"] == "READY"
-    assert task["id"] == "COORD-DISC-QUANT-004"
-    assert task.get("fingerprint_id") is None
+    assert highest_ready_task(_config(), coordination) is None
+    current = next(row for row in coordination["tasks"] if row["id"] == "COORD-DISC-QUANT-004")
+    assert current["status"] == "DONE"
+    assert current["completion_evidence"]["decision"] == "REJECTED_PRE_OOS"
 
 def test_legacy_swarm_is_manual_only_and_new_workflow_cannot_merge_main_or_trade():
     legacy = Path(".github/workflows/autonomous_agents.yml").read_text(encoding="utf-8")
@@ -340,14 +344,13 @@ def test_legacy_swarm_is_manual_only_and_new_workflow_cannot_merge_main_or_trade
     assert "gh workflow run security.yml" in cloud
     assert "OPENAI_API_KEY" in cloud
 
-def test_terminal_data_resolution_pivots_to_distinct_hypothesis_freeze():
+def test_terminal_rejection_does_not_reopen_hypothesis_freeze():
     coordination = copy.deepcopy(_coord())
-    next(row for row in coordination["tasks"] if row["id"] == "COORD-DISC-DATA-003")["status"] = "DONE"
-    task = highest_ready_task(_config(), coordination)
-    assert task["id"] == "COORD-DISC-QUANT-004"
-    assert task["owner"] == "quant-research"
-    assert task.get("fingerprint_id") is None
+    assert highest_ready_task(_config(), coordination) is None
     assert next(row for row in coordination["tasks"] if row["id"] == "COORD-DISC-DATA-004")["status"] == "DONE"
+    rejected = next(row for row in coordination["tasks"] if row["id"] == "COORD-DISC-QUANT-004")
+    assert rejected["status"] == "DONE"
+    assert rejected["fingerprint_id"] == "DISC-BTC-LEADLAG-001-v1"
 
 
 def test_quant_terra_reservation_fits_daily_budget():

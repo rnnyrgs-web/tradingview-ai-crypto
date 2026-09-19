@@ -121,7 +121,7 @@ def test_select_next_returns_none_for_a_role_with_no_active_or_queued_task():
 
 
 
-def test_select_next_parks_data_market_until_a_new_contract_is_frozen():
+def test_select_next_parks_strategy_roles_during_lead_runtime_acceptance():
     from orchestration.specialist_coordination import next_task
 
     state = load_state()
@@ -130,7 +130,7 @@ def test_select_next_parks_data_market_until_a_new_contract_is_frozen():
     assert task == next_task(state, "data-market")
     quant = select_next(state, "quant-research")
     assert quant == next_task(state, "quant-research")
-    assert quant["id"] == "COORD-DISC-QUANT-004"
+    assert quant is None
 
 def test_select_next_returns_the_same_task_as_next_task_for_an_active_role():
     from orchestration.specialist_coordination import next_task

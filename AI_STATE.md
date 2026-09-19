@@ -1,111 +1,87 @@
 # AI_STATE.md
 
-Last reconciled: 2026-09-19T06:15Z
-Last updated: 2026-09-19T06:15Z
+Last reconciled: 2026-09-19T11:24Z
+Last updated: 2026-09-19T11:24Z
 
-This is the compact canonical handoff for `rnnyrgs-web/tradingview-ai-crypto`. On every run, verify actual `main` SHA first, then read `UNIFIED_PROFITABILITY_LEAD_SPEC.md`, `AGENTS.md`, `orchestration/strategy_discovery_queue.json`, `orchestration/rejected_fingerprints.json`, specialist coordination plus all override layers, `orchestration/model_routing_policy.json`, current Big-Move/Money Intelligence evidence, open PRs, latest Strategy Discovery Supervisor snapshot, relevant autonomous-worker state, and exact-head CI. GitHub/persistent machine-readable state outranks chat memory.
+This is the compact canonical handoff for `rnnyrgs-web/tradingview-ai-crypto`. Verify actual `main` SHA first on every run, then read `UNIFIED_PROFITABILITY_LEAD_SPEC.md`, `AGENTS.md`, `AUTONOMOUS_RESEARCH_DIRECTOR_STATUS.md`, `docs/ASTRA_BACKGROUND_WORKER.md`, strategy/rejected/coordination state including overrides, `orchestration/model_routing_policy.json`, current Money Intelligence / Big-Move artifacts, open PRs, active ownership, and exact-head CI. GitHub durable state outranks chat memory.
 
-## PRIMARY OBJECTIVE
+## MASTER OBJECTIVE
 
-Find and rigorously validate one algorithmic strategy with sustainable positive after-cost expectancy and useful frequency, while independently improving scientifically defensible 90-day large-upside / 2x-candidate intelligence. Do not call backtests real profit and do not manufacture a 2x forecast.
+Find and rigorously validate at least one sustainable profitable after-cost algorithmic strategy, while independently improving scientifically defensible 90-day large-upside / 2x intelligence. Optimize compounded economic return, drawdown/tail-risk control, OOS robustness, execution realism and information gain. Never manufacture success, and never call an already-moved asset an early prediction.
 
-Exactly one candidate may consume expensive deep-validation capacity at a time. Cheap predeclared screening may reject many candidates. Failure means explain -> preserve evidence -> learn -> pivot -> continue. A waiting or blocked lane must not stop independent useful work that cannot contaminate protected evidence.
+## OVERNIGHT INTEGRATION PROGRAM
 
-## CURRENT CANONICAL STRATEGY STATE
+Sequential phases:
+1. Profitability Learning + Strategy Evolution Engine.
+2. Evolving Money Intelligence + Causal Repricing Engine.
+3. Independent adversarial architecture review/fixes.
+4. Permanent autonomous-loop integration.
 
-- No validated profitable strategy exists.
-- Discovery lifecycle: **SELECTION**.
-- `active_deep_candidate`: **null**.
-- There is currently **no scientifically actionable `CHEAP_SCREEN_READY` strategy candidate** after the DATA-004 source-resolution result.
-- `DISC-SQUEEZE-RETENTION-001-v1` is **BLOCKED_DATA_CONTRACT**, not strategy-rejected.
-- `DISC-RESIDUAL-MOMENTUM-001-v1` remains **DEPRIORITIZED_EVIDENCE_LIMITED** because the current-survivor universe prevents promotion-grade point-in-time interpretation.
-- `DISC-FRIZZ-PLAYBIT-EMA-001-v1` remains **BLOCKED_SOURCE_FINGERPRINT**; never approximate it or silently substitute existing FFRIZZ logic.
-- Untouched OOS for all unresolved candidates remains **LOCKED / unopened**.
-- Broker/live authority: **OFF**; research/paper/shadow only.
-- Combined variable paid-project ceiling: approximately **$30/month total** unless the user explicitly changes it.
+**Earliest incomplete phase: PHASE 1. Phase 2 must not start yet.**
 
-## DATA-004 RESULT — SQUEEZE/RETENTION SOURCE RESOLUTION
+Phase 1 architecture is materially advanced, but acceptance still requires genuine runtime proof on the actual autonomous/deployed path: experiment -> reconciled after-cost trades/NAV -> profitability/risk analysis -> component/interaction learning -> failure/success classification -> durable memory -> evidence-based mission/admission re-ranking, with restart/replay/outage fail-closed behavior. Issue #438 is the durable acceptance contract.
 
-`COORD-DISC-DATA-004` is **DONE** via PR #431. The exact result is **`TERMINAL_NO_ZERO_COST_TIMESTAMP_SAFE_SOURCE` for the current frozen data contract and approved access**, not a strategy rejection and not evidence that the squeeze/retention economic mechanism is false.
+## CURRENT CANONICAL STRATEGY RESULT
 
-Frozen scope:
-- venue/market semantics: Binance USDⓈ-M;
-- instruments: BTCUSDT / ETHUSDT / SOLUSDT;
-- required families: liquidations / open_interest / mark_price;
-- historical interval: `2025-07-01T00:00:00Z` inclusive through `2026-09-01T00:00:00Z` exclusive;
-- strategy outcomes inspected: **false**;
-- untouched OOS opened: **false**;
-- new paid source authorized: **false**.
+PR #442 is merged to canonical `main` as `9368dfe0d3f22573b5331b1086547c3884330b1b` after exact-head Security & Reliability success on PR head `722c2615f8b87368e84b7e576fe5cc853bb9c2cd` (run `35436865197`).
 
-What was learned:
-- the bounded DATA-003 sample proved individual CryptoHFTData objects can exist and be validated, but did not prove complete historical inventory or publication chronology;
-- complete CryptoHFTData prefix/inventory enumeration requires dashboard-generated temporary S3 credentials under the current access path, so anonymous exact-path probing cannot prove the full historical contract;
-- Binance zero-cost alternatives do not provide an equivalent historical forced-liquidation family for the frozen contract;
-- public liquidation broadcasts remain lower-bound observations and cannot be silently treated as complete liquidation notional;
-- missing liquidation objects may not be converted to zero events;
-- no venue/instrument substitution or outcome-driven proxy was used.
+`DISC-BTC-LEADLAG-001-v1` is **REJECTED_PRE_OOS** on its exact frozen fingerprint. Do not tune or reopen it.
 
-Canonical evidence:
-- PR #431 exact head: `503cbc5402bd0096b327c8aae9481633c354373f`;
-- exact-head Security & Reliability run `35424497257`: **SUCCESS**;
-- verified merge commit: `c51a59dbac604a2e0b2eefa2b68ae025d4c5b0e3`;
-- post-merge Security & Reliability run `35425911144`: **SUCCESS**;
-- source-resolution artifact: `research_data/squeeze_preflight/data004_source_resolution.json`.
+Frozen 3x-cost result:
+- training pooled: 102 trades, mean net **-68.95 bps**, PF **0.420**;
+- validation pooled: 24 trades, mean net **-113.69 bps**, PF **0.097**;
+- ETH and SOL were both negative in train and validation;
+- the primary was already negative at base cost;
+- both fixed 35/65 bps falsifiers were negative;
+- historical untouched OOS opened: **false**;
+- genuine-forward evidence opened: **false**.
 
-Reopen `DISC-SQUEEZE-RETENTION-001-v1` only if the documented DATA-004 reopen conditions are satisfied by materially improved timestamp-safe source access. Do not rescue it with another venue, current snapshots, inferred missing liquidation flow, or post-hoc proxying.
+The predeclared underreaction component improved training compounded return by 6.03 percentage points versus its valid ablation, but the full strategy still lost 16.30% after costs. Treat that as **development-only component evidence**, not a rescue of v1. Useful parts may seed a NEW hypothesis only under a fresh fingerprint and fresh chronological validation.
 
-## CURRENT SPECIALIST EXECUTION QUEUE
+PR #442 also fixed and regression-tested the evaluator -> `profitability_learning.complete_experiment` -> durable memory -> exact rejected-fingerprint admission-veto path. That is necessary Phase-1 wiring, but **MERGED/TESTED is not yet the same as live autonomous runtime acceptance**.
 
-Canonical coordination must be loaded through `orchestration/coordination_overrides.py`, which applies the historical override ledger and the Lead reconciliation layer. Do **not** read only the base JSON.
-
-Current strategy-discovery execution state:
-- `COORD-DISC-DATA-004` — **DONE**: current squeeze-retention data path terminally blocked under current approved zero-new-cost access.
-- `COORD-DISC-QUANT-003` — **BLOCKED**: do not screen or proxy-rescue the data-blocked squeeze fingerprint.
-- `COORD-DISC-VAL-003` — **BLOCKED**: preserve its pre-outcome design, but do not spend additional candidate-specific validation capacity until the data contract reopens or a new candidate is frozen.
-- `COORD-DISC-TEST-003` — **BLOCKED FOR DUPLICATION AVOIDANCE** while generic discovery-firewall hardening PR #432 awaits independent Lead review; the remaining candidate-specific audit waits for a new executable contract.
-- `COORD-DISC-QUANT-004` — **READY** and is the next strategy-discovery action: freeze one materially distinct hypothesis with a demonstrably timestamp-safe available-data path before any returns are inspected.
-
-`COORD-DISC-QUANT-004` must:
-- choose a genuinely different economic mechanism rather than tuning/rescuing a rejected or blocked exact fingerprint;
-- use data families already demonstrably available under current approved access;
-- freeze market/venue, instruments, timeframe, signal definition, entry, exit, hold, no-trade rules, chronology, train/validation split, untouched-OOS boundary, benchmark, realistic costs/stress, sample floors, search breadth and multiple-testing treatment **before** outcome inspection;
-- state an economic mechanism and explicit falsification rule;
-- preserve durable rejected-fingerprint memory and evidence-limited lanes;
-- either add exactly one highest-ranked `CHEAP_SCREEN_READY` candidate with the complete frozen contract or persist a precise reason why none is defensible yet.
-
-## DURABLE NEGATIVE MEMORY
-
-Do not rescue rejected exact fingerprints without materially new data or a genuinely different frozen scientific/economic hypothesis. Rejected exact fingerprints include at least:
+Durable negative memory now includes at least:
 - `ACC-002`;
 - `DATA-BASIS-001`;
 - `DATA-FUNDING-001`;
 - `DISC-VOL-BREAKOUT-001-v1`;
-- `DISC-LIQUIDITY-MEANREV-001-v1`.
+- `DISC-LIQUIDITY-MEANREV-001-v1`;
+- `DISC-BTC-LEADLAG-001-v1`.
 
-The volatility-breakout and liquidity-shock mean-reversion failures remain durable pre-OOS rejections; untouched OOS stayed locked. `DISC-SQUEEZE-RETENTION-001-v1` is **not** in this rejected registry because the mechanism was never tested: its required data contract failed first.
+## OTHER STRATEGY LANES
 
-## 90-DAY BIG-MOVE / MONEY INTELLIGENCE LANE
+- `active_deep_candidate`: **null**.
+- `DISC-SQUEEZE-RETENTION-001-v1`: **BLOCKED_DATA_CONTRACT**, not strategy-rejected. DATA-004 found no scientifically defensible zero-new-cost timestamp-safe historical forced-flow source under the exact frozen Binance contract. Strategy outcomes/OOS were never opened.
+- `DISC-RESIDUAL-MOMENTUM-001-v1`: **DEPRIORITIZED_EVIDENCE_LIMITED** because historical point-in-time membership is not verified.
+- `DISC-FRIZZ-PLAYBIT-EMA-001-v1`: **BLOCKED_SOURCE_FINGERPRINT**. Never approximate or silently substitute existing FFRIZZ logic.
+- No candidate may enter expensive deep validation unless it first passes a newly frozen, predeclared cheap screen under current scientific gates.
 
-Big-Move Intelligence and Money Intelligence remain independent hypothesis/evidence generators when they cannot contaminate protected strategy evidence.
+## PHASE 1 EXACT NEXT ACCEPTANCE ACTION
 
-Rules:
-- study historical roughly-2x-within-90-days events and other large moves against outcome-blind matched pre-event controls;
-- use point-in-time-safe universes and covariates where possible;
-- optimize for top-ranked precision/lift, PR-AUC/calibration, realized forward returns, tradability and regime stability rather than raw accuracy;
-- label OBSERVED FACT / INFERENCE / HYPOTHESIS / FORECAST / UNKNOWN;
-- preserve failed precursors and never rewrite them after outcomes;
-- never retroactively call an already-moved asset an early prediction;
-- only produce a ranked Big-Move Evidence Profile when current evidence is strong enough to support it.
+Continue issue #438 without duplicating already merged work. On an isolated branch, verify the merged `9368dfe...` evaluator/learning path through the **actual autonomous runtime/state channel**, not only unit/integration tests:
 
-Current truth: there is **no promotion-grade 90-day 2x candidate**. Latest Money Intelligence evidence remains hypothesis-generation evidence, not a frozen forecast.
+1. use only the already-opened train/validation evidence for the rejected BTC lead-lag experiment; do not open historical untouched OOS or genuine-forward data;
+2. execute completion into the approved durable profitability-learning state channel;
+3. prove the resulting failure/component memory is consumed by the real autonomous admission/mission-generation path, including exact-fingerprint veto and bounded component influence;
+4. prove restart/re-entry/idempotency, duplicate/replay suppression, and configured-memory missing/corrupt/outage fail-closed behavior;
+5. if the real runtime lacks a necessary dispatch/transport hook, implement the smallest bounded fix on an isolated branch with regression coverage;
+6. require exact-head Security & Reliability before merge and actual deployed/runtime SHA verification before declaring Phase 1 complete.
 
-PR #433 is **OPEN / NOT CANONICAL** and therefore must not be described as deployed functionality. It implements a DEVELOPMENT-only deterministic 2x-within-90d event/matched-control lab with explicit censoring and outcome-blind control construction. Its exact head `bc68d0c3d6aefe01bd67170539d8caaa7b047f63` passed Security & Reliability run `35425535682`. Independent Lead review is still required before merge; even if merged, infrastructure alone is not market evidence and does not create a current 2x candidate.
+Only after that proof may Phase 1 be marked complete and Phase 2 begin automatically.
 
-## OTHER OPEN RESEARCH-INTEGRITY WORK
+## MONEY INTELLIGENCE / BIG-MOVE STATE
 
-PR #432 is **OPEN / NOT MERGED**. It hardens strategy-discovery public boundaries so rejected fingerprints, unsafe policy flags, or multiple deep candidates cannot bypass loader validation. Its existence does not complete candidate-specific TEST-003 and does not create profitability evidence. Avoid duplicate worker execution while it awaits independent Lead review.
+Independent Money Intelligence may continue when it cannot contaminate protected strategy evidence. The latest merged research cycle at cutoff `2026-09-19T10:49Z` deepened trust-to-ETF wrapper transmission using ZCSH/ZEC plus GBTC/ETHE controls. Key learning: ETF/wrapper **AUM, net creation flow, and marginal spot demand are different variables**; direction depends on cash vs in-kind sourcing, legacy-holder supply, free float/liquidity and leverage.
 
-The latest Strategy Discovery Supervisor snapshot before DATA-004 completion still ranked squeeze-retention because it was generated from earlier canonical state. After this reconciliation, the supervisor should show no actionable cheap screen until QUANT-004 freezes a new candidate. A stale snapshot must not override newer merged state.
+Current decision support remains **WAIT / AVOID CHASING** for ZEC after its extreme move, and **WAIT** for BTC pending stronger spot-led confirmation. There is still **no promotion-grade 90-day 2x candidate and no immutable forecast clearing the evidence bar**.
+
+Do not infer "ETF conversion = bullish". Treat wrapper transmission as a mechanism whose sign must be measured with point-in-time creations/redemptions, sourcing mechanics and matched controls.
+
+## OPEN INTEGRATION / INTEGRITY WORK
+
+Older open PRs must be revalidated against current main before any integration; do not merge merely because an old exact-head CI run was green. Avoid duplicate work where a current PR/branch/run already owns the task.
+
+PR #432 (strategy-discovery firewall), PR #433 (development-only Big-Move event lab), PR #441 (superseded older AI_STATE reconciliation), and other stale PRs are **not canonical merely because they are open**. Review them against current main and current scientific objectives before deciding whether to supersede, rebase, integrate, or close.
 
 ## PRESERVED DATA-BREADTH HANDOFF
 
@@ -115,36 +91,32 @@ The latest Strategy Discovery Supervisor snapshot before DATA-004 completion sti
 
 Do not select another DATA-BREADTH candidate while `COORD-DATA-007` remains blocked on genuine prospective maturation. This legacy breadth maturation wait does not block strategy discovery.
 
-## COST / INFRASTRUCTURE / MODEL ROUTING
-
-- Obey `orchestration/model_routing_policy.json`.
-- Deterministic Python/GitHub Actions first when possible.
-- API routing uses GPT-5.6 Luna/Terra/Sol only within approved budgets.
-- GPT-6 Astra belongs to ChatGPT Work/Codex, not the OpenAI API; never claim an API Astra run.
-- One autonomous cloud specialist model run at a time; branch-isolated; cannot merge itself or trade.
-- Do not add OpenAI/Anthropic spend merely to relay work between sessions.
-- Supabase Pro is approved by the user, but egress/query/window/throttling safeguards from PRs #413/#414 remain mandatory; do not reintroduce unbounded resolved-ledger polling or broad repeated reads.
+Canonical specialist coordination must be loaded through `orchestration/coordination_overrides.py`, which applies the historical override ledger and the Lead reconciliation layer. Do **not** read only the base JSON.
 
 ## SAFETY INVARIANTS
 
-- Broker disconnected; no real-order authority or fund transfer.
+- Broker disconnected; trade/promotion authority **OFF**.
 - Do not rewrite historical predictions, frozen OOS, genuine-forward evidence, or rejected fingerprints.
-- Isolated branches only for code/state changes.
-- Exact-head **Security & Reliability** must pass before merge.
-- Runtime-affecting changes also require actual deployed-SHA verification.
-- Missing/stale/malformed/future/ambiguous/provenance-uncertain evidence fails closed to WAIT / RESEARCH_ONLY.
-- Never weaken chronology, purging, non-overlap, point-in-time universe safety, realistic costs, robustness, multiple-testing controls, or promotion gates to obtain a pass.
-- One attractive backtest/OOS result grants no production or live authority.
-- If frozen rigorous criteria genuinely pass, report the success clearly with exact evidence and limitations.
+- Use isolated branches for changes and require exact-head Security & Reliability before merge.
+- Runtime-affecting work also requires actual deployed/runtime-SHA verification.
+- Missing/stale/malformed/future/ambiguous evidence fails closed to WAIT / RESEARCH_ONLY.
+
+## COST / MODEL ROUTING
+
+- Broker disconnected; trade/promotion authority **OFF**.
+- Combined variable paid-project ceiling remains approximately **$30/month** unless the user explicitly changes it.
+- Supabase Pro is approved; preserve egress/query/window/throttling safeguards from PRs #413/#414.
+- Deterministic Python/GitHub Actions first when possible.
+- API routing: GPT-5.6 Luna/Terra/Sol only within approved budget.
+- GPT-6 Astra belongs to Work/Codex, never the OpenAI API.
+- One expensive deep strategy candidate at a time.
+- Preserve chronology, point-in-time safety, realistic costs, robustness, multiple-testing controls, cross-engine checks where applicable, untouched OOS and genuine-forward gates.
+- Missing/stale/malformed/future/ambiguous evidence fails closed to WAIT / RESEARCH_ONLY.
+
+## STATUS
+
+Current truth: **no validated profitable strategy; `DISC-BTC-LEADLAG-001-v1` rejected pre-OOS; no promotion-grade 90-day 2x candidate; Phase 1 not yet live-runtime accepted; Phase 2 gated; untouched OOS/forward for the rejected lead-lag fingerprint remain unopened; broker/live authority off.**
 
 ## EXACT NEXT STEP
 
-Execute **`COORD-DISC-QUANT-004`**: freeze the next materially distinct strategy hypothesis that can be tested using a timestamp-defensible data path already available under approved access, without inspecting candidate returns while choosing the contract. Only after that contract is frozen may the deterministic cheap screen run.
-
-Independent Big-Move/Money Intelligence work may continue in parallel when it cannot contaminate protected strategy evidence. PR #433 may be independently reviewed/integrated on its own evidence, but it is not a substitute for selecting a testable strategy candidate.
-
-## STATUS VOCABULARY
-
-Do not conflate IMPLEMENTED / TESTED / MERGED / DEPLOYED / BACKTESTED / OOS TESTED / ROBUSTNESS TESTED / CROSS-ENGINE VERIFIED / FORWARD TESTED / LIVE TESTED / VALIDATED PROFITABLE.
-
-Current truth: **no validated profitable strategy, no promotion-grade 90-day 2x candidate, no active deep candidate, squeeze-retention scientifically data-blocked before outcomes, untouched OOS locked, broker/live authority off.**
+Complete the Phase-1 acceptance action above through issue #438. Do not freeze a successor strategy or begin Phase 2 until the merged runtime path is proven on the actual durable/deployed channel, or a precise blocker is recorded.

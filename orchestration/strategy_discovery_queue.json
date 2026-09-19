@@ -14,42 +14,6 @@
   },
   "candidates": [
     {
-      "hypothesis_id": "DISC-BTC-LEADLAG-001",
-      "fingerprint_id": "DISC-BTC-LEADLAG-001-v1",
-      "family": "cross_asset_price_discovery_leadlag",
-      "lane": "cheap_screen",
-      "stage": "CHEAP_SCREEN_READY",
-      "work_mode": "CHEAP_SCREEN",
-      "economic_mechanism": "BTC may absorb market-wide information and capital-flow shocks before fixed liquid followers; a follower that has not incorporated its strictly trailing beta-implied response may continue in the BTC impulse direction as arbitrageurs and allocators rebalance.",
-      "hypothesis": "After a predeclared large completed one-hour BTC impulse, fixed ETH and SOL followers satisfying a strictly pre-event beta-defined underreaction gap have positive next-six-hour same-direction after-cost expectancy versus trading every identical BTC impulse without the underreaction condition.",
-      "target_markets": ["OKX BTC/ETH/SOL USDT perpetual swaps"],
-      "target_timeframes": ["1h signal / 6h hold"],
-      "source_fingerprint_required": false,
-      "blocker": null,
-      "contract_ref": "orchestration/disc_btc_leadlag_001.json",
-      "source_evidence_ref": "orchestration/evidence/disc_liquidity_meanrev_001_20260919.json",
-      "expected_profitability_impact": 0.74,
-      "expected_information_gain": 0.9,
-      "falsification_value": 0.94,
-      "sample_readiness": 0.95,
-      "compute_cost": 0.25,
-      "validation_requirements": [
-        "exact_timestamp_alignment",
-        "strictly_trailing_through_origin_beta",
-        "chronological_train_validation",
-        "mandatory_ETH_and_SOL_replication",
-        "no_underreaction_baseline",
-        "reconciled_trade_cost_hourly_nav_artifacts",
-        "reused_train_validation_is_exploratory_only",
-        "fresh_post_freeze_chronological_confirmation_required",
-        "untouched_oos_locked_until_canonical_pass",
-        "robustness_stability",
-        "multiple_testing_firewall",
-        "realistic_cost_stress",
-        "genuine_forward_shadow_if_later_selected"
-      ]
-    },
-    {
       "hypothesis_id": "DISC-RESIDUAL-MOMENTUM-001",
       "fingerprint_id": "DISC-RESIDUAL-MOMENTUM-001-v1",
       "family": "residual_momentum",
@@ -58,14 +22,8 @@
       "work_mode": "CHEAP_SCREEN",
       "economic_mechanism": "Asset-specific momentum remaining after removing broad market movement may persist because idiosyncratic information and flows diffuse gradually.",
       "hypothesis": "Residualized cross-sectional momentum has positive incremental after-cost expectancy across predeclared liquid universes and chronological splits.",
-      "target_markets": [
-        "liquid_crypto"
-      ],
-      "target_timeframes": [
-        "1h",
-        "4h",
-        "1d"
-      ],
+      "target_markets": ["liquid_crypto"],
+      "target_timeframes": ["1h", "4h", "1d"],
       "source_fingerprint_required": false,
       "blocker": "Frozen cheap screen DISC-RESIDUAL-MOMENTUM-001-v1 produced 0/2 passing Top-15/Top-30 pre-OOS subsets on exact artifact 10572498750; challenger training rank IC and 3x after-cost spread were negative on both subsets. Historical point-in-time membership is unverified, so the screen is exploratory negative evidence only: keep OOS locked, do not deep-freeze, and do not terminally reject solely from survivor-biased evidence.",
       "evidence_ref": "orchestration/evidence/disc_residual_momentum_001_20260919.json",
@@ -74,16 +32,7 @@
       "falsification_value": 0.9,
       "sample_readiness": 0.85,
       "compute_cost": 0.35,
-      "validation_requirements": [
-        "chronological_train_validation",
-        "untouched_oos",
-        "robustness_stability",
-        "multiple_testing_firewall",
-        "point_in_time_universe",
-        "realistic_cost_stress",
-        "cross_engine_if_selected",
-        "genuine_forward_shadow"
-      ]
+      "validation_requirements": ["chronological_train_validation", "untouched_oos", "robustness_stability", "multiple_testing_firewall", "point_in_time_universe", "realistic_cost_stress", "cross_engine_if_selected", "genuine_forward_shadow"]
     },
     {
       "hypothesis_id": "DISC-SQUEEZE-RETENTION-001",
@@ -94,14 +43,8 @@
       "work_mode": "CHEAP_SCREEN",
       "economic_mechanism": "If a large upside move is initially amplified by short-covering but price remains elevated after forced-flow activity and leverage normalize, independent spot/capital demand may be carrying the move and continuation may have positive expectancy.",
       "hypothesis": "A predeclared post-squeeze retention/deleveraging filter identifies continuation after large upside moves with positive after-cost expectancy versus equally large price shocks without retention and leverage-normalization confirmation.",
-      "target_markets": [
-        "liquid_crypto"
-      ],
-      "target_timeframes": [
-        "1h",
-        "4h",
-        "24h"
-      ],
+      "target_markets": ["liquid_crypto"],
+      "target_timeframes": ["1h", "4h", "24h"],
       "source_fingerprint_required": false,
       "blocker": "DATA-004 terminally established no scientifically defensible zero-new-cost timestamp-safe historical forced-flow source for the frozen Binance USDⓈ-M BTCUSDT/ETHUSDT/SOLUSDT interval 2025-07-01T00:00Z through 2026-09-01T00:00Z under current access. CryptoHFTData complete prefix inventory requires dashboard-generated temporary S3 credentials; anonymous exact-path probing cannot prove complete inventory or historical publication chronology. Binance zero-cost alternatives do not provide the matching historical forced-liquidation family, and public liquidation broadcasts remain lower-bound observations. Strategy outcomes and untouched OOS were not opened. This blocks v1 under the current data contract but is not a strategy rejection; reopen only under the documented DATA-004 conditions or freeze a genuinely different hypothesis.",
       "generator_evidence_ref": "money_intelligence/research_cycles/2026-09-19T0357Z-cycle.json",
@@ -111,17 +54,7 @@
       "falsification_value": 0.93,
       "sample_readiness": 0.15,
       "compute_cost": 0.4,
-      "validation_requirements": [
-        "timestamp_safe_forced_flow_data",
-        "predeclared_squeeze_and_retention_thresholds",
-        "chronological_train_validation",
-        "matched_large_move_baseline",
-        "untouched_oos",
-        "robustness_stability",
-        "multiple_testing_firewall",
-        "realistic_cost_stress",
-        "genuine_forward_shadow"
-      ],
+      "validation_requirements": ["timestamp_safe_forced_flow_data", "predeclared_squeeze_and_retention_thresholds", "chronological_train_validation", "matched_large_move_baseline", "untouched_oos", "robustness_stability", "multiple_testing_firewall", "realistic_cost_stress", "genuine_forward_shadow"],
       "data_preflight_ref": "docs/research/squeeze_retention_data_preflight_20260919.md",
       "data_resolution_ref": "research_data/squeeze_preflight/data004_source_resolution.json",
       "data_resolution_pr": 431,
@@ -136,18 +69,8 @@
       "work_mode": "CHEAP_SCREEN",
       "economic_mechanism": "Trend-following EMA geometry may capture persistent directional order flow if the exact published rules are applied consistently across assets and timeframes.",
       "hypothesis": "The exact user-specified Frizz/PlayBit EMA rules exhibit robust after-cost expectancy on a subset of assets/timeframes without post-hoc rule changes.",
-      "target_markets": [
-        "crypto",
-        "fx",
-        "indices",
-        "commodities"
-      ],
-      "target_timeframes": [
-        "15m",
-        "1h",
-        "4h",
-        "1d"
-      ],
+      "target_markets": ["crypto", "fx", "indices", "commodities"],
+      "target_timeframes": ["15m", "1h", "4h", "1d"],
       "source_fingerprint_required": true,
       "blocker": "Exact indicator source/rules must be pinned and fingerprinted before any screen; do not approximate or silently substitute the existing FFRIZZ family.",
       "expected_profitability_impact": 0.76,
@@ -155,17 +78,7 @@
       "falsification_value": 0.92,
       "sample_readiness": 0.3,
       "compute_cost": 0.35,
-      "validation_requirements": [
-        "exact_source_fingerprint",
-        "faithful_rule_transcription",
-        "chronological_train_validation",
-        "untouched_oos",
-        "robustness_stability",
-        "multiple_testing_firewall",
-        "realistic_cost_stress",
-        "cross_asset_timeframe_search_adjustment",
-        "genuine_forward_shadow"
-      ]
+      "validation_requirements": ["exact_source_fingerprint", "faithful_rule_transcription", "chronological_train_validation", "untouched_oos", "robustness_stability", "multiple_testing_firewall", "realistic_cost_stress", "cross_asset_timeframe_search_adjustment", "genuine_forward_shadow"]
     },
     {
       "hypothesis_id": "DISC-BIG-MOVE-GENERATOR-001",
@@ -176,15 +89,8 @@
       "work_mode": "CHEAP_SCREEN",
       "economic_mechanism": "Extreme moves may share measurable pre-move combinations of liquidity, leverage, supply, narrative, catalyst, and market-structure conditions.",
       "hypothesis": "Matched-control big-move studies can generate measurable precursor hypotheses that improve future strategy discovery without using post-move information.",
-      "target_markets": [
-        "global_multi_asset"
-      ],
-      "target_timeframes": [
-        "event",
-        "1h",
-        "1d",
-        "1w"
-      ],
+      "target_markets": ["global_multi_asset"],
+      "target_timeframes": ["event", "1h", "1d", "1w"],
       "source_fingerprint_required": false,
       "blocker": null,
       "expected_profitability_impact": 0.58,
@@ -192,12 +98,7 @@
       "falsification_value": 0.94,
       "sample_readiness": 0.7,
       "compute_cost": 0.25,
-      "validation_requirements": [
-        "point_in_time_reconstruction",
-        "matched_controls",
-        "post_hoc_story_filter",
-        "prospective_validation"
-      ]
+      "validation_requirements": ["point_in_time_reconstruction", "matched_controls", "post_hoc_story_filter", "prospective_validation"]
     },
     {
       "hypothesis_id": "DISC-MONEY-INTEL-GENERATOR-001",
@@ -208,14 +109,8 @@
       "work_mode": "CHEAP_SCREEN",
       "economic_mechanism": "Liquidity, credit, policy, capital-flow and positioning changes can transmit into asset returns through measurable causal channels.",
       "hypothesis": "Money Intelligence can generate timestamp-defensible, testable strategy hypotheses with incremental predictive value over simple price-only baselines.",
-      "target_markets": [
-        "global_multi_asset"
-      ],
-      "target_timeframes": [
-        "1d",
-        "1w",
-        "1m"
-      ],
+      "target_markets": ["global_multi_asset"],
+      "target_timeframes": ["1d", "1w", "1m"],
       "source_fingerprint_required": false,
       "blocker": null,
       "expected_profitability_impact": 0.55,
@@ -223,12 +118,7 @@
       "falsification_value": 0.9,
       "sample_readiness": 0.6,
       "compute_cost": 0.2,
-      "validation_requirements": [
-        "timestamped_sources",
-        "causal_hypothesis",
-        "simple_baseline_comparison",
-        "prospective_validation"
-      ]
+      "validation_requirements": ["timestamped_sources", "causal_hypothesis", "simple_baseline_comparison", "prospective_validation"]
     }
   ]
 }

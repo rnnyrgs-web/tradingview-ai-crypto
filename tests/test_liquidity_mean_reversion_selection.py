@@ -200,15 +200,16 @@ def test_missing_cache_has_no_network_fallback(tmp_path):
         _load_frozen_cache(tmp_path)
 
 
-def test_terminal_task_handoff_releases_old_lease_for_materially_distinct_candidate():
+def test_terminal_task_handoff_releases_old_lease_and_waits_without_ready_work():
     from datetime import datetime, timezone
     from agents.autonomous_cloud_runner import default_state, load_config, load_coordination, plan_decision
     state = default_state()
     state["active_task"] = {"role": "data-market", "task_id": "COORD-DISC-DATA-002", "phase": "WAITING_CI", "base_main_sha": "a" * 40, "started_at": "2026-09-19T04:00:00Z"}
     decision = plan_decision(load_config(), load_coordination(), state, "a" * 40, datetime(2026, 9, 19, 4, 10, tzinfo=timezone.utc))
-    assert decision.run is True
-    assert decision.role == "quant-research"
-    assert decision.task_id == "COORD-DISC-QUANT-004"
+    assert decision.run is False
+    assert decision.reason == "NO_READY_AUTONOMOUS_TASK"
+    assert decision.role is None
+    assert decision.task_id is None
 
 
 def test_frozen_sample_cost_and_sensitivity_gates_cannot_be_bypassed():
