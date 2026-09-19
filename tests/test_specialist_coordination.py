@@ -98,7 +98,10 @@ def test_completed_data_provenance_work_is_not_reassigned():
 
     next_data_task = next(row for row in state["tasks"] if row["id"] == "COORD-DATA-007")
     assert next_data_task["status"] == "BLOCKED"
-    assert next_task(state, "data-market")["id"] == "COORD-DISC-DATA-002"
+    current = next_task(state, "data-market")
+    assert current["id"].startswith("COORD-DISC-DATA-")
+    assert current["status"] == "READY"
+    assert current["fingerprint_id"] == next_task(state, "quant-research")["fingerprint_id"]
     assert "matured prospective point-in-time cohorts" in next_data_task["title"]
     requirements = " ".join(next_data_task["evidence_required"]).lower()
     assert "minimum eight independent" in requirements
@@ -175,4 +178,3 @@ def test_compact_snapshot_keeps_role_next_work_aligned_to_discovery():
             assert actual is not None
             assert actual["id"] == expected["id"]
             assert actual["fingerprint_id"] == expected["fingerprint_id"]
-

@@ -139,8 +139,14 @@ def validate_config(config: dict[str, Any]) -> None:
     if sum(float(budget[k]) for k in ("baseline_infrastructure_reserve_usd", "runner_monthly_api_budget_usd", "pause_buffer_usd")) > 30:
         raise PolicyError("configured reserve can exceed project ceiling")
     autonomous = config.get("autonomous_roles")
-    if not isinstance(autonomous, list) or len(autonomous) != 1 or set(autonomous) != set(roles):
-        raise PolicyError("v1 must configure exactly one autonomous role")
+    if (
+        not isinstance(autonomous, list)
+        or not autonomous
+        or len(autonomous) > 3
+        or len(set(autonomous)) != len(autonomous)
+        or set(autonomous) != set(roles)
+    ):
+        raise PolicyError("runner must configure one to three unique autonomous roles matching roles")
     for role, settings in roles.items():
         model = settings.get("model")
         if model not in models or models[model].get("enabled") is not True:

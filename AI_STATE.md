@@ -1,7 +1,7 @@
 # AI_STATE.md
 
-Last reconciled: 2026-09-19T04:12Z
-Last updated: 2026-09-19T04:12Z
+Last reconciled: 2026-09-19T04:31Z
+Last updated: 2026-09-19T04:31Z
 
 This is the compact canonical handoff for `rnnyrgs-web/tradingview-ai-crypto`. On every run, first read current default-branch `UNIFIED_PROFITABILITY_LEAD_SPEC.md`, `AGENTS.md`, `docs/MULTI_ENGINE_PROTOCOL.md`, `SIGNAL_BACKTEST_CHARTS_SPEC.md`, the strategy-discovery queue, rejected-fingerprint registry, specialist coordination plus overrides, and actual GitHub/runtime evidence. GitHub/persistent machine-readable state outranks chat memory and stale branch notes.
 
@@ -56,7 +56,7 @@ Exact selection evidence:
 
 Interpretation: the liquidity filters slightly improved validation versus the already-losing large-return reversal baseline, but did not create positive after-cost expectancy. The failure is broad across instruments, train/validation, validation halves, and predeclared sensitivities. Do **not** tune v1 using these outcomes.
 
-Durable evidence: `orchestration/evidence/disc_liquidity_meanrev_001_20260919.json` and `orchestration/rejected_fingerprints.json`.
+Durable evidence: the original rejection record and rejected registry, plus the original sealed evidence/dataset in `orchestration/evidence/liquidity_meanrev_001_cache/`, descriptive audit `orchestration/evidence/disc_liquidity_meanrev_001_audit_20260919.json`, and `docs/research/liquidity_meanrev_001_audit_20260919.md`. Offline replay exactly matches the original complete selection object; it is not a new independent trial. All three cached series have zero hourly gaps. Validation also fails the base 20 bps cost proxy (-5.48 bps/trade). The frozen rule has no stop; additive label drawdown is not portfolio percentage or mark-to-market risk. No claim of validated profitability follows.
 
 ## DURABLE NEGATIVE MEMORY
 
@@ -81,6 +81,16 @@ Economic hypothesis: after a large upside move initially amplified by short-cove
 
 Target scope currently queued: liquid crypto; 1H / 4H / 24H research horizons. Before outcomes are inspected, the exact squeeze, forced-flow normalization, retention, entry, exit, hold, fixed instruments, chronology, matched baseline, costs, sample floors, search breadth, and multiple-testing treatment must be frozen. If timestamp-safe historical forced-flow/open-interest data are not genuinely available, block scientifically rather than fabricating or proxying them post hoc.
 
+## PRESERVED DATA-BREADTH HANDOFF
+
+- `COORD-DATA-005`: **DONE** — breadth evaluator integrated; historical point-in-time history unavailable.
+- `COORD-DATA-006`: **DONE** — prospective capture verified, 79 members, no fabricated historical backfill.
+- `COORD-DATA-007`: **BLOCKED** — await sufficient matured independent prospective cohorts.
+
+Do not select another DATA-BREADTH candidate in the legacy data lane while its prospective maturation gate remains unmet. This does not block the separately authorized strategy-discovery lane. Load coordination through its canonical override loader; do **not** read only the base JSON.
+
+The pivot has continued through a local data-capability preflight: `docs/research/squeeze_retention_data_preflight_20260919.md`. Existing derivatives history explicitly cannot provide defensible historical liquidation notional. DATA-003 must establish a bounded timestamp-defensible source before the next full contract is frozen and before any squeeze outcomes are examined. This is a local data deficiency, not proof that all free external sources are exhausted. No paid data was requested or acquired.
+
 ## CURRENT SPECIALIST EXECUTION QUEUE
 
 The old liquidity tasks are closed DONE with their negative evidence. Active discovery assignments are now:
@@ -94,18 +104,36 @@ Do not allow stale signal-era work or rejected fingerprints to consume these rol
 
 ## SAFETY INVARIANTS
 
-- `COORD-DATA-005`: **DONE**; its historical point-in-time limitation remains durable negative/provenance memory.
-- `COORD-DATA-006`: **DONE**; preserve the verified prospective point-in-time capture evidence and all of its provenance fields.
-- `COORD-DATA-007`: **BLOCKED** until authentic prospective cohorts mature. Do not select another DATA-BREADTH candidate or reconstruct/backfill missing historical membership to bypass that maturation gate.
-- Current `COORD-DISC-*` data work is a separate strategy-discovery lane and does not reopen the blocked DATA-BREADTH fingerprint.
-- Use the canonical coordination loader plus append-only overrides; do **not** read only the base JSON and treat overridden historical rows as current.
-- Broker/live authority remains OFF. Untouched OOS stays locked until a frozen candidate passes the required selection gate, and rejected fingerprints remain terminal unless their recorded reconsideration conditions are genuinely met.
+- Broker disconnected; no real-order authority.
+- Existing $100,000 paper ledger remains authentic/append-only; never reset, reseed, rewrite, or cosmetically improve it.
+- Code changes on isolated branches only.
+- Confirmed defects get regression coverage where practical.
+- Require exact-head **Security and Reliability** green before merge; runtime-affecting changes also require exact deployed-SHA verification.
+- Missing, stale, malformed, future, ambiguous, provenance-uncertain, or scientifically insufficient evidence fails closed to WAIT / RESEARCH_ONLY.
+- Never weaken chronology, purging, non-overlap, untouched OOS/forward boundaries, multiple-testing controls, point-in-time universe safety, cost realism, abstention, or promotion gates to obtain a pass.
+- One promising backtest/OOS result grants no production, broker, paper-authority, or promotion authority.
+- If the predefined rigorous evidence/validation criteria are genuinely satisfied, report that successful result clearly with exact supporting evidence and limitations.
 
 ## API / INFRASTRUCTURE STATE
 
 The API-backed autonomous cloud specialist most recently paused cleanly because the OpenAI organization spend limit was exhausted. Do **not** add or increase OpenAI/Anthropic API spend merely to coordinate sessions. Prefer this scheduled Lead, GitHub state, deterministic Python/GitHub Actions, and already-approved infrastructure.
 
 The previous Supabase egress incident remains bounded by merged query/window/throttling fixes. Do not reintroduce unbounded resolved-ledger polling or broad repeated database reads. The Supabase organization remains on the Free plan; do not upgrade without explicit user approval.
+
+## 24/7 BACKGROUND MODEL ORCHESTRATION
+
+The project now uses a machine-readable routing policy at `orchestration/model_routing_policy.json`.
+
+- Deterministic Python/GitHub Actions handle repeatable screening, backtests, data transforms and state validation.
+- OpenAI API `gpt-5.6-luna` handles routine bounded tasks.
+- OpenAI API `gpt-5.6-terra` handles the autonomous quant-research lane for medium-complexity strategy research/implementation under the existing API budget.
+- OpenAI API `gpt-5.6-sol` is reserved for deep scientific/Lead review where the expected information value justifies the higher cost; the autonomous Lead workflow already uses Sol for candidate review.
+- **GPT-6 Astra is not an OpenAI API model.** It is routed only through ChatGPT Work/Codex. The canonical scheduled Work instructions live in `docs/ASTRA_BACKGROUND_WORKER.md`.
+- One final one-time product setup is required to get guaranteed Astra background execution: create an hourly Scheduled Task from **Work → GPT-6 Astra → High** using that repository prompt. After that, it reads GitHub state and executes bounded Astra-appropriate milestones without copy/paste.
+- Background workers never use browser-tab scraping. GitHub remains the mailbox and source of truth.
+- If Astra capacity is unavailable, the project must checkpoint the exact handoff and continue independent deterministic/API/Claude work rather than stall.
+
+The OpenAI cloud specialist may own both `data-market` and `quant-research` READY tasks but remains strictly **one model run at a time**, one task per invocation, branch-isolated, budget-gated, unable to merge its own PR, and unable to trade. It selects the highest-priority READY ChatGPT-eligible task; after the current data task is complete, the squeeze-retention quant task becomes eligible automatically.
 
 ## FRIZZ / PLAYBIT EMA LANE
 
@@ -117,24 +145,40 @@ Big-Move Intelligence and Money Intelligence may continue when they cannot conta
 
 ## CURRENT INTEGRATION / CI STATE
 
-PR #416 owns the liquidity-screen implementation, evidence preservation, durable rejection, queue pivot, and specialist reconciliation.
+PR #416 is the single integration vehicle for this milestone; no competing
+liquidity screen was opened. Its original frozen contract and first negative
+artifact are preserved. Current-main background routing from PR #417
+(`0b0e715`) was integrated without changing its models, budgets or authority.
 
-Important chronology during this Lead cycle:
-- branch was created from `037706ece4cd0c20e0e161ebaf0014caf8b52c46`;
-- `main` independently advanced to unsigned Money Intelligence commit `e55f42cba404d7d795c0ee9820ffa2fd08e65313`; that change is independent hypothesis-generation research and did not alter trading authority;
-- exact PR head `e652d458401d40d45e098c85680ef96ddbd8ce51` passed Security & Reliability run `35420353639` and Liquidity Mean Reversion Selection run `35420353644`;
-- subsequent evidence/queue/rejected-memory/coordination/AI_STATE commits changed the PR head, so **the final head must pass exact-head Security & Reliability again before merge**;
-- because the strategy queue and rejected registry changed, Strategy Discovery Supervisor validation must also pass before treating the pivot as canonical.
+The audit repairs stale `*-002` routing assertions after the `*-003` pivot,
+restores historical rejection/provenance fields and machine-readable AI_STATE
+headings, validates supplied contracts against the pinned original hash, rejects
+hourly gaps and replaces repeated live-history selection runs with offline
+exact replay. It adds return distribution/frequency diagnostics without new gates.
 
-Do not merge on an earlier green SHA.
+Original screen Security & Reliability run `35420353639` and selection run
+`35420353644` passed on `e652d458401d40d45e098c85680ef96ddbd8ce51`.
+Those runs do not authorize merging later changes. GitHub checks on the final
+PR #416 head are authoritative for final full-suite, security, dependency,
+secret, replay and supervisor validation; the PR body records their exact IDs
+when complete. Require a fresh exact-head check before any merge.
 
 ## EXACT NEXT STEP
 
-1. Verify PR #416 final head and current `main` have no conflicting ownership change.
-2. Require exact-head Security & Reliability success on the final PR head.
-3. Require Strategy Discovery Supervisor validation to accept the rejected-memory removal plus new `DISC-SQUEEZE-RETENTION-001-v1` ranked screen.
-4. If those gates pass, merge PR #416 with an exact-head guard and verify the resulting canonical `main` SHA.
-5. On the next discovery cycle, start with `COORD-DISC-DATA-003` data-feasibility proof plus `COORD-DISC-QUANT-003` frozen pre-outcome contract. Do not inspect squeeze outcomes until the contract/data semantics are fixed.
+1. Reconcile current main and PR #416 head; preserve independent work and do not
+   reopen the rejected liquidity fingerprint. If unmerged, finish exact-head
+   Security & Reliability, cached replay and discovery-supervisor checks, then
+   integrate through the Lead path with an expected-head guard. Do not merge on
+   an earlier green SHA.
+2. Continue `COORD-DISC-DATA-003` using the recorded squeeze-retention data
+   preflight. No unbounded Supabase reads, repeated historical downloads or paid
+   service expansion. The current adapter's missing historical liquidation
+   input must not become a fabricated feature.
+3. Freeze the next full scientific contract and exact timestamp/provenance
+   semantics before its outcomes. Keep prior OOS intervals protected across
+   hypotheses. Run only train/validation; no central deep candidate exists.
+4. Frizz remains source-fingerprint blocked; independent Money/Big-Move
+   generators may proceed without touching protected evidence.
 
 ## STATUS VOCABULARY
 

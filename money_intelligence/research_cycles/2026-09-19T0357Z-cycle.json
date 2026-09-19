@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-19T03:57:45Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate or broker state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-19T03:50:07Z",
+    "artifact_cutoff_utc": "2026-09-19T03:57:45Z",
+    "seconds_this_run": 458,
+    "reporting_gate": "NOT MET. Only directly observed execution time is counted; gaps between scheduled artifacts are not treated as research duration."
+  },
+  "highest_information_question": "After the Sep. 18 crypto rebound and the broader tightening/AI-capex regime, which observed flows represent durable capital reallocation rather than temporary forced flow or headline-sensitive price impact?",
+  "fresh_validated_observations": [
+    {
+      "topic": "BTC post-squeeze retention and leverage state",
+      "label": "OBSERVED FACT",
+      "facts": [
+        "At approximately 03:50Z CoinMarketCap quoted BTC near $81,158, +4.93% over 24 hours and +5.08% over seven days. BTC remained near the post-breakout area after the main forced-short-covering burst had faded.",
+        "CoinMarketCap global derivatives data showed total crypto open interest about $449.68B, down 3.77% over 24 hours; perpetual open interest about $448.34B, down 3.79%; average perpetual funding about 0.0069248 and higher than the prior comparison window.",
+        "BTC liquidations over 24 hours were about $245.59M, with about $237.77M shorts and $7.82M longs. The latest one-hour and four-hour BTC liquidation windows were zero, so the large forced-buying impulse was no longer active at cutoff.",
+        "Farside's Sep. 18 BTC ETF row remained incomplete because IBIT had not finalized. Reported non-IBIT issuers still summed to +$324.6M, led by FBTC +$310.7M; this must not be promoted to a final daily total.",
+        "Sep. 18 ETH ETF flow had finalized at +$143.7M, including ETHA +$114.3M and FETH +$26.2M. Even with that positive session, Sep. 15-18 ETH flow remained approximately -$261.7M, so one reversal day does not establish a durable accumulation regime."
+      ],
+      "inference": "BTC price retention after liquidations normalized is mildly constructive and is harder to explain as pure forced covering, but the final Sep. 18 IBIT flow remains the key missing regulated-spot datum. ETH received a meaningful positive daily creation impulse, yet the multi-session balance remains negative.",
+      "decision_support": "BTC remains WAIT / tactical-momentum candidate; ETH remains WAIT. Do not upgrade either to a durable institutional-accumulation thesis yet."
+    },
+    {
+      "topic": "Stablecoin liquidity control",
+      "label": "OBSERVED FACT",
+      "facts": [
+        "DefiLlama showed total stablecoin market capitalization near $304.43B, down about 0.21% over seven days and up about 1.23% over 30 days; USDT dominance was about 60.2%.",
+        "USDT was about $183.33B and USDC about $73.92B."
+      ],
+      "inference": "The crypto-native cash pool is very large but is not currently undergoing a broad explosive expansion. The Sep. 18 rally is better explained by rotation, existing cash deployment, regulated spot demand and forced-flow amplification than by a new system-wide stablecoin-liquidity wave.",
+      "falsification": "Upgrade the broad-liquidity explanation only if stablecoin supply, exchange balances/velocity and other liquidity measures expand persistently alongside price."
+    },
+    {
+      "topic": "Point-in-time CFTC correction",
+      "label": "NEGATIVE FINDING / METHOD RULE",
+      "facts": [
+        "The Sep. 15 CFTC Traders in Financial Futures report was published Friday Sep. 18 after the U.S.-session BTC breakout had already occurred, so those Sep. 15 positions were not available to a pre-move decision maker.",
+        "The Sep. 8 CFTC report remains the latest safely public pre-breakout snapshot for the Sep. 18 causal reconstruction. Earlier work reconstructed standard-BTC leveraged funds at roughly 5,146 longs versus 13,038 shorts, net short 7,892 standard contracts, about 39,460 BTC equivalent before spread/basis-hedge caveats."
+      ],
+      "inference": "COT data can be mechanism context without being a valid pre-move predictor. Research must key on publication timestamp, not merely the positions-as-of date.",
+      "preserved_negative_finding": "Large leveraged-fund futures shorts are not automatically directional bearish exposure because basis trades can pair futures shorts with long spot/ETF exposure."
+    },
+    {
+      "topic": "Volkswagen Sep. 18 abnormal move causal reconstruction",
+      "label": "HIGH-INFORMATION BIG-MOVE CANDIDATE",
+      "facts": [
+        "Volkswagen fell 5.6% on Sep. 18, its largest one-day drop since Sep. 2025. The European auto sector fell about 3.4% and the STOXX 600 about 1.1%, so VW materially underperformed both matched controls.",
+        "Volkswagen's Sep. 18 ad-hoc update cut 2026 operating return-on-sales guidance to up to 1% from 4.0%-5.5%; the company cited an average analyst expectation near 4.1% before the update.",
+        "Volkswagen estimated roughly EUR10B of FY special effects. Adjusted for those effects, it said full-year operating return on sales would be around 4%; automotive net cash-flow guidance remained EUR3-6B.",
+        "A roughly EUR6B non-cash goodwill impairment relates to lowered Porsche assumptions; additional restructuring and China-related impairments are expected. Management also described China weakness, U.S. tariffs, EV mix and restructuring as durable profitability pressures.",
+        "A matched historical analogue exists: in Sep. 2025 Volkswagen/Porsche cut profitability expectations amid Porsche EV-delay, China and U.S.-tariff pressures; VW then suffered another unusually large one-day repricing."
+      ],
+      "inference": "The Sep. 18 price gap is better explained as a downward revision to durable medium-term earning power, asset value and capital-allocation quality than as an immediate cash-solvency shock. The headline <=1% margin overstates the cash hit because special/non-cash effects are large, but the impairment is still economically informative because it recognizes lower expected future value.",
+      "causal_chain": "China demand/price pressure + U.S. tariffs + lower-margin EV mix + Porsche profitability reset + restructuring -> lower expected medium-term margins/ROIC and Porsche asset value -> goodwill impairment and guidance shock -> VW-specific fundamental selling plus sector read-through -> relative price gap",
+      "catalyst": "Volkswagen Sep. 18 ad-hoc forecast update and management commentary.",
+      "transmission_mechanism": "Expected future cash flows, margins and asset values were revised lower relative to the pre-announcement consensus; valuation repriced immediately.",
+      "amplifiers": ["Already-weak European auto tape", "China competition", "Tariff uncertainty", "EV mix/margin pressure", "Restructuring uncertainty"],
+      "matched_controls": ["European auto sector -3.4%", "STOXX 600 -1.1%", "Porsche AG about -3.3%", "Porsche SE about -4.9%", "Sep. 2025 VW/Porsche warning episode"],
+      "alternative_explanations": ["Broad European risk-off", "Rates/energy shock", "Generic auto weakness"],
+      "alternative_assessment": "The controls explain part of the move but not VW's full underperformance; the company-specific earnings/value revision is necessary to explain the residual.",
+      "confirmations": ["Analyst estimate cuts persist", "Medium-term margin/cash-flow expectations fall", "VW relative weakness persists after sector beta normalizes"],
+      "falsifiers": ["Detailed subsequent results show materially stronger adjusted margins/cash generation than feared and the company-specific relative gap reverses", "Matched-company controls explain nearly all of the move after a cleaner factor decomposition"],
+      "decision_support": "WAIT after the gap. A fundamental shock is validated, but no automatic SHORT thesis is promoted without valuation/estimate-reset work.",
+      "canonical_lab_status": "Mechanism is mature enough for canonical promotion, but this cycle persists it first to avoid editing the canonical lab without a clean full-file atomic update."
+    },
+    {
+      "topic": "AI infrastructure financing dispersion",
+      "label": "SUPPORTED CROSS-CASE HYPOTHESIS CANDIDATE",
+      "facts": [
+        "ByteDance raised an upsized roughly $29.6B unsecured bank loan after strong lender demand, with participation from nearly 30 banks; proceeds are intended largely for AI chips/data centers.",
+        "Crux AI has a roughly $22B bank loan backed by Google TPUs and customer contracts plus an initial $5B Blackstone equity investment, with syndication/refinancing expected.",
+        "CoreWeave filed for a $3B 2033 convertible note offering plus a $500M option while also maintaining expensive senior debt and an at-the-market/forward equity capacity, illustrating access to capital but with meaningful financing/dilution tradeoffs.",
+        "Nscale's Sep. 18 S-1 reports roughly $103.4B of active/contracted total contracted value, about 461,000 active/contracted GPUs, significant customer prepayments and secured GPU/data-center facilities, but also high customer concentration and very large losses.",
+        "Oracle Project Jupiter's roughly $18B project debt traded around 89-91 cents and syndication was reported to have stalled amid sponsor-credit, power/permitting and project-execution concerns, leaving banks with more exposure than intended.",
+        "Broader 2026 reporting indicates AI-related debt issuance is extraordinarily large, creating a credible crowding-out/hurdle-rate channel even as physical AI investment remains structurally strong."
+      ],
+      "inference": "The AI capital cycle is not an undifferentiated risk-on flow. Tight-money underwriting is increasingly sorting borrowers/projects by sponsor credit, contracted cash flows/prepayments, collateral, customer concentration, power/permitting certainty and syndication liquidity.",
+      "hypothesis": "AI INFRA FUNDING DISPERSION: aggregate AI capex can continue to rise while marginal capital becomes materially cheaper and more abundant for high-quality contracted/collateralized projects and materially more expensive or unavailable for weaker projects. Physical demand can stay bullish while weak project debt/equity underperform.",
+      "falsification": "Reject if a broader matched sample shows lower-quality/high-leverage or weak-permitting projects clear funding on equal-or-better terms than high-quality projects, or financing dispersion fails to relate to contract/collateral/sponsor/permitting quality.",
+      "decision_support": "HOLD / RESEARCH FOR BUY candidates in the high-quality physical AI chain; WAIT/AVOID generic theme extrapolation to every borrower/project. No individual-asset BUY is frozen."
+    },
+    {
+      "topic": "Corporate-credit outflow non-move control",
+      "label": "OBSERVED FACT + NEGATIVE FINDING",
+      "facts": [
+        "Fund-flow datasets report weakness/redemptions in corporate-credit wrappers, but ICE BofA Single-B option-adjusted spreads remained around the high-2% area through the latest observations rather than widening into stress territory.",
+        "The latest Single-B total-return observations did not show a broad credit-price break.",
+        "Project-specific weakness such as Oracle/Project Jupiter therefore has not generalized into broad high-yield stress."
+      ],
+      "inference": "Wrapper outflows are a pressure input, not a systemic-stress conclusion. Other buyers, carry demand, cross-border demand and market depth can absorb redemptions without a large clearing-price adjustment.",
+      "confirmation_gate_for_stress": ["Rapid HY/Single-B OAS widening", "Larger new-issue concessions", "Dealer/bid-ask liquidity deterioration", "Default/recovery deterioration"],
+      "decision_support": "MONITOR / UNDERWEIGHT weaker leveraged credit; do not label the current broad credit market distressed."
+    },
+    {
+      "topic": "SEC tokenized-securities framework",
+      "label": "PRIMARY-SOURCE VALIDATION / EXISTING THESIS CONFIRMED",
+      "facts": [
+        "SEC Release 34-106402 / File 4-927 establishes a five-year temporary conditional exemption for qualifying tokenized-securities venues.",
+        "The exemption permits defined venue structures for tokenized NMS stocks under conditions, requires tokenized shares to preserve the underlying shareholder rights, excludes synthetic lookalikes from that treatment, and imposes access/reporting/market-integrity conditions.",
+        "The SEC framework does not select a blockchain or generic crypto-token winner."
+      ],
+      "inference": "The structural opportunity is in actual regulated venue/custody/settlement/liquidity infrastructure and chains/protocols that earn measurable economic value from adoption, not in assuming broad RWA-token beta.",
+      "decision_support": "HOLD / RESEARCH actual value capture; no generic token BUY thesis."
+    }
+  ],
+  "daily_big_move_scan": {
+    "selected_for_deep_study": [
+      "Volkswagen -5.6%: company-specific profitability/value reset versus weaker sector and broad-market controls",
+      "BTC/ETH/SOL/major-alts rebound: spot-demand plus short-covering decomposition, with BTC ETF day still incomplete",
+      "USD/JPY yen selloff after expected BOJ hike: already canonical; expectation-adjusted path remains the stronger explanation",
+      "Gold resilience despite high U.S. yields/strong USD: confirms an existing structural allocation thesis rather than creating a new case"
+    ],
+    "lower_priority_or_rejected_for_now": [
+      "Airtel Africa -11.3%: large but currently idiosyncratic IPO/valuation story with lower cross-market information value",
+      "Orange -5.8%: downgrade-driven and currently lower generalization value",
+      "LPP +8%: positive earnings surprise; informative but lower priority than the VW negative fundamental shock",
+      "Brent/WTI easing: already represented by the canonical effective-deliverable-supply case"
+    ]
+  },
+  "cross_case_learning_candidates": [
+    "FORCED FLOW IS AN AMPLIFIER, NOT A COMPLETE CAUSE: post-squeeze persistence requires independent spot/capital-flow confirmation once liquidations normalize.",
+    "FUNDING QUALITY DISPERSION CAN INCREASE INSIDE A CAPEX BOOM: aggregate capital abundance can coexist with severe borrower/project-specific financing stress.",
+    "FLOW WRAPPER OUTFLOW != MARKET STRESS: require spread, issuance, liquidity or default confirmation before upgrading a redemption headline into a systemic credit thesis.",
+    "ACCOUNTING SPECIAL EFFECTS MUST BE DECOMPOSED: non-cash impairment is not immediate cash loss, but can still be a high-information recognition of lower future economic value."
+  ],
+  "prediction_ledger": "No new immutable forecast frozen. Existing canonical scorecard remains frozen=0 and resolved=0; no prior forecast was rewritten.",
+  "canonical_update_decision": "Persist this cycle only. The Volkswagen case and AI-funding-dispersion hypothesis now meet a higher evidence threshold, but canonical dashboard/learning/big-move edits are deferred to a subsequent atomic update after re-fetching the exact latest files and avoiding noisy multi-file churn. BTC remains WAIT because Sep. 18 IBIT is still unresolved. No broad regime change is validated.",
+  "next_priority": [
+    "Finalize Sep. 18 BTC ETF flow once IBIT reports; compute completed Sep. 15-18 and Sep. 17-18 totals and issuer breadth.",
+    "Promote the Volkswagen Sep. 18 case into big_move_lab with the company/sector/market controls and the Sep. 2025 matched analogue.",
+    "Promote AI funding dispersion to the learning ledger/dashboard only after one final matched-case consistency check and explicit financing-term comparison.",
+    "Continue tracking HY/Single-B OAS and primary-market concessions while wrapper outflows persist.",
+    "Begin a timestamp-safe BTC squeeze matched sample using only information actually public before each move."
+  ],
+  "sources": [
+    "CoinMarketCap connected live quote and global-derivatives feeds, accessed approximately 2026-09-19T03:50Z",
+    "Farside Investors BTC/ETH ETF tables, accessed during the cycle: https://farside.co.uk/btc/ and https://farside.co.uk/eth/",
+    "DefiLlama stablecoins overview, accessed during the cycle: https://defillama.com/stablecoins",
+    "CFTC Traders in Financial Futures publication timing and BTC category data: https://www.cftc.gov/dea/futures/financial_lf.htm",
+    "Volkswagen Sep. 18 2026 ad-hoc forecast update: https://www.volkswagen-group.com/en/ad-hoc/volkswagen-ag-updates-its-forecast-for-fiscal-year-2026-20701",
+    "Volkswagen management/CFO Sep. 18 2026 commentary and Reuters contemporaneous market reports",
+    "SEC CoreWeave Sep. 17 2026 convertible-note filing and Sep. 18 Nscale S-1",
+    "Reuters Sep. 2026 reports on ByteDance, Crux AI, Oracle Project Jupiter and AI-debt issuance",
+    "SEC Release 34-106402 / File 4-927 tokenized-securities temporary conditional exemption",
+    "ICE BofA Single-B OAS/total-return series via FRED"
+  ],
+  "owner_reporting_gate": "NO OWNER-FACING REPORT. The cycle produced and persisted materially useful work, but only 458 seconds of directly verifiable execution time were established in this run. Prior schedule gaps are not counted as research time, so the >=60-minute reporting threshold is not met. Continue quietly."
+}

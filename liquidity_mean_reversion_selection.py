@@ -10,16 +10,23 @@ from typing import Any
 
 from volatility_breakout_selection import (
     LOCKED_OOS, _dataset_manifest, _max_stress, _regime, _selection_decision,
-    _sha256_hex, _split_bounds, _stress_metrics, _validate_rows,
+    _sha256_hex, _split_bounds, _stress_metrics, _validate_rows as _validate_ohlcv,
 )
 
 ROOT = Path(__file__).resolve().parent
 CONTRACT_PATH = ROOT / "orchestration" / "disc_liquidity_meanrev_001.json"
+FROZEN_CONTRACT_SHA256 = "19252de4464fc997632b0500fded857bc58d5bdad49d6f72e3660eba75a28b57"
+CACHE_PATH = ROOT / "orchestration/evidence/liquidity_meanrev_001_cache"
+FROZEN_DATASET_SHA256 = "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f"
+FROZEN_ENVELOPE_SHA256 = "8630b22e7c2a8e0ef0e44fad2ea0fcd30395c9e2b2ef99bc08c98afb6e968f4e"
 
 def _load_contract(path: Path = CONTRACT_PATH) -> dict[str, Any]:
     c = json.loads(path.read_text(encoding="utf-8"))
+    return _validate_contract(c)
+
+def _validate_contract(c):
     payload = dict(c); payload.pop("contract_sha256", None); payload.pop("contract_fingerprint_definition", None)
-    if _sha256_hex(payload) != c.get("contract_sha256"):
+    if _sha256_hex(payload) != c.get("contract_sha256") or c.get("contract_sha256") != FROZEN_CONTRACT_SHA256:
         raise RuntimeError("selection contract fingerprint mismatch")
     if c.get("fingerprint_id") != "DISC-LIQUIDITY-MEANREV-001-v1":
         raise RuntimeError("unexpected fingerprint")
@@ -30,6 +37,15 @@ def _load_contract(path: Path = CONTRACT_PATH) -> dict[str, Any]:
     if c.get("search_breadth", {}).get("parameter_optimization_allowed") is not False:
         raise RuntimeError("parameter optimization forbidden")
     return c
+
+def _validate_rows(rows):
+    clean = _validate_ohlcv(rows)
+    for row in clean:
+        if row["ts"] % 3_600_000:
+            raise ValueError("history must use UTC hourly bar-open timestamps")
+    if any(b["ts"] - a["ts"] != 3_600_000 for a, b in zip(clean, clean[1:])):
+        raise ValueError("missing hourly bars; interpolation and row-count time compression forbidden")
+    return clean
 
 def _signal(rows, i, contract, *, sigma_multiple=None, liquidity_filters=True):
     r = contract["primary_rule"]; w = int(r["volatility_window_bars"])
@@ -114,7 +130,7 @@ def _sensitivity_pass(p,c):
     return not reasons,reasons
 
 def evaluate_selection_from_histories(histories, *, contract=None):
-    c=contract or _load_contract(); fixed=list(c["source"]["fixed_instruments"]); minimum=int(c["source"]["minimum_history_bars_per_asset"]); clean={}; errors={}
+    c=_load_contract() if contract is None else _validate_contract(contract); fixed=list(c["source"]["fixed_instruments"]); minimum=int(c["source"]["minimum_history_bars_per_asset"]); clean={}; errors={}
     for inst in fixed:
         if inst not in histories: errors[inst]="MISSING_FIXED_INSTRUMENT"; continue
         try: rows=_validate_rows(histories[inst])
@@ -136,15 +152,43 @@ def evaluate_selection_from_histories(histories, *, contract=None):
     decision=_selection_decision(data_integrity_ok=data_ok,passing_instruments=count,pooled_primary_pass=pooled_ok,sensitivity_passes=sp,contract=c)
     return {"hypothesis_id":c["hypothesis_id"],"fingerprint_id":c["fingerprint_id"],"contract_sha256":c["contract_sha256"],"research_only":True,"trade_authority":False,"promotion_authority":False,"screen_stage":"SELECTION_ONLY","data_integrity_ok":data_ok,"data_errors":errors,"passing_instruments":count,"instrument_passes":passes,"primary":primary,"baseline":baseline,"pooled_primary":pooled_primary,"pooled_baseline":pooled_baseline,"pooled_primary_pass":pooled_ok,"pooled_primary_failure_reasons":pooled_reasons,"sensitivity_pooled":sens_pooled,"sensitivity_passes":sp,"sensitivity_failure_reasons":sr,"untouched_oos":dict(LOCKED_OOS),"untouched_oos_opened":False,"genuine_forward_opened":False,**decision}
 
+def _load_frozen_cache(cache_path=CACHE_PATH):
+    from research_artifact import verify_research_envelope
+    c = _load_contract()
+    with gzip.open(cache_path / "evidence.json.gz", "rt", encoding="utf-8") as f:
+        evidence = json.load(f)
+    with gzip.open(cache_path / "dataset.json.gz", "rt", encoding="utf-8") as f:
+        dataset = json.load(f)
+    if not verify_research_envelope(evidence) or evidence["integrity"]["payload_sha256"] != FROZEN_ENVELOPE_SHA256:
+        raise RuntimeError("original evidence integrity mismatch")
+    if _sha256_hex(dataset) != FROZEN_DATASET_SHA256:
+        raise RuntimeError("frozen dataset identity mismatch; no fresh-history substitution")
+    payload = evidence["payload"]
+    if payload["contract_sha256"] != c["contract_sha256"]:
+        raise RuntimeError("evidence contract mismatch")
+    manifest, _ = _dataset_manifest(dataset["histories"], c)
+    if manifest != payload["dataset_manifest"]:
+        raise RuntimeError("dataset provenance mismatch")
+    # Check timestamp metadata only; never derive outcomes from the locked tail.
+    observed_ms = int(datetime.fromisoformat(payload["generated_at"]).timestamp() * 1000)
+    for rows in dataset["histories"].values():
+        _validate_rows(rows)
+        if rows[-1]["ts"] + 3_600_000 > observed_ms:
+            raise RuntimeError("incomplete bar at artifact observation time")
+    return evidence, dataset
+
 def run():
-    c=_load_contract(); from market_data import get_history; from research_artifact import seal_research_payload
-    histories={}; failures=[]; src=c["source"]
-    for inst in src["fixed_instruments"]:
-        try: histories[inst]=get_history(inst,bar=src["bar_interval"],bars=int(src["history_bars_per_asset"]),max_bars=int(src["history_bars_per_asset"]))
-        except Exception as exc: failures.append({"instrument":inst,"error_type":type(exc).__name__})
-    manifest,dataset=_dataset_manifest(histories,c); selection=evaluate_selection_from_histories(histories,contract=c)
-    payload={"generated_at":datetime.now(timezone.utc).isoformat(),"artifact_type":"DISC_LIQUIDITY_MEANREV_SELECTION_EVIDENCE","hypothesis_id":c["hypothesis_id"],"fingerprint_id":c["fingerprint_id"],"contract_sha256":c["contract_sha256"],"research_only":True,"live_approved":False,"trade_authority":False,"promotion_authority":False,"source":"OKX public historical API","dataset_manifest":manifest,"history_failures":failures,"selection":selection,"scientific_limitations":{"untouched_oos_opened":False,"historical_executable_quotes_available":False,"costs_are_explicit_conservative_proxy":True,"warning":"Train/validation selection evidence only; not real profit, OOS proof, forward proof, or live authority."}}
-    return seal_research_payload(payload),dataset
+    """Offline exact replay of the first screen, never a new selection trial.
+
+    Cache includes the original opaque OOS tail for provenance only. All trade
+    generation and metrics remain confined to the original purged train/val.
+    Missing/corrupt cache fails closed; there is no network fallback.
+    """
+    evidence, dataset = _load_frozen_cache()
+    selection = evaluate_selection_from_histories(dataset["histories"])
+    if selection != evidence["payload"]["selection"]:
+        raise RuntimeError("frozen selection replay differs from original evidence")
+    return evidence, dataset
 
 def main():
     p=argparse.ArgumentParser(); p.add_argument("--output",default="liquidity_mean_reversion_selection.json"); p.add_argument("--dataset-output",default="liquidity_mean_reversion_selection_dataset.json.gz"); a=p.parse_args(); evidence,dataset=run(); Path(a.output).write_text(json.dumps(evidence,indent=2,sort_keys=True),encoding="utf-8")

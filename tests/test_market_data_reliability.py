@@ -26,7 +26,9 @@ def test_okx_get_retries_bounded_transient_timeout(monkeypatch):
     assert calls["count"] == md.OKX_MAX_ATTEMPTS
 
 
-def test_history_reuses_identical_deep_fetch_without_sharing_mutation(monkeypatch):
+def test_history_reuses_identical_deep_fetch_without_sharing_mutation(monkeypatch, tmp_path):
+    # A prior test invocation's disk cache must not satisfy this cold-fetch case.
+    monkeypatch.setattr("historical_cache.DEFAULT_CACHE_DIR", tmp_path)
     md.clear_history_cache()
     calls = {"count": 0}
     page = [["1000", "1", "2", "0.5", "1.5", "10", "0", "15", "1"]]

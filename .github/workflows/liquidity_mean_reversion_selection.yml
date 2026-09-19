@@ -6,14 +6,18 @@ on:
     branches: [main]
     paths:
       - "liquidity_mean_reversion_selection.py"
+      - "liquidity_mean_reversion_audit.py"
       - "orchestration/disc_liquidity_meanrev_001.json"
+      - "orchestration/evidence/liquidity_meanrev_001_cache/**"
       - "tests/test_liquidity_mean_reversion_selection.py"
       - ".github/workflows/liquidity_mean_reversion_selection.yml"
   push:
     branches: [main]
     paths:
       - "liquidity_mean_reversion_selection.py"
+      - "liquidity_mean_reversion_audit.py"
       - "orchestration/disc_liquidity_meanrev_001.json"
+      - "orchestration/evidence/liquidity_meanrev_001_cache/**"
       - ".github/workflows/liquidity_mean_reversion_selection.yml"
 
 permissions:
@@ -21,12 +25,12 @@ permissions:
 
 concurrency:
   group: liquidity-mean-reversion-selection-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   selection:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     env:
       RESEARCH_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
@@ -42,7 +46,7 @@ jobs:
           pip install pytest
       - name: Verify frozen selection-only regression tests
         run: pytest -q tests/test_liquidity_mean_reversion_selection.py
-      - name: Run frozen liquidity-mean-reversion cheap screen
+      - name: Replay the original cached train/validation screen (no network data)
         run: |
           python liquidity_mean_reversion_selection.py \
             --output liquidity_mean_reversion_selection.json \
@@ -64,7 +68,7 @@ jobs:
       - name: Upload immutable selection evidence
         uses: actions/upload-artifact@v4
         with:
-          name: liquidity-mean-reversion-selection-${{ env.RESEARCH_COMMIT_SHA }}
+          name: liquidity-mean-reversion-replay-${{ env.RESEARCH_COMMIT_SHA }}
           path: |
             liquidity_mean_reversion_selection.json
             liquidity_mean_reversion_selection_dataset.json.gz

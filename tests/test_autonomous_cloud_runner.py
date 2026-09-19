@@ -63,15 +63,19 @@ def test_coordination_loader_applies_canonical_overrides():
     assert current["fingerprint_id"]
     assert highest_ready_task(_config(), coordination) == current
 
-def test_v1_is_single_agent_cost_bounded_and_broker_disconnected():
+def test_runner_is_single_execution_multi_role_cost_bounded_and_broker_disconnected():
     config = _config()
-    assert config["autonomous_roles"] == ["data-market"]
+    assert config["autonomous_roles"] == ["data-market", "quant-research"]
     assert config["policy"]["max_concurrent_agent_runs"] == 1
     assert config["policy"]["max_agent_runs_per_invocation"] == 1
     assert config["roles"]["data-market"]["max_turns"] <= 8
     assert config["roles"]["data-market"]["max_output_tokens_per_turn"] <= 2000
+    assert config["roles"]["quant-research"]["max_turns"] <= 8
+    assert config["roles"]["quant-research"]["max_output_tokens_per_turn"] <= 2000
     assert "point_in_time_universe.py" in config["roles"]["data-market"]["allowed_paths"]
     assert "strategy-discovery" in config["roles"]["data-market"]["mission"].lower()
+    assert config["roles"]["quant-research"]["model"] == "gpt-5.6-terra"
+    assert config["models"]["gpt-5.6-terra"]["enabled"] is True
     assert config["policy"]["automatic_merge"] is False
     assert config["policy"]["trade_authority"] is False
     assert config["policy"]["broker_connected"] is False
@@ -96,6 +100,12 @@ def test_runaway_loop_configuration_is_rejected():
         validate_config(bad)
     bad = copy.deepcopy(config)
     bad["roles"]["data-market"]["max_turns"] = 9
+    with pytest.raises(PolicyError):
+        validate_config(bad)
+    bad = copy.deepcopy(config)
+    bad["autonomous_roles"] = ["data-market", "quant-research", "signal-accuracy", "testing-security"]
+    bad["roles"]["signal-accuracy"] = copy.deepcopy(bad["roles"]["quant-research"])
+    bad["roles"]["testing-security"] = copy.deepcopy(bad["roles"]["quant-research"])
     with pytest.raises(PolicyError):
         validate_config(bad)
 
@@ -269,7 +279,8 @@ def test_completion_handoff_clears_discovery_lease_after_lead_marks_task_done():
     # Completing one role's task must release that lease. Another eligible role
     # may legitimately become the next bounded task on later queue generations.
     next_ready = highest_ready_task(_config(), coordination)
-    assert next_ready is None or next_ready["id"] != task["id"]
+    assert next_ready == _ready_discovery_task_for_role("quant-research", coordination)
+    assert next_ready["id"] != task["id"]
 
 def test_shutdown_restart_recovers_abandoned_running_lease_without_losing_usage_history():
     state = default_state()
@@ -329,3 +340,19 @@ def test_legacy_swarm_is_manual_only_and_new_workflow_cannot_merge_main_or_trade
     assert "trade_authority" not in cloud
     assert "gh workflow run security.yml" in cloud
     assert "OPENAI_API_KEY" in cloud
+
+def test_quant_role_becomes_eligible_after_data_task_completes():
+    coordination = copy.deepcopy(_coord())
+    next(row for row in coordination["tasks"] if row["id"] == "COORD-DISC-DATA-003")["status"] = "DONE"
+    task = highest_ready_task(_config(), coordination)
+    assert task["id"] == "COORD-DISC-QUANT-003"
+    assert task["owner"] == "quant-research"
+    assert task["fingerprint_id"] == "DISC-SQUEEZE-RETENTION-001-v1"
+
+
+def test_quant_terra_reservation_fits_daily_budget():
+    config = _config()
+    reserve = reserved_cost_usd(config, "quant-research")
+    assert reserve > reserved_cost_usd(config, "data-market")
+    assert reserve * config["budget"]["provider_retry_safety_multiplier"] <= config["budget"]["runner_daily_api_budget_usd"]
+
