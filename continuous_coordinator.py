@@ -24,7 +24,7 @@ from continuous_specialist_factory import run_factory, snapshot as specialist_fa
 from continuous_worker_army import run_army, snapshot as worker_army_snapshot
 from cross_asset_runner import MIN_LIQUIDITY_SUBSET_COVERAGE
 from deployment_canary import evaluate_canary
-from research_director_runtime import refresh_director, snapshot as research_director_snapshot
+from profitability_learning.runtime import refresh_director, director_snapshot as research_director_snapshot
 
 
 PRODUCTION_HEALTH_URL = os.getenv(
