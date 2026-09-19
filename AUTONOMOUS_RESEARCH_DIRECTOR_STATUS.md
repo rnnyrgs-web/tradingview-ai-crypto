@@ -17,3 +17,18 @@ Still required before this is considered live 24/7 orchestration:
 8. Run exact-head CI and only merge after all required checks pass.
 
 Do not treat PR #160 as production-live until the wiring above is complete and validated.
+
+## Profitability learning implementation (2026-09-19)
+
+User-assigned PROFITABILITY-LEARNING-EVOLUTION-001 adds the economic learning
+package, immutable local research-memory adapter, completion hook, experiment
+factory feedback and coordinator-side director wrapper. See
+`docs/research/profitability_learning/ARCHITECTURE.md` for the implemented data flow,
+activation contract and remaining runtime evidence requirements.
+
+This substantially advances item 5 and adds evidence-based mission generation;
+it does not claim that the remaining scheduling/lease/deployment work above is
+finished. Learning missions remain advisory pending a fresh scientific contract
+and independent review. Rich portfolio evidence must be emitted by the newly
+selected strategy's actual evaluator; sparse legacy summaries remain explicitly
+inconclusive. No OOS release, merge or deployment is implied by this document.

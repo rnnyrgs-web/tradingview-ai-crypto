@@ -58,6 +58,8 @@ def load_state(path=None):
 def append_lesson(lesson, path=None):
     if not isinstance(lesson, dict):
         raise TypeError("lesson must be a dict")
+    from profitability_learning.runtime import enrich_legacy_lesson
+    lesson = enrich_legacy_lesson(lesson)
     allowed = {"fingerprint", "hypothesis", "outcome", "evidence_summary", "recommended_next_test", "reason_not_to_repeat"}
     compact = {k: lesson.get(k) for k in allowed if lesson.get(k) is not None}
     compact.update({"recorded_at": _now(), "research_only": True, "trade_authority": False, "promotion_authority": False})

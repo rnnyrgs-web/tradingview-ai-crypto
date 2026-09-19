@@ -1,0 +1,393 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Profitability learning experiment v1",
+  "$comment": "Python validators additionally enforce fingerprints, chronology, PIT freshness, finite numbers, reconciliation and authority. SHA256 integrity is not proof of provenance.",
+  "type": "object",
+  "required": [
+    "contract",
+    "status",
+    "trades",
+    "equity",
+    "failure_reasons"
+  ],
+  "properties": {
+    "contract": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "strategy",
+        "strategy_fingerprint",
+        "family",
+        "dataset_id",
+        "dataset_sha256",
+        "split",
+        "initial_capital",
+        "cost_model",
+        "provenance_ref",
+        "minimum_events",
+        "search_budget",
+        "mining_dimensions",
+        "ablation_components",
+        "interaction_pairs",
+        "start",
+        "end",
+        "frozen_at",
+        "outcomes_observed_at",
+        "no_external_flows",
+        "closed_portfolio",
+        "point_in_time_verified",
+        "max_feature_age_seconds",
+        "purge_seconds",
+        "embargo_seconds"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "strategy": {
+          "type": "object",
+          "required": [
+            "mechanism",
+            "components",
+            "assets",
+            "timeframe",
+            "execution_rule"
+          ],
+          "properties": {
+            "mechanism": {
+              "type": "string",
+              "minLength": 1
+            },
+            "components": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 24,
+              "uniqueItems": true,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "rule",
+                  "parameters",
+                  "economic_reason"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "rule": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "parameters": {
+                    "type": "object"
+                  },
+                  "economic_reason": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            },
+            "assets": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "timeframe": {
+              "type": "string"
+            },
+            "execution_rule": {
+              "type": "string"
+            }
+          }
+        },
+        "strategy_fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "family": {
+          "type": "string"
+        },
+        "dataset_id": {
+          "type": "string"
+        },
+        "dataset_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "split": {
+          "enum": [
+            "DEVELOPMENT",
+            "TRAINING",
+            "CHRONOLOGICAL_VALIDATION",
+            "RELEASED_OOS",
+            "FORWARD"
+          ]
+        },
+        "initial_capital": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "cost_model": {
+          "type": "string"
+        },
+        "provenance_ref": {
+          "type": "string"
+        },
+        "minimum_events": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 100000
+        },
+        "search_budget": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256
+        },
+        "mining_dimensions": {
+          "type": "array",
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "ablation_components": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "interaction_pairs": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "start": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "end": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "frozen_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "outcomes_observed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "no_external_flows": {
+          "const": true
+        },
+        "closed_portfolio": {
+          "const": true
+        },
+        "point_in_time_verified": {
+          "const": true
+        },
+        "max_feature_age_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "purge_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "embargo_seconds": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "split": {
+                "const": "RELEASED_OOS"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "release_ref"
+            ],
+            "properties": {
+              "release_ref": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "status": {
+      "enum": [
+        "PASSED",
+        "REJECTED",
+        "INCONCLUSIVE",
+        "INFRA_DATA_FAILURE"
+      ]
+    },
+    "trades": {
+      "type": "array",
+      "maxItems": 100000,
+      "items": {
+        "type": "object",
+        "required": [
+          "trade_id",
+          "event_id",
+          "entry_at",
+          "exit_at",
+          "decision_at",
+          "gross_pnl",
+          "notional",
+          "asset",
+          "timeframe",
+          "direction",
+          "costs",
+          "features"
+        ],
+        "properties": {
+          "trade_id": {
+            "type": "string"
+          },
+          "event_id": {
+            "type": "string"
+          },
+          "entry_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "exit_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "decision_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "gross_pnl": {
+            "type": "number"
+          },
+          "notional": {
+            "type": "number",
+            "minimum": 0
+          },
+          "asset": {
+            "type": "string"
+          },
+          "timeframe": {
+            "type": "string"
+          },
+          "direction": {
+            "enum": [
+              "LONG",
+              "SHORT"
+            ]
+          },
+          "costs": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "fees",
+              "spread",
+              "slippage",
+              "funding_carry"
+            ],
+            "properties": {
+              "fees": {
+                "type": "number",
+                "minimum": 0
+              },
+              "spread": {
+                "type": "number",
+                "minimum": 0
+              },
+              "slippage": {
+                "type": "number",
+                "minimum": 0
+              },
+              "funding_carry": {
+                "type": "number"
+              }
+            }
+          },
+          "features": {
+            "type": "object",
+            "maxProperties": 64,
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "value",
+                "available_at"
+              ],
+              "properties": {
+                "value": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "available_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "equity": {
+      "type": "array",
+      "maxItems": 200000,
+      "items": {
+        "type": "object",
+        "required": [
+          "timestamp",
+          "nav",
+          "gross_exposure"
+        ],
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "nav": {
+            "type": "number",
+            "minimum": 0
+          },
+          "gross_exposure": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "failure_reasons": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}
