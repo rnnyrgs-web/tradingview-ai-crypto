@@ -2,6 +2,7 @@ import gzip
 import json
 
 import continuous_coordinator as coordinator
+import profitability_learning.acceptance as acceptance
 from profitability_learning.acceptance import (
     acceptance_snapshot,
     run_canonical_acceptance,
@@ -67,6 +68,41 @@ def test_invalid_acceptance_artifact_fails_closed_without_writing_memory(
     assert Memory(database, create=False).snapshot()["experiments"] == []
     assert result["trade_authority"] is False
     assert result["promotion_authority"] is False
+
+
+def test_missing_or_corrupt_configured_memory_is_not_reset(monkeypatch, tmp_path):
+    missing = tmp_path / "missing.sqlite"
+    monkeypatch.setenv("PROFITABILITY_LEARNING_DB", str(missing))
+
+    missing_result = run_canonical_acceptance()
+
+    assert missing_result["status"] == "WAIT_MEMORY_UNAVAILABLE"
+    assert not missing.exists()
+
+    corrupt = tmp_path / "corrupt.sqlite"
+    corrupt.write_bytes(b"not a sqlite database")
+    monkeypatch.setenv("PROFITABILITY_LEARNING_DB", str(corrupt))
+
+    corrupt_result = run_canonical_acceptance()
+
+    assert corrupt_result["status"] == "WAIT_MEMORY_UNAVAILABLE"
+    assert corrupt.read_bytes() == b"not a sqlite database"
+    assert corrupt_result["trade_authority"] is False
+    assert corrupt_result["promotion_authority"] is False
+
+
+def test_durable_memory_outage_fails_closed(monkeypatch):
+    def unavailable():
+        raise ConnectionError("simulated durable-memory outage")
+
+    monkeypatch.setattr(acceptance, "learning_snapshot", unavailable)
+
+    result = run_canonical_acceptance()
+
+    assert result["status"] == "WAIT_MEMORY_UNAVAILABLE"
+    assert result["research_only"] is True
+    assert result["trade_authority"] is False
+    assert result["broker_connected"] is False
 
 
 def test_coordinator_exposes_only_compact_acceptance_status(monkeypatch, tmp_path):
