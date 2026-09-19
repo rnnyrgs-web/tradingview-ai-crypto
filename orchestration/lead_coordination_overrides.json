@@ -1,35 +1,30 @@
 {
   "schema_version": 1,
-  "reason": "Lead reconciliation after DATA-004 terminally established that DISC-SQUEEZE-RETENTION-001-v1 has no scientifically defensible zero-new-cost timestamp-safe historical forced-flow source under the current frozen Binance cohort and approved access. Preserve the hypothesis as data-blocked rather than rejected, stop stale candidate-specific workers, keep untouched OOS locked, and route quant research to freeze one materially distinct available-data hypothesis before any new outcome screen.",
+  "reason": "Lead reconciliation after merged PR #442 terminally rejected DISC-BTC-LEADLAG-001-v1 before untouched OOS while proving the evaluator -> durable profitability-learning completion -> exact rejected-fingerprint admission-veto path. Preserve all prior data-blocked/rejected outcomes, close stale COORD-DISC-QUANT-004 ownership, keep OOS/forward locked, and make issue #438 Phase-1 live-runtime acceptance the architectural bottleneck before advancing to Phase 2.",
   "task_updates": {
     "COORD-DISC-DATA-003": {
       "status": "DONE",
       "blockers": [],
       "pr": 423,
-      "completion_evidence": {
-        "exact_head_sha": "3e606f15afbe95e652f9f59e65f0c27b5f5555a3",
-        "merge_sha": "f463ff6a13bb001c1bbbebece5ffc50afd27c02f",
-        "security_and_reliability_run": 35423125858,
-        "security_and_reliability": "SUCCESS",
-        "research_decision": "INSUFFICIENT_FOR_FROZEN_SCREEN",
-        "fixed_sample": "Binance USDⓈ-M BTCUSDT/ETHUSDT/SOLUSDT, 2026-09-02T12:00Z receipt hour, liquidations/open_interest/mark_price",
-        "verified_objects": "9/9",
-        "verified_bytes": 336805,
-        "outcomes_inspected": false,
-        "untouched_oos_opened": false,
-        "remaining_blockers": [
-          "exact historical coverage and cross-file gap/duplicate behavior are unproved",
-          "archive/publication chronology is not independently proved for historical objects",
-          "venue contract/base/quote units and liquidation notional semantics are not independently frozen",
-          "public liquidation broadcasts are sampled and can only be used as a declared lower-bound proxy"
-        ]
-      },
       "next_task": "COORD-DISC-DATA-004"
+    },
+    "COORD-DISC-DATA-004": {
+      "status": "DONE",
+      "blockers": [],
+      "pr": 431,
+      "completion_evidence": {
+        "decision": "TERMINAL_NO_ZERO_COST_TIMESTAMP_SAFE_SOURCE",
+        "merge_sha": "c51a59dbac604a2e0b2eefa2b68ae025d4c5b0e3",
+        "strategy_outcomes_inspected": false,
+        "untouched_oos_opened": false,
+        "new_paid_service_authorized": false
+      },
+      "next_task": "COORD-DISC-QUANT-004"
     },
     "COORD-DISC-QUANT-003": {
       "status": "BLOCKED",
       "blockers": [
-        "DATA-004 terminally found no zero-new-cost timestamp-safe historical forced-flow source for the exact frozen Binance BTCUSDT/ETHUSDT/SOLUSDT squeeze-retention contract under current approved access. Do not substitute another venue, infer missing liquidations, or inspect returns to rescue v1."
+        "DISC-SQUEEZE-RETENTION-001-v1 remains scientifically blocked by the frozen data contract. Do not substitute venues, infer missing liquidations, or inspect returns to rescue v1."
       ],
       "completion_evidence": {
         "status": "SCIENTIFICALLY_BLOCKED_BY_DATA_CONTRACT",
@@ -38,20 +33,47 @@
         "strategy_outcomes_inspected": false,
         "untouched_oos_opened": false
       },
-      "next_task": "COORD-DISC-QUANT-004"
+      "next_task": null
     },
     "COORD-DISC-VAL-003": {
       "status": "BLOCKED",
       "blockers": [
-        "The current squeeze-retention fingerprint cannot reach a valid cheap screen under the DATA-004 source result. Preserve its pre-outcome validation design, but do not spend additional candidate-specific validation capacity until the data contract reopens or a new frozen hypothesis is selected."
+        "The squeeze-retention fingerprint cannot reach a valid cheap screen under DATA-004. Preserve its pre-outcome design; spend no further candidate-specific validation capacity unless the data contract legitimately reopens."
       ],
       "next_task": null
     },
     "COORD-DISC-TEST-003": {
       "status": "BLOCKED",
       "blockers": [
-        "Candidate-specific squeeze-retention execution is data-blocked. Generic discovery-firewall hardening already has open PR #432 with exact-head Security & Reliability success; avoid duplicate worker execution while that independent Lead review is pending."
+        "Candidate-specific squeeze-retention execution remains data-blocked. Generic firewall work is independent and must not be confused with candidate evidence."
       ],
+      "next_task": null
+    },
+    "COORD-DISC-QUANT-004": {
+      "status": "DONE",
+      "blockers": [],
+      "pr": 442,
+      "fingerprint_id": "DISC-BTC-LEADLAG-001-v1",
+      "completion_evidence": {
+        "frozen_contract_pr": 436,
+        "screen_pr": 442,
+        "screen_exact_head_sha": "722c2615f8b87368e84b7e576fe5cc853bb9c2cd",
+        "screen_security_and_reliability_run": 35436865197,
+        "merge_sha": "9368dfe0d3f22573b5331b1086547c3884330b1b",
+        "decision": "REJECTED_PRE_OOS",
+        "training_pooled_trades": 102,
+        "training_3x_mean_net_bps": -68.95,
+        "training_3x_profit_factor": 0.420,
+        "validation_pooled_trades": 24,
+        "validation_3x_mean_net_bps": -113.69,
+        "validation_3x_profit_factor": 0.097,
+        "untouched_oos_opened": false,
+        "genuine_forward_opened": false,
+        "profitability_learning_completion_wired": true,
+        "rejected_fingerprint_admission_veto_regression": true,
+        "phase1_complete": false,
+        "phase1_remaining_acceptance": "Issue #438 must prove the merged completion/memory/ranking path on the actual autonomous runtime/deployed SHA, including durable transport and restart/replay/outage fail-closed behavior."
+      },
       "next_task": null
     }
   },
@@ -63,46 +85,19 @@
       "status": "DONE",
       "work_mode": "CHEAP_SCREEN",
       "fingerprint_id": "DISC-SQUEEZE-RETENTION-001-v1",
-      "eligible_engines": [
-        "chatgpt",
-        "human"
-      ],
+      "eligible_engines": ["chatgpt", "human"],
       "title": "Resolve or terminally falsify timestamp-safe squeeze-retention data availability",
-      "dependencies": [
-        "COORD-DISC-DATA-003"
-      ],
+      "dependencies": ["COORD-DISC-DATA-003"],
       "blockers": [],
       "issue": null,
       "branch": "agent/data-market",
       "pr": 431,
-      "evidence_required": [
-        "predeclare the exact historical interval before inspecting strategy outcomes",
-        "first seek a bounded zero-new-cost exact file/prefix enumeration path for the frozen Binance cohort, or an equivalent complete manifest/gap audit; do not require unapproved credentials or a new paid service merely to keep the task actionable",
-        "if CryptoHFTData cannot establish the full contract, investigate only timestamp-defensible alternative sources that preserve the same frozen Binance USDⓈ-M BTCUSDT/ETHUSDT/SOLUSDT semantics; do not silently substitute another venue, instrument or current snapshot history",
-        "enumerate every expected object for BTCUSDT/ETHUSDT/SOLUSDT and liquidations/open_interest/mark_price with immutable hashes or an equivalently complete manifest",
-        "distinguish source absence, collection outage and zero published liquidation events without fabricating complete liquidation notional",
-        "freeze decision-time chronology using collector receipt/public availability semantics only",
-        "independently reconcile Binance USDⓈ-M instrument, base/quote/contract and liquidation notional units",
-        "keep strategy returns and untouched OOS unopened while resolving the data contract",
-        "if no scientifically defensible zero-new-cost path exists, persist a precise terminal data blocker so the Lead can pivot rather than post-hoc proxying the failed source",
-        "zero new paid service without explicit approval"
-      ],
-      "completion_rule": "Either return one frozen, timestamp-defensible historical data contract suitable for pre-outcome QUANT-003 execution, or persist a precise terminal data blocker and let the Lead pivot to the highest-value materially distinct available-data hypothesis. Do not inspect strategy returns or untouched OOS during source resolution.",
+      "completion_rule": "Either freeze a timestamp-defensible historical data contract or persist a precise terminal data blocker without inspecting strategy returns or untouched OOS.",
       "completion_evidence": {
         "decision": "TERMINAL_NO_ZERO_COST_TIMESTAMP_SAFE_SOURCE",
-        "decision_scope": "current approved access, venue, cohort and scientific contract",
-        "frozen_interval": "2025-07-01T00:00:00Z inclusive through 2026-09-01T00:00:00Z exclusive",
-        "source_resolution_ref": "research_data/squeeze_preflight/data004_source_resolution.json",
-        "exact_head_sha": "503cbc5402bd0096b327c8aae9481633c354373f",
-        "security_and_reliability_run": 35424497257,
-        "security_and_reliability": "SUCCESS",
         "merge_sha": "c51a59dbac604a2e0b2eefa2b68ae025d4c5b0e3",
-        "post_merge_security_and_reliability_run": 35425911144,
-        "post_merge_security_and_reliability": "SUCCESS",
         "strategy_outcomes_inspected": false,
-        "untouched_oos_opened": false,
-        "new_paid_service_authorized": false,
-        "broker_or_live_authority": false
+        "untouched_oos_opened": false
       },
       "next_task": "COORD-DISC-QUANT-004"
     },
@@ -110,31 +105,25 @@
       "id": "COORD-DISC-QUANT-004",
       "priority": 1,
       "owner": "quant-research",
-      "status": "READY",
+      "status": "DONE",
       "work_mode": "CHEAP_SCREEN",
-      "eligible_engines": [
-        "chatgpt",
-        "human"
-      ],
-      "title": "Freeze the next materially distinct available-data strategy hypothesis",
-      "dependencies": [
-        "COORD-DISC-DATA-004"
-      ],
+      "fingerprint_id": "DISC-BTC-LEADLAG-001-v1",
+      "eligible_engines": ["chatgpt", "human"],
+      "title": "Freeze and execute the next materially distinct available-data strategy hypothesis",
+      "dependencies": ["COORD-DISC-DATA-004"],
       "blockers": [],
-      "issue": null,
-      "branch": "agent/quant-research",
-      "pr": null,
-      "evidence_required": [
-        "select a materially distinct economic mechanism rather than tuning or proxy-rescuing any rejected or data-blocked exact fingerprint",
-        "use only timestamp-defensible data families already demonstrably available under current approved access; prefer simple official or immutable price/volume/market data unless a stronger existing source is already verified",
-        "before inspecting candidate returns, freeze exact market/venue, instruments, timeframe, signal definition, entry, exit, holding period, no-trade rules, chronology, train/validation split, untouched-OOS boundary, benchmark, realistic costs and stress multipliers",
-        "predeclare sample floors, search breadth, parameter grid if any, and multiple-testing treatment before outcomes",
-        "state the economic mechanism and explicit falsification criteria; a mechanism that only restates past price performance is insufficient",
-        "check durable rejected_fingerprints and evidence-limited lanes before assigning a new fingerprint so no rejected exact fingerprint is silently reopened",
-        "do not open untouched OOS or genuine forward evidence during hypothesis selection",
-        "if no candidate can be frozen without outcome-driven choices, persist that fact and let Big-Move/Money Intelligence continue generating measurable hypotheses rather than inventing busywork"
-      ],
-      "completion_rule": "Either add exactly one highest-ranked CHEAP_SCREEN_READY candidate with a fully frozen pre-outcome scientific contract and verified timestamp-safe data path, or persist a precise scientific reason why no current candidate is defensible. No deep validation, OOS opening, broker authority or paid-data expansion.",
+      "issue": 438,
+      "branch": "agent/btc-leadlag-cheap-screen",
+      "pr": 442,
+      "completion_rule": "Preserve the exact frozen outcome, keep untouched OOS/forward locked on failure, and feed truthful trade/NAV evidence through profitability learning without tuning the rejected fingerprint.",
+      "completion_evidence": {
+        "decision": "REJECTED_PRE_OOS",
+        "screen_exact_head_sha": "722c2615f8b87368e84b7e576fe5cc853bb9c2cd",
+        "merge_sha": "9368dfe0d3f22573b5331b1086547c3884330b1b",
+        "untouched_oos_opened": false,
+        "genuine_forward_opened": false,
+        "next_architecture_issue": 438
+      },
       "next_task": null
     }
   ]
