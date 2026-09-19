@@ -22,6 +22,8 @@ def test_runtime_acceptance_runs_automatically_after_relevant_main_changes():
         "db.py",
         "profitability_learning/**",
         "orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz",
+        "orchestration/rejected_fingerprints.json",
+        "orchestration/signal_development_objective.json",
         "research_artifact.py",
         "research_heavy_experiment_scheduler.py",
         "signal_development.py",
@@ -36,3 +38,14 @@ def test_runtime_acceptance_failure_diagnostics_are_sanitized():
     assert 'last_http_status=$status' in workflow
     assert "response_not_json" in workflow
     assert 'cat "$response"' not in workflow
+    assert "detail: .detail?" not in workflow
+    assert "evidence_boundaries: .evidence_boundaries?" not in workflow
+    assert "safety: .safety?" not in workflow
+    for field in (
+        "untouched_oos_opened: .evidence_boundaries.untouched_oos_opened?",
+        "genuine_forward_opened: .evidence_boundaries.genuine_forward_opened?",
+        "trade_authority: .safety.trade_authority?",
+        "promotion_authority: .safety.promotion_authority?",
+        "broker_connected: .safety.broker_connected?",
+    ):
+        assert field in workflow
