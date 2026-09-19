@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-19T04:07:41.980154+00:00",
+  "hypothesis_id": "DISC-LIQUIDITY-MEANREV-001",
+  "fingerprint_id": "DISC-LIQUIDITY-MEANREV-001-v1",
+  "contract_sha256": "19252de4464fc997632b0500fded857bc58d5bdad49d6f72e3660eba75a28b57",
+  "stage": "SELECTION_ONLY_PRE_OOS",
+  "screen_status": "PRE_OOS_FAIL",
+  "economic_pre_oos_pass": false,
+  "terminal_rejection_authorized": true,
+  "research_only": true,
+  "trade_authority": false,
+  "promotion_authority": false,
+  "untouched_oos_opened": false,
+  "genuine_forward_opened": false,
+  "workflow": {
+    "run_id": 35420353644,
+    "artifact_id": 10577901325,
+    "artifact_name": "liquidity-mean-reversion-selection-e652d458401d40d45e098c85680ef96ddbd8ce51",
+    "artifact_digest": "sha256:085d46fabd899241e05865dd1bac39a9adf695ee68e1835203a9889080203df6",
+    "evaluated_head_sha": "e652d458401d40d45e098c85680ef96ddbd8ce51"
+  },
+  "dataset": {
+    "source": "OKX /api/v5/market/history-candles",
+    "bar": "1H",
+    "fixed_instruments": ["BTC-USDT-SWAP", "ETH-USDT-SWAP", "SOL-USDT-SWAP"],
+    "normalized_row_count": 35997,
+    "coverage_start_utc": "2025-05-07T05:00:00+00:00",
+    "coverage_end_utc": "2026-09-19T03:00:00+00:00",
+    "normalized_rows_sha256": "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f",
+    "data_integrity_ok": true,
+    "missing_or_invalid_instruments": {}
+  },
+  "selection_cost_basis": {
+    "base_round_trip_bps": 20.0,
+    "reported_gate_stress_multiplier": 3.0,
+    "reported_round_trip_cost_bps": 60.0,
+    "historical_executable_quotes_available": false,
+    "interpretation": "Conservative composite cost proxy; no historical executable spread was fabricated."
+  },
+  "result": {
+    "passing_instruments": 0,
+    "minimum_passing_instruments": 2,
+    "pooled_train_3x": {
+      "trades": 425,
+      "mean_net_bps": -88.8701757246473,
+      "profit_factor": 0.33095130918422955,
+      "total_net_bps_additive": -37769.8246829751
+    },
+    "pooled_validation_3x": {
+      "trades": 123,
+      "mean_net_bps": -45.47562632933707,
+      "profit_factor": 0.45586425443550266,
+      "total_net_bps_additive": -5593.502038508459
+    },
+    "baseline_validation_3x": {
+      "trades": 124,
+      "mean_net_bps": -47.07456025740364,
+      "profit_factor": 0.4454350765711595
+    },
+    "validation_halves_3x_mean_net_bps": {
+      "first_half": -29.147191892226754,
+      "second_half": -63.77473388816758
+    },
+    "instrument_validation_3x_mean_net_bps": {
+      "BTC-USDT-SWAP": -50.83279337767875,
+      "ETH-USDT-SWAP": -46.73137590975769,
+      "SOL-USDT-SWAP": -41.63370127046601
+    },
+    "pooled_failure_reasons": [
+      "POOLED_TRAIN_EXPECTANCY",
+      "POOLED_VALIDATION_EXPECTANCY",
+      "POOLED_VALIDATION_PROFIT_FACTOR",
+      "VALIDATION_FIRST_HALF_INSTABILITY",
+      "VALIDATION_SECOND_HALF_INSTABILITY"
+    ],
+    "sensitivity_results": {
+      "sigma_1_75": {
+        "pass": false,
+        "train_3x_mean_net_bps": -79.99404519934242,
+        "validation_3x_mean_net_bps": -44.965422845075565
+      },
+      "sigma_2_25": {
+        "pass": false,
+        "train_3x_mean_net_bps": -91.6538674548495,
+        "validation_3x_mean_net_bps": -45.51628867155401
+      }
+    }
+  },
+  "scientific_interpretation": "The frozen v1 liquidity-shock mean-reversion hypothesis failed broadly before OOS: all three fixed replication instruments had negative max-stress train and validation expectancy, pooled train/validation expectancy and profit factor failed, both validation halves were negative, and both non-selectable sigma falsifier sensitivities were negative. The liquidity filters improved pooled validation only slightly versus the baseline and did not create positive expectancy. Untouched OOS remained locked, so no protected evidence was consumed attempting a rescue.",
+  "next_action": "Persist this fingerprint as terminally rejected and pivot to the highest-value materially distinct predeclared hypothesis; do not tune or reopen v1 without materially new data or a genuinely different frozen scientific hypothesis."
+}
