@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-19T00:15:00Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal confidence, paper-trade, promotion-gate or broker state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "highest_information_question": "Was the Sep. 18 BTC breakout primarily enabled by a pre-existing short-crowding state that became forced buying after a spot/catalyst impulse, and what evidence would distinguish a durable post-squeeze accumulation regime from temporary price impact?",
+  "observed_facts": [
+    "CoinMarketCap quotes at about 00:14-00:15Z Sep. 19 placed BTC near $80,913 (+5.92%/24h), ETH near $2,612 (+6.95%), SOL near $112.68 (+11.10%), XRP near $1.400 (+8.09%) and LINK near $12.24 (+7.52%). BTC dominance was about 58.78%. BTC therefore remained near the $80.9K level roughly 35 minutes after the prior 23:40Z observation rather than immediately retracing after the main liquidation burst.",
+    "CoinMarketCap global derivatives data around the cutoff showed roughly $462.27B total open interest, down 1.87% over 24 hours, and roughly $460.91B perpetual open interest, down 1.90%. Average funding was positive at about 0.0072% and materially higher than the previous comparison window.",
+    "CoinMarketCap reported about $260.38M of BTC liquidations over 24 hours, about $252.33M shorts and $8.04M longs, so approximately 96.9% of forced BTC closures were shorts. The most recent four hours contained only about $2.56M of BTC liquidations and the latest hour showed zero, confirming that the main forced short-covering burst had largely subsided by the cutoff.",
+    "CoinMarketCap's 00:00Z global snapshot showed total crypto market capitalization around $2.76T (+5.54%/24h), spot volume materially higher than the previous 24-hour comparison, derivatives volume also higher, aggregate open interest still lower over 24 hours and funding more positive. Provider-level absolute open-interest totals varied between adjacent snapshots, so the change in absolute dollars over tens of minutes is not treated as a market fact without venue confirmation.",
+    "Farside's preferred U.S. spot-BTC ETF table still had Sep. 18 constituent entries unfinalized at the cutoff. The last completed sequence remained Sep. 14 +$159.9M, Sep. 15 -$450.4M, Sep. 16 -$295.9M and Sep. 17 +$159.5M, or about -$426.9M over those four completed sessions. An automatically displayed incomplete-day total must not be treated as a completed zero or completed positive flow.",
+    "The official CFTC Traders in Financial Futures report for positions as of Sep. 15 showed CME standard Bitcoin leveraged funds long 5,545 contracts and short 11,899, a net short of 6,354 standard contracts (about 31,770 BTC before considering spreads/hedges). Asset managers were net long 2,760 standard contracts (about 13,800 BTC). Micro-Bitcoin leveraged funds were also net short 8,482 contracts, roughly 848 BTC equivalent.",
+    "Using the same official CFTC weekly-change fields, the Sep. 8 standard-Bitcoin leveraged-fund position reconstructs to 5,146 longs versus 13,038 shorts, net short 7,892 standard contracts, about 39,460 BTC equivalent. The Sep. 8 micro-Bitcoin leveraged-fund position reconstructs to roughly net short 5,406 micro contracts, about 541 BTC equivalent. This implies roughly 40,000 BTC-equivalent of net leveraged-fund CME short exposure in the prior public COT snapshot before the Sep. 18 breakout, subject to the important basis-hedge caveat below.",
+    "A Deribit/Block Scholes weekly report published Sep. 17 before the breakout described BTC implied volatility as broadly subdued and BTC 25-delta skew close to neutral rather than showing a strong pre-move call premium. This is useful negative evidence against a simple claim that options markets clearly anticipated the breakout.",
+    "U.S. crypto-linked equities also moved abnormally on Sep. 18: contemporaneous market coverage reported approximately +15% in Strategy, +12% in Coinbase and +8.7% in Robinhood. This is consistent with a broad crypto-specific beta impulse, but does not by itself identify the original source of capital."
+  ],
+  "inferences": [
+    "The combination of substantial pre-existing CME leveraged-fund net short exposure, approximately 97% short-dominated BTC liquidations, and price rising while aggregate/single-venue open interest fell strengthens the causal interpretation that short inventory was an important amplifier of the Sep. 18 move.",
+    "The strongest defensible mechanism is not 'shorts caused the breakout from nothing.' A more plausible chain is: some discretionary spot/catalyst/risk demand pushes price through vulnerable levels -> pre-existing short positioning becomes forced buying -> liquidations and stop-outs accelerate price -> open interest falls as positions close -> momentum broadens into higher-beta crypto assets and crypto equities.",
+    "CFTC leveraged-fund net shorts are not equivalent to directional bearish bets because some funds may be short CME futures against long spot/ETF or other basis positions. Therefore COT short crowding is a squeeze-risk state variable, not proof of imminent upward direction and not proof that the Sep. 18 liquidations came from those exact accounts.",
+    "Pre-move options skew being near neutral weakens the hypothesis that a broad options-market directional signal anticipated the move. At least in this episode, observable short inventory appears more informative for amplification risk than call-skew anticipation, but this is not yet a validated cross-episode predictor.",
+    "BTC remaining near $80.9K after the largest forced-covering burst had faded is modestly constructive, but durable spot/institutional accumulation is still unproven because Sep. 18 ETF flow is unfinished and higher-quality exchange/on-chain absorption evidence remains unresolved.",
+    "No broad new crypto-liquidity regime is established. Funding is more positive, open interest remains lower over 24 hours, and the last completed ETF sequence is still net negative."
+  ],
+  "hypotheses": [
+    {
+      "id": "btc-short-inventory-amplifier-20260918",
+      "status": "CANDIDATE / STRONGLY SUPPORTED FOR MECHANISM, NOT YET PREDICTIVE",
+      "claim": "When BTC enters a catalyst/spot-demand impulse with unusually large pre-existing leveraged short inventory, a resistance break can generate convex forced buying and a larger price move than the original discretionary flow alone would imply.",
+      "inputs_available_before_move": [
+        "Latest public CFTC leveraged-fund positioning normalized by open interest and BTC equivalent",
+        "Venue/perpetual funding, basis and open-interest state",
+        "Options skew/gamma where timestamp-safe",
+        "Spot/ETF demand and catalyst state",
+        "Nearby liquidity/technical levels"
+      ],
+      "predicted_effect": "Conditional on an upward spot/catalyst impulse, unusually crowded short inventory should increase the right-tail magnitude of the move and be accompanied by short-heavy liquidations and falling/flat open interest during the forced-cover phase.",
+      "falsification": "Across a timestamp-safe matched sample, pre-existing short crowding adds no information to subsequent upside-tail magnitude after controlling for spot demand, volatility, liquidity and catalyst strength, or observed squeeze episodes occur without the predicted forced-flow signature.",
+      "base_rate_status": "UNKNOWN; historical matched sample not yet built."
+    }
+  ],
+  "matched_controls_and_negative_findings": [
+    "Do not convert CFTC leveraged-fund net shorts directly into directional bearish positioning; cash-and-carry/basis hedges can create large futures shorts alongside long spot exposure.",
+    "Do not treat 'price up + open interest down' as a continuation signal. It diagnoses position closure/forced-flow amplification more directly than it predicts what happens after the forced flow ends.",
+    "Do not claim options predicted the Sep. 18 breakout: pre-move BTC 25-delta skew was near neutral and implied volatility was not displaying an obvious one-way breakout signal in the timestamped Sep. 17 report.",
+    "Do not promote incomplete Sep. 18 ETF estimates. Finalized multi-session creations/redemptions remain the cleaner test of institutional spot persistence.",
+    "A useful matched control will be BTC episodes with similarly elevated leveraged-fund short exposure but no positive spot/catalyst impulse. If they do not squeeze, that would support the hypothesis that short inventory is an amplifier rather than a standalone trigger."
+  ],
+  "decision_support": {
+    "instrument": "BTC",
+    "action": "WAIT / TACTICAL MOMENTUM CANDIDATE",
+    "horizon": "days to several weeks",
+    "confidence": "MODERATE on continued tactical strength; MODERATE-HIGH that forced short-covering materially amplified Sep. 18; LOW on a durable institutional accumulation regime until spot-flow evidence confirms it",
+    "thesis": "The causal decomposition is stronger: pre-existing short inventory likely supplied convex forced buying after an initial price impulse. That improves understanding of the move but does not by itself create a clean forward BUY edge once the liquidation impulse has mostly passed.",
+    "capital_source_destination": "A validated marginal source of buying was short sellers repurchasing BTC under forced closure. The source and size of additional discretionary spot/ETF buying remain incompletely measured.",
+    "confirmations_required": [
+      "Finalized Sep. 18 and subsequent BTC ETF sessions show persistent positive net creations with reasonable issuer breadth",
+      "BTC holds or builds above approximately $80K-$82K after short liquidations normalize",
+      "Open interest rebuilds only moderately while funding remains contained, or price advances with clear spot-volume dominance",
+      "Timestamp-consistent exchange/on-chain evidence supports net spot absorption rather than distribution",
+      "BTC retains relative strength versus comparable high-beta risk assets"
+    ],
+    "invalidation_or_downgrade": [
+      "BTC loses roughly $77K-$78K after forced buying has faded",
+      "Material ETF redemptions resume",
+      "Open interest rebuilds aggressively on the long side while funding becomes expensive and price stalls",
+      "Higher-quality on-chain/exchange evidence shows distribution into strength"
+    ],
+    "liquidity_cost_capacity": "BTC is highly liquid relative to crypto, but event-window slippage, funding and basis can change quickly. Research/decision support only; no execution authority."
+  },
+  "big_move_lab_status": "READYING, NOT YET INSERTED. The pre-move positioning state is now materially better reconstructed using public prior CFTC data and timestamped Sep. 17 options evidence. Canonical insertion remains deferred until the breakout-start window and point-in-time catalyst set are timestamped defensibly enough to avoid hindsight contamination.",
+  "prediction_ledger": "No new immutable forward forecast frozen. The evidence materially improves causal mechanism attribution but does not yet clear the spec's standard for a new action-level forecast. Existing dashboard scorecard remains frozen=0, resolved=0.",
+  "canonical_update_decision": "Persist this research cycle only. Do not update dashboard_state, learning_ledger or big_move_lab yet: the owner-facing action remains WAIT / tactical candidate, the broad regime is unchanged, and the new CFTC evidence is best treated as a mechanism candidate pending historical controls and exact breakout-window reconstruction. This avoids noisy canonical commits.",
+  "next_priority": [
+    "Finalize Sep. 18 BTC/ETH ETF flows from a preferred completed source and test persistence across subsequent sessions.",
+    "Reconstruct the Sep. 18 BTC breakout start with timestamp-defensible spot prices, news/catalysts and venue data, then add the case to big_move_lab if the pre-move cutoff is clean.",
+    "Build a matched historical BTC sample stratified by public CFTC leveraged-fund short crowding, basis conditions, funding/open interest and spot/ETF demand; measure 1d/3d/5d/20d outcomes and liquidation signatures.",
+    "Separate directional shorts from basis-style futures shorts where possible using CME basis, ETF/spot exposure proxies and participant category behavior.",
+    "Continue monitoring post-squeeze price retention versus funding/open-interest rebuild and spot-flow confirmation."
+  ],
+  "sources": [
+    "CoinMarketCap connected real-time quote, global-market and derivatives feeds, accessed 2026-09-19T00:00-00:15Z",
+    "U.S. CFTC Traders in Financial Futures, Futures Only, positions as of 2026-09-15; weekly change fields used to reconstruct 2026-09-08 category positions: https://www.cftc.gov/dea/futures/financial_lf.htm",
+    "Block Scholes / Deribit Insights Weekly Report published 2026-09-17 before the breakout",
+    "Farside Investors U.S. spot Bitcoin ETF flow table: https://farside.co.uk/btc/",
+    "Contemporaneous Sep. 18 market coverage for crypto-linked equity moves"
+  ],
+  "reporting_gate": "No owner-facing report. At least 60 minutes of cumulative verifiable research/execution time has not been established; schedule cadence and artifact timestamps are not treated as duration evidence. Continue quietly."
+}
