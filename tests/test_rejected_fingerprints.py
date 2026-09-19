@@ -66,14 +66,19 @@ def test_missing_required_field_is_rejected(tmp_path):
         load_rejected_fingerprints(path)
 
 
+
 def test_coordination_task_declaring_rejected_fingerprint_fails_closed():
     state = load_state()
     bad = copy.deepcopy(state)
-    task = next(row for row in bad["tasks"] if row["id"] == "COORD-DISC-DATA-002")
+    task = next(
+        row for row in bad["tasks"]
+        if row["owner"] == "data-market"
+        and row["status"] in {"READY", "IN_PROGRESS", "PR_OPEN"}
+        and row["id"].startswith("COORD-DISC-")
+    )
     task["fingerprint_id"] = "DATA-BASIS-001"
     with pytest.raises(RuntimeError, match="rejected fingerprint"):
         validate_state(bad)
-
 
 def test_coordination_task_declaring_rejected_fingerprint_is_fine_when_done():
     # A DONE task recording historical rejection evidence must not be blocked:
@@ -87,9 +92,16 @@ def test_coordination_task_declaring_rejected_fingerprint_is_fine_when_done():
     validate_state(ok)  # must not raise
 
 
+
 def test_coordination_task_with_genuinely_new_fingerprint_is_unaffected():
     state = load_state()
     ok = copy.deepcopy(state)
-    task = next(row for row in ok["tasks"] if row["id"] == "COORD-DISC-DATA-002")
+    task = next(
+        row for row in ok["tasks"]
+        if row["owner"] == "data-market"
+        and row["status"] in {"READY", "IN_PROGRESS", "PR_OPEN"}
+        and row["id"].startswith("COORD-DISC-")
+    )
     task["fingerprint_id"] = "DATA-BREADTH-002-GENUINELY-NEW"
     validate_state(ok)  # must not raise
+
