@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-19T15:16:04Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate or broker state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "context_integrity": {
+    "read_current_spec": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-19T15:05:54Z",
+    "artifact_cutoff_utc": "2026-09-19T15:16:04Z",
+    "seconds_this_run": 610,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 807,
+    "minimum_cumulative_seconds_since_last_owner_report": 1417,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly recorded active execution time after the last owner-facing report is counted. Schedule gaps are excluded; no padding or idle time is counted."
+  },
+  "highest_information_question": "Are finalized regulated crypto-ETP flow figures predictive pre-move variables, concurrent/endogenous demand measures, or mixtures whose price impact depends on cash-versus-in-kind creation mechanics and AP inventory timing?",
+  "fresh_validated_observations": [
+    {
+      "topic": "Finalized daily ETF flow is not automatically a timestamp-defensible pre-move predictor",
+      "label": "PRIMARY-SOURCE METHOD LEARNING / NEGATIVE FINDING / NEEDS LARGER SAMPLE",
+      "observed_facts": [
+        "Bitwise BSOL's current SEC prospectus states that in-kind creation orders may be entered until 3:59 p.m. ET, while cash creation orders normally cut off at 2:00 p.m. ET. NAV is calculated at 4:00 p.m. ET but often is not officially struck until roughly 5:30 p.m. or later.",
+        "For a cash creation under BSOL's Agent Execution Model, the Trust purchases SOL on the evening of the Creation Order Date through Coinbase Prime and may use trade credit; under the Trust-Directed model it generally purchases SOL OTC from an approved trading counterparty.",
+        "For an in-kind creation, the AP or designee delivers SOL by the following business day. The AP may have acquired or hedged that SOL before the recorded creation, so recorded flow date and marginal spot-price-impact time need not be identical.",
+        "BSOL's Q1 2026 10-Q records $21.591M of in-kind SOL creations and $3.422M of in-kind redemptions; its 2025 10-K records $355.475M of in-kind creations. Thus in-kind transfer is not a theoretical edge case.",
+        "The Sep. 18 Farside SOL flow snapshot is +$47.6M and concentrated entirely in BSOL. Relative to BSOL's roughly $1.145B Sep. 17 AUM cited in the issuer snapshot, the flow is about 4.16% of AUM, but the exact fraction representing contemporaneous external spot buying is UNKNOWN without creation-mode detail."
+      ],
+      "inference": "A daily ETP-flow number is best treated as evidence of regulated-product demand, not as a guaranteed same-day exchange spot purchase. Cash creations can cause actual asset purchases on the creation date, but those purchases may occur OTC or through a prime broker; in-kind creations transfer inventory and can shift price impact earlier into AP sourcing/hedging. Final daily totals are also generally known after much of the trading day, so they cannot be credited as public pre-move predictors for that same session without an intraday proxy.",
+      "candidate_method_rule": "For causal/predictive research, store four distinct timestamps/states: investor secondary-market demand/premium-volume signal; AP creation-order cutoff/acceptance; underlying-asset acquisition/hedging window; final published flow/NAV state. Split cash and in-kind creation modes whenever possible. Score prediction only from information actually public before the forecast timestamp.",
+      "promotion_status": "Strong method candidate, but defer canonical ledger promotion until replicated across BTC/ETH/SOL products and a larger event sample."
+    },
+    {
+      "topic": "Small recent sample rejects a naive 'finalized ETF flow today predicts price tomorrow' rule",
+      "label": "NEGATIVE FINDING / PROVISIONAL EMPIRICAL TEST",
+      "observed_facts": [
+        "Using 13 U.S. business sessions from Sep. 1-Sep. 18 with contemporaneous Farside daily net flows and public daily BTC/ETH/SOL returns, same-session flow/return Pearson correlations were approximately +0.81 BTC, +0.64 ETH and +0.66 SOL; same-session Spearman correlations were about +0.64, +0.59 and +0.24 respectively.",
+        "Lagging flow by one U.S. business session produced Pearson correlations with next-session return of approximately -0.11 BTC, -0.38 ETH and -0.54 SOL; Spearman correlations were approximately -0.27, -0.57 and -0.56.",
+        "For SOL, excluding Sep. 18 collapses the same-session relationship to about +0.04 Pearson/+0.03 Spearman, showing that its apparent correlation is dominated by one large joint price/flow observation.",
+        "Sep. 17 finalized flows were +$159.5M BTC, -$39.3M ETH and $0 SOL, while Sep. 18 returns were roughly +5.81% BTC, +6.74% ETH and +10.80% SOL. The strongest next-day return occurred in SOL despite zero prior-day reported flow."
+      ],
+      "inference": "The strong same-day BTC/ETH association is consistent with concurrent demand/arbitrage and/or price-driven creations but is not proof of pre-move predictability. In this small sample the finalized prior-day flow signal does not positively rank next-day returns and therefore should not be used naively as a next-day directional predictor.",
+      "limitations": [
+        "n=13 same-day and n=12 lagged observations only",
+        "single high-volatility September 2026 regime",
+        "no control yet for broad crypto beta, prior momentum, volatility, macro news, legislation or derivatives positioning",
+        "crypto trades continuously while ETF flow is U.S.-session dated; weekend/overnight timing creates alignment noise",
+        "Farside tables are mutable and Sep. 18 BTC/ETH issuer cells have temporarily disappeared/reappeared, so timestamped snapshots must be versioned"
+      ],
+      "falsification_next": "Extend to at least 60 timestamp-safe business sessions, test 1d/3d/5d forward excess returns with beta/momentum/volatility controls, winsorized and rank-robust specifications, and separate cash/in-kind product mechanics before promoting any predictive relation."
+    },
+    {
+      "topic": "Sep. 18 regulated crypto flow is a real concurrent demand rebound but not yet a durable accumulation regime",
+      "label": "OBSERVED FACT / RELATIVE-FLOW CONTROL / WAIT",
+      "observed_facts": [
+        "Multiple timestamped sources preserve Sep. 18 completed-looking U.S. spot-BTC ETF net inflow near +$433.0M, including FBTC +$310.7M and IBIT +$108.4M. The live Farside page has again regressed to a partial +$324.6M state with the IBIT cell missing, reinforcing the need for versioned snapshots rather than destructive overwrite.",
+        "Multiple timestamped sources preserve Sep. 18 ETH ETF net inflow near +$143.7M, while the live Farside page has again regressed to a partial +$29.4M state with major issuer cells missing.",
+        "Using completed-looking Sep. 18 snapshots, Sep. 14-18 net flow is approximately +$6.1M BTC, -$140.6M ETH and +$60.7M SOL. Thus one strong Friday session leaves BTC roughly flat on the week and ETH still negative.",
+        "BTC at about 15:05Z was $81,652 (+1.18%/24h, +5.45%/7d), ETH $2,642 (+2.54%/24h), SOL $111.84 (+1.51%/24h, +9.66%/7d)."
+      ],
+      "inference": "Sep. 18 shows genuine regulated-vehicle demand participation, but the week-level evidence does not yet justify calling BTC/ETH a persistent institutional accumulation regime. SOL's flow intensity is notable relative to its size, but the single-issuer concentration and unknown cash/in-kind mix make causal spot-demand interpretation provisional.",
+      "decision_support": "BTC WAIT / TACTICAL MOMENTUM CANDIDATE; ETH WAIT; SOL HOLD/WAIT FOR VALIDATION."
+    },
+    {
+      "topic": "Weekend BTC continuation is occurring while the immediate liquidation impulse and aggregate open interest are cooling",
+      "label": "OBSERVED FACT / INFERENCE / DATA-QUALITY CAUTION",
+      "observed_facts": [
+        "CoinMarketCap's dedicated derivatives snapshot around the run showed total crypto open interest near $433.3B, down about 2.15% over 24h, with average perpetual funding near 0.00738; BTC 24h liquidations were about $56.9M, mostly shorts, and both the latest 1h and 4h BTC liquidation windows were zero.",
+        "A separate CoinMarketCap global-metrics snapshot showed total open interest near $443.2B and average funding near 0.00714%, again indicating positive funding but highlighting material endpoint inconsistency in exact aggregate OI values.",
+        "BTC remained around $81.6K despite the forced-liquidation burst fading."
+      ],
+      "inference": "Price retention while forced covering fades and aggregate leverage appears to cool is better-quality continuation evidence than a rally accompanied by rapidly expanding OI. However, positive funding remains a crowding risk and the inconsistent aggregate endpoints prevent precise leverage attribution.",
+      "method_rule": "Do not merge inconsistent aggregate derivatives endpoints into false precision. Preserve timestamps and reconcile venue-level OI/funding/basis before using leverage as a promotion variable.",
+      "decision_support": "No BUY promotion. Require fresh spot/ETF absorption after U.S. markets reopen plus controlled venue-grade leverage."
+    },
+    {
+      "topic": "Privacy rotation remains broad while ZEC keeps exceptional excess return",
+      "label": "OBSERVED FACT / MATCHED CONTROL / NO THESIS CHANGE",
+      "observed_facts": [
+        "At roughly 15:05Z ZEC was about $1,525, +33.2%/7d and +170.6%/30d; XMR about $575, +8.9%/7d and +36.8%/30d; DASH about $59.65, +5.9%/7d and +83.9%/30d.",
+        "XMR was stronger than ZEC over the latest 24h snapshot (+6.3% versus +3.5%), another control against attributing every privacy move to ZCSH-specific mechanics."
+      ],
+      "inference": "A broad privacy-theme rotation remains validated, with ZEC-specific regulated-wrapper/free-float/reflexive mechanisms plausibly explaining part of its much larger excess move rather than the entire move.",
+      "decision_support": "ZEC/ZCSH remains WAIT / AVOID CHASING."
+    },
+    {
+      "topic": "Saudi security risk broadened geographically, but no new benchmark-oil move can be claimed while markets are closed",
+      "label": "OBSERVED FACT / UNKNOWN / EVENT-RISK UPDATE",
+      "observed_facts": [
+        "Reuters reported smoke and flames near Riyadh airport after Saudi aerial-danger alerts and booms; at the cutoff there was still no official cause attribution.",
+        "Reuters separately confirmed three damaged Saudi East-West Pipeline pumping stations, with repair estimates ranging from partial earlier restart to five-six weeks, while Hormuz commodity traffic remained far below normal and Bab el-Mandeb also faced heightened security risk.",
+        "Saudi logistical substitution via Gulf loadings and Sohar ship-to-ship transfers remains the principal buffer preventing disrupted pipeline capacity from mapping one-for-one into lost deliverable barrels."
+      ],
+      "inference": "Energy tail risk is elevated because both the primary and substitute export routes are exposed to conflict, but the correct state remains route-specific effective deliverable supply rather than headline gross capacity. No fresh crude directional conclusion is defensible without confirmed physical impact and open-market pricing.",
+      "decision_support": "Crude WAIT / event-risk monitoring."
+    }
+  ],
+  "daily_big_move_scan": {
+    "market_context": "Saturday: major cash equity, sovereign-bond and benchmark commodity markets are closed. Traditional-market Friday moves are not fabricated; live crypto is updated.",
+    "selected_or_retested": [
+      "SOL Sep. 18 +~10.8%: causality deepened by BSOL creation-mode/timing audit; same-day +$47.6M flow is confirmation/concurrent demand evidence, not yet a validated pre-move predictor.",
+      "BTC Sep. 18 +~5.8% and weekend retention near $81.6K: forced covering has faded while leverage appears to cool; durable institutional accumulation remains unproven at week level.",
+      "ETH Sep. 18 +~6.7%: positive same-day ETF rebound but negative five-session flow weakens a simple institution-led narrative.",
+      "ZEC/XMR/DASH: privacy rotation remains broad; ZEC keeps extreme excess return.",
+      "Saudi oil-security tail: fresh airport-area incident remains unattributed and is treated as event risk only until physical impact/market pricing exists."
+    ],
+    "negative_findings": [
+      "Finalized daily ETF flow is generally not known early enough to be credited as a same-session public pre-move predictor.",
+      "ETF net flow is not equivalent to same-day exchange spot buying because creations can be cash or in-kind and purchases can be OTC/prime-broker executed.",
+      "In the small Sep. 1-18 sample, prior-business-day finalized flow did not positively predict next-business-session return for BTC/ETH/SOL.",
+      "SOL's recent same-day flow/return correlation is largely a Sep. 18 outlier and should not be promoted.",
+      "Do not overwrite completed-looking ETF snapshots when mutable live tables later lose issuer cells; preserve both states with timestamps.",
+      "Do not manufacture a weekend Brent move or attribute the Riyadh incident before the cause is established."
+    ]
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "status": "No new immutable directional forecast clears the evidence bar. Existing WAIT/HOLD-research states are preserved and no prior forecast is rewritten."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. Do not churn dashboard_state, learning_ledger or big_move_lab. The ETF creation-timing rule and lagged-flow negative result are materially useful but require a larger timestamp-safe sample and cross-product replication before canonical promotion. No code change and no signal-system state change were made.",
+  "next_research": [
+    "Extend BTC/ETH/SOL ETF-flow versus forward-return tests to at least 60 timestamp-safe sessions; test 1d/3d/5d excess returns with beta, momentum, volatility and event controls and report negative results honestly.",
+    "For BSOL and other major SOL wrappers, obtain daily cash-versus-in-kind creation mode or infer it only when issuer/AP disclosures make it defensible; separate AP inventory sourcing from trust acquisition.",
+    "Use intraday ETF premium/discount, volume and creation-order timing as candidate pre-move proxies rather than post-close final flow where available.",
+    "Reconcile BTC/SOL leverage at venue level, including Deribit term basis/funding and major perpetual venues, before using aggregate OI as a promotion variable.",
+    "After U.S. markets reopen, capture versioned BTC/ETH/SOL ETF tables at multiple timestamps and test whether Monday spot demand confirms Friday's rebound.",
+    "Continue split-safe ZCSH creation-ledger preparation before Sep. 30 and separate corporate action, staking/reward accrual, price change and genuine creation flow.",
+    "Reassess Saudi effective deliverable supply when crude markets reopen using route volumes, physical differentials, curves, freight/insurance and confirmed infrastructure status."
+  ],
+  "source_log": [
+    {"publisher":"SEC","date":"2026-08-13","topic":"BSOL creation/redemption procedures, cash/in-kind cutoffs, NAV timing, OTC/Coinbase Prime acquisition","url":"https://www.sec.gov/Archives/edgar/data/2045872/000119312526349138/bsol-20260813.htm"},
+    {"publisher":"SEC","date":"2026-05-2026 filing","topic":"BSOL Q1 2026 in-kind creations/redemptions","url":"https://www.sec.gov/Archives/edgar/data/2045872/000119312526209326/bsol-20260331.htm"},
+    {"publisher":"SEC","date":"2026 filing","topic":"BSOL 2025 in-kind creation history","url":"https://www.sec.gov/Archives/edgar/data/2045872/000119312526117404/bsol-20251231.htm"},
+    {"publisher":"Farside Investors","date":"2026-09-19 live view","topic":"BTC/ETH/SOL ETF daily flows; mutable Sep. 18 live-state regression","url":"https://farside.co.uk/"},
+    {"publisher":"CoinNess / Farside-SoSoValue relay","date":"2026-09-19","topic":"Timestamped completed Sep. 18 BTC +$433M and ETH +$143.7M ETF snapshots","url":"https://coinness.com/en/news/1144685"},
+    {"publisher":"CoinMarketCap connected data","date":"2026-09-19T15:05Z","topic":"Live crypto quotes and aggregate derivatives metrics","url":"https://coinmarketcap.com/"},
+    {"publisher":"Investing.com historical data","date":"2026-09-19 crawl","topic":"Daily BTC/ETH/SOL returns used in provisional Sep. 1-18 flow timing test","url":"https://www.investing.com/crypto/"},
+    {"publisher":"Reuters","date":"2026-09-19","topic":"Riyadh airport-area smoke/flames and unattributed aerial-danger alerts","url":"https://www.reuters.com/world/middle-east/saudi-civil-defence-sends-all-clear-after-danger-warning-capital-riyadh-2026-09-19/"},
+    {"publisher":"Reuters","date":"2026-09-17 to 2026-09-18","topic":"East-West Pipeline damage, Hormuz/Bab el-Mandeb traffic and Saudi logistics substitution","url":"https://www.reuters.com/business/energy/three-pumping-stations-along-saudi-east-west-pipeline-were-hit-recent-attack-2026-09-17/"}
+  ],
+  "owner_report_gate": "NOT MET. Minimum cumulative directly recorded execution since the last owner-facing report is 1,417 seconds, below the required 3,600 seconds. Persist research quietly."
+}
