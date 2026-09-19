@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-19T02:30:00Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate or broker state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "highest_information_question": "After the Sep. 18 BTC squeeze, does persistent regulated spot demand remain strong enough to support continuation once forced buying has disappeared, and which pre-move variables were actually public before the move?",
+  "observed_facts": [
+    "Farside's Sep. 18 U.S. spot-BTC ETF row is still incomplete at the cutoff because IBIT remains unreported. Reported issuers sum to +$324.6M: FBTC +$310.7M, BITB +$9.7M, ARKB +$1.9M and HODL +$2.3M, with the other reported funds at $0. The displayed total is therefore partial, not final.",
+    "Across completed Sep. 15-17 sessions, BTC ETF flow was -$586.8M. Adding the currently reported Sep. 18 +$324.6M leaves Sep. 15-18 at -$262.2M before IBIT; the multi-session turn therefore remains unresolved.",
+    "CoinMarketCap quotes around 02:29-02:30Z placed BTC at about $81,323 (+5.85%/24h), ETH $2,617 (+6.44%), SOL $113.46 (+10.79%), XRP $1.418 (+8.65%) and LINK $12.42 (+7.75%). BTC remained above $81K several hours after the main liquidation burst faded.",
+    "CoinMarketCap's dedicated derivatives snapshot showed total crypto open interest about $451.34B, down 4.78%/24h, perpetual open interest about $449.98B, down 4.81%, average perpetual funding about 0.00812 and up 47.88% versus the prior 24-hour comparison window. BTC liquidations were about $258.37M over 24h, with about $250.35M shorts and $8.01M longs; the latest 1h and 4h windows showed zero BTC liquidations.",
+    "The CFTC states that Commitments of Traders data are generally published Friday at 3:30 p.m. Eastern using positions from the preceding Tuesday. Therefore the report with positions as of Sep. 15 would normally have become public only at 19:30Z Sep. 18, after BTC had already crossed $80K during the U.S. market open. Sep. 15 COT positions must not be used as a pre-move predictor for the Sep. 18 breakout.",
+    "The latest public CFTC TFF snapshot that was safely available before the Sep. 18 U.S.-session breakout was the Sep. 8 report. It showed CME standard-Bitcoin leveraged funds long 5,146 contracts and short 13,038, net short 7,892 standard contracts, approximately 39,460 BTC equivalent before spreads/hedges. This was a pre-move short-crowding state, but not proof of directional bearish exposure because cash-and-carry/basis hedges can create futures shorts against spot longs.",
+    "CoinDesk's Sep. 18 live coverage recorded BTC just below $78K in the earlier session and above $80K around the opening minutes of the U.S. market day; later it reported roughly $238M of BTC shorts liquidated as BTC reached about $81K. This establishes the squeeze as a post-impulse amplifier rather than a pre-move causal label.",
+    "A useful matched episode occurred Aug. 19-24. Farside records BTC ETF inflows of +$517.2M Aug. 19, +$606.3M Aug. 20, +$307.5M Aug. 21 and +$337.6M Aug. 24. CoinDesk reported a record short squeeze around Aug. 20, while BTC continued higher and reached roughly $81.2K by Aug. 24. The episode therefore combined forced short covering with already-observable, persistent regulated spot demand."
+  ],
+  "inferences": [
+    "The current Sep. 18 causal decomposition remains two-stage: a discretionary/spot/regulatory impulse moved price into vulnerable short positioning, then forced short-covering amplified the move. BTC holding above $81K after the forced-flow window ended strengthens the case that the move was not sustained solely by liquidations.",
+    "Point-in-time integrity requires correcting the positioning evidence: Sep. 15 CFTC data are valid post-move mechanism context but were not public before the breakout. Any pre-move causal-lab case must use Sep. 8 or earlier public CFTC data. This correction reduces hindsight contamination without removing the short-crowding hypothesis because the Sep. 8 report itself showed substantial leveraged-fund net-short futures inventory.",
+    "The Aug. 20 matched episode supports a conditional rather than standalone squeeze hypothesis: short crowding can amplify an upside move, but continuation was stronger when multi-session ETF creations were already broad and persistent. The current Sep. 18 episode is directionally similar, but its key ETF day is still incomplete and therefore has not yet reached the same evidence quality.",
+    "Funding is rising while aggregate open interest remains below the prior 24-hour level. That is consistent with a market transitioning from short removal toward more expensive long exposure, but it does not yet prove destabilizing long crowding because open interest has not rebuilt above its prior level and BTC is still holding the breakout area.",
+    "No broad crypto-liquidity expansion is validated. Current evidence supports capital rotation and regulated spot demand plus forced-flow amplification more strongly than a system-wide stablecoin/liquidity surge."
+  ],
+  "hypotheses": [
+    {
+      "id": "btc-short-crowding-plus-spot-demand-conditional-continuation",
+      "status": "SUPPORTED_CANDIDATE / NOT YET PREDICTIVE",
+      "claim": "Pre-existing short crowding increases upside convexity only conditionally on a genuine discretionary spot/catalyst impulse; durable post-squeeze continuation is more likely when regulated spot flows remain positive and broad after forced buying fades.",
+      "inputs_available_before_move": [
+        "Latest actually-published CFTC leveraged-fund positioning, not merely the latest as-of date",
+        "Completed ETF creations/redemptions available before the move",
+        "Funding/open interest/basis available before the move",
+        "Regulatory/macro catalysts and price relative strength",
+        "Nearby liquidity/resistance levels"
+      ],
+      "predicted_effect": "Given a positive spot/catalyst impulse, greater public short crowding should increase immediate right-tail move magnitude; persistence should depend more on post-impulse spot/ETF demand than on liquidation size itself.",
+      "matched_control": "Aug. 20, 2026 short squeeze with accelerating ETF inflows and multi-session continuation versus future episodes with comparable short crowding but weak/negative spot flows.",
+      "falsification": "In a timestamp-safe matched sample, public pre-move short crowding adds no information to upside-tail magnitude conditional on spot impulse, or post-squeeze continuation is unrelated to persistent spot/ETF demand after controlling for volatility/liquidity/regime.",
+      "base_rate_status": "UNKNOWN; historical matched sample remains incomplete."
+    }
+  ],
+  "negative_findings_and_corrections": [
+    "Do not use Sep. 15 CFTC positions as evidence that was available before the Sep. 18 U.S.-session breakout; normal COT publication timing places release after the move. Use Sep. 8 as the last safely public pre-move snapshot unless a different timestamped publication record proves otherwise.",
+    "Do not treat a large futures net short as pure bearish direction; leveraged-fund shorts can be basis hedges against long spot/ETF exposure.",
+    "Do not treat price-up/open-interest-down as a continuation predictor. It diagnoses position closure and amplification more directly than it predicts what follows.",
+    "Do not finalize Sep. 18 BTC ETF flow while IBIT remains missing. The current +$324.6M is a partial reported total.",
+    "Do not infer a broad crypto-liquidity regime from the rally alone; the leverage flush, partial ETF demand and asset-specific regulatory catalysts can explain the move without system-wide monetary expansion."
+  ],
+  "decision_support": {
+    "instrument": "BTC",
+    "action": "WAIT / TACTICAL MOMENTUM CANDIDATE",
+    "horizon": "days to several weeks",
+    "confidence": "MODERATE on near-term strength; MODERATE-HIGH that short covering amplified Sep. 18; LOW-MODERATE on a durable institutional accumulation regime until Sep. 18 flow is finalized and follow-through is observed",
+    "thesis": "Price has retained the $81K area after forced short liquidations fell to zero in the latest 1h/4h windows, and currently reported Sep. 18 ETF creations outside IBIT are broad and large. This strengthens the spot-demand interpretation, but the key ETF day remains incomplete and funding has become more expensive, so the evidence still does not justify upgrading to a clean BUY thesis.",
+    "capital_source_destination": "Validated marginal buyers include forced short-coverers and reported regulated spot-ETF creations. The underlying accounts funding ETF creations and the scale of non-ETF discretionary spot demand remain UNKNOWN.",
+    "confirmations_required": [
+      "Final Sep. 18 IBIT flow leaves the session strongly positive",
+      "Subsequent completed BTC ETF sessions remain positive with issuer breadth",
+      "BTC holds or advances above roughly $80K-$82K after liquidations remain normalized",
+      "Open interest rebuild is controlled and funding does not become extreme while price stalls",
+      "Timestamp-consistent exchange/on-chain evidence supports absorption rather than distribution"
+    ],
+    "invalidation_or_downgrade": [
+      "Final Sep. 18 IBIT flow materially offsets the reported +$324.6M",
+      "ETF redemptions resume across subsequent completed sessions",
+      "BTC loses roughly $77K-$78K after forced buying has ended",
+      "Open interest rebuilds aggressively on the long side while funding rises and price stops advancing",
+      "Higher-quality spot/on-chain data show distribution into strength"
+    ],
+    "liquidity_cost_capacity": "BTC is highly liquid relative to crypto, but funding, basis and event-window slippage can change quickly. Research/decision support only; no execution authority."
+  },
+  "big_move_lab_status": "READYING WITH POINT-IN-TIME CORRECTION. The Sep. 18 BTC case now has enough mechanism evidence for eventual insertion, but the pre-move positioning field must use the Sep. 8 CFTC report rather than Sep. 15 because the latter was not public until after the breakout. Canonical insertion remains deferred until Sep. 18 ETF flow is finalized and the exact pre-move information cutoff is frozen.",
+  "prediction_ledger": "No new immutable forward forecast frozen. Dashboard scorecard remains frozen=0 and resolved=0.",
+  "canonical_update_decision": "Persist this research-cycle artifact only. Do not update dashboard_state, learning_ledger or big_move_lab yet: the broad regime and BTC WAIT action are unchanged, Sep. 18 ETF flow is incomplete, and the point-in-time CFTC correction should be incorporated when the BTC big-move case is finalized rather than creating a noisy intermediate canonical state.",
+  "next_priority": [
+    "Re-check Farside until Sep. 18 IBIT and the major ETH issuers are finalized; then compute completed Sep. 15-18 and Sep. 17-18 flows and issuer breadth.",
+    "Build a timestamp-safe matched BTC squeeze sample beginning with Aug. 20 and Sep. 18, using only CFTC reports actually published before each move, completed pre-move ETF flows, leverage state and 1d/3d/5d continuation.",
+    "Track BTC price retention, funding and open-interest rebuild after the forced-flow window; distinguish spot-led continuation from new leveraged-long crowding.",
+    "Resolve exchange/on-chain flow disagreement with a timestamp-consistent higher-quality source before using those variables for confirmation.",
+    "Once Sep. 18 ETF flow is final, insert the BTC case into big_move_lab only if the pre-move cutoff remains clean."
+  ],
+  "sources": [
+    "MONEY_INTELLIGENCE_SPEC.md on current main, read at start of cycle",
+    "Farside Investors U.S. spot Bitcoin ETF table, accessed 2026-09-19 around 02:30Z: https://farside.co.uk/btc/",
+    "CoinMarketCap connected quotes/global derivatives feeds, accessed 2026-09-19 around 02:29-02:30Z",
+    "CFTC Commitments of Traders publication policy: reports generally release Friday 3:30 p.m. Eastern using prior Tuesday data: https://www.cftc.gov/MarketReports/CommitmentsofTraders/index.htm",
+    "CFTC Traders in Financial Futures futures-only report for positions as of 2026-09-08: https://www.cftc.gov/dea/futures/financial_lf.htm",
+    "CoinDesk Sep. 18, 2026 live BTC/crypto coverage for breakout chronology and liquidation context",
+    "Farside historical BTC ETF table for Aug. 19-24, 2026 matched episode"
+  ],
+  "reporting_gate": "No owner-facing report. At least 60 minutes of cumulative verifiable research/execution time has not been established; schedule cadence and artifact timestamps are not treated as duration evidence. Continue quietly."
+}
