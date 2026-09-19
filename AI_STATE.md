@@ -1,7 +1,7 @@
 # AI_STATE.md
 
-Last reconciled: 2026-09-19T14:21Z
-Last updated: 2026-09-19T14:21Z
+Last reconciled: 2026-09-19T16:35Z
+Last updated: 2026-09-19T16:35Z
 
 This is the compact canonical handoff for `rnnyrgs-web/tradingview-ai-crypto`. Verify actual `main` SHA first on every run, then read `UNIFIED_PROFITABILITY_LEAD_SPEC.md`, `AGENTS.md`, `AUTONOMOUS_RESEARCH_DIRECTOR_STATUS.md`, `docs/ASTRA_BACKGROUND_WORKER.md`, strategy/rejected/coordination state including overrides, `orchestration/model_routing_policy.json`, current Money Intelligence / Big-Move artifacts, open PRs, active ownership and exact-head CI. GitHub durable state outranks chat memory.
 
@@ -17,38 +17,33 @@ Sequential phases:
 3. Independent adversarial architecture review/fixes.
 4. Permanent autonomous-loop integration.
 
-**Earliest incomplete phase: PHASE 1. Phase 2 must not start yet.**
+**Phase 1 acceptance evidence is COMPLETE. Earliest incomplete phase: PHASE 2.**
 
-## PHASE 1 INTEGRATION STATE
+Issue #451 is the durable Phase-2 acceptance contract. Do not advance to Phase 3 until Phase 2 has genuine persistent/runtime evidence, not merely schemas or tests.
 
-PR #446 (`Add exact deployed Profitability Learning runtime acceptance`) was independently reviewed and merged. Exact reviewed head: `b18c20f464ada4b03834a7cd0a3d9e4f621abb8c`; exact-head Security & Reliability run `35446478010` passed with 1,112 tests passed / 2 skipped plus dependency audit, Bandit and secret scan. The two prior acceptance defects were fixed before integration: replay idempotency is target-row scoped and unrelated concurrent appends are allowed; mission acceptance requires an exact-provenance `LEARN` mission from the sealed training experiment.
+## PHASE 1 — VERIFIED COMPLETE ACCEPTANCE
 
-Integration merge on `main`: `f3ab73e5714be23d82295a0f79ea606cf5d13528`. Post-merge Security & Reliability `verify` run `35448367392` passed on that exact SHA.
+The Profitability Learning + Strategy Evolution Engine passed genuine exact-deployed-SHA production acceptance on canonical production SHA:
 
-Deployment precondition is satisfied on that exact SHA: Render web service deploy `dep-dan9jnijnfac738m5d60` became live at `2026-09-19T14:19:35Z`, and coordinator deploy `dep-dan9jnijnfac738m5d00` became live at `2026-09-19T14:19:40Z`.
+`6d8dce267e35f079c7e91d7538419509bd2d059e`
 
-Merged runtime-acceptance path now:
-- exposes a POST-only, `X-Scan-Secret`-protected acceptance endpoint with no caller-selected research payload;
-- binds to the sealed rejected `DISC-BTC-LEADLAG-001-v1` artifact, frozen contract SHA, frozen dataset SHA and `PRE_OOS_FAIL` state;
-- replays only already-inspected train/validation evidence through the real durable `persist_selection` path;
-- requires durable memory availability, target-scoped idempotency, `LEARN_AND_PIVOT`, component evidence, an exact-training-provenance learning mission, canonical rejected-fingerprint memory and zero heavy-dispatch admission for the rejected exact fingerprint;
-- requires a valid deployed `RENDER_GIT_COMMIT` and preserves untouched OOS / genuine-forward locks plus broker/trade/promotion-off boundaries.
+Evidence:
+- PR #450 exact implementation head `859f439fb54df7954010fce576dc71972da2f144` passed exact-head Security & Reliability run `35454379268` with 1,115 tests passed / 2 skipped plus dependency audit, Bandit and secret scan before independent integration.
+- PR #450 merged to `main` as `6d8dce267e35f079c7e91d7538419509bd2d059e`.
+- `Profitability Learning Runtime Acceptance` run `35454496075` completed **SUCCESS** on exact head SHA `6d8dce267e35f079c7e91d7538419509bd2d059e`.
+- The workflow required exact deployed SHA equality, the sealed rejected fingerprint `DISC-BTC-LEADLAG-001-v1`, `PRE_OOS_FAIL`, both training and validation `LEARN_AND_PIVOT`, both persistence statuses `PERSISTED`, target-scoped replay idempotency, exactly two target experiment rows, exact rejected-fingerprint consumption, eligibility-changing queue feedback, zero heavy dispatch of the rejected fingerprint, at least one component observation, and at least one `LEARN` mission whose `source_experiment_id` equals the exact sealed training experiment.
+- The same successful workflow required untouched OOS and genuine-forward evidence to remain unopened and broker/trade/promotion authority to remain false.
+- Independent production persistence observation at 2026-09-19T16:18:26Z–16:18:27Z found exactly two new `experiment` events, both `LEARN_AND_PIVOT`, with distinct input digests.
 
-**Phase 1 is still NOT complete.** Merged code and CI are necessary but insufficient; issue #438 remains the durable acceptance contract.
+Production acceptance identifiers:
+- rejected strategy fingerprint: `e34357280eb06acc965b81aa8a4655d71c29010cd39f476e18d974e54d244e4e`;
+- dataset SHA-256: `047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f`;
+- experiment IDs: `0bc7d582a0730149242d700d848f5fb23c16c2fdea35944579587c1c813f2b97`, `806f6bd58d69a3ad1d81c7191f06cf564be2dfbfc8697f889eff3038426ac696`;
+- distinct input digests: `da20482d5ebd04d642225d887cc21d239854b050e9d9a32db3491098ad24507d`, `0d97017ed073c98bed72eaa36c4ff672afcf655163bfd46cdd02b900c8fa5332`.
 
-## PHASE 1 EXACT NEXT ACCEPTANCE ACTION
+Source status remained `REJECTED`; development-learning permission was true only where allowed and false for the locked component. Phase 1 completion grants **no** profitability, OOS, broker, trading or promotion authority.
 
-Do not duplicate PR #446. The next action is deployed-runtime proof against the exact currently deployed `main` SHA:
-
-1. deployment precondition **SATISFIED**: both Render services are live on exact `main` SHA `f3ab73e5714be23d82295a0f79ea606cf5d13528` through `RENDER_GIT_COMMIT`;
-2. dispatch `.github/workflows/profitability-learning-runtime-acceptance.yml` (`Profitability Learning Runtime Acceptance`) on `main`;
-3. require the workflow attestation to prove the deployed SHA equals the workflow `GITHUB_SHA`;
-4. independently inspect the two exact target durable experiment rows and confirm one-row multiplicity, stable input/full-row digests and exact replay idempotency;
-5. confirm both completions classify `LEARN_AND_PIVOT`, component evidence exists, at least one `LEARN` mission has `source_experiment_id` equal to the exact sealed training experiment, the exact rejected fingerprint remains rejected and heavy admission selects zero copies of it;
-6. preserve restart/re-entry/replay/contention and configured-memory missing/corrupt/outage fail-closed behavior;
-7. do not open historical untouched OOS or genuine-forward evidence and do not enable broker/trade/promotion authority.
-
-Only a passing exact-deployed-SHA acceptance plus independent durable-row inspection may complete Phase 1 and unlock Phase 2.
+Issue #438 may be closed as completed after this reconciliation is independently merged to `main`.
 
 ## CURRENT CANONICAL STRATEGY RESULT
 
@@ -75,21 +70,46 @@ Durable negative memory includes at least `ACC-002`, `DATA-BASIS-001`, `DATA-FUN
 - `DISC-FRIZZ-PLAYBIT-EMA-001-v1`: **BLOCKED_SOURCE_FINGERPRINT**; never approximate or silently substitute existing FFRIZZ logic.
 - No candidate enters expensive deep validation without a newly frozen predeclared cheap screen under current scientific gates.
 
-## MONEY INTELLIGENCE / BIG-MOVE STATE
+No validated profitable strategy exists yet.
 
-Independent Money Intelligence may continue only when it cannot contaminate protected strategy evidence. Latest persisted research cycle cutoff is `2026-09-19T13:37:53Z`.
+## PHASE 2 — ACTIVE NEXT PROGRAM PHASE
 
-Current evidence does **not** justify a promotion-grade 90-day 2x forecast:
-- BTC: Sep. 18 regulated spot-vehicle demand is corroborated, but the five-session flow is approximately flat; state remains WAIT / tactical-momentum research.
-- ETH: Sep. 18 inflow improved, but the completed-looking weekly regulated flow remains negative; WAIT.
-- SOL: strongest recent regulated-flow intensity relative to market cap among BTC/ETH/SOL in the preserved snapshot, but evidence is one-week and issuer-concentrated; HOLD / WAIT FOR VALIDATION, not a frozen BUY or 2x call.
-- ZEC/privacy complex: extreme move remains a causal-research case; avoid chasing and do not rewrite it as an early prediction.
+Durable acceptance contract: issue #451, `Phase 2: evolving Money Intelligence + causal repricing memory`.
 
-No immutable new forecast currently clears the evidence bar.
+Required end state is a persistent point-in-time Money Intelligence / causal-repricing / reflexivity memory that:
+- records immutable/versioned evidence with observation/publication/availability cutoffs and source provenance;
+- maintains stable mechanism IDs and can **gain confidence, lose confidence, record contradictions and decay when stale**;
+- separates observed fact, inference, hypothesis and supported mechanism in machine-readable state;
+- freezes causal chain, expected direction/timing, falsifier, transmission variables and matched-control design before outcome evaluation;
+- accounts for chronology and repeated testing/search breadth;
+- uses relative-impact variables such as `flow/float`, `flow/free_float`, `flow/liquidity`, `flow/ADV`, leverage/positioning concentration and source-of-funds distinctions only when data genuinely supports the denominator and timing;
+- keeps missing/non-comparable denominators UNKNOWN rather than inventing them;
+- can emit provenance-bound **new** Big-Move precursor hypotheses and **new** strategy-component hypotheses with fresh fingerprints;
+- cannot rescue Phase-1 rejected exact strategy fingerprints;
+- cannot grant broker/trade/promotion authority from narrative or LLM prose;
+- survives restart/replay and fails closed on corrupt/missing/outage state;
+- is genuinely consumed by autonomous research routing before Phase 2 is called complete.
+
+First bounded Phase-2 milestone: implement the smallest coherent core for PIT evidence, evolving mechanism/belief state, contradiction/decay, causal hypothesis + matched-control records, deterministic updating, approved durable persistence, provenance-bound downstream research-hypothesis emission, and chronology/replay/malformed/narrative-firewall regressions. Reuse existing Money Intelligence facts/provenance where valid; do not rewrite existing append-only research cycles or duplicate the routine research-cycle writer.
+
+## MONEY INTELLIGENCE / BIG-MOVE CURRENT STATE
+
+Latest persisted Money Intelligence research cycle cutoff: `2026-09-19T16:11Z` (`money_intelligence/research_cycles/2026-09-19T1611Z-cycle.json`).
+
+Current preserved conclusions:
+- ZCSH/ZEC: related-party/in-kind transfer evidence is not equivalent to proven new outside cash or spot buying; source-of-funds and settlement ordering remain the causal bottleneck. ZEC remains WAIT / AVOID CHASING.
+- H.R. 5334 Russia/Iran Act: signed Sep. 18; policy tail risk is real, but actual tariff implementation/waivers and physical-flow transmission remain unresolved. Energy/rates stay WAIT pending implementation evidence and matched controls.
+- BTC: roughly 81.5k at the 16:06Z snapshot, +0.87% 24h and +5.39% 7d; open interest was down slightly while funding was above recent baseline and liquidations skewed short. Hold quality improved independently of squeeze, but the U.S. ETF channel was closed Saturday, so state remains WAIT / tactical-momentum research rather than a promotion-grade call.
+- Privacy complex: ZEC's large move remains a causal-research case, not evidence that the system predicted it early.
+- No immutable new directional forecast cleared the evidence bar and no promotion-grade 90-day 2x candidate exists.
+
+The Phase-2 engine may use these cases to motivate schema/tests, but must not outcome-mine them into thresholds.
 
 ## OPEN INTEGRATION / INTEGRITY WORK
 
-Older PRs must be revalidated against current main before any integration. Do not merge merely because an old CI run was green. PR #441 is this AI_STATE reconciliation branch; older state in its prior commits was superseded when the branch was reset onto `f3ab73e...`. Other stale PRs such as #432/#433 remain non-canonical until independently re-reviewed against current objectives and current main.
+Older open PRs (#387, #389, #394, #429, #432, #433, #434) predate the current main materially. Their old green CI is not sufficient for integration. Revalidate against current `main`, current scientific objectives and current active ownership before considering any merge; close superseded work rather than reviving it by inertia.
+
+PR #433's Big-Move event/control lab may become relevant to Phase 2/Big-Move work, but it must first be rebased/revalidated against current main and its historical-source provenance must remain independently auditable. It is infrastructure, not evidence of a 2x predictor.
 
 Canonical specialist coordination must be loaded through `orchestration/coordination_overrides.py`; do **not** read only the base JSON.
 
@@ -99,7 +119,7 @@ Canonical specialist coordination must be loaded through `orchestration/coordina
 - `COORD-DATA-006`: **DONE** — prospective point-in-time capture verified; no fabricated historical backfill.
 - `COORD-DATA-007`: **BLOCKED** — wait for enough genuinely matured independent prospective cohorts.
 
-Do not select another DATA-BREADTH candidate while `COORD-DATA-007` remains blocked on genuine prospective maturation. This legacy maturation wait does not block independent strategy discovery or Phase-1 runtime acceptance.
+Do not select another DATA-BREADTH candidate while `COORD-DATA-007` remains blocked on genuine prospective maturation. This wait does not block independent Phase-2 implementation or fresh strategy discovery under current gates.
 
 ## SAFETY INVARIANTS
 
@@ -110,12 +130,12 @@ Do not select another DATA-BREADTH candidate while `COORD-DATA-007` remains bloc
 - Missing/stale/malformed/future/ambiguous evidence fails closed to WAIT / RESEARCH_ONLY.
 - Combined variable paid-project ceiling remains approximately **$30/month** unless the user explicitly changes it.
 - Supabase Pro is approved; preserve egress/query/window/throttling safeguards from PRs #413/#414.
-- Deterministic Python/GitHub Actions first; API routing uses GPT-5.6 Luna/Terra/Sol within budget. GPT-6 Astra belongs to Work/Codex, never the OpenAI API.
+- Deterministic Python/GitHub Actions first; API routing uses approved budget-aware model policy. GPT-6 Astra belongs to Work/Codex, never the OpenAI API.
 
 ## STATUS
 
-Current truth: **no validated profitable strategy; `DISC-BTC-LEADLAG-001-v1` rejected pre-OOS; no promotion-grade 90-day 2x candidate; Phase 1 code integration is materially advanced and PR #446 is merged, but exact deployed-runtime acceptance is not yet proven; Phase 2 remains gated; untouched OOS/forward remain locked; broker/live authority remains off.**
+Current truth: **Phase 1 exact-deployed profitability-learning runtime acceptance passed; Phase 2 is the earliest incomplete overnight-program phase; no validated profitable strategy exists; `DISC-BTC-LEADLAG-001-v1` remains rejected pre-OOS; no promotion-grade 90-day 2x candidate exists; untouched OOS/forward remain locked; broker/live authority remains off.**
 
 ## EXACT NEXT STEP
 
-Complete the exact deployed-SHA Phase-1 acceptance through issue #438. Do not begin Phase 2 or freeze a successor strategy merely to keep activity high. If deployed acceptance is temporarily waiting, continue only independent non-contaminating research work and preserve the exact next runtime action durably.
+Independently review and merge this Phase-1/Phase-2 reconciliation only if exact-head checks pass and no scientific invariants regress. After merge, close issue #438 as completed and execute issue #451's first bounded Phase-2 implementation milestone on an isolated branch. Do not duplicate an active Phase-2 owner if one appears first.
