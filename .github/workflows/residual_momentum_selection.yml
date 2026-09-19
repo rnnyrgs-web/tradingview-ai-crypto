@@ -1,0 +1,72 @@
+name: Residual Momentum Selection
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "residual_momentum_research.py"
+      - "residual_momentum_selection.py"
+      - "orchestration/disc_residual_momentum_001.json"
+      - "tests/test_residual_momentum_selection.py"
+      - ".github/workflows/residual_momentum_selection.yml"
+  push:
+    branches: [main]
+    paths:
+      - "residual_momentum_research.py"
+      - "residual_momentum_selection.py"
+      - "orchestration/disc_residual_momentum_001.json"
+      - ".github/workflows/residual_momentum_selection.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: residual-momentum-selection-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  selection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      RESEARCH_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RESEARCH_COMMIT_SHA }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest
+      - name: Verify selection-only regression tests
+        run: pytest -q tests/test_residual_momentum_research.py tests/test_residual_momentum_selection.py
+      - name: Run frozen residual-momentum cheap screen
+        run: |
+          python residual_momentum_selection.py \
+            --output residual_momentum_selection.json \
+            --dataset-output residual_momentum_selection_dataset.json.gz
+      - name: Assert research-only and untouched-OOS lock
+        run: |
+          python - <<'PY'
+          import json
+          payload = json.load(open("residual_momentum_selection.json", encoding="utf-8"))["payload"]
+          selection = payload["selection"]
+          assert payload["research_only"] is True
+          assert payload["trade_authority"] is False
+          assert payload["promotion_authority"] is False
+          assert selection["untouched_oos_opened"] is False
+          assert selection["untouched_oos"]["status"] == "LOCKED_UNTOUCHED_OOS"
+          PY
+      - name: Upload immutable selection evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: residual-momentum-selection-${{ env.RESEARCH_COMMIT_SHA }}
+          path: |
+            residual_momentum_selection.json
+            residual_momentum_selection_dataset.json.gz
+          if-no-files-found: error
+          retention-days: 90
