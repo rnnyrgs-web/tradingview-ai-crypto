@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-19T15:38:20Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate or broker state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "context_integrity": {
+    "read_current_spec": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-19T15:33:56Z",
+    "artifact_cutoff_utc": "2026-09-19T15:38:20Z",
+    "seconds_this_run": 264,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 1417,
+    "minimum_cumulative_seconds_since_last_owner_report": 1681,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly recorded active execution time after the last owner-facing report is counted. Schedule gaps are excluded; no padding or idle time is counted."
+  },
+  "highest_information_question": "Can regulated crypto-ETP flows be converted from a vague headline metric into a timestamp-safe causal variable by separating investor demand, AP order timing, cash-versus-in-kind creation mode, underlying sourcing/hedging, execution venue and final publication time?",
+  "fresh_validated_observations": [
+    {
+      "topic": "Crypto ETP flow timing rule replicated across SOL, ETH and BTC primary filings",
+      "label": "PRIMARY-SOURCE METHOD LEARNING / CANONICALLY PROMOTED",
+      "observed_facts": [
+        "Bitwise Solana Staking ETF's Aug. 13, 2026 SEC filing states that under its Agent Execution Model the Trust purchases SOL through Coinbase Prime on the evening of the Creation Order Date and may use trade credit; the product supports cash and in-kind creation mechanics with different order/settlement paths.",
+        "iShares Ethereum Trust ETF's Jul. 29, 2026 SEC filing states that in-kind creation orders cut off at 3:59 p.m. ET on trade date while cash creation orders cut off at 6:00 p.m. ET on the prior business day. For cash creations the Trust purchases ether through an Ether Trading Counterparty or Prime Execution Agent; final cash amounts are determined after NAV is struck and transactions settle.",
+        "Fidelity Wise Origin Bitcoin Fund's Apr. 29, 2026 SEC prospectus states that creation orders may be cash or in kind. In-kind bitcoin is credited by the following business day; for cash creations the Trust instructs a bitcoin trading counterparty to purchase bitcoin with execution targeted to the Index price on the Purchase Order Date. Purchase-order cutoffs can precede 4:00 p.m. ET and NAV is released after the session.",
+        "These three independent product structures demonstrate that a single finalized daily net-flow number can combine different economic timing: investor secondary-market demand, AP inventory sourcing/hedging, trust-level asset acquisition, in-kind inventory transfer and post-session publication."
+      ],
+      "inference": "Finalized daily ETP net flow is economically meaningful evidence of regulated-product demand, but it is not automatically a public pre-move predictor and is not equivalent to same-day exchange spot buying. The relevant causal time can precede, coincide with or follow the reported flow date depending on creation mode and AP/Trust execution mechanics.",
+      "method_rule": "Store at least four separate timestamped states for ETP-flow research: (1) secondary-market demand/premium/volume; (2) AP order cutoff/acceptance; (3) underlying acquisition or hedging window and venue; (4) final published flow/NAV. Preserve observation timestamp and public-availability timestamp separately. Split cash and in-kind modes whenever defensible. Never score a finalized post-close flow as a same-session public pre-move predictor without evidence the relevant information was available earlier.",
+      "canonical_action": "Promoted as MI-L-20260919-011 in money_intelligence/learning_ledger.jsonl at commit 609c572317f64e5f6b675e6e5d0a1ceaa0363676."
+    },
+    {
+      "topic": "Weekend BTC price retention continues while forced-covering pressure and aggregate OI cool",
+      "label": "OBSERVED FACT / INFERENCE / WAIT",
+      "observed_facts": [
+        "At about 15:33Z BTC was approximately $81,582, +1.07%/24h and +5.42%/7d; ETH about $2,638, +2.34%/24h; SOL about $111.53, +0.98%/24h and +9.37%/7d; XRP about $1.430, +3.63%/24h; LINK about $12.56, +3.05%/24h.",
+        "CoinMarketCap's derivatives snapshot showed total crypto open interest around $438.82B, down about 0.51%/24h; perpetual OI about $437.45B, down about 0.53%/24h.",
+        "Average perpetual funding was about 0.0071605, down 5.45%/24h but still roughly 53% above the seven-day comparison and 186% above the fourteen-day comparison.",
+        "BTC liquidations over 24h were about $56.85M, with about $49.89M shorts and $6.96M longs; the latest 4h and 1h liquidation windows were zero."
+      ],
+      "inference": "BTC holding near $81.6K after the short-liquidation impulse has largely disappeared and aggregate OI has cooled is higher-quality continuation evidence than the initial squeeze. Positive funding remains a crowding warning, and regulated-flow durability is still unproven because the completed-looking five-session BTC ETF total is approximately flat rather than strongly positive.",
+      "decision_support": "BTC remains WAIT / TACTICAL MOMENTUM CANDIDATE, not a BUY. Require fresh U.S.-session spot/ETF absorption plus controlled venue-grade leverage before promotion."
+    },
+    {
+      "topic": "Privacy rotation remains broad; ZEC still has extreme excess return",
+      "label": "OBSERVED FACT / MATCHED CONTROL / NO THESIS CHANGE",
+      "observed_facts": [
+        "At about 15:34Z ZEC was approximately $1,523.50, +33.49%/7d and +169.90%/30d.",
+        "XMR was approximately $572.20, +8.86%/7d and +36.17%/30d; DASH approximately $59.48, +5.57%/7d and +83.08%/30d.",
+        "The broader privacy basket remains positive while ZEC retains a much larger excess move."
+      ],
+      "inference": "A broad privacy-narrative rotation remains a real matched control, while ZEC-specific regulated-wrapper/free-float/reflexive mechanics remain plausible amplifiers rather than a complete causal explanation.",
+      "decision_support": "ZEC/ZCSH remains WAIT / AVOID CHASING."
+    }
+  ],
+  "daily_big_move_scan": {
+    "market_context": "Saturday: major cash equity, sovereign-bond and benchmark commodity markets are closed. No weekend traditional-market prices are fabricated; live crypto is updated and Friday traditional cases remain the latest completed cash sessions.",
+    "selected_or_retested": [
+      "BTC: near $81.6K with 24h gains compressed to roughly +1.1%; liquidation impulse has faded and OI is cooling, supporting continuation quality but not a BUY.",
+      "SOL: +9.4%/7d relative strength persists; recent regulated-flow intensity remains an interesting cross-sectional candidate, but creation-mode timing shows why finalized flow is not a clean pre-move signal.",
+      "ZEC: +33.5%/7d and +169.9%/30d; XMR/DASH remain positive controls confirming a broader privacy rotation.",
+      "No new closed-market oil, bond, FX or equity move is manufactured from Saturday headlines."
+    ],
+    "negative_findings": [
+      "Do not equate finalized ETP flow with same-day exchange spot buying.",
+      "Do not score post-close flow totals as same-session public predictors without an earlier public proxy.",
+      "Do not assume in-kind creation forces the Trust or AP to buy underlying assets at the recorded flow timestamp; inventory may have been sourced or hedged earlier.",
+      "Do not upgrade BTC from price retention alone while funding remains positive and the next U.S. ETF session has not occurred.",
+      "Do not attribute the full ZEC move to ZCSH when matched privacy assets are also strong."
+    ]
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "status": "No new immutable directional forecast clears the evidence bar. Existing WAIT/HOLD-research states are preserved and no prior forecast is rewritten."
+  },
+  "canonical_update_decision": "Promote only the replicated ETP timing/causality method rule to the learning ledger. Do not churn dashboard_state or big_move_lab because the world regime, action states and price-move case conclusions have not materially changed. No code change and no signal-system state change were made.",
+  "next_research": [
+    "Extend the Sep. 1-18 exploratory ETF-flow test to at least 60 timestamp-safe sessions for BTC/ETH/SOL and test 1d/3d/5d excess returns with beta, momentum, volatility, macro/event and leverage controls.",
+    "Find timestamp-safe intraday proxies for creation demand: ETF premium/discount, secondary-market volume, basket arbitrage pressure, issuer/AP disclosures and where possible cash-versus-in-kind order states.",
+    "Reconcile BTC/SOL leverage at venue level rather than relying on aggregate OI endpoints that have shown cross-snapshot inconsistencies.",
+    "After U.S. markets reopen, capture versioned BTC/ETH/SOL ETF tables at multiple timestamps and test whether fresh spot demand confirms Friday's rebound.",
+    "Continue ZCSH split-safe creation-ledger preparation before Sep. 30, separating corporate action, price effect, rewards/accrual and genuine creation/redemption flow.",
+    "When crude markets reopen, reassess Saudi effective deliverable supply using route volumes, physical differentials, futures curves, freight/insurance and confirmed infrastructure status."
+  ],
+  "source_log": [
+    {"publisher":"SEC","date":"2026-08-13","topic":"Bitwise Solana Staking ETF cash/in-kind creation execution and timing","url":"https://www.sec.gov/Archives/edgar/data/2045872/000119312526349138/bsol-20260813.htm"},
+    {"publisher":"SEC","date":"2026-07-29","topic":"iShares Ethereum Trust ETF cash/in-kind creation cutoffs and purchase mechanics","url":"https://www.sec.gov/Archives/edgar/data/2000638/000143774926025251/etha20260729_posam.htm"},
+    {"publisher":"SEC","date":"2026-04-29","topic":"Fidelity Wise Origin Bitcoin Fund cash/in-kind creation and execution mechanics","url":"https://www.sec.gov/Archives/edgar/data/1852317/000119312526191289/d76290d424b3.htm"},
+    {"publisher":"CoinMarketCap connected data","date":"2026-09-19T15:33-15:34Z","topic":"Live BTC/ETH/SOL/XRP/LINK/ZEC/XMR/DASH quotes and aggregate derivatives metrics","url":"https://coinmarketcap.com/"}
+  ],
+  "owner_report_gate": "NOT MET. Minimum cumulative directly recorded execution since the last owner-facing report is 1,681 seconds, below the required 3,600 seconds. Persist research quietly."
+}
