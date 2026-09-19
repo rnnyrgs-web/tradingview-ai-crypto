@@ -134,10 +134,10 @@ Ownership:
 Goal: try to break every proposed improvement before production can depend on it. This role reviews but does not merge its own work.
 
 ## Coordination cycle for every specialist
-After syncing current `main`:
+After syncing current `main`, treat the strategy-discovery queue as the scientific priority layer and specialist coordination as the execution-assignment layer:
 
-1. Read `orchestration/specialist_coordination.json`.
-2. Find the task whose `owner` equals the role key above and whose status is `IN_PROGRESS`, `PR_OPEN`, or `READY` (in that order).
+1. Read `orchestration/specialist_coordination.json` with canonical overrides applied, plus `orchestration/strategy_discovery_queue.json` and `orchestration/rejected_fingerprints.json`.
+2. Find the task whose `owner` equals the role key above and whose status is `IN_PROGRESS`, `PR_OPEN`, or `READY` (in that order), and verify it still advances the current ranked strategy-discovery objective.
 3. Check `dependencies`, `blockers`, `issue`, `branch`, `pr`, `evidence_required`, and `completion_rule` before editing code.
 4. If blocked, do not invent data or relax requirements; report the blocker and move only to another task if the Lead has explicitly changed coordination state.
 5. Work only on the owned task and complementary evidence. Do not start the queued successor while the active task remains open.

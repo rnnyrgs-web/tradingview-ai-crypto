@@ -2,8 +2,10 @@
   "version": 1,
   "enabled": true,
   "objective_id": "UNIVERSAL_SIGNAL_DEVELOPMENT_V1",
-  "primary_mission": "Find and validate one strategy with genuine sustainable after-cost profitability across tradable liquid assets and any economically meaningful move duration. Use broad cheap deterministic screening only to select that one strategy, then concentrate deep work on its immutable fingerprint until rejection or full validation. Genuine forward profitability, expectancy, profit factor, drawdown control and calibration outrank raw signal count or nominal accuracy.",
-  "autonomous_roles": ["data-market"],
+  "primary_mission": "Find and validate one strategy with genuine sustainable after-cost profitability across tradable liquid assets and any economically meaningful move duration. Genuine forward profitability, expectancy, profit factor, drawdown control and calibration outrank raw signal count or nominal accuracy. Support the current strategy-discovery queue by resolving the highest-priority READY data/provenance task without reviving stale signal-era work or fabricating missing history.",
+  "autonomous_roles": [
+    "data-market"
+  ],
   "policy": {
     "max_concurrent_agent_runs": 1,
     "max_agent_runs_per_invocation": 1,
@@ -31,14 +33,14 @@
     "hourly_self_improvement_policy": "Re-evaluate this question at each hourly eligibility check using available evidence, but do not force a paid model call, bypass the 12-hour successful-run cooldown, exceed the $1/day API budget, raise physical concurrency, or change production authority merely to answer it. Prefer deterministic Python screening and cheap falsification before paid model work."
   },
   "budget": {
-    "project_monthly_ceiling_usd": 30.0,
-    "baseline_infrastructure_reserve_usd": 0.0,
-    "runner_monthly_api_budget_usd": 29.0,
-    "runner_daily_api_budget_usd": 1.0,
-    "pause_buffer_usd": 1.0,
-    "provider_retry_safety_multiplier": 3.0,
-    "fleet_pacing_burst_allowance_usd": 2.0,
-    "fleet_daily_burst_cap_usd": 3.0
+    "project_monthly_ceiling_usd": 30,
+    "baseline_infrastructure_reserve_usd": 0,
+    "runner_monthly_api_budget_usd": 29,
+    "runner_daily_api_budget_usd": 1,
+    "pause_buffer_usd": 1,
+    "provider_retry_safety_multiplier": 3,
+    "fleet_pacing_burst_allowance_usd": 2,
+    "fleet_daily_burst_cap_usd": 3
   },
   "models": {
     "gpt-5.6-luna": {
@@ -48,9 +50,9 @@
       "enabled": true
     },
     "gpt-5.6-sol": {
-      "input_usd_per_million": 4.0,
+      "input_usd_per_million": 4,
       "cached_input_usd_per_million": 0.4,
-      "output_usd_per_million": 20.0,
+      "output_usd_per_million": 20,
       "enabled": false
     }
   },
@@ -69,9 +71,13 @@
         "tests/test_market_data.py",
         "tests/test_data_market*.py",
         "tests/test_db*.py",
-        "tests/test_prediction_ledger*.py"
+        "tests/test_prediction_ledger*.py",
+        "point_in_time_universe.py",
+        "tests/test_point_in_time_universe.py",
+        "tests/test_strategy_discovery*.py",
+        "docs/research/data_market_strategy_discovery_*.md"
       ],
-      "mission": "Apply UNIVERSAL_SIGNAL_DEVELOPMENT_V1 by spending scarce API budget only on the highest expected incremental after-cost profitability or information-gain work across all supported asset classes and move durations, with one strategy as the only active deep candidate. Diagnose genuine resolved economic losses first. Preserve selective WAIT/meta-label evidence. Prefer broad cheap deterministic screening only to choose the one candidate, then route deep work to its immutable fingerprint. Reject unstable or nonpositive candidates quickly before selecting a replacement. Deprioritize unrelated research, blind indicator parameter permutations, redundant strategies, duplicate disproven hypotheses and worker-count expansion without evidence. Never weaken chronology, untouched OOS, multiple-testing controls, point-in-time safety, cost realism or promotion controls. TURN-BUDGET DISCIPLINE: finish within four model turns. Turn 1: read only the minimum files needed to choose one falsifiable change. Turn 2: implement the smallest allowed change plus targeted tests. Turn 3: run targeted tests and fix only directly observed failures. Turn 4: return READY_FOR_PR, NO_CHANGE, or BLOCKED; do not perform additional exploration. Prefer a safe NO_CHANGE/BLOCKED result over exceeding the turn budget."
+      "mission": "Own the highest-priority READY data-market task selected from the canonical coordination state and current strategy-discovery queue. Spend scarce API budget only on the highest expected incremental after-cost profitability or information-gain work across all supported asset classes and move durations, while keeping one strategy as the only possible active deep candidate. Diagnose genuine resolved economic losses first and preserve selective WAIT/meta-label evidence. Prefer deterministic screening and cheap falsification before paid model work. For the current candidate, prioritize point-in-time-safe data, exact timestamp/source provenance and sufficient history without survivor substitution. If historical PIT data are unavailable, persist the blocker and propose the cleanest scientifically distinct path such as prospective cohorts or a predeclared fixed-asset design; do not manufacture history. Reject unstable or nonpositive candidates quickly, deprioritize redundant strategies and blind parameter permutations, and never weaken chronology, untouched OOS, multiple-testing controls, point-in-time safety, cost realism or promotion controls. TURN-BUDGET DISCIPLINE: finish within four model turns. Turn 1: read only the minimum current candidate/data files. Turn 2: implement the smallest allowed data/provenance change if justified. Turn 3: run targeted tests and fix directly observed failures. Turn 4: return READY_FOR_PR, NO_CHANGE, or BLOCKED."
     }
   }
 }

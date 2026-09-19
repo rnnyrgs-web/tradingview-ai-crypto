@@ -1,6 +1,6 @@
 {
-  "version": 2,
-  "reason": "Reconcile canonical coordination with integrated DATA-BREADTH-001 work and independently verified prospective point-in-time universe persistence without rewriting prior immutable completion evidence.",
+  "version": 3,
+  "reason": "Reconcile autonomous specialist execution with the merged strategy-discovery queue: retire/defer stale signal-era tasks, preserve blocked prospective-evidence work, and activate role-specific work for DISC-RESIDUAL-MOMENTUM-001-v1 without changing live/trade authority.",
   "task_updates": {
     "COORD-DATA-005": {
       "status": "DONE",
@@ -13,6 +13,78 @@
         "note": "The immutable breadth candidate and strict chronological evaluator are integrated. Historical scoring remains fail-closed unless genuinely historical point-in-time universe snapshots exist; never reconstruct missing history from present-day survivors."
       },
       "next_task": "COORD-DATA-006"
+    },
+    "COORD-QUANT-001": {
+      "status": "DONE",
+      "completion_evidence": {
+        "status": "SUPERSEDED_BY_SEALED_ACC002_REJECTION",
+        "rejected_fingerprint": "ACC-002",
+        "selection_audit_run": 35405308190,
+        "eligible_candidate_count": 0,
+        "untouched_oos_status": "LOCKED_UNTOUCHED_OOS",
+        "note": "ACC-002 selection was conclusively closed with zero eligible candidates; future work must use materially distinct strategy-discovery fingerprints."
+      },
+      "next_task": null
+    },
+    "COORD-QUANT-002": {
+      "status": "BLOCKED",
+      "blockers": [
+        "Legacy ACC-002 follow-up is superseded by the merged strategy-discovery queue and remains blocked unless materially new data or a genuinely different scientific mechanism creates a new fingerprint."
+      ]
+    },
+    "COORD-VAL-001": {
+      "status": "BLOCKED",
+      "blockers": [
+        "Legacy agreement-value validation is deprioritized while strategy discovery has no active deep candidate; use COORD-DISC-VAL-001 for the current candidate."
+      ]
+    },
+    "COORD-REGIME-001": {
+      "status": "BLOCKED",
+      "blockers": [
+        "No active deep-validation strategy candidate exists yet; regime-specific challenger work resumes only after a candidate passes cheap selection and is frozen."
+      ]
+    },
+    "COORD-EXEC-001": {
+      "status": "BLOCKED",
+      "blockers": [
+        "No active deep-validation strategy candidate exists yet; execution/microstructure validation resumes when one frozen candidate needs after-cost execution proof."
+      ]
+    },
+    "COORD-RISK-001": {
+      "status": "BLOCKED",
+      "blockers": [
+        "No active deep-validation strategy candidate exists yet; portfolio/risk integration is premature until one candidate has earned deep validation."
+      ]
+    },
+    "COORD-TEST-001": {
+      "status": "BLOCKED",
+      "blockers": [
+        "Superseded by COORD-DISC-TEST-001, which adversarially tests the current strategy-discovery candidate and pipeline."
+      ]
+    },
+    "COORD-REGIME-002": {
+      "status": "BLOCKED",
+      "blockers": [
+        "No frozen active candidate exists; regime-specific demotion/promotion work is deferred until strategy discovery selects one."
+      ]
+    },
+    "COORD-EXEC-002": {
+      "status": "BLOCKED",
+      "blockers": [
+        "No frozen active candidate exists; predictive microstructure research is deferred unless it directly supports the selected strategy candidate."
+      ]
+    },
+    "COORD-RISK-002": {
+      "status": "BLOCKED",
+      "blockers": [
+        "No frozen active candidate exists; exposure calibration is deferred until genuine candidate evidence exists."
+      ]
+    },
+    "COORD-TEST-002": {
+      "status": "BLOCKED",
+      "blockers": [
+        "Superseded by COORD-DISC-TEST-001 while the project is in strategy-discovery selection."
+      ]
     }
   },
   "append_tasks": [
@@ -22,7 +94,9 @@
       "owner": "data-market",
       "status": "DONE",
       "title": "Capture prospective point-in-time universe snapshots for DATA-BREADTH-001 forward evidence",
-      "dependencies": ["COORD-DATA-005"],
+      "dependencies": [
+        "COORD-DATA-005"
+      ],
       "blockers": [],
       "issue": null,
       "branch": "agent/data-market",
@@ -62,7 +136,9 @@
       "owner": "data-market",
       "status": "BLOCKED",
       "title": "Falsify DATA-BREADTH-001 on matured prospective point-in-time cohorts",
-      "dependencies": ["COORD-DATA-006"],
+      "dependencies": [
+        "COORD-DATA-006"
+      ],
       "blockers": [
         "requires genuinely prospective point-in-time universe cohorts to mature into sufficient non-overlapping 24h and 7d outcomes; do not backfill or reconstruct missing historical membership"
       ],
@@ -105,6 +181,125 @@
         "exact-head Security and Reliability success"
       ],
       "completion_rule": "Do not silently legitimize the current weights by leaving them undocumented, and do not retune them using untouched OOS/forward outcomes as if that were validation. A defensible methodology, or an explicit predeclared plan for deriving one, is required before this task can move past READY.",
+      "next_task": null
+    },
+    {
+      "id": "COORD-DISC-QUANT-001",
+      "priority": 1,
+      "owner": "quant-research",
+      "status": "READY",
+      "work_mode": "CHEAP_SCREEN",
+      "fingerprint_id": "DISC-VOL-BREAKOUT-001-v1",
+      "eligible_engines": [
+        "chatgpt",
+        "human"
+      ],
+      "title": "Own scientific selection and pivot decisions for the volatility-breakout cheap screen",
+      "dependencies": [],
+      "blockers": [],
+      "issue": null,
+      "branch": "agent/quant-research",
+      "pr": null,
+      "evidence_required": [
+        "freeze the complete volatility-breakout mechanism, entry/exit rules, parameter set, asset set, timeframe, data, costs, chronology and search breadth before outcome inspection",
+        "prefer one simple economically defensible primary rule plus explicitly declared falsifier/sensitivity checks rather than parameter mining",
+        "cheap train/validation evidence only until central freeze; untouched OOS remains locked",
+        "realistic cost stress, non-overlapping observations, subperiod/regime stability and sufficient independent samples",
+        "use a fixed predeclared asset universe or defensible point-in-time membership; no silent current-survivor substitution",
+        "if the candidate fails, preserve the exact failure mechanism and pivot to the next materially distinct ranked hypothesis",
+        "if it genuinely passes all predefined selection gates, freeze exactly one fingerprint and dataset for deep validation",
+        "no production, paper, broker or promotion authority"
+      ],
+      "completion_rule": "Advance the strategy-discovery queue by one truthful state transition: reject/learn/pivot, block on a genuine data limitation while continuing independent work, or freeze exactly one qualifying candidate for deep validation.",
+      "next_task": null
+    },
+    {
+      "id": "COORD-DISC-VAL-001",
+      "priority": 1,
+      "owner": "signal-accuracy",
+      "status": "READY",
+      "work_mode": "VALIDATION",
+      "fingerprint_id": "DISC-VOL-BREAKOUT-001-v1",
+      "eligible_engines": [
+        "claude",
+        "chatgpt",
+        "human"
+      ],
+      "title": "Independently falsify the volatility-breakout selection contract and acceptance gates",
+      "dependencies": [],
+      "blockers": [],
+      "issue": null,
+      "branch": "agent/signal-accuracy",
+      "pr": null,
+      "evidence_required": [
+        "independent pre-outcome review of chronology, sample floors, cost stress, baseline, exits and leakage risks",
+        "explicit multiple-testing treatment for any asset/timeframe/parameter breadth and no winner selection from undeclared sweeps",
+        "predeclared pass/fail conditions before any new selection outcome is inspected",
+        "separate economic significance from hit rate and require positive after-cost expectancy/stability",
+        "untouched OOS remains locked until the central freeze transition",
+        "document evidence that would genuinely qualify, reject, or scientifically block the candidate",
+        "exact-head Security and Reliability success for any code/test change"
+      ],
+      "completion_rule": "Produce an independent falsification/validation design for the current candidate; do not authorize production and do not duplicate the implementation owner.",
+      "next_task": null
+    },
+    {
+      "id": "COORD-DISC-DATA-001",
+      "priority": 1,
+      "owner": "data-market",
+      "status": "READY",
+      "work_mode": "CHEAP_SCREEN",
+      "fingerprint_id": "DISC-VOL-BREAKOUT-001-v1",
+      "eligible_engines": [
+        "chatgpt",
+        "human"
+      ],
+      "title": "Provide clean fixed-asset/provenance data for the volatility-breakout cheap screen",
+      "dependencies": [],
+      "blockers": [],
+      "issue": null,
+      "branch": "agent/data-market",
+      "pr": null,
+      "evidence_required": [
+        "prefer predeclared fixed instruments with long, timestamp-safe history so cross-sectional survivorship is not required for the first screen",
+        "record exact venue/source, bar interval, coverage start/end, normalized row hashes, missing data and completed-bar semantics",
+        "if a broader ranked universe is proposed, require defensible point-in-time membership rather than present-day survivors",
+        "do not substitute assets after inspecting outcomes",
+        "missing/stale/ambiguous data fails closed for that asset while independent safe work continues",
+        "zero new paid service unless separately proposed and explicitly approved",
+        "exact-head Security and Reliability success for any code change"
+      ],
+      "completion_rule": "Provide a defensible frozen data path for the volatility-breakout screen, preferably on predeclared fixed liquid instruments, or persist the exact data blocker and cleanest alternative without outcome-driven substitution.",
+      "next_task": null
+    },
+    {
+      "id": "COORD-DISC-TEST-001",
+      "priority": 1,
+      "owner": "testing-security",
+      "status": "READY",
+      "work_mode": "AUDIT",
+      "fingerprint_id": "DISC-VOL-BREAKOUT-001-v1",
+      "eligible_engines": [
+        "claude-code",
+        "chatgpt",
+        "human"
+      ],
+      "title": "Adversarially test the volatility-breakout discovery and selection pipeline",
+      "dependencies": [],
+      "blockers": [],
+      "issue": null,
+      "branch": "agent/testing-security",
+      "pr": null,
+      "evidence_required": [
+        "prove future bars cannot enter compression, breakout, volatility, entry, exit or selection features",
+        "prove untouched OOS cannot be opened before the central freeze transition",
+        "prove asset/timeframe/parameter search breadth is explicit and cannot silently expand after outcomes",
+        "prove realistic costs and non-overlapping evaluation cannot be bypassed",
+        "prove one-active-deep-candidate, rejected-memory and broker/trade-authority invariants remain intact",
+        "do not weaken scientific gates merely to make CI pass",
+        "exact-head Security and Reliability success"
+      ],
+      "completion_rule": "Try to break the current discovery/evidence path and fix only concrete research-safety or implementation defects within the research-only allowlist; never merge or authorize trading.",
       "next_task": null
     }
   ]

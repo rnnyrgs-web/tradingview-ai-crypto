@@ -23,8 +23,7 @@ configuration.
    structurally independent of each other and of the engine being reviewed:
    - Research: `agents/claude_specialist_runner.py`, configured by
      `orchestration/autonomous_specialist_runner_claude.json`, owns
-     research-only coordination tasks (currently `signal-accuracy` /
-     `COORD-VAL-001`) and may only write research-design artifacts, never
+     research-only coordination tasks (the highest-priority READY `signal-accuracy` task from canonical coordination) and may only write research-design artifacts, never
      production or test code for strategy/signal/paper-ledger logic.
    - Adversarial review: `agents/autonomous_orchestrator.py
      --reviewer claude-adversarial`, called from `.github/workflows/autonomous_lead.yml`
@@ -69,6 +68,17 @@ imports, not merely documented as a convention):
 4. Check the candidate task's `fingerprint_id` (if any) against
    `orchestration/rejected_fingerprints.json`
    (`is_rejected_fingerprint()`) before opening untouched OOS on it.
+
+## Strategy-discovery queue and execution queue
+
+The ranked scientific hypothesis queue lives in `orchestration/strategy_discovery_queue.json`. The bounded engine task queue remains `orchestration/specialist_coordination.json` plus overrides.
+
+The Lead is responsible for keeping these layers aligned:
+- strategy queue = what scientific hypothesis should be investigated next;
+- specialist coordination = which engine/role performs the next bounded research, data, validation or implementation action;
+- rejected fingerprints = what exact hypotheses must not be silently recycled.
+
+When these layers drift, the Lead must reconcile the execution queue before allowing scheduled workers to spend model budget on stale work. Scheduled engines must never create activity merely to stay busy.
 
 ## One canonical shared task/handoff state
 

@@ -2,10 +2,12 @@
   "version": 1,
   "enabled": true,
   "objective_id": "UNIVERSAL_SIGNAL_DEVELOPMENT_V1",
-  "primary_mission": "Find and validate one strategy with genuine sustainable after-cost profitability. Act as the independent scientific research and falsification layer for the single active deep candidate: study its mechanism, indicators, market information and data, predeclare tests, and reject it quickly if evidence is fragile. Broad unrelated research is deprioritized; recommend promotion only when untouched OOS, forward evidence, costs, robustness and calibration justify it.",
+  "primary_mission": "Find and validate one strategy with genuine sustainable after-cost profitability. Act as the independent scientific research and falsification layer for the current strategy-discovery candidate selected by canonical coordination: predeclare tests, challenge mechanisms, search for leakage and false discovery, and define what evidence would genuinely advance or reject the candidate. Broad unrelated research remains deprioritized.",
   "engine": "claude",
   "engine_role_description": "Deep scientific researcher and independent adversarial reviewer. This config governs Claude's bounded research role only (predeclared validation design, error attribution, resource-recommendation proposals). Claude's separate adversarial-review duty (agents/autonomous_orchestrator.py --reviewer claude-adversarial) is unrelated code that does not read this file, so the two remain structurally independent as required.",
-  "autonomous_roles": ["signal-accuracy"],
+  "autonomous_roles": [
+    "signal-accuracy"
+  ],
   "policy": {
     "max_concurrent_agent_runs": 1,
     "max_agent_runs_per_invocation": 1,
@@ -36,26 +38,26 @@
     "own_state_file": "runner_state_claude.json"
   },
   "budget": {
-    "project_monthly_ceiling_usd": 30.0,
-    "baseline_infrastructure_reserve_usd": 0.0,
-    "runner_monthly_api_budget_usd": 29.0,
-    "runner_daily_api_budget_usd": 1.0,
-    "pause_buffer_usd": 1.0,
-    "provider_retry_safety_multiplier": 3.0,
-    "fleet_pacing_burst_allowance_usd": 2.0,
-    "fleet_daily_burst_cap_usd": 3.0
+    "project_monthly_ceiling_usd": 30,
+    "baseline_infrastructure_reserve_usd": 0,
+    "runner_monthly_api_budget_usd": 29,
+    "runner_daily_api_budget_usd": 1,
+    "pause_buffer_usd": 1,
+    "provider_retry_safety_multiplier": 3,
+    "fleet_pacing_burst_allowance_usd": 2,
+    "fleet_daily_burst_cap_usd": 3
   },
   "models": {
     "claude-haiku-4-5": {
-      "input_usd_per_million": 1.0,
-      "cached_input_usd_per_million": 0.10,
-      "output_usd_per_million": 5.0,
+      "input_usd_per_million": 1,
+      "cached_input_usd_per_million": 0.1,
+      "output_usd_per_million": 5,
       "enabled": true
     },
     "claude-sonnet-5": {
-      "input_usd_per_million": 2.0,
-      "cached_input_usd_per_million": 0.20,
-      "output_usd_per_million": 10.0,
+      "input_usd_per_million": 2,
+      "cached_input_usd_per_million": 0.2,
+      "output_usd_per_million": 10,
       "enabled": false
     }
   },
@@ -71,9 +73,11 @@
       "allowed_paths": [
         "docs/research/signal_accuracy_*.md",
         "tests/test_signal_accuracy_validation_design*.py",
-        "resource_recommendations_proposed.json"
+        "resource_recommendations_proposed.json",
+        "docs/research/strategy_discovery_validation_*.md",
+        "tests/test_strategy_discovery_validation*.py"
       ],
-      "mission": "Own coordination task COORD-VAL-001 as the independent scientific researcher for the one strategy focus. Predeclare falsifiable validation before outcome inspection: fixed comparison groups/cutoffs, minimum independent sample sizes, Wilson/confidence reporting, non-overlapping observations, positive after-cost expectancy, regime stability, multiple-testing control and explicit failure criteria. Research indicators, algorithms, market information and timestamp-safe data only when they directly test or select the single active candidate; broad unrelated research is deprioritized. Never infer edge from narrative alone. Write only a predeclaration design document plus a test that pins the design against later tampering; never production signal code and never a claim that validation design alone authorizes production behavior. Missing or insufficient evidence is WAIT / RESEARCH_ONLY. TURN-BUDGET DISCIPLINE: finish within four model turns. Turn 1: read only the minimum files needed. Turn 2: write the smallest safe predeclaration plus pinning test. Turn 3: verify it. TURN 4 IS TERMINAL: submit READY_FOR_PR, NO_CHANGE, or BLOCKED as the first tool call."
+      "mission": "Own the highest-priority READY signal-accuracy task selected from canonical coordination state; do not hard-code a legacy task ID. Support finding one strategy with genuine sustainable after-cost profitability. For the current strategy-discovery candidate, independently predeclare and falsify chronology, purging/non-overlap, sample floors, after-cost expectancy, stability, multiple-testing/search breadth, point-in-time safety, untouched-OOS rules and forward-proof requirements before outcome inspection. Research mechanisms and data only when they directly test the current candidate. Write only research/validation artifacts and pinning tests within the allowlist; never production trading code and never a promotion claim. If the candidate fails, explain why and what materially different next hypothesis should be considered. Missing evidence is a scoped blocker, not a reason to stop unrelated safe research. TURN-BUDGET DISCIPLINE: finish within four model turns. Turn 1 minimum reads; Turn 2 smallest predeclaration/falsification artifact; Turn 3 verify; Turn 4 terminal READY_FOR_PR, NO_CHANGE, or BLOCKED."
     }
   }
 }
