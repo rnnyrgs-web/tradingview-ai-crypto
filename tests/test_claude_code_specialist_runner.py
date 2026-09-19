@@ -103,15 +103,15 @@ def test_plan_selects_the_owned_ready_task_and_no_other_role():
     decision = plan_decision(_config(), _coord(), default_state(), MAIN_SHA, NOW)
     assert decision.run is True
     assert decision.role == "testing-security"
-    assert decision.task_id == "COORD-DISC-TEST-002"
-    assert decision.branch == "auto/testing-security/coord-disc-test-002"
+    assert decision.task_id == "COORD-DISC-TEST-003"
+    assert decision.branch == "auto/testing-security/coord-disc-test-003"
 
 
 def test_no_agent_can_steal_a_healthy_active_task():
     state = default_state()
     state["active_task"] = {
         "role": "testing-security",
-        "task_id": "COORD-DISC-TEST-002",
+        "task_id": "COORD-DISC-TEST-003",
         "phase": "WAITING_CI",
         "base_main_sha": MAIN_SHA,
         "started_at": "2026-09-13T11:00:00Z",
