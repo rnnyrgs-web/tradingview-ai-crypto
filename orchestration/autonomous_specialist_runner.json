@@ -2,15 +2,16 @@
   "version": 1,
   "enabled": true,
   "objective_id": "UNIVERSAL_SIGNAL_DEVELOPMENT_V1",
-  "primary_mission": "Find and validate one strategy with genuine sustainable after-cost profitability across tradable liquid assets and any economically meaningful move duration. Genuine forward profitability, expectancy, profit factor, drawdown control and calibration outrank raw signal count or nominal accuracy. Support the current strategy-discovery queue by resolving the highest-priority READY data/provenance task without reviving stale signal-era work or fabricating missing history.",
+  "primary_mission": "Continuously support the master research mission: (A) discover one genuinely profitable after-cost algorithmic strategy and (B) improve evidence for liquid assets with unusually large ~90-day upside potential. Execute only the highest-priority READY ChatGPT-eligible coordination task, using deterministic work first and bounded model calls under the shared budget.",
   "autonomous_roles": [
-    "data-market"
+    "data-market",
+    "quant-research"
   ],
   "policy": {
     "max_concurrent_agent_runs": 1,
     "max_agent_runs_per_invocation": 1,
     "schedule_check_hours": 1,
-    "successful_run_cooldown_hours": 12,
+    "successful_run_cooldown_hours": 3,
     "max_retries": 0,
     "task_retry_limit": 2,
     "retry_base_seconds": 30,
@@ -54,6 +55,12 @@
       "cached_input_usd_per_million": 0.4,
       "output_usd_per_million": 20,
       "enabled": false
+    },
+    "gpt-5.6-terra": {
+      "input_usd_per_million": 2,
+      "cached_input_usd_per_million": 0.2,
+      "output_usd_per_million": 12,
+      "enabled": true
     }
   },
   "roles": {
@@ -78,6 +85,24 @@
         "docs/research/data_market_strategy_discovery_*.md"
       ],
       "mission": "Own the highest-priority READY data-market task selected from the canonical coordination state and current strategy-discovery queue. Spend scarce API budget only on the highest expected incremental after-cost profitability or information-gain work across all supported asset classes and move durations, while keeping one strategy as the only possible active deep candidate. Diagnose genuine resolved economic losses first and preserve selective WAIT/meta-label evidence. Prefer deterministic screening and cheap falsification before paid model work. For the current candidate, prioritize point-in-time-safe data, exact timestamp/source provenance and sufficient history without survivor substitution. If historical PIT data are unavailable, persist the blocker and propose the cleanest scientifically distinct path such as prospective cohorts or a predeclared fixed-asset design; do not manufacture history. Reject unstable or nonpositive candidates quickly, deprioritize redundant strategies and blind parameter permutations, and never weaken chronology, untouched OOS, multiple-testing controls, point-in-time safety, cost realism or promotion controls. TURN-BUDGET DISCIPLINE: finish within four model turns. Turn 1: read only the minimum current candidate/data files. Turn 2: implement the smallest allowed data/provenance change if justified. Turn 3: run targeted tests and fix directly observed failures. Turn 4: return READY_FOR_PR, NO_CHANGE, or BLOCKED."
+    },
+    "quant-research": {
+      "model": "gpt-5.6-terra",
+      "max_turns": 4,
+      "max_output_tokens_per_turn": 1600,
+      "reserved_max_input_tokens_per_run": 60000,
+      "reserved_max_output_tokens_per_run": 4000,
+      "max_file_read_bytes": 16000,
+      "max_file_write_bytes": 50000,
+      "allowed_paths": [
+        "*_selection.py",
+        "*_research.py",
+        "tests/test_*_selection.py",
+        "tests/test_*_research.py",
+        "docs/research/quant_*.md",
+        "docs/research/strategy_discovery_quant_*.md"
+      ],
+      "mission": "Own the highest-priority READY quant-research task from canonical coordination. Focus on one current strategy-discovery hypothesis at a time. Before outcome inspection, make the economic mechanism, trigger/entry/exit/hold/no-trade logic, chronology, cost assumptions, sample floors, stability requirements and search breadth explicit in research code/docs/tests allowed by this role. Implement the smallest deterministic cheap-screen/research component needed to create truthful train/validation evidence. Untouched OOS stays locked until the canonical Lead freezes one qualifying candidate. Failure -> explain -> preserve -> pivot; never post-hoc tune a rejected fingerprint. This role may also implement bounded Big-Move rare-event research components when the strategy lane is scientifically waiting and canonical coordination assigns such work. No orchestration/workflow/canonical-state edits, no live trading, no broker authority, no promotion authority. TURN BUDGET: finish in four model turns with minimum reads, smallest implementation, targeted verification, then READY_FOR_PR/NO_CHANGE/BLOCKED."
     }
   }
 }
