@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-19T10:04:57Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate or broker state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "prior_canonical_state": {
+    "dashboard_as_of": "2026-09-18T21:34:56Z",
+    "prior_cycle_cutoff": "2026-09-19T08:45:03Z",
+    "regime": "RESTRICTIVE POLICY / SELECTIVE CAPITAL ALLOCATION / EXPECTATION-SENSITIVE PRICING",
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-19T09:55:13Z",
+    "artifact_cutoff_utc": "2026-09-19T10:04:57Z",
+    "seconds_this_run": 584,
+    "prior_minimum_cumulative_seconds_from_recent_cycles_with_explicit_runtime": 2253,
+    "minimum_cumulative_seconds_after_this_cycle": 2837,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly recorded execution seconds are counted. Schedule gaps and artifacts without explicit runtime are excluded; no padding or idle time is counted."
+  },
+  "highest_information_question": "Does external regulated-wrapper flow intensity relative to economically available free float explain ZEC's extreme excess return, and how much of reported ETF growth is true marginal spot demand versus legacy AUM, price appreciation and in-kind inventory transfer?",
+  "fresh_validated_observations": [
+    {
+      "topic": "ZEC extreme move resolves into regulated-wrapper demand plus constrained float and recurring short-cover reflexivity",
+      "label": "OBSERVED FACT / INFERENCE / BIG-MOVE CANDIDATE / WAIT",
+      "observed_facts": [
+        "CoinMarketCap around 10:01Z quoted ZEC near $1,567, +5.9% over 24h, +36.0% over 7d and +181.0% over 30d, with market capitalization about $26.45B and 24h volume about $1.81B.",
+        "Current weekly crypto-ETF reporting shows ZCSH attracted about $98.2M in the week ending Sep. 18 and roughly $271M over four weeks, versus only about +$6.2M for U.S. spot BTC ETFs and about -$140M for ETH ETFs over the same latest week.",
+        "SEC primary filing shows DCG contributed 85,705.32563297 ZEC in-kind on Sep. 8 for about $100M of ZCSH shares. This transfer increased ETF assets but did not require $100M of contemporaneous spot buying.",
+        "YCharts history gives ZCSH AUM/NAV of about $304.59M/$63.07 on Aug. 25 and $842.86M/$119.40 on Sep. 17. Implied shares rose from about 4.829M to 7.059M (+46.2%) while NAV/share rose about 89.3%; of the $538.27M AUM increase, roughly $272.04M is explained by appreciation of the original shares and roughly $266.23M by added shares valued at Sep. 17 NAV.",
+        "SEC prospectus permits ZCSH creations in cash or in-kind. Cash creations can require liquidity providers to source ZEC, while in-kind creations can transfer pre-existing inventory without equivalent same-day spot demand. Redemptions are cash-only/case-by-case at the cited prospectus state.",
+        "Quantority cross-exchange snapshot on Sep. 19 showed ZEC perpetual OI about $1.22B, down about 3.1% over 24h but up about 48.5% over 7d, with negative funding on Binance and Bitget but positive funding on OKX. That is consistent with persistent short positioning and squeeze potential rather than a uniform leveraged-long buildup.",
+        "ZecStats showed about 4.92M ZEC shielded, roughly 29% of issued supply. Shielded balance is not permanently illiquid, but the increase is consistent with less directly exchange-visible inventory.",
+        "The ZCSH 3-for-1 split announced for late September is nominal and explicitly does not change total fund value."
+      ],
+      "inference": "The best current explanation for ZEC's excess return is not broad crypto liquidity alone. A relatively large regulated-wrapper demand impulse for a much smaller asset, reduced directly visible float, and recurring short-covering form a plausible reflexive chain. However, headline ETF AUM materially overstates fresh marginal cash because price appreciation, legacy trust assets and in-kind affiliate contributions are large components.",
+      "causal_chain": "regulated access and privacy/token narrative -> wrapper creations and attention -> demand relative to limited effective float rises -> price advances -> shorts are forced to cover -> price/AUM/headlines rise -> more attention and possible creations -> reflexive continuation; counter-flow comes from whales/miners/cash redemptions and leverage normalization.",
+      "matched_controls": [
+        "BTC rose about 5.1% over 7d versus ZEC about 36% while latest weekly BTC ETF net flow was only about +$6.2M; ZEC's reported $98.2M weekly flow is far larger relative to its market capitalization.",
+        "ETH rose about 4.3% over 7d while latest weekly ETH ETF flow remained negative, weakening a pure broad-beta explanation.",
+        "ZEC flow-to-market-cap is roughly 0.37% for the latest week versus roughly 0.00038% for BTC using the reported weekly totals; the exact economic impact still depends on cash versus in-kind sourcing and free-float depth."
+      ],
+      "alternative_explanations": [
+        "Broad Sep. 18 crypto risk-on move and regulatory relief after the SEC tokenized-securities exemption.",
+        "Privacy narrative and project-specific governance/NU7 attention.",
+        "Pure momentum/attention effects unrelated to durable capital capture.",
+        "Thin order-book depth or venue fragmentation independently amplifying price."
+      ],
+      "unknowns": [
+        "Exact cash-versus-in-kind composition of ZCSH daily creations.",
+        "How liquidity providers sourced ZEC: exchange spot, OTC, internal inventory or hedged pre-positioning.",
+        "True exchange-available/free-float supply and order-book depth by venue.",
+        "Primary on-chain confirmation of the reported large whale-to-Coinbase transfer."
+      ],
+      "falsification": "Weaken the wrapper-flow/free-float thesis if external cash creations slow materially while ZEC continues to outperform without short-covering, or if measured exchange depth/free float proves large enough that the flow intensity is economically trivial. A reversal pattern would be several sessions of slowing/outflow, normalized funding, falling OI without spot absorption and rising exchange deposits.",
+      "decision_support": "WAIT / AVOID CHASING. The structural flow mechanism is stronger than before, but +181% in 30 days, very high realized volatility, squeeze dynamics, uncertain cash-versus-in-kind sourcing and possible whale supply make a fresh immutable BUY or SHORT thesis unjustified."
+    },
+    {
+      "topic": "Fund-flow headline integrity: a reported $270M one-day ZCSH inflow is rejected as likely period/unit mislabeling",
+      "label": "NEGATIVE FINDING / DATA-INTEGRITY LEARNING",
+      "observed_facts": [
+        "A secondary flash source described about $270M as a single-day Sep. 18 ZCSH inflow.",
+        "Higher-quality weekly/cumulative reporting instead places the week ending Sep. 18 near $98.2M and cumulative recent inflows near $271M."
+      ],
+      "inference": "The flash item likely confused cumulative inflow with a one-day flow. Dynamic or syndicated fund-flow summaries must be reconciled to period definitions, issuer cells and primary filings before entering forecasts.",
+      "method_rule": "Do not freeze fund-flow claims from a single secondary headline when day/week/cumulative units conflict. Preserve the timestamped claim as rejected evidence rather than silently deleting it."
+    },
+    {
+      "topic": "BTC Sep. 18 regulated spot-vehicle demand is now materially better corroborated",
+      "label": "OBSERVED FACT / INFERENCE / STILL WAIT",
+      "observed_facts": [
+        "Multiple current sources citing SoSoValue report U.S. spot BTC ETFs around +$433.0M on Sep. 18 and spot ETH ETFs around +$144M.",
+        "This resolves the prior cycle's concern that the live Farside row had regressed to a partial state with missing issuer cells.",
+        "BTC was about $81.3K at 10:01Z, +4.0% over 24h and +5.1% over 7d.",
+        "Current CoinMarketCap derivatives data around 10:02Z showed total crypto OI about $452.27B (+5.93% 24h), average perpetual funding about 0.00777 (+156% versus the prior 7d comparison), and BTC 24h liquidations about $228.9M, of which about $221.0M were shorts; latest 1h/4h liquidation windows were zero."
+      ],
+      "inference": "Friday's BTC advance is higher quality than a pure weekend squeeze because a large regulated spot-vehicle inflow is now corroborated. However, the week was only around flat/slightly positive in aggregate after large midweek outflows, while leverage/funding are rebuilding. One strong creation day does not yet establish a durable accumulation regime.",
+      "falsification": "Upgrade only if several completed sessions show broad positive creations, BTC retains relative strength after forced short covering has ceased, and venue-grade leverage/basis remain controlled. Downgrade if ETF redemptions resume or price stalls while OI/funding rise."
+    },
+    {
+      "topic": "Aggregate stablecoin liquidity is not the source of the current crypto impulse",
+      "label": "OBSERVED FACT / INFERENCE",
+      "observed_facts": [
+        "DefiLlama current stablecoin capitalization is about $304.4B, down roughly $0.66B or 0.21% over 7d and up only about 1.2% over 30d.",
+        "CoinMarketCap snapshots put USDT near $183.3B and USDC near $74.3B; USDe near $4.81B is growing faster but remains a small fraction of total stablecoin liquidity."
+      ],
+      "inference": "The BTC/ZEC impulse is better attributed to rotation, regulated wrapper creations, existing stablecoin deployment and forced covering than to a broad new crypto-dollar issuance wave."
+    },
+    {
+      "topic": "Physical oil cross-section strengthens the effective-deliverability state variable",
+      "label": "OBSERVED FACT / SUPPORTED EXISTING LEARNING",
+      "observed_facts": [
+        "Reuters Sep. 18 reported Russian ESPO crude above $120/bbl and a record roughly $20-$30/bbl premium to ICE Brent as Chinese buyers sought accessible barrels amid Middle-East/Saudi delivery disruption.",
+        "Benchmark Brent simultaneously closed near $104.87 and had declined from its earlier scarcity spike."
+      ],
+      "inference": "A falling global benchmark can coexist with acute local/grade scarcity. Route, location, grade, freight, refinery compatibility and accessible inventory are more informative than gross disrupted capacity or benchmark direction alone.",
+      "matched_control": "ESPO premium expansion versus declining Brent is a live cross-sectional non-move/mover control for the deliverable-supply hypothesis."
+    }
+  ],
+  "daily_big_move_scan": {
+    "market_context": "Saturday: major cash equities, government-bond and commodity benchmark markets are closed. No fabricated weekend traditional-market moves were added. The scan uses Sep. 18 closes plus live crypto.",
+    "selected_or_retested": [
+      "ZEC: about +36% in 7d and +181% in 30d; selected as an extreme move for wrapper-flow/free-float/short-squeeze reconstruction.",
+      "BTC: about +5% in 7d after a strong Sep. 18 rebound; now retested with corroborated +$433M BTC ETF flow and live leverage data.",
+      "ESPO versus Brent: accessible Russian crude above $120 and record premium while Brent eased; strengthens location/grade deliverability model.",
+      "Gold Sep. 18: rose despite a strong dollar and near-5% U.S. 10y yield; existing fund-flow evidence keeps this as a useful relative-strength case, but no new weekend price data are fabricated."
+    ],
+    "negative_findings": [
+      "Do not equate ETF AUM growth with net new cash; price appreciation and in-kind creations can dominate.",
+      "Do not equate all ETF creations with contemporaneous exchange spot buying.",
+      "Do not treat a nominal fund split as new economic value.",
+      "Do not infer broad crypto liquidity expansion from asset-price rallies while aggregate stablecoin capitalization is flat/down on the week.",
+      "Do not label BTC or ZEC continuation as purely short squeeze after price holds beyond the immediate liquidation window, but do retain leverage/squeeze as an amplifier until spot-flow persistence is demonstrated."
+    ]
+  },
+  "decision_support": [
+    {
+      "instrument": "ZEC / ZCSH theme",
+      "action": "WAIT / AVOID CHASING",
+      "horizon": "days to weeks",
+      "confidence": "MODERATE on causal mechanism; LOW on forward risk/reward after the extreme move",
+      "capital_source_destination": "Some regulated-account capital appears to be entering ZCSH, but source-of-funds and cash-versus-in-kind composition are not fully known. Marginal price impact can be amplified by limited effective float and short covering.",
+      "confirmations": ["Sustained external cash creations", "Exchange/on-chain evidence of spot absorption", "Price holds after short-liquidation impulse ends", "Controlled leverage/funding"],
+      "invalidation": "ETF demand stalls/reverses, exchange deposits rise, OI/funding normalize without spot demand, or price fails to hold despite continued wrapper AUM growth."
+    },
+    {
+      "instrument": "BTC",
+      "action": "WAIT / TACTICAL MOMENTUM CANDIDATE",
+      "horizon": "days to weeks",
+      "confidence": "MODERATE",
+      "capital_source_destination": "Friday regulated ETF creations now provide real spot-vehicle demand evidence, but week-level persistence is not yet established and derivatives leverage is rebuilding.",
+      "confirmations": ["Several completed positive ETF sessions with issuer breadth", "BTC relative strength persists after short covering", "Venue-grade OI/funding/basis stay controlled"],
+      "invalidation": "Large ETF redemptions resume, price falls back through the rebound area, or leverage rises sharply while price stalls."
+    }
+  ],
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "status": "No new immutable forecast clears the evidence bar; preserving WAIT is intentional."
+  },
+  "next_research": [
+    "Build a point-in-time ZCSH creation ledger separating external cash, external in-kind, affiliate in-kind, legacy trust assets and price appreciation.",
+    "Estimate economically available ZEC float using exchange balances/order-book depth, transparent versus shielded movement and known custodial holdings; do not treat shielded balance as permanently locked.",
+    "Reconstruct several historical small-asset ETF/wrapper launches using flow-to-free-float rather than flow dollars and compare matched non-movers.",
+    "Recheck BTC/ETH ETF flows after the next U.S. session and test whether spot demand persists once the forced-short-cover impulse is fully absent.",
+    "Continue standardizing central-bank full-policy-package surprise cases and maturity-specific sovereign-duration supply controls."
+  ],
+  "source_log": [
+    {"publisher":"SEC","topic":"DCG in-kind ZEC contribution","url":"https://www.sec.gov/Archives/edgar/data/1720265/000119312526385317/zcsh-20260908.htm"},
+    {"publisher":"SEC","topic":"ZCSH prospectus creation/redemption mechanics","url":"https://www.sec.gov/Archives/edgar/data/1720265/000119312526363603/zcsh__424b3.htm"},
+    {"publisher":"SEC","topic":"ZCSH 3-for-1 split","url":"https://www.sec.gov/Archives/edgar/data/1720265/000119312526395068/zcsh-20260918.htm"},
+    {"publisher":"The Block","topic":"ZCSH assets/inflows/split","url":"https://www.theblock.co/news/markets/2026-09-18-grayscales-zcash-etf-plans-3-for-1-split-233-million-inflow-surge-415520"},
+    {"publisher":"Yahoo Finance / BeInCrypto","topic":"weekly crypto ETF flows","url":"https://finance.yahoo.com/markets/crypto/articles/crypto-etf-drew-most-money-073952990.html"},
+    {"publisher":"YCharts","topic":"ZCSH AUM history","url":"https://ycharts.com/companies/ZCSH/total_assets_under_management"},
+    {"publisher":"YCharts","topic":"ZCSH NAV history","url":"https://ycharts.com/companies/ZCSH/net_asset_value"},
+    {"publisher":"ZecStats","topic":"shielded supply","url":"https://zecstats.org/shielded-percentage"},
+    {"publisher":"Quantority","topic":"ZEC derivatives OI/funding","url":"https://quantority.com/open-interest/ZEC"},
+    {"publisher":"Reuters","topic":"ESPO physical crude premium","url":"https://www.reuters.com/business/energy/russian-espo-oil-price-exceeds-120-per-barrel-traders-say-and-data-shows-2026-09-18/"},
+    {"publisher":"Reuters","topic":"global fund flows","url":"https://www.reuters.com/world/china/global-markets-flows-graphic-pix-2026-09-18/"},
+    {"publisher":"DefiLlama","topic":"stablecoin market capitalization","url":"https://defillama.com/stablecoins"},
+    {"publisher":"CoinMarketCap connector","topic":"live BTC/ETH/ZEC prices and global crypto derivatives","observed_at":"2026-09-19T10:04:57Z"}
+  ]
+}
