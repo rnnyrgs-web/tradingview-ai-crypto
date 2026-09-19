@@ -74,4 +74,10 @@ jobs:
             sleep 10
           done
           echo "Exact deployed-SHA Profitability Learning acceptance did not pass" >&2
+          echo "Last acceptance HTTP status: $status" >&2
+          if jq -e 'type == "object"' "$response" >/dev/null 2>&1; then
+            jq -c 'del(.detail) | {ok, deployed_sha, fingerprint_id, screen_status}' "$response" >&2
+          else
+            echo "Last acceptance response was not valid JSON" >&2
+          fi
           exit 1
