@@ -9,6 +9,9 @@ experiments capable of producing actionable evidence now.
 from __future__ import annotations
 
 from math import isfinite
+from copy import deepcopy
+
+from profitability_learning.contracts import SAFE, number
 
 from signal_development import objective_reference, priority_score, validate_task_contract
 
@@ -41,6 +44,8 @@ def _eligible(experiment: dict) -> bool:
     if experiment.get("status") != "QUEUED_RESEARCH_ONLY":
         return False
     if experiment.get("blocked_reason"):
+        return False
+    if _learning_factor(experiment) <= 0:
         return False
     if str(experiment.get("evidence_readiness") or "") in BLOCKED_EVIDENCE_STATES:
         return False
@@ -90,7 +95,27 @@ def _eligible(experiment: dict) -> bool:
     return True
 
 
-def _profitability_priority(row: dict) -> float:
+def _learning_factor(row: dict) -> float:
+    """Consume bounded feedback; invalid/rejected evidence cannot authorize work."""
+    if "learning_feedback" not in row:
+        return 1.0  # Existing queues without configured learning remain compatible.
+    feedback = row["learning_feedback"]
+    if (not isinstance(feedback, dict)
+            or any(feedback.get(key) is not value for key, value in SAFE.items())
+            or feedback.get("changes_eligibility") is not False
+            or not isinstance(feedback.get("reason"), str)
+            or feedback.get("reason") not in {"no_matched_completion",
+                "prior_completion_requires_new_evidence", "matched_family_economic_evidence"}):
+        return 0.0
+    try:
+        factor = number(feedback.get("factor"), "learning factor", minimum=0)
+    except ValueError:
+        return 0.0
+    # Current bounded family boost (1.3) times component boost (1.15) < 1.5.
+    return factor if factor <= 1.5 else 0.0
+
+
+def _base_profitability_priority(row: dict) -> float:
     factors = row.get("priority_factors") or {}
     return priority_score(
         expected_incremental_after_cost_profitability_impact=factors.get("expected_incremental_after_cost_profitability_impact", 0),
@@ -98,6 +123,10 @@ def _profitability_priority(row: dict) -> float:
         probability_actionable_evidence=factors.get("probability_actionable_evidence", 0),
         compute_api_cost_units=factors.get("compute_api_cost_units", 1),
     )
+
+
+def _profitability_priority(row: dict) -> float:
+    return _base_profitability_priority(row) * _learning_factor(row)
 
 
 def _signal_quality_secondary(row: dict) -> float:
@@ -132,6 +161,8 @@ def build_heavy_dispatch_plan(experiment_queue: dict, *, running_experiment_ids=
         selected.append({
             "experiment_id": str(row["experiment_id"]),
             "profitability_priority_score": _profitability_priority(row),
+            "base_profitability_priority_score": _base_profitability_priority(row),
+            "learning_feedback": deepcopy(row.get("learning_feedback")),
             "signal_quality_secondary_score": _signal_quality_secondary(row),
             "priority_factors": dict(row.get("priority_factors") or {}),
             "information_priority": _finite(row.get("information_priority")),
@@ -162,7 +193,7 @@ def build_heavy_dispatch_plan(experiment_queue: dict, *, running_experiment_ids=
         "blocked_candidate_count": blocked_count,
         "selected_count": len(selected),
         "selected": selected,
-        "priority_policy": "expected incremental after-cost profitability impact x information/falsification value x probability of actionable evidence / compute/API cost first; genuine forward signal-quality impact is a secondary tiebreaker; blocked natural-history or unsupported-executor work is deferred; every admitted science design must be one-search, one-mutation, no-mining, no-OOS-reuse, multiple-testing protected, replication-required and no-paid-compute-escalation; later ties prefer restrictive abstention-first science",
+        "priority_policy": "expected incremental after-cost profitability impact x information/falsification value x probability of actionable evidence / compute/API cost, multiplied by bounded validated learning feedback when present; rejected or invalid feedback is ineligible; genuine forward signal-quality impact is a secondary tiebreaker; blocked natural-history or unsupported-executor work is deferred; every admitted science design must be one-search, one-mutation, no-mining, no-OOS-reuse, multiple-testing protected, replication-required and no-paid-compute-escalation; later ties prefer restrictive abstention-first science",
         "trade_authority": False,
         "promotion_authority": False,
         "strategy_mutation_authority": False,

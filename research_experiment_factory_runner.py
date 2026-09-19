@@ -14,6 +14,7 @@ from research_learning_state import load_state
 from research_paper_loss_attribution import build_paper_loss_attribution, merge_paper_priorities
 from research_quant_science_factory import build_quant_science_queue
 from research_specialist_bridge import enrich_diagnostics_with_specialists
+from profitability_learning.runtime import apply_queue_feedback, factory_feedback
 
 
 def build_factory_report(rows, paper_trades=None):
@@ -21,7 +22,7 @@ def build_factory_report(rows, paper_trades=None):
     diagnostics = merge_paper_priorities(learning_diagnostics(rows), paper_loss)
     diagnostics, specialist_bridge = enrich_diagnostics_with_specialists(rows, diagnostics)
     memory = load_state()
-    queue = build_quant_science_queue(diagnostics, memory)
+    queue = apply_queue_feedback(build_quant_science_queue(diagnostics, memory))
     heavy_dispatch_plan = build_heavy_dispatch_plan(queue)
     return {
         "ok": True,
@@ -38,6 +39,7 @@ def build_factory_report(rows, paper_trades=None):
         "quant_science_queue": queue,
         "experiment_queue": queue,
         "heavy_dispatch_plan": heavy_dispatch_plan,
+        "profitability_learning": factory_feedback(),
     }
 
 
