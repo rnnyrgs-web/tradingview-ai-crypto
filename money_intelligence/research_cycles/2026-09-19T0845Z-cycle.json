@@ -1,0 +1,231 @@
+{
+  "schema_version": 1,
+  "information_cutoff": "2026-09-19T08:45:03Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate or broker state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "prior_canonical_state": {
+    "dashboard_as_of": "2026-09-18T21:34:56Z",
+    "regime": "RESTRICTIVE POLICY / SELECTIVE CAPITAL ALLOCATION / EXPECTATION-SENSITIVE PRICING",
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-19T08:35:20Z",
+    "artifact_cutoff_utc": "2026-09-19T08:45:03Z",
+    "seconds_this_run": 583,
+    "prior_minimum_cumulative_seconds_from_recent_cycles_with_explicit_runtime": 1670,
+    "minimum_cumulative_seconds_after_this_cycle": 2253,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly recorded execution seconds are counted. Schedule gaps and artifacts without explicit runtime are excluded; no padding or idle time is counted."
+  },
+  "highest_information_question": "Does maturity-specific effective sovereign-duration supply add explanatory and predictive value beyond policy-rate direction and aggregate balance-sheet/QT pace, and can current BTC strength persist as leverage rebuilds after the short-cover impulse ends?",
+  "fresh_validated_observations": [
+    {
+      "topic": "BOE Sep. 17 2026 provides a live duration-supply composition shock",
+      "label": "OBSERVED FACT / INFERENCE / BIG-MOVE CANDIDATE",
+      "observed_facts": [
+        "The BOE Market Participants Survey before the Sep. 17 meeting assigned 86.3% mean probability to Bank Rate remaining at 3.75%, so the rate hold itself carried little surprise.",
+        "The same survey's median expected APF reduction for Oct. 2026-Sep. 2027 was £50B. Among respondents expecting gilt sales to continue, expected sale weights averaged 44.3% short, 40.3% medium and 15.3% long (>20y).",
+        "The BOE instead set a multi-year plan with £20B/year active sales, retained about £222B of shorter gilts to maturity and £120B of the longest-dated gilts to maturity for banknote backing, while reviewing a model for selling £146.5B of 2035-2049 gilts to the Government. Public APF auctions pause pending an implementation decision by April 2027.",
+        "Reuters reported the 30-year gilt yield fell about 12 bp to 5.74% after the announcement, compared with about 8 bp for the 10-year and 6 bp for the 2-year; long gilts therefore outperformed the front end."
+      ],
+      "inference": "The marginal policy information was not simply the unchanged Bank Rate or a small change in aggregate QT pace. It was a large maturity/timing composition change that removed expected public long-end supply. This supports treating effective net duration supply by maturity as a distinct causal state variable for term premia and long yields.",
+      "matched_internal_control": "The larger fall in 30-year than 2-year yields is directionally consistent with a maturity-specific supply effect rather than a uniform policy-rate shock.",
+      "alternative_explanations": [
+        "Global bond-market moves and energy/inflation repricing contaminated the event window.",
+        "The £46B approximate annual stock reduction is slower than the prior £70B pace, so aggregate QT slowing also contributed.",
+        "Direct sales to the DMO, if implemented, can still affect the government's financing mix and ultimate private duration supply."
+      ],
+      "falsification": "Weaken if a larger event sample shows maturity-specific central-bank/sovereign supply surprises do not explain curve-relative moves after controlling for rate-path surprise, inflation/growth news and global duration beta.",
+      "decision_support": "Mechanism only; no post-move gilt trade is promoted."
+    },
+    {
+      "topic": "Fed Operation Twist 2011 is a strong historical control for duration-supply composition",
+      "label": "SUPPORTED / HISTORICAL MATCHED CONTROL",
+      "observed_facts": [
+        "The Fed's 2011 maturity extension program sold $400B of Treasuries with remaining maturity of 3 years or less and bought $400B with 6-30 year maturities, changing portfolio duration without increasing the program's net Treasury holdings.",
+        "Fed materials explicitly described the mechanism as reducing market supply of longer-term Treasuries to put downward pressure on longer-term rates.",
+        "On the announcement day, contemporaneous reporting showed 10-year yields down as much as about 9 bp and 30-year yields down about 19-20 bp while 2-year yields rose about 4 bp."
+      ],
+      "inference": "A balance-sheet-size-neutral maturity shift produced a large curve twist in the predicted direction. Paired with the 2026 BOE case, this materially strengthens the hypothesis that maturity-specific effective net duration supply can matter independently of aggregate central-bank liquidity.",
+      "negative_finding": "Do not infer broad risk-on from lower long yields caused by duration-supply operations: equities fell sharply in 2011 because the Fed also communicated significant downside growth risks and bank downgrades hit risk sentiment."
+    },
+    {
+      "topic": "Expectation-adjusted full-policy-package model gains two stronger controls",
+      "label": "SUPPORTED / PROVISIONAL / CROSS-EPISODE DEEPENING",
+      "observed_facts": [
+        "BOE Sep. 2023 survey data gave 68.5% mean probability to a 25 bp hike to 5.50% and only 25.0% to a hold at 5.25%; the actual hold was therefore an expectation surprise rather than a neutral event.",
+        "Immediately before the Fed's Jul. 31 2019 meeting, Fed sources show markets assigned high probability to a 25 bp cut, while federal-funds futures implied roughly 67 bp of cumulative easing by year-end. The Fed cut 25 bp but Chair Powell characterized it as a 'mid-cycle adjustment'; the dollar rose and equities fell as the expected future easing path was disappointed."
+      ],
+      "inference": "The general rule is broader than 'guidance matters': market response depends on the expectation-adjusted change in the full policy constraint set—rate path, balance-sheet/YCC/FX commitments, vote composition and reaction function. Nominal hike/cut/hold sign is informative only to the extent it changes that expected package.",
+      "sample_warning": "The cases are deliberately selected for information value and are not a statistically representative sample. No hit-rate or causal elasticity is claimed yet."
+    },
+    {
+      "topic": "BTC weekend continuation has shifted from deleveraging to leverage rebuild",
+      "label": "OBSERVED FACT / INFERENCE / FAIL-CLOSED",
+      "observed_facts": [
+        "Connected CoinMarketCap data around 08:35-08:36Z quoted BTC near $81,314 (+4.38%/24h, +5.21%/7d) and ETH near $2,648 (+6.06%/24h).",
+        "Global crypto derivatives open interest was about $459.91B, +8.43% over 24h, after earlier cycles had shown materially lower OI; perpetual OI was about $458.56B, +8.44%.",
+        "Average perpetual funding was about 0.0078605 and +131% versus the prior seven-day comparison.",
+        "BTC 24h liquidations were about $242.19M, of which $233.4M were shorts, but the latest 1h and 4h BTC liquidation windows were zero. The immediate forced-covering impulse had gone dormant while price remained near $81K.",
+        "Primary OKX data showed BTC-USDT-SWAP OI around $2.52B and a settled/current funding rate of 0.0001 per funding period, indicating positive but not uniformly extreme single-venue funding."
+      ],
+      "inference": "Price retention after forced liquidations cease weakens a pure short-squeeze explanation, but the sharp aggregate OI rebuild and more positive funding show fresh leveraged risk is now entering. This lowers continuation quality if spot/ETF absorption does not resume when U.S. markets reopen.",
+      "contradiction": "Aggregate funding is becoming more elevated, while OKX's single-venue funding remains ordinary. Multi-venue venue-grade confirmation is required before labeling leverage uniformly crowded.",
+      "hypothesis": "Weekend crypto gains accompanied by rebuilding OI/funding but no new U.S. ETF creation session are more fragile than gains accompanied by persistent regulated spot creations and stable leverage.",
+      "falsification": "Weaken the fragility hypothesis if BTC holds or advances after U.S. ETF trading resumes with broad positive creations, controlled venue funding/basis and no price stall as OI rebuilds.",
+      "decision_support": "BTC remains WAIT / tactical momentum candidate; no immutable BUY is frozen."
+    },
+    {
+      "topic": "ETF tracker revision risk is itself a point-in-time data-integrity issue",
+      "label": "OBSERVED FACT / METHOD",
+      "observed_facts": [
+        "The current live Farside Sep. 18 BTC row is incomplete relative to an earlier captured point-in-time print: IBIT is presently missing and the displayed partial total is about +$324.6M, while prior research preserved a +$433.0M completed-looking print.",
+        "The current live ETH Sep. 18 row likewise omits major issuer cells and displays only a partial total, conflicting with the earlier captured +$143.7M print.",
+        "A separate Farside all-data page currently shows an inconsistent empty/zero Sep. 18 row."
+      ],
+      "inference": "Dynamic webpages can regress from a previously populated state. Immutable research must preserve timestamped snapshots and cross-source corroboration rather than silently replacing earlier evidence with the latest webpage rendering.",
+      "method_rule": "Treat flow rows as provisional when issuer cells are missing or cross-pages disagree; preserve both timestamped states and resolve via issuer/independent corroboration before using the total in a frozen forecast."
+    },
+    {
+      "topic": "Post-FOMC secured funding remains orderly after corridor reset",
+      "label": "OBSERVED FACT / NEGATIVE FINDING",
+      "observed_facts": [
+        "NY Fed reference-rate data for Sep. 17 show SOFR at 3.85%, with the 99th percentile at 3.93% and transaction volume near $2.992T after the Fed raised its target range to 3.75%-4.00%.",
+        "The 99th percentile remained below the 4.00% Standing Repo rate."
+      ],
+      "inference": "The roughly 23 bp increase in SOFR from Sep. 16 is mainly a mechanical policy-corridor reset, not evidence of renewed funding scarcity. Repo stress must be evaluated relative to the updated administered-rate corridor and tails/backstop, not raw day-over-day basis-point moves.",
+      "decision_support": "No broad funding-crisis signal; preserve the prior TGA-drain non-crisis control."
+    },
+    {
+      "topic": "Corporate-credit wrapper outflows have not yet become priced Single-B stress",
+      "label": "OBSERVED FACT / NEGATIVE FINDING",
+      "observed_facts": [
+        "Recent global fund-flow reporting shows redemptions from higher-risk credit buckets.",
+        "ICE BofA Single-B U.S. high-yield option-adjusted spread was about 2.78% on Sep. 16 and 2.77% on Sep. 17, essentially unchanged and still tight."
+      ],
+      "inference": "Fund-wrapper outflows are currently an allocation/opportunity-cost signal, not validated credit stress. Escalation requires spread widening, weaker market depth/new-issue terms or defaults/refinancing evidence.",
+      "decision_support": "Maintain credit caution but do not use crisis language."
+    },
+    {
+      "topic": "NY Fed DSGE adds a model-based stagflationary-policy control, not an official forecast",
+      "label": "MODEL EVIDENCE / LOW-WEIGHT",
+      "observed_facts": [
+        "The Sep. 18 New York Fed DSGE update forecasts core PCE around 3.3% in 2026 and 2.1% in 2027 while 2026 GDP growth is about 1.2% and 2027 growth about 0.1%; it estimates r-star around 1.9% in 2026."
+      ],
+      "inference": "One model is consistent with persistent inflation alongside weak growth, reinforcing why policy can remain restrictive despite slowing activity. It is model output with wide uncertainty and must not be treated as the Fed's official forecast."
+    }
+  ],
+  "causal_learning_candidate": {
+    "claim": "Effective net sovereign-duration supply by maturity is a distinct price state variable from policy-rate direction, aggregate QE/QT stock change and aggregate central-bank liquidity.",
+    "status": "SUPPORTED CANDIDATE / NEEDS LARGER TIMESTAMP-SAFE SAMPLE",
+    "provisional_state_vector": [
+      "gross sovereign issuance by maturity",
+      "central-bank purchases/sales by maturity",
+      "central-bank maturities/reinvestments",
+      "sovereign buybacks or debt-management switches",
+      "structural/captive pension-insurer demand",
+      "dealer balance-sheet/intermediation capacity",
+      "auction tails and bid-to-cover",
+      "swap spreads / futures basis / term-premium measures",
+      "rate-path and inflation/growth surprises"
+    ],
+    "mechanism": "A reduction in expected privately absorbed long-duration supply lowers the clearing term premium/required yield when marginal demand and dealer capacity are not equally reduced; the effect should be strongest in the targeted maturity sector.",
+    "falsification": "Reject or materially weaken if standardized event studies show no incremental explanatory value for maturity-supply surprises after controlling for policy-path surprise and global duration beta."
+  },
+  "daily_big_move_scan": {
+    "market_context": "Saturday; most cash equities, government bonds and commodity benchmarks are closed. No fabricated weekend traditional-market moves were added.",
+    "selected_or_retested": [
+      "BTC/ETH Sep. 18-19 continuation: price retention after forced covering, but leverage is rebuilding; Monday spot/ETF absorption is the next high-information test.",
+      "BOE Sep. 17 gilt rally: newly reconstructed as a maturity-supply/composition shock; 30-year outperformance makes it a high-value Big-Move Lab candidate.",
+      "Fed Operation Twist 2011: historical matched control for maturity-specific duration-supply effects without balance-sheet expansion.",
+      "Fed Jul. 2019 and BOE Sep. 2023: expectation-relative policy-package controls added to the central-bank event series."
+    ],
+    "negative_findings": [
+      "Do not call a central-bank event dovish/hawkish from the nominal rate action alone.",
+      "Do not treat a smaller aggregate QT pace as equivalent to broad liquidity easing when the principal market effect is maturity-specific duration-supply relief.",
+      "Do not infer a credit crisis from fund outflows while spreads and funding-market tails remain orderly.",
+      "Do not infer durable BTC institutional accumulation from weekend price retention while the fresh regulated ETF channel is closed and leverage is rebuilding."
+    ]
+  },
+  "policy_event_case_series": {
+    "status": "HIGH-INFORMATION QUALITATIVE SAMPLE / NOT REPRESENTATIVE",
+    "cases": [
+      "SNB 2015: rate cut plus unexpected FX-floor removal -> CHF surge; regime-constraint surprise dominated rate sign.",
+      "BOJ 2022: unchanged short rate plus surprise YCC-band widening -> JPY appreciation; unconventional-policy surprise dominated rate sign.",
+      "RBA 2023: surprise hike -> AUD appreciation; action sign worked because action itself surprised.",
+      "BOE 2023: survey heavily favored hike, actual hold -> GBP weakness; expectation-relative path shift.",
+      "ECB 2024: expected cut plus hawkish inflation/path package -> EUR/yields rose.",
+      "Fed 2019: expected 25 bp cut but shallower future easing than priced -> USD up/equities down.",
+      "FOMC 2026: expected hike; future path/energy information mattered more than the action sign.",
+      "BOJ 2026: expected hike plus cautious/dissenting package -> JPY weakened.",
+      "BOE 2026: expected rate hold plus major APF maturity-composition change -> long gilt yields fell disproportionately."
+    ],
+    "next_test": "Build a standardized table with pre-event probabilities/OIS, full-policy-package surprise coding and 30m/1d/5d FX/rates/curve responses. Include ordinary events where the naive action-sign heuristic succeeds and fails."
+  },
+  "money_intelligence_decision_support": [
+    {
+      "theme": "Broad macro one-factor positioning",
+      "action": "WAIT",
+      "reason": "Cross-asset transmission remains selective; policy, energy, duration supply, credit and positioning do not support one uniform risk-on/risk-off trade."
+    },
+    {
+      "theme": "BTC",
+      "action": "WAIT / TACTICAL MOMENTUM CANDIDATE",
+      "reason": "Price retention and prior spot creations are constructive, but fresh leverage is rebuilding and no new U.S. ETF session can confirm weekend demand."
+    },
+    {
+      "theme": "UK long-end duration",
+      "action": "WAIT AFTER MOVE / RESEARCH MECHANISM",
+      "reason": "The supply-composition surprise has already repriced long gilts; no valuation/forward curve edge has been established post-move."
+    },
+    {
+      "theme": "Corporate high-yield credit",
+      "action": "REDUCE RISK / MONITOR, NOT CRISIS SHORT",
+      "reason": "Fund outflows warrant caution, but Single-B OAS remains tight and no broad funding stress is validated."
+    },
+    {
+      "theme": "AI physical infrastructure",
+      "action": "HOLD / RESEARCH FOR BUY CANDIDATES",
+      "reason": "Capital remains abundant but financing terms are dispersing sharply by contracted cash flow, collateral, sponsor credit, customer concentration and power/permitting certainty."
+    }
+  ],
+  "immutable_prediction_ledger": {
+    "new_forecasts_frozen": 0,
+    "forecasts_resolved": 0,
+    "note": "No new immutable forecast cleared the evidence bar. No prior prediction was backfilled, edited or rewritten."
+  },
+  "canonical_update_decision": "Persist this unique research-cycle artifact only. The BOE duration-supply case is materially useful but should be promoted into big_move_lab/learning_ledger only in a clean atomic canonical update after a broader standardized duration-supply sample and concurrency re-check. Dashboard action/regime does not change enough to justify noisy churn in this cycle.",
+  "next_priority": [
+    "Build the timestamp-safe sovereign-duration-supply event table: BOE APF/QT changes, Fed Operation Twist and LSAP maturity shocks, Treasury/DMO buybacks/switches, ECB/BOJ composition events; encode pre-event supply expectations and curve-relative responses.",
+    "When U.S. ETF trading reopens, test whether BTC price retention is validated by broad completed spot creations as aggregate OI/funding rebuilds; add venue-grade basis/funding/OI from multiple exchanges and exchange/on-chain absorption.",
+    "Resolve the Sep. 18 Farside dynamic-table inconsistency without overwriting earlier timestamped observations.",
+    "Recheck SOFR/TGCR tails and Standing Repo usage after the next business-day publication; keep the TGA-drain control open for quarter-end.",
+    "Extend AI financing dispersion with matched project/borrower controls: collateral, convert optionality, maturity, prepayments/contracted revenue, customer concentration, power/permitting and secondary loan prices.",
+    "Promote BOE Sep. 17 duration-supply case and Volkswagen fundamental-reset case to canonical Big-Move Lab only when a clean atomic research-state update is safe."
+  ],
+  "sources": [
+    {"publisher":"Bank of England","date":"2026-09-17","url":"https://www.bankofengland.co.uk/markets/market-notices/2026/asset-purchase-facility-gilt-sales-market-notice-17-september-2026"},
+    {"publisher":"Bank of England","date":"2026-09-18","url":"https://www.bankofengland.co.uk/markets/market-intelligence/survey-results/2026/market-participants-survey-results-september-2026"},
+    {"publisher":"Reuters","date":"2026-09-17","url":"https://www.reuters.com/business/investors-cheer-boe-move-pause-gilt-sales-driving-bond-rally-2026-09-17/"},
+    {"publisher":"Federal Reserve","date":"2011-09-21","url":"https://www.federalreserve.gov/monetarypolicy/timeline-balance-sheet-policies.htm"},
+    {"publisher":"Federal Reserve","date":"2011-09-21","url":"https://www.federalreserve.gov/monetarypolicy/files/FOMC20110921material.htm"},
+    {"publisher":"Washington Post","date":"2011-09-21","url":"https://www.washingtonpost.com/business/economy/fed-to-buy-longer-term-bonds-to-try-to-lower-interest-rates/2011/09/21/gIQAqZcYlK_story.html"},
+    {"publisher":"Bank of England","date":"2023-09-22","url":"https://www.bankofengland.co.uk/markets/market-intelligence/survey-results/2023/market-participants-survey-results-september-2023"},
+    {"publisher":"Federal Reserve","date":"2019-09-20","url":"https://www.federalreserve.gov/econres/notes/feds-notes/new-way-to-visualize-the-evolution-of-monetary-policy-expectations-20190920.html"},
+    {"publisher":"Federal Reserve","date":"2019-07-31","url":"https://www.federalreserve.gov/monetarypolicy/fomcminutes20190731.htm"},
+    {"publisher":"Federal Reserve","date":"2019-07-31","url":"https://www.federalreserve.gov/monetarypolicy/files/FOMC20190731meeting.pdf"},
+    {"publisher":"New York Fed","date":"2026-09-19","url":"https://markets.newyorkfed.org/api/rates/secured/sofr/last/5.json"},
+    {"publisher":"FRED / ICE BofA","date":"2026-09-19","url":"https://fred.stlouisfed.org/series/BAMLH0A2HYB"},
+    {"publisher":"New York Fed Liberty Street Economics","date":"2026-09-18","url":"https://libertystreeteconomics.newyorkfed.org/2026/09/the-new-york-fed-dsge-model-forecast-september-2026/"},
+    {"publisher":"Reuters","date":"2026-09-18","url":"https://www.reuters.com/world/china/global-markets-flows-graphic-pix-2026-09-18/"},
+    {"publisher":"Farside Investors","date":"2026-09-19","url":"https://farside.co.uk/btc/"},
+    {"publisher":"Farside Investors","date":"2026-09-19","url":"https://farside.co.uk/eth/"},
+    {"publisher":"OKX public API","date":"2026-09-19","url":"https://www.okx.com/api/v5/public/open-interest?instType=SWAP&instId=BTC-USDT-SWAP"},
+    {"publisher":"OKX public API","date":"2026-09-19","url":"https://www.okx.com/api/v5/public/funding-rate?instId=BTC-USDT-SWAP"},
+    {"publisher":"Reuters","date":"2026-09-18","url":"https://www.reuters.com/business/finance/oracles-18-billion-data-center-debt-under-pressure-ft-reports-2026-09-18/"},
+    {"publisher":"Reuters","date":"2026-09-18","url":"https://www.reuters.com/business/energy/aramco-halts-october-crude-deliveries-some-european-refiners-after-pipeline-2026-09-18/"}
+  ],
+  "reporting_gate": "No owner-facing report. Cumulative verifiable execution remains below 60 minutes; continue research quietly on subsequent runs unless an urgent safety/security blocker appears."
+}
