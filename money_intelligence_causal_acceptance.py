@@ -138,6 +138,10 @@ def _contract(ids: dict[str, str], base: datetime) -> FrozenHypothesis:
         evaluation_method="matched_mean_diff_v1",
         family_size=2,
         alpha=0.05,
+        evaluation_units=tuple(
+            ("PHASE2_ACCEPTANCE", _ts(base + timedelta(hours=index)), 1)
+            for index in range(1, 7)
+        ),
     )
 
 
@@ -150,6 +154,7 @@ def _seed_support(memory, ids: dict[str, str], base: datetime) -> None:
                 value=10.0,
                 observed_at=base,
                 available_at=base + timedelta(minutes=1),
+                window_hours=1,
             )
         )
     if ids["hypothesis"] not in memory.hypotheses:
