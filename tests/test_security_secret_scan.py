@@ -30,6 +30,20 @@ def test_reuters_word_slug_starting_sk_is_not_a_key_but_url_key_still_is():
     assert line_has_secret_pattern(f'"https://www.reuters.com/{fake_key}"') is True
 
 
+def test_reuters_url_query_and_long_path_tokens_still_look_like_keys():
+    key = "s" + "k-proj-" + ("a" * 24) + "-" + ("b" * 20) + "-" + ("c" * 20)
+    assert line_has_secret_pattern(f'"https://www.reuters.com/?api_key={key}"') is True
+    assert line_has_secret_pattern(f'"https://www.reuters.com/world/asia-pacific/#{key}"') is True
+    assert line_has_secret_pattern(f'"https://www.reuters.com/world/asia-pacific/{key}/"') is True
+    disguised = (
+        "s" + "k-market-" + ("a" * 25)
+        + "-supply-risk-outlook-2026-09-20"
+    )
+    assert line_has_secret_pattern(
+        f'"https://www.reuters.com/world/asia-pacific/{disguised}/"'
+    ) is True
+
+
 def test_actual_openai_key_shape_is_detected_without_embedding_a_real_key():
     fake_key = "s" + "k-" + ("A" * 24)
     assert line_has_secret_pattern(fake_key) is True

@@ -22,8 +22,10 @@ PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r'''SCAN_SECRET\s*=\s*["'][^"']+["']'''),
     re.compile(r'''DASHBOARD_SECRET\s*=\s*["'][^"']+["']'''),
 )
-REUTERS_WORD_SLUG = re.compile(r"sk-(?:[a-z0-9]+-){3,}[a-z0-9]+")
-REUTERS_URL_PREFIX = re.compile(r"https://(?:www\.)?reuters\.com/[^\s\"']*$")
+REUTERS_WORD_SLUG = re.compile(r"sk-(?:(?:[a-z]{1,18}|[0-9]{1,2})-){5,}20\d{2}-\d{2}-\d{2}")
+REUTERS_URL_PREFIX = re.compile(
+    r"https://(?:www\.)?reuters\.com/(?:[a-z0-9-]+/){2,}$"
+)
 
 
 def line_has_secret_pattern(line: str) -> bool:
@@ -32,9 +34,14 @@ def line_has_secret_pattern(line: str) -> bool:
     for match in PATTERNS[0].finditer(line):
         # Reuters article slugs can start with the letters "sk" and contain
         # many lowercase words. Keep key-shaped tokens, even in a URL, blocked.
+        suffix = line[match.end():]
+        article_path_ends = suffix.startswith("/") and (
+            len(suffix) == 1 or suffix[1].isspace() or suffix[1] in "\"',"
+        )
         if (
             REUTERS_WORD_SLUG.fullmatch(match.group())
             and REUTERS_URL_PREFIX.search(line[: match.start()])
+            and article_path_ends
         ):
             continue
         return True
