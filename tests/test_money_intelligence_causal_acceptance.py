@@ -4,6 +4,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from threading import Lock
 
+import pytest
+
 import money_intelligence_causal_acceptance as acceptance
 from money_intelligence_causal_memory import CausalMemoryError, CausalRepricingMemory
 from money_intelligence_mission_integration import apply_causal_feedback
@@ -19,7 +21,8 @@ def test_runtime_acceptance_rechecks_deployment_packaging_changes():
     assert "Prospective guard passed; full synthetic runtime acceptance remains pending" in workflow
 
 
-def test_acceptance_fixture_can_confirm_after_four_prior_project_tests():
+@pytest.mark.parametrize("prior_slots", [4, 28])
+def test_acceptance_fixture_can_confirm_after_prior_project_tests(prior_slots):
     ids = acceptance._ids("b" * 40)
     base = datetime(2026, 9, 20, tzinfo=timezone.utc)
     memory = CausalRepricingMemory()
@@ -27,7 +30,7 @@ def test_acceptance_fixture_can_confirm_after_four_prior_project_tests():
         ids["formation"], metric_name="flow_intensity", value=10.0,
         observed_at=base, available_at=base + timedelta(minutes=1), window_hours=1,
     ))
-    for index in range(4):
+    for index in range(prior_slots):
         memory.register_hypothesis(replace(
             acceptance._contract(ids, base),
             hypothesis_id=f"prior-{index}", family_id=f"prior-family-{index}",
@@ -37,6 +40,8 @@ def test_acceptance_fixture_can_confirm_after_four_prior_project_tests():
     hypothesis = memory.hypotheses[ids["hypothesis"]]
     verification = memory._verified_evaluation(memory.events[ids["support"]], hypothesis)
     assert len(hypothesis.evaluation_units) == verification["sample_size"]
+    if prior_slots == 28:
+        assert len(hypothesis.evaluation_units) > acceptance.SUPPORT_PAIRS
     assert verification["verified_p_value"] <= memory._project_threshold(hypothesis)
 
 
