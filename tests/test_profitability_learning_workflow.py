@@ -25,6 +25,7 @@ def test_runtime_acceptance_runs_automatically_after_relevant_main_changes():
         "orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz",
         "orchestration/rejected_fingerprints.json",
         "orchestration/signal_development_objective.json",
+        "orchestration/trusted_executor_manifest.json",
         "research_artifact.py",
         "research_heavy_experiment_scheduler.py",
         "signal_development.py",
@@ -61,5 +62,6 @@ def test_runtime_acceptance_dependencies_are_packaged_in_web_image():
         "COPY orchestration/rejected_fingerprints.py orchestration/",
         "COPY orchestration/rejected_fingerprints.json orchestration/",
         "COPY orchestration/signal_development_objective.json orchestration/",
+        "COPY orchestration/trusted_executor_manifest.json orchestration/",
     ):
         assert instruction in dockerfile

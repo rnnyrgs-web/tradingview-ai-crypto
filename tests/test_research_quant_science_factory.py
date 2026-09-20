@@ -1,6 +1,13 @@
+import json
+from pathlib import Path
+
 import pytest
 
-from profitability_learning.contracts import fingerprint
+import profitability_learning.contracts as contracts
+from profitability_learning.contracts import (
+    fingerprint,
+    verified_executor_implementation,
+)
 from research_heavy_experiment_scheduler import build_heavy_dispatch_plan
 from research_quant_science_factory import (
     MASSIVE_VIRTUAL_RESEARCH_CONSTRAINTS,
@@ -38,7 +45,7 @@ def test_quant_science_factory_predeclares_safe_scientific_design():
     assert design["minimum_actionable_coverage"] == 0.25
     assert design["executor_kind"] == "restrictive_group_abstention_v1"
     assert design["executor_implementation_id"] == (
-        "research_adaptive_accuracy._evaluate_frozen_filter@v1"
+        "research_adaptive_accuracy._evaluate_frozen_filter@v3-import-closure"
     )
     assert len(design["executor_implementation_sha256"]) == 64
     assert design["dispatchable_now"] is True
@@ -85,6 +92,178 @@ def test_stale_executor_registry_identity_fails_closed(monkeypatch):
     )
     with pytest.raises(ValueError, match="implementation digest is stale"):
         verified_strategy_semantic_fingerprint(candidate)
+
+
+@pytest.mark.parametrize(
+    "dependency_name",
+    ["selective_precision.py", "utils.py", "contracts.py"],
+)
+def test_transitive_executor_dependency_drift_fails_closed(
+    monkeypatch, dependency_name
+):
+    original_read_text = Path.read_text
+
+    def changed_dependency(path, *args, **kwargs):
+        source = original_read_text(path, *args, **kwargs)
+        if path.name == dependency_name:
+            return source + "\n_TRANSITIVE_EXECUTOR_DRIFT = True\n"
+        return source
+
+    monkeypatch.setattr(Path, "read_text", changed_dependency)
+    with pytest.raises(ValueError, match="implementation digest is stale"):
+        verified_executor_implementation("restrictive_group_abstention_v1")
+
+
+def test_executor_runtime_objective_drift_fails_closed(monkeypatch):
+    original_read_text = Path.read_text
+
+    def changed_objective(path, *args, **kwargs):
+        source = original_read_text(path, *args, **kwargs)
+        if path.name == "signal_development_objective.json":
+            payload = json.loads(source)
+            payload["primary_mission"] += " changed after evidence was earned"
+            return json.dumps(payload)
+        return source
+
+    monkeypatch.setattr(Path, "read_text", changed_objective)
+    with pytest.raises(ValueError, match="implementation digest is stale"):
+        verified_executor_implementation("restrictive_group_abstention_v1")
+
+
+def test_executor_dependency_comments_do_not_change_identity(monkeypatch):
+    original_read_text = Path.read_text
+
+    def comment_only_change(path, *args, **kwargs):
+        source = original_read_text(path, *args, **kwargs)
+        if path.name == "contracts.py":
+            return "# formatting-only executor review note\n" + source
+        return source
+
+    monkeypatch.setattr(Path, "read_text", comment_only_change)
+    implementation = verified_executor_implementation(
+        "restrictive_group_abstention_v1"
+    )
+    assert len(implementation["ast_sha256"]) == 64
+
+
+def test_executor_closure_binds_from_package_imported_submodule(
+    monkeypatch, tmp_path
+):
+    (tmp_path / "entry.py").write_text(
+        "from pkg import behavior\n\nRESULT = behavior.run()\n",
+        encoding="utf-8",
+    )
+    package = tmp_path / "pkg"
+    package.mkdir()
+    (package / "__init__.py").write_text("", encoding="utf-8")
+    behavior = package / "behavior.py"
+    behavior.write_text("def run():\n    return 1\n", encoding="utf-8")
+
+    rule = "temporary_from_package_executor"
+    monkeypatch.setitem(
+        contracts.TRUSTED_EXECUTOR_IMPLEMENTATIONS,
+        rule,
+        "temporary.entry@v1-import-closure",
+    )
+    monkeypatch.setitem(
+        contracts.TRUSTED_EXECUTOR_SOURCES,
+        rule,
+        {"entrypoint": "entry.py", "resources": []},
+    )
+    monkeypatch.setattr(
+        contracts,
+        "__file__",
+        str(tmp_path / "profitability_learning" / "contracts.py"),
+    )
+    manifest = tmp_path / "trusted_executor_manifest.json"
+    monkeypatch.setattr(contracts, "TRUSTED_EXECUTOR_MANIFEST", manifest)
+    initial_digest = contracts._executor_bundle_digest(rule)
+    manifest.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "implementations": {
+                    rule: {"bundle_sha256": initial_digest},
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    verified_executor_implementation(rule)
+
+    behavior.write_text("def run():\n    return 2\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="implementation digest is stale"):
+        verified_executor_implementation(rule)
+
+
+def test_executor_closure_rejects_local_package_wildcard_import(
+    monkeypatch, tmp_path
+):
+    (tmp_path / "entry.py").write_text(
+        "from pkg import *\n\nRESULT = behavior.run()\n",  # noqa: F403
+        encoding="utf-8",
+    )
+    package = tmp_path / "pkg"
+    package.mkdir()
+    (package / "__init__.py").write_text(
+        '__all__ = ["behavior"]\n',
+        encoding="utf-8",
+    )
+    (package / "behavior.py").write_text(
+        "def run():\n    return 1\n",
+        encoding="utf-8",
+    )
+
+    rule = "temporary_wildcard_package_executor"
+    monkeypatch.setitem(
+        contracts.TRUSTED_EXECUTOR_SOURCES,
+        rule,
+        {"entrypoint": "entry.py", "resources": []},
+    )
+    monkeypatch.setattr(
+        contracts,
+        "__file__",
+        str(tmp_path / "profitability_learning" / "contracts.py"),
+    )
+    with pytest.raises(ValueError, match="local package wildcard import"):
+        contracts._executor_bundle_digest(rule)
+
+
+def test_executor_closure_rejects_relative_package_wildcard_import(
+    monkeypatch, tmp_path
+):
+    (tmp_path / "entry.py").write_text(
+        "from pkg import runner\n",
+        encoding="utf-8",
+    )
+    package = tmp_path / "pkg"
+    package.mkdir()
+    (package / "__init__.py").write_text(
+        '__all__ = ["behavior"]\n',
+        encoding="utf-8",
+    )
+    (package / "runner.py").write_text(
+        "from . import *\n\nRESULT = behavior.run()\n",  # noqa: F403
+        encoding="utf-8",
+    )
+    (package / "behavior.py").write_text(
+        "def run():\n    return 1\n",
+        encoding="utf-8",
+    )
+
+    rule = "temporary_relative_wildcard_executor"
+    monkeypatch.setitem(
+        contracts.TRUSTED_EXECUTOR_SOURCES,
+        rule,
+        {"entrypoint": "entry.py", "resources": []},
+    )
+    monkeypatch.setattr(
+        contracts,
+        "__file__",
+        str(tmp_path / "profitability_learning" / "contracts.py"),
+    )
+    with pytest.raises(ValueError, match="local package wildcard import"):
+        contracts._executor_bundle_digest(rule)
 
 
 def test_massive_virtual_scale_never_raises_physical_or_cost_authority():

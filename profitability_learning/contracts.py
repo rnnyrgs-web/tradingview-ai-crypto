@@ -21,15 +21,23 @@ MAX_TRADES = 100_000
 # Adding an entry is a code change that must ship with an evaluator and tests.
 TRUSTED_EXECUTOR_IMPLEMENTATIONS = {
     "restrictive_group_abstention_v1": (
-        "research_adaptive_accuracy._evaluate_frozen_filter@v1"
+        "research_adaptive_accuracy._evaluate_frozen_filter@v3-import-closure"
     ),
 }
 TRUSTED_EXECUTOR_SOURCES = {
     "restrictive_group_abstention_v1": {
-        "path": "research_adaptive_accuracy.py",
-        "ast_sha256": "12fd00d9be9f43f70f2b50624175e4270eebbbac4f230972095e7f56acd6f64f",
+        "entrypoint": "research_adaptive_accuracy.py",
+        "resources": [
+            "orchestration/signal_development_objective.json",
+        ],
     },
 }
+TRUSTED_EXECUTOR_MANIFEST = (
+    Path(__file__).resolve().parent.parent
+    / "orchestration"
+    / "trusted_executor_manifest.json"
+)
+MAX_EXECUTOR_SOURCE_FILES = 128
 
 
 def canonical(value):
@@ -40,38 +48,171 @@ def fingerprint(value):
     return sha256(canonical(value).encode()).hexdigest()
 
 
-def trusted_executor_implementation(execution_rule):
-    implementation_id = TRUSTED_EXECUTOR_IMPLEMENTATIONS.get(execution_rule)
-    source = TRUSTED_EXECUTOR_SOURCES.get(execution_rule)
-    if implementation_id is None or not isinstance(source, dict):
-        raise ValueError("unregistered research executor")
-    digest = source.get("ast_sha256")
+def _registered_executor_digest(execution_rule):
+    try:
+        manifest = json.loads(
+            TRUSTED_EXECUTOR_MANIFEST.read_text(encoding="utf-8")
+        )
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ValueError("trusted executor manifest is unreadable") from exc
+    if (not isinstance(manifest, dict) or manifest.get("schema_version") != 1
+            or not isinstance(manifest.get("implementations"), dict)):
+        raise ValueError("invalid trusted executor manifest")
+    entry = manifest["implementations"].get(execution_rule)
+    if not isinstance(entry, dict) or set(entry) != {"bundle_sha256"}:
+        raise ValueError("unregistered research executor digest")
+    digest = entry["bundle_sha256"]
     if (not isinstance(digest, str) or len(digest) != 64
             or any(char not in "0123456789abcdef" for char in digest)):
         raise ValueError("invalid registered executor implementation digest")
+    return digest
+
+
+def _registered_executor_source(execution_rule):
+    source = TRUSTED_EXECUTOR_SOURCES.get(execution_rule)
+    if not isinstance(source, dict) or set(source) != {"entrypoint", "resources"}:
+        raise ValueError("unregistered research executor")
+    entrypoint = source["entrypoint"]
+    resources = source["resources"]
+    if not isinstance(entrypoint, str) or not entrypoint.endswith(".py"):
+        raise ValueError("invalid registered executor entrypoint")
+    if (not isinstance(resources, list) or len(resources) != len(set(resources))
+            or any(not isinstance(path, str) or not path.endswith(".json")
+                   for path in resources)):
+        raise ValueError("invalid registered executor resources")
+    return source
+
+
+def trusted_executor_implementation(execution_rule):
+    implementation_id = TRUSTED_EXECUTOR_IMPLEMENTATIONS.get(execution_rule)
+    if implementation_id is None:
+        raise ValueError("unregistered research executor")
+    _registered_executor_source(execution_rule)
+    digest = _registered_executor_digest(execution_rule)
     return {"implementation_id": implementation_id, "ast_sha256": digest}
 
 
-def verified_executor_implementation(execution_rule):
-    """Bind a reviewed registry identity to the deployed evaluator AST.
+def _safe_executor_path(root, relative_path, *, suffix):
+    if (not isinstance(relative_path, str) or not relative_path.endswith(suffix)
+            or Path(relative_path).is_absolute()):
+        raise ValueError("invalid registered executor dependency path")
+    path = (root / relative_path).resolve()
+    if not path.is_relative_to(root) or not path.is_file():
+        raise ValueError("registered executor dependency is unavailable")
+    return path
 
-    Comments and formatting are intentionally excluded. Any executable module
-    change requires a reviewed digest update; stale identifiers fail closed.
+
+def _local_module_paths(root, module_parts):
+    if not module_parts or any(not part or part.startswith(".") for part in module_parts):
+        return []
+    paths = []
+    for index in range(1, len(module_parts)):
+        package = root.joinpath(*module_parts[:index], "__init__.py")
+        if package.is_file():
+            paths.append(package.relative_to(root).as_posix())
+    module = root.joinpath(*module_parts).with_suffix(".py")
+    package = root.joinpath(*module_parts, "__init__.py")
+    if module.is_file():
+        paths.append(module.relative_to(root).as_posix())
+    elif package.is_file():
+        paths.append(package.relative_to(root).as_posix())
+    return paths
+
+
+def _local_import_paths(root, relative_path, tree):
+    package_parts = list(Path(relative_path).parent.parts)
+    imports = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                imports.update(_local_module_paths(root, alias.name.split(".")))
+        elif isinstance(node, ast.ImportFrom):
+            if node.level:
+                remove = node.level - 1
+                if remove > len(package_parts):
+                    raise ValueError("registered executor has invalid relative import")
+                base = package_parts[:len(package_parts) - remove]
+            else:
+                base = []
+            target_parts = base + (node.module.split(".") if node.module else [])
+            if (any(alias.name == "*" for alias in node.names)
+                    and target_parts
+                    and root.joinpath(*target_parts, "__init__.py").is_file()):
+                raise ValueError(
+                    "registered executor has local package wildcard import"
+                )
+            if node.module:
+                module_parts = target_parts
+                imports.update(
+                    _local_module_paths(root, module_parts)
+                )
+                for alias in node.names:
+                    if alias.name != "*":
+                        imports.update(
+                            _local_module_paths(
+                                root, module_parts + alias.name.split(".")
+                            )
+                        )
+            else:
+                for alias in node.names:
+                    imports.update(
+                        _local_module_paths(root, base + alias.name.split("."))
+                    )
+    return sorted(imports)
+
+
+def _executor_python_closure(root, entrypoint):
+    pending = [entrypoint]
+    normalized = {}
+    while pending:
+        relative_path = pending.pop(0)
+        if relative_path in normalized:
+            continue
+        if len(normalized) >= MAX_EXECUTOR_SOURCE_FILES:
+            raise ValueError("registered executor dependency closure is too large")
+        source_path = _safe_executor_path(root, relative_path, suffix=".py")
+        try:
+            tree = ast.parse(source_path.read_text(encoding="utf-8"))
+        except (OSError, SyntaxError, UnicodeError) as exc:
+            raise ValueError("registered executor source is unreadable") from exc
+        normalized[relative_path] = ast.dump(
+            tree, annotate_fields=True, include_attributes=False
+        )
+        for imported in _local_import_paths(root, relative_path, tree):
+            if imported not in normalized and imported not in pending:
+                pending.append(imported)
+        pending.sort()
+    return normalized
+
+
+def _executor_bundle_digest(execution_rule):
+    source = _registered_executor_source(execution_rule)
+    root = Path(__file__).resolve().parent.parent
+    material = {
+        "python_ast": _executor_python_closure(root, source["entrypoint"]),
+        "resources": {},
+    }
+    for relative_path in source["resources"]:
+        resource_path = _safe_executor_path(root, relative_path, suffix=".json")
+        try:
+            material["resources"][relative_path] = json.loads(
+                resource_path.read_text(encoding="utf-8")
+            )
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+            raise ValueError("registered executor resource is unreadable") from exc
+    return sha256(canonical(material).encode()).hexdigest()
+
+
+def verified_executor_implementation(execution_rule):
+    """Bind a reviewed registry identity to the executable dependency closure.
+
+    Python dependencies are derived from local imports rather than a hand-picked
+    list. Runtime JSON inputs are canonicalized and bound explicitly. The reviewed
+    expected digest lives outside this hashed module, avoiding a self-reference.
+    Comments and formatting are excluded; behavior or resource drift fails closed.
     """
     expected = trusted_executor_implementation(execution_rule)
-    relative_path = TRUSTED_EXECUTOR_SOURCES[execution_rule].get("path")
-    if not isinstance(relative_path, str) or not relative_path.endswith(".py"):
-        raise ValueError("invalid registered executor source path")
-    root = Path(__file__).resolve().parent.parent
-    source_path = (root / relative_path).resolve()
-    if source_path.parent != root or not source_path.is_file():
-        raise ValueError("registered executor source is unavailable")
-    try:
-        tree = ast.parse(source_path.read_text(encoding="utf-8"))
-    except (OSError, SyntaxError, UnicodeError) as exc:
-        raise ValueError("registered executor source is unreadable") from exc
-    normalized = ast.dump(tree, annotate_fields=True, include_attributes=False)
-    actual = sha256(normalized.encode()).hexdigest()
+    actual = _executor_bundle_digest(execution_rule)
     if actual != expected["ast_sha256"]:
         raise ValueError("registered executor implementation digest is stale")
     return expected
@@ -143,12 +284,16 @@ def strategy_semantic_fingerprint(strategy):
     implementation_id = TRUSTED_EXECUTOR_IMPLEMENTATIONS.get(
         strategy["execution_rule"], "UNVERIFIED_CALLER_DECLARATION"
     )
-    source = TRUSTED_EXECUTOR_SOURCES.get(strategy["execution_rule"], {})
+    implementation_digest = None
+    if strategy["execution_rule"] in TRUSTED_EXECUTOR_IMPLEMENTATIONS:
+        implementation_digest = trusted_executor_implementation(
+            strategy["execution_rule"]
+        )["ast_sha256"]
     payload = {
         "schema_version": 3,
         "execution_rule": strategy["execution_rule"],
         "executor_implementation": implementation_id,
-        "executor_implementation_sha256": source.get("ast_sha256"),
+        "executor_implementation_sha256": implementation_digest,
         "assets": sorted(strategy["assets"]),
         "timeframe": strategy["timeframe"],
         "components": [
