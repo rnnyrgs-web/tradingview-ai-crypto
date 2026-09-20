@@ -11,7 +11,9 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
+import hashlib
 import os
+from pathlib import Path
 from threading import Barrier
 from typing import Any
 
@@ -63,8 +65,8 @@ def _parse(value: str) -> datetime:
     return parsed.astimezone(timezone.utc)
 
 
-def _ids(sha: str) -> dict[str, str]:
-    token = sha
+def _ids(namespace: str) -> dict[str, str]:
+    token = namespace
     identifiers = {
         key: f"{PREFIX}:{token}:{suffix}"
         for key, suffix in {
@@ -88,6 +90,41 @@ def _ids(sha: str) -> dict[str, str]:
             f"{PREFIX}:{token}:support-control-{index}"
         )
     return identifiers
+
+
+def _scientific_plan_fingerprint(project_root: Path | None = None) -> str:
+    """Bind synthetic units to deployed executable inputs, not a docs-only SHA."""
+    root = project_root or Path(__file__).resolve().parent
+    package_paths = (
+        path for path in (root / "profitability_learning").rglob("*")
+        if path.is_file()
+        and path.suffix in {".py", ".json"}
+        and "__pycache__" not in path.parts
+    )
+    paths = [*root.glob("*.py"), *package_paths]
+    required = (
+        "requirements.txt",
+        "orchestration/rejected_fingerprints.py",
+        "orchestration/rejected_fingerprints.json",
+        "orchestration/signal_development_objective.json",
+    )
+    for relative in required:
+        path = root / relative
+        if not path.is_file():
+            raise CausalMemoryError(f"scientific plan input is unavailable: {relative}")
+        paths.append(path)
+    files = sorted(
+        (path for path in paths if path.is_file()),
+        key=lambda path: path.relative_to(root).as_posix(),
+    )
+    if not files or not any(path.name == "money_intelligence_causal_memory.py" for path in files):
+        raise CausalMemoryError("scientific plan source tree is incomplete")
+    digest = hashlib.sha256()
+    for path in files:
+        digest.update(path.relative_to(root).as_posix().encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(hashlib.sha256(path.read_bytes()).digest())
+    return digest.hexdigest()
 
 
 def _pair_count_for_slot(slot: int) -> int:
@@ -456,7 +493,7 @@ def run_phase2_causal_runtime_acceptance() -> dict[str, Any]:
     sha = _deployed_sha()
     if not _canonical_rejected_id_veto_probe():
         raise CausalMemoryError("canonical rejected strategy ID bypassed the causal mission boundary")
-    ids = _ids(sha)
+    ids = _ids(_scientific_plan_fingerprint())
     store = SupabaseCausalMemory()
 
     replay = _validate_receipt(store, ids, sha)

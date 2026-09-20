@@ -106,6 +106,67 @@ class FakeDurableCausalStore:
         raise CausalMemoryError("fake durable causal memory changed during transaction")
 
 
+def test_unrelated_redeploy_reuses_prospective_scientific_plan(monkeypatch):
+    FakeDurableCausalStore.reset()
+    monkeypatch.setattr(acceptance, "SupabaseCausalMemory", FakeDurableCausalStore)
+    clock = datetime(2026, 9, 20, tzinfo=timezone.utc)
+    monkeypatch.setattr(acceptance, "_utc_now", lambda: clock)
+
+    def fake_refresh(_army):
+        return apply_causal_feedback(
+            {"missions": [], "next_missions": [], "daily_lead_report": {}},
+            loader=FakeDurableCausalStore().load,
+            as_of=clock.isoformat(),
+        )
+
+    monkeypatch.setattr(acceptance, "refresh_director", fake_refresh)
+    monkeypatch.setenv("RENDER_GIT_COMMIT", "a" * 40)
+    first = acceptance.run_phase2_causal_runtime_acceptance()
+    frozen = FakeDurableCausalStore().load()
+    assert first["status"] == "WAIT_PROSPECTIVE_SYNTHETIC_EVALUATION"
+    assert len(frozen.hypotheses) == 1
+
+    monkeypatch.setenv("RENDER_GIT_COMMIT", "b" * 40)
+    second = acceptance.run_phase2_causal_runtime_acceptance()
+    after_redeploy = FakeDurableCausalStore().load()
+    assert second["deployed_sha"] == "b" * 40
+    assert second["status"] == "WAIT_PROSPECTIVE_SYNTHETIC_EVALUATION"
+    assert after_redeploy.hypotheses == frozen.hypotheses
+    assert after_redeploy.hypothesis_order == frozen.hypothesis_order
+    assert after_redeploy.events == {}
+
+
+@pytest.mark.parametrize("changed_input", [
+    "money_intelligence_causal_memory.py",
+    "profitability_learning/runtime.py",
+    "orchestration/rejected_fingerprints.json",
+    "requirements.txt",
+])
+def test_scientific_plan_namespace_tracks_packaged_inputs_not_state_docs(tmp_path, changed_input):
+    inputs = (
+        "money_intelligence_causal_memory.py",
+        "profitability_learning/runtime.py",
+        "orchestration/rejected_fingerprints.py",
+        "orchestration/rejected_fingerprints.json",
+        "orchestration/signal_development_objective.json",
+        "requirements.txt",
+    )
+    for relative in inputs:
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("original", encoding="utf-8")
+    first = acceptance._scientific_plan_fingerprint(tmp_path)
+
+    (tmp_path / "AI_STATE.md").write_text("unrelated state update", encoding="utf-8")
+    assert acceptance._scientific_plan_fingerprint(tmp_path) == first
+    (tmp_path / "profitability_learning" / "runtime.sqlite").write_text(
+        "ephemeral local state", encoding="utf-8"
+    )
+    assert acceptance._scientific_plan_fingerprint(tmp_path) == first
+    (tmp_path / changed_input).write_text("changed science input", encoding="utf-8")
+    assert acceptance._scientific_plan_fingerprint(tmp_path) != first
+
+
 def test_phase2_runtime_acceptance_uses_default_mission_surface_and_is_replay_safe(monkeypatch):
     FakeDurableCausalStore.reset()
     monkeypatch.setattr(acceptance, "SupabaseCausalMemory", FakeDurableCausalStore)
