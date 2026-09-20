@@ -11,6 +11,9 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
+import hashlib
+import hmac
+import json
 import os
 from threading import Barrier
 from typing import Any
@@ -26,6 +29,7 @@ from money_intelligence_causal_memory import (
     PROJECT_ALPHA,
     ReplayConflictError,
     _synthetic_support_attestation,
+    _trusted_support_attestation,
 )
 from money_intelligence_causal_supabase import SupabaseCausalMemory
 from money_intelligence_mission_integration import causal_feedback
@@ -324,6 +328,28 @@ def _acceptance_missions(state: dict[str, Any], hypothesis_id: str) -> list[dict
     ]
 
 
+def _receipt_text(sha: str, support_attestation: str) -> str:
+    key = os.getenv("CAUSAL_ACCEPTANCE_ATTESTATION_KEY", "")
+    if len(key) != 64 or any(char not in "0123456789abcdef" for char in key):
+        raise CausalMemoryError("synthetic receipt attestation key is unavailable")
+    payload = json.dumps(
+        {
+            "protocol": "causal-acceptance-receipt-v1",
+            "deployed_sha": sha,
+            "support_attestation": support_attestation,
+            "support_consumed_by_default_director": True,
+            "supported_mission_count": 2,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+    ).encode("utf-8")
+    signature = hmac.new(bytes.fromhex(key), payload, hashlib.sha256)
+    return (
+        "causal-acceptance-receipt-v1:" + signature.hexdigest()
+    )
+
+
 def _canonical_rejected_id_veto_probe() -> bool:
     """Exercise the deployed mission boundary without mutating durable memory."""
     memory = CausalRepricingMemory(half_life_days=30)
@@ -418,8 +444,33 @@ def _validate_receipt(store: SupabaseCausalMemory, ids: dict[str, str], sha: str
         raise CausalMemoryError("Phase-2 runtime acceptance receipt is missing durable observations")
     if design not in memory.rejected_fingerprints or effective not in memory.rejected_fingerprints:
         raise CausalMemoryError("Phase-2 runtime acceptance receipt lost rejected fingerprints")
+    support = memory.events[ids["support"]]
+    if not support.confirmatory or not _trusted_support_attestation(
+        memory, hypothesis, support
+    ):
+        raise CausalMemoryError(
+            "Phase-2 runtime acceptance receipt lacks attestation-valid confirmatory support"
+        )
+    support_snapshot = memory.confidence(
+        ids["hypothesis"], as_of=support.evaluated_at
+    )
+    if (
+        support_snapshot.confirmatory_support_count != 1
+        or support_snapshot.score < 0.65
+    ):
+        raise CausalMemoryError(
+            "Phase-2 runtime acceptance receipt lost verified support confidence"
+        )
+    receipt = memory.claims[ids["receipt"]]
+    if (
+        receipt.source_observation_ids != (ids["formation"],)
+        or receipt.text != _receipt_text(sha, support.note)
+    ):
+        raise CausalMemoryError(
+            "Phase-2 runtime acceptance receipt lost mission-consumption evidence"
+        )
     support_verification = memory._verified_evaluation(
-        memory.events[ids["support"]], hypothesis
+        support, hypothesis
     )
     if (
         support_verification.get("independent_unit_contract")
@@ -440,6 +491,7 @@ def _validate_receipt(store: SupabaseCausalMemory, ids: dict[str, str], sha: str
         "hypothesis_id": ids["hypothesis"],
         "durable_restart_reload": True,
         "support_consumed_by_default_director": True,
+        "support_confidence": support_snapshot.score,
         "verified_independent_unit_count": pair_count,
         "independent_unit_contract": "economic-realization-nonoverlap-v2",
         "canonical_rejected_id_veto": True,
@@ -578,7 +630,7 @@ def run_phase2_causal_runtime_acceptance() -> dict[str, Any]:
                 EpistemicClaim(
                     claim_id=ids["receipt"],
                     level="fact",
-                    text=f"Phase-2 deployed runtime acceptance completed for {sha}.",
+                    text=_receipt_text(sha, memory.events[ids["support"]].note),
                     created_at=_ts(base + timedelta(hours=pair_count + 5)),
                     source_observation_ids=(ids["formation"],),
                 )
