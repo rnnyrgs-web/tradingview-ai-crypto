@@ -92,6 +92,7 @@ class PointInTimeObservation:
     max_age_hours: int
     revision_id: str = ""
     provenance_uri: str = ""
+    selection_contract_id: str = ""
 
     def __post_init__(self) -> None:
         if not self.observation_id.strip() or not self.metric_name.strip():
@@ -126,6 +127,9 @@ class PointInTimeObservation:
         object.__setattr__(self, "available_at", _normalise_time(self.available_at))
         object.__setattr__(self, "retrieved_at", _normalise_time(self.retrieved_at))
         object.__setattr__(self, "value", float(self.value))
+        object.__setattr__(
+            self, "selection_contract_id", self.selection_contract_id.strip()
+        )
 
     @property
     def provenance_fingerprint(self) -> str:
@@ -156,6 +160,33 @@ class EpistemicClaim:
 
 
 @dataclass(frozen=True)
+class EvaluationPairContract:
+    """Pre-outcome provenance and selection identity for one matched pair."""
+
+    outcome_observation_id: str
+    control_observation_id: str
+    outcome_metric_name: str
+    outcome_source_id: str
+    outcome_provenance_uri: str
+    control_metric_name: str
+    control_source_id: str
+    control_provenance_uri: str
+    control_selection_contract_id: str
+
+    def __post_init__(self) -> None:
+        for field_name, value in asdict(self).items():
+            if not isinstance(value, str) or not value.strip():
+                raise CausalMemoryError(
+                    f"evaluation pair contract requires non-blank {field_name}"
+                )
+            object.__setattr__(self, field_name, value.strip())
+        if self.outcome_observation_id == self.control_observation_id:
+            raise CausalMemoryError(
+                "evaluation pair contract requires distinct outcome and control ids"
+            )
+
+
+@dataclass(frozen=True)
 class FrozenHypothesis:
     hypothesis_id: str
     statement: str
@@ -177,11 +208,9 @@ class FrozenHypothesis:
     # Exact outcome/control observation identities, aligned one-for-one with
     # evaluation_units and frozen before either side of a pair is observed.
     evaluation_pairs: tuple[tuple[str, str], ...] = ()
-    # Each ordered pair freezes (metric, source, provenance URI) for its
-    # outcome and control. IDs alone do not constrain post-outcome selection.
-    evaluation_selectors: tuple[
-        tuple[tuple[str, str, str], tuple[str, str, str]], ...
-    ] = ()
+    # Non-value observation provenance plus the deterministic control-selection
+    # contract, aligned one-for-one with evaluation_pairs and frozen pre-outcome.
+    evaluation_pair_contracts: tuple[EvaluationPairContract, ...] = ()
 
     def __post_init__(self) -> None:
         if not self.hypothesis_id.strip() or not self.statement.strip():
@@ -273,26 +302,26 @@ class FrozenHypothesis:
         if len(set(planned_ids)) != len(planned_ids):
             raise CausalMemoryError("evaluation pair observation ids cannot be reused")
         object.__setattr__(self, "evaluation_pairs", tuple(planned_pairs))
-        planned_selectors = []
-        for raw_pair in self.evaluation_selectors:
-            if not isinstance(raw_pair, (tuple, list)) or len(raw_pair) != 2:
-                raise CausalMemoryError("evaluation selectors require outcome and control")
-            selectors = []
-            for raw_selector in raw_pair:
-                if not isinstance(raw_selector, (tuple, list)) or len(raw_selector) != 3:
-                    raise CausalMemoryError(
-                        "evaluation selectors require metric, source, and provenance URI"
-                    )
-                if any(
-                    not isinstance(value, str) or not value.strip()
-                    for value in raw_selector
-                ):
-                    raise CausalMemoryError("evaluation selector fields cannot be blank")
-                selectors.append(tuple(value.strip() for value in raw_selector))
-            planned_selectors.append(tuple(selectors))
-        if planned_selectors and len(planned_selectors) != len(planned_pairs):
-            raise CausalMemoryError("evaluation selectors must align with frozen pairs")
-        object.__setattr__(self, "evaluation_selectors", tuple(planned_selectors))
+        pair_contracts = tuple(self.evaluation_pair_contracts)
+        if pair_contracts and len(pair_contracts) != len(planned_pairs):
+            raise CausalMemoryError(
+                "evaluation pair contracts must align one-for-one with evaluation pairs"
+            )
+        if any(
+            not isinstance(contract, EvaluationPairContract)
+            for contract in pair_contracts
+        ):
+            raise CausalMemoryError(
+                "evaluation pair contracts must use EvaluationPairContract"
+            )
+        if pair_contracts and tuple(
+            (contract.outcome_observation_id, contract.control_observation_id)
+            for contract in pair_contracts
+        ) != tuple(planned_pairs):
+            raise CausalMemoryError(
+                "evaluation pair contracts must match frozen outcome/control ids"
+            )
+        object.__setattr__(self, "evaluation_pair_contracts", pair_contracts)
 
     @property
     def fingerprint(self) -> str:
@@ -316,8 +345,10 @@ class FrozenHypothesis:
             design["evaluation_units"] = list(self.evaluation_units)
         if self.evaluation_pairs:
             design["evaluation_pairs"] = list(self.evaluation_pairs)
-        if self.evaluation_selectors:
-            design["evaluation_selectors"] = list(self.evaluation_selectors)
+        if self.evaluation_pair_contracts:
+            design["evaluation_pair_contracts"] = [
+                asdict(contract) for contract in self.evaluation_pair_contracts
+            ]
         return f"mi-causal-v1:{_sha256(design)}"
 
 
@@ -500,24 +531,28 @@ class CausalRepricingMemory:
         hypothesis: FrozenHypothesis,
     ) -> tuple[FrozenHypothesis, ...]:
         variants = [hypothesis]
+        # Provenance contracts strengthen an already frozen design; they do not
+        # create scientific novelty or rescue a rejected predecessor.
+        if hypothesis.evaluation_pair_contracts:
+            variants.append(replace(hypothesis, evaluation_pair_contracts=()))
         # Pair identity was added after planned-unit identity. Preserve rejected
         # memory across that schema strengthening instead of treating the new
         # field as scientific novelty.
         if hypothesis.evaluation_pairs:
             variants.append(
-                replace(hypothesis, evaluation_pairs=(), evaluation_selectors=())
+                replace(
+                    hypothesis,
+                    evaluation_pairs=(),
+                    evaluation_pair_contracts=(),
+                )
             )
-        if hypothesis.evaluation_selectors:
-            variants.append(replace(hypothesis, evaluation_selectors=()))
-        if (
-            hypothesis.evaluation_units
-            or hypothesis.evaluation_pairs
-            or hypothesis.evaluation_selectors
-        ):
+        if hypothesis.evaluation_units or hypothesis.evaluation_pairs:
             variants.append(
                 replace(
                     hypothesis,
-                    evaluation_units=(), evaluation_pairs=(), evaluation_selectors=(),
+                    evaluation_units=(),
+                    evaluation_pairs=(),
+                    evaluation_pair_contracts=(),
                 )
             )
         return tuple({variant.fingerprint: variant for variant in variants}.values())
@@ -570,7 +605,6 @@ class CausalRepricingMemory:
             and hypothesis.hypothesis_id in self.legacy_underdeclared_hypotheses
             and not hypothesis.evaluation_units
             and not hypothesis.evaluation_pairs
-            and not hypothesis.evaluation_selectors
         ):
             raise CausalMemoryError(
                 "family_size cannot undercount registered hypotheses in the family"
@@ -888,9 +922,9 @@ class CausalRepricingMemory:
                 raise CausalMemoryError(
                     "confirmatory support requires frozen outcome/control pairs"
                 )
-            if not hypothesis.evaluation_selectors:
+            if not hypothesis.evaluation_pair_contracts:
                 raise CausalMemoryError(
-                    "confirmatory support requires frozen observation provenance"
+                    "confirmatory support requires frozen control provenance contracts"
                 )
             submitted_pairs = tuple(
                 zip(
@@ -903,22 +937,35 @@ class CausalRepricingMemory:
                 raise CausalMemoryError(
                     "confirmatory evidence must match the frozen outcome/control pairs"
                 )
-            for (outcome_id, control_id), (outcome_selector, control_selector) in zip(
-                submitted_pairs, hypothesis.evaluation_selectors, strict=True
-            ):
-                for observation_id, selector in (
-                    (outcome_id, outcome_selector), (control_id, control_selector)
+            for contract in hypothesis.evaluation_pair_contracts:
+                outcome = self.observations[contract.outcome_observation_id]
+                control = self.observations[contract.control_observation_id]
+                if (
+                    outcome.metric_name,
+                    outcome.source_id,
+                    outcome.provenance_uri,
+                ) != (
+                    contract.outcome_metric_name,
+                    contract.outcome_source_id,
+                    contract.outcome_provenance_uri,
                 ):
-                    observation = self.observations[observation_id]
-                    actual_selector = (
-                        observation.metric_name,
-                        observation.source_id,
-                        observation.provenance_uri,
+                    raise CausalMemoryError(
+                        "confirmatory evidence violates frozen outcome provenance"
                     )
-                    if actual_selector != selector:
-                        raise CausalMemoryError(
-                            "confirmatory evidence must match frozen observation provenance"
-                        )
+                if (
+                    control.metric_name,
+                    control.source_id,
+                    control.provenance_uri,
+                    control.selection_contract_id,
+                ) != (
+                    contract.control_metric_name,
+                    contract.control_source_id,
+                    contract.control_provenance_uri,
+                    contract.control_selection_contract_id,
+                ):
+                    raise CausalMemoryError(
+                        "confirmatory evidence violates frozen control provenance"
+                    )
             actual_units = (
                 {
                     (
@@ -1295,9 +1342,9 @@ class CausalRepricingMemory:
                 "confirmatory_p_threshold": self._project_threshold(hypothesis),
                 "evaluation_units": [list(unit) for unit in hypothesis.evaluation_units],
                 "evaluation_pairs": [list(pair) for pair in hypothesis.evaluation_pairs],
-                "evaluation_selectors": [
-                    [list(selector) for selector in pair]
-                    for pair in hypothesis.evaluation_selectors
+                "evaluation_pair_contracts": [
+                    asdict(contract)
+                    for contract in hypothesis.evaluation_pair_contracts
                 ],
                 "evaluation_method": hypothesis.evaluation_method,
                 "direction": hypothesis.direction,
@@ -1401,8 +1448,9 @@ class CausalRepricingMemory:
                 not isinstance(marker, list)
                 or marker != sorted(underdeclared)
                 or any(
-                    raw.get("evaluation_units") or raw.get("evaluation_pairs")
-                    or raw.get("evaluation_selectors")
+                    raw.get("evaluation_units")
+                    or raw.get("evaluation_pairs")
+                    or raw.get("evaluation_pair_contracts")
                     for raw in hypothesis_rows
                     if raw["hypothesis_id"] in underdeclared
                 )
@@ -1486,6 +1534,10 @@ class CausalRepricingMemory:
                         raw["evaluation_units"] = tuple(
                             tuple(unit) for unit in raw["evaluation_units"]
                         )
+                    raw["evaluation_pair_contracts"] = tuple(
+                        EvaluationPairContract(**contract)
+                        for contract in raw.get("evaluation_pair_contracts", [])
+                    )
                     memory.register_hypothesis(
                         FrozenHypothesis(**raw),
                         _restore_legacy_undercount=raw["hypothesis_id"] in underdeclared,
@@ -1518,7 +1570,7 @@ class CausalRepricingMemory:
                     raw["confirmatory"] = False
                 elif raw.get("kind") == "support" and not memory.hypotheses[
                     raw["hypothesis_id"]
-                ].evaluation_selectors:
+                ].evaluation_pair_contracts:
                     raw["confirmatory"] = False
                 legacy_unverified = (
                     raw.get("evaluation_implementation")

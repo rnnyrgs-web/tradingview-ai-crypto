@@ -357,33 +357,33 @@ def test_durable_control_substitution_cannot_create_confirmatory_support(supabas
     ).confirmatory_support_count == 0
 
 
-def test_durable_same_id_control_source_substitution_cannot_confirm(supabase):
+def test_durable_planned_control_ids_cannot_hide_substituted_provenance(supabase):
     prepared = _memory_with_hypothesis()
     adapter = SupabaseCausalMemory()
     adapter.initialize(_plan_only())
-    control_ids = set(_support().control_observation_ids)
 
-    def seed_changed_controls(current):
-        for observation in prepared.observations.values():
-            if observation.observation_id in current.observations:
-                continue
-            if observation.observation_id in control_ids:
-                observation = replace(
-                    observation,
+    def seed_substituted_controls(current):
+        for outcome_id, control_id in prepared.hypotheses["H1"].evaluation_pairs:
+            current.register_observation(prepared.observations[outcome_id])
+            current.register_observation(
+                replace(
+                    prepared.observations[control_id],
                     metric_name="posthoc_selected_control",
                     source_id="posthoc-selected-provider",
+                    provenance_uri=f"posthoc://{control_id}",
                 )
-            current.register_observation(observation)
+            )
 
-    adapter.transact(seed_changed_controls)
-    with pytest.raises(CausalMemoryError, match="frozen observation provenance"):
-        adapter.transact(lambda current: current.record_evidence(
-            _support("same-id-durable-posthoc-control")
-        ))
+    adapter.transact(seed_substituted_controls)
+    with pytest.raises(CausalMemoryError, match="frozen control provenance"):
+        adapter.transact(
+            lambda current: current.record_evidence(
+                _support("durable-planned-id-control-substitution")
+            )
+        )
 
-    restarted = SupabaseCausalMemory().load()
-    assert restarted.hypotheses["H1"].evaluation_selectors == _hypothesis().evaluation_selectors
-    assert "same-id-durable-posthoc-control" not in restarted.events
+    restarted = adapter.load()
+    assert "durable-planned-id-control-substitution" not in restarted.events
     assert restarted.confidence(
         "H1", as_of="2026-09-03T00:00:00Z"
     ).confirmatory_support_count == 0

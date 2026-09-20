@@ -8,6 +8,7 @@ from money_intelligence_causal_memory import (
     CausalMemoryError,
     CausalRepricingMemory,
     EpistemicClaim,
+    EvaluationPairContract,
     EvidenceEvent,
     FrozenHypothesis,
     PointInTimeObservation,
@@ -28,6 +29,7 @@ def _observation(
     measurement_window_hours: int = 24,
     venue: str = "coinbase",
     max_age_hours: int = 72,
+    selection_contract_id: str = "",
 ) -> PointInTimeObservation:
     return PointInTimeObservation(
         observation_id=observation_id,
@@ -45,6 +47,7 @@ def _observation(
         measurement_window_hours=measurement_window_hours,
         venue=venue,
         max_age_hours=max_age_hours,
+        selection_contract_id=selection_contract_id,
     )
 
 
@@ -79,12 +82,23 @@ def _hypothesis(source_ids=("flow",)) -> FrozenHypothesis:
             )
             for index in range(1, 7)
         ),
-        evaluation_selectors=tuple(
-            (
-                ("forward_return_72h", "test-source", "source://fixture"),
-                ("matched_control_return_72h", "test-source", "source://fixture"),
+        evaluation_pair_contracts=tuple(
+            EvaluationPairContract(
+                outcome_observation_id=(
+                    "outcome" if index == 1 else f"outcome-{index}"
+                ),
+                control_observation_id=(
+                    "control" if index == 1 else f"control-{index}"
+                ),
+                outcome_metric_name="forward_return_72h",
+                outcome_source_id="test-source",
+                outcome_provenance_uri="source://fixture",
+                control_metric_name="matched_control_return_72h",
+                control_source_id="test-source",
+                control_provenance_uri="source://fixture",
+                control_selection_contract_id="market-beta-volatility-v1",
             )
-            for _ in range(6)
+            for index in range(1, 7)
         ),
     )
 
@@ -137,6 +151,7 @@ def _memory_with_hypothesis(*, half_life_days=30.0) -> CausalRepricingMemory:
             retrieved_at="2026-09-02T05:00:00Z",
             currency="ratio",
             measurement_window_hours=72,
+            selection_contract_id="market-beta-volatility-v1",
         )
     )
     memory.register_observation(
@@ -201,6 +216,7 @@ def _register_paired_evaluation(
                 subject_id=f"BTC-USD-{index}",
                 currency="ratio",
                 measurement_window_hours=72,
+                selection_contract_id="market-beta-volatility-v1",
             )
         )
         outcome_ids.append(outcome_id)
@@ -453,7 +469,7 @@ def test_economic_unit_consumption_is_global_across_hypotheses_and_families():
     memory = _memory_with_hypothesis()
     second_hypothesis = replace(
         _hypothesis(), hypothesis_id="H2", family_id="OTHER-FAMILY",
-        evaluation_units=(), evaluation_pairs=(), evaluation_selectors=(),
+        evaluation_units=(), evaluation_pairs=(), evaluation_pair_contracts=(),
     )
     memory.register_hypothesis(second_hypothesis)
     original = _support("first-hypothesis-evidence")
@@ -918,7 +934,12 @@ def test_point_in_time_chronology_and_narrative_separation_fail_closed():
 
 
 def test_hypothesis_is_frozen_fingerprinted_and_exact_rejection_is_vetoed():
-    hypothesis = replace(_hypothesis(), evaluation_units=(), evaluation_pairs=(), evaluation_selectors=())
+    hypothesis = replace(
+        _hypothesis(),
+        evaluation_units=(),
+        evaluation_pairs=(),
+        evaluation_pair_contracts=(),
+    )
     with pytest.raises(FrozenInstanceError):
         hypothesis.statement = "post-hoc rewrite"  # type: ignore[misc]
 
@@ -969,7 +990,7 @@ def test_matched_controls_and_multiple_testing_are_predeclared_not_post_hoc():
             _hypothesis(),
             evaluation_units=_hypothesis().evaluation_units[:5],
             evaluation_pairs=_hypothesis().evaluation_pairs[:5],
-            evaluation_selectors=_hypothesis().evaluation_selectors[:5],
+            evaluation_pair_contracts=_hypothesis().evaluation_pair_contracts[:5],
         )
     )
     for source_id in (
@@ -1056,7 +1077,14 @@ def test_distinct_family_labels_cannot_reset_project_wide_testing_budget():
             (f"second-{outcome_id}", f"second-{control_id}")
             for outcome_id, control_id in _hypothesis().evaluation_pairs
         ),
-        evaluation_selectors=_hypothesis().evaluation_selectors,
+        evaluation_pair_contracts=tuple(
+            replace(
+                contract,
+                outcome_observation_id=f"second-{contract.outcome_observation_id}",
+                control_observation_id=f"second-{contract.control_observation_id}",
+            )
+            for contract in _hypothesis().evaluation_pair_contracts
+        ),
     )
     assert memory.register_hypothesis(sibling) is True
     original = _support()
@@ -1135,35 +1163,24 @@ def test_confirmatory_evidence_rejects_post_outcome_control_substitution():
         memory.record_evidence(attack)
 
 
-@pytest.mark.parametrize("changed_field", ["metric_name", "source_id", "provenance_uri"])
-@pytest.mark.parametrize("changed_role", ["outcome", "control"])
-def test_frozen_pair_ids_cannot_hide_post_outcome_selection(changed_field, changed_role):
+def test_confirmatory_evidence_rejects_substituted_data_under_planned_control_ids():
+    prepared = _memory_with_hypothesis()
     memory = CausalRepricingMemory()
-    memory.register_observation(_observation("flow"))
-    hypothesis = _hypothesis()
-    memory.register_hypothesis(hypothesis)
-    for index, (subject, start, window) in enumerate(hypothesis.evaluation_units, start=1):
-        outcome_id, control_id = hypothesis.evaluation_pairs[index - 1]
-        common = dict(
-            observed_at=start, available_at="2026-09-05T02:00:00Z",
-            retrieved_at="2026-09-05T02:00:00Z", subject_id=subject,
-            currency="ratio", measurement_window_hours=window,
+    memory.register_observation(prepared.observations["flow"])
+    memory.register_hypothesis(prepared.hypotheses["H1"])
+    for outcome_id, control_id in prepared.hypotheses["H1"].evaluation_pairs:
+        memory.register_observation(prepared.observations[outcome_id])
+        memory.register_observation(
+            replace(
+                prepared.observations[control_id],
+                metric_name="posthoc_selected_control",
+                source_id="posthoc-selected-provider",
+                provenance_uri=f"posthoc://{control_id}",
+            )
         )
-        outcome = _observation(outcome_id, "forward_return_72h", 0.08, **common)
-        control = _observation(control_id, "matched_control_return_72h", 0.01, **common)
-        replacement = {
-            "metric_name": "posthoc_selected_control",
-            "source_id": "posthoc-selected-provider",
-            "provenance_uri": "source://posthoc-selection",
-        }[changed_field]
-        if changed_role == "outcome":
-            outcome = replace(outcome, **{changed_field: replacement})
-        else:
-            control = replace(control, **{changed_field: replacement})
-        memory.register_observation(outcome)
-        memory.register_observation(control)
-    with pytest.raises(CausalMemoryError, match="frozen.*provenance"):
-        memory.record_evidence(_support("same-ids-posthoc-selection", "2026-09-05T03:00:00Z"))
+
+    with pytest.raises(CausalMemoryError, match="frozen control provenance"):
+        memory.record_evidence(_support("planned-id-control-substitution"))
 
 
 def test_evaluation_plan_cannot_be_registered_after_outcomes_are_present():
@@ -1176,7 +1193,12 @@ def test_evaluation_plan_cannot_be_registered_after_outcomes_are_present():
 
 
 def test_adding_evaluation_plan_cannot_rescue_prior_rejected_design():
-    legacy = replace(_hypothesis(), evaluation_units=(), evaluation_pairs=(), evaluation_selectors=())
+    legacy = replace(
+        _hypothesis(),
+        evaluation_units=(),
+        evaluation_pairs=(),
+        evaluation_pair_contracts=(),
+    )
     memory = CausalRepricingMemory(rejected_fingerprints={legacy.fingerprint})
     memory.register_observation(_observation("flow"))
     with pytest.raises(CausalMemoryError, match="rejected"):
@@ -1184,7 +1206,9 @@ def test_adding_evaluation_plan_cannot_rescue_prior_rejected_design():
 
 
 def test_adding_frozen_pairs_cannot_rescue_prior_rejected_planned_design():
-    pre_pair_design = replace(_hypothesis(), evaluation_pairs=(), evaluation_selectors=())
+    pre_pair_design = replace(
+        _hypothesis(), evaluation_pairs=(), evaluation_pair_contracts=()
+    )
     memory = CausalRepricingMemory(
         rejected_fingerprints={pre_pair_design.fingerprint}
     )
@@ -1194,10 +1218,12 @@ def test_adding_frozen_pairs_cannot_rescue_prior_rejected_planned_design():
         memory.register_hypothesis(_hypothesis())
 
 
-def test_adding_frozen_selectors_cannot_rescue_prior_rejected_pair_design():
-    pre_selector_design = replace(_hypothesis(), evaluation_selectors=())
+def test_adding_provenance_contracts_cannot_rescue_rejected_paired_design():
+    pre_provenance_design = replace(
+        _hypothesis(), evaluation_pair_contracts=()
+    )
     memory = CausalRepricingMemory(
-        rejected_fingerprints={pre_selector_design.fingerprint}
+        rejected_fingerprints={pre_provenance_design.fingerprint}
     )
     memory.register_observation(_observation("flow"))
 
@@ -1231,7 +1257,7 @@ def test_legacy_family_only_document_loses_confirmatory_authority():
     document.pop("registration_log")
     document["hypotheses"][0].pop("evaluation_units")
     document["hypotheses"][0].pop("evaluation_pairs")
-    document["hypotheses"][0].pop("evaluation_selectors")
+    document["hypotheses"][0].pop("evaluation_pair_contracts")
     encoded = json.dumps(
         document, sort_keys=True, separators=(",", ":"), ensure_ascii=True
     ).encode("utf-8")
@@ -1253,7 +1279,7 @@ def test_legacy_underdeclared_family_replays_without_admitting_a_new_sibling():
         memory.register_hypothesis(replace(
             _hypothesis(), hypothesis_id=f"H{index}",
             statement=f"Historical family member {index}.",
-            evaluation_units=(), evaluation_pairs=(), evaluation_selectors=(),
+            evaluation_units=(), evaluation_pairs=(), evaluation_pair_contracts=(),
         ))
     document = memory.to_document()
     for field in ("content_digest", "project_testing_protocol", "hypothesis_order", "event_order", "registration_log", "legacy_underdeclared_hypotheses"):
@@ -1265,7 +1291,7 @@ def test_legacy_underdeclared_family_replays_without_admitting_a_new_sibling():
     for sibling in document["hypotheses"]:
         sibling.pop("evaluation_units")
         sibling.pop("evaluation_pairs")
-        sibling.pop("evaluation_selectors")
+        sibling.pop("evaluation_pair_contracts")
     encoded = json.dumps(document, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
     document["content_digest"] = hashlib.sha256(encoded).hexdigest()
 
@@ -1275,7 +1301,7 @@ def test_legacy_underdeclared_family_replays_without_admitting_a_new_sibling():
     with pytest.raises(CausalMemoryError, match="family_size cannot undercount"):
         restored.register_hypothesis(replace(
             _hypothesis(), hypothesis_id="H5", statement="New undeclared sibling.",
-            evaluation_units=(), evaluation_pairs=(), evaluation_selectors=(),
+            evaluation_units=(), evaluation_pairs=(), evaluation_pair_contracts=(),
         ))
 
 
@@ -1285,7 +1311,7 @@ def test_current_protocol_document_without_frozen_pairs_loses_confirmatory_autho
     document = memory.to_document()
     document.pop("content_digest")
     document["hypotheses"][0].pop("evaluation_pairs")
-    document["hypotheses"][0].pop("evaluation_selectors")
+    document["hypotheses"][0].pop("evaluation_pair_contracts")
     encoded = json.dumps(
         document, sort_keys=True, separators=(",", ":"), ensure_ascii=True
     ).encode("utf-8")
@@ -1302,12 +1328,12 @@ def test_current_protocol_document_without_frozen_pairs_loses_confirmatory_autho
     ) is None
 
 
-def test_current_protocol_document_without_selectors_loses_confirmatory_authority():
+def test_current_protocol_document_without_pair_provenance_loses_confirmatory_authority():
     memory = _memory_with_hypothesis()
-    assert memory.record_evidence(_support("pre-selector-contract-support"))
+    assert memory.record_evidence(_support("pre-provenance-contract-support"))
     document = memory.to_document()
     document.pop("content_digest")
-    document["hypotheses"][0].pop("evaluation_selectors")
+    document["hypotheses"][0].pop("evaluation_pair_contracts")
     encoded = json.dumps(
         document, sort_keys=True, separators=(",", ":"), ensure_ascii=True
     ).encode("utf-8")
@@ -1315,7 +1341,7 @@ def test_current_protocol_document_without_selectors_loses_confirmatory_authorit
 
     restored = CausalRepricingMemory.from_document(document)
 
-    assert restored.events["pre-selector-contract-support"].confirmatory is False
+    assert restored.events["pre-provenance-contract-support"].confirmatory is False
     assert restored.confidence(
         "H1", as_of="2026-09-03T00:00:00Z"
     ).confirmatory_support_count == 0
@@ -1324,18 +1350,19 @@ def test_current_protocol_document_without_selectors_loses_confirmatory_authorit
     ) is None
 
 
-@pytest.mark.parametrize("field, malformed", [
-    ("evaluation_selectors", ["abc", "def"]),
-    ("evaluation_pairs", "OC"),
-])
-def test_malformed_plan_document_cannot_coerce_strings_into_fields(field, malformed):
+def test_malformed_pair_document_cannot_coerce_string_into_observation_ids():
     memory = CausalRepricingMemory()
     memory.register_observation(_observation("flow"))
     memory.register_hypothesis(_hypothesis())
     document = memory.to_document()
     document.pop("content_digest")
-    original = document["hypotheses"][0][field]
-    document["hypotheses"][0][field] = [malformed, *original[1:]]
+    document["hypotheses"][0]["evaluation_pairs"] = [
+        "OC", *document["hypotheses"][0]["evaluation_pairs"][1:]
+    ]
+    document["hypotheses"][0]["evaluation_pair_contracts"][0].update(
+        outcome_observation_id="O",
+        control_observation_id="C",
+    )
     encoded = json.dumps(
         document, sort_keys=True, separators=(",", ":"), ensure_ascii=True
     ).encode("utf-8")
@@ -1529,9 +1556,8 @@ def test_supported_finding_can_feed_research_lanes_but_has_zero_authority():
         "confirmatory_p_threshold": 0.025,
         "evaluation_units": [list(unit) for unit in _hypothesis().evaluation_units],
         "evaluation_pairs": [list(pair) for pair in _hypothesis().evaluation_pairs],
-        "evaluation_selectors": [
-            [list(selector) for selector in pair]
-            for pair in _hypothesis().evaluation_selectors
+        "evaluation_pair_contracts": [
+            asdict(contract) for contract in _hypothesis().evaluation_pair_contracts
         ],
         "evaluation_method": "matched_control_mean_difference_v1",
         "direction": "positive",

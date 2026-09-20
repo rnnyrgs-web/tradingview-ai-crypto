@@ -19,6 +19,7 @@ from money_intelligence_causal_memory import (
     CausalMemoryError,
     CausalRepricingMemory,
     EpistemicClaim,
+    EvaluationPairContract,
     EvidenceEvent,
     FrozenHypothesis,
     PointInTimeObservation,
@@ -115,6 +116,7 @@ def _observation(
     available_at: datetime,
     unit: str = "pct",
     window_hours: int = 24,
+    selection_contract_id: str = "",
 ) -> PointInTimeObservation:
     return PointInTimeObservation(
         observation_id=observation_id,
@@ -131,6 +133,7 @@ def _observation(
         venue="synthetic-matched-control",
         max_age_hours=24 * 3650,
         provenance_uri=f"acceptance://{observation_id}",
+        selection_contract_id=selection_contract_id,
     )
 
 
@@ -172,15 +175,22 @@ def _contract(ids: dict[str, str], base: datetime, pair_count: int = SUPPORT_PAI
             (ids[f"support_outcome_{index}"], ids[f"support_control_{index}"])
             for index in range(1, pair_count + 1)
         ),
-        evaluation_selectors=tuple(
-            (
-                (
-                    "matched_return", "phase2-runtime-acceptance-fixture",
-                    f"acceptance://{ids[f'support_outcome_{index}']}",
+        evaluation_pair_contracts=tuple(
+            EvaluationPairContract(
+                outcome_observation_id=ids[f"support_outcome_{index}"],
+                control_observation_id=ids[f"support_control_{index}"],
+                outcome_metric_name="matched_return",
+                outcome_source_id="phase2-runtime-acceptance-fixture",
+                outcome_provenance_uri=(
+                    "acceptance://" + ids[f"support_outcome_{index}"]
                 ),
-                (
-                    "matched_return", "phase2-runtime-acceptance-fixture",
-                    f"acceptance://{ids[f'support_control_{index}']}",
+                control_metric_name="matched_return",
+                control_source_id="phase2-runtime-acceptance-fixture",
+                control_provenance_uri=(
+                    "acceptance://" + ids[f"support_control_{index}"]
+                ),
+                control_selection_contract_id=(
+                    "phase2-runtime-exact-matched-control-v1"
                 ),
             )
             for index in range(1, pair_count + 1)
@@ -228,6 +238,11 @@ def _seed_support(memory, ids: dict[str, str], base: datetime) -> None:
                         observed_at=unit_observed_at,
                         available_at=unit_available_at,
                         window_hours=1,
+                        selection_contract_id=(
+                            "phase2-runtime-exact-matched-control-v1"
+                            if observation_id == control_id
+                            else ""
+                        ),
                     )
                 )
     if ids["support"] not in memory.events:
