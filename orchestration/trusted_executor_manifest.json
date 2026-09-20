@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "implementations": {
+    "restrictive_group_abstention_v1": {
+      "bundle_sha256": "8b85b37cf37fd8abe6f8ecc60306c3b97df90ed686dbfa328acd68bc3dbc88e7"
+    }
+  }
+}

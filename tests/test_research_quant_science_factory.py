@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -43,7 +44,7 @@ def test_quant_science_factory_predeclares_safe_scientific_design():
     assert design["minimum_actionable_coverage"] == 0.25
     assert design["executor_kind"] == "restrictive_group_abstention_v1"
     assert design["executor_implementation_id"] == (
-        "research_adaptive_accuracy._evaluate_frozen_filter@v2-source-bundle"
+        "research_adaptive_accuracy._evaluate_frozen_filter@v3-import-closure"
     )
     assert len(design["executor_implementation_sha256"]) == 64
     assert design["dispatchable_now"] is True
@@ -92,7 +93,10 @@ def test_stale_executor_registry_identity_fails_closed(monkeypatch):
         verified_strategy_semantic_fingerprint(candidate)
 
 
-@pytest.mark.parametrize("dependency_name", ["selective_precision.py", "utils.py"])
+@pytest.mark.parametrize(
+    "dependency_name",
+    ["selective_precision.py", "utils.py", "contracts.py"],
+)
 def test_transitive_executor_dependency_drift_fails_closed(
     monkeypatch, dependency_name
 ):
@@ -107,6 +111,38 @@ def test_transitive_executor_dependency_drift_fails_closed(
     monkeypatch.setattr(Path, "read_text", changed_dependency)
     with pytest.raises(ValueError, match="implementation digest is stale"):
         verified_executor_implementation("restrictive_group_abstention_v1")
+
+
+def test_executor_runtime_objective_drift_fails_closed(monkeypatch):
+    original_read_text = Path.read_text
+
+    def changed_objective(path, *args, **kwargs):
+        source = original_read_text(path, *args, **kwargs)
+        if path.name == "signal_development_objective.json":
+            payload = json.loads(source)
+            payload["primary_mission"] += " changed after evidence was earned"
+            return json.dumps(payload)
+        return source
+
+    monkeypatch.setattr(Path, "read_text", changed_objective)
+    with pytest.raises(ValueError, match="implementation digest is stale"):
+        verified_executor_implementation("restrictive_group_abstention_v1")
+
+
+def test_executor_dependency_comments_do_not_change_identity(monkeypatch):
+    original_read_text = Path.read_text
+
+    def comment_only_change(path, *args, **kwargs):
+        source = original_read_text(path, *args, **kwargs)
+        if path.name == "contracts.py":
+            return "# formatting-only executor review note\n" + source
+        return source
+
+    monkeypatch.setattr(Path, "read_text", comment_only_change)
+    implementation = verified_executor_implementation(
+        "restrictive_group_abstention_v1"
+    )
+    assert len(implementation["ast_sha256"]) == 64
 
 
 def test_massive_virtual_scale_never_raises_physical_or_cost_authority():
