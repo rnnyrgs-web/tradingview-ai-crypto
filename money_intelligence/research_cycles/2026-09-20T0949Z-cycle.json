@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T0949Z",
+  "information_cutoff": "2026-09-20T09:49:05Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_before_persist": "361d110113700649dadf5d606456e8355945c17e",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-20T09:43:56Z",
+    "artifact_cutoff_utc": "2026-09-20T09:49:05Z",
+    "seconds_this_run_minimum": 309,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 1126,
+    "minimum_cumulative_seconds_since_last_owner_report": 1435,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted; schedule gaps, idle time, publication timestamps and background time are excluded."
+  },
+  "highest_information_question": "For bundled protocol upgrades, which parameter changes mechanically alter native-token supply/value capture at activation, which only alter participant optionality or incentives, and which require post-activation behavior before their economic sign can be known?",
+  "fresh_research": [
+    {
+      "topic": "Avalanche Helicon bundle: shorter validator lock is offset by a steeper reward gradient, while dynamic gas starts economically unchanged",
+      "label": "DAILY BIG-MOVE CAUSAL LAB / PRIMARY-DOCUMENT BUNDLE DECOMPOSITION / PRE-EVENT BASELINE",
+      "observed_facts": [
+        "CoinMarketCap around 09:43-09:44 UTC showed AVAX near $9.85, +10.64%/24h and +34.50%/7d, with about $1.14B of 24h volume and turnover about 26.0% of market capitalization. BTC, ETH, SOL, XRP and LINK were all negative over 24h, so the move remained strongly idiosyncratic.",
+        "Aggregate crypto derivatives open interest was about $427.5B, down 6.86%/24h, while perpetual open interest was down 6.88%. This weakens a broad fresh-leverage explanation for AVAX relative strength, although AVAX-specific leverage has not yet been reconstructed.",
+        "Helicon is scheduled for Avalanche Mainnet on September 22, 2026 at 15:00 UTC. ACP-273 lowers the minimum Primary Network validator staking duration from 14 days to 48 hours only for new staking periods after activation; existing stakes are unchanged and delegators retain the two-week minimum.",
+        "ACP-236 adds auto-renewed staking for Primary Network validators, allowing a validator to use a cycle duration and auto-compound rewards while retaining the ability to signal exit at a cycle boundary. It does not apply to delegators or Avalanche L1 validators.",
+        "ACP-285 lowers MinConsumptionRate from 10% to 7.5% over a 90-day linear ramp. The primary proposal projects a 0.5-1 percentage-point annual reduction in AVAX inflation and models an approximately two-month increase in stake-weighted average staking duration, but explicitly treats the duration response as an economic expectation rather than an observed fact.",
+        "Under ACP-285's full post-ramp schedule, the published ARR examples are about 4.00% for 2 days, 4.08% for 14 days, 4.58% for 90 days, 5.18% for 182 days and 6.38% for 365 days. The proposal is deliberately paired with ACP-273/236 so that highly liquid rolling 48-hour validation does not remain nearly reward-equivalent to long-tenor commitment.",
+        "ACP-283 makes the C-Chain minimum gas-price floor dynamic and stake-weighted, but it initializes at 1 wei, exactly the pre-activation floor. Activation therefore does not mechanically raise the minimum gas price or AVAX burn; any later floor increase requires validator preferences/votes to move it."
+      ],
+      "inference": "The common headline 'Helicon makes AVAX staking more liquid' is incomplete. The upgrade simultaneously increases validator capital reversibility, removes manual renewal friction, steepens the economic penalty for short staking, gradually reduces issuance to short-duration stakes, and introduces a gas-price governance mechanism that begins with no fee-floor change. Net persistent AVAX lock-up and burn therefore cannot be inferred from the protocol parameters alone; they depend on actual validator entry, chosen cycle lengths, auto-renew/exit behavior and subsequent gas-price voting/use.",
+      "causal_chain": "Helicon expectation -> lower operational/liquidity friction for validators + stronger long-duration reward gradient + gradual lower short-duration issuance -> participant utility and staking choices change -> total staked AVAX/effective float/issuance may change -> scarcity/value capture changes only if realized behavior produces greater persistent stake or lower net issuance; separately ACP-283 changes gas-floor governance but starts at the prior 1-wei floor -> no mechanical activation-day burn jump",
+      "capital_source_destination": "Current price action is consistent with crypto-native attention/momentum capital rotating into AVAX around institutional/tokenization optionality plus the approaching Helicon upgrade. No evidence establishes that new validators or institutions are already the marginal AVAX buyers, and broad crypto leverage is contracting rather than expanding.",
+      "catalyst": "Approaching September 22 Helicon activation together with recent institutional/tokenization evaluation disclosures.",
+      "transmission_mechanism": "Expectation repricing precedes realization; protocol parameters affect future staking/issuance optionality, but durable native-token demand requires observable participant behavior and value capture.",
+      "amplifiers": [
+        "Weekend/thinner liquidity",
+        "High AVAX turnover and momentum",
+        "Institutional/tokenization narrative concentration",
+        "AVAX-specific derivatives positioning remains unknown"
+      ],
+      "matched_non_movers": "BTC -0.85%, ETH -1.93%, SOL -2.73%, XRP -1.58% and LINK -2.97% over the same rolling 24h snapshot while AVAX was +10.64%; aggregate crypto OI contracted sharply. This rejects simple broad-market beta or broad fresh-leverage expansion as sufficient explanations.",
+      "negative_findings": [
+        "Do not say Helicon unlocks existing validator stakes; ACP-273 applies only to new staking periods after activation.",
+        "Do not say the 48-hour minimum applies to delegators; the Helicon documentation leaves delegation at the two-week minimum.",
+        "Do not infer shorter validator minimum duration mechanically lowers total staked AVAX; easier entry and auto-renew can offset greater reversibility.",
+        "Do not promote ACP-285's modeled approximately two-month increase in average staking duration to an observed fact.",
+        "Do not claim Helicon immediately increases C-Chain burn through a higher minimum gas price; ACP-283 starts at the same 1-wei floor.",
+        "Do not infer that an institutional infrastructure evaluation creates forced AVAX purchase/lock demand without architecture-specific evidence."
+      ],
+      "pre_event_baseline": {
+        "cutoff": "2026-09-20T09:44:00Z",
+        "AVAX_price_usd": 9.8506,
+        "AVAX_change_24h_pct": 10.64,
+        "AVAX_change_7d_pct": 34.5,
+        "AVAX_turnover_pct_of_market_cap_24h": 26.04,
+        "aggregate_crypto_open_interest_usd": "427.52B",
+        "aggregate_crypto_open_interest_change_24h_pct": -6.86,
+        "aggregate_perpetual_funding_rate": 0.0064221,
+        "primary_network_current_total_stake": "UNKNOWN at this cutoff; dynamic explorer fields were not safely captured, so no baseline is fabricated."
+      },
+      "post_activation_confirmations": [
+        "Primary Network validator count increases after activation without an offsetting collapse in average effective stake persistence.",
+        "Total AVAX staked and/or staking ratio rises after controlling for price and pre-existing stake expiries.",
+        "Distribution of new validator cycle lengths shows whether 48-hour liquidity is used transiently or auto-renewed persistently.",
+        "Actual AVAX issuance/reward outflow declines as ACP-285 ramps, consistent with the mechanical reward-floor reduction.",
+        "C-Chain minimum gas-price floor moves above 1 wei only if validators actually vote it higher, with corresponding fee/burn evidence.",
+        "AVAX relative strength persists after activation with measurable network/staking value capture rather than only pre-event attention."
+      ],
+      "falsifiers": [
+        "Validator participation does not rise materially after the lower minimum and auto-renew become available.",
+        "Average/effective stake persistence falls enough that liquid/free float rises despite lower short-duration rewards.",
+        "The gas-price floor remains at 1 wei and fee/burn usage does not improve, contradicting any burn-led narrative.",
+        "Price strength reverses after activation without corresponding staking, issuance or usage improvement."
+      ],
+      "decision_support": "AVAX WAIT / AVOID CHASING. The upgrade is real and economically nuanced, but durable native-token demand/value capture remains unproven before activation."
+    },
+    {
+      "topic": "BTC weekend deleveraging control remains constructive but still lacks institutional-flow confirmation",
+      "label": "LIVE CRYPTO CONTROL / NO ACTION UPGRADE",
+      "observed_facts": [
+        "Bitcoin was about $80.55K at 09:43 UTC, -0.85%/24h and +4.99%/7d, with dominance about 58.87%.",
+        "Aggregate crypto open interest fell 6.86%/24h and perpetual open interest fell 6.88%, while average perpetual funding remained positive at about 0.00642.",
+        "BTC 24h liquidations were about $48.0M, with $34.6M longs versus $13.4M shorts; the latest 12h window was about $27.1M, overwhelmingly longs ($26.3M).",
+        "U.S. ETF markets remain closed for the weekend, so there is no fresh regulated spot-flow confirmation."
+      ],
+      "inference": "BTC is continuing to hold the ~$80K area while leverage contracts and recent forced flow is long-heavy, which is healthier than a rally sustained by ever-rising leverage. The evidence still does not identify durable new institutional buying; positive funding and absent weekend ETF data preserve uncertainty.",
+      "decision_support": "BTC WAIT / tactical confirmation candidate. Reassess only after reopened ETF sessions and venue-grade spot/OI/funding/basis evidence."
+    }
+  ],
+  "daily_big_move_lab_delta": {
+    "selected_or_retested": [
+      "AVAX +10.6%/24h and +34.5%/7d while BTC/ETH/SOL/XRP/LINK were negative and aggregate OI contracted: the move remains idiosyncratic, but Helicon's bundle is economically two-sided rather than a simple 'shorter lock = bullish' or 'shorter lock = bearish' story.",
+      "BTC ~$80.55K through -6.9%/24h aggregate OI contraction and long-heavy recent liquidations: constructive absorption, but still not a BUY without reopened ETF/spot confirmation.",
+      "ZEC ~$1,446, -8.05%/24h but +33.75%/7d and +123.3%/30d: remains an extreme special-situation mover; no new timestamp-defensible wrapper-flow evidence was obtained, so no causal/action upgrade is made.",
+      "Traditional U.S./European cash markets remain closed; no equity/rates/oil price response is fabricated during the weekend."
+    ],
+    "method_upgrade_candidate": "For protocol-upgrade narratives, decompose each bundled parameter into (1) participation friction, (2) lock/reversibility/effective float, (3) issuance/reward gradient, (4) fee/burn mechanics and activation defaults, (5) observed participant behavior, and (6) narrative/positioning amplifiers before assigning native-token value capture."
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast clears the evidence bar; existing WAIT states are preserved."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. The Helicon bundle decomposition materially improves the pre-event causal baseline, but the high-level regime and current actionability do not change enough to justify dashboard or learning-ledger churn before post-activation evidence. The sovereign-duration method candidate MI-L-20260920-013 remains pending safe canonical-ledger promotion. No code or signal-system state changed.",
+  "next_research": [
+    "Freeze a post-activation measurement panel for Helicon: Primary Network validator count, total AVAX staked/staking ratio, new stake-cycle duration distribution, auto-renew usage, cycle exits/renewals, issuance/reward rate, C-Chain minimumGasPrice, fees and burn.",
+    "Obtain a timestamp-safe live Primary Network stake baseline from a primary RPC/API rather than relying on dynamic explorer placeholders.",
+    "Reconstruct AVAX-specific derivatives OI/funding/liquidations and spot-volume venue mix around the September 18-22 move to separate spot repricing from short covering/fresh leverage.",
+    "After U.S. markets reopen, reconcile completed BTC ETF flows with native-unit OI/funding/basis and exchange/on-chain spot absorption before changing BTC WAIT.",
+    "When crude markets reopen, test whether the weekend Saudi attack headlines produced any verified change in effective deliverable supply, physical differentials or benchmark pricing.",
+    "Continue building the expectation-adjusted sovereign net-duration-supply model by maturity and marginal-buyer capacity."
+  ],
+  "sources": [
+    "https://build.avax.network/docs/primary-network/helicon-upgrade",
+    "https://build.avax.network/docs/acps/273-reduce-minimum-staking-duration",
+    "https://build.avax.network/docs/acps/236-auto-renewed-staking",
+    "https://build.avax.network/docs/acps/285-reduce-minimum-consumption-rate",
+    "https://build.avax.network/docs/acps/283-dynamic-minimum-gas-price",
+    "https://build.avax.network/docs/primary-network/validate/rewards-formula",
+    "CoinMarketCap connected real-time quotes/global derivatives metrics, 2026-09-20 09:43-09:44 UTC"
+  ],
+  "paid_resource_policy": "No new paid resources authorized; free/public/primary sources and connected CoinMarketCap data were used.",
+  "real_money_trading": "DISABLED / NOT AUTHORIZED"
+}
