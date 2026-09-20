@@ -415,10 +415,10 @@ def test_2x_lookup_programming_error_is_not_swallowed(tmp_path, monkeypatch):
     _base(tmp_path, lab={"forward_candidates": [_forward_candidate(0)]})
 
     def fail_lookup(_identity):
-        raise AssertionError("unrelated programming error")
+        raise TypeError("unrelated programming error")
 
     monkeypatch.setattr(db, "fetch_prediction_by_id", fail_lookup)
-    with pytest.raises(AssertionError, match="unrelated programming error"):
+    with pytest.raises(TypeError, match="unrelated programming error"):
         _snapshot(tmp_path)
 
 

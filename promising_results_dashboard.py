@@ -332,7 +332,7 @@ def _strict_2x(root: Path, now: datetime) -> list[dict]:
         try:
             from db import fetch_prediction_by_id
             row = fetch_prediction_by_id(identity)
-        except (httpx.RequestError, OSError, RuntimeError, ValueError, TypeError):
+        except (httpx.RequestError, OSError, RuntimeError, ValueError):
             continue
         card = _immutable_2x_card(candidate, row, now)
         if card:
