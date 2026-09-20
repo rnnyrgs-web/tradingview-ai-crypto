@@ -1103,6 +1103,21 @@ def test_adding_evaluation_plan_cannot_rescue_prior_rejected_design():
         memory.register_hypothesis(_hypothesis())
 
 
+def test_rejected_planned_design_cannot_change_sample_schedule_to_reenter():
+    memory = _memory_with_hypothesis()
+    memory.reject_hypothesis("H1")
+    shifted = replace(
+        _hypothesis(),
+        hypothesis_id="H2",
+        evaluation_units=tuple(
+            (subject, "2026-09-20T01:00:00Z", window)
+            for subject, _, window in _hypothesis().evaluation_units
+        ),
+    )
+    with pytest.raises(CausalMemoryError, match="rejected"):
+        memory.register_hypothesis(shifted)
+
+
 def test_legacy_family_only_document_loses_confirmatory_authority():
     memory = _memory_with_hypothesis()
     assert memory.record_evidence(_support("legacy-family-only"))
@@ -1111,6 +1126,7 @@ def test_legacy_family_only_document_loses_confirmatory_authority():
     document.pop("project_testing_protocol")
     document.pop("hypothesis_order")
     document.pop("event_order")
+    document.pop("registration_log")
     document["hypotheses"][0].pop("evaluation_units")
     encoded = json.dumps(
         document, sort_keys=True, separators=(",", ":"), ensure_ascii=True

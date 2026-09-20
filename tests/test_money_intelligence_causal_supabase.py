@@ -6,6 +6,7 @@ import pytest
 
 from money_intelligence_causal_memory import (
     CausalMemoryError,
+    CausalRepricingMemory,
     EvidenceEvent,
     FrozenHypothesis,
     ReplayConflictError,
@@ -119,13 +120,66 @@ def _contradiction(event_id="contradiction-1"):
     )
 
 
+def _plan_only():
+    memory = CausalRepricingMemory()
+    memory.register_observation(_observation("flow"))
+    memory.register_hypothesis(_hypothesis())
+    return memory
+
+
+def _append_evaluation_observations(current, prepared):
+    for observation in prepared.observations.values():
+        if observation.observation_id not in current.observations:
+            current.register_observation(observation)
+
+
+def test_plan_and_outcomes_cannot_first_arrive_in_one_durable_version(supabase):
+    prepared = _memory_with_hypothesis()
+    with pytest.raises(CausalMemoryError, match="durable before outcome"):
+        SupabaseCausalMemory().initialize(prepared)
+    assert supabase.rows == []
+
+    adapter = SupabaseCausalMemory()
+    adapter.initialize(CausalRepricingMemory())
+
+    def one_step(current):
+        current.register_observation(_observation("flow"))
+        current.register_hypothesis(_hypothesis())
+        _append_evaluation_observations(current, prepared)
+        current.record_evidence(_support())
+
+    with pytest.raises(CausalMemoryError, match="durable before outcome"):
+        adapter.transact(one_step)
+    assert len(supabase.rows) == 1
+
+    adapter.transact(
+        lambda current: (
+            current.register_observation(_observation("flow")),
+            current.register_hypothesis(_hypothesis()),
+        )
+    )
+    adapter.transact(
+        lambda current: (
+            _append_evaluation_observations(current, prepared),
+            current.record_evidence(_support()),
+        )
+    )
+    assert adapter.load().confidence(
+        "H1", as_of="2026-09-03T00:00:00Z"
+    ).confirmatory_support_count == 1
+
+
 def test_durable_restart_preserves_scientific_state_and_behavior(supabase):
     memory = _memory_with_hypothesis(half_life_days=30.0)
     memory.record_evidence(_support())
-    original = deepcopy(memory.to_document())
 
     first = SupabaseCausalMemory()
-    assert first.initialize(memory) == "APPENDED"
+    assert first.initialize(_plan_only()) == "APPENDED"
+    def seed(current):
+        _append_evaluation_observations(current, memory)
+        current.record_evidence(_support())
+    first.transact(seed)
+    original = deepcopy(SupabaseCausalMemory().load().to_document())
 
     restarted = SupabaseCausalMemory().load()
     assert restarted.to_document() == original
@@ -156,7 +210,7 @@ def test_durable_restart_preserves_scientific_state_and_behavior(supabase):
 
 
 def test_stale_writer_replays_mutation_against_fresh_durable_state(supabase):
-    SupabaseCausalMemory().initialize(_memory_with_hypothesis())
+    SupabaseCausalMemory().initialize(_plan_only())
 
     def concurrent(fake):
         memory = SupabaseCausalMemory.document_to_memory(fake.rows[-1]["payload"])
@@ -182,7 +236,10 @@ def test_stale_writer_cannot_reconsume_units_after_concurrent_confirmatory_write
         observation_changes={"currency": "bp", "unit": "bp", "venue": "other"},
         value_scale=10_000.0,
     )
-    SupabaseCausalMemory().initialize(memory)
+    SupabaseCausalMemory().initialize(_plan_only())
+    SupabaseCausalMemory().transact(
+        lambda current: _append_evaluation_observations(current, memory)
+    )
 
     def concurrent(fake):
         current = SupabaseCausalMemory.document_to_memory(fake.rows[-1]["payload"])
@@ -206,7 +263,7 @@ def test_outage_corruption_missing_state_and_repeated_stale_fail_closed(supabase
     with pytest.raises(CausalMemoryError, match="not initialized"):
         SupabaseCausalMemory().load()
 
-    SupabaseCausalMemory().initialize(_memory_with_hypothesis())
+    SupabaseCausalMemory().initialize(_plan_only())
     supabase.available = False
     with pytest.raises(CausalMemoryError, match="read failed"):
         SupabaseCausalMemory().load()
@@ -217,7 +274,7 @@ def test_outage_corruption_missing_state_and_repeated_stale_fail_closed(supabase
         SupabaseCausalMemory().load()
 
     supabase.rows.clear()
-    SupabaseCausalMemory().initialize(_memory_with_hypothesis())
+    SupabaseCausalMemory().initialize(_plan_only())
     original_post = supabase.post
     supabase.post = lambda *_args, **_kwargs: Response(503, {"message": "outage"})
     with pytest.raises(CausalMemoryError, match="append failed"):
@@ -235,7 +292,7 @@ def test_outage_corruption_missing_state_and_repeated_stale_fail_closed(supabase
 
 
 def test_conflicting_replay_remains_rejected_after_backend_restart(supabase):
-    SupabaseCausalMemory().initialize(_memory_with_hypothesis())
+    SupabaseCausalMemory().initialize(_plan_only())
     conflicting = _observation("flow", value=999.0)
     with pytest.raises(ReplayConflictError, match="different content"):
         SupabaseCausalMemory().transact(

@@ -7,6 +7,7 @@ optimistic append RPC. It never falls back to an empty or ephemeral local state.
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import timedelta
 import json
 from typing import TypeVar
 
@@ -15,6 +16,7 @@ import db
 from money_intelligence_causal_memory import (
     CausalMemoryError,
     CausalRepricingMemory,
+    _parse_time,
 )
 
 
@@ -61,6 +63,55 @@ class SupabaseCausalMemory:
             return CausalRepricingMemory.from_document(document)
         except CausalMemoryError as exc:
             raise CausalMemoryError("Supabase causal memory integrity failure") from exc
+
+    @staticmethod
+    def _require_prior_durable_plan(
+        previous: CausalRepricingMemory | None,
+        current: CausalRepricingMemory,
+    ) -> None:
+        """A plan must exist in the parent version before its outcomes arrive."""
+        prior_hypotheses = previous.hypotheses if previous is not None else {}
+        prior_observations = previous.observations if previous is not None else {}
+        prior_events = previous.events if previous is not None else {}
+        if previous is not None and (
+            any(current.hypotheses.get(key) != value for key, value in prior_hypotheses.items())
+            or any(current.observations.get(key) != value for key, value in prior_observations.items())
+            or any(current.events.get(key) != value for key, value in prior_events.items())
+            or current.registration_log[: len(previous.registration_log)]
+            != previous.registration_log
+        ):
+            raise CausalMemoryError("durable causal-memory history is immutable")
+        for hypothesis in current.hypotheses.values():
+            if not hypothesis.evaluation_units or hypothesis.hypothesis_id in prior_hypotheses:
+                continue
+            for observation in current.observations.values():
+                if observation.observation_id in prior_observations:
+                    continue
+                observed_start = _parse_time(observation.observed_at)
+                observed_end = observed_start + timedelta(
+                    hours=observation.measurement_window_hours
+                )
+                for subject, start, window in hypothesis.evaluation_units:
+                    planned_start = _parse_time(start)
+                    planned_end = planned_start + timedelta(hours=window)
+                    if (
+                        observation.subject_id == subject
+                        and observed_start < planned_end
+                        and planned_start < observed_end
+                    ):
+                        raise CausalMemoryError(
+                            "evaluation plan must be durable before outcome observations"
+                        )
+            if any(
+                event.hypothesis_id == hypothesis.hypothesis_id
+                and event.event_id not in prior_events
+                and event.kind == "support"
+                and event.confirmatory
+                for event in current.events.values()
+            ):
+                raise CausalMemoryError(
+                    "evaluation plan must be durable before confirmatory support"
+                )
 
     def _read_head(self) -> dict[str, object] | None:
         try:
@@ -168,6 +219,7 @@ class SupabaseCausalMemory:
                 if head["content_digest"] == document["content_digest"]:
                     return "EXISTS"
                 raise CausalMemoryError("Supabase causal memory is already initialized")
+            self._require_prior_durable_plan(None, memory)
             status = self._append(
                 document,
                 parent_digest=None,
@@ -195,7 +247,9 @@ class SupabaseCausalMemory:
             if head is None:
                 raise CausalMemoryError("Supabase causal memory is not initialized")
             memory = self.document_to_memory(head["payload"])
+            previous = self.document_to_memory(head["payload"])
             result = mutation(memory)
+            self._require_prior_durable_plan(previous, memory)
             document = memory.to_document()
             if document["content_digest"] == head["content_digest"]:
                 return result

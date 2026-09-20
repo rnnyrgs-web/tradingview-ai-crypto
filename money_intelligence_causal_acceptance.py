@@ -128,7 +128,7 @@ def _contract(ids: dict[str, str], base: datetime) -> FrozenHypothesis:
         statement="A verified relative flow shock precedes matched relative repricing in this synthetic acceptance fixture.",
         mechanism_chain=("verified_flow", "relative_liquidity_impact", "matched_repricing"),
         direction="positive",
-        horizon_hours=24,
+        horizon_hours=1,
         falsifier="matched outcomes do not exceed the frozen matched control",
         matched_controls=("phase2-runtime-matched-control-v1",),
         lanes=("big_move", "strategy_component"),
@@ -145,7 +145,7 @@ def _contract(ids: dict[str, str], base: datetime) -> FrozenHypothesis:
     )
 
 
-def _seed_support(memory, ids: dict[str, str], base: datetime) -> None:
+def _freeze_support_contract(memory, ids: dict[str, str], base: datetime) -> None:
     if ids["formation"] not in memory.observations:
         memory.register_observation(
             _observation(
@@ -159,6 +159,10 @@ def _seed_support(memory, ids: dict[str, str], base: datetime) -> None:
         )
     if ids["hypothesis"] not in memory.hypotheses:
         memory.register_hypothesis(_contract(ids, base))
+
+
+def _seed_support(memory, ids: dict[str, str], base: datetime) -> None:
+    _freeze_support_contract(memory, ids, base)
     outcome_ids = tuple(ids[f"support_outcome_{index}"] for index in range(1, 7))
     control_ids = tuple(ids[f"support_control_{index}"] for index in range(1, 7))
     for index, (outcome_id, control_id) in enumerate(
@@ -397,6 +401,7 @@ def run_phase2_causal_runtime_acceptance() -> dict[str, Any]:
 
     initial = store.load()
     base = _base_time(initial, ids)
+    store.transact(lambda memory: _freeze_support_contract(memory, ids, base))
     store.transact(lambda memory: _seed_support(memory, ids, base))
     restarted_after_support = store.load()
     support_as_of = _ts(base + timedelta(hours=8, minutes=1))

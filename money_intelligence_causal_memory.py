@@ -228,6 +228,10 @@ class FrozenHypothesis:
                 raise CausalMemoryError(
                     "evaluation units require subject and positive window"
                 )
+            if window != self.horizon_hours:
+                raise CausalMemoryError(
+                    "evaluation-unit window must match frozen hypothesis horizon"
+                )
             start = _normalise_time(start)
             if _parse_time(start) < _parse_time(self.created_at):
                 raise CausalMemoryError("evaluation units must begin after hypothesis freeze")
@@ -371,6 +375,7 @@ class CausalRepricingMemory:
         # alpha, independent of family labels or the eventual search count.
         self.hypothesis_order: list[str] = []
         self.event_order: list[str] = []
+        self.registration_log: list[dict[str, str]] = []
 
     @staticmethod
     def _append_immutable(store: dict[str, object], key: str, value: object) -> bool:
@@ -383,9 +388,14 @@ class CausalRepricingMemory:
         raise ReplayConflictError(f"immutable id {key!r} replayed with different content")
 
     def register_observation(self, observation: PointInTimeObservation) -> bool:
-        return self._append_immutable(
+        added = self._append_immutable(
             self.observations, observation.observation_id, observation
         )
+        if added:
+            self.registration_log.append(
+                {"kind": "observation", "id": observation.observation_id}
+            )
+        return added
 
     def _require_sources_available(self, source_ids: Iterable[str], as_of: str) -> None:
         cutoff = _parse_time(as_of)
@@ -437,9 +447,7 @@ class CausalRepricingMemory:
             or self.effective_fingerprint(legacy_design) in self.rejected_fingerprints
         )
 
-    def register_hypothesis(
-        self, hypothesis: FrozenHypothesis, *, _allow_restore: bool = False
-    ) -> bool:
+    def register_hypothesis(self, hypothesis: FrozenHypothesis) -> bool:
         self._require_sources_available(
             hypothesis.source_observation_ids, hypothesis.created_at
         )
@@ -449,9 +457,7 @@ class CausalRepricingMemory:
             return self._append_immutable(
                 self.hypotheses, hypothesis.hypothesis_id, hypothesis
             )
-        for subject, start, window in (
-            () if _allow_restore else hypothesis.evaluation_units
-        ):
+        for subject, start, window in hypothesis.evaluation_units:
             planned_start = _parse_time(start)
             planned_end = planned_start + timedelta(hours=window)
             for observation in self.observations.values():
@@ -484,6 +490,9 @@ class CausalRepricingMemory:
         )
         if added:
             self.hypothesis_order.append(hypothesis.hypothesis_id)
+            self.registration_log.append(
+                {"kind": "hypothesis", "id": hypothesis.hypothesis_id}
+            )
         return added
 
     def _project_threshold(self, hypothesis: FrozenHypothesis) -> float:
@@ -501,6 +510,11 @@ class CausalRepricingMemory:
         design = hypothesis.fingerprint
         effective = self.effective_fingerprint(hypothesis)
         self.rejected_fingerprints.update((design, effective))
+        if hypothesis.evaluation_units:
+            plan_free = replace(hypothesis, evaluation_units=())
+            self.rejected_fingerprints.update(
+                (plan_free.fingerprint, self.effective_fingerprint(plan_free))
+            )
         return design, effective
 
     @staticmethod
@@ -810,6 +824,7 @@ class CausalRepricingMemory:
         added = self._append_immutable(self.events, event.event_id, event)
         if added:
             self.event_order.append(event.event_id)
+            self.registration_log.append({"kind": "event", "id": event.event_id})
         return added
 
     def confidence(self, hypothesis_id: str, *, as_of: str) -> ConfidenceSnapshot:
@@ -1175,6 +1190,7 @@ class CausalRepricingMemory:
             "project_testing_protocol": PROJECT_TESTING_PROTOCOL,
             "hypothesis_order": list(self.hypothesis_order),
             "event_order": list(self.event_order),
+            "registration_log": list(self.registration_log),
             "observations": [
                 asdict(self.observations[key]) for key in sorted(self.observations)
             ],
@@ -1227,72 +1243,98 @@ class CausalRepricingMemory:
         if protocol not in (None, PROJECT_TESTING_PROTOCOL):
             raise CausalMemoryError("unsupported project-wide testing protocol")
         if protocol is None and any(
-            key in document for key in ("hypothesis_order", "event_order")
+            key in document
+            for key in ("hypothesis_order", "event_order", "registration_log")
         ):
             raise CausalMemoryError("incomplete project-wide testing ledger")
-        hypothesis_rows = document.get("hypotheses", [])
-        event_rows = document.get("events", [])
-        if protocol is not None:
-            hypothesis_order = document.get("hypothesis_order")
-            event_order = document.get("event_order")
-            if (
-                not isinstance(hypothesis_rows, list)
-                or not isinstance(event_rows, list)
-                or not isinstance(hypothesis_order, list)
-                or not isinstance(event_order, list)
-                or any(not isinstance(raw, dict) for raw in hypothesis_rows)
-                or any(not isinstance(raw, dict) for raw in event_rows)
-                or any(type(key) is not str for key in hypothesis_order)
-                or any(type(key) is not str for key in event_order)
-                or len(hypothesis_order) != len(hypothesis_rows)
-                or len(event_order) != len(event_rows)
-                or len(hypothesis_order) != len(set(hypothesis_order))
-                or len(event_order) != len(set(event_order))
-                or set(hypothesis_order)
-                != {raw["hypothesis_id"] for raw in hypothesis_rows}
-                or set(event_order) != {raw["event_id"] for raw in event_rows}
-            ):
-                raise CausalMemoryError(
-                    "causal memory failed scientific-contract validation: "
-                    "invalid project-wide testing ledger"
-                )
-            hypotheses_by_id = {raw["hypothesis_id"]: raw for raw in hypothesis_rows}
-            events_by_id = {raw["event_id"]: raw for raw in event_rows}
-            hypothesis_rows = [hypotheses_by_id[key] for key in hypothesis_order]
-            event_rows = [events_by_id[key] for key in event_order]
-
         # Historical hypotheses must remain loadable after later rejection. Rejection
         # blocks fresh admission and lane emission; it must not make durable memory
         # unrecoverable after a restart.
         persisted_rejected = tuple(str(value) for value in document.get("rejected_fingerprints", []))
-        memory = cls(
-            rejected_fingerprints=(),
-            half_life_days=float(document["half_life_days"]),
-        )
         try:
-            for raw in document.get("observations", []):
-                memory.register_observation(PointInTimeObservation(**raw))
-            for raw in document.get("claims", []):
-                raw = dict(raw)
-                raw["source_observation_ids"] = tuple(raw["source_observation_ids"])
-                memory.register_claim(EpistemicClaim(**raw))
-            for raw in hypothesis_rows:
-                raw = dict(raw)
-                for field in (
-                    "mechanism_chain",
-                    "matched_controls",
-                    "lanes",
-                    "source_observation_ids",
-                ):
-                    raw[field] = tuple(raw[field])
-                if "evaluation_units" in raw:
-                    raw["evaluation_units"] = tuple(
-                        tuple(unit) for unit in raw["evaluation_units"]
+            observation_rows = document.get("observations", [])
+            hypothesis_rows = document.get("hypotheses", [])
+            event_rows = document.get("events", [])
+            memory = cls(half_life_days=float(document["half_life_days"]))
+            if protocol is not None:
+                order = document["registration_log"]
+                hypothesis_order = document["hypothesis_order"]
+                event_order = document["event_order"]
+                rows = {
+                    "observation": (observation_rows, "observation_id"),
+                    "hypothesis": (hypothesis_rows, "hypothesis_id"),
+                    "event": (event_rows, "event_id"),
+                }
+                if (
+                    not isinstance(order, list)
+                    or not isinstance(hypothesis_order, list)
+                    or not isinstance(event_order, list)
+                    or any(not isinstance(value, list) for value, _ in rows.values())
+                    or any(
+                        not isinstance(raw, dict) or type(raw.get(key)) is not str
+                        for value, key in rows.values()
+                        for raw in value
                     )
-                memory.register_hypothesis(
-                    FrozenHypothesis(**raw), _allow_restore=True
+                    or any(
+                        not isinstance(item, dict)
+                        or set(item) != {"kind", "id"}
+                        or item["kind"] not in rows
+                        or type(item["id"]) is not str
+                        for item in order
+                    )
+                ):
+                    raise CausalMemoryError("invalid project-wide testing ledger")
+                expected = [
+                    (kind, raw[key])
+                    for kind, (value, key) in rows.items()
+                    for raw in value
+                ]
+                actual = [(item["kind"], item["id"]) for item in order]
+                if (
+                    len(actual) != len(expected)
+                    or len(set(actual)) != len(actual)
+                    or set(actual) != set(expected)
+                    or [ident for kind, ident in actual if kind == "hypothesis"]
+                    != hypothesis_order
+                    or [ident for kind, ident in actual if kind == "event"]
+                    != event_order
+                ):
+                    raise CausalMemoryError("invalid project-wide testing ledger")
+                by_kind = {
+                    kind: {raw[key]: raw for raw in value}
+                    for kind, (value, key) in rows.items()
+                }
+            else:
+                if any(raw.get("evaluation_units") for raw in hypothesis_rows):
+                    raise CausalMemoryError("legacy document cannot carry a new evaluation plan")
+                actual = (
+                    [("observation", raw["observation_id"]) for raw in observation_rows]
+                    + [("hypothesis", raw["hypothesis_id"]) for raw in hypothesis_rows]
+                    + [("event", raw["event_id"]) for raw in event_rows]
                 )
-            for raw in event_rows:
+                by_kind = {
+                    "observation": {raw["observation_id"]: raw for raw in observation_rows},
+                    "hypothesis": {raw["hypothesis_id"]: raw for raw in hypothesis_rows},
+                    "event": {raw["event_id"]: raw for raw in event_rows},
+                }
+            for kind, ident in actual:
+                raw = by_kind[kind][ident]
+                if kind == "observation":
+                    memory.register_observation(PointInTimeObservation(**raw))
+                    continue
+                if kind == "hypothesis":
+                    raw = dict(raw)
+                    for field in (
+                        "mechanism_chain", "matched_controls", "lanes",
+                        "source_observation_ids",
+                    ):
+                        raw[field] = tuple(raw[field])
+                    if "evaluation_units" in raw:
+                        raw["evaluation_units"] = tuple(
+                            tuple(unit) for unit in raw["evaluation_units"]
+                        )
+                    memory.register_hypothesis(FrozenHypothesis(**raw))
+                    continue
                 raw = dict(raw)
                 raw["matched_controls"] = tuple(raw["matched_controls"])
                 raw["outcome_observation_ids"] = tuple(
@@ -1330,8 +1372,12 @@ class CausalRepricingMemory:
                     EvidenceEvent(**raw),
                     _allow_legacy_unverified=legacy_unverified,
                 )
+            for raw in document.get("claims", []):
+                raw = dict(raw)
+                raw["source_observation_ids"] = tuple(raw["source_observation_ids"])
+                memory.register_claim(EpistemicClaim(**raw))
             memory.rejected_fingerprints.update(persisted_rejected)
-        except (KeyError, TypeError, CausalMemoryError) as exc:
+        except (KeyError, TypeError, ValueError, CausalMemoryError) as exc:
             raise CausalMemoryError(
                 "causal memory failed scientific-contract validation"
             ) from exc
