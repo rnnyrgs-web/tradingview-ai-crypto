@@ -29,7 +29,7 @@ from money_intelligence_mission_integration import causal_feedback
 from profitability_learning.runtime import refresh_director
 
 
-PREFIX = "phase2-runtime-acceptance"
+PREFIX = "phase3-verified-causal-evidence-acceptance"
 CANONICAL_REJECTED_ACCEPTANCE_ID = "DISC-BTC-LEADLAG-001-v1"
 SAFE = {
     "research_only": True,
@@ -61,13 +61,11 @@ def _parse(value: str) -> datetime:
 
 def _ids(sha: str) -> dict[str, str]:
     token = sha[:16]
-    return {
+    identifiers = {
         key: f"{PREFIX}:{token}:{suffix}"
         for key, suffix in {
             "formation": "formation",
             "hypothesis": "hypothesis",
-            "support_outcome": "support-outcome",
-            "support_control": "support-control",
             "support": "support",
             "narrative": "narrative",
             "concurrent_a": "concurrent-a",
@@ -78,6 +76,14 @@ def _ids(sha: str) -> dict[str, str]:
             "receipt": "receipt",
         }.items()
     }
+    for index in range(1, 7):
+        identifiers[f"support_outcome_{index}"] = (
+            f"{PREFIX}:{token}:support-outcome-{index}"
+        )
+        identifiers[f"support_control_{index}"] = (
+            f"{PREFIX}:{token}:support-control-{index}"
+        )
+    return identifiers
 
 
 def _observation(
@@ -113,7 +119,7 @@ def _base_time(memory, ids: dict[str, str]) -> datetime:
     if existing is not None:
         return _parse(existing.observed_at)
     now = datetime.now(timezone.utc).replace(second=0, microsecond=0)
-    return now - timedelta(minutes=20)
+    return now - timedelta(hours=13)
 
 
 def _contract(ids: dict[str, str], base: datetime) -> FrozenHypothesis:
@@ -148,31 +154,42 @@ def _seed_support(memory, ids: dict[str, str], base: datetime) -> None:
         )
     if ids["hypothesis"] not in memory.hypotheses:
         memory.register_hypothesis(_contract(ids, base))
-    for key, value in (("support_outcome", 2.0), ("support_control", 0.0)):
-        if ids[key] not in memory.observations:
-            memory.register_observation(
-                _observation(
-                    ids[key],
-                    metric_name="matched_return",
-                    value=value,
-                    observed_at=base + timedelta(minutes=3),
-                    available_at=base + timedelta(minutes=4),
+    outcome_ids = tuple(ids[f"support_outcome_{index}"] for index in range(1, 7))
+    control_ids = tuple(ids[f"support_control_{index}"] for index in range(1, 7))
+    for index, (outcome_id, control_id) in enumerate(
+        zip(outcome_ids, control_ids, strict=True), start=1
+    ):
+        unit_observed_at = base + timedelta(hours=index)
+        unit_available_at = unit_observed_at + timedelta(hours=1, minutes=1)
+        for observation_id, value in (
+            (outcome_id, 2.0 + index / 100),
+            (control_id, 0.0),
+        ):
+            if observation_id not in memory.observations:
+                memory.register_observation(
+                    _observation(
+                        observation_id,
+                        metric_name="matched_return",
+                        value=value,
+                        observed_at=unit_observed_at,
+                        available_at=unit_available_at,
+                        window_hours=1,
+                    )
                 )
-            )
     if ids["support"] not in memory.events:
         memory.record_evidence(
             EvidenceEvent(
                 event_id=ids["support"],
                 hypothesis_id=ids["hypothesis"],
-                evaluated_at=_ts(base + timedelta(minutes=5)),
+                evaluated_at=_ts(base + timedelta(hours=7, minutes=2)),
                 kind="support",
                 matched_controls=("phase2-runtime-matched-control-v1",),
-                outcome_observation_ids=(ids["support_outcome"],),
-                control_observation_ids=(ids["support_control"],),
+                outcome_observation_ids=outcome_ids,
+                control_observation_ids=control_ids,
                 evaluation_method="matched_mean_diff_v1",
-                sample_size=40,
+                sample_size=6,
                 confirmatory=True,
-                p_value=0.01,
+                p_value=0.015625,
             )
         )
 
@@ -184,7 +201,7 @@ def _record_narrative(memory, ids: dict[str, str], base: datetime) -> None:
                 claim_id=ids["narrative"],
                 level="inference",
                 text="Synthetic bullish narrative that must not alter causal mission eligibility or fingerprint.",
-                created_at=_ts(base + timedelta(minutes=6)),
+                created_at=_ts(base + timedelta(hours=8)),
                 source_observation_ids=(ids["formation"],),
             )
         )
@@ -198,8 +215,9 @@ def _record_contradiction(memory, ids: dict[str, str], base: datetime) -> None:
                     ids[key],
                     metric_name="matched_return",
                     value=value,
-                    observed_at=base + timedelta(minutes=7),
-                    available_at=base + timedelta(minutes=8),
+                    observed_at=base + timedelta(hours=9),
+                    available_at=base + timedelta(hours=10, minutes=1),
+                    window_hours=1,
                 )
             )
     if ids["contradiction"] not in memory.events:
@@ -207,15 +225,15 @@ def _record_contradiction(memory, ids: dict[str, str], base: datetime) -> None:
             EvidenceEvent(
                 event_id=ids["contradiction"],
                 hypothesis_id=ids["hypothesis"],
-                evaluated_at=_ts(base + timedelta(minutes=9)),
+                evaluated_at=_ts(base + timedelta(hours=10, minutes=2)),
                 kind="contradiction",
                 matched_controls=("phase2-runtime-matched-control-v1",),
                 outcome_observation_ids=(ids["contradiction_outcome"],),
                 control_observation_ids=(ids["contradiction_control"],),
                 evaluation_method="matched_mean_diff_v1",
-                sample_size=40,
+                sample_size=1,
                 confirmatory=True,
-                p_value=0.01,
+                p_value=None,
             )
         )
 
@@ -243,7 +261,7 @@ def _canonical_rejected_id_veto_probe() -> bool:
     )
     feedback = causal_feedback(
         loader=lambda: memory,
-        as_of=_ts(base + timedelta(minutes=6, seconds=30)),
+        as_of=_ts(base + timedelta(hours=8, minutes=1)),
     )
     return (
         feedback.get("status") == "AVAILABLE_NO_SUPPORTED_MECHANISMS"
@@ -261,8 +279,8 @@ def _live_stale_writer_probe(store: SupabaseCausalMemory, ids: dict[str, str], b
             ids[key],
             metric_name="acceptance_concurrency_marker",
             value=float(offset),
-            observed_at=base + timedelta(minutes=6, seconds=offset),
-            available_at=base + timedelta(minutes=6, seconds=offset + 1),
+            observed_at=base + timedelta(hours=8, seconds=offset),
+            available_at=base + timedelta(hours=8, seconds=offset + 1),
             unit="count",
             window_hours=1,
         )
@@ -289,8 +307,8 @@ def _live_stale_writer_probe(store: SupabaseCausalMemory, ids: dict[str, str], b
             ids[key],
             metric_name="acceptance_concurrency_marker",
             value=1.0 if key == "concurrent_a" else 2.0,
-            observed_at=base + timedelta(minutes=6, seconds=1 if key == "concurrent_a" else 2),
-            available_at=base + timedelta(minutes=6, seconds=2 if key == "concurrent_a" else 3),
+            observed_at=base + timedelta(hours=8, seconds=1 if key == "concurrent_a" else 2),
+            available_at=base + timedelta(hours=8, seconds=2 if key == "concurrent_a" else 3),
             unit="count",
             window_hours=1,
         )
@@ -310,9 +328,11 @@ def _validate_receipt(store: SupabaseCausalMemory, ids: dict[str, str], sha: str
     effective = memory.effective_fingerprint(hypothesis)
     required_events = {ids["support"], ids["contradiction"]}
     required_observations = {
-        ids["formation"], ids["support_outcome"], ids["support_control"],
+        ids["formation"],
         ids["contradiction_outcome"], ids["contradiction_control"],
         ids["concurrent_a"], ids["concurrent_b"],
+        *(ids[f"support_outcome_{index}"] for index in range(1, 7)),
+        *(ids[f"support_control_{index}"] for index in range(1, 7)),
     }
     if not required_events.issubset(memory.events):
         raise CausalMemoryError("Phase-2 runtime acceptance receipt is missing evidence")
@@ -320,6 +340,18 @@ def _validate_receipt(store: SupabaseCausalMemory, ids: dict[str, str], sha: str
         raise CausalMemoryError("Phase-2 runtime acceptance receipt is missing durable observations")
     if design not in memory.rejected_fingerprints or effective not in memory.rejected_fingerprints:
         raise CausalMemoryError("Phase-2 runtime acceptance receipt lost rejected fingerprints")
+    support_verification = memory._verified_evaluation(
+        memory.events[ids["support"]], hypothesis
+    )
+    if (
+        support_verification.get("independent_unit_contract")
+        != "economic-realization-nonoverlap-v2"
+        or support_verification.get("sample_size") != 6
+        or len(support_verification.get("independent_units", [])) != 6
+    ):
+        raise CausalMemoryError(
+            "Phase-2 runtime acceptance did not preserve six verified independent units"
+        )
     if not _canonical_rejected_id_veto_probe():
         raise CausalMemoryError("canonical rejected strategy ID regained causal mission eligibility")
     return {
@@ -330,6 +362,8 @@ def _validate_receipt(store: SupabaseCausalMemory, ids: dict[str, str], sha: str
         "hypothesis_id": ids["hypothesis"],
         "durable_restart_reload": True,
         "support_consumed_by_default_director": True,
+        "verified_independent_unit_count": 6,
+        "independent_unit_contract": "economic-realization-nonoverlap-v2",
         "canonical_rejected_id_veto": True,
         "narrative_firewall": True,
         "contradiction_removed_missions": True,
@@ -360,7 +394,7 @@ def run_phase2_causal_runtime_acceptance() -> dict[str, Any]:
     base = _base_time(initial, ids)
     store.transact(lambda memory: _seed_support(memory, ids, base))
     restarted_after_support = store.load()
-    support_as_of = _ts(base + timedelta(minutes=6, seconds=30))
+    support_as_of = _ts(base + timedelta(hours=8, minutes=1))
     support_confidence = restarted_after_support.confidence(ids["hypothesis"], as_of=support_as_of)
     if support_confidence.score < 0.65 or support_confidence.confirmatory_support_count < 1:
         raise CausalMemoryError("supportive PIT evidence did not raise causal confidence")
@@ -429,7 +463,7 @@ def run_phase2_causal_runtime_acceptance() -> dict[str, Any]:
 
     store.transact(lambda memory: _record_contradiction(memory, ids, base))
     restarted_after_contradiction = store.load()
-    contradiction_as_of = _ts(base + timedelta(minutes=10))
+    contradiction_as_of = _ts(base + timedelta(hours=11))
     weakened = restarted_after_contradiction.confidence(ids["hypothesis"], as_of=contradiction_as_of)
     if weakened.score >= support_confidence.score:
         raise CausalMemoryError("contradictory matched-control evidence did not lower confidence")
@@ -449,7 +483,7 @@ def run_phase2_causal_runtime_acceptance() -> dict[str, Any]:
                     claim_id=ids["receipt"],
                     level="fact",
                     text=f"Phase-2 deployed runtime acceptance completed for {sha}.",
-                    created_at=_ts(base + timedelta(minutes=10)),
+                    created_at=_ts(base + timedelta(hours=11)),
                     source_observation_ids=(ids["formation"],),
                 )
             )

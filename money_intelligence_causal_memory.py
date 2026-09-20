@@ -8,7 +8,7 @@ append-only, chronology checked, provenance bound, and replay safe.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 import math
@@ -23,6 +23,12 @@ EPISTEMIC_LEVELS = {"fact", "inference"}
 EVIDENCE_KINDS = {"support", "contradiction"}
 RESEARCH_LANES = {"big_move", "strategy_component"}
 RELATIVE_IMPACT_RATIOS = {"flow_float", "flow_liquidity"}
+TRUSTED_EVALUATION_IMPLEMENTATION = "paired-sign-exact-independent-units-v2"
+LEGACY_UNVERIFIED_IMPLEMENTATION = "legacy-unverified-v0"
+TRUSTED_EVALUATION_METHODS = {
+    "matched_control_mean_difference_v1",
+    "matched_mean_diff_v1",
+}
 
 
 class CausalMemoryError(ValueError):
@@ -234,6 +240,7 @@ class EvidenceEvent:
     control_observation_ids: tuple[str, ...]
     evaluation_method: str
     sample_size: int
+    evaluation_implementation: str = TRUSTED_EVALUATION_IMPLEMENTATION
     confirmatory: bool = True
     p_value: float | None = None
     note: str = ""
@@ -243,9 +250,13 @@ class EvidenceEvent:
             raise CausalMemoryError("event_id and hypothesis_id are required")
         if self.kind not in EVIDENCE_KINDS:
             raise CausalMemoryError("evidence kind must be support or contradiction")
-        if not self.evaluation_method.strip() or self.sample_size <= 0:
+        if (
+            not self.evaluation_method.strip()
+            or not self.evaluation_implementation.strip()
+            or self.sample_size <= 0
+        ):
             raise CausalMemoryError(
-                "evaluation_method and positive sample_size are required"
+                "evaluation_method, evaluation_implementation, and positive sample_size are required"
             )
         if self.p_value is not None and not 0.0 <= float(self.p_value) <= 1.0:
             raise CausalMemoryError("p_value must be in [0, 1]")
@@ -418,7 +429,168 @@ class CausalRepricingMemory:
         self.rejected_fingerprints.update((design, effective))
         return design, effective
 
-    def record_evidence(self, event: EvidenceEvent) -> bool:
+    @staticmethod
+    def _paired_sign_p_value(*, wins: int, non_ties: int) -> float:
+        """Exact one-sided paired sign-test tail under p=0.5."""
+        if non_ties <= 0:
+            return 1.0
+        return sum(
+            math.comb(non_ties, count)
+            for count in range(wins, non_ties + 1)
+        ) / float(2**non_ties)
+
+    def _verified_evaluation(
+        self,
+        event: EvidenceEvent,
+        hypothesis: FrozenHypothesis,
+    ) -> dict[str, object]:
+        if event.evaluation_method not in TRUSTED_EVALUATION_METHODS:
+            raise CausalMemoryError("unsupported confirmatory evaluation method")
+        if event.evaluation_implementation != TRUSTED_EVALUATION_IMPLEMENTATION:
+            raise CausalMemoryError("unsupported evaluation implementation")
+        if len(event.outcome_observation_ids) != len(event.control_observation_ids):
+            raise CausalMemoryError(
+                "trusted paired evaluation requires equal outcome and control counts"
+            )
+
+        independent_units: list[dict[str, object]] = []
+        unit_fingerprints: set[str] = set()
+        intervals_by_subject: dict[str, list[tuple[datetime, datetime]]] = {}
+        for outcome_id, control_id in zip(
+            event.outcome_observation_ids,
+            event.control_observation_ids,
+            strict=True,
+        ):
+            outcome = self.observations[outcome_id]
+            control = self.observations[control_id]
+            outcome_unit = {
+                "subject_id": outcome.subject_id,
+                "observed_at": outcome.observed_at,
+                "measurement_window_hours": outcome.measurement_window_hours,
+            }
+            control_unit = {
+                "subject_id": control.subject_id,
+                "observed_at": control.observed_at,
+                "measurement_window_hours": control.measurement_window_hours,
+            }
+            if outcome_unit != control_unit:
+                raise CausalMemoryError(
+                    "each outcome/control pair must represent the same economic unit"
+                )
+            unit_fingerprint = _sha256(outcome_unit)
+            if unit_fingerprint in unit_fingerprints:
+                raise CausalMemoryError(
+                    "matched pairs must represent distinct independent economic units"
+                )
+            unit_fingerprints.add(unit_fingerprint)
+            independent_units.append(
+                {
+                    **outcome_unit,
+                    "unit_fingerprint": unit_fingerprint,
+                }
+            )
+            interval_start = _parse_time(outcome.observed_at)
+            interval_end = interval_start + timedelta(
+                hours=outcome.measurement_window_hours
+            )
+            # A venue or display-unit relabel cannot split one subject's realization.
+            intervals_by_subject.setdefault(outcome.subject_id, []).append(
+                (interval_start, interval_end)
+            )
+
+        for intervals in intervals_by_subject.values():
+            ordered = sorted(intervals)
+            if any(
+                current_start < previous_end
+                for (_, previous_end), (current_start, _) in zip(
+                    ordered, ordered[1:], strict=False
+                )
+            ):
+                raise CausalMemoryError(
+                    "temporal independent economic units must use non-overlapping windows"
+                )
+
+        independent_unit_count = len(unit_fingerprints)
+        if event.sample_size != independent_unit_count:
+            raise CausalMemoryError(
+                "sample_size must equal the number of verified independent economic units"
+            )
+
+        differences = [
+            self.observations[outcome_id].value
+            - self.observations[control_id].value
+            for outcome_id, control_id in zip(
+                event.outcome_observation_ids,
+                event.control_observation_ids,
+                strict=True,
+            )
+        ]
+        directional = [
+            difference if hypothesis.direction == "positive" else -difference
+            for difference in differences
+        ]
+        wins = sum(value > 0 for value in directional)
+        non_ties = sum(value != 0 for value in directional)
+        p_value = self._paired_sign_p_value(wins=wins, non_ties=non_ties)
+        if event.p_value is not None and not math.isclose(
+            event.p_value, p_value, rel_tol=1e-12, abs_tol=1e-12
+        ):
+            raise CausalMemoryError(
+                "caller p_value does not match the recomputed p_value"
+            )
+
+        payload = {
+            "evaluation_implementation": TRUSTED_EVALUATION_IMPLEMENTATION,
+            "independent_unit_contract": "economic-realization-nonoverlap-v2",
+            "evaluation_method": event.evaluation_method,
+            "hypothesis_id": hypothesis.hypothesis_id,
+            "family_id": hypothesis.family_id,
+            "family_size": hypothesis.family_size,
+            "alpha": hypothesis.alpha,
+            "direction": hypothesis.direction,
+            "matched_controls": list(event.matched_controls),
+            "sample_size": independent_unit_count,
+            "independent_units": independent_units,
+            "non_tie_count": non_ties,
+            "directional_win_count": wins,
+            "verified_p_value": p_value,
+            "outcome_inputs": [
+                {
+                    "observation_id": source_id,
+                    "provenance_fingerprint": self.observations[
+                        source_id
+                    ].provenance_fingerprint,
+                }
+                for source_id in event.outcome_observation_ids
+            ],
+            "control_inputs": [
+                {
+                    "observation_id": source_id,
+                    "provenance_fingerprint": self.observations[
+                        source_id
+                    ].provenance_fingerprint,
+                }
+                for source_id in event.control_observation_ids
+            ],
+        }
+        return {
+            **payload,
+            "verified_fingerprint": "mi-verified-evidence-v3:" + _sha256(payload),
+        }
+
+    def record_evidence(
+        self,
+        event: EvidenceEvent,
+        *,
+        _allow_legacy_unverified: bool = False,
+    ) -> bool:
+        existing = self.events.get(event.event_id)
+        if existing is not None:
+            if existing == event:
+                return False
+            raise ReplayConflictError(
+                f"immutable id {event.event_id!r} replayed with different content"
+            )
         hypothesis = self.hypotheses.get(event.hypothesis_id)
         if hypothesis is None:
             raise CausalMemoryError(f"unknown hypothesis: {event.hypothesis_id}")
@@ -453,7 +625,6 @@ class CausalRepricingMemory:
         ]
         comparison_keys = {
             (
-                observation.subject_id,
                 observation.currency,
                 observation.unit,
                 observation.measurement_window_hours,
@@ -463,7 +634,7 @@ class CausalRepricingMemory:
         }
         if len(comparison_keys) != 1:
             raise CausalMemoryError(
-                "outcome/control observations must be subject, unit, window, and venue comparable"
+                "outcome/control observations must be unit, window, and venue comparable"
             )
         outcome_mean = sum(
             self.observations[source_id].value
@@ -483,24 +654,58 @@ class CausalRepricingMemory:
             raise CausalMemoryError(
                 "evidence kind conflicts with the observed effect direction"
             )
+        if event.evaluation_implementation == LEGACY_UNVERIFIED_IMPLEMENTATION:
+            if not _allow_legacy_unverified or event.confirmatory:
+                raise CausalMemoryError(
+                    "legacy unverified evidence is restore-only and non-confirmatory"
+                )
+            verification = None
+        else:
+            verification = self._verified_evaluation(event, hypothesis)
         if event.kind == "support" and event.confirmatory:
             adjusted_alpha = hypothesis.alpha / hypothesis.family_size
-            if event.p_value is None or event.p_value > adjusted_alpha:
+            if event.p_value is None:
+                raise CausalMemoryError(
+                    "confirmatory support requires the recomputed p_value assertion"
+                )
+            if verification is None or verification["verified_p_value"] > adjusted_alpha:
                 raise CausalMemoryError(
                     "confirmatory support must pass the frozen Bonferroni family threshold"
                 )
         for existing in self.events.values():
             if (
-                existing.hypothesis_id == event.hypothesis_id
-                and frozenset(existing.outcome_observation_ids)
+                frozenset(existing.outcome_observation_ids)
                 == frozenset(event.outcome_observation_ids)
                 and frozenset(existing.control_observation_ids)
                 == frozenset(event.control_observation_ids)
-                and existing.event_id != event.event_id
             ):
                 raise CausalMemoryError(
                     "evaluation observations already consumed by another evidence event"
                 )
+            if verification is not None:
+                # Events and their observations are the durable global consumption
+                # ledger. Rebuild it on every write/restart, including legacy events;
+                # neither a new hypothesis/family nor a new representation resets it.
+                for current_unit in verification["independent_units"]:
+                    current_start = _parse_time(current_unit["observed_at"])
+                    current_end = current_start + timedelta(
+                        hours=current_unit["measurement_window_hours"]
+                    )
+                    for source_id in (
+                        existing.outcome_observation_ids
+                        + existing.control_observation_ids
+                    ):
+                        consumed = self.observations[source_id]
+                        if consumed.subject_id != current_unit["subject_id"]:
+                            continue
+                        consumed_start = _parse_time(consumed.observed_at)
+                        consumed_end = consumed_start + timedelta(
+                            hours=consumed.measurement_window_hours
+                        )
+                        if current_start < consumed_end and consumed_start < current_end:
+                            raise CausalMemoryError(
+                                "verified independent units already consumed by another evidence event"
+                            )
         return self._append_immutable(self.events, event.event_id, event)
 
     def confidence(self, hypothesis_id: str, *, as_of: str) -> ConfidenceSnapshot:
@@ -750,14 +955,41 @@ class CausalRepricingMemory:
                 self.observations[source_id].value
                 for source_id in event.control_observation_ids
             ) / len(event.control_observation_ids)
+            if event.evaluation_implementation == LEGACY_UNVERIFIED_IMPLEMENTATION:
+                verification = {
+                    "verified_fingerprint": "mi-unverified-legacy-evidence-v0:"
+                    + _sha256(
+                        {
+                            "raw_event_fingerprint": event.fingerprint,
+                            "outcome_provenance": [
+                                self.observations[source_id].provenance_fingerprint
+                                for source_id in event.outcome_observation_ids
+                            ],
+                            "control_provenance": [
+                                self.observations[source_id].provenance_fingerprint
+                                for source_id in event.control_observation_ids
+                            ],
+                        }
+                    ),
+                    "verified_p_value": None,
+                }
+            else:
+                verification = self._verified_evaluation(event, hypothesis)
+            verified_p_value = verification["verified_p_value"]
             evidence_events.append(
                 {
                     "event_id": event.event_id,
-                    "event_fingerprint": event.fingerprint,
+                    "event_fingerprint": verification["verified_fingerprint"],
+                    "raw_event_fingerprint": event.fingerprint,
                     "kind": event.kind,
                     "evaluated_at": event.evaluated_at,
                     "confirmatory": event.confirmatory,
                     "evaluation_method": event.evaluation_method,
+                    "evaluation_implementation": event.evaluation_implementation,
+                    "independent_unit_contract": verification.get(
+                        "independent_unit_contract"
+                    ),
+                    "independent_units": verification.get("independent_units", []),
                     "sample_size": event.sample_size,
                     "matched_controls": list(event.matched_controls),
                     "outcome_observation_ids": list(event.outcome_observation_ids),
@@ -771,9 +1003,10 @@ class CausalRepricingMemory:
                         for source_id in event.control_observation_ids
                     ],
                     "raw_p_value": event.p_value,
+                    "verified_p_value": verified_p_value,
                     "adjusted_p_value": (
-                        min(1.0, event.p_value * hypothesis.family_size)
-                        if event.p_value is not None
+                        min(1.0, float(verified_p_value) * hypothesis.family_size)
+                        if verified_p_value is not None
                         else None
                     ),
                     "bounded_evidence_weight": event.evidence_weight,
@@ -898,7 +1131,26 @@ class CausalRepricingMemory:
                 raw["control_observation_ids"] = tuple(
                     raw["control_observation_ids"]
                 )
-                memory.record_evidence(EvidenceEvent(**raw))
+                missing_evaluation_implementation = (
+                    "evaluation_implementation" not in raw
+                )
+                if missing_evaluation_implementation:
+                    # Schema-v2 durable rows predate trusted statistical
+                    # verification. Preserve them for audit/contradiction history,
+                    # but never let them manufacture confirmatory confidence.
+                    raw["evaluation_implementation"] = (
+                        LEGACY_UNVERIFIED_IMPLEMENTATION
+                    )
+                    raw["confirmatory"] = False
+                    raw["p_value"] = None
+                legacy_unverified = (
+                    raw.get("evaluation_implementation")
+                    == LEGACY_UNVERIFIED_IMPLEMENTATION
+                )
+                memory.record_evidence(
+                    EvidenceEvent(**raw),
+                    _allow_legacy_unverified=legacy_unverified,
+                )
             memory.rejected_fingerprints.update(persisted_rejected)
         except (KeyError, TypeError, CausalMemoryError) as exc:
             raise CausalMemoryError(
