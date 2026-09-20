@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "reason": "Lead reconciliation after exact-deployed Phase-1 Profitability Learning acceptance and integration of the first Phase-2 persistent causal-memory primitive. Preserve all prior rejected/data-blocked strategy outcomes and OOS/forward locks. PR #454 is integrated on canonical main with deployment-durable PIT causal memory; Phase 2 remains incomplete until the actual autonomous Money Intelligence -> Big-Move / strategy-component mission path consumes this memory and passes deployed restart/replay/outage acceptance.",
+  "reason": "Lead reconciliation after exact-deployed Phase-2 Money Intelligence / causal-repricing acceptance on canonical main c1737bd4b3340a9073bce64f9f9143f8a0bc03f8. Preserve all prior rejected/data-blocked strategy outcomes, OOS/forward locks, chronology, multiple-testing controls and broker-off authority. Route exactly one next milestone: the independent Phase-3 adversarial architecture review on the canonical testing-security branch.",
   "task_updates": {
     "COORD-DISC-DATA-003": {
       "status": "DONE",
@@ -180,7 +180,7 @@
       "id": "COORD-MI-CAUSAL-002",
       "priority": 1,
       "owner": "quant-research",
-      "status": "READY",
+      "status": "DONE",
       "work_mode": "AUDIT",
       "eligible_engines": ["chatgpt", "human"],
       "title": "Wire causal-repricing memory into autonomous research mission generation and prove deployed consumption",
@@ -188,7 +188,7 @@
       "blockers": [],
       "issue": 451,
       "branch": "agent/quant-research",
-      "pr": null,
+      "pr": 460,
       "evidence_required": [
         "actual autonomous Money Intelligence runtime reads and writes the approved durable causal-memory store rather than a parallel or ephemeral truth store",
         "structured PIT fact/inference/hypothesis/mechanism state is consumed by downstream Big-Move and strategy-component mission generation/ranking by default",
@@ -202,6 +202,65 @@
         "exact-head Security and Reliability success before integration and exact-deployed-SHA runtime acceptance after integration"
       ],
       "completion_rule": "Phase 2 may be marked DONE only after the real autonomous research path demonstrably consumes the persistent causal-memory state, changes downstream research mission eligibility/ranking from provenance-bound evidence, survives deployed restart/replay/outage tests, and preserves all chronology, multiple-testing, rejected-memory and research-only firewalls. Then route Phase 3 independent adversarial architecture review.",
+      "completion_evidence": {
+        "status": "PHASE_2_RUNTIME_ACCEPTED",
+        "mission_consumption_pr": 460,
+        "mission_consumption_exact_head_sha": "0ee9e160e4652cfcac4a0890ee27ef9e9639f175",
+        "mission_consumption_merge_sha": "870ce1cb680d757963b19d9dfc858f25eabf7eb2",
+        "runtime_acceptance_pr": 461,
+        "runtime_acceptance_exact_head_sha": "ad7b7d4f71175c795670af3c469404410e5f02cc",
+        "rejected_id_firewall_pr": 465,
+        "rejected_id_firewall_exact_head_sha": "9585cc1df09e4a8130afe2b41e77ce85ed4ffbfa",
+        "runtime_packaging_pr": 466,
+        "runtime_packaging_exact_head_sha": "3898d5740b82a04441a2627984ea90a78ddbd25b",
+        "accepted_main_sha": "c1737bd4b3340a9073bce64f9f9143f8a0bc03f8",
+        "exact_main_security_and_reliability_run": 35484292738,
+        "exact_main_security_and_reliability": "SUCCESS",
+        "profitability_runtime_regression_run": 35484292890,
+        "profitability_runtime_regression": "SUCCESS",
+        "causal_runtime_acceptance_run": 35484292758,
+        "causal_runtime_acceptance": "SUCCESS",
+        "canonical_rejected_id_veto": true,
+        "structured_support_consumed_by_default_director": true,
+        "narrative_firewall_verified": true,
+        "confidence_decay_verified": true,
+        "matched_contradiction_removes_missions": true,
+        "restart_replay_stale_writer_outage_corruption_fail_closed": true,
+        "rejected_fingerprints_persist": true,
+        "final_acceptance_fixture_mission_count": 0,
+        "untouched_oos_opened": false,
+        "genuine_forward_opened": false,
+        "broker_or_live_authority": false,
+        "phase_2_complete": true
+      },
+      "next_task": "COORD-ARCH-ADVERSARIAL-001"
+    },
+    {
+      "id": "COORD-ARCH-ADVERSARIAL-001",
+      "priority": 1,
+      "owner": "testing-security",
+      "status": "READY",
+      "work_mode": "AUDIT",
+      "eligible_engines": ["chatgpt", "human"],
+      "title": "Independently falsify the integrated Profitability Learning and Money Intelligence architecture",
+      "dependencies": ["COORD-MI-CAUSAL-002"],
+      "blockers": [],
+      "issue": 462,
+      "branch": "agent/testing-security",
+      "pr": null,
+      "evidence_required": [
+        "trace actual merged default execution from durable profitability/component and causal memory through ranking, eligibility, queueing and execution rather than accepting code-presence claims",
+        "prove useful, harmful and conditional component evidence changes behavior and unavailable or corrupt memory fails closed",
+        "falsify post-hoc subgroup mining, parameter tuning, adaptive or repeated looks, incomplete project-wide family size, outcome-selected reranking, successor duplication, fake ablation and cross-lane multiplicity",
+        "require fresh fingerprints, predeclared chronology and multiple-testing treatment for every outcome-selected variation or successor",
+        "prove narrative or correlated facts cannot alter scientific admission without structured point-in-time provenance and a frozen mechanism, control and falsifier",
+        "prove rejected exact strategy IDs and fingerprints cannot regain eligibility through causal, component, similarity or ancestry paths",
+        "exercise deploy replacement, restart, replay, races, stale writers, outages, corrupt state, concurrent writers and partial persistence; every unsafe or ambiguous condition must fail closed",
+        "audit decision, entry, exit, availability and OOS/forward boundaries for post-event leakage",
+        "preserve broker/trade/promotion authority false and the combined variable paid-resource ceiling near $30/month",
+        "add focused regressions for every defect and require exact-head Security and Reliability plus independent review before integration"
+      ],
+      "completion_rule": "Phase 3 is DONE only after the live merged execution paths have been independently traced and adversarially tested, all discovered defects are fixed or durably blocked with focused regressions, exact-head CI and independent review pass, and the evidence supports routing Phase 4 permanent autonomous-loop integration. Do not self-certify or weaken safeguards.",
       "next_task": null
     }
   ]

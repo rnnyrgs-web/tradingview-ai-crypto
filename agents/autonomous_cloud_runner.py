@@ -26,6 +26,12 @@ COORDINATION_PATH = ROOT / "orchestration" / "specialist_coordination.json"
 PROTECTED_PATHS = load_protected_paths()
 TERMINAL_AGENT_STATUSES = {"READY_FOR_PR", "NO_CHANGE", "BLOCKED"}
 RUNNING_RECOVERY_MINUTES = 60
+CONFIG_ENGINE_BY_NAME = {
+    "autonomous_specialist_runner.json": "chatgpt",
+    "autonomous_specialist_runner_claude.json": "claude",
+    "autonomous_specialist_runner_claude_code.json": "claude-code",
+}
+SUPPORTED_ENGINES = frozenset(CONFIG_ENGINE_BY_NAME.values())
 
 
 class PolicyError(RuntimeError):
@@ -70,7 +76,10 @@ def load_json(path: Path) -> dict[str, Any]:
 
 def load_config(path: Path = CONFIG_PATH) -> dict[str, Any]:
     config = load_json(path)
-    validate_config(config)
+    expected_engine = CONFIG_ENGINE_BY_NAME.get(path.name)
+    if expected_engine is None:
+        raise PolicyError(f"unrecognized runner config filename: {path.name}")
+    validate_config(config, expected_engine=expected_engine)
     return config
 
 
@@ -103,7 +112,14 @@ def save_state(path: Path, state: dict[str, Any]) -> None:
     path.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def validate_config(config: dict[str, Any]) -> None:
+def validate_config(config: dict[str, Any], *, expected_engine: str | None = None) -> None:
+    engine = config.get("engine")
+    if engine not in SUPPORTED_ENGINES:
+        raise PolicyError("runner config engine identity is missing or unsupported")
+    if expected_engine is not None and engine != expected_engine:
+        raise PolicyError(
+            f"runner config engine identity must be {expected_engine}, got {engine}"
+        )
     policy, budget = config.get("policy"), config.get("budget")
     roles, models = config.get("roles"), config.get("models")
     if not all(isinstance(v, dict) for v in (policy, budget, roles, models)):
@@ -267,7 +283,20 @@ def recover_state(state: dict[str, Any], coordination: dict[str, Any], now: date
 
 def highest_ready_task(config: dict[str, Any], coordination: dict[str, Any]) -> dict[str, Any] | None:
     roles = set(config["autonomous_roles"])
-    candidates = [t for t in coordination["tasks"] if t.get("owner") in roles and t.get("status") == "READY" and not t.get("blockers")]
+    engine = config.get("engine")
+    if engine not in SUPPORTED_ENGINES:
+        raise PolicyError("runner config engine identity is missing or unsupported")
+    candidates = [
+        task
+        for task in coordination["tasks"]
+        if task.get("owner") in roles
+        and task.get("status") == "READY"
+        and not task.get("blockers")
+        and (
+            not task.get("eligible_engines")
+            or engine in task["eligible_engines"]
+        )
+    ]
     return min(candidates, key=lambda t: (int(t.get("priority", 999999)), str(t.get("id", ""))), default=None)
 
 

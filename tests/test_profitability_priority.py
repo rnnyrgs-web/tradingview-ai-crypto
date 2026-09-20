@@ -121,17 +121,18 @@ def test_select_next_returns_none_for_a_role_with_no_active_or_queued_task():
 
 
 
-def test_select_next_routes_phase_two_only_to_its_owner():
+def test_select_next_routes_phase_three_only_to_its_owner():
     from orchestration.specialist_coordination import next_task
 
     state = load_state()
     task = select_next(state, "data-market")
     assert task is None
     assert task == next_task(state, "data-market")
-    quant = select_next(state, "quant-research")
-    assert quant == next_task(state, "quant-research")
-    assert quant["id"] == "COORD-MI-CAUSAL-002"
-    assert quant["issue"] == 451
+    assert select_next(state, "quant-research") is None
+    review = select_next(state, "testing-security")
+    assert review == next_task(state, "testing-security")
+    assert review["id"] == "COORD-ARCH-ADVERSARIAL-001"
+    assert review["issue"] == 462
 
 def test_select_next_returns_the_same_task_as_next_task_for_an_active_role():
     from orchestration.specialist_coordination import next_task

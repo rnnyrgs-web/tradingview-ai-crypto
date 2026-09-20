@@ -54,10 +54,10 @@ def test_lead_reconciliation_closes_stale_data_task_and_routes_safe_followup():
     assert primitive["next_task"] == "COORD-MI-CAUSAL-002"
 
     runtime = tasks["COORD-MI-CAUSAL-002"]
-    assert runtime["status"] == "READY"
+    assert runtime["status"] == "DONE"
     assert runtime["owner"] == "quant-research"
     assert runtime["issue"] == 451
-    assert runtime["pr"] is None
+    assert runtime["pr"] == 460
     assert runtime["blockers"] == []
     assert runtime["dependencies"] == ["COORD-MI-CAUSAL-001"]
     requirements = " ".join(runtime["evidence_required"]).lower()
@@ -67,3 +67,16 @@ def test_lead_reconciliation_closes_stale_data_task_and_routes_safe_followup():
     assert "rejected exact strategy fingerprints remain ineligible" in requirements
     assert "no oos/forward opening, broker/trade/promotion authority" in requirements
     assert "exact-deployed-sha runtime acceptance" in requirements
+    runtime_evidence = runtime["completion_evidence"]
+    assert runtime_evidence["accepted_main_sha"] == "c1737bd4b3340a9073bce64f9f9143f8a0bc03f8"
+    assert runtime_evidence["causal_runtime_acceptance_run"] == 35484292758
+    assert runtime_evidence["canonical_rejected_id_veto"] is True
+    assert runtime_evidence["phase_2_complete"] is True
+
+    adversarial = tasks["COORD-ARCH-ADVERSARIAL-001"]
+    assert adversarial["status"] == "READY"
+    assert adversarial["owner"] == "testing-security"
+    assert adversarial["branch"] == "agent/testing-security"
+    assert adversarial["issue"] == 462
+    assert adversarial["pr"] is None
+    assert adversarial["dependencies"] == ["COORD-MI-CAUSAL-002"]

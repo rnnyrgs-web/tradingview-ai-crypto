@@ -1,7 +1,7 @@
 # AI_STATE.md
 
-Last reconciled: 2026-09-19T21:58Z
-Last updated: 2026-09-19T21:58Z
+Last reconciled: 2026-09-20T02:46Z
+Last updated: 2026-09-20T02:46Z
 
 This is the compact canonical handoff for `rnnyrgs-web/tradingview-ai-crypto`. Verify actual `main` SHA first on every run, then read `UNIFIED_PROFITABILITY_LEAD_SPEC.md`, `AGENTS.md`, `AUTONOMOUS_RESEARCH_DIRECTOR_STATUS.md`, `docs/ASTRA_BACKGROUND_WORKER.md`, strategy/rejected/coordination state including overrides, `orchestration/model_routing_policy.json`, current Money Intelligence / Big-Move artifacts, open PRs, active ownership and exact-head CI. GitHub durable state outranks chat memory.
 
@@ -17,9 +17,9 @@ Sequential phases:
 3. Independent adversarial architecture review/fixes.
 4. Permanent autonomous-loop integration.
 
-**Phase 1 acceptance evidence is COMPLETE. Earliest incomplete phase: PHASE 2.**
+**Phase 1 and Phase 2 acceptance evidence are COMPLETE. Earliest incomplete phase: PHASE 3.**
 
-Issue #451 is the durable Phase-2 acceptance contract. Do not advance to Phase 3 until Phase 2 has genuine persistent/runtime evidence, not merely schemas or tests.
+Issue #451 is the completed Phase-2 acceptance contract. Issue #462 is the durable Phase-3 adversarial-review contract. Do not advance to Phase 4 until the actual merged execution paths pass that independent review and all discovered defects are fixed or durably blocked.
 
 ## PHASE 1 — VERIFIED COMPLETE ACCEPTANCE
 
@@ -70,58 +70,58 @@ Durable negative memory includes at least `ACC-002`, `DATA-BASIS-001`, `DATA-FUN
 
 No validated profitable strategy exists yet.
 
-## PHASE 2 — ACTIVE NEXT PROGRAM PHASE
+## PHASE 2 — VERIFIED COMPLETE ACCEPTANCE
 
 Durable acceptance contract: issue #451, `Phase 2: evolving Money Intelligence + causal repricing memory`.
 
-The first bounded Phase-2 primitive is **integrated**:
-- PR #454 exact head `8da3ff1d212d28cfd9f04521c7ab7b5ec5a4d8e3` passed exact-head Security & Reliability and was independently merged as `dbc5e80c5c664863df645689dcd6df418db8194f`.
-- The merged core provides immutable point-in-time observations/provenance, frozen causal mechanism/direction/horizon/falsifier/matched-control contracts, multiple-testing protection, confidence gain/loss/decay, contradiction memory, PIT `flow/float` and `flow/liquidity`, exact rejected-fingerprint vetoes, deployment-durable service-role Supabase append-only versioning with digest/parent-chain integrity, bounded stale-writer replay, and fail-closed outage/corruption behavior.
-- This primitive is research-only and has zero broker/trade/promotion/OOS-opening authority.
+The Phase-2 core and default autonomous consumption path are integrated:
+- PR #454 provided immutable point-in-time evidence/provenance, frozen mechanisms, controls and falsifiers, confidence gain/loss/decay, contradiction memory, defensible relative-impact features, multiple-testing state, durable service-role Supabase versioning and fail-closed restart/replay/outage/corruption behavior.
+- PR #460 wired structured support into the default research director and downstream Big-Move / strategy-component mission path.
+- PR #461 added exact-deployed runtime acceptance.
+- PR #465 closed a critical rescue path in which a causal hypothesis could reuse a canonically rejected strategy ID.
+- PR #466 fixed production packaging so the rejected-ID registry is present at runtime.
 
-The Phase-2 routing handoff is also **integrated**:
-- PR #458 exact reviewed head `f2e7a8779fede7f058a7fc89e6f591ffc5b9354b` passed exact-head Security & Reliability, was independently merged as canonical `main` SHA `ae23d01686bc71422143e2335c78a8c527f7b72c`, and post-merge Security & Reliability run `35471848162` completed **SUCCESS** on that exact SHA.
-- `COORD-MI-CAUSAL-001` is DONE.
-- Exactly one active Phase-2 successor is canonical: `COORD-MI-CAUSAL-002`, owner `quant-research`, status **READY**, issue #451.
-- At the reconciliation checkpoint, `agent/quant-research` still points to the already-integrated #454 primitive head and no open PR claims `COORD-MI-CAUSAL-002`; do not duplicate it if a worker claims it after this checkpoint.
+Exact production acceptance passed on canonical main SHA `c1737bd4b3340a9073bce64f9f9143f8a0bc03f8`:
+- Security & Reliability run `35484292738`: **SUCCESS**.
+- Money Intelligence Causal Runtime Acceptance run `35484292758`: **SUCCESS**.
+- Profitability Learning Runtime Acceptance regression run `35484292890`: **SUCCESS**.
+- Acceptance verified default-director structured-support consumption; confidence gain/loss/decay; matched-control contradiction removing missions; narrative-only evidence exclusion; restart/replay/stale-writer/outage/corruption fail-closed behavior; durable rejected-fingerprint memory; and canonical rejected-ID veto.
+- The final bounded acceptance fixture emitted zero missions after contradiction/rejection. Untouched OOS and genuine-forward evidence remained unopened; broker/trade/promotion authority remained false.
 
-Required Phase-2 end state remains a persistent point-in-time Money Intelligence / causal-repricing / reflexivity memory that:
-- records immutable/versioned evidence with observation/publication/availability cutoffs and source provenance;
-- maintains stable mechanism IDs and can **gain confidence, lose confidence, record contradictions and decay when stale**;
-- separates observed fact, inference, hypothesis and supported mechanism in machine-readable state;
-- freezes causal chain, expected direction/timing, falsifier, transmission variables and matched-control design before outcome evaluation;
-- accounts for chronology and repeated testing/search breadth;
-- uses relative-impact variables such as `flow/float`, `flow/free_float`, `flow/liquidity`, `flow/ADV`, leverage/positioning concentration and source-of-funds distinctions only when data genuinely supports the denominator and timing;
-- keeps missing/non-comparable denominators UNKNOWN rather than inventing them;
-- can emit provenance-bound **new** Big-Move precursor hypotheses and **new** strategy-component hypotheses with fresh fingerprints;
-- cannot rescue Phase-1 rejected exact strategy fingerprints;
-- cannot grant broker/trade/promotion authority from narrative or LLM prose;
-- survives restart/replay and fails closed on corrupt/missing/outage state;
-- is genuinely consumed by autonomous research routing before Phase 2 is called complete.
+`COORD-MI-CAUSAL-001` and `COORD-MI-CAUSAL-002` are DONE. Phase 2 completion is an architecture/runtime result, not evidence of profitability or a predictive 2x signal.
 
-**Active bounded milestone — `COORD-MI-CAUSAL-002`:** wire the approved durable causal memory into the actual autonomous Money Intelligence -> Big-Move / strategy-component mission-generation path. Structured provenance-bound mechanism evidence must affect mission eligibility/ranking by default; unsupported narrative-only claims must not. Prove one bounded mechanism can gain confidence, lose confidence from contradiction/matched controls, decay when stale, persist through restart/deploy replacement, and change downstream mission eligibility/ranking with exact provenance. Prove replay idempotency and fail-closed backend outage/corruption/stale-writer behavior. Keep rejected exact fingerprints ineligible. Exact-head Security & Reliability is required before integration and exact-deployed-SHA runtime acceptance is required afterward. Only then may Phase 2 be marked DONE and Phase 3 routed.
+## PHASE 3 — ACTIVE NEXT PROGRAM PHASE
 
-Do not rewrite existing append-only research cycles or duplicate the routine research-cycle writer while wiring the runtime path.
+Durable acceptance contract: issue #462. Exactly one active milestone is canonical: `COORD-ARCH-ADVERSARIAL-001`, owner `testing-security`, status **READY**, branch `agent/testing-security`.
+
+Independently trace and attempt to falsify the live merged paths, including:
+- durable Profitability Learning, Strategy Component Memory and causal memory actually changing ranking, eligibility, queueing and execution;
+- compounded after-cost economics, catastrophic-tail and return-concentration treatment rather than win-rate proxies;
+- fake attribution/ablation, post-hoc subgroup rescue, parameter tuning, repeated/adaptive looks, incomplete project-wide family size, successor duplication and interaction overfitting;
+- causal narrative/correlation entering admission without point-in-time provenance, frozen mechanism, control and falsifier;
+- stale beliefs, rejected-ID/fingerprint rescue, chronology leakage and OOS/forward contamination;
+- deploy replacement, restart, replay, race, concurrent-writer, partial-persistence, outage and corruption failure modes.
+
+Every defect requires a focused regression and an isolated fix PR. Preserve research-only authority and do not self-certify Phase 3. The stale premature Phase-3 reconciliation in closed PR #463 must not be resurrected.
 
 ## MONEY INTELLIGENCE / BIG-MOVE CURRENT STATE
 
-Latest persisted Money Intelligence research cycle cutoff: `2026-09-19T21:31:42Z` (`money_intelligence/research_cycles/2026-09-19T2131Z-cycle.json`). Its status is `RESEARCH_IN_PROGRESS_NO_OWNER_REPORT`; it changed no signal-engine, paper-trade, promotion-gate, broker or real-money state.
+Latest persisted Money Intelligence research cycle cutoff: `2026-09-20T02:43:10Z` (`money_intelligence/research_cycles/2026-09-20T0243Z-cycle.json`). Its status is `MATERIAL_CAUSAL_UPDATE_OWNER_REPORT_ELIGIBLE`; it changed no signal-engine, paper-trade, promotion-gate, broker or real-money state.
 
 Current preserved conclusions from the latest cycle:
-- SOL-treasury equities formed a high-beta matched cluster around the Sep. 18 SOL move; the event is better treated as a wrapper-factor / heterogeneous premium-leverage case than as a DFDV-specific news reaction. Predictive return value remains untested.
-- Treasury-wrapper causality must distinguish realized financing proceeds, actual asset acquisition/disposition, in-kind transfers, locked assets, seniority/cash carry, unused financing capacity, and liability-adjusted treasury value. Token-per-common-share accretion alone is not proof of common-equity economic accretion.
-- Upexi provides a direct in-kind SOL control: treasury holdings can rise without contemporaneous public-market buying, so holdings growth cannot be assumed to equal marginal spot demand.
-- Cross-wrapper primary-source evidence supports a causal bridge of financing/cash need -> realized proceeds or assets -> allocation decision -> actual acquisition/disposition mode -> venue/counterparty -> marginal flow. Registered capacity, legal permission and treasury size are state variables, not realized flow themselves.
-- Weekend Middle-East attack claims still did not establish a verified incremental deliverable-barrel loss; crude remains fail-closed pending physical damage/supply evidence and reopened-market confirmation.
+- Bank of England QT composition produced a supported regime-specific sovereign-duration learning: removing expected price-insensitive long-duration selling can lower long-end term premia even while the short-rate path remains hawkish. Track net duration supply by maturity rather than treating QT as one scalar liquidity variable; no post-event trade edge is established.
+- BTC held near the Sep. 18 breakout while aggregate derivatives leverage and forced-flow intensity fell. That is constructive absorption evidence, but positive funding, weekend liquidity and closed U.S. ETF markets leave the marginal buyer unidentified; the state remains WAIT.
+- ENA and AVAX remain high-information movers, but neither has a timestamp-defensible fresh fundamental-flow catalyst sufficient for a BUY thesis. Post-hoc narrative attribution remains rejected.
+- The Sep. 19 Saudi/Yanbu episode remains a failed-transmission control: an attempted or intercepted attack is not a verified loss of deliverable barrels. Crude remains fail-closed pending physical impairment and reopened-market confirmation.
 - No immutable new directional forecast cleared the evidence bar and no promotion-grade 90-day 2x candidate exists.
 
 These cases may motivate frozen causal hypotheses and tests, but their observed outcomes must not be mined into post-hoc thresholds.
 
 ## OPEN INTEGRATION / INTEGRITY WORK
 
-Current active Phase-2 core work is `COORD-MI-CAUSAL-002`; prioritize it over unrelated dashboard or legacy cleanup work unless another worker has already claimed it.
+Current active overnight-program work is `COORD-ARCH-ADVERSARIAL-001`; it belongs only to `testing-security` on `agent/testing-security`. Do not let cloud/quant lanes claim this manual independent-review task.
 
-PR #457 is a separate Promising Results dashboard task and does not satisfy Phase-2 causal-runtime acceptance. PR #453 is a bounded development-orchestrator task and likewise does not substitute for scientific/runtime Phase-2 evidence.
+PR #457 is a separate Promising Results dashboard task and does not satisfy Phase-3 adversarial review. PR #453 is a bounded development-orchestrator task and likewise does not substitute for independent architecture evidence. PR #463 is closed, stale and must not be revived.
 
 Older open PRs (#387, #389, #394, #429, #432, #433, #434) predate the current main materially. Their old green CI is not sufficient for integration. Revalidate against current `main`, current scientific objectives and current active ownership before considering any merge; close superseded work rather than reviving it by inertia.
 
@@ -150,8 +150,8 @@ Do not select another DATA-BREADTH candidate while `COORD-DATA-007` remains bloc
 
 ## STATUS
 
-Current truth: **Phase 1 exact-deployed profitability-learning runtime acceptance passed; Phase 2 is the earliest incomplete overnight-program phase; its durable causal-memory primitive and `COORD-MI-CAUSAL-002` routing are integrated; runtime consumption/deployed acceptance is still missing; no validated profitable strategy exists; `DISC-BTC-LEADLAG-001-v1` remains rejected pre-OOS; no promotion-grade 90-day 2x candidate exists; untouched OOS/forward remain locked; broker/live authority remains off.**
+Current truth: **Phase 1 and Phase 2 exact-deployed runtime acceptance passed; Phase 3 is the earliest incomplete overnight-program phase; `COORD-ARCH-ADVERSARIAL-001` is the sole active milestone; no validated profitable strategy exists; `DISC-BTC-LEADLAG-001-v1` remains rejected pre-OOS; no promotion-grade 90-day 2x candidate exists; untouched OOS/forward remain locked; broker/live authority remains off.**
 
 ## EXACT NEXT STEP
 
-Execute `COORD-MI-CAUSAL-002` from current `main` on an isolated `quant-research` branch unless a current owner/PR already claims it. Wire the approved durable causal-memory store into the actual autonomous Money Intelligence -> Big-Move / strategy-component mission path; prove provenance-bound mission/ranking changes, restart/replay/deploy replacement and outage/corruption/stale-writer fail-closed behavior; pass exact-head Security & Reliability; integrate only after independent review; then run exact-deployed-SHA runtime acceptance. Do not call Phase 2 complete or route Phase 3 before that evidence exists.
+After independent integration of this reconciliation, execute `COORD-ARCH-ADVERSARIAL-001` from current `main` on the canonical `agent/testing-security` branch under issue #462. Trace the real merged paths end to end, attempt each declared falsification, add focused regressions and isolated fixes for every defect, and require exact-head Security & Reliability plus independent review. Do not self-certify Phase 3, reopen protected OOS/forward evidence, or grant broker/trade/promotion authority.
