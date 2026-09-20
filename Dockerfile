@@ -7,6 +7,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY *.py ./
 COPY profitability_learning/ profitability_learning/
 COPY orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz orchestration/evidence/
+COPY orchestration/rejected_fingerprints.py orchestration/
 COPY orchestration/rejected_fingerprints.json orchestration/
 COPY orchestration/signal_development_objective.json orchestration/
 EXPOSE 8000
