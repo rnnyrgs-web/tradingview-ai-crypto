@@ -1,9 +1,18 @@
 from copy import deepcopy
+from pathlib import Path
 from threading import Lock
 
 import money_intelligence_causal_acceptance as acceptance
 from money_intelligence_causal_memory import CausalMemoryError, CausalRepricingMemory
 from money_intelligence_mission_integration import apply_causal_feedback
+
+
+def test_runtime_acceptance_rechecks_deployment_packaging_changes():
+    workflow = Path(
+        ".github/workflows/money-intelligence-causal-runtime-acceptance.yml"
+    ).read_text(encoding="utf-8")
+
+    assert "      - Dockerfile" in workflow
 
 
 class FakeDurableCausalStore:
