@@ -640,6 +640,314 @@ def test_successful_no_pr_outcome_reconciles_without_redispatch(status, lifecycl
     assert len(api.sent) == 1
 
 
+def _completed_wait(*, main_advanced=False):
+    coordination = _idle_coordination()
+    task = _ready_task(coordination)
+    api, store, budget = _API(), _Store(), _Budget()
+    outcome = {"status": "WAIT", "reason": "cooldown",
+               "retry_at": (NOW + timedelta(hours=1)).isoformat()}
+    observed = _complete_dispatch(coordination, api, store, budget, task, outcome,
+                                  main_advanced=main_advanced)
+    assert observed.reason == "WORKER_WAIT"
+    return coordination, task, api, store, budget
+
+
+def _archived_receipt(intent):
+    receipt = copy.deepcopy(intent)
+    receipt.pop("history", None)
+    return receipt
+
+
+def test_wait_before_retry_at_is_repeatable_without_a_second_dispatch():
+    coordination, task, api, store, budget = _completed_wait()
+    original = copy.deepcopy(store.value["dispatches"][task["id"]])
+    writes = store.writes
+    for minute in (2, 30, 59):
+        result = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                           budget, NOW + timedelta(minutes=minute), api.main_sha)
+        assert result.reason == "WORKER_WAIT"
+    assert store.value["dispatches"][task["id"]] == original
+    assert store.writes == writes
+    assert len(api.sent) == 1
+
+
+@pytest.mark.parametrize("minutes", [60, 61])
+@pytest.mark.parametrize("main_advanced", [False, True])
+def test_wait_releases_once_at_or_after_deadline_on_current_main(minutes, main_advanced):
+    coordination, task, api, store, budget = _completed_wait(main_advanced=main_advanced)
+    original = copy.deepcopy(store.value["dispatches"][task["id"]])
+    released = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                         budget, NOW + timedelta(minutes=minutes), api.main_sha)
+    fresh = store.value["dispatches"][task["id"]]
+    assert released.reason == "WAIT_REDISPATCHED"
+    assert fresh["status"] == "DISPATCHED"
+    assert fresh["main_sha"] == api.main_sha
+    assert fresh["generation"] == 1
+    assert fresh["history"] == [_archived_receipt(original)]
+    assert fresh["attempts"][0]["request_id"] != original["attempts"][0]["request_id"]
+    assert api.sent[-1][1]["orchestrator_request_id"] == fresh["attempts"][0]["request_id"]
+    assert len(api.sent) == 2
+    for minute in (minutes, minutes + 1):
+        repeated = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                             budget, NOW + timedelta(minutes=minute), api.main_sha)
+        assert repeated.reason == "DISPATCH_VISIBILITY_WAIT"
+    assert len(api.sent) == 2
+    assert store.value["dispatches"][task["id"]]["history"] == [_archived_receipt(original)]
+
+
+def test_wait_release_rechecks_canonical_ownership_branch_and_budget():
+    for change, expected in [
+        (lambda task, api, budget: task.update(eligible_engines=["claude-code"]), "ENGINE_INELIGIBLE"),
+        (lambda task, api, budget: task.update(eligible_engines=["chatgpt", "claude-code"],
+                                               engine_claim="claude-code"), "OTHER_ENGINE_CLAIM"),
+        (lambda task, api, budget: api.branches.add("auto/data-market/coord-test-orch-001"),
+         "TASK_ALREADY_CLAIMED"),
+        (lambda task, api, budget: setattr(budget, "allowed", False), "SHARED_BUDGET_DENIED"),
+    ]:
+        coordination, task, api, store, budget = _completed_wait()
+        change(task, api, budget)
+        result = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                           budget, NOW + timedelta(hours=1), api.main_sha)
+        assert result.reason == expected
+        assert len(api.sent) == 1
+        assert store.value["dispatches"][task["id"]]["status"] == "COMPLETED"
+
+
+def test_wait_release_never_runs_after_canonical_task_stops_being_ready():
+    coordination, task, api, store, budget = _completed_wait()
+    task["status"] = "BLOCKED"
+    task["blockers"] = ["new canonical blocker"]
+    result = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                       budget, NOW + timedelta(hours=1), api.main_sha)
+    assert result.reason == "NO_READY_TASK"
+    assert len(api.sent) == 1
+
+
+def test_wait_release_first_cas_failure_does_not_post_and_can_restart():
+    coordination, task, api, store, budget = _completed_wait()
+    original = copy.deepcopy(store.value["dispatches"][task["id"]])
+    store.fail_on_write = store.writes + 1
+    with pytest.raises(RuntimeError, match="durable CAS"):
+        run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                  budget, NOW + timedelta(hours=1), api.main_sha)
+    assert store.value["dispatches"][task["id"]] == original
+    assert len(api.sent) == 1
+    restarted = _Store()
+    restarted.value = copy.deepcopy(store.value)
+    released = run_existing_review_cycle(coordination, _policy(), _config(), api, restarted,
+                                         budget, NOW + timedelta(hours=1), api.main_sha)
+    assert released.reason == "WAIT_REDISPATCHED"
+    assert restarted.value["dispatches"][task["id"]]["history"] == [_archived_receipt(original)]
+    assert len(api.sent) == 2
+
+
+def test_concurrent_wait_release_stale_cas_cannot_post_twice():
+    coordination, task, api, store, budget = _completed_wait()
+    remote = {"value": copy.deepcopy(store.value), "revision": 0}
+
+    class SnapshotStore:
+        def __init__(self):
+            self.snapshot = copy.deepcopy(remote["value"])
+            self.revision = remote["revision"]
+
+        def load(self):
+            return copy.deepcopy(self.snapshot)
+
+        def save(self, value):
+            if self.revision != remote["revision"]:
+                raise RuntimeError("durable CAS conflict")
+            remote["value"] = copy.deepcopy(value)
+            remote["revision"] += 1
+            self.revision = remote["revision"]
+            self.snapshot = copy.deepcopy(value)
+
+    first, stale = SnapshotStore(), SnapshotStore()
+    released = run_existing_review_cycle(coordination, _policy(), _config(), api, first,
+                                         budget, NOW + timedelta(hours=1), api.main_sha)
+    assert released.reason == "WAIT_REDISPATCHED"
+    with pytest.raises(RuntimeError, match="durable CAS conflict"):
+        run_existing_review_cycle(coordination, _policy(), _config(), api, stale,
+                                  budget, NOW + timedelta(hours=1), api.main_sha)
+    assert len(api.sent) == 2
+    replayed = run_existing_review_cycle(coordination, _policy(), _config(), api,
+                                         SnapshotStore(), budget,
+                                         NOW + timedelta(hours=1), api.main_sha)
+    assert replayed.reason == "DISPATCH_VISIBILITY_WAIT"
+    assert len(api.sent) == 2
+
+
+def test_wait_release_second_cas_failure_adopts_exact_run_after_restart():
+    coordination, task, api, store, budget = _completed_wait()
+    original = copy.deepcopy(store.value["dispatches"][task["id"]])
+    store.fail_on_write = store.writes + 2
+    with pytest.raises(RuntimeError, match="durable CAS"):
+        run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                  budget, NOW + timedelta(hours=1), api.main_sha)
+    pending = store.value["dispatches"][task["id"]]
+    assert pending["status"] == "REQUESTED"
+    assert pending["history"] == [_archived_receipt(original)]
+    assert len(api.sent) == 2
+    api.dispatch_runs = [{"id": 126, "request_id": pending["attempts"][0]["request_id"],
+                          "task_id": task["id"], "head_sha": api.main_sha,
+                          "status": "queued", "conclusion": None}]
+    restarted = _Store()
+    restarted.value = copy.deepcopy(store.value)
+    adopted = run_existing_review_cycle(coordination, _policy(), _config(), api, restarted,
+                                        budget, NOW + timedelta(hours=1, minutes=1), api.main_sha)
+    assert adopted.reason == "DISPATCH_RUN_ADOPTED"
+    assert restarted.value["dispatches"][task["id"]]["run_id"] == 126
+    assert len(api.sent) == 2
+
+
+def test_wait_release_post_uncertainty_adopts_exact_run_without_duplicate():
+    coordination, task, api, store, budget = _completed_wait()
+    original = copy.deepcopy(store.value["dispatches"][task["id"]])
+    api.dispatch_error = True
+    uncertain = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                          budget, NOW + timedelta(hours=1), api.main_sha)
+    assert uncertain.reason == "DISPATCH_OUTCOME_UNKNOWN"
+    pending = copy.deepcopy(store.value["dispatches"][task["id"]])
+    assert pending["history"] == [_archived_receipt(original)]
+    assert len(api.sent) == 2
+    api.dispatch_runs = [{"id": 126, "request_id": pending["attempts"][0]["request_id"],
+                          "task_id": task["id"], "head_sha": api.main_sha,
+                          "status": "queued", "conclusion": None}]
+    adopted = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                        budget, NOW + timedelta(hours=1, minutes=1), api.main_sha)
+    assert adopted.reason == "DISPATCH_RUN_ADOPTED"
+    assert len(api.sent) == 2
+    api.dispatch_runs = []
+    repeated = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                         budget, NOW + timedelta(hours=1, minutes=6), api.main_sha)
+    assert repeated.reason == "DISPATCH_RUN_PREVIOUSLY_OBSERVED"
+    assert len(api.sent) == 2
+
+
+def test_wait_release_post_uncertainty_uses_bounded_retry_without_run():
+    coordination, task, api, store, budget = _completed_wait()
+    original = copy.deepcopy(store.value["dispatches"][task["id"]])
+    api.dispatch_error = True
+    uncertain = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                          budget, NOW + timedelta(hours=1), api.main_sha)
+    assert uncertain.reason == "DISPATCH_OUTCOME_UNKNOWN"
+    api.dispatch_error = False
+    retried = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                        budget, NOW + timedelta(hours=1, minutes=6), api.main_sha)
+    assert retried.reason == "DISPATCH_RETRIED"
+    assert len(api.sent) == 3
+    assert store.value["dispatches"][task["id"]]["history"] == [_archived_receipt(original)]
+    assert len(store.value["dispatches"][task["id"]]["attempts"]) == 2
+
+
+@pytest.mark.parametrize("retry_at", [None, "bad", "2026-09-19T17:00:00"])
+def test_wait_release_rejects_missing_or_malformed_retry_at(retry_at):
+    coordination, task, api, store, budget = _completed_wait()
+    store.value["dispatches"][task["id"]]["worker_outcome"]["retry_at"] = retry_at
+    result = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                       budget, NOW + timedelta(hours=2), api.main_sha)
+    assert result.reason == "MALFORMED_WORKER_OUTCOME"
+    assert result.lifecycle is Lifecycle.BLOCKED
+    assert len(api.sent) == 1
+
+
+def test_wait_release_rejects_corrupt_historical_receipt():
+    coordination, task, api, store, budget = _completed_wait()
+    run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                              budget, NOW + timedelta(hours=1), api.main_sha)
+    store.value["dispatches"][task["id"]]["history"][0]["worker_outcome"] = None
+    result = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                       budget, NOW + timedelta(hours=1, minutes=1), api.main_sha)
+    assert result.reason == "MALFORMED_DISPATCH_INTENT"
+    assert result.lifecycle is Lifecycle.BLOCKED
+    assert len(api.sent) == 2
+
+
+def test_wait_release_is_bounded_across_multiple_completed_waits():
+    coordination, task, api, store, budget = _completed_wait()
+    first = copy.deepcopy(store.value["dispatches"][task["id"]])
+    released = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                         budget, NOW + timedelta(hours=1), api.main_sha)
+    assert released.reason == "WAIT_REDISPATCHED"
+    second_id = api.sent[-1][1]["orchestrator_request_id"]
+    api.dispatch_runs = [{"id": 126, "request_id": second_id,
+                          "task_id": task["id"], "head_sha": api.main_sha,
+                          "status": "completed", "conclusion": "success"}]
+    api.worker_outcome = {"status": "WAIT", "reason": "cooldown again",
+                          "retry_at": (NOW + timedelta(hours=2)).isoformat()}
+    observed = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                         budget, NOW + timedelta(hours=1, minutes=1), api.main_sha)
+    assert observed.reason == "WORKER_WAIT"
+    second = copy.deepcopy(store.value["dispatches"][task["id"]])
+    released_again = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                               budget, NOW + timedelta(hours=2), api.main_sha)
+    assert released_again.reason == "WAIT_REDISPATCHED"
+    third = store.value["dispatches"][task["id"]]
+    assert third["generation"] == 2
+    assert third["history"] == [_archived_receipt(first), _archived_receipt(second)]
+    assert len({record["attempts"][0]["request_id"] for record in
+                [first, second, third]}) == 3
+    third_id = api.sent[-1][1]["orchestrator_request_id"]
+    api.dispatch_runs = [{"id": 127, "request_id": third_id,
+                          "task_id": task["id"], "head_sha": api.main_sha,
+                          "status": "completed", "conclusion": "success"}]
+    api.worker_outcome = {"status": "WAIT", "reason": "still cooling down",
+                          "retry_at": (NOW + timedelta(hours=3)).isoformat()}
+    run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                              budget, NOW + timedelta(hours=2, minutes=1), api.main_sha)
+    exhausted = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                          budget, NOW + timedelta(hours=3), api.main_sha)
+    assert exhausted.reason == "WAIT_RETRY_EXHAUSTED"
+    assert exhausted.lifecycle is Lifecycle.BLOCKED
+    assert len(api.sent) == 3
+
+
+@pytest.mark.parametrize("field,value", [
+    ("run_status", "in_progress"),
+    ("run_conclusion", "failure"),
+    ("run_id", None),
+    ("status", "OBSERVED"),
+])
+def test_wait_release_rejects_corrupt_active_receipt(field, value):
+    coordination, task, api, store, budget = _completed_wait()
+    store.value["dispatches"][task["id"]][field] = value
+    result = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                       budget, NOW + timedelta(hours=1), api.main_sha)
+    assert result.reason == "MALFORMED_DISPATCH_INTENT"
+    assert result.lifecycle is Lifecycle.BLOCKED
+    assert len(api.sent) == 1
+
+
+def test_wait_release_rejects_request_identity_mismatch():
+    coordination, task, api, store, budget = _completed_wait()
+    store.value["dispatches"][task["id"]]["attempts"][0]["request_id"] = "f" * 24
+    result = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                       budget, NOW + timedelta(hours=1), api.main_sha)
+    assert result.reason == "MALFORMED_DISPATCH_INTENT"
+    assert len(api.sent) == 1
+
+
+def test_wait_release_rejects_missing_durable_receipt():
+    coordination, task, api, store, budget = _completed_wait()
+    store.value["dispatches"][task["id"]].pop("worker_outcome")
+    result = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                       budget, NOW + timedelta(hours=1), api.main_sha)
+    assert result.reason == "MALFORMED_DISPATCH_INTENT"
+    assert result.lifecycle is Lifecycle.BLOCKED
+    assert len(api.sent) == 1
+
+
+def test_wait_release_rejects_missing_historical_receipt():
+    coordination, task, api, store, budget = _completed_wait()
+    run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                              budget, NOW + timedelta(hours=1), api.main_sha)
+    store.value["dispatches"][task["id"]]["history"] = []
+    result = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                       budget, NOW + timedelta(hours=1, minutes=1), api.main_sha)
+    assert result.reason == "MALFORMED_DISPATCH_INTENT"
+    assert result.lifecycle is Lifecycle.BLOCKED
+    assert len(api.sent) == 2
+
+
 @pytest.mark.parametrize("outcome", [None, {}, {"status": "NO_CHANGE"},
                                      {"status": "MERGE", "reason": "bad"}])
 def test_successful_run_without_valid_worker_receipt_fails_closed(outcome):

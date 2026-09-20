@@ -26,6 +26,7 @@ STALE_AFTER = timedelta(days=7)
 REVIEW_EVIDENCE_WAIT = timedelta(hours=2)
 DISPATCH_VISIBILITY_WAIT = timedelta(minutes=5)
 MAX_DISPATCH_ATTEMPTS = 2
+MAX_WAIT_RELEASES = 2
 WORKFLOW = "autonomous_cloud_specialist.yml"
 
 
@@ -356,28 +357,40 @@ def _review_for_task(state: dict[str, Any], task_id: str, pr_number: int, head_s
     return prior[-1] if prior else None
 
 
-def _dispatch_request_id(task_id: str, main_sha: str, attempt_number: int) -> str:
-    raw = json.dumps([task_id, main_sha, attempt_number], separators=(",", ":"))
+def _dispatch_request_id(task_id: str, main_sha: str, attempt_number: int,
+                         generation: int = 0) -> str:
+    identity = ([task_id, main_sha, attempt_number] if generation == 0 else
+                [task_id, main_sha, generation, attempt_number])
+    raw = json.dumps(identity, separators=(",", ":"))
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:24]
 
 
-def _dispatch_attempt(task_id: str, main_sha: str, number: int, now: datetime) -> dict[str, str]:
-    return {"request_id": _dispatch_request_id(task_id, main_sha, number),
+def _dispatch_attempt(task_id: str, main_sha: str, number: int, now: datetime,
+                      generation: int = 0) -> dict[str, str]:
+    return {"request_id": _dispatch_request_id(task_id, main_sha, number, generation),
             "requested_at": _iso(now)}
 
 
 def _send_dispatch(api: Any, store: Any, state: dict[str, Any], task_id: str,
                    workflow: str, branch: str, main_sha: str, now: datetime,
-                   *, retry: bool) -> CycleResult:
+                   *, retry: bool, release_wait: bool = False) -> CycleResult:
     updated = copy.deepcopy(state)
     prior = updated["dispatches"].get(task_id)
-    attempts = list(prior["attempts"]) if retry else []
-    attempt = _dispatch_attempt(task_id, main_sha, len(attempts) + 1, now)
+    generation = (prior.get("generation", 0) + 1 if release_wait else
+                  prior.get("generation", 0) if retry else 0)
+    history = copy.deepcopy(prior.get("history", [])) if retry or release_wait else []
+    if release_wait:
+        completed = copy.deepcopy(prior)
+        completed.pop("history", None)
+        history.append(completed)
+    attempts = copy.deepcopy(prior["attempts"]) if retry else []
+    attempt = _dispatch_attempt(task_id, main_sha, len(attempts) + 1, now, generation)
     attempts.append(attempt)
     inputs = {"task_id": task_id, "orchestrator_request_id": attempt["request_id"]}
     updated["dispatches"][task_id] = {
         "status": "REQUESTED", "branch": branch, "workflow": workflow,
         "main_sha": main_sha, "attempts": attempts,
+        "generation": generation, "history": history,
     }
     store.save(updated)
     try:
@@ -390,7 +403,8 @@ def _send_dispatch(api: Any, store: Any, state: dict[str, Any], task_id: str,
     acknowledged["dispatches"][task_id]["status"] = "DISPATCHED"
     store.save(acknowledged)
     return CycleResult(Lifecycle.CLAIMED,
-                       "DISPATCH_RETRIED" if retry else "DISPATCHED", task_id)
+                       "DISPATCH_RETRIED" if retry else
+                       "WAIT_REDISPATCHED" if release_wait else "DISPATCHED", task_id)
 
 
 def _worker_result(outcome: Any, task_id: str) -> CycleResult:
@@ -409,7 +423,9 @@ def _worker_result(outcome: Any, task_id: str) -> CycleResult:
     if status == "WAIT":
         retry_at = outcome.get("retry_at")
         try:
-            stamp = datetime.fromisoformat(str(retry_at).replace("Z", "+00:00"))
+            if not isinstance(retry_at, str):
+                raise ValueError("missing retry timestamp")
+            stamp = datetime.fromisoformat(retry_at.replace("Z", "+00:00"))
             if stamp.tzinfo is None:
                 raise ValueError("naive retry timestamp")
         except (TypeError, ValueError):
@@ -420,7 +436,53 @@ def _worker_result(outcome: Any, task_id: str) -> CycleResult:
     return CycleResult(Lifecycle.BLOCKED, f"WORKER_{status}", task_id)
 
 
+def _validated_attempts(record: dict[str, Any], task_id: str, generation: int,
+                        now: datetime) -> tuple[list[datetime], list[str]]:
+    attempts = record.get("attempts")
+    if (not isinstance(attempts, list) or not 1 <= len(attempts) <= MAX_DISPATCH_ATTEMPTS
+            or not isinstance(record.get("main_sha"), str)
+            or not SHA_RE.fullmatch(record["main_sha"])):
+        raise ValueError("malformed dispatch attempts")
+    stamps = [datetime.fromisoformat(a["requested_at"].replace("Z", "+00:00"))
+              for a in attempts]
+    ids = [a["request_id"] for a in attempts]
+    if (any(stamp.tzinfo is None or stamp > now for stamp in stamps)
+            or stamps != sorted(stamps)
+            or any(not isinstance(rid, str) or not re.fullmatch(r"[0-9a-f]{24}", rid)
+                   for rid in ids)
+            or ids != [_dispatch_request_id(task_id, record["main_sha"], number, generation)
+                       for number in range(1, len(ids) + 1)]):
+        raise ValueError("malformed dispatch attempts")
+    return stamps, ids
+
+
+def _release_wait(api: Any, store: Any, budget: Any,
+                  coordination: dict[str, Any], routing_policy: dict[str, Any],
+                  runner_config: dict[str, Any], state: dict[str, Any],
+                  task_id: str, main_sha: str, now: datetime) -> CycleResult:
+    claimed = set()
+    for task in coordination["tasks"]:
+        if task["status"] == "READY":
+            branch = safe_branch(task["owner"], task["id"])
+            if api.branch_exists(branch):
+                claimed.add(branch)
+    budget_allowed = bool(budget.can_dispatch(runner_config, "data-market", now))
+    remaining = {key: value for key, value in state["dispatches"].items() if key != task_id}
+    dispatch = select_successor(coordination, routing_policy, runner_config,
+                                claimed, remaining, budget_allowed)
+    if not dispatch.run:
+        return CycleResult(Lifecycle.READY if dispatch.task_id else None,
+                           dispatch.reason, dispatch.task_id)
+    if dispatch.task_id != task_id or dispatch.branch != state["dispatches"][task_id]["branch"]:
+        return CycleResult(Lifecycle.BLOCKED, "WAIT_RELEASE_TASK_MISMATCH", task_id)
+    if api.current_main_sha() != main_sha:
+        return CycleResult(None, "MAIN_CHANGED", task_id)
+    return _send_dispatch(api, store, state, task_id, dispatch.workflow,
+                          dispatch.branch, main_sha, now, retry=False, release_wait=True)
+
+
 def _reconcile_dispatch(api: Any, store: Any, budget: Any, runner_config: dict[str, Any],
+                        coordination: dict[str, Any], routing_policy: dict[str, Any],
                         state: dict[str, Any], task_id: str, main_sha: str,
                         now: datetime) -> CycleResult:
     intent = state["dispatches"].get(task_id)
@@ -429,30 +491,60 @@ def _reconcile_dispatch(api: Any, store: Any, budget: Any, runner_config: dict[s
             or not SHA_RE.fullmatch(intent["main_sha"])
             or intent.get("branch") != safe_branch("data-market", task_id)
             or intent.get("status") not in {"REQUESTED", "DISPATCHED", "OBSERVED", "BLOCKED", "COMPLETED"}
-            or not isinstance(intent.get("attempts"), list)
-            or not intent["attempts"]
-            or len(intent["attempts"]) > MAX_DISPATCH_ATTEMPTS):
+            or not isinstance(intent.get("generation", 0), int)
+            or isinstance(intent.get("generation", 0), bool)
+            or not 0 <= intent.get("generation", 0) <= MAX_WAIT_RELEASES
+            or not isinstance(intent.get("history", []), list)
+            or len(intent.get("history", [])) != intent.get("generation", 0)):
         return CycleResult(Lifecycle.BLOCKED, "MALFORMED_DISPATCH_INTENT", task_id)
-    attempts = intent["attempts"]
+    generation = intent.get("generation", 0)
+    history = intent.get("history", [])
     try:
-        stamps = [datetime.fromisoformat(a["requested_at"].replace("Z", "+00:00"))
-                  for a in attempts]
-        ids = [a["request_id"] for a in attempts]
-        if (any(stamp.tzinfo is None or stamp > now for stamp in stamps)
-                 or any(not re.fullmatch(r"[0-9a-f]{24}", rid) for rid in ids)
-                 or len(set(ids)) != len(ids)
-                 or ids != [_dispatch_request_id(task_id, intent["main_sha"], number)
-                            for number in range(1, len(ids) + 1)]):
-            raise ValueError("malformed attempts")
+        stamps, ids = _validated_attempts(intent, task_id, generation, now)
+        seen_ids = set(ids)
+        for index, record in enumerate(history):
+            if (not isinstance(record, dict) or "history" in record
+                    or record.get("generation", 0) != index
+                    or record.get("workflow") != WORKFLOW
+                    or record.get("branch") != intent["branch"]
+                    or record.get("status") != "COMPLETED"
+                    or not isinstance(record.get("run_id"), int)
+                    or record["run_id"] <= 0
+                    or record.get("run_status") != "completed"
+                    or record.get("run_conclusion") != "success"
+                    or _worker_result(record.get("worker_outcome"), task_id).reason != "WORKER_WAIT"):
+                raise ValueError("malformed completed WAIT history")
+            historical_stamps, historical_ids = _validated_attempts(record, task_id, index, now)
+            if set(historical_ids) & seen_ids:
+                raise ValueError("duplicate historical dispatch request")
+            seen_ids.update(historical_ids)
+            next_stamp = (history[index + 1]["attempts"][0]["requested_at"]
+                          if index + 1 < len(history) else intent["attempts"][0]["requested_at"])
+            release_stamp = datetime.fromisoformat(next_stamp.replace("Z", "+00:00"))
+            retry_stamp = datetime.fromisoformat(
+                record["worker_outcome"]["retry_at"].replace("Z", "+00:00"))
+            if (historical_stamps[-1] > release_stamp or retry_stamp > release_stamp):
+                raise ValueError("historical WAIT released before eligibility")
     except (KeyError, TypeError, AttributeError, ValueError):
         return CycleResult(Lifecycle.BLOCKED, "MALFORMED_DISPATCH_INTENT", task_id)
     if intent.get("worker_outcome") is not None:
         if (intent["status"] != "COMPLETED"
                 or not isinstance(intent.get("run_id"), int)
                 or intent["run_id"] <= 0
+                or intent.get("run_status") != "completed"
                 or intent.get("run_conclusion") != "success"):
             return CycleResult(Lifecycle.BLOCKED, "MALFORMED_DISPATCH_INTENT", task_id)
-        return _worker_result(intent["worker_outcome"], task_id)
+        decision = _worker_result(intent["worker_outcome"], task_id)
+        if decision.reason != "WORKER_WAIT":
+            return decision
+        retry_at = intent["worker_outcome"]["retry_at"]
+        stamp = datetime.fromisoformat(retry_at.replace("Z", "+00:00"))
+        if now < stamp:
+            return decision
+        if generation >= MAX_WAIT_RELEASES:
+            return CycleResult(Lifecycle.BLOCKED, "WAIT_RETRY_EXHAUSTED", task_id)
+        return _release_wait(api, store, budget, coordination, routing_policy,
+                             runner_config, state, task_id, main_sha, now)
     if intent["status"] == "COMPLETED":
         return CycleResult(Lifecycle.BLOCKED, "MALFORMED_DISPATCH_INTENT", task_id)
     run = api.find_dispatch_run(task_id, ids, intent["main_sha"], stamps[0])
@@ -505,7 +597,7 @@ def _reconcile_dispatch(api: Any, store: Any, budget: Any, runner_config: dict[s
         return CycleResult(Lifecycle.BLOCKED, reason, task_id)
     if now - stamps[-1] <= DISPATCH_VISIBILITY_WAIT:
         return CycleResult(Lifecycle.RUNNING, "DISPATCH_VISIBILITY_WAIT", task_id)
-    if len(attempts) >= MAX_DISPATCH_ATTEMPTS:
+    if len(ids) >= MAX_DISPATCH_ATTEMPTS:
         blocked = copy.deepcopy(state)
         blocked["dispatches"][task_id]["status"] = "BLOCKED"
         store.save(blocked)
@@ -689,7 +781,8 @@ def run_existing_review_cycle(
     ready = sorted((task for task in coordination["tasks"] if task["status"] == "READY"),
                    key=lambda task: (int(task.get("priority", 999999)), task["id"]))
     if ready[0]["id"] in state["dispatches"]:
-        return _reconcile_dispatch(api, store, budget, runner_config, state,
+        return _reconcile_dispatch(api, store, budget, runner_config,
+                                   coordination, routing_policy, state,
                                    ready[0]["id"], expected_main_sha, now)
 
     claimed = set()
