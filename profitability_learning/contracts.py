@@ -13,6 +13,14 @@ SAFE = {"research_only": True, "trade_authority": False, "promotion_authority": 
         "automatic_execution_authority": False, "broker_connected": False}
 MAX_TRADES = 100_000
 
+# These identifiers name reviewed executable implementations, not caller prose.
+# Adding an entry is a code change that must ship with an evaluator and tests.
+TRUSTED_EXECUTOR_IMPLEMENTATIONS = {
+    "restrictive_group_abstention_v1": (
+        "research_adaptive_accuracy._evaluate_frozen_filter@v1"
+    ),
+}
+
 
 def canonical(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
@@ -86,8 +94,11 @@ def strategy_semantic_fingerprint(strategy):
     """Label-invariant executable-rule identity for failure and novelty memory."""
     validate_strategy(strategy)
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
         "execution_rule": strategy["execution_rule"],
+        "executor_implementation": TRUSTED_EXECUTOR_IMPLEMENTATIONS.get(
+            strategy["execution_rule"], "UNVERIFIED_CALLER_DECLARATION"
+        ),
         "component_rules": sorted(
             (component["kind"], component["rule"])
             for component in strategy["components"]

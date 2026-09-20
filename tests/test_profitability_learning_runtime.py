@@ -5,6 +5,7 @@ import pytest
 
 from test_profitability_learning import experiment
 from test_profitability_learning_development import setup_ablation, evaluator
+from test_research_heavy_experiment_scheduler import _experiment
 from profitability_learning.development import run_ablation
 from profitability_learning.memory import Memory
 from profitability_learning.runtime import (complete_experiment, learning_snapshot,
@@ -116,10 +117,9 @@ def test_existing_legacy_completion_generates_missing_evidence_mission(monkeypat
 
 def test_existing_director_ranking_receives_memory_feedback(monkeypatch, tmp_path):
     configure(monkeypatch, tmp_path)
-    frozen = experiment()["contract"]
+    identity = _experiment("existing-exp", 100)
     army = {"workers": {"adaptive-accuracy": {"state": "resting", "latest_evidence": {
-        "evidence_conclusion": "pending_validation", "experiment": {"experiment_id": "existing-exp", "hypothesis": "test a rule",
-        "strategy": frozen["strategy"], "strategy_fingerprint": frozen["strategy_fingerprint"]}}}}}
+        "evidence_conclusion": "pending_validation", "experiment": identity}}}}
     before = refresh_director(army)["missions"][0]["priority"]
     enrich_legacy_lesson({"fingerprint": "legacy", "outcome": "validation_failed", "hypothesis": "test a rule",
                          "evidence_summary": {"experiment_id": "existing-exp"}})
@@ -131,12 +131,11 @@ def test_existing_director_ranking_receives_memory_feedback(monkeypatch, tmp_pat
 def test_existing_factory_candidates_reordered_from_completed_memory(monkeypatch, tmp_path):
     from profitability_learning.runtime import apply_queue_feedback
     configure(monkeypatch, tmp_path)
-    frozen = experiment()["contract"]
-    identity = {"strategy": frozen["strategy"], "strategy_fingerprint": frozen["strategy_fingerprint"]}
     enrich_legacy_lesson({"fingerprint": "legacy", "outcome": "validation_failed", "hypothesis": "test a rule",
                          "evidence_summary": {"experiment_id": "old"}})
-    queue = {"experiments": [{"experiment_id": "old", "information_priority": 1.0, **identity},
-                             {"experiment_id": "fresh", "information_priority": .9, **identity}]}
+    old, fresh = _experiment("old", 100), _experiment("fresh", 90)
+    old["information_priority"], fresh["information_priority"] = 1.0, .9
+    queue = {"experiments": [old, fresh]}
     result = apply_queue_feedback(queue)
     assert result["experiments"][0]["experiment_id"] == "fresh"
     assert queue["experiments"][0]["experiment_id"] == "old"

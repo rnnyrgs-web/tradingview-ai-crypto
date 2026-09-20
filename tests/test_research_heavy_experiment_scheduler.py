@@ -1,5 +1,6 @@
 from profitability_learning.contracts import fingerprint
 from research_heavy_experiment_scheduler import build_heavy_dispatch_plan
+from research_quant_science_factory import _scientific_design
 
 
 def _experiment(experiment_id, priority, samples=20, *, profitability_impact=None, signal_quality_impact=None):
@@ -16,7 +17,7 @@ def _experiment(experiment_id, priority, samples=20, *, profitability_impact=Non
         "timeframe": "both",
         "execution_rule": "restrictive_group_abstention_v1",
     }
-    return {
+    row = {
         "experiment_id": experiment_id,
         "information_priority": priority,
         "source_samples": samples,
@@ -51,6 +52,8 @@ def _experiment(experiment_id, priority, samples=20, *, profitability_impact=Non
         "trade_authority": False,
         "promotion_authority": False,
     }
+    row["science_design"] = _scientific_design(row)
+    return row
 
 
 def test_scheduler_admits_highest_priority_without_raising_concurrency():

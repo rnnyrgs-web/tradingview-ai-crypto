@@ -32,6 +32,9 @@ def test_quant_science_factory_predeclares_safe_scientific_design():
     assert design["minimum_evaluation_samples"] == 8
     assert design["minimum_actionable_coverage"] == 0.25
     assert design["executor_kind"] == "restrictive_group_abstention_v1"
+    assert design["executor_implementation_id"] == (
+        "research_adaptive_accuracy._evaluate_frozen_filter@v1"
+    )
     assert design["dispatchable_now"] is True
     assert design["parameter_mining_allowed"] is False
     assert design["untouched_oos_reuse_allowed"] is False

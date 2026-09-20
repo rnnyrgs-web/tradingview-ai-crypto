@@ -12,6 +12,7 @@ from math import isfinite
 from copy import deepcopy
 
 from profitability_learning.contracts import SAFE, number
+from research_quant_science_factory import verified_strategy_semantic_fingerprint
 
 from signal_development import objective_reference, priority_score, validate_task_contract
 
@@ -91,6 +92,10 @@ def _eligible(experiment: dict) -> bool:
         if design.get("dispatchable_now") is False:
             return False
         if "dispatchable_now" in design and not design.get("executor_kind"):
+            return False
+        try:
+            verified_strategy_semantic_fingerprint(experiment)
+        except (KeyError, TypeError, ValueError):
             return False
     return True
 
@@ -175,6 +180,7 @@ def build_heavy_dispatch_plan(experiment_queue: dict, *, running_experiment_ids=
             "hypothesis": row.get("hypothesis"),
             "research_method": design.get("research_method"),
             "executor_kind": design.get("executor_kind"),
+            "executor_implementation_id": design.get("executor_implementation_id"),
             "primary_endpoint": design.get("primary_endpoint"),
             "abstention_first": bool(design.get("abstention_first")),
             "falsification_criteria": list(row.get("falsification_criteria") or []),

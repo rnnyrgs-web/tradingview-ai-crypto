@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T0659Z",
+  "information_cutoff": "2026-09-20T06:59:17Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_before_persist": "21006d14bc6b3c96827800bac545f72479697827",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-20T06:54:58Z",
+    "artifact_cutoff_utc": "2026-09-20T06:59:17Z",
+    "seconds_this_run_minimum": 259,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 446,
+    "minimum_cumulative_seconds_since_last_owner_report": 705,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted; schedule gaps, idle time, source publication timestamps and background time are excluded."
+  },
+  "highest_information_question": "Can sovereign bond supply be represented more truthfully as expectation-adjusted private/free-float duration equivalents by maturity and marginal buyer, rather than scalar balance-sheet or QT dollars?",
+  "fresh_research": [
+    {
+      "topic": "Cross-central-bank evidence supports a duration-equivalent/free-float model rather than scalar QE/QT dollars",
+      "label": "DURATION-SUPPLY MODEL / MATERIAL METHOD STRENGTHENING",
+      "observed_facts": [
+        "Federal Reserve research measures SOMA holdings in ten-year equivalents (TYE), weighting par value by security duration relative to an on-the-run 10-year Treasury. The framework explicitly magnifies the economic importance of longer maturities and links the Fed portfolio's maturity composition to duration removed from private investors.",
+        "Federal Reserve research on the projected SOMA portfolio shows that term-premium effects evolve as the portfolio ages even without a simple one-for-one change in notional balance-sheet size. The relevant state is duration exposure removed from the private market, not dollars of securities alone.",
+        "ECB analysis of the APP models the term-premium channel through the current and expected future 'free float of duration risk' in private hands. It states that longer maturities have larger term-premium effects and that reinvestment can keep duration extracted even after net purchases stop, while portfolio ageing gradually returns duration risk to the market.",
+        "Bank of England July 2026 analysis estimates cumulative QT raised 10-year gilt yields by roughly 20-30 bp, but judges the much larger increase in term premia since 2022 was also driven by global policy uncertainty, high sovereign issuance and structurally weaker domestic long-gilt demand. The Bank explicitly treats the estimate as uncertain and regime-dependent.",
+        "The Bank of England July 2026 Market Participants Survey expected a median £50B APF reduction for Oct.2026-Sep.2027 and, among respondents expecting active sales, an average 15.6% long-maturity (>20y) sales weight. The September decision set an average £46B annual rundown but retained £120B of the longest gilts for banknote backing, set annual active sales at £20B, and paused APF auctions while implementation with the DMO is reviewed. Thus the aggregate pace change was modest relative to survey expectations, while the long-end composition/path changed much more substantially.",
+        "Federal Reserve 2024 work shows the marginal private buyer of Treasuries released by QT changes across regimes: households/dealers/foreign hedge funds featured in 2017-19, whereas households, dealers, insurers and the rest of the world were more important in the post-2022 episode. The paper states that the identity of the marginal buyer has implications for yield volatility."
+      ],
+      "inference": "A more causally faithful sovereign-duration state variable is expectation-adjusted NET MARKET-FACING DURATION EQUIVALENTS by maturity bucket, combined with the balance-sheet elasticity of the marginal absorber. Notional QE/QT dollars are insufficient because securities with different maturities remove/release different amounts of duration risk, portfolio ageing changes duration without requiring the same notional change, reinvestment changes the expected future free float, and the same supply can clear at different yields depending on who must absorb it and their constraints.",
+      "causal_chain": "fiscal issuance + central-bank purchases/retention/reinvestment/runoff/sales + debt-manager buybacks -> expected private free-float duration by maturity changes -> preferred-habitat/marginal buyers must absorb more or less duration -> dealer/arbitrage/intermediary capacity and structural pension/insurance/foreign demand determine price elasticity -> term premium/curve reprice -> mortgage/corporate discount rates and relative asset values change",
+      "matched_control": "The September 2026 BoE case is consistent with a maturity-composition surprise mattering more than the small aggregate-pace surprise: the July survey already centered the next annual APF reduction near £50B, while the September plan averaged £46B but materially changed the long-end path and implementation. This remains a mechanism-supporting control, not a clean calibrated elasticity estimate, because simultaneous Bank Rate, energy and global-bond news affected yields.",
+      "negative_findings": [
+        "Do not translate aggregate QE/QT dollars into a universal basis-point yield effect.",
+        "Do not assume unchanged balance-sheet notional means unchanged duration extraction; maturity ageing and reinvestment can change ten-year-equivalent exposure.",
+        "Do not assume active sales universally have a larger effect than passive runoff; credible studies disagree across designs and regimes.",
+        "Do not infer a trade from supply mechanics without measuring the pre-event expected path, policy-rate surprise, fiscal issuance, market depth and marginal buyer capacity.",
+        "Keep reserve-liquidity/funding-scarcity channels separate from the duration/term-premium channel; both can move financial conditions through different mechanisms."
+      ],
+      "learning_candidate": {
+        "proposed_id": "MI-L-20260920-013",
+        "status": "SUPPORTED_METHOD_RULE_PENDING_CANONICAL_LEDGER_PROMOTION",
+        "claim": "For sovereign bond markets, model expectation-adjusted private/free-float duration equivalents by maturity and marginal-buyer risk-bearing capacity rather than scalar QE/QT or balance-sheet dollars. Notional size, duration composition, portfolio ageing, reinvestment/runoff, fiscal replacement issuance and buyer identity are distinct causal variables.",
+        "promotion_note": "Evidence is now cross-validated across Fed, ECB and BoE frameworks plus a Fed marginal-buyer study. Preserve uncertainty about effect size and active-versus-passive ranking; promote to the learning ledger only with a safe append path rather than rewriting/truncating the existing JSONL."
+      },
+      "decision_support": "Research-model upgrade only. No sovereign-duration BUY/SHORT clears the evidence bar from this mechanism alone."
+    },
+    {
+      "topic": "Weekend crypto cross-section: AVAX strength persists while broad leverage contracts",
+      "label": "DAILY BIG-MOVE CAUSAL LAB / LIVE CONTROL",
+      "observed_facts": [
+        "CoinMarketCap around 06:55-06:57 UTC showed BTC near $80.27K (-0.91%/24h), ETH $2,572 (-2.05%), SOL $108.33 (-2.97%), XRP $1.381 (-2.87%) and LINK $11.97 (-3.08%).",
+        "AVAX was about $9.73 (+14.43%/24h, +31.29%/7d) with turnover about 26.7% of market cap and 24h volume up about 98%, preserving unusually strong idiosyncratic relative strength while major crypto assets were negative.",
+        "ZEC was about $1,448 (-7.21%/24h) but remained +27.36%/7d and +141.3%/30d, consistent with an extreme high-volatility wrapper/privacy/free-float case rather than a broad market move.",
+        "Global crypto derivatives open interest was about $437.1B, down 5.08%/24h; perpetual OI was down 5.10%. Average perpetual funding remained positive. BTC 24h liquidations were about $50.7M, with about $34.7M longs versus $15.9M shorts; in the latest 4h window about $3.91M of $4.06M BTC liquidations were longs.",
+        "USDT market cap was about $183.31B and USDC about $74.22B; their 7-day market-cap changes were approximately -0.08% and -0.06%, respectively, providing no evidence of a fresh broad stablecoin-liquidity expansion."
+      ],
+      "inference": "BTC is absorbing leverage contraction better than higher-beta majors, but positive funding, closed U.S. ETF markets and flat major-stablecoin supply still prevent a durable-accumulation claim. AVAX remains a genuine idiosyncratic attention/flow outlier after the previously identified ICE/NYSE evaluation disclosure, but direct AVAX value capture is still unproven because an Avalanche L1 can use custom economics and does not require old-style 2,000-AVAX validator staking.",
+      "alternative_explanations_for_avax": [
+        "Short covering/derivatives positioning not fully reconstructed at AVAX-specific level",
+        "Weekend liquidity and momentum amplification",
+        "Pre-positioning for the preannounced Helicon upgrade",
+        "Broader tokenization narrative after the SEC exemption"
+      ],
+      "matched_non_movers": "BTC, ETH, SOL, XRP and LINK were all negative while AVAX was double-digit positive. The broad SEC tokenized-securities exemption cannot by itself explain AVAX-specific relative strength because it does not select a blockchain.",
+      "decision_support": "BTC WAIT / tactical confirmation candidate. AVAX WAIT / AVOID CHASING. ZEC WAIT / AVOID CHASING. No immutable directional forecast frozen."
+    },
+    {
+      "topic": "China rate hold is expectation-aligned and does not resolve weak-credit-demand transmission",
+      "label": "MACRO EVENT CONTROL / WAIT",
+      "observed_facts": [
+        "Reuters reported on September 20 that China kept the one-year LPR at 3.00% and the five-year LPR at 3.50% for a 16th consecutive month; all 21 analysts in its survey expected no change.",
+        "The same reporting describes weak credit demand from property and local-government sectors and constrained room for broad rate easing while major global central banks are tightening.",
+        "U.S. Treasury Secretary Scott Bessent and Chinese Vice Premier He Lifeng are set to meet in New York on September 20 on AI, trade and critical minerals ahead of the Trump-Xi summit; no agreement outcome was available at this cutoff."
+      ],
+      "inference": "The fully expected LPR hold contains little clean policy surprise. China's current transmission problem should not be reduced to the administered price of credit alone: weak borrower balance sheets/credit demand and external yield constraints can limit the effect of small rate changes. The U.S.-China meeting remains future information, so sector winners should not be assigned from agenda headlines.",
+      "decision_support": "WAIT / NO EDGE from the LPR headline or pre-meeting agenda alone."
+    },
+    {
+      "topic": "Saudi weekend security event remains a physical-supply non-confirmation control",
+      "label": "ENERGY CONTROL / NO REGIME CHANGE",
+      "observed_facts": [
+        "Fresh reporting confirms a Houthi ballistic-missile attempt on Riyadh was intercepted without reported casualties or damage.",
+        "Saudi authorities said attempted attacks involving Yanbu and other locations were thwarted; Houthi claims of Aramco-target damage remain unverified at this cutoff."
+      ],
+      "inference": "The event increases geopolitical tail risk but still does not establish incremental lost deliverable oil barrels. Preserve the existing attack-headline != supply-loss rule and wait for verified infrastructure damage, loadings/route data, physical differentials and reopened-market pricing.",
+      "decision_support": "Crude WAIT / high tail risk."
+    }
+  ],
+  "daily_big_move_lab_delta": {
+    "selected_or_retested": [
+      "AVAX +14.4%/24h while BTC/ETH/SOL/XRP/LINK were negative: idiosyncratic relative strength persists, catalyst plausibility is stronger than market-beta explanations, but native-token value capture remains unproven.",
+      "BTC ~$80.3K during -5.1%/24h aggregate open-interest contraction with long-dominated recent liquidations: resilience is constructive but not sufficient for BUY without reopened ETF/spot confirmation.",
+      "BoE September 2026 QT plan versus July market expectations: maturity-composition/path surprise appears more informative than aggregate runoff pace, strengthening the duration-equivalent supply model."
+    ],
+    "not_promoted": [
+      "No fresh traditional cash-market session occurred during the weekend; no equity/rates/oil price response is fabricated.",
+      "ZEC remains an extreme high-volatility special situation but no new timestamp-defensible wrapper flow is available in this cycle.",
+      "No U.S.-China policy outcome existed at the cutoff; agenda headlines are not treated as realized policy."
+    ]
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast clears the evidence bar; existing WAIT states are preserved."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. The duration-equivalent/free-float framework is materially strengthened and merits later safe learning-ledger promotion, but the high-level regime and actionable Money Intelligence theses do not change enough to justify dashboard churn. No code or signal-system state changed.",
+  "next_research": [
+    "Build a maturity-bucket ten-year-equivalent/private-free-float duration table combining fiscal coupon issuance, central-bank holdings/retention/reinvestment/runoff/sales and debt-manager buybacks, with expectations frozen before each event.",
+    "Add marginal-buyer state variables: dealer inventory/depth, pension/insurance structural demand, foreign official/private demand, mutual-fund/household absorption and hedge-fund basis capacity.",
+    "Construct a timestamp-safe BoE event study around September 17 separating Bank Rate-path surprise from QT maturity-composition surprise and compare 2y/10y/30y reactions with earlier QT reviews.",
+    "After U.S. markets reopen, reconcile finalized BTC ETF flows with native-unit OI, funding/basis and price resilience before changing BTC WAIT.",
+    "For AVAX, obtain architecture-specific evidence for any ICE/NYSE deployment and measure AVAX-denominated validator/gas/burn demand before promoting a token-level adoption thesis."
+  ],
+  "sources": [
+    "https://www.federalreserve.gov/econres/feds/files/2017075pap.pdf",
+    "https://www.federalreserve.gov/econres/notes/feds-notes/projected-evolution-of-the-soma-portfolio-and-the-10-year-treasury-term-premium-effect-accessible-20170922.htm",
+    "https://www.ecb.europa.eu/press/economic-bulletin/articles/2019/html/ecb.ebart201902_01~3049319b8d.nl.html",
+    "https://www.bankofengland.co.uk/monetary-policy-report/2026/july-2026",
+    "https://www.bankofengland.co.uk/markets/market-intelligence/survey-results/2026/market-participants-survey-results-july-2026",
+    "https://www.bankofengland.co.uk/monetary-policy-summary-and-minutes/2026/september-2026",
+    "https://www.federalreserve.gov/econres/notes/feds-notes/who-buys-treasuries-when-the-fed-reduces-its-holdings-20240614.html",
+    "https://www.reuters.com/business/finance/china-keeps-benchmark-lending-rates-unchanged-16th-month-september-2026-09-20/",
+    "https://www.reuters.com/business/finance/us-treasurys-bessent-chinas-he-launch-talks-ai-trade-critical-minerals-2026-09-20/",
+    "CoinMarketCap connected real-time quotes/global derivatives metrics, 2026-09-20 06:55-06:57 UTC"
+  ],
+  "paid_resource_policy": "No new paid resources authorized; free/public/primary sources, connected CoinMarketCap data and high-quality contemporaneous reporting were used.",
+  "real_money_trading": "DISABLED / NOT AUTHORIZED"
+}

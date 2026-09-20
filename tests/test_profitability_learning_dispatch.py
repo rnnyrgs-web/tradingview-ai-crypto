@@ -10,6 +10,7 @@ from profitability_learning.runtime import (
     apply_queue_feedback, complete_experiment, enrich_legacy_lesson, refresh_director,
 )
 from research_heavy_experiment_scheduler import build_heavy_dispatch_plan
+from research_quant_science_factory import _scientific_design, _strategy_identity
 from test_profitability_learning import experiment
 from test_research_heavy_experiment_scheduler import _experiment
 
@@ -132,18 +133,64 @@ def test_missing_exact_identity_cannot_bypass_rejected_semantics(
     assert build_heavy_dispatch_plan(queue)["selected"] == []
 
 
-def test_material_rule_change_has_distinct_semantic_identity(monkeypatch, tmp_path):
-    configure(monkeypatch, tmp_path)
+def _completed_factory_strategy(candidate):
     rejected = experiment([-10, -10, -10])
-    complete_experiment(rejected)
-    strategy = deepcopy(rejected["contract"]["strategy"])
-    strategy["components"][0]["rule"] = "materially_distinct_inventory_rule"
-    candidate = _experiment("material-rule-change", 100)
-    candidate.update(
-        family="new-hypothesis-family",
-        strategy=strategy,
-        strategy_fingerprint=fingerprint(strategy),
-    )
+    rejected["contract"]["strategy"] = deepcopy(candidate["strategy"])
+    rejected["contract"]["strategy_fingerprint"] = candidate["strategy_fingerprint"]
+    rejected["contract"]["family"] = candidate["family"]
+    for trade in rejected["trades"]:
+        trade["asset"] = candidate["strategy"]["assets"][0]
+        trade["timeframe"] = candidate["strategy"]["timeframe"]
+    return rejected
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["execution_rule", "component_rule", "component_parameters", "implementation_id"],
+)
+def test_cosmetic_rule_text_cannot_claim_new_semantics_with_same_executor(
+    monkeypatch, tmp_path, field
+):
+    configure(monkeypatch, tmp_path)
+    candidate = _experiment("same-executor-cosmetic-relabel", 100)
+    candidate["family"] = "factory-restrictive-filter"
+    candidate["science_design"] = _scientific_design(candidate)
+    complete_experiment(_completed_factory_strategy(candidate))
+    if field == "execution_rule":
+        candidate["strategy"]["execution_rule"] = "cosmetically_renamed_executor"
+    elif field == "component_rule":
+        candidate["strategy"]["components"][0]["rule"] = "cosmetically_renamed_rule"
+    elif field == "component_parameters":
+        candidate["strategy"]["components"][0]["parameters"]["group"] = "RANGE"
+    else:
+        candidate["science_design"]["executor_implementation_id"] = "caller.asserted@v99"
+    candidate["strategy_fingerprint"] = fingerprint(candidate["strategy"])
+
+    assert build_heavy_dispatch_plan({"experiments": [candidate]})["selected"] == []
+
+    queue = apply_queue_feedback({"experiments": [candidate]})
+
+    assert queue["experiments"][0]["learning_feedback"]["reason"] in {
+        "semantic_identity_unverifiable",
+        "rejected_semantic_identity",
+        "rejected_exact_fingerprint",
+    }
+    assert queue["experiments"][0]["learning_feedback"]["changes_eligibility"] is True
+    assert build_heavy_dispatch_plan(queue)["selected"] == []
+
+
+def test_trusted_behavior_change_has_distinct_semantic_identity(monkeypatch, tmp_path):
+    configure(monkeypatch, tmp_path)
+    rejected_candidate = _experiment("rejected-regime", 100)
+    rejected_candidate["family"] = "factory-restrictive-filter"
+    rejected_candidate["science_design"] = _scientific_design(rejected_candidate)
+    complete_experiment(_completed_factory_strategy(rejected_candidate))
+
+    candidate = _experiment("different-direction-filter", 100)
+    candidate.update(dimension="direction", group="LONG")
+    candidate["science_design"] = _scientific_design(candidate)
+    candidate["strategy"] = _strategy_identity(candidate, candidate["science_design"])
+    candidate["strategy_fingerprint"] = fingerprint(candidate["strategy"])
 
     queue = apply_queue_feedback({"experiments": [candidate]})
 

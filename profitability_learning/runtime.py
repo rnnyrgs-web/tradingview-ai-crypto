@@ -11,6 +11,7 @@ from .analytics import analyze
 from .contracts import SAFE, fingerprint, strategy_semantic_fingerprint
 from .evolution import learning_missions, rank_candidates
 from .memory import Memory
+from research_quant_science_factory import verified_strategy_semantic_fingerprint
 
 _lock = Lock()
 _director_state = None
@@ -111,7 +112,19 @@ def _candidate_feedback(candidate, memory):
             try:
                 if sf != fingerprint(strategy):
                     raise ValueError("strategy fingerprint mismatch")
-                semantic = strategy_semantic_fingerprint(strategy)
+                semantic = memory.get("strategy_semantic_by_fingerprint", {}).get(sf)
+                if semantic is None:
+                    declared_semantic = strategy_semantic_fingerprint(strategy)
+                    # It is safe to recognize an already rejected semantic from
+                    # its executable projection: doing so can only veto work.
+                    # Any new or favorable identity must be bound to a trusted
+                    # executor/design before it can affect admission.
+                    if declared_semantic in memory.get(
+                        "rejected_semantic_fingerprints", []
+                    ):
+                        semantic = declared_semantic
+                    else:
+                        semantic = verified_strategy_semantic_fingerprint(candidate)
             except (KeyError, TypeError, ValueError):
                 semantic_unverifiable = True
         else:
