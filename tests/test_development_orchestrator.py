@@ -188,7 +188,7 @@ def test_duplicate_claim_is_rejected():
 
 
 def test_unsupported_engine_route_returns_wait():
-    coordination = load_state()
+    coordination = _idle_coordination()
     _ready_task(coordination, role="testing-security")
     decision = select_successor(coordination, _policy(), _config(),
                                 claimed_branches=set(), dispatches={}, budget_allowed=True)
