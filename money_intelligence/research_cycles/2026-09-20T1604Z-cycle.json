@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T1604Z",
+  "information_cutoff": "2026-09-20T16:04:12Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_observed_before_write": "c3a24c10fe422c9a5d51636078b35774bc8c378a",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles": true,
+    "searched_prediction_artifacts": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-20T16:00:44Z",
+    "artifact_cutoff_utc": "2026-09-20T16:04:12Z",
+    "seconds_this_run_minimum": 208,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 2948,
+    "minimum_cumulative_seconds_since_last_owner_report": 3156,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted; schedule gaps, idle time, publication timestamps and background time are excluded."
+  },
+  "highest_information_question": "Does the multi-year Gulf LNG supply impairment create a durable capital-allocation advantage for U.S. liquefaction capacity, and how much of the benefit is true volume/cash-flow capture versus temporary spot-price scarcity, rerouting and buyer-specific trade-policy optionality?",
+  "fresh_research": [
+    {
+      "topic": "Global LNG shock is redirecting marginal demand and contracting toward U.S. liquefaction capacity, but near-term export volumes remain capacity-constrained",
+      "label": "ENERGY / LNG / PHYSICAL SCARCITY / CAPITAL-TO-CAPACITY CAUSAL CHAIN",
+      "observed_facts": [
+        "QatarEnergy has said 12.8 Mtpa of Qatari LNG capacity was knocked out by March attacks for an estimated three to five years, and Reuters reported QatarEnergy is seeking roughly 2-3 Mtpa of multi-year U.S. LNG supply through 2031 from producers including Venture Global, Cheniere and Woodside.",
+        "On September 20 QatarEnergy said it is currently producing only a very small volume of LNG and that Hormuz disruption may delay North Field expansion projects by interfering with critical-equipment deliveries.",
+        "Asian September LNG imports are estimated near 20.09 Mt, the lowest September level since 2018, while North Asian spot prices near $26/MMBtu have destroyed price-sensitive demand in China, India and Pakistan. Europe, with storage near 68% and materially below its five-year seasonal norm, is pulling more cargoes instead.",
+        "EIA's May 2026 STEO said U.S. LNG terminals were operating near maximum capacity while international-U.S. price spreads stayed elevated; it forecast roughly 17.0 Bcf/d U.S. LNG exports in 2026 and 18.2 Bcf/d in 2027 as new capacity ramps.",
+        "EIA's April 2025 analysis is a useful matched control: when China stopped importing U.S. LNG after tariff escalation, flexible destination clauses and ample global demand allowed U.S. export volumes to remain largely unaffected because cargoes could be redirected.",
+        "Venture Global and China Gas announced a new 20-year 0.5 Mtpa SPA beginning in 2030, taking their long-term contracted relationship to 2.5 Mtpa. U.S.-China negotiators are separately discussing reducing or eliminating China's 15% tariff on U.S. LNG ahead of the September 24-25 presidential summit.",
+        "U.S. policy and financing are enabling additional capacity: DOE authorized a 13% immediate Plaquemines export increase in March, authorized a 12% Corpus Christi increase in February, and Venture Global closed $8.6B of project financing for CP2 Phase 2 in March after strong bank commitments."
+      ],
+      "inference": "The strongest causal effect is not 'Gulf LNG shortage -> U.S. gas price immediately explodes.' Existing U.S. liquefaction is already near a physical export ceiling and domestic gas supply remains relatively abundant. The more durable transmission is Gulf supply impairment + European replacement demand + buyers seeking security/diversification -> stronger utilization/netback and long-term contracting value for existing U.S. LNG portfolios -> higher probability/financeability of incremental U.S. liquefaction capacity -> capital shifts toward export terminals, pipelines/feedgas and projects with contracted cash-flow capture. High spot prices simultaneously destroy marginal Asian demand, capping how far scarcity can translate into global volumes.",
+      "source_to_price_chain": "Qatar/Hormuz physical impairment -> buyers lose dependable contracted/spot supply -> price-sensitive Asian buyers withdraw while Europe and contract-short buyers compete for flexible cargoes -> U.S. destination-flexible LNG is redirected to highest-netback markets -> existing terminals run near capacity -> scarcity rents show up more in contract value/netbacks than immediate volume expansion -> long-duration SPAs and project financing improve -> capital can fund new liquefaction capacity -> future global supply response eventually compresses scarcity rents.",
+      "matched_controls": [
+        "China's 2025 halt of direct U.S. LNG imports did not mechanically remove U.S. export demand because destination-flexible cargoes were redirected; buyer geography and exporter volume are therefore not one-to-one in a fungible global market.",
+        "Current Asia-versus-Europe divergence shows that very high prices can reduce quantity demanded in price-sensitive regions even while another region increases imports; a global supply shock does not imply every importing region bids equally.",
+        "EIA's near-max-capacity observation means elevated international spreads cannot create unlimited near-term U.S. export volume; capacity is the binding constraint."
+      ],
+      "negative_findings": [
+        "Do not promote a broad Henry Hub BUY from the global LNG shortage alone; domestic U.S. supply, storage and liquefaction bottlenecks can keep the upstream price response much smaller than overseas LNG prices.",
+        "Do not treat possible China tariff relief as a same-day physical-demand shock. China LNG demand is currently weak at high prices, and destination flexibility means tariff changes can alter routing/contract optionality more than total U.S. utilization.",
+        "Do not equate all U.S. LNG developers: value capture depends on commissioned versus planned capacity, contract mix, tolling/merchant exposure, feedgas and shipping obligations, construction/financing risk and valuation."
+      ],
+      "learning_candidate": {
+        "id": "MI-H-20260920-LNG-FUNGIBILITY-CAPACITY",
+        "status": "SUPPORTED_CASE_CANDIDATE_NOT_YET_CANONICAL",
+        "claim": "For globally fungible commodities with destination flexibility, buyer-specific tariffs or demand shocks can change routing without proportionally changing exporter utilization. During a physical supply shock, the relevant price/value variables are effective deliverable supply, destination flexibility, spare export capacity and contract exposure; when export capacity is binding, scarcity can raise contract/netback value and future-capacity financeability more than current export volume."
+      },
+      "decision_support": {
+        "view": "HOLD / RESEARCH FOR BUY CANDIDATES in U.S. LNG infrastructure; NO BROAD GAS BUY YET",
+        "horizon": "months to several years",
+        "confidence": "MODERATE structural; LOW individual-asset confidence without valuation and contract analysis",
+        "capital_source_destination": "Replacement/security-of-supply budgets from European, Asian and Middle-Eastern buyers plus bank/project-finance capital -> U.S. LNG offtake contracts and liquefaction expansion; source-of-funds is partly customer operating/utility procurement budgets and partly project debt/equity.",
+        "confirmation": "Additional long-term SPAs; high utilization; financing/FIDs for new capacity; durable international-Henry Hub spreads; Qatar outage/route constraints persist; project economics remain attractive after capex and financing costs.",
+        "invalidation": "Qatar/Hormuz supply normalizes much faster than expected, global LNG prices collapse enough to weaken contracting, U.S. projects suffer material cost overruns/financing stress, or new global supply creates oversupply before project cash flows mature."
+      },
+      "sources": [
+        "https://www.reuters.com/business/energy/qatarenergy-seeks-us-lng-deals-through-2031-sources-say-2026-09-11/",
+        "https://www.reuters.com/business/energy/qatarenergy-says-hormuz-crisis-may-delay-some-expansion-projects-2026-09-20/",
+        "https://www.reuters.com/commentary/reuters-open-interest/lng-spot-price-surge-deters-asian-buyers-saves-europe-2026-09-17/",
+        "https://www.eia.gov/outlooks/steo/archives/may26.pdf",
+        "https://www.eia.gov/pressroom/releases/press567.php",
+        "https://investors.ventureglobal.com/news/news-details/2026/Venture-Global-and-China-Gas-Announce-New-Long-Term-LNG-Agreement/default.aspx",
+        "https://www.reuters.com/business/energy/us-china-discuss-cutting-tariffs-us-lng-ahead-xi-visit-2026-09-18/",
+        "https://www.energy.gov/articles/energy-department-approves-immediate-additional-lng-exports-plaquemines-lng",
+        "https://www.energy.gov/articles/energy-department-approves-export-expansion-corpus-christi-lng",
+        "https://ventureglobal.com/2026/03/13/venture-global-announces-final-investment-decision-and-financial-close-for-phase-2-of-cp2-lng/"
+      ]
+    },
+    {
+      "topic": "AVAX remains the dominant liquid-crypto outlier and accelerated while majors weakened; causal attribution still lacks validated spot/on-chain capital inflow",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / AVAX / EXPECTATION REPRICING",
+      "observed_facts": [
+        "CoinMarketCap at about 16:00 UTC showed AVAX near $11.34, +20.09%/24h and +54.04%/7d with turnover about 28.27% of market cap and 24h volume up about 87%.",
+        "At the same snapshot BTC was -0.88%/24h, ETH -1.07%, SOL -2.62%, XRP -2.84% and LINK -1.67%; broad crypto beta therefore cannot explain AVAX's move.",
+        "AVAX had been about +14.7%/24h near 14:16 UTC, so the idiosyncratic move accelerated materially within the research window without a newly validated primary production-selection announcement from ICE/NYSE.",
+        "Primary Avalanche documentation still places Helicon mainnet activation on September 22 at 15:00 UTC; ICE's public tokenized-securities architecture remains multi-chain and does not publicly name Avalanche as the production chain."
+      ],
+      "inference": "The acceleration strengthens a narrative/expectation-repricing plus market-structure amplification interpretation rather than a broad-liquidity explanation. It does not by itself prove new fundamental value capture or net capital inflow; the missing discriminators remain asset-level stablecoin/bridge flow, token-unit TVL, exchange spot absorption and venue-grade AVAX derivatives decomposition.",
+      "decision_support": "WAIT / AVOID CHASING unchanged despite stronger momentum. The evidence bar for BUY is higher after a +50% weekly repricing because production selection, post-Helicon activity and actual flow capture remain unresolved.",
+      "sources": [
+        "CoinMarketCap live quote connector snapshot at 2026-09-20T16:00Z",
+        "https://build.avax.network/blog/helicon-upgrade",
+        "https://ir.theice.com/press/news-details/2026/The-New-York-Stock-Exchange-Develops-Tokenized-Securities-Platform/"
+      ]
+    },
+    {
+      "topic": "U.S.-China negotiation window is a catalyst, not yet a capital-flow fact",
+      "label": "TRADE / AI / CRITICAL MINERALS / EVENT EXPECTATIONS",
+      "observed_facts": [
+        "U.S. Treasury Secretary Scott Bessent and Chinese Vice Premier He Lifeng began talks in New York on September 20 focused on trade, AI safeguards, tariffs and critical-mineral supply ahead of the September 24-25 Trump-Xi summit.",
+        "Reuters reporting says incremental deliverables are more likely than a sweeping breakthrough; critical-mineral compliance remains a U.S. concern.",
+        "Separate LNG negotiations contemplate reducing or eliminating China's 15% tariff on U.S. LNG."
+      ],
+      "inference": "Do not pre-assign winners from negotiation headlines. The high-information event is the gap between the distribution already expected and any signed/enforceable commitments, especially for critical-mineral volumes, AI restrictions and energy tariffs.",
+      "decision_support": "WAIT on event-driven China/critical-mineral directional trades until terms are concrete and market pricing is observable.",
+      "sources": [
+        "https://www.reuters.com/business/finance/us-treasurys-bessent-chinas-he-launch-talks-ai-trade-critical-minerals-2026-09-20/",
+        "https://www.reuters.com/business/energy/us-china-discuss-cutting-tariffs-us-lng-ahead-xi-visit-2026-09-18/"
+      ]
+    }
+  ],
+  "crypto_snapshot": {
+    "timestamp_utc": "2026-09-20T16:00:00Z",
+    "BTC": {"price": 80891.36, "pct_24h": -0.883, "pct_7d": 4.876},
+    "ETH": {"price": 2612.27, "pct_24h": -1.074, "pct_7d": 4.874},
+    "SOL": {"price": 108.64, "pct_24h": -2.624, "pct_7d": 8.355},
+    "XRP": {"price": 1.3895, "pct_24h": -2.842, "pct_7d": 3.386},
+    "LINK": {"price": 12.3519, "pct_24h": -1.666, "pct_7d": 9.690},
+    "AVAX": {"price": 11.3427, "pct_24h": 20.087, "pct_7d": 54.038, "turnover": 0.2827},
+    "ZEC": {"price": 1444.28, "pct_24h": -5.011, "pct_7d": 32.761},
+    "ENA": {"price": 0.20356, "pct_24h": 2.362, "pct_7d": 46.914}
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast clears the evidence bar; WAIT states and research-only structural themes preserved."
+  },
+  "canonical_update_decision": "Append this research cycle only. The U.S. LNG rerouting/capacity mechanism is a high-information structural candidate and AVAX has strengthened as an idiosyncratic big-move case, but neither yet justifies changing the canonical dashboard, learning ledger or immutable forecast ledger. No code or signal-system state changed.",
+  "next_research": [
+    "Map U.S. LNG value capture by project/company: commissioned capacity, contracted versus merchant exposure, fixed liquefaction fees, remaining uncontracted capacity, debt/capex, construction risk and valuation before promoting an individual BUY.",
+    "Test the fungible-commodity routing rule on 2022 Europe LNG and the 2025 China-U.S. tariff episode using export volumes, netbacks and destination shifts.",
+    "Reconcile AVAX asset-level stablecoin/bridge net flows, token-unit TVL and venue-grade spot/derivatives data; then run a post-Helicon event study after September 22 activation.",
+    "Resolve U.S.-China summit outcomes against pre-event expectations; separate enforceable critical-mineral/LNG terms from headline language.",
+    "After U.S. ETF markets reopen, reconcile BTC/ETH flows with spot breadth and leverage before changing BTC WAIT.",
+    "When crude futures reopen, resolve the Saudi attack control with verified physical damage, loading data, physical differentials and prompt-curve response."
+  ]
+}
