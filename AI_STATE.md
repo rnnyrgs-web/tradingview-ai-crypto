@@ -1,7 +1,7 @@
 # AI_STATE.md
 
-Last reconciled: 2026-09-20T02:46Z
-Last updated: 2026-09-20T02:46Z
+Last reconciled: 2026-09-20T04:18Z
+Last updated: 2026-09-20T04:18Z
 
 This is the compact canonical handoff for `rnnyrgs-web/tradingview-ai-crypto`. Verify actual `main` SHA first on every run, then read `UNIFIED_PROFITABILITY_LEAD_SPEC.md`, `AGENTS.md`, `AUTONOMOUS_RESEARCH_DIRECTOR_STATUS.md`, `docs/ASTRA_BACKGROUND_WORKER.md`, strategy/rejected/coordination state including overrides, `orchestration/model_routing_policy.json`, current Money Intelligence / Big-Move artifacts, open PRs, active ownership and exact-head CI. GitHub durable state outranks chat memory.
 
@@ -117,6 +117,18 @@ Current preserved conclusions from the latest cycle:
 
 These cases may motivate frozen causal hypotheses and tests, but their observed outcomes must not be mined into post-hoc thresholds.
 
+## DEVELOPMENT ORCHESTRATOR V1 — INTEGRATED AND VERIFIED (BOUNDED ACCEPTANCE)
+
+**ORCHESTRATOR V1 = INTEGRATED AND VERIFIED** for its bounded canonical-main schedule/selection/fail-closed path. PR #453 exact head `756353ba2d0a3c6bd149731eb6b8af1c44de5a70` passed Security & Reliability run `35488025693` (1,232 passed, 2 skipped) and fresh independent review with no unresolved Important-or-higher finding. The Lead merged it as `cd2bec2089a62172e9dfaa39592b5b9c11e2aca2`.
+
+The first post-merge main Security run `35488506781` failed one test because its synthetic testing-security READY task duplicated the newly active canonical Phase-3 READY task. PR #470 changed only that test fixture, merged as `f5da85c95f5869583ca5eb23767eb13ddd69de77`. Security & Reliability run `35488718947` then passed on this repaired exact main (1,240 passed, 2 skipped; dependency audit, static security scan and secret check passed).
+
+The first scheduled Development Orchestrator V1 run `35488628336` succeeded from merged main `cd2bec2089a62172e9dfaa39592b5b9c11e2aca2`. It loaded the canonical queue, selected existing active `COORD-ARCH-ADVERSARIAL-001`, and returned `READY / MANUAL_ADAPTER_REQUIRED`; it dispatched no duplicate or invented task. After the no-action run, the Lead explicitly bootstrapped the empty version-1 durable state on `automation/specialist-runner-state` at `55415079ea73434d914ac481831e48cabb0a4858` and read it back with empty reviews, dispatches, attempts and runs; the no-action workflow itself did not write state. The workflow is present on main with manual dispatch, completed Lead/cloud-worker event triggers, and hourly `13 * * * *` schedule; its first scheduled run proves the schedule is active. Focused exact-head regressions and the green main suite cover worker-outcome reconciliation, WAIT/retry_at release, bounded retries, CAS/restart duplicate suppression, current-main checks, ownership, routing and shared-budget gates. This real acceptance exercised the unsupported-task path; it did **not** exercise a production Luna dispatch because no legitimate Luna task was READY.
+
+V1's only automatic development dispatch route is the existing cost-bounded GitHub Actions cloud specialist for a canonical, ChatGPT-eligible `data-market` task mapped to enabled API `gpt-5.6-luna`. It may import the existing exact-head three-lane review receipt for eligible `auto/*` PRs after Security success. Codex, ChatGPT Work/Astra, API Terra/Sol, Claude, Claude Code, other roles, unsupported review branches, rejected repair and Lead integration require manual handling or V2. V1 has no merge, direct-main, strategy-promotion, broker or live-trading authority. No validated profitable strategy or promotion-grade 90-day 2x candidate follows from this integration.
+
+**Next orchestrator development milestone:** issue #472, `V2-001`, is QUEUED: define the canonical durable multi-agent task/attempt/review/repair/integration contract and deterministic end-to-end acceptance harness before adding broad worker adapters. V2 must eventually coordinate ChatGPT Lead, deterministic GitHub/Python, API Luna/Terra/Sol, ChatGPT Work/Astra, Codex, Claude, Claude Code, independent review and gated Lead integration, then select the next non-duplicative task across the profitable-strategy and defensible 90-day 2x lanes. Keep the current Phase-3 adversarial review under `testing-security` as the sole active overnight-program milestone; do not claim V2 routing or automatic integration until separately verified. Alert the user only for genuine `USER_ACTION_REQUIRED` blockers.
+
 ## OPEN INTEGRATION / INTEGRITY WORK
 
 Current active overnight-program work is `COORD-ARCH-ADVERSARIAL-001`; it belongs only to `testing-security` on `agent/testing-security`. Do not let cloud/quant lanes claim this manual independent-review task.
@@ -150,7 +162,7 @@ Do not select another DATA-BREADTH candidate while `COORD-DATA-007` remains bloc
 
 ## STATUS
 
-Current truth: **Phase 1 and Phase 2 exact-deployed runtime acceptance passed; Phase 3 is the earliest incomplete overnight-program phase; `COORD-ARCH-ADVERSARIAL-001` is the sole active milestone; no validated profitable strategy exists; `DISC-BTC-LEADLAG-001-v1` remains rejected pre-OOS; no promotion-grade 90-day 2x candidate exists; untouched OOS/forward remain locked; broker/live authority remains off.**
+Current truth: **Orchestrator V1 bounded canonical-main acceptance passed; Phase 1 and Phase 2 exact-deployed runtime acceptance passed; Phase 3 is the earliest incomplete overnight-program phase; `COORD-ARCH-ADVERSARIAL-001` is the sole active milestone; no validated profitable strategy exists; `DISC-BTC-LEADLAG-001-v1` remains rejected pre-OOS; no promotion-grade 90-day 2x candidate exists; untouched OOS/forward remain locked; broker/live authority remains off.**
 
 ## EXACT NEXT STEP
 
