@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T1420Z",
+  "information_cutoff": "2026-09-20T14:20:15Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles": true,
+    "searched_prediction_artifacts": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-20T14:15:41Z",
+    "artifact_cutoff_utc": "2026-09-20T14:20:15Z",
+    "seconds_this_run_minimum": 274,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 2674,
+    "minimum_cumulative_seconds_since_last_owner_report": 2948,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted; schedule gaps, idle time, publication timestamps and background time are excluded."
+  },
+  "highest_information_question": "Can the current AVAX outlier be separated into genuine new capital inflow versus expectation repricing/mark-to-market/derivatives amplification, and can large strategic semiconductor financing be mapped into future supply and incumbent margin pressure before the price response?",
+  "fresh_research": [
+    {
+      "topic": "AVAX outlier deepening: Helicon has opposing token-supply and capital-lockup channels; current price leadership is not validated as broad net inflow",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / AVAX / TOKENOMICS / FLOW-ACCOUNTING",
+      "observed_facts": [
+        "CoinMarketCap at 14:16 UTC showed AVAX near $10.67, +14.69%/24h and +44.11%/7d with turnover about 26.7% of market cap, while BTC was -0.98%, ETH -2.28%, SOL -3.03%, XRP -4.30% and LINK -3.30% over 24h.",
+        "Avalanche's primary Helicon documentation schedules mainnet activation for September 22 at 15:00 UTC and bundles Continuous Execution, auto-renewed staking, a higher 90% validator uptime threshold, a validator minimum-staking-duration cut from 14 days to 48 hours, dynamic minimum gas pricing and a staking-reward-curve change.",
+        "ACP-285 lowers the minimum reward-consumption rate from 10% to 7.5% over a 90-day ramp while leaving the maximum rate unchanged; Avalanche explicitly describes the change as reducing short-duration rewards/inflation and strengthening incentives for longer commitments.",
+        "The 48-hour minimum applies to validators; primary documentation indicates delegators retain a longer minimum. Auto-renewal reduces operational rollover friction, while the stricter uptime threshold raises the probability of earning zero validator rewards if performance is insufficient because Avalanche does not slash principal.",
+        "ICE's January primary release for the NYSE tokenized-securities platform says the architecture is designed to support multiple blockchains. It does not name Avalanche as a selected production settlement chain.",
+        "A refreshed DefiLlama Avalanche page showed about $601.8M TVL, roughly $1.263B stablecoin market cap, about $119M 24h DEX volume, roughly $698M 7d DEX volume (-13.15% week/week) and displayed 24h net inflow around -$1.65M. However, an earlier same-day research snapshot showed about $1.358B stablecoin market cap and +0.34%/7d, creating a material same-day data/reclassification discrepancy that must be resolved before treating the stablecoin delta as verified capital flight.",
+        "Aave V3 Avalanche USDC supplied balances were roughly $60.0M Sep.17, $60.8M Sep.18 and $61.2M Sep.19, a useful local control showing no broad withdrawal from that lending venue during the early rally window.",
+        "Global crypto derivatives open interest was about $421.7B, down 4.02%/24h; aggregate perpetual funding remained positive but was down about 21.7% versus the prior 24h. BTC 24h liquidations were about $48.1M, with longs around $35.3M versus shorts around $12.7M, showing that the prior broad short-squeeze impulse had faded even as AVAX remained an idiosyncratic leader."
+      ],
+      "inference": "Helicon is not a one-way mechanical AVAX demand shock. Shorter validator lockups and auto-renew reduce capital-friction/rollover costs and can increase supply elasticity; the lower short-duration reward floor reduces issuance/dilution and encourages longer commitments; stricter uptime raises operational risk. The net circulating-supply and marginal-buying effect is therefore state-dependent and should be measured after activation rather than inferred from the upgrade label. Current AVAX leadership is more consistent with expectation repricing around tokenization/institutional narratives plus Helicon front-running, amplified by derivatives/momentum, than with a demonstrated broad on-chain capital-inflow wave.",
+      "catalyst_transmission_amplifier": {
+        "catalysts": [
+          "ICE/NYSE Avalanche evaluation/testing narrative without confirmed production selection",
+          "broader tokenized-securities regulatory opening",
+          "Helicon activation approaching September 22",
+          "AVAX-denominated payment/reward integrations whose funding source is not yet known"
+        ],
+        "transmission": "higher perceived probability of future network use/value capture -> discretionary repricing of AVAX before realized usage/fees are observable",
+        "amplifiers": [
+          "high turnover and attention",
+          "large derivatives participation relative to spot",
+          "smaller executable depth/free float than BTC/ETH",
+          "pre-event momentum"
+        ]
+      },
+      "matched_controls": [
+        "Major crypto assets were negative over the same 24h window, so broad crypto beta is insufficient to explain AVAX's move.",
+        "Prior Avalanche upgrades such as Etna and Octane materially improved cost/scalability while also reducing transaction or validator capital requirements; protocol improvement therefore does not imply a monotonic increase in native-token demand.",
+        "Aave Avalanche USDC balances rose modestly while the broader DefiLlama stablecoin series showed a conflicting large drop/revision, reinforcing the need for asset-level reconciliation rather than a single dashboard metric."
+      ],
+      "negative_findings": [
+        "No primary ICE/NYSE source found that selects Avalanche for a production tokenized-equity role.",
+        "No primary evidence supports treating Helicon as an immediate one-time AVAX burn or guaranteed spot-buy event.",
+        "USD-denominated TVL and market-cap growth are mark-to-market measures during a native-token rally and cannot be equated with net deposits.",
+        "The refreshed Avalanche stablecoin-supply decline cannot yet be promoted to OBSERVED capital flight because the same-day series changed materially and may include reclassification/data correction."
+      ],
+      "decision_support": {
+        "view": "WAIT / AVOID CHASING",
+        "horizon": "days through several weeks",
+        "confidence": "MODERATE",
+        "confirmation": "Confirmed ICE/NYSE production role; reconciled asset-level stablecoin/bridge net inflows; price-normalized/token-unit TVL growth; rising fees/revenue/real activity after Helicon; spot-led continuation without leverage excess.",
+        "invalidation_of_bull_narrative": "No production role, post-Helicon real activity and net inflow fail to improve, or derivatives leverage unwinds while price cannot hold the pre-upgrade repricing."
+      },
+      "sources": [
+        "https://build.avax.network/blog/helicon-upgrade",
+        "https://github.com/avalanche-foundation/ACPs/discussions/285",
+        "https://ir.theice.com/press/news-details/2026/The-New-York-Stock-Exchange-Develops-Tokenized-Securities-Platform/",
+        "https://defillama.com/chain/Avalanche",
+        "https://aavescan.com/avalanche-v3/usdc"
+      ]
+    },
+    {
+      "topic": "CXMT fifth-generation DRAM mass production is a strategic supply-side development, but the direct HBM/AI-memory threat is not yet equivalent to the commodity/mobile DRAM threat",
+      "label": "SEMICONDUCTORS / INDUSTRIAL POLICY / CAPITAL-TO-CAPACITY CAUSAL CHAIN",
+      "observed_facts": [
+        "Reuters reported on September 20 that CXMT's fifth-generation DRAM process has entered mass production. CXMT says memory-cell feature spacing is 11.95nm using quadruple patterning and that gross dies per wafer are at least 50% higher than its prior-generation process on an 8Gb baseline; gross dies are not the same as tested-good yield.",
+        "CXMT also disclosed two 24Gb LPDDR5X products on the new platform, aimed mainly at smartphones and portable electronics. Separately, CXMT's September 7 primary release says LPDDR6 is already in mass production and commercially deployed in a Xiaomi flagship device.",
+        "Reuters reported in August that CXMT raised about $8.6B in its 2026 IPO and is planning/financing additional fabs; already announced projects could more than double capacity to over 600,000 wafers per month when fully operational. Local/state-backed capital has been an important source of CXMT funding.",
+        "Reuters previously reported SK Hynix held about 61% of the global HBM market in 2025, highlighting that HBM is a differentiated AI-memory segment rather than interchangeable with mobile LPDDR5X."
+      ],
+      "inference": "The causal chain is state/IPO financing -> fab/process R&D and capacity -> more competitive bits-per-wafer and qualified product supply -> lower import dependence and more price competition in commodity/mobile/server DRAM -> potential margin/market-share pressure on incumbents. The immediate direct threat to leading HBM economics is weaker than the generic 'China catches up in memory' headline because today's confirmed new products are LPDDR5X/mobile-oriented and independent yield/cost-per-bit/customer-qualification data are still missing.",
+      "source_to_price_chain": "Chinese local/state capital + public IPO capital -> CXMT fabs/equipment/R&D -> larger domestic DRAM supply and better process economics -> Chinese device makers gain substitute suppliers -> incumbent commodity/mobile DRAM scarcity rent can compress -> memory-sector earnings expectations and capex allocation can rotate toward more differentiated HBM/advanced packaging if the supply gain proves commercially competitive.",
+      "alternative_explanations_and_offsets": [
+        "Global DRAM demand remains extremely strong, so additional CXMT supply may be absorbed without immediate price declines.",
+        "Gross die count is not tested-good yield or cost per bit; multi-patterning can add process complexity/cost.",
+        "Customer qualification, reliability and export restrictions can limit addressable international demand.",
+        "HBM scarcity/differentiation can preserve economics for incumbents even if commodity DRAM competition intensifies."
+      ],
+      "decision_support": "RESEARCH / NO TRADE YET. Treat CXMT financing and capacity milestones as pre-move supply indicators for commodity/mobile DRAM; wait for customer qualification, realized output/yield/cost data and Monday price/earnings-revision confirmation before promoting any incumbent SHORT-THESIS or Chinese semiconductor BUY.",
+      "sources": [
+        "https://www.reuters.com/world/asia-pacific/chinas-cxmt-says-new-memory-chip-platform-enters-mass-production-2026-09-20/",
+        "https://www.cxmt.com/en/news/info_21.html",
+        "https://www.reuters.com/world/asia-pacific/cxmt-plans-second-chip-plant-beijing-is-talks-its-funding-sources-say-2026-08-03/",
+        "https://www.reuters.com/world/asia-pacific/sk-hynix-overtakes-samsung-become-koreas-most-valuable-company-2026-06-22/"
+      ]
+    },
+    {
+      "topic": "BTC weekend state: the broad short squeeze has faded and leverage is de-risking, but there is still no institutional confirmation window",
+      "label": "CRYPTO / POSITIONING / WEEKEND CONTROL",
+      "observed_facts": [
+        "BTC was about $80.57K at 14:15 UTC, -0.98%/24h and +4.55%/7d.",
+        "Global crypto derivatives open interest was about $421.7B, down 4.02%/24h and 3.18%/7d.",
+        "Aggregate perpetual funding remained positive at the provider's displayed rate but fell 21.67% versus the prior 24h.",
+        "BTC liquidations over 24h were about $48.05M, with about $35.31M longs and $12.74M shorts; the most recent 12h liquidation total was only about $5.62M."
+      ],
+      "inference": "The September 18 forced-short-buyer impulse is no longer the dominant live flow. BTC holding near $80K while aggregate OI declines is healthier than price sustained only by rising leverage, but U.S. ETF markets are closed and spot/on-chain institutional absorption cannot be newly confirmed this weekend.",
+      "decision_support": "BTC WAIT / tactical confirmation candidate unchanged. Highest-information next test remains completed U.S. ETF flow plus spot relative strength and leverage behavior after markets reopen."
+    }
+  ],
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast clears the evidence bar; existing WAIT states preserved."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. AVAX has become a stronger causal-lab case and CXMT is a high-information strategic supply development, but key flow/yield/qualification evidence remains unresolved. Do not rewrite dashboard regime, big-move canonical cases or learning ledger until the new observations are reconciled and sufficiently generalized. No code or signal-system state changed.",
+  "next_research": [
+    "Reconcile Avalanche stablecoin supply asset-by-asset and determine whether the same-day DefiLlama change reflects actual redemptions/bridging versus methodology/reclassification before using it as a capital-flow variable.",
+    "After Helicon activates, compare AVAX price-normalized/token-unit TVL, stablecoin/bridge net flow, fees/revenue, validator count/stake duration, issuance/burn and derivatives OI/funding against the pre-event baseline.",
+    "After Asian/U.S. equity markets reopen, test whether CXMT's mass-production disclosure reprices CXMT, Micron, Samsung, SK Hynix and memory-equipment names differentially; separate commodity/mobile DRAM exposure from HBM exposure.",
+    "Obtain independent CXMT tested-good yield/cost-per-bit/customer-qualification evidence before converting the process announcement into a sector directional thesis.",
+    "After U.S. crypto ETFs reopen, reconcile finalized BTC/ETH flows with spot breadth, OI/funding/basis and exchange/on-chain absorption before changing BTC WAIT.",
+    "When crude futures reopen, resolve the Saudi weekend control with verified physical damage/loading data, prompt spreads, physical differentials and price response."
+  ]
+}
