@@ -174,6 +174,9 @@ class FrozenHypothesis:
     # Pre-outcome economic units for the sole confirmatory look. Empty plans
     # remain eligible for exploratory research but cannot claim confirmation.
     evaluation_units: tuple[tuple[str, str, int], ...] = ()
+    # Exact outcome/control observation identities, aligned one-for-one with
+    # evaluation_units and frozen before either side of a pair is observed.
+    evaluation_pairs: tuple[tuple[str, str], ...] = ()
 
     def __post_init__(self) -> None:
         if not self.hypothesis_id.strip() or not self.statement.strip():
@@ -239,6 +242,32 @@ class FrozenHypothesis:
         if len(set(planned_units)) != len(planned_units):
             raise CausalMemoryError("evaluation units cannot contain duplicates")
         object.__setattr__(self, "evaluation_units", tuple(planned_units))
+        planned_pairs = []
+        for raw in self.evaluation_pairs:
+            if not isinstance(raw, (tuple, list)) or len(raw) != 2:
+                raise CausalMemoryError(
+                    "evaluation pairs must contain outcome and control observation ids"
+                )
+            outcome_id, control_id = raw
+            if (
+                not isinstance(outcome_id, str)
+                or not outcome_id.strip()
+                or not isinstance(control_id, str)
+                or not control_id.strip()
+                or outcome_id.strip() == control_id.strip()
+            ):
+                raise CausalMemoryError(
+                    "evaluation pairs require distinct outcome and control observation ids"
+                )
+            planned_pairs.append((outcome_id.strip(), control_id.strip()))
+        if planned_pairs and len(planned_pairs) != len(planned_units):
+            raise CausalMemoryError(
+                "evaluation pairs must align one-for-one with evaluation units"
+            )
+        planned_ids = [identifier for pair in planned_pairs for identifier in pair]
+        if len(set(planned_ids)) != len(planned_ids):
+            raise CausalMemoryError("evaluation pair observation ids cannot be reused")
+        object.__setattr__(self, "evaluation_pairs", tuple(planned_pairs))
 
     @property
     def fingerprint(self) -> str:
@@ -260,6 +289,8 @@ class FrozenHypothesis:
         }
         if self.evaluation_units:
             design["evaluation_units"] = list(self.evaluation_units)
+        if self.evaluation_pairs:
+            design["evaluation_pairs"] = list(self.evaluation_pairs)
         return f"mi-causal-v1:{_sha256(design)}"
 
 
@@ -437,17 +468,27 @@ class CausalRepricingMemory:
             }
         )
 
+    @staticmethod
+    def _rejection_variants(
+        hypothesis: FrozenHypothesis,
+    ) -> tuple[FrozenHypothesis, ...]:
+        variants = [hypothesis]
+        # Pair identity was added after planned-unit identity. Preserve rejected
+        # memory across that schema strengthening instead of treating the new
+        # field as scientific novelty.
+        if hypothesis.evaluation_pairs:
+            variants.append(replace(hypothesis, evaluation_pairs=()))
+        if hypothesis.evaluation_units or hypothesis.evaluation_pairs:
+            variants.append(
+                replace(hypothesis, evaluation_units=(), evaluation_pairs=())
+            )
+        return tuple({variant.fingerprint: variant for variant in variants}.values())
+
     def _is_rejected(self, hypothesis: FrozenHypothesis) -> bool:
-        legacy_design = (
-            replace(hypothesis, evaluation_units=())
-            if hypothesis.evaluation_units
-            else hypothesis
-        )
-        return (
-            hypothesis.fingerprint in self.rejected_fingerprints
-            or self.effective_fingerprint(hypothesis) in self.rejected_fingerprints
-            or legacy_design.fingerprint in self.rejected_fingerprints
-            or self.effective_fingerprint(legacy_design) in self.rejected_fingerprints
+        return any(
+            variant.fingerprint in self.rejected_fingerprints
+            or self.effective_fingerprint(variant) in self.rejected_fingerprints
+            for variant in self._rejection_variants(hypothesis)
         )
 
     def register_hypothesis(
@@ -490,6 +531,7 @@ class CausalRepricingMemory:
             _restore_legacy_undercount
             and hypothesis.hypothesis_id in self.legacy_underdeclared_hypotheses
             and not hypothesis.evaluation_units
+            and not hypothesis.evaluation_pairs
         ):
             raise CausalMemoryError(
                 "family_size cannot undercount registered hypotheses in the family"
@@ -518,11 +560,9 @@ class CausalRepricingMemory:
             raise CausalMemoryError(f"unknown hypothesis: {hypothesis_id}")
         design = hypothesis.fingerprint
         effective = self.effective_fingerprint(hypothesis)
-        self.rejected_fingerprints.update((design, effective))
-        if hypothesis.evaluation_units:
-            plan_free = replace(hypothesis, evaluation_units=())
+        for variant in self._rejection_variants(hypothesis):
             self.rejected_fingerprints.update(
-                (plan_free.fingerprint, self.effective_fingerprint(plan_free))
+                (variant.fingerprint, self.effective_fingerprint(variant))
             )
         return design, effective
 
@@ -804,6 +844,21 @@ class CausalRepricingMemory:
             if not hypothesis.evaluation_units:
                 raise CausalMemoryError(
                     "confirmatory support requires a pre-outcome evaluation plan"
+                )
+            if not hypothesis.evaluation_pairs:
+                raise CausalMemoryError(
+                    "confirmatory support requires frozen outcome/control pairs"
+                )
+            submitted_pairs = tuple(
+                zip(
+                    event.outcome_observation_ids,
+                    event.control_observation_ids,
+                    strict=True,
+                )
+            )
+            if submitted_pairs != hypothesis.evaluation_pairs:
+                raise CausalMemoryError(
+                    "confirmatory evidence must match the frozen outcome/control pairs"
                 )
             actual_units = (
                 {
@@ -1180,6 +1235,7 @@ class CausalRepricingMemory:
                 "project_alpha": PROJECT_ALPHA,
                 "confirmatory_p_threshold": self._project_threshold(hypothesis),
                 "evaluation_units": [list(unit) for unit in hypothesis.evaluation_units],
+                "evaluation_pairs": [list(pair) for pair in hypothesis.evaluation_pairs],
                 "evaluation_method": hypothesis.evaluation_method,
                 "direction": hypothesis.direction,
                 "horizon_hours": hypothesis.horizon_hours,
@@ -1282,7 +1338,8 @@ class CausalRepricingMemory:
                 not isinstance(marker, list)
                 or marker != sorted(underdeclared)
                 or any(
-                    raw.get("evaluation_units") for raw in hypothesis_rows
+                    raw.get("evaluation_units") or raw.get("evaluation_pairs")
+                    for raw in hypothesis_rows
                     if raw["hypothesis_id"] in underdeclared
                 )
             ):
@@ -1365,6 +1422,10 @@ class CausalRepricingMemory:
                         raw["evaluation_units"] = tuple(
                             tuple(unit) for unit in raw["evaluation_units"]
                         )
+                    if "evaluation_pairs" in raw:
+                        raw["evaluation_pairs"] = tuple(
+                            tuple(pair) for pair in raw["evaluation_pairs"]
+                        )
                     memory.register_hypothesis(
                         FrozenHypothesis(**raw),
                         _restore_legacy_undercount=raw["hypothesis_id"] in underdeclared,
@@ -1397,7 +1458,7 @@ class CausalRepricingMemory:
                     raw["confirmatory"] = False
                 elif raw.get("kind") == "support" and not memory.hypotheses[
                     raw["hypothesis_id"]
-                ].evaluation_units:
+                ].evaluation_pairs:
                     raw["confirmatory"] = False
                 legacy_unverified = (
                     raw.get("evaluation_implementation")

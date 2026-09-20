@@ -162,6 +162,10 @@ def _contract(ids: dict[str, str], base: datetime, pair_count: int = SUPPORT_PAI
             ("PHASE2_ACCEPTANCE", _ts(base + timedelta(hours=index)), 1)
             for index in range(1, pair_count + 1)
         ),
+        evaluation_pairs=tuple(
+            (ids[f"support_outcome_{index}"], ids[f"support_control_{index}"])
+            for index in range(1, pair_count + 1)
+        ),
     )
 
 

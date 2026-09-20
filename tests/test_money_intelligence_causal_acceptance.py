@@ -34,12 +34,16 @@ def test_acceptance_fixture_can_confirm_after_prior_project_tests(prior_slots):
         memory.register_hypothesis(replace(
             acceptance._contract(ids, base),
             hypothesis_id=f"prior-{index}", family_id=f"prior-family-{index}",
-            family_size=1, evaluation_units=(),
+            family_size=1, evaluation_units=(), evaluation_pairs=(),
         ))
     acceptance._seed_support(memory, ids, base)
     hypothesis = memory.hypotheses[ids["hypothesis"]]
     verification = memory._verified_evaluation(memory.events[ids["support"]], hypothesis)
     assert len(hypothesis.evaluation_units) == verification["sample_size"]
+    assert hypothesis.evaluation_pairs == tuple(
+        (ids[f"support_outcome_{index}"], ids[f"support_control_{index}"])
+        for index in range(1, verification["sample_size"] + 1)
+    )
     if prior_slots == 28:
         assert len(hypothesis.evaluation_units) > acceptance.SUPPORT_PAIRS
     assert verification["verified_p_value"] <= memory._project_threshold(hypothesis)

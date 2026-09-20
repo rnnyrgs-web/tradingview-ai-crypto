@@ -70,6 +70,10 @@ def _supported_memory(*, lanes=("big_move", "strategy_component"), family_id="tr
             (f"SOL-{index}", "2026-09-02T00:00:00Z", 24)
             for index in range(1, 7)
         ),
+        evaluation_pairs=tuple(
+            (f"outcome-{index}", f"control-{index}")
+            for index in range(1, 7)
+        ),
     )
     memory.register_hypothesis(hypothesis)
     outcome_ids = tuple(f"outcome-{index}" for index in range(1, 7))
