@@ -145,7 +145,11 @@ class GitHubAPI:
         return {key: value for key, value in parsed.items() if key in {"status", "run_id", "outcomes"}}
 
     def lead_can_review(self, branch: str, head_sha: str, main_sha: str) -> bool:
-        if not branch.startswith("auto/") or not SHA_RE.fullmatch(head_sha) or not SHA_RE.fullmatch(main_sha):
+        return branch.startswith("auto/") and self.pr_base_is_current(branch, head_sha, main_sha)
+
+    def pr_base_is_current(self, branch: str, head_sha: str, main_sha: str) -> bool:
+        if (not isinstance(branch, str) or not branch or not SHA_RE.fullmatch(head_sha)
+                or not SHA_RE.fullmatch(main_sha)):
             return False
         comparison = self._get(f"/compare/{main_sha}...{head_sha}")
         if not isinstance(comparison, dict):
@@ -237,6 +241,30 @@ class GitHubAPI:
         if len(matches) > 1:
             raise RuntimeError("ambiguous exact dispatch runs")
         return matches[0] if matches else None
+
+    def get_dispatch_outcome(self, run_id: int, request_id: str, task_id: str,
+                             main_sha: str, branch: str) -> dict | None:
+        if (not isinstance(run_id, int) or run_id <= 0
+                or not REQUEST_RE.fullmatch(request_id)
+                or not TASK_ID_RE.fullmatch(task_id)
+                or not SHA_RE.fullmatch(main_sha)
+                or not branch.startswith("auto/")):
+            raise ValueError("malformed worker outcome lookup")
+        state, _ = _gh_get_content(repo=self.repo, path="runner_state.json",
+                                   ref=STATE_BRANCH, token=self.token)
+        if not isinstance(state, dict) or not isinstance(state.get("dispatch_results"), dict):
+            return None
+        receipt = state["dispatch_results"].get(request_id)
+        if receipt is None:
+            return None
+        if (not isinstance(receipt, dict) or receipt.get("request_id") != request_id
+                or receipt.get("workflow_run_id") != run_id
+                or receipt.get("task_id") != task_id
+                or receipt.get("base_main_sha") != main_sha
+                or receipt.get("branch") != branch):
+            raise RuntimeError("worker outcome identity mismatch")
+        return {key: value for key, value in receipt.items()
+                if key in {"status", "reason", "retry_at", "pr_number", "head_sha"}}
 
 
 class GitHubStateStore:

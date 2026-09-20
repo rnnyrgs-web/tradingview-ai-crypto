@@ -269,6 +269,8 @@ class _API:
         self.lead_reviewable = True
         self.dispatch_runs: list[dict] = []
         self.dispatch_error = False
+        self.worker_outcome = None
+        self.pr_base_current = True
 
     def current_main_sha(self):
         return self.main_sha
@@ -292,6 +294,9 @@ class _API:
     def lead_can_review(self, branch, head, main_sha):
         return self.lead_reviewable and branch.startswith("auto/")
 
+    def pr_base_is_current(self, branch, head, main_sha):
+        return self.pr_base_current
+
     def branch_exists(self, branch):
         return branch in self.branches
 
@@ -306,6 +311,9 @@ class _API:
         if len(matches) > 1:
             raise RuntimeError("ambiguous exact dispatch runs")
         return matches[0] if matches else None
+
+    def get_dispatch_outcome(self, run_id, request_id, task_id, main_sha, branch):
+        return self.worker_outcome
 
 
 class _Store:
@@ -545,6 +553,120 @@ def test_completed_failed_dispatch_is_durable_blocker_without_retry():
     assert len(api.sent) == 1
 
 
+def _complete_dispatch(coordination, api, store, budget, task, outcome, *, main_advanced=False):
+    original_main = api.main_sha
+    run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                              budget, NOW, original_main)
+    request_id = api.sent[0][1]["orchestrator_request_id"]
+    api.dispatch_runs = [{"id": 125, "request_id": request_id,
+                          "task_id": task["id"], "head_sha": original_main,
+                          "status": "completed", "conclusion": "success"}]
+    api.worker_outcome = outcome
+    if main_advanced:
+        api.main_sha = "d" * 40
+    return run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                     budget, NOW + timedelta(minutes=1), api.main_sha)
+
+
+def test_main_advance_adopts_original_dispatch_and_requires_fresh_pr_base():
+    coordination = load_state()
+    task = _ready_task(coordination)
+    api, store, budget = _API(), _Store(), _Budget()
+    result = _complete_dispatch(coordination, api, store, budget, task,
+                                {"status": "PR_CREATED", "reason": "candidate PR published",
+                                 "pr_number": 501,
+                                 "head_sha": HEAD}, main_advanced=True)
+    assert result.lifecycle is Lifecycle.AWAITING_REVIEW
+    assert store.value["dispatches"][task["id"]]["main_sha"] == "c" * 40
+    assert store.value["dispatches"][task["id"]]["run_id"] == 125
+    assert len(api.sent) == 1
+    task["status"], task["pr"] = "PR_OPEN", 501
+    api.pr_base_current = False
+    stale = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                      budget, NOW + timedelta(minutes=2), api.main_sha)
+    assert stale.reason == "STALE_PR_BASE"
+    assert stale.lifecycle is Lifecycle.REVISION_REQUIRED
+
+
+def test_created_pr_enters_exact_head_review_after_canonical_pr_open():
+    coordination = load_state()
+    task = _ready_task(coordination)
+    api, store, budget = _API(), _Store(), _Budget()
+    _complete_dispatch(coordination, api, store, budget, task,
+                       {"status": "PR_CREATED", "reason": "candidate PR published",
+                        "pr_number": 501, "head_sha": HEAD})
+    task["status"], task["pr"] = "PR_OPEN", 501
+    result = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                       budget, NOW + timedelta(minutes=2), api.main_sha)
+    assert result.lifecycle is Lifecycle.AWAITING_REVIEW
+    assert result.reason == "REVIEW_REQUESTED"
+    assert result.head_sha == HEAD
+
+
+def test_created_pr_with_wrong_branch_fails_closed():
+    coordination = load_state()
+    task = _ready_task(coordination)
+    api, store, budget = _API(), _Store(), _Budget()
+    api.pr["head"]["ref"] = "auto/data-market/other-task"
+    result = _complete_dispatch(coordination, api, store, budget, task,
+                                {"status": "PR_CREATED", "reason": "candidate PR published",
+                                 "pr_number": 501, "head_sha": HEAD})
+    assert result.reason == "WORKER_PR_MISMATCH"
+    assert result.lifecycle is Lifecycle.BLOCKED
+    assert len(api.sent) == 1
+
+
+@pytest.mark.parametrize("status,lifecycle", [
+    ("NO_CHANGE", Lifecycle.DONE),
+    ("BLOCKED", Lifecycle.BLOCKED),
+    ("WAIT", Lifecycle.READY),
+    ("TASK_MISMATCH", Lifecycle.BLOCKED),
+    ("NOT_CLAIMED", Lifecycle.BLOCKED),
+    ("FAILED", Lifecycle.BLOCKED),
+])
+def test_successful_no_pr_outcome_reconciles_without_redispatch(status, lifecycle):
+    coordination = load_state()
+    task = _ready_task(coordination)
+    api, store, budget = _API(), _Store(), _Budget()
+    outcome = {"status": status, "reason": "bounded worker result"}
+    if status == "WAIT":
+        outcome["retry_at"] = (NOW + timedelta(hours=1)).isoformat()
+    first = _complete_dispatch(coordination, api, store, budget, task, outcome)
+    second = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                       budget, NOW + timedelta(minutes=2), api.main_sha)
+    assert first.lifecycle is second.lifecycle is lifecycle
+    assert first.reason == second.reason
+    assert store.value["dispatches"][task["id"]]["worker_outcome"] == outcome
+    assert len(api.sent) == 1
+
+
+@pytest.mark.parametrize("outcome", [None, {}, {"status": "NO_CHANGE"},
+                                     {"status": "MERGE", "reason": "bad"}])
+def test_successful_run_without_valid_worker_receipt_fails_closed(outcome):
+    coordination = load_state()
+    task = _ready_task(coordination)
+    api, store, budget = _API(), _Store(), _Budget()
+    result = _complete_dispatch(coordination, api, store, budget, task, outcome)
+    assert result.lifecycle is Lifecycle.BLOCKED
+    assert len(api.sent) == 1
+
+
+def test_terminal_no_change_allows_successor_only_after_canonical_completion():
+    coordination = _idle_coordination()
+    first_task = _ready_task(coordination)
+    api, store, budget = _API(), _Store(), _Budget()
+    _complete_dispatch(coordination, api, store, budget, first_task,
+                       {"status": "NO_CHANGE", "reason": "nothing valid to change"})
+    first_task["status"] = "DONE"
+    second_task = _ready_task(coordination)
+    second_task["id"] = "COORD-TEST-ORCH-002"
+    second_task["priority"] = 1
+    result = run_existing_review_cycle(coordination, _policy(), _config(), api, store,
+                                       budget, NOW + timedelta(minutes=2), api.main_sha)
+    assert result.task_id == second_task["id"]
+    assert len(api.sent) == 2
+
+
 def test_safe_cycle_dispatches_once_and_waits_for_canonical_claim():
     coordination = load_state()
     task = _ready_task(coordination)
@@ -771,9 +893,85 @@ def test_lead_route_requires_auto_branch_forked_from_current_main():
     client = Client()
     api = GitHubAPI("rnnyrgs-web/tradingview-ai-crypto", "token", client)
     assert api.lead_can_review("auto/data-market/task", HEAD, "c" * 40)
+    assert api.pr_base_is_current("auto/data-market/task", HEAD, "c" * 40)
     assert not api.lead_can_review("agent/data-market", HEAD, "c" * 40)
     client.base = "d" * 40
     assert not api.lead_can_review("auto/data-market/task", HEAD, "c" * 40)
+    assert not api.pr_base_is_current("auto/data-market/task", HEAD, "c" * 40)
+
+
+def test_dispatch_outcome_adapter_requires_exact_runner_receipt(monkeypatch):
+    from agents.development_orchestrator_runtime import GitHubAPI
+
+    receipt = {"request_id": "a" * 24, "workflow_run_id": 125,
+               "task_id": "COORD-TEST-001", "base_main_sha": "c" * 40,
+               "branch": "auto/data-market/coord-test-001",
+               "status": "NO_CHANGE", "reason": "no valid change"}
+    remote = {"dispatch_results": {"a" * 24: receipt}}
+    monkeypatch.setattr("agents.development_orchestrator_runtime._gh_get_content",
+                        lambda **kwargs: (remote, "blob"))
+    api = GitHubAPI("rnnyrgs-web/tradingview-ai-crypto", "token", object())
+    result = api.get_dispatch_outcome(125, "a" * 24, "COORD-TEST-001", "c" * 40,
+                                      "auto/data-market/coord-test-001")
+    assert result == {"status": "NO_CHANGE", "reason": "no valid change"}
+    remote["dispatch_results"]["a" * 24] = dict(receipt, workflow_run_id=126)
+    with pytest.raises(RuntimeError, match="identity"):
+        api.get_dispatch_outcome(125, "a" * 24, "COORD-TEST-001", "c" * 40,
+                                 "auto/data-market/coord-test-001")
+
+
+def test_runner_receipt_classifies_pr_no_change_blocked_wait_and_mismatch():
+    from agents.autonomous_cloud_state import mark_dispatch_result
+
+    base = {"version": 1, "runs": [], "dispatch_results": {},
+            "next_eligible_at": "2026-09-19T17:00:00Z"}
+    cases = [
+        ({"run": True, "task_id": "COORD-TEST-001"},
+         {"outcome": {"status": "READY_FOR_PR", "summary": "candidate"}},
+         501, HEAD, "PR_CREATED"),
+        ({"run": True, "task_id": "COORD-TEST-001"},
+         {"outcome": {"status": "NO_CHANGE", "summary": "nothing valid"}},
+         None, None, "NO_CHANGE"),
+        ({"run": True, "task_id": "COORD-TEST-001"},
+         {"outcome": {"status": "BLOCKED", "summary": "data missing"}},
+         None, None, "BLOCKED"),
+        ({"run": False, "reason": "COOLDOWN"}, None, None, None, "WAIT"),
+        ({"run": False, "reason": "DISPATCH_TASK_ID_MISMATCH"},
+         None, None, None, "TASK_MISMATCH"),
+    ]
+    for plan, result, pr_number, head, expected in cases:
+        updated = mark_dispatch_result(base, request_id="a" * 24,
+                                       task_id="COORD-TEST-001", workflow_run_id=125,
+                                       base_main_sha="c" * 40, plan=plan,
+                                       result=result, pr_number=pr_number, head_sha=head)
+        receipt = updated["dispatch_results"]["a" * 24]
+        assert receipt["status"] == expected
+        assert receipt["task_id"] == "COORD-TEST-001"
+        assert receipt["workflow_run_id"] == 125
+        assert receipt["base_main_sha"] == "c" * 40
+        assert mark_dispatch_result(updated, request_id="a" * 24,
+                                    task_id="COORD-TEST-001", workflow_run_id=125,
+                                    base_main_sha="c" * 40, plan=plan,
+                                    result=result, pr_number=pr_number, head_sha=head) == updated
+
+
+def test_runner_receipt_rejects_mismatched_task_and_pr_without_head():
+    from agents.autonomous_cloud_state import mark_dispatch_result
+
+    state = {"version": 1, "runs": [], "dispatch_results": {}}
+    with pytest.raises(ValueError):
+        mark_dispatch_result(state, request_id="a" * 24,
+                             task_id="COORD-TEST-001", workflow_run_id=125,
+                             base_main_sha="c" * 40,
+                             plan={"run": True, "task_id": "OTHER"}, result=None,
+                             pr_number=None, head_sha=None)
+    with pytest.raises(ValueError):
+        mark_dispatch_result(state, request_id="a" * 24,
+                             task_id="COORD-TEST-001", workflow_run_id=125,
+                             base_main_sha="c" * 40,
+                             plan={"run": True, "task_id": "COORD-TEST-001"},
+                             result={"outcome": {"status": "READY_FOR_PR", "summary": "x"}},
+                             pr_number=None, head_sha=None)
 
 
 def test_dispatch_run_adapter_requires_exact_run_name_head_and_complete_listing():

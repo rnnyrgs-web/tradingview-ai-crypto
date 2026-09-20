@@ -393,14 +393,42 @@ def _send_dispatch(api: Any, store: Any, state: dict[str, Any], task_id: str,
                        "DISPATCH_RETRIED" if retry else "DISPATCHED", task_id)
 
 
+def _worker_result(outcome: Any, task_id: str) -> CycleResult:
+    if not isinstance(outcome, dict) or outcome.get("status") not in {
+        "PR_CREATED", "NO_CHANGE", "BLOCKED", "WAIT", "TASK_MISMATCH", "NOT_CLAIMED", "FAILED"
+    } or not isinstance(outcome.get("reason"), str) or not outcome["reason"].strip():
+        return CycleResult(Lifecycle.BLOCKED, "MALFORMED_WORKER_OUTCOME", task_id)
+    status = outcome["status"]
+    if status == "PR_CREATED":
+        if (not isinstance(outcome.get("pr_number"), int) or outcome["pr_number"] <= 0
+                or not isinstance(outcome.get("head_sha"), str)
+                or not SHA_RE.fullmatch(outcome["head_sha"])):
+            return CycleResult(Lifecycle.BLOCKED, "MALFORMED_WORKER_OUTCOME", task_id)
+        return CycleResult(Lifecycle.AWAITING_REVIEW, "PR_CREATED_AWAIT_CANONICAL_STATE",
+                           task_id, outcome["head_sha"])
+    if status == "WAIT":
+        retry_at = outcome.get("retry_at")
+        try:
+            stamp = datetime.fromisoformat(str(retry_at).replace("Z", "+00:00"))
+            if stamp.tzinfo is None:
+                raise ValueError("naive retry timestamp")
+        except (TypeError, ValueError):
+            return CycleResult(Lifecycle.BLOCKED, "MALFORMED_WORKER_OUTCOME", task_id)
+        return CycleResult(Lifecycle.READY, "WORKER_WAIT", task_id)
+    if status == "NO_CHANGE":
+        return CycleResult(Lifecycle.DONE, "WORKER_NO_CHANGE_AWAIT_CANONICAL_UPDATE", task_id)
+    return CycleResult(Lifecycle.BLOCKED, f"WORKER_{status}", task_id)
+
+
 def _reconcile_dispatch(api: Any, store: Any, budget: Any, runner_config: dict[str, Any],
                         state: dict[str, Any], task_id: str, main_sha: str,
                         now: datetime) -> CycleResult:
     intent = state["dispatches"].get(task_id)
     if (not isinstance(intent, dict) or intent.get("workflow") != WORKFLOW
-            or intent.get("main_sha") != main_sha
+            or not isinstance(intent.get("main_sha"), str)
+            or not SHA_RE.fullmatch(intent["main_sha"])
             or intent.get("branch") != safe_branch("data-market", task_id)
-            or intent.get("status") not in {"REQUESTED", "DISPATCHED", "OBSERVED", "BLOCKED"}
+            or intent.get("status") not in {"REQUESTED", "DISPATCHED", "OBSERVED", "BLOCKED", "COMPLETED"}
             or not isinstance(intent.get("attempts"), list)
             or not intent["attempts"]
             or len(intent["attempts"]) > MAX_DISPATCH_ATTEMPTS):
@@ -411,15 +439,26 @@ def _reconcile_dispatch(api: Any, store: Any, budget: Any, runner_config: dict[s
                   for a in attempts]
         ids = [a["request_id"] for a in attempts]
         if (any(stamp.tzinfo is None or stamp > now for stamp in stamps)
-                or any(not re.fullmatch(r"[0-9a-f]{24}", rid) for rid in ids)
-                or len(set(ids)) != len(ids)):
+                 or any(not re.fullmatch(r"[0-9a-f]{24}", rid) for rid in ids)
+                 or len(set(ids)) != len(ids)
+                 or ids != [_dispatch_request_id(task_id, intent["main_sha"], number)
+                            for number in range(1, len(ids) + 1)]):
             raise ValueError("malformed attempts")
     except (KeyError, TypeError, AttributeError, ValueError):
         return CycleResult(Lifecycle.BLOCKED, "MALFORMED_DISPATCH_INTENT", task_id)
-    run = api.find_dispatch_run(task_id, ids, main_sha, stamps[0])
+    if intent.get("worker_outcome") is not None:
+        if (intent["status"] != "COMPLETED"
+                or not isinstance(intent.get("run_id"), int)
+                or intent["run_id"] <= 0
+                or intent.get("run_conclusion") != "success"):
+            return CycleResult(Lifecycle.BLOCKED, "MALFORMED_DISPATCH_INTENT", task_id)
+        return _worker_result(intent["worker_outcome"], task_id)
+    if intent["status"] == "COMPLETED":
+        return CycleResult(Lifecycle.BLOCKED, "MALFORMED_DISPATCH_INTENT", task_id)
+    run = api.find_dispatch_run(task_id, ids, intent["main_sha"], stamps[0])
     if run is not None:
         if (not isinstance(run, dict) or run.get("request_id") not in ids
-                or run.get("task_id") != task_id or run.get("head_sha") != main_sha
+                or run.get("task_id") != task_id or run.get("head_sha") != intent["main_sha"]
                 or not isinstance(run.get("id"), int) or run["id"] <= 0
                 or run.get("status") not in {"queued", "in_progress", "completed"}):
             return CycleResult(Lifecycle.BLOCKED, "MALFORMED_DISPATCH_RUN", task_id)
@@ -427,18 +466,35 @@ def _reconcile_dispatch(api: Any, store: Any, budget: Any, runner_config: dict[s
             "success", "failure", "cancelled", "timed_out", "action_required"
         }:
             return CycleResult(Lifecycle.BLOCKED, "MALFORMED_DISPATCH_RUN", task_id)
-        observed = copy.deepcopy(state)
         failed = run["status"] == "completed" and run.get("conclusion") != "success"
-        observed["dispatches"][task_id]["status"] = "BLOCKED" if failed else "OBSERVED"
+        outcome = None
+        if run["status"] == "completed" and not failed:
+            outcome = api.get_dispatch_outcome(run["id"], run["request_id"], task_id,
+                                               intent["main_sha"], intent["branch"])
+            decision = _worker_result(outcome, task_id)
+            if decision.reason == "MALFORMED_WORKER_OUTCOME":
+                return decision
+            if outcome["status"] == "PR_CREATED":
+                pr = api.get_pr(outcome["pr_number"])
+                if (not isinstance(pr, dict) or _head(pr) != outcome["head_sha"]
+                        or (pr.get("head") or {}).get("ref") != intent["branch"]
+                        or ((pr.get("head") or {}).get("repo") or {}).get("full_name") != api.repo
+                        or pr.get("state") != "open"):
+                    return CycleResult(Lifecycle.BLOCKED, "WORKER_PR_MISMATCH", task_id)
+        observed = copy.deepcopy(state)
+        observed["dispatches"][task_id]["status"] = (
+            "BLOCKED" if failed else "COMPLETED" if outcome is not None else "OBSERVED")
         observed["dispatches"][task_id]["run_id"] = run["id"]
         observed["dispatches"][task_id]["run_status"] = run["status"]
         observed["dispatches"][task_id]["run_conclusion"] = run.get("conclusion")
+        if outcome is not None:
+            observed["dispatches"][task_id]["worker_outcome"] = outcome
         if observed != state:
             store.save(observed)
         if failed:
             return CycleResult(Lifecycle.BLOCKED, "WORKFLOW_FAILED", task_id)
         if run["status"] == "completed":
-            return CycleResult(Lifecycle.RUNNING, "WORKFLOW_COMPLETED_AWAIT_CANONICAL_STATE", task_id)
+            return decision
         return CycleResult(Lifecycle.CLAIMED, "DISPATCH_RUN_ADOPTED", task_id)
     if api.branch_exists(intent["branch"]):
         return CycleResult(Lifecycle.CLAIMED, "TASK_BRANCH_EXISTS", task_id)
@@ -456,10 +512,10 @@ def _reconcile_dispatch(api: Any, store: Any, budget: Any, runner_config: dict[s
         return CycleResult(Lifecycle.BLOCKED, "DISPATCH_RETRY_EXHAUSTED", task_id)
     if not budget.can_dispatch(runner_config, "data-market", now):
         return CycleResult(Lifecycle.READY, "SHARED_BUDGET_DENIED", task_id)
-    if api.current_main_sha() != main_sha:
+    if api.current_main_sha() != main_sha or intent["main_sha"] != main_sha:
         return CycleResult(None, "MAIN_CHANGED", task_id)
     return _send_dispatch(api, store, state, task_id, WORKFLOW,
-                          intent["branch"], main_sha, now, retry=True)
+                          intent["branch"], intent["main_sha"], now, retry=True)
 
 
 def run_existing_review_cycle(
@@ -499,6 +555,8 @@ def run_existing_review_cycle(
             return CycleResult(Lifecycle.BLOCKED, "PR_REPOSITORY_MISMATCH", task_id, head)
         if head_ref not in {task.get("branch"), safe_branch(task["owner"], task_id)}:
             return CycleResult(Lifecycle.BLOCKED, "PR_BRANCH_MISMATCH", task_id, head)
+        if pr.get("state") == "open" and not api.pr_base_is_current(head_ref, head, expected_main_sha):
+            return CycleResult(Lifecycle.REVISION_REQUIRED, "STALE_PR_BASE", task_id, head)
         decision = reconcile_candidate(task, pr, api.security_runs(head_ref),
                                        _review_for_task(state, task_id, number, head), now)
         if not decision.needs_review:

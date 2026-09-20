@@ -36,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.sha }}
           fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
@@ -324,6 +324,20 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --ref "$STATE_BRANCH" \
             --reservation-id '${{ steps.fleet_budget.outputs.reservation_id }}' || true
+
+      - name: Bind dispatched worker outcome to runner state
+        if: always() && inputs.orchestrator_request_id != '' && steps.meta.outputs.main_sha != ''
+        run: |
+          python agents/autonomous_cloud_state.py mark-dispatch-result \
+            --state /tmp/runner_state.json \
+            --request-id '${{ inputs.orchestrator_request_id }}' \
+            --task-id '${{ inputs.task_id }}' \
+            --run-id "$GITHUB_RUN_ID" \
+            --base-sha '${{ steps.meta.outputs.main_sha }}' \
+            --plan /tmp/decision.json \
+            --result /tmp/agent_result.json \
+            --pr-number '${{ steps.publish.outputs.pr_number }}' \
+            --head-sha '${{ steps.publish.outputs.head_sha }}'
 
       - name: Persist sanitized durable state to non-main branch
         if: always()
