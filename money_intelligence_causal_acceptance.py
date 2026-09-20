@@ -25,6 +25,7 @@ from money_intelligence_causal_memory import (
     PointInTimeObservation,
     PROJECT_ALPHA,
     ReplayConflictError,
+    _synthetic_support_attestation,
 )
 from money_intelligence_causal_supabase import SupabaseCausalMemory
 from money_intelligence_mission_integration import causal_feedback
@@ -246,21 +247,25 @@ def _seed_support(memory, ids: dict[str, str], base: datetime) -> None:
                     )
                 )
     if ids["support"] not in memory.events:
-        memory.record_evidence(
-            EvidenceEvent(
-                event_id=ids["support"],
-                hypothesis_id=ids["hypothesis"],
-                evaluated_at=_ts(base + timedelta(hours=pair_count + 1, minutes=2)),
-                kind="support",
-                matched_controls=("phase2-runtime-matched-control-v1",),
-                outcome_observation_ids=outcome_ids,
-                control_observation_ids=control_ids,
-                evaluation_method="matched_mean_diff_v1",
-                sample_size=pair_count,
-                confirmatory=True,
-                p_value=1 / (2**pair_count),
-            )
+        event = EvidenceEvent(
+            event_id=ids["support"],
+            hypothesis_id=ids["hypothesis"],
+            evaluated_at=_ts(base + timedelta(hours=pair_count + 1, minutes=2)),
+            kind="support",
+            matched_controls=("phase2-runtime-matched-control-v1",),
+            outcome_observation_ids=outcome_ids,
+            control_observation_ids=control_ids,
+            evaluation_method="matched_mean_diff_v1",
+            sample_size=pair_count,
+            confirmatory=True,
+            p_value=1 / (2**pair_count),
         )
+        attestation = _synthetic_support_attestation(
+            memory, memory.hypotheses[ids["hypothesis"]], event
+        )
+        if attestation is None:
+            raise CausalMemoryError("synthetic support attestation key is unavailable")
+        memory.record_evidence(replace(event, note=attestation))
 
 
 def _record_narrative(memory, ids: dict[str, str], base: datetime) -> None:

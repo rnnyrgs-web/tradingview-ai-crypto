@@ -4,6 +4,7 @@ from pathlib import Path
 
 import db
 import pytest
+import money_intelligence_causal_memory as causal_memory
 
 from money_intelligence_causal_memory import (
     CausalMemoryError,
@@ -20,6 +21,23 @@ from test_money_intelligence_causal_memory import (
     _observation,
     _support,
 )
+
+
+@pytest.fixture(autouse=True)
+def _test_source_receipt(monkeypatch):
+    """The durable-adapter fixtures simulate an external test-source receipt."""
+    production_verify = causal_memory._trusted_control_selection
+
+    def verify(hypothesis, contract, outcome, control):
+        if (
+            contract.control_selection_contract_id == "market-beta-volatility-v1"
+            and outcome.source_id == control.source_id == "test-source"
+        ):
+            return True
+        return production_verify(hypothesis, contract, outcome, control)
+
+    monkeypatch.setattr(causal_memory, "_trusted_control_selection", verify)
+    monkeypatch.setattr(causal_memory, "_trusted_support_attestation", lambda memory, hypothesis, event: True)
 
 
 class Response:

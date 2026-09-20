@@ -4,6 +4,7 @@ import json
 
 import pytest
 
+import money_intelligence_causal_memory as causal_memory
 from money_intelligence_causal_memory import (
     CausalMemoryError,
     CausalRepricingMemory,
@@ -14,6 +15,24 @@ from money_intelligence_causal_memory import (
     PointInTimeObservation,
     ReplayConflictError,
 )
+
+_PRODUCTION_SELECTION_VERIFIER = causal_memory._trusted_control_selection
+_PRODUCTION_SUPPORT_ATTESTATION = causal_memory._trusted_support_attestation
+
+
+@pytest.fixture(autouse=True)
+def _test_source_receipt(monkeypatch):
+    """Statistical fixtures simulate an independently verified test source."""
+    def verify(hypothesis, contract, outcome, control):
+        if (
+            contract.control_selection_contract_id == "market-beta-volatility-v1"
+            and outcome.source_id == control.source_id == "test-source"
+        ):
+            return True
+        return _PRODUCTION_SELECTION_VERIFIER(hypothesis, contract, outcome, control)
+
+    monkeypatch.setattr(causal_memory, "_trusted_control_selection", verify)
+    monkeypatch.setattr(causal_memory, "_trusted_support_attestation", lambda memory, hypothesis, event: True)
 
 
 def _observation(
@@ -1208,6 +1227,42 @@ def test_confirmatory_evidence_rejects_substituted_data_under_planned_control_id
 
     with pytest.raises(CausalMemoryError, match="frozen control provenance"):
         memory.record_evidence(_support("planned-id-control-substitution"))
+
+
+def test_caller_asserted_selection_id_cannot_confirm_posthoc_venue_revision(monkeypatch):
+    monkeypatch.setattr(
+        causal_memory, "_trusted_control_selection", _PRODUCTION_SELECTION_VERIFIER
+    )
+    monkeypatch.setattr(causal_memory, "_trusted_support_attestation", _PRODUCTION_SUPPORT_ATTESTATION)
+    prepared = _memory_with_hypothesis()
+    memory = CausalRepricingMemory()
+    memory.register_observation(prepared.observations["flow"])
+    memory.register_hypothesis(prepared.hypotheses["H1"])
+    for outcome_id, control_id in prepared.hypotheses["H1"].evaluation_pairs:
+        for observation_id in (outcome_id, control_id):
+            memory.register_observation(replace(
+                prepared.observations[observation_id],
+                venue="posthoc-selected-venue",
+                revision_id="r2",
+            ))
+    with pytest.raises(CausalMemoryError, match="trusted control selection"):
+        memory.record_evidence(_support("same-id-posthoc-venue"))
+
+
+def test_prior_unattested_support_replays_for_audit_without_confirmatory_authority(monkeypatch):
+    memory = _memory_with_hypothesis()
+    memory.record_evidence(_support("pre-verifier-support"))
+    document = memory.to_document()
+    monkeypatch.setattr(
+        causal_memory, "_trusted_control_selection", _PRODUCTION_SELECTION_VERIFIER
+    )
+    monkeypatch.setattr(causal_memory, "_trusted_support_attestation", _PRODUCTION_SUPPORT_ATTESTATION)
+
+    restored = CausalRepricingMemory.from_document(document)
+    assert restored.events["pre-verifier-support"].confirmatory is False
+    assert restored.confidence(
+        "H1", as_of="2026-09-03T00:00:00Z"
+    ).confirmatory_support_count == 0
 
 
 def test_evaluation_plan_cannot_be_registered_after_outcomes_are_present():
