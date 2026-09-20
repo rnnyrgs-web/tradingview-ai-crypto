@@ -1,7 +1,7 @@
 # AI_STATE.md
 
-Last reconciled: 2026-09-20T06:08Z
-Last updated: 2026-09-20T06:08Z
+Last reconciled: 2026-09-20T07:09Z
+Last updated: 2026-09-20T07:09Z
 
 This is the compact canonical handoff for `rnnyrgs-web/tradingview-ai-crypto`. Verify actual `main` SHA first on every run, then read `UNIFIED_PROFITABILITY_LEAD_SPEC.md`, `AGENTS.md`, `AUTONOMOUS_RESEARCH_DIRECTOR_STATUS.md`, `docs/ASTRA_BACKGROUND_WORKER.md`, strategy/rejected/coordination state including overrides, `orchestration/model_routing_policy.json`, current Money Intelligence / Big-Move artifacts, open PRs, active ownership and exact-head CI. GitHub durable state outranks chat memory.
 
@@ -96,6 +96,12 @@ Durable acceptance contract: issue #462. Exactly one active milestone is canonic
 
 Execution is already active under the durable issue #462 claim. The first bounded defect fix is integrated: PR #471 closed an underdeclared-family multiple-testing bypass in causal memory and merged as `8638dad86142f78f63bfbf936e1a52310bf97fd0` after exact-head Security & Reliability run `35488774983` passed with 1,242 tests passed / 2 skipped plus dependency, static-security and secret scans. This is one completed adversarial finding, not Phase-3 completion or self-certification.
 
+**PR #477 = INTEGRATED / VERIFIED BOUNDED PHASE-3 FIX.** The independent Lead merged exact PR head `4019345bf2840f0688cd1abd13b5835e2aa337e2` by GitHub merge commit from pre-merge `main` `1c6b8c630c5e52f9eaa3ab36a6fa0092e4289752` to `6ccdd315b8be6690bcfec2614509a822804ebf20`. GitHub records PR #477 as merged. The earlier base advance from `21006d14bc6b3c96827800bac545f72479697827` added only a separate Money Intelligence research-cycle JSON artifact and did not overlap PR #477. The latest independent adversarial review on that exact PR head reported no unresolved Important-or-higher finding in this bounded repair. Exact-head Security & Reliability run `35494772176` succeeded. Exact merged-main Security & Reliability push run `35496016175` succeeded on `6ccdd315b8be6690bcfec2614509a822804ebf20`: 1,335 tests passed, 2 skipped; dependency audit, Bandit/static security and committed-secret checks passed.
+
+The bounded scientific attack closed is caller-asserted significance and pseudoreplication in causal-memory confirmatory evidence. The trusted evaluator recomputes the exact paired-sign p-value and derives sample size from verified independent economic units. Its durable consumption identity is subject/entity + frozen observation start + measurement window; observation IDs, metric/source/provenance labels, currency/display unit/value rescaling and venue relabeling cannot recount the same or overlapping realization across events, hypotheses, families, restart/replay or stale-writer retry. Comparable units/venues and provenance remain checked separately. Distinct subjects and non-overlapping temporal units remain admissible. PIT chronology, frozen matched controls, the existing Bonferroni threshold and research-only authority remain enforced. This is an architecture-integrity repair, not validated profitability or Phase-3 completion.
+
+**Remaining blocking Phase-3 findings:** project-wide predeclared search-family/multiple-testing governance and cross-hypothesis evidence-reuse rules beyond the bounded economic-unit consumption fix; profitability-learning semantic relabeling/false novelty and rejected-design rescue; plus continued end-to-end falsification of attribution/ablation, successor duplication, adaptive stopping/repeated looks, chronology, stale/rejected memory, restart/replay/race/outage/corruption. Keep Phase 3 open under issue #462 and `COORD-ARCH-ADVERSARIAL-001`.
+
 Independently trace and attempt to falsify the live merged paths, including:
 - durable Profitability Learning, Strategy Component Memory and causal memory actually changing ranking, eligibility, queueing and execution;
 - compounded after-cost economics, catastrophic-tail and return-concentration treatment rather than win-rate proxies;
@@ -178,4 +184,4 @@ Current truth: **Orchestrator V1 bounded canonical-main acceptance passed; Phase
 
 ## EXACT NEXT STEP
 
-Continue the already-claimed `COORD-ARCH-ADVERSARIAL-001` from exact current `main` on the canonical `agent/testing-security` branch under issue #462. Treat PR #471 as the first completed bounded fix, then trace and falsify the remaining real merged paths end to end, adding focused regressions and isolated reviewed fixes for every concrete defect. Do not self-certify Phase 3, advance V2/Phase 4 ahead of the active milestone, reopen protected OOS/forward evidence, or grant broker/trade/promotion authority.
+Continue the already-claimed `COORD-ARCH-ADVERSARIAL-001` from exact current `main` on the canonical `agent/testing-security` branch under issue #462. PRs #471 and #477 are integrated bounded fixes. The next isolated task is to reproduce and close the project-wide search-family/multiple-testing and favorable-evidence reuse bypass: bind a durable pre-outcome search-family budget independently of worker-chosen `family_id`, reject adaptive sibling relabeling and repeated looks, and prevent one favorable realization from creating independent confirmatory support across hypotheses/families. Add adversarial regressions, make the smallest fail-closed fix, require exact-head Security & Reliability and independent review, then use separate Lead integration. Follow with the distinct semantic-relabeling/false-novelty finding and remaining end-to-end attacks. Do not self-certify Phase 3, advance V2-002/Phase 4 ahead of the active milestone, reopen protected OOS/forward evidence, or grant broker/trade/promotion authority.
