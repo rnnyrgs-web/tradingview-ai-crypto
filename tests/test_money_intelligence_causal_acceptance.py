@@ -140,6 +140,7 @@ def test_unrelated_redeploy_reuses_prospective_scientific_plan(monkeypatch):
     "money_intelligence_causal_memory.py",
     "profitability_learning/runtime.py",
     "orchestration/rejected_fingerprints.json",
+    "orchestration/trusted_executor_manifest.json",
     "orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz",
     "requirements.txt",
     "Dockerfile",
@@ -150,6 +151,7 @@ def test_scientific_plan_namespace_tracks_packaged_inputs_not_state_docs(tmp_pat
         "profitability_learning/runtime.py",
         "orchestration/rejected_fingerprints.py",
         "orchestration/rejected_fingerprints.json",
+        "orchestration/trusted_executor_manifest.json",
         "orchestration/signal_development_objective.json",
         "orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz",
         "requirements.txt",
@@ -178,6 +180,7 @@ def test_scientific_plan_namespace_tracks_resolved_runtime_identity(tmp_path, mo
         "Dockerfile",
         "orchestration/rejected_fingerprints.py",
         "orchestration/rejected_fingerprints.json",
+        "orchestration/trusted_executor_manifest.json",
         "orchestration/signal_development_objective.json",
         "orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz",
     )

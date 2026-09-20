@@ -143,6 +143,7 @@ def _scientific_plan_fingerprint(project_root: Path | None = None) -> str:
         "requirements.txt",
         "orchestration/rejected_fingerprints.py",
         "orchestration/rejected_fingerprints.json",
+        "orchestration/trusted_executor_manifest.json",
         "orchestration/signal_development_objective.json",
         "orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz",
     )
