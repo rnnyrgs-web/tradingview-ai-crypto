@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 
+import profitability_learning.contracts as contracts
 from profitability_learning.contracts import (
     fingerprint,
     verified_executor_implementation,
@@ -143,6 +144,126 @@ def test_executor_dependency_comments_do_not_change_identity(monkeypatch):
         "restrictive_group_abstention_v1"
     )
     assert len(implementation["ast_sha256"]) == 64
+
+
+def test_executor_closure_binds_from_package_imported_submodule(
+    monkeypatch, tmp_path
+):
+    (tmp_path / "entry.py").write_text(
+        "from pkg import behavior\n\nRESULT = behavior.run()\n",
+        encoding="utf-8",
+    )
+    package = tmp_path / "pkg"
+    package.mkdir()
+    (package / "__init__.py").write_text("", encoding="utf-8")
+    behavior = package / "behavior.py"
+    behavior.write_text("def run():\n    return 1\n", encoding="utf-8")
+
+    rule = "temporary_from_package_executor"
+    monkeypatch.setitem(
+        contracts.TRUSTED_EXECUTOR_IMPLEMENTATIONS,
+        rule,
+        "temporary.entry@v1-import-closure",
+    )
+    monkeypatch.setitem(
+        contracts.TRUSTED_EXECUTOR_SOURCES,
+        rule,
+        {"entrypoint": "entry.py", "resources": []},
+    )
+    monkeypatch.setattr(
+        contracts,
+        "__file__",
+        str(tmp_path / "profitability_learning" / "contracts.py"),
+    )
+    manifest = tmp_path / "trusted_executor_manifest.json"
+    monkeypatch.setattr(contracts, "TRUSTED_EXECUTOR_MANIFEST", manifest)
+    initial_digest = contracts._executor_bundle_digest(rule)
+    manifest.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "implementations": {
+                    rule: {"bundle_sha256": initial_digest},
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    verified_executor_implementation(rule)
+
+    behavior.write_text("def run():\n    return 2\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="implementation digest is stale"):
+        verified_executor_implementation(rule)
+
+
+def test_executor_closure_rejects_local_package_wildcard_import(
+    monkeypatch, tmp_path
+):
+    (tmp_path / "entry.py").write_text(
+        "from pkg import *\n\nRESULT = behavior.run()\n",  # noqa: F403
+        encoding="utf-8",
+    )
+    package = tmp_path / "pkg"
+    package.mkdir()
+    (package / "__init__.py").write_text(
+        '__all__ = ["behavior"]\n',
+        encoding="utf-8",
+    )
+    (package / "behavior.py").write_text(
+        "def run():\n    return 1\n",
+        encoding="utf-8",
+    )
+
+    rule = "temporary_wildcard_package_executor"
+    monkeypatch.setitem(
+        contracts.TRUSTED_EXECUTOR_SOURCES,
+        rule,
+        {"entrypoint": "entry.py", "resources": []},
+    )
+    monkeypatch.setattr(
+        contracts,
+        "__file__",
+        str(tmp_path / "profitability_learning" / "contracts.py"),
+    )
+    with pytest.raises(ValueError, match="local package wildcard import"):
+        contracts._executor_bundle_digest(rule)
+
+
+def test_executor_closure_rejects_relative_package_wildcard_import(
+    monkeypatch, tmp_path
+):
+    (tmp_path / "entry.py").write_text(
+        "from pkg import runner\n",
+        encoding="utf-8",
+    )
+    package = tmp_path / "pkg"
+    package.mkdir()
+    (package / "__init__.py").write_text(
+        '__all__ = ["behavior"]\n',
+        encoding="utf-8",
+    )
+    (package / "runner.py").write_text(
+        "from . import *\n\nRESULT = behavior.run()\n",  # noqa: F403
+        encoding="utf-8",
+    )
+    (package / "behavior.py").write_text(
+        "def run():\n    return 1\n",
+        encoding="utf-8",
+    )
+
+    rule = "temporary_relative_wildcard_executor"
+    monkeypatch.setitem(
+        contracts.TRUSTED_EXECUTOR_SOURCES,
+        rule,
+        {"entrypoint": "entry.py", "resources": []},
+    )
+    monkeypatch.setattr(
+        contracts,
+        "__file__",
+        str(tmp_path / "profitability_learning" / "contracts.py"),
+    )
+    with pytest.raises(ValueError, match="local package wildcard import"):
+        contracts._executor_bundle_digest(rule)
 
 
 def test_massive_virtual_scale_never_raises_physical_or_cost_authority():

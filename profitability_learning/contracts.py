@@ -134,10 +134,25 @@ def _local_import_paths(root, relative_path, tree):
                 base = package_parts[:len(package_parts) - remove]
             else:
                 base = []
-            if node.module:
-                imports.update(
-                    _local_module_paths(root, base + node.module.split("."))
+            target_parts = base + (node.module.split(".") if node.module else [])
+            if (any(alias.name == "*" for alias in node.names)
+                    and target_parts
+                    and root.joinpath(*target_parts, "__init__.py").is_file()):
+                raise ValueError(
+                    "registered executor has local package wildcard import"
                 )
+            if node.module:
+                module_parts = target_parts
+                imports.update(
+                    _local_module_paths(root, module_parts)
+                )
+                for alias in node.names:
+                    if alias.name != "*":
+                        imports.update(
+                            _local_module_paths(
+                                root, module_parts + alias.name.split(".")
+                            )
+                        )
             else:
                 for alias in node.names:
                     imports.update(
