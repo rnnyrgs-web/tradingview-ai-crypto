@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "reason": "Lead reconciliation after exact-deployed Phase-1 Profitability Learning acceptance and integration of the first Phase-2 persistent causal-memory primitive. Preserve all prior rejected/data-blocked strategy outcomes and OOS/forward locks. PR #454 is integrated on canonical main with deployment-durable PIT causal memory; Phase 2 remains incomplete until the actual autonomous Money Intelligence -> Big-Move / strategy-component mission path consumes this memory and passes deployed restart/replay/outage acceptance.",
+  "reason": "Lead reconciliation after exact-deployed Phase-1 Profitability Learning acceptance and full Phase-2 Evolving Money Intelligence + Causal Repricing acceptance. Preserve all prior rejected/data-blocked strategy outcomes and OOS/forward locks. Phase 2 is complete only on the recorded exact merged main and deployed acceptance evidence; Phase 3 independent adversarial architecture review is now the sole overnight-program successor.",
   "task_updates": {
     "COORD-DISC-DATA-003": {
       "status": "DONE",
@@ -180,7 +180,7 @@
       "id": "COORD-MI-CAUSAL-002",
       "priority": 1,
       "owner": "quant-research",
-      "status": "READY",
+      "status": "DONE",
       "work_mode": "AUDIT",
       "eligible_engines": ["chatgpt", "human"],
       "title": "Wire causal-repricing memory into autonomous research mission generation and prove deployed consumption",
@@ -188,7 +188,7 @@
       "blockers": [],
       "issue": 451,
       "branch": "agent/quant-research",
-      "pr": null,
+      "pr": 460,
       "evidence_required": [
         "actual autonomous Money Intelligence runtime reads and writes the approved durable causal-memory store rather than a parallel or ephemeral truth store",
         "structured PIT fact/inference/hypothesis/mechanism state is consumed by downstream Big-Move and strategy-component mission generation/ranking by default",
@@ -202,6 +202,62 @@
         "exact-head Security and Reliability success before integration and exact-deployed-SHA runtime acceptance after integration"
       ],
       "completion_rule": "Phase 2 may be marked DONE only after the real autonomous research path demonstrably consumes the persistent causal-memory state, changes downstream research mission eligibility/ranking from provenance-bound evidence, survives deployed restart/replay/outage tests, and preserves all chronology, multiple-testing, rejected-memory and research-only firewalls. Then route Phase 3 independent adversarial architecture review.",
+      "completion_evidence": {
+        "status": "PHASE_2_RUNTIME_ACCEPTED",
+        "mission_consumption_pr": 460,
+        "mission_consumption_exact_head_sha": "0ee9e160e4652cfcac4a0890ee27ef9e9639f175",
+        "mission_consumption_merge_sha": "870ce1cb680d757963b19d9dfc858f25eabf7eb2",
+        "runtime_acceptance_pr": 461,
+        "runtime_acceptance_exact_head_sha": "ad7b7d4f71175c795670af3c469404410e5f02cc",
+        "accepted_main_sha": "1834c740c9ce85dfeb14f4f0544c7a4957755cbd",
+        "exact_main_security_and_reliability_run": 35479519648,
+        "exact_main_security_and_reliability": "SUCCESS",
+        "profitability_runtime_regression_run": 35479519652,
+        "profitability_runtime_regression": "SUCCESS",
+        "causal_runtime_acceptance_run": 35479519649,
+        "causal_runtime_acceptance_attempt": 2,
+        "causal_runtime_acceptance": "SUCCESS",
+        "durable_store_genesis": "explicit deterministic blank genesis appended once through the already-approved optimistic Supabase RPC after production was independently verified empty; no research outcome/confidence/hypothesis was seeded and no permissive fallback was added",
+        "structured_support_consumed_by_default_director": true,
+        "narrative_firewall_verified": true,
+        "confidence_decay_verified": true,
+        "matched_contradiction_removes_missions": true,
+        "restart_replay_stale_writer_outage_corruption_fail_closed": true,
+        "rejected_fingerprints_persist": true,
+        "final_acceptance_fixture_mission_count": 0,
+        "untouched_oos_opened": false,
+        "genuine_forward_opened": false,
+        "broker_or_live_authority": false,
+        "phase_2_complete": true
+      },
+      "next_task": "COORD-ARCH-ADVERSARIAL-001"
+    },
+    {
+      "id": "COORD-ARCH-ADVERSARIAL-001",
+      "priority": 1,
+      "owner": "testing-security",
+      "status": "READY",
+      "work_mode": "AUDIT",
+      "eligible_engines": ["chatgpt", "human"],
+      "title": "Independently adversarially audit learning-driven autonomous research execution paths",
+      "dependencies": ["COORD-MI-CAUSAL-002"],
+      "blockers": [],
+      "issue": 462,
+      "branch": "agent/testing-security-phase3",
+      "pr": null,
+      "evidence_required": [
+        "trace the actual merged default autonomous path from durable profitability/component learning and causal-repricing memory through mission generation, ranking, eligibility, queue ownership and execution",
+        "prove learned useful/harmful/conditional component state genuinely changes future research behavior and missing/corrupt/unavailable memory fails closed",
+        "adversarially test post-hoc subgroup selection, parameter search, adaptive stopping, repeated looks, family-size accounting, mission reranking, successor generation, ablations and cross-lane evidence reuse",
+        "require any outcome-selected subgroup/parameter/component to become a fresh frozen hypothesis/fingerprint with new chronology and multiple-testing treatment rather than confirmatory relabeling",
+        "prove facts/inferences/narratives cannot change scientific admission, causal fingerprints, confidence or promotion without provenance-bound structured evidence under frozen mechanism/control/falsifier contracts",
+        "prove exact rejected fingerprints cannot be rescued by component learning or narrative similarity and useful parts can seed only new frozen hypotheses with fresh chronological validation",
+        "exercise deploy replacement, stale writers, conflicting replay, partial backend outage, corrupt/malformed state, concurrent workers, stale data, partially persisted missions and queue/ownership races with fail-closed behavior",
+        "audit end-to-end chronology so formation observations, confirmatory evidence, matched controls, untouched OOS and genuine-forward evidence remain separated at every real call boundary",
+        "preserve broker/trade/promotion/OOS-opening authority false, approximately $30/month combined variable paid-resource ceiling and no new paid service",
+        "add reproducing regressions before each blocking fix and pass exact-head Security and Reliability before independent integration"
+      ],
+      "completion_rule": "Phase 3 is DONE only after an independent adversarial review traces the real execution paths, fixes every blocking finding with regression coverage or durably records a fail-closed blocker, and exact-head CI plus independent review find no unresolved blocking architecture issue. Then route Phase 4 permanent autonomous-loop integration.",
       "next_task": null
     }
   ]
