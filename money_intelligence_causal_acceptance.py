@@ -63,7 +63,7 @@ def _parse(value: str) -> datetime:
 
 
 def _ids(sha: str) -> dict[str, str]:
-    token = sha[:16]
+    token = sha
     identifiers = {
         key: f"{PREFIX}:{token}:{suffix}"
         for key, suffix in {

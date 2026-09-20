@@ -21,6 +21,15 @@ def test_runtime_acceptance_rechecks_deployment_packaging_changes():
     assert "Prospective guard passed; full synthetic runtime acceptance remains pending" in workflow
 
 
+def test_fixture_subject_is_unique_for_each_full_deployed_sha():
+    first = acceptance._ids("a" * 16 + "b" * 24)
+    second = acceptance._ids("a" * 16 + "c" * 24)
+    assert first["hypothesis"] != second["hypothesis"]
+    assert acceptance._fixture_subject(first["hypothesis"]) != acceptance._fixture_subject(
+        second["hypothesis"]
+    )
+
+
 @pytest.mark.parametrize("prior_slots", [4, 28])
 def test_acceptance_fixture_can_confirm_after_prior_project_tests(prior_slots):
     ids = acceptance._ids("b" * 40)
