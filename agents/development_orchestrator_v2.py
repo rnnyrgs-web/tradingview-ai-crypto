@@ -223,7 +223,8 @@ def validate_v2(state: Any) -> None:
             elif decision == "DEFERRED":
                 fields.add("retry_at")
             if index:
-                fields.update({"previous_integration_id", "resumed_at", "resume_kind"})
+                fields.update({"previous_integration_id", "resumed_at", "resume_kind",
+                               "resume_event_id", "resume_event_digest", "resume_source_event"})
             review = record["reviews"].get(integration.get("review_id"))
             _require(set(integration) == fields
                      and _nonempty(integration.get("integration_id"))
@@ -270,10 +271,19 @@ def validate_v2(state: Any) -> None:
                          "malformed integration retry time")
             if index:
                 previous = receipts[index - 1]
+                resume_event = integration.get("resume_source_event")
                 _require(previous["decision"] == "DEFERRED"
                          and integration.get("previous_integration_id") == previous["integration_id"]
                          and integration.get("resume_kind") in {"RESUME", "REBASE"}
                          and _time(integration.get("resumed_at"))
+                         and isinstance(resume_event, dict)
+                         and resume_event.get("event_id") == integration.get("resume_event_id")
+                         and resume_event.get("type") == integration["resume_kind"]
+                         and resume_event.get("task_id") == task_id
+                         and resume_event.get("at") == integration["resumed_at"]
+                         and _digest(resume_event) == integration.get("resume_event_digest")
+                         and state["events"].get(integration.get("resume_event_id")) ==
+                             integration.get("resume_event_digest")
                          and _at(integration["at"]) > _at(previous["at"])
                          and _at(integration["at"]) >= _at(previous["retry_at"])
                          and _at(integration["at"]) >= _at(integration["resumed_at"])
@@ -337,11 +347,27 @@ def validate_v2(state: Any) -> None:
                      "orphan integration state")
     for task_id, successor in state["successors"].items():
         record = state["tasks"].get(task_id)
+        source = successor.get("source_event") if isinstance(successor, dict) else None
         _require(isinstance(successor, dict) and isinstance(record, dict)
+                 and set(successor) == {"previous_task_id", "successor_task_id", "engine",
+                                        "routing_decision", "deduplication_proof", "at",
+                                        "integration_id", "event_id", "event_digest",
+                                        "source_event", "content_digest"}
                  and record["status"] == "DONE"
                  and record.get("integration", {}).get("decision") == "INTEGRATED"
                  and successor.get("previous_task_id") == task_id
-                 and successor.get("integration_id") == record["integration"]["integration_id"],
+                 and successor.get("integration_id") == record["integration"]["integration_id"]
+                 and isinstance(source, dict)
+                 and source.get("type") == "SUCCESSOR"
+                 and source.get("event_id") == successor.get("event_id")
+                 and source.get("task_id") == task_id
+                 and all(source.get(k) == successor.get(k) for k in
+                         ("previous_task_id", "successor_task_id", "engine",
+                          "routing_decision", "deduplication_proof", "at"))
+                 and state["events"].get(successor.get("event_id")) == successor.get("event_digest")
+                 and _digest(source) == successor.get("event_digest")
+                 and successor.get("content_digest") == _digest({k: v for k, v in
+                     successor.items() if k != "content_digest"}),
                  "successor integration identity mismatch")
     _require(all(_nonempty(k) and isinstance(v, str)
                  and bool(re.fullmatch(r"[0-9a-f]{64}", v))
@@ -766,7 +792,10 @@ def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str,
             integration["retry_at"] = e["retry_at"]
         if previous is not None:
             integration.update(previous_integration_id=previous["integration_id"],
-                               resumed_at=resumption["at"], resume_kind=resumption["kind"])
+                               resumed_at=resumption["at"], resume_kind=resumption["kind"],
+                               resume_event_id=resumption["event_id"],
+                               resume_event_digest=resumption["event_digest"],
+                               resume_source_event=copy.deepcopy(resumption["source_event"]))
             r.pop("integration_resumption")
         integration["content_digest"] = _digest(integration)
         r["integration"] = integration
@@ -787,7 +816,11 @@ def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str,
         state["successors"][r["task_id"]] = {k: e[k] for k in
                                              ("previous_task_id", "successor_task_id", "engine",
                                               "routing_decision", "deduplication_proof", "at")}
-        state["successors"][r["task_id"]]["integration_id"] = r["integration"]["integration_id"]
+        successor_record = state["successors"][r["task_id"]]
+        successor_record.update(integration_id=r["integration"]["integration_id"],
+                                event_id=e["event_id"], event_digest=_digest(e),
+                                source_event=copy.deepcopy(e))
+        successor_record["content_digest"] = _digest(successor_record)
     elif kind == "USER_ACTION_REQUIRED":
         _require(_nonempty(e.get("escalation_id")) and e.get("reason") in ESCALATIONS
                  and e.get("severity") in {"LOW", "MEDIUM", "HIGH", "CRITICAL"}

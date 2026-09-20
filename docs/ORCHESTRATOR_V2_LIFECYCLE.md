@@ -45,7 +45,10 @@ decision, event hash, and decision-specific main SHA or retry time. A deferred
 decision stays in ordered history after resume; a later decision requires a
 new ID and records which resume or rebase released the deferral. Reload
 validation checks every current and historical receipt, chronology, the
-completed main SHA, and the successor's integration ID. Missing or altered
+completed main SHA, and the successor's integration ID. The later decision
+also retains the exact resume/rebase source event; successor routing retains
+its own exact source event, so re-digesting an altered timestamp or successor
+choice cannot pass reload validation. Missing or altered
 receipts fail closed, including after restart or duplicate event delivery.
 
 `DONE` frees the worker. A successor event can then cite only the completed

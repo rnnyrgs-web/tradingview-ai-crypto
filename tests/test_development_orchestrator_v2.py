@@ -727,6 +727,16 @@ def test_integration_history_chronology_and_link_fail_closed_even_if_resealed():
     reseal(premature["tasks"]["V2-A"]["integration"])
     with pytest.raises(ValueError, match="integration"):
         validate_v2(premature)
+    in_range_forgery = copy.deepcopy(state)
+    in_range_forgery["tasks"]["V2-A"]["integration"]["resumed_at"] = "2026-09-23T12:00:00Z"
+    reseal(in_range_forgery["tasks"]["V2-A"]["integration"])
+    with pytest.raises(ValueError, match="integration"):
+        validate_v2(in_range_forgery)
+    changed_resume_kind = copy.deepcopy(state)
+    changed_resume_kind["tasks"]["V2-A"]["integration"]["resume_kind"] = "REBASE"
+    reseal(changed_resume_kind["tasks"]["V2-A"]["integration"])
+    with pytest.raises(ValueError, match="integration"):
+        validate_v2(changed_resume_kind)
 
 
 def test_two_deferred_receipts_cannot_be_reordered_or_duplicated():
@@ -825,7 +835,12 @@ def test_deferred_receipt_survives_new_head_review_wait_and_escalation():
     assert state["tasks"]["V2-A"]["integration"]["integration_id"] == "integration-A"
 
 
-def test_integration_receipt_is_bound_to_successor_audit_state():
+@pytest.mark.parametrize("field,value", [
+    ("integration_id", "integration-A"), ("successor_task_id", "V2-forged"),
+    ("engine", "codex"), ("routing_decision", "MANUAL"),
+    ("deduplication_proof", "forged"), ("at", "2026-09-25T00:00:00Z"),
+])
+def test_integration_receipt_is_bound_to_successor_audit_state(field, value):
     state, _, _ = deferred_then_integrated()
     updated_queue = queue()
     updated_queue["tasks"][-2]["status"] = "DONE"
@@ -839,6 +854,6 @@ def test_integration_receipt_is_bound_to_successor_audit_state():
                         updated_queue, current_main_sha=MERGED,
                         selection_evidence=selection)
     assert state["successors"]["V2-A"]["integration_id"] == "integration-B"
-    state["successors"]["V2-A"]["integration_id"] = "integration-A"
+    state["successors"]["V2-A"][field] = value
     with pytest.raises(ValueError, match="integration|successor"):
         validate_v2(state)
