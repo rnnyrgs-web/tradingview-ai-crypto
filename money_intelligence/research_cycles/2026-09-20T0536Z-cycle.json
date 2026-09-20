@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T0536Z",
+  "information_cutoff": "2026-09-20T05:36:49Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_before_persist": "d1d5efd19eb7cfe0317b1df341052c7dc3a87fce",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-20T05:35:04Z",
+    "artifact_cutoff_utc": "2026-09-20T05:36:49Z",
+    "seconds_this_run_minimum": 104,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 342,
+    "minimum_cumulative_seconds_since_last_owner_report": 446,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted; schedule gaps, idle time, source publication timestamps and background time are excluded."
+  },
+  "highest_information_question": "When an official institution buys long-dated sovereign bonds, does the operation actually reduce net market-facing duration supply, or is it primarily a liquidity/maturity-exchange operation funded by replacement issuance?",
+  "fresh_research": [
+    {
+      "topic": "U.S. Treasury liquidity-support buybacks are not QE and should not be modeled as gross duration absorption",
+      "label": "DURATION-SUPPLY METHOD REFINEMENT / SUPPORTED",
+      "observed_facts": [
+        "Treasury announced on Aug.19, 2026 that long-end liquidity-support buyback maximums would increase from $2B to at least $4B per operation from Sep.9 through Nov.4, explicitly because of strong offers and a desire to improve liquidity in longer-dated nominal sectors.",
+        "Treasury's Aug.3, 2026 marketable-borrowing release explicitly states that buybacks are not expected to significantly affect privately held net marketable borrowing because new issuance replaces securities that are bought back.",
+        "TreasuryDirect's buyback FAQ says liquidity-support buybacks provide a regular opportunity to sell off-the-run securities and are not intended to mitigate episodes of acute market stress. Treasury may buy less than the announced maximum after evaluating offers.",
+        "Treasury's 2025 primary-dealer remarks describe liquidity-support buybacks as a price-sensitive mechanism for taking less-liquid securities out of intermediary inventories so dealers can recycle balance-sheet capacity; Treasury also said the program was small relative to total debt and had changed weighted-average maturity by only a few weeks.",
+        "On Sep.9 Treasury announced a Sep.10 operation of up to $6B in 10-20y bonds. Reuters reported the 10-year yield nevertheless rose to about 4.8528% after the announcement as macro/inflation pressures dominated.",
+        "On Sep.10 Treasury accepted about $5.19B of roughly $10.5B offered rather than the $6B maximum; contemporaneous reporting said the 10-year yield extended higher to roughly 4.95%. This is a useful non-dominant-transmission control: a gross official purchase headline did not mechanically lower long yields."
+      ],
+      "inference": "Official bond purchases must be classified by financing and balance-sheet mechanics before being labeled liquidity easing. A Treasury debt-manager buyback funded by replacement issuance can improve off-the-run liquidity and dealer intermediation while leaving aggregate privately held borrowing broadly unchanged. Its duration effect is therefore the difference between duration bought back and replacement duration issued, not the gross purchase amount. This differs materially from central-bank retention/QE that can remove net duration from private balance sheets without Treasury replacement issuance at the same causal step.",
+      "causal_chain": "Treasury replacement issuance raises cash -> Treasury buys selected off-the-run bonds -> holders receive cash / dealer inventories fall -> local liquidity and intermediation capacity may improve -> gross debt held by private investors is replaced rather than simply extinguished -> net duration effect depends on maturity composition of replacement issuance versus bought-back securities -> macro inflation/rate-path/fiscal supply can still dominate the curve",
+      "capital_source_destination": "Cash used for buybacks ultimately sits within Treasury's broader borrowing/cash-management program. At system level this is primarily a debt-management exchange financed by issuance, not an unbacked injection of central-bank reserves. Exact account-level sellers in individual operations remain UNKNOWN.",
+      "matched_control": "Sep.9-10 2026 expanded long-end buyback: official purchase capacity increased substantially, but 10-year yields rose rather than fell as oil/inflation, auction and policy-path pressures dominated. This rejects a deterministic 'Treasury buyback = lower yields/easier liquidity' rule.",
+      "negative_findings": [
+        "Do not equate Treasury buybacks with QE or central-bank balance-sheet expansion.",
+        "Do not use gross buyback dollars as net duration removed from private markets when new issuance replaces the purchased debt.",
+        "Do not infer a stable yield effect from the Sep.10 event because oil, inflation data, a 30-year auction and broader global bond selling contaminated the window.",
+        "Do not call a buyback shortfall versus its maximum a policy failure by itself; Treasury explicitly says the maximum is not a required target and it is price-sensitive."
+      ],
+      "supported_method_refinement": "Extend the sovereign-duration model to classify official operations by economic identity: (1) central-bank QE/retention or runoff, (2) debt-manager liquidity-support buybacks funded by replacement issuance, (3) cash-management buybacks, and (4) fiscal issuance/auction changes. Compute expectation-adjusted NET MARKET-FACING DURATION SUPPLY by maturity: fiscal/replacement issuance + central-bank active sales/runoff - central-bank purchases/retention/reinvestment - debt bought back, while preserving that debt-manager buybacks may mainly redistribute maturity/liquidity rather than change aggregate privately held borrowing. Model dealer inventory/depth separately from net duration supply.",
+      "decision_support": "Research-model upgrade only. No U.S. Treasury duration BUY/SHORT is justified from buyback headlines alone."
+    },
+    {
+      "topic": "Weekend crypto remains cross-sectionally selective; AVAX stays idiosyncratically strong while BTC absorbs long liquidations",
+      "label": "DAILY BIG-MOVE CAUSAL LAB / LIVE CONTROL",
+      "observed_facts": [
+        "CoinMarketCap around 05:33-05:34 UTC showed BTC near $80.59K (-0.56%/24h), ETH $2,580 (-1.86%), SOL $108.99 (-3.36%), XRP $1.382 (-3.28%), LINK $12.02 (-3.15%), while AVAX was $9.62 (+12.93%) and ENA $0.195 (+11.43%).",
+        "AVAX 24h turnover was about 26.7% of market capitalization and volume was up about 98% versus the prior 24h, preserving strong idiosyncratic attention/flow after the previously identified NYSE/ICE-Avalanche evaluation disclosure.",
+        "Global crypto open interest was about $425.5B, down 4.73%/24h; perpetual OI was down 4.75%. Average funding remained positive. BTC 24h liquidations were about $50.8M, with about $34.8M longs versus $16.0M shorts; the latest 4h window was overwhelmingly long liquidation (~$25.7M longs).",
+        "BTC remained near $80.6K despite continued aggregate leverage contraction and long-dominated forced selling, but U.S. ETF markets remained closed."
+      ],
+      "inference": "BTC resilience through long-liquidation/deleveraging is constructive relative to a leverage-led continuation story, but it still does not identify durable institutional demand. AVAX remains a genuine relative-strength outlier with a defensible fresh technology-adoption catalyst, yet the direct AVAX-token value-capture bridge remains unproven because Avalanche L1 architecture need not create proportional AVAX gas/staking demand.",
+      "decision_support": "BTC WAIT / tactical confirmation candidate. AVAX WAIT / AVOID CHASING. ENA WAIT / AVOID CHASING."
+    }
+  ],
+  "daily_big_move_lab_delta": {
+    "market_context": "Weekend traditional cash markets remain closed. No fresh equity/rates/commodity price response is fabricated; the cycle deepens a sovereign-duration historical/current control and updates live crypto cross-sectional moves.",
+    "selected_or_retested": [
+      "U.S. Treasury Sep.9-10 long-end buyback expansion: gross official purchases did not mechanically lower yields; used as a control distinguishing debt-management liquidity support from QE/net duration removal.",
+      "AVAX +12.9%/24h while BTC/ETH/SOL/XRP/LINK were negative: idiosyncratic relative strength persists after the NYSE/ICE evaluation disclosure, but token value capture remains unproven.",
+      "BTC ~$80.6K while aggregate OI -4.7%/24h and recent forced flow is long-heavy: constructive absorption control, but no weekend ETF confirmation."
+    ]
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast clears the evidence bar; existing WAIT states are preserved."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. The Treasury-buyback classification materially refines the duration-supply model, but it does not change the high-level regime or create an actionable BUY/SHORT. Avoid noisy dashboard/ledger rewrites until the method is tested across additional debt-management operations. No code or signal-system state changed.",
+  "next_research": [
+    "Build a unified duration-equivalent supply table that distinguishes Treasury replacement issuance, liquidity-support buybacks, cash-management buybacks, Fed portfolio purchases/retention and fiscal coupon issuance by maturity bucket.",
+    "Test whether liquidity-support buybacks measurably improve off-the-run bid/ask spreads, dealer inventories or relative-value dispersion even when benchmark yields do not fall.",
+    "Expand the expectation-adjusted duration-supply event panel across Treasury buybacks/refundings and BoE/Fed/ECB balance-sheet events, controlling for policy-path and macro-news shocks.",
+    "After U.S. markets reopen, reconcile finalized BTC ETF flows against native-unit OI/funding/basis and price resilience before changing BTC WAIT.",
+    "For AVAX, seek actual ICE/NYSE architecture choices and on-chain/regulated-product flows before inferring AVAX-denominated economic demand."
+  ],
+  "sources": [
+    "https://home.treasury.gov/news/press-releases/sb0607",
+    "https://home.treasury.gov/news/press-releases/sb0584",
+    "https://treasurydirect.gov/help-center/faqs/buyback-faqs/",
+    "https://home.treasury.gov/news/press-releases/sb0267",
+    "https://www.reuters.com/world/us-treasury-buy-up-6-billion-sept-10-buyback-operation-2026-09-09/",
+    "https://uk.finance.yahoo.com/news/treasury-takes-less-expected-buyback-183919692.html",
+    "CoinMarketCap connected real-time quotes/global derivatives metrics, 2026-09-20 05:33-05:34 UTC"
+  ],
+  "paid_resource_policy": "No new paid resources authorized; free/public/primary sources, connected CoinMarketCap data and high-quality contemporaneous reporting were used.",
+  "real_money_trading": "DISABLED / NOT AUTHORIZED"
+}
