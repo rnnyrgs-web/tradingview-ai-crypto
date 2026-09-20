@@ -1,0 +1,97 @@
+name: Money Intelligence Causal Runtime Acceptance
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/money-intelligence-causal-runtime-acceptance.yml
+      - app.py
+      - db.py
+      - money_intelligence_causal_acceptance.py
+      - money_intelligence_causal_memory.py
+      - money_intelligence_causal_supabase.py
+      - money_intelligence_mission_integration.py
+      - profitability_learning/**
+      - research_director.py
+      - research_director_runtime.py
+      - supabase/migrations/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: money-intelligence-causal-runtime-acceptance
+  cancel-in-progress: false
+
+jobs:
+  exact-deployed-sha:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Await exact deployed SHA and verify causal-memory consumption
+        env:
+          ACCEPTANCE_URL: https://tradingview-ai-crypto.onrender.com/research/money-intelligence-causal/acceptance
+          SCAN_SECRET: ${{ secrets.SCAN_SECRET }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main"
+          test -n "$SCAN_SECRET"
+          response="$(mktemp)"
+          status="000"
+          for attempt in $(seq 1 30); do
+            status="$(curl --silent --show-error \
+              --output "$response" --write-out '%{http_code}' \
+              --request POST \
+              --header "X-Scan-Secret: $SCAN_SECRET" \
+              --connect-timeout 10 --max-time 45 \
+              "$ACCEPTANCE_URL" || true)"
+            if [ "$status" = "200" ] && jq -e --arg sha "$GITHUB_SHA" '
+              .ok == true and
+              .deployed_sha == $sha and
+              .durable_restart_reload == true and
+              .support_consumed_by_default_director == true and
+              .narrative_firewall == true and
+              .contradiction_removed_missions == true and
+              .decay_removed_missions == true and
+              .stale_writer_replayed == true and
+              .conflicting_replay_failed_closed == true and
+              .simulated_outage_failed_closed == true and
+              .corrupt_document_failed_closed == true and
+              .final_mission_count == 0 and
+              (.rejected_design_fingerprint | startswith("mi-causal-v1:")) and
+              (.rejected_effective_fingerprint | startswith("mi-causal-pit-v1:")) and
+              .safety.research_only == true and
+              .safety.trade_authority == false and
+              .safety.promotion_authority == false and
+              .safety.broker_authority == false and
+              .safety.oos_opening_authority == false
+            ' "$response" >/dev/null; then
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "last_http_status=$status" >&2
+          if jq -e 'type == "object"' "$response" >/dev/null 2>&1; then
+            jq -c '{
+              ok: .ok?,
+              deployed_sha: .deployed_sha?,
+              receipt_replay: .receipt_replay?,
+              hypothesis_id: .hypothesis_id?,
+              durable_restart_reload: .durable_restart_reload?,
+              support_consumed_by_default_director: .support_consumed_by_default_director?,
+              narrative_firewall: .narrative_firewall?,
+              contradiction_removed_missions: .contradiction_removed_missions?,
+              decay_removed_missions: .decay_removed_missions?,
+              stale_writer_replayed: .stale_writer_replayed?,
+              conflicting_replay_failed_closed: .conflicting_replay_failed_closed?,
+              simulated_outage_failed_closed: .simulated_outage_failed_closed?,
+              corrupt_document_failed_closed: .corrupt_document_failed_closed?,
+              final_mission_count: .final_mission_count?,
+              safety: .safety?
+            }' "$response" >&2
+          else
+            echo "response_not_json" >&2
+          fi
+          echo "Exact deployed-SHA Money Intelligence causal acceptance did not pass" >&2
+          exit 1
