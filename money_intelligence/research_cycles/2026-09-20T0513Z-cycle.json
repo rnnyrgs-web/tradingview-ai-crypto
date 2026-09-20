@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T0513Z",
+  "information_cutoff": "2026-09-20T05:13:21Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_before_persist": "c8ee538b5bb1f0b79a34912e3c69de0fc3cb59ca",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-20T05:10:56Z",
+    "artifact_cutoff_utc": "2026-09-20T05:13:21Z",
+    "seconds_this_run_minimum": 144,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 198,
+    "minimum_cumulative_seconds_since_last_owner_report": 342,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted. Schedule gaps, idle time, source publication timestamps and background time are excluded."
+  },
+  "highest_information_question": "Can the BoE 2026 long-gilt case be generalized into an expectation-adjusted net-duration-supply model across central banks and fiscal debt management without falsely treating QT as one scalar liquidity variable?",
+  "fresh_research": [
+    {
+      "topic": "Cross-country QT evidence strengthens the maturity/method model but reveals an important active-versus-passive disagreement",
+      "label": "LITERATURE CROSS-CHECK / SUPPORTED WITH CONFLICT PRESERVED",
+      "observed_facts": [
+        "NBER Working Paper 32321 (Du, Forbes and Luzzetti, 2024) studies seven advanced economies and finds QT announcements raise government-bond yields and steepen curves; active QT has a larger estimated impact than passive QT, particularly at longer maturities.",
+        "Bank of England Staff Working Paper 1,097 (Joyce and Lengyel, 2024) estimates that UK debt-issuance surprises transmit through both duration-risk and local-supply channels and depend critically on market stress. Its low-stress calibration says a fully unanticipated first-annual-QT-like announcement would raise the 10-year gilt yield by about 20 bp, with passive unwind broadly equivalent to active sales.",
+        "Federal Reserve FEDS research using 1985-2016 data finds the maturity composition of the Fed Treasury portfolio relative to Treasury debt outstanding is significantly associated with term premia: a relatively shorter Fed portfolio is associated with higher term premia, while a relatively longer portfolio is associated with lower term premia.",
+        "The ECB's December 14, 2023 PEPP runoff schedule was explicitly described in the later meeting account as broadly in line with market expectations, making it an expectation-aligned control rather than a clean surprise case.",
+        "The Bank of Canada's January 29, 2025 end-QT announcement was preceded by a January 16 speech saying QT was expected to end in the first half of 2025. The January 29 decision also cut the policy rate 25 bp, so contemporaneous yield changes cannot cleanly identify a QT effect. The Bank explicitly described the resumed purchases as normal balance-sheet management to stabilize settlement balances, not tariff stimulus."
+      ],
+      "inference": "The supported common mechanism is expectation-adjusted net duration supply interacting with maturity-specific investor demand and market state. The stronger claim that active sales are universally more powerful than passive runoff is NOT validated: the cross-country NBER result points that way on average, while the BoE issuance-surprise framework finds passive and active effects broadly comparable in its low-stress UK calibration. Treat implementation method as a conditional variable rather than a universal ranking.",
+      "causal_chain": "expected fiscal issuance and central-bank holdings/sales/runoff by maturity -> announcement changes expected net market-facing duration supply -> preferred-habitat/local-supply absorption requirement changes -> term premium and curve reprice -> financing conditions and relative asset valuations change",
+      "negative_findings": [
+        "Do not convert aggregate QT dollars into a universal basis-point yield effect.",
+        "Do not assume active sales always dominate passive runoff; credible research disagrees conditional on design and regime.",
+        "Do not use the Bank of Canada January 2025 event as a clean QT yield control because the policy-rate cut and tariff/growth communication contaminate the event.",
+        "Do not use the ECB December 2023 PEPP schedule as a surprise case because the ECB itself says the schedule was broadly expected."
+      ],
+      "supported_method_refinement": "For every balance-sheet or debt-management event, freeze the pre-event expected schedule, then compute realized minus expected NET MARKET-FACING DURATION SUPPLY by maturity bucket. Include fiscal issuance, central-bank active sales, passive runoff/reinvestment, retained holdings/official absorption and maturity. Interact the supply surprise with market stress, depth, dealer/arbitrage capacity and structural pension/insurer/nonbank demand. Separately control the policy-rate-path surprise.",
+      "decision_support": "Research-model upgrade only. No sovereign-duration BUY/SHORT is justified from this evidence alone."
+    },
+    {
+      "topic": "U.S. Treasury 2023 refundings provide a fiscal-duration matched pair consistent with expectation-adjusted supply, but macro contamination prevents a clean elasticity estimate",
+      "label": "HISTORICAL BIG-MOVE / MATCHED PAIR",
+      "observed_facts": [
+        "On August 2, 2023 Treasury announced a $103B quarterly refunding and increases across benchmark coupon maturities, including +$3B for 10-year new/reopening auctions and +$2B for 30-year auctions. Bloomberg contemporaneously reported the $103B total was slightly larger than most dealers expected and that the announcement contributed to a Treasury selloff; the 10-year yield rose as much as about 10 bp to 4.12% that day.",
+        "The August window was contaminated by Fitch's U.S. sovereign downgrade the prior day and strong labor data, so the full yield rise cannot be assigned to issuance supply.",
+        "On November 1, 2023 Treasury announced a $112B refunding, below the roughly $114B dealer expectation, with slower increases at the long end. Reuters reported that most dealers expected a repeat of the August increase, Treasury delivered slightly less, and the long end rallied after the refunding announcement. By late morning the 10-year yield was about 7.8 bp lower and the 30-year about 6.8 bp lower.",
+        "The November window was also contaminated by weaker-than-expected private payrolls and a later same-day FOMC meeting, so it supports the sign/mechanism but not a clean causal magnitude."
+      ],
+      "inference": "The Aug/Nov pair is directionally consistent with the same mechanism identified in the BoE case: yields respond to supply relative to expectations, especially the maturity composition of duration offered to private investors. It extends the hypothesis beyond central-bank QT into fiscal debt management.",
+      "matched_control": "August: larger-than-expected coupon supply / selloff; November: smaller-than-feared long-end increases / rally. Both are contaminated by macro news, so they are mechanism-supporting controls, not a calibrated event study.",
+      "practical_implication": "Money Intelligence should combine Treasury/DMO issuance and central-bank balance-sheet actions into one maturity-bucket duration-supply map rather than treating fiscal issuance and QT as unrelated liquidity variables."
+    },
+    {
+      "topic": "AVAX abnormal relative-strength move now has a timestamp-defensible catalyst, but the AVAX value-capture bridge remains weak",
+      "label": "DAILY BIG-MOVE CAUSAL LAB / CATALYST FOUND, ACTIONABILITY STILL WAIT",
+      "observed_facts": [
+        "At approximately 05:11 UTC AVAX was about $9.61, +13.7%/24h and +29.7%/7d, with roughly $1.13B of 24h volume and turnover around 26.6% of market cap. BTC was -0.8%/24h, ETH -1.8%, SOL -3.2% and XRP -2.6%, making AVAX's move strongly idiosyncratic rather than simple market beta.",
+        "The Block reported on September 18 at 09:40 EDT that Ava Labs president Charley Cooper said NYSE had spent about a year testing Avalanche and integrating it with exchange systems; ICE strategic-initiatives executive Michael Blaugrund said ICE was 'very engaged' and that Avalanche checks many requirements. Neither ICE nor NYSE has selected Avalanche, and NYSE's planned tokenized-securities system is intended to support multiple blockchains.",
+        "The SEC's September 17 innovation exemption created a live regulatory path for qualifying tokenized-stock trading, increasing the economic relevance of NYSE/ICE's blockchain evaluation.",
+        "Avalanche's Helicon upgrade is publicly scheduled for September 22, adding a known technical/narrative catalyst, but because it was preannounced it should not be treated as a fresh surprise explaining the full September 19 acceleration.",
+        "Avalanche documentation shows sovereign Avalanche L1s can use a custom native token or even USDC as the gas token. L1 validators do not need to stake 2,000 AVAX; they pay a continuous P-Chain fee initially around 1.33 AVAX per validator per month. Therefore institutional adoption of an Avalanche L1 does not mechanically imply proportional transaction-fee demand or large staking demand for AVAX.",
+        "The broader tokenization story is not wholly new: tokenized institutional funds and Avalanche tokenization infrastructure existed before this move, so post-hoc attribution to generic 'RWA adoption' is too broad."
+      ],
+      "catalyst": "Fresh public disclosure of a substantive NYSE/ICE Avalanche evaluation, arriving immediately after the SEC tokenized-securities exemption.",
+      "transmission_mechanism": "The disclosure raises the perceived probability that Avalanche technology could win a role in regulated U.S. securities infrastructure, increasing expected ecosystem relevance and attracting speculative/narrative capital into AVAX.",
+      "amplifiers": [
+        "High-beta alt-L1 positioning and momentum",
+        "Tokenization/RWA narrative attention after the SEC exemption",
+        "High turnover and weekend crypto liquidity",
+        "Upcoming Helicon upgrade"
+      ],
+      "alternative_explanations": [
+        "Broad alt rotation",
+        "Short covering or derivatives positioning not yet fully reconstructed",
+        "Pre-positioning for Helicon",
+        "Other institutional/tokenization announcements"
+      ],
+      "matched_non_movers": "ETH, SOL, XRP and BTC were all negative over the same rolling 24h snapshot while AVAX was double-digit positive, weakening a pure market-beta explanation. The SEC exemption is broad rather than Avalanche-specific, so it is insufficient by itself to explain the cross-sectional move.",
+      "critical_value_capture_unknown": "Even if ICE/NYSE ultimately deploys on Avalanche, direct AVAX demand depends on architecture. A sovereign L1 can choose non-AVAX gas; validator AVAX fees are small at current parameters. Ecosystem prestige/adoption may matter, but token-level cash-flow/value capture is not established.",
+      "forecast": "No immutable forward forecast frozen. AVAX remains WAIT / AVOID CHASING until selection probability, architecture, AVAX-denominated fee/staking demand, regulated-product flows and derivatives positioning are measured rather than inferred from the headline.",
+      "falsifiers": [
+        "ICE/NYSE selects another settlement architecture or confirms Avalanche is only one non-economic technical test among many",
+        "A chosen Avalanche design uses custom/stablecoin gas with minimal AVAX-linked economics",
+        "AVAX relative strength reverses without follow-through in on-chain/institutional usage or regulated-product demand"
+      ]
+    },
+    {
+      "topic": "Weekend BTC leverage control and Saudi physical-supply control remain non-confirmatory",
+      "label": "CURRENT CONTROL / NO ACTIONABILITY CHANGE",
+      "observed_facts": [
+        "At about 05:10-05:11 UTC BTC was near $80.5K, about -0.8%/24h but +4.2%/7d. Aggregate crypto open interest was about $426.9B, down 6.4%/24h; average perpetual funding remained positive, while BTC 24h liquidations were about $50.8M and were now long-dominated (~$34.8M longs versus ~$16.0M shorts).",
+        "This is a different microstructure state from the September 18 short squeeze: leverage quantity is contracting and the latest forced flow is tilted toward longs rather than shorts, yet price remains near $80K. U.S. ETF markets remain closed, so durable regulated spot accumulation cannot be confirmed.",
+        "Fresh September 19 Reuters reporting still does not verify incremental Yanbu/export-capacity damage from the latest weekend attacks. Saudi authorities said attacks including Yanbu were thwarted, while the cause of smoke/flames near Riyadh airport remained unclear."
+      ],
+      "inference": "BTC resilience with falling aggregate OI is healthier than leverage-led continuation, but positive funding and no fresh ETF session keep the durable-accumulation claim unproven. For crude, attack headlines remain insufficient without verified lost deliverable barrels and reopen-market confirmation.",
+      "decision_support": "BTC WAIT / tactical confirmation candidate. Crude WAIT / high tail risk."
+    },
+    {
+      "topic": "U.S.-China Sunday talks remain a future information event, not an already-priced policy change",
+      "label": "EVENT CONTROL / WAIT",
+      "observed_facts": [
+        "Reuters reports U.S. Treasury Secretary Scott Bessent and Chinese Vice Premier He Lifeng are scheduled to meet Sunday in New York ahead of the September 24 Trump-Xi summit, with AI security, trade and broader economic issues on the agenda.",
+        "No signed trade, tariff, rare-earth, semiconductor or energy-policy change had been announced by this information cutoff."
+      ],
+      "inference": "Do not assign sector winners from agenda headlines. The timestamp-defensible predictor is the pre-meeting expectation distribution; actionable repricing requires an actual policy surprise or credible agreement text.",
+      "decision_support": "WAIT across China/rare-earth/semiconductor event trades pending outcome."
+    }
+  ],
+  "daily_big_move_lab_delta": {
+    "selected": [
+      "AVAX +13.7%/24h relative-strength case: fresh NYSE/ICE evaluation disclosure identified, but direct AVAX value capture remains unproven.",
+      "BTC weekend control: ~$80.5K while aggregate OI -6.4%/24h and liquidations shifted long-heavy; no U.S. ETF confirmation.",
+      "U.S. Treasury Aug/Nov 2023 refunding matched pair: fiscal duration-supply surprise behaves consistently with the BoE QT mechanism, subject to macro contamination."
+    ],
+    "not_promoted": [
+      "ENA remains high-turnover momentum (+11.8%/24h at the snapshot) but this cycle found no new primary catalyst beyond already-known narratives; preserve prior WAIT/avoid-chasing conclusion.",
+      "ZEC remained an extreme wrapper/privacy/free-float case (~-5.0%/24h, +27.1%/7d, +145%/30d) with no new clean causal state change in this cycle.",
+      "No new traditional cash-market session occurred over the weekend; do not fabricate fresh equity/rates/commodity responses."
+    ]
+  },
+  "learning_refinement_candidate": {
+    "parent_candidate": "MI-L-20260920-013",
+    "status": "SUPPORTED / REGIME-SPECIFIC / STRENGTHENED, CONFLICT PRESERVED",
+    "claim": "Sovereign long-end pricing should model expectation-adjusted net market-facing duration supply by maturity, implementation method and market state rather than scalar QT or gross issuance. Cross-country evidence supports maturity and announcement effects, but active-versus-passive strength is not universal across credible studies.",
+    "promotion_note": "Keep as refinement of the existing candidate until a larger timestamp-safe event panel controls policy-path and macro-news contamination."
+  },
+  "big_move_lab_promotion_candidate": {
+    "case_id": "2026-09-18-20-avax-nyse-tokenization-relative-strength",
+    "status": "CATALYST SUPPORTED / TOKEN VALUE-CAPTURE UNPROVEN",
+    "cross_case_hypothesis": "Infrastructure-adoption headlines can cause large native-token repricing even when the chain architecture does not mechanically require proportional native-token demand; causal research must separate technology adoption probability from token value capture."
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast clears the evidence bar; WAIT states preserved."
+  },
+  "canonical_update_decision": "Persist this append-only cycle only. The duration-supply model is materially strengthened and the AVAX move now has a defensible catalyst/value-capture decomposition, but neither creates a sufficiently validated actionable thesis. Avoid noisy canonical whole-file rewrites while main is active; compact later after conflict-safe refetch and further validation.",
+  "next_research": [
+    "Build a timestamp-safe event panel spanning BoE 2022/2025/2026, U.S. Treasury Aug/Nov 2023 refundings, Fed runoff changes, ECB PEPP and Bank of Canada QT-end controls. For each event freeze expected versus realized maturity-bucket supply and policy-rate-path surprise before looking at outcomes.",
+    "Estimate a duration-equivalent net supply metric rather than raw notional, and test 2y/10y/30y curve residuals against global-rate controls and market-stress/depth states.",
+    "For AVAX, obtain timestamp-safe ETF/ETP creations/redemptions, perpetual OI/funding/liquidations, on-chain stablecoin/RWA activity and any ICE/NYSE architecture disclosure. Explicitly test whether expected AVAX fee/burn/validator demand is economically material under the chosen architecture.",
+    "After U.S. markets reopen, reconcile finalized BTC ETF flows with native-unit OI, funding/basis and price to distinguish genuine spot accumulation from weekend leverage cleanup.",
+    "At crude reopen, require verified Saudi throughput/loading damage plus physical differentials/freight/curve confirmation before changing the WAIT thesis.",
+    "After the Bessent-He meeting, compare actual signed/announced policy changes with pre-meeting expectations; do not infer beneficiaries from agenda language alone."
+  ],
+  "sources": [
+    "https://www.nber.org/papers/w32321",
+    "https://www.bankofengland.co.uk/working-paper/2024/the-yield-curve-impact-of-government-debt-issuance-surprises-and-the-implications-for-qt",
+    "https://www.federalreserve.gov/econres/feds/the-federal-reserves-portfolio-and-its-effect-on-interest-rates.htm",
+    "https://www.bankofcanada.ca/2025/01/back-to-normal-for-the-balance-sheet/",
+    "https://www.bankofcanada.ca/2025/01/fad-press-release-2025-01-29/",
+    "https://www.bankofcanada.ca/2025/02/summary-governing-council-deliberations-fixed-announcement-date-january-29-2025/",
+    "https://www.ecb.europa.eu/press/accounts/2024/html/ecb.mg240118~57d24ff18f.en.html",
+    "https://home.treasury.gov/news/press-releases/jy1671",
+    "https://home.treasury.gov/news/press-releases/jy1864",
+    "Reuters Nov.1 2023 Treasury market report syndicated at https://finance.yahoo.com/news/treasuries-us-yields-slip-treasury-154605927.html",
+    "Bloomberg Aug.2 2023 Treasury refunding market report: https://www.bloomberg.com/news/articles/2023-08-02/us-plans-103-billion-debt-sale-says-issuance-to-keep-rising",
+    "https://www.theblock.co/news/ecosystems/2026-09-18-ava-labs-president-says-nyse-spent-a-year-testing-avalanche-technology-tokenization-plans-415509",
+    "https://build.avax.network/blog/subnet-vs-l1-validators",
+    "https://build.avax.network/academy/avalanche-l1/native-token-bridge",
+    "https://build.avax.network/docs/primary-network/avax-token",
+    "https://build.avax.network/docs/primary-network/helicon-upgrade",
+    "CoinMarketCap connected real-time quotes and global derivatives metrics, 2026-09-20 05:10-05:11 UTC",
+    "https://www.reuters.com/world/middle-east/saudi-civil-defence-sends-all-clear-after-danger-warning-capital-riyadh-2026-09-19/",
+    "https://www.reuters.com/business/finance/us-treasurys-bessent-chinas-he-meet-sunday-jpmorgan-headquarters-2026-09-19/"
+  ],
+  "paid_resource_policy": "No new paid resources authorized; free/public/primary sources, connected CoinMarketCap data and high-quality contemporaneous reporting were used.",
+  "real_money_trading": "DISABLED / NOT AUTHORIZED"
+}
