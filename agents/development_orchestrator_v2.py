@@ -17,12 +17,14 @@ from datetime import datetime
 from typing import Any
 
 from agents.autonomous_cloud_runner import safe_branch
+from agents.development_orchestrator import REVIEW_LANES as V1_REVIEW_LANES, review_identity
 from orchestration.rejected_fingerprints import is_rejected_fingerprint
 from orchestration.specialist_coordination import validate_state
 
 SHA = re.compile(r"^[0-9a-f]{40}$")
 MAX_REPAIRS = 2
-REVIEW_LANES = {"security", "independent"}
+REVIEW_LANES = set(V1_REVIEW_LANES)
+REPO = "rnnyrgs-web/tradingview-ai-crypto"
 OUTCOMES = {"PR_CREATED", "NO_CHANGE", "BLOCKED", "WAIT", "TASK_MISMATCH", "FAILED"}
 ESCALATIONS = {"credential_required", "plugin_required", "spending_approval_required",
                "paid_resource_recommendation", "repeated_failure", "manual_external_action",
@@ -101,7 +103,7 @@ def empty_v2() -> dict:
 
 
 def persist_event(store: Any, event: dict, coordination: dict, main_sha: str,
-                  read_main_sha: Any) -> dict:
+                  read_main_sha: Any, *, selection_evidence: dict | None = None) -> dict:
     """Write V2 under V1's existing CAS document, never a second state file.
 
     GitHubStateStore.save requires the Contents API SHA captured by load. A
@@ -114,7 +116,8 @@ def persist_event(store: Any, event: dict, coordination: dict, main_sha: str,
                      ("reviews", "dispatches", "review_attempts"))
              and isinstance(document.get("runs"), list), "malformed V1 state")
     before = document.get("v2", empty_v2())
-    after = apply_event(before, event, coordination, current_main_sha=main_sha)
+    after = apply_event(before, event, coordination, current_main_sha=main_sha,
+                        selection_evidence=selection_evidence)
     if after == before:
         return document
     _require(read_main_sha() == main_sha, "main advanced")
@@ -136,6 +139,18 @@ def validate_v2(state: Any) -> None:
                  and isinstance(record.get("repairs"), dict)
                  and isinstance(record.get("ci"), dict), "malformed v2 task")
         _require(record.get("active_attempt") in record["attempts"], "malformed active attempt")
+        pr = record.get("pr_identity")
+        if pr is not None:
+            active = record["attempts"][record["active_attempt"]]
+            _require(isinstance(pr, dict) and pr.get("pr_repo") == REPO
+                     and pr.get("pr_head_branch") == active.get("branch")
+                     and pr.get("pr_base_branch") == "main"
+                     and pr.get("pr_base_main_sha") == active.get("base_main_sha")
+                     and pr.get("pr_number") == record.get("pr_number")
+                     and pr.get("head_sha") == record.get("head_sha")
+                     and pr.get("fingerprint") == _digest({k: v for k, v in pr.items()
+                                                            if k != "fingerprint"}),
+                     "malformed PR identity")
         for attempt_id, attempt in record["attempts"].items():
             _require(isinstance(attempt, dict) and attempt.get("attempt_id") == attempt_id
                      and _sha(attempt.get("base_main_sha"))
@@ -152,7 +167,16 @@ def validate_v2(state: Any) -> None:
                      and review.get("head_sha") in record["ci"]
                      and record["ci"][review["head_sha"]]["conclusion"] == "success"
                      and set(review.get("reviewer_lanes") or []) == REVIEW_LANES
-                     and review.get("outcome") in {"APPROVED", "REVISION_REQUIRED", "BLOCKED", "WAIT"},
+                     and review.get("outcome") in {"APPROVED", "REVISION_REQUIRED", "BLOCKED", "WAIT"}
+                     and isinstance(review.get("outcomes"), dict)
+                     and set(review["outcomes"]) == REVIEW_LANES
+                     and review.get("reviewer_lanes") == list(V1_REVIEW_LANES)
+                     and (review.get("outcome") == "APPROVED") ==
+                         all(value == "APPROVE" for value in review["outcomes"].values())
+                     and review.get("fingerprint") == review_identity(task_id,
+                         review.get("pr_number"), review.get("head_sha"))
+                     and review.get("content_digest") == _digest({k: v for k, v in review.items()
+                                                                  if k != "content_digest"}),
                      "malformed review identity")
         for repair_id, repair in record["repairs"].items():
             _require(isinstance(repair, dict) and repair.get("repair_id") == repair_id
@@ -179,7 +203,7 @@ def route_task(task: dict, engine: str) -> dict[str, str]:
 
 
 def select_task(coordination: dict, *, engine: str, claimed_branches: set[str],
-                active_prs: set[int], rejected: list[dict], strategy_queue: dict,
+                active_prs: set[str], rejected: list[dict], strategy_queue: dict,
                 now: datetime | None = None) -> dict | None:
     """Select from the canonical queue only; unknown evidence fails closed."""
     validate_state(coordination)
@@ -207,15 +231,16 @@ def select_task(coordination: dict, *, engine: str, claimed_branches: set[str],
                 or any(t["owner"] == task["owner"] and t["id"] != task["id"]
                        and t["status"] in {"IN_PROGRESS", "PR_OPEN"} for t in coordination["tasks"])):
             continue
-        if now is not None and task.get("retry_at"):
+        if task.get("retry_at"):
             _require(_time(task["retry_at"]), "malformed retry_at")
-            if datetime.fromisoformat(task["retry_at"].replace("Z", "+00:00")) > now:
+            if now is None or datetime.fromisoformat(task["retry_at"].replace("Z", "+00:00")) > now:
                 continue
         return copy.deepcopy(task)
     return None
 
 
-def apply_event(state: dict, event: dict, coordination: dict, *, current_main_sha: str) -> dict:
+def apply_event(state: dict, event: dict, coordination: dict, *, current_main_sha: str,
+                selection_evidence: dict | None = None) -> dict:
     """Pure event reducer. Persist its result through V1 GitHubStateStore.save.
 
     Every receipt is immutable and a duplicate event ID with identical bytes is
@@ -243,6 +268,9 @@ def apply_event(state: dict, event: dict, coordination: dict, *, current_main_sh
 
     if kind == "CLAIM":
         _require(record is None and task["status"] == "READY", "duplicate claim or task not READY")
+        selected = _selected(coordination, event["engine"], selection_evidence, event["at"])
+        _require(selected is not None and selected["id"] == task_id,
+                 "claim bypassed canonical selection or task already claimed")
         _require(event.get("base_main_sha") == current_main_sha, "main advanced before claim")
         _require(all(_nonempty(event.get(k)) for k in
                      ("attempt_id", "request_id", "adapter", "engine", "branch")),
@@ -265,16 +293,34 @@ def apply_event(state: dict, event: dict, coordination: dict, *, current_main_sh
     else:
         _require(record is not None, "task not claimed")
         _require(record["status"] != "DONE" or kind == "SUCCESSOR", "task already DONE")
-        if kind != "SUCCESSOR":
-            _require(current_main_sha == record["attempts"][record["active_attempt"]]["base_main_sha"],
+        old_base = record["attempts"][record["active_attempt"]]["base_main_sha"]
+        if kind == "REBASE":
+            _require(current_main_sha != old_base, "main has not advanced")
+        elif kind == "INTEGRATION" and event.get("decision") == "INTEGRATED":
+            _require(event.get("resulting_main_sha") == current_main_sha,
+                     "integration main SHA mismatch")
+        elif kind != "SUCCESSOR":
+            _require(current_main_sha == old_base,
                      "main advanced; rebase and re-review required")
-        _advance_record(updated, record, task, event, kind, coordination)
+        _advance_record(updated, record, task, event, kind, coordination,
+                        current_main_sha, selection_evidence)
     updated["events"][event["event_id"]] = receipt
     validate_v2(updated)
     return updated
 
 
-def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str, coordination: dict) -> None:
+def _selected(coordination: dict, engine: str, evidence: dict | None,
+              at: str) -> dict | None:
+    _require(isinstance(evidence, dict) and set(evidence) ==
+             {"claimed_branches", "active_prs", "rejected", "strategy_queue"},
+             "missing canonical selection evidence")
+    return select_task(coordination, engine=engine,
+                       now=datetime.fromisoformat(at.replace("Z", "+00:00")), **evidence)
+
+
+def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str,
+                    coordination: dict, current_main_sha: str,
+                    selection_evidence: dict | None) -> None:
     status = r["status"]
     if kind == "DISPATCH":
         _require(status == "CLAIMED" and e.get("attempt_id") == r["active_attempt"]
@@ -293,24 +339,84 @@ def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str, coordi
                               ("result_id", "outcome", "pr_number", "head_sha", "retry_at")}
         if e["outcome"] == "PR_CREATED":
             _require(type(e.get("pr_number")) is int and e["pr_number"] > 0
-                     and _sha(e.get("head_sha")), "invalid PR identity")
+                     and _sha(e.get("head_sha"))
+                     and e.get("pr_repo") == REPO
+                     and e.get("pr_head_branch") ==
+                     r["attempts"][r["active_attempt"]]["branch"]
+                     and e.get("pr_base_branch") == "main"
+                     and e.get("pr_base_main_sha") ==
+                     r["attempts"][r["active_attempt"]]["base_main_sha"],
+                     "invalid PR identity or provenance")
             r["pr_number"], r["head_sha"], r["status"] = e["pr_number"], e["head_sha"], "REVIEW_REQUIRED"
+            r["pr_identity"] = {k: e[k] for k in
+                                ("pr_repo", "pr_head_branch", "pr_base_branch",
+                                 "pr_base_main_sha", "pr_number", "head_sha")}
+            r["pr_identity"]["fingerprint"] = _digest(r["pr_identity"])
         elif e["outcome"] == "WAIT":
             _require(_time(e.get("retry_at")), "WAIT requires retry_at")
-            r["status"] = "WAIT"
+            r["retry_at"] = e["retry_at"]
+            r["status"] = "WAIT" if len(r["attempts"]) < 2 else "BLOCKED"
         else:
             r["status"] = "BLOCKED"
     elif kind == "PROVIDER_TIMEOUT":
         _require(status in {"CLAIMED", "DISPATCHED", "RUNNING"}
                  and e.get("attempt_id") == r["active_attempt"]
                  and _time(e.get("retry_at")), "invalid provider timeout")
-        r["retry_at"], r["status"] = e["retry_at"], "WAIT"
+        r["retry_at"] = e["retry_at"]
+        r["status"] = "WAIT" if len(r["attempts"]) < 2 else "BLOCKED"
+    elif kind == "RETRY":
+        _require(status == "WAIT" and _time(r.get("retry_at"))
+                 and datetime.fromisoformat(e["at"].replace("Z", "+00:00")) >=
+                 datetime.fromisoformat(r["retry_at"].replace("Z", "+00:00")),
+                 "retry is not due")
+        _require(len(r["attempts"]) < 2 and e.get("base_main_sha") == current_main_sha
+                 and _nonempty(e.get("attempt_id")) and e["attempt_id"] not in r["attempts"]
+                 and _nonempty(e.get("request_id"))
+                 and _nonempty(e.get("budget_reservation_id")), "retry limit or identity invalid")
+        old = r["attempts"][r["active_attempt"]]
+        if "dispatch_id" in r:
+            old["dispatch_id"] = r.pop("dispatch_id")
+        new = {k: old.get(k) for k in ("adapter", "engine", "branch")}
+        new.update(attempt_id=e["attempt_id"], request_id=e["request_id"],
+                   base_main_sha=e["base_main_sha"], started_at=e["at"],
+                   budget_reservation_id=e["budget_reservation_id"])
+        r["attempts"][e["attempt_id"]] = new
+        r["active_attempt"], r["status"] = e["attempt_id"], "CLAIMED"
+        r.pop("retry_at", None)
+    elif kind == "REBASE":
+        _require(status not in {"DONE", "BLOCKED", "WAIT", "USER_ACTION_REQUIRED"}
+                 and e.get("base_main_sha") == current_main_sha
+                 and _nonempty(e.get("attempt_id")) and e["attempt_id"] not in r["attempts"]
+                 and _nonempty(e.get("request_id"))
+                 and _nonempty(e.get("budget_reservation_id")), "invalid rebase identity")
+        old = r["attempts"][r["active_attempt"]]
+        if "dispatch_id" in r:
+            old["dispatch_id"] = r.pop("dispatch_id")
+        new = {k: old.get(k) for k in ("adapter", "engine", "branch")}
+        new.update(attempt_id=e["attempt_id"], request_id=e["request_id"],
+                   base_main_sha=e["base_main_sha"], started_at=e["at"],
+                   budget_reservation_id=e["budget_reservation_id"])
+        r["attempts"][e["attempt_id"]] = new
+        r["active_attempt"] = e["attempt_id"]
+        if r.get("pr_number"):
+            _require(_sha(e.get("head_sha")) and e["head_sha"] != r["head_sha"],
+                     "rebased PR needs a new head")
+            r.setdefault("pr_history", []).append(copy.deepcopy(r["pr_identity"]))
+            r["head_sha"] = e["head_sha"]
+            r["pr_identity"] = {**r["pr_identity"], "head_sha": e["head_sha"],
+                                "pr_base_main_sha": current_main_sha}
+            r["pr_identity"]["fingerprint"] = _digest({k: v for k, v in r["pr_identity"].items()
+                                                       if k != "fingerprint"})
+            r["status"] = "REVIEW_REQUIRED"
+        else:
+            r["status"] = "CLAIMED"
     elif kind == "HEAD_CHANGED":
         _require(status in {"REVIEW_REQUIRED", "REVIEWING", "READY_FOR_INTEGRATION"}
                  and e.get("pr_number") == r.get("pr_number")
                  and _sha(e.get("head_sha")) and e["head_sha"] != r.get("head_sha"),
                  "invalid changed head")
-        r["head_sha"], r["status"] = e["head_sha"], "REVIEW_REQUIRED"
+        _replace_pr_head(r, e["head_sha"])
+        r["status"] = "REVIEW_REQUIRED"
     elif kind == "CI":
         _require(status in {"REVIEW_REQUIRED", "REVISION_REQUIRED"}
                  and e.get("pr_number") == r.get("pr_number")
@@ -332,16 +438,25 @@ def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str, coordi
                  and e.get("head_sha") == r.get("head_sha")
                  and r["ci"].get(r["head_sha"], {}).get("conclusion") == "success",
                  "exact-head CI required")
-        _require(_nonempty(e.get("review_id")) and set(e.get("reviewer_lanes") or []) == REVIEW_LANES
+        _require(_nonempty(e.get("review_id")) and e["review_id"] not in r["reviews"]
+                 and e.get("reviewer_lanes") == list(V1_REVIEW_LANES)
+                 and isinstance(e.get("outcomes"), dict)
+                 and set(e["outcomes"]) == REVIEW_LANES
+                 and all(value in {"APPROVE", "REJECT"} for value in e["outcomes"].values())
                  and e.get("outcome") in {"APPROVED", "REVISION_REQUIRED", "BLOCKED", "WAIT"}
                  and isinstance(e.get("findings"), list), "malformed independent review")
+        _require((e["outcome"] == "APPROVED") ==
+                 all(value == "APPROVE" for value in e["outcomes"].values()),
+                 "review outcome contradicts reviewer lanes")
         _require(r["head_sha"] not in [v["head_sha"] for v in r["reviews"].values()],
                  "head already reviewed")
         if e["outcome"] == "REVISION_REQUIRED":
             _require(bool(e["findings"]), "repair findings missing")
         review = {k: copy.deepcopy(e[k]) for k in
-                  ("review_id", "pr_number", "head_sha", "reviewer_lanes", "outcome", "findings", "at")}
-        review["fingerprint"] = _digest(review)
+                  ("review_id", "pr_number", "head_sha", "reviewer_lanes", "outcomes",
+                   "outcome", "findings", "at")}
+        review["fingerprint"] = review_identity(r["task_id"], e["pr_number"], e["head_sha"])
+        review["content_digest"] = _digest(review)
         r["reviews"][e["review_id"]] = review
         r["status"] = ("READY_FOR_INTEGRATION" if e["outcome"] == "APPROVED"
                        else "BLOCKED" if e["outcome"] == "REVISION_REQUIRED"
@@ -365,7 +480,8 @@ def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str, coordi
                  and _sha(e.get("head_sha")) and e["head_sha"] != r["head_sha"]
                  and e["head_sha"] not in r["ci"], "invalid repaired head")
         r["repairs"][e["repair_id"]]["updated_head_sha"] = e["head_sha"]
-        r["head_sha"], r["status"] = e["head_sha"], "REVIEW_REQUIRED"
+        _replace_pr_head(r, e["head_sha"])
+        r["status"] = "REVIEW_REQUIRED"
     elif kind == "INTEGRATION":
         review = r["reviews"].get(e.get("review_id"))
         _require(status == "READY_FOR_INTEGRATION" and review is not None
@@ -389,9 +505,10 @@ def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str, coordi
                  and _nonempty(e.get("deduplication_proof")), "invalid successor identity")
         by_id = {t["id"]: t for t in coordination["tasks"]}
         successor = by_id.get(e["successor_task_id"])
-        _require(task["status"] == "DONE" and successor is not None and successor["status"] == "READY"
-                 and route_task(successor, e.get("engine"))["status"] == "AUTOMATIC",
-                 "successor not canonically ready or engine ineligible")
+        selected = _selected(coordination, e.get("engine"), selection_evidence, e["at"])
+        _require(task["status"] == "DONE" and successor is not None
+                 and selected is not None and selected["id"] == successor["id"],
+                 "successor not canonically selected")
         _require(r["task_id"] not in state["successors"], "successor already selected")
         state["successors"][r["task_id"]] = {k: e[k] for k in
                                              ("previous_task_id", "successor_task_id", "engine",
@@ -409,3 +526,12 @@ def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str, coordi
         r["status"] = "USER_ACTION_REQUIRED"
     else:
         raise ValueError("unsupported lifecycle event")
+
+
+def _replace_pr_head(record: dict, head_sha: str) -> None:
+    record.setdefault("pr_history", []).append(copy.deepcopy(record["pr_identity"]))
+    record["head_sha"] = head_sha
+    record["pr_identity"]["head_sha"] = head_sha
+    record["pr_identity"]["fingerprint"] = _digest({k: v for k, v in
+                                                     record["pr_identity"].items()
+                                                     if k != "fingerprint"})

@@ -15,17 +15,23 @@ The V2 state value belongs under `v2` in V1's existing
 `READY -> CLAIMED -> DISPATCHED -> RUNNING -> REVIEW_REQUIRED -> REVIEWING ->
 REVISION_REQUIRED -> REPAIR -> REVIEW_REQUIRED -> READY_FOR_INTEGRATION -> DONE`
 
-The canonical queue alone supplies `READY` and `DONE` for task selection;
-V2 records the intervening attempt and evidence identities. A worker outcome
+The canonical queue supplies task eligibility and the Lead's completed-task
+state; V2 records the intervening attempt and evidence identities. `CLAIM`
+and `SUCCESSOR` rerun the same canonical selector with explicit branch/PR,
+rejected-fingerprint, strategy-capacity, and time evidence. A worker outcome
 of `PR_CREATED` enters review. `NO_CHANGE`, `BLOCKED`, `TASK_MISMATCH`, and
 `FAILED` block; `WAIT` and provider timeout require `retry_at`. CI failure
-cannot enter review. Review must cite Security and independent reviewer lanes
-and successful Security and Reliability CI on the exact PR head. Revisions
+cannot enter review. Review must cite V1's Security, Lead, and Claude
+adversarial lanes, each with an explicit verdict, V1's exact-head receipt
+identity, and successful Security and Reliability CI on the exact PR head. Revisions
 preserve exact findings and the existing owner, and are limited to two repair
 cycles. A further revision blocks the task. A changed PR head returns to
-`REVIEW_REQUIRED` and needs fresh CI and review. Main advancement blocks
-further transitions until the branch is reconciled. A human Lead records the
-integration decision and resulting main SHA; the reducer never merges.
+`REVIEW_REQUIRED` and needs fresh CI and review. Main advancement requires a
+`REBASE` event with a new immutable attempt and, for an open PR, a new head
+that needs fresh CI and review. `WAIT`/provider timeout can create at most one
+new attempt after `retry_at`; the prior attempt remains in the record. A human
+Lead records the integration decision after merge and binds it to the resulting
+current main SHA; the reducer never merges.
 
 `DONE` frees the worker. A successor event can then cite only the completed
 task's canonical `next_task`, provided the Lead has updated the coordination
@@ -39,8 +45,10 @@ the contract requires a reservation identity and cannot itself reserve funds.
 Every event has a stable ID and content hash. Identical redelivery is a no-op;
 conflicting redelivery raises. Task, attempt, engine, adapter, request, branch,
 base SHA, PR, worker result, CI, review, repair, integration, and successor
-identities are stored with the record. Callers must submit only verified GitHub
-facts, persist the reduced value through `persist_event`, and reload after any
+identities are stored with the record. A `PR_CREATED` event requires the exact
+repository, claimed head branch, main base branch, and attempt base SHA.
+Callers must submit only verified GitHub facts and actual shared-budget
+reservation IDs, persist the reduced value through `persist_event`, and reload after any
 CAS conflict. No V2 event grants direct-main write, autonomous merge, broker,
 trade, paper-ledger, strategy-promotion, or OOS authority.
 
@@ -72,6 +80,6 @@ no notification is sent by V2-001. Consumers should remain quiet otherwise.
 tasks and event identities only. It does not generate market outcomes or
 research evidence. It exercises repair and exact-head re-review through Lead
 integration, successor selection, duplicate delivery/claim suppression,
-provider timeout, budget denial, unsupported adapters, stale head, main
-advancement, CAS conflict, and human escalation. Existing V1 and safety
+provider timeout and bounded retry, budget denial, unsupported adapters,
+stale head, main advancement/rebase, CAS conflict, corrupt receipts, and human escalation. Existing V1 and safety
 regressions remain required before integration.
