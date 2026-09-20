@@ -8,9 +8,10 @@ from threading import Lock
 from money_intelligence_mission_integration import apply_causal_feedback
 
 from .analytics import analyze
-from .contracts import SAFE, fingerprint
+from .contracts import SAFE, fingerprint, strategy_semantic_fingerprint
 from .evolution import learning_missions, rank_candidates
 from .memory import Memory
+from research_quant_science_factory import verified_strategy_semantic_fingerprint
 
 _lock = Lock()
 _director_state = None
@@ -97,14 +98,80 @@ def _candidate_feedback(candidate, memory):
         factor, reason = .5, "prior_completion_requires_new_evidence"
     family = candidate.get("family") or candidate.get("strategy_family")
     sf = candidate.get("strategy_fingerprint")
-    if family in memory.get("families", {}):
-        ranked = rank_candidates([{**candidate, "family": family, "id": ident}], memory)[0]
+    semantic = None
+    semantic_unverifiable = False
+    if not sf:
+        # Family names and narrative labels are not executable identity. Every
+        # candidate entering learned admission must bind a full strategy to its
+        # exact fingerprint, or reuse a fingerprint already known to durable
+        # memory. Missing either side cannot regain eligibility by relabeling.
+        semantic_unverifiable = True
+    else:
+        strategy = candidate.get("strategy")
+        if strategy is not None:
+            try:
+                if sf != fingerprint(strategy):
+                    raise ValueError("strategy fingerprint mismatch")
+                stored_semantic = memory.get(
+                    "strategy_semantic_by_fingerprint", {}
+                ).get(sf)
+                declared_semantic = strategy_semantic_fingerprint(strategy)
+                # Rejected identity may be recognized from its executable
+                # projection because this can only veto work. Favorable or new
+                # learning must re-bind the complete candidate to the trusted
+                # executor/design even when its exact fingerprint is known.
+                if (sf in memory.get("rejected_fingerprints", [])
+                        or declared_semantic in memory.get(
+                            "rejected_semantic_fingerprints", []
+                        )):
+                    semantic = stored_semantic or declared_semantic
+                else:
+                    semantic = verified_strategy_semantic_fingerprint(candidate)
+                    if stored_semantic is not None and stored_semantic != semantic:
+                        raise ValueError("stored semantic identity mismatch")
+            except (KeyError, TypeError, ValueError):
+                semantic_unverifiable = True
+        else:
+            # An exact fingerprint lookup is sufficient for a durable rejection
+            # veto, but never for a favorable admission: the candidate's actual
+            # behavior-driving fields and science design would remain unbound.
+            semantic_unverifiable = sf not in memory.get("rejected_fingerprints", [])
+    semantic_evidence = memory.get("semantic_strategies", {}).get(semantic)
+    family_evidence = memory.get("families", {}).get(family)
+
+    def actionable(evidence):
+        return bool(evidence and (
+            evidence.get("promising_development", 0)
+            or evidence.get("development_failures", 0)
+            or evidence.get("mechanism_dead")
+            or evidence.get("infra_blocked")
+        ))
+
+    if actionable(semantic_evidence) or actionable(family_evidence):
+        ranked = rank_candidates([{
+            **candidate,
+            "family": family,
+            "strategy_semantic_fingerprint": semantic,
+            "id": ident,
+        }], memory)[0]
         factor *= ranked["learning_factor"]
-        reason = "matched_family_economic_evidence"
+        reason = (
+            "matched_semantic_economic_evidence"
+            if actionable(semantic_evidence)
+            else "matched_family_economic_evidence"
+        )
     if sf and sf in memory.get("rejected_fingerprints", []):
         factor, reason = 0.0, "rejected_exact_fingerprint"
+    elif semantic in memory.get("rejected_semantic_fingerprints", []):
+        factor, reason = 0.0, "rejected_semantic_identity"
+    elif semantic_unverifiable:
+        factor, reason = 0.0, "semantic_identity_unverifiable"
     return {"factor": factor, "reason": reason,
-            "changes_eligibility": reason == "rejected_exact_fingerprint", **SAFE}
+            "changes_eligibility": reason in {
+                "rejected_exact_fingerprint",
+                "rejected_semantic_identity",
+                "semantic_identity_unverifiable",
+            }, **SAFE}
 
 
 def apply_queue_feedback(queue):
@@ -158,7 +225,7 @@ def refresh_director(army):
         # Never broaden legacy eligibility or disturb active claims. A remembered
         # exact rejection is a veto, not a low-priority runnable experiment.
         result["next_missions"] = sorted([deepcopy(by_id[m["mission_id"]]) for m in result["next_missions"]
-            if by_id[m["mission_id"]]["learning_feedback"]["reason"] != "rejected_exact_fingerprint"],
+            if not by_id[m["mission_id"]]["learning_feedback"]["changes_eligibility"]],
                                         key=lambda m: (-m["priority"], m["mission_id"]))
         for item in feedback["missions"]:
             mission = build_mission(lane="profitability-learning", horizon="fresh_chronological",

@@ -7,13 +7,19 @@ from pathlib import Path
 import sqlite3
 
 from .analytics import analyze
-from .contracts import (DEVELOPMENT, SAFE, canonical, fingerprint, timestamp, text,
-                        experiment_id, validate_contract, number, integer)
+from .contracts import (DEVELOPMENT, SAFE, UNVERIFIED_FAVORABLE_EVIDENCE,
+                        VERIFIED_FAVORABLE_EVIDENCE, canonical, fingerprint,
+                        timestamp, text, experiment_id, validate_contract,
+                        number, integer, strategy_semantic_fingerprint)
 from .development import component_effects, mine_conditions
 
 MAX_EVENT_BYTES = 16_000_000
 MAX_EVENTS = 10_000
 REJECTED_REGISTRY = Path(__file__).resolve().parents[1] / "orchestration/rejected_fingerprints.json"
+
+
+def _verified_favorable_evidence(record):
+    return record.get("favorable_evidence_provenance") == VERIFIED_FAVORABLE_EVIDENCE
 
 
 def _canonical_rejections():
@@ -43,6 +49,15 @@ def _validate_event(ident, kind, payload):
                 or not isinstance(payload.get("component_evidence"), list)):
             raise ValueError("experiment memory schema mismatch")
         try:
+            provenance = payload.get("favorable_evidence_provenance")
+            # The generic completion API has no trusted executor boundary.  It
+            # may persist caller results for audit and negative vetoes, but it
+            # cannot mint a self-asserted receipt that grants favorable weight.
+            # Missing values are accepted only for backward-compatible reads
+            # and are interpreted as unverified by every consumer.
+            if (provenance is not None
+                    and provenance != UNVERIFIED_FAVORABLE_EVIDENCE):
+                raise ValueError("favorable evidence provenance is not verifier issued")
             text(payload["input_digest"], "input digest")
             text(payload["next_research_question"], "next research question")
             if payload["development_learning_allowed"] is not (c["split"] in DEVELOPMENT):
@@ -111,14 +126,28 @@ def _snapshot(events):
     records = [e["payload"] for e in events if e["kind"] == "experiment"]
     legacy = [e["payload"] for e in events if e["kind"] == "legacy"]
     proposals = [e["payload"] for e in events if e["kind"] == "proposal"]
-    families, components, interactions = {}, {}, {}
+    families, semantic_strategies, components, interactions = {}, {}, {}, {}
     rejected = _canonical_rejections()
+    rejected_semantic = set()
+    semantic_by_fingerprint = {}
     for r in records:
         c = r["contract"]
+        semantic = strategy_semantic_fingerprint(c["strategy"])
+        semantic_by_fingerprint[c["strategy_fingerprint"]] = semantic
         if r["source_status"] == "REJECTED":
             rejected.add(c["strategy_fingerprint"])
+            rejected_semantic.add(semantic)
         family = families.setdefault(c["family"], {"records": []})
         family["records"].append(r)
+        semantic_row = semantic_strategies.setdefault(
+            semantic,
+            {"records": [], "families": set(), "mechanisms": set(),
+             "exact_fingerprints": set()},
+        )
+        semantic_row["records"].append(r)
+        semantic_row["families"].add(c["family"])
+        semantic_row["mechanisms"].add(c["strategy"]["mechanism"])
+        semantic_row["exact_fingerprints"].add(c["strategy_fingerprint"])
         effects = {x["component_fingerprint"]: x for x in r["component_evidence"]}
         for comp in c["strategy"]["components"]:
             key = fingerprint(comp)
@@ -131,6 +160,7 @@ def _snapshot(events):
                 "start": c["start"], "end": c["end"], "minimum_events": c["minimum_events"],
                 "assets": c["strategy"]["assets"], "timeframe": c["strategy"]["timeframe"],
                 "outcome": r["outcome"], "effect": effect, "attribution": r["attribution"],
+                "favorable_evidence_verified": _verified_favorable_evidence(r),
                 "observed_at": c["outcomes_observed_at"],
                 "sample_count": r["metrics"].get("sample_count", 0),
                 "independent_event_count": r["metrics"].get("independent_event_count", 0)})
@@ -138,7 +168,9 @@ def _snapshot(events):
                 row["evidence_level"] = "DEVELOPMENT_ASSOCIATION"
         for interaction in r["interaction_evidence"]:
             key = fingerprint(sorted(interaction["component_fingerprints"]))
-            interactions.setdefault(key, []).append({**interaction, "experiment_id": r["experiment_id"]})
+            interactions.setdefault(key, []).append({**interaction,
+                "experiment_id": r["experiment_id"],
+                "favorable_evidence_verified": _verified_favorable_evidence(r)})
     for family in families.values():
         eligible = [r for r in family.pop("records") if r["metrics"]
             and r["metrics"]["independent_event_count"] >= r["contract"]["minimum_events"]]
@@ -147,18 +179,45 @@ def _snapshot(events):
         family.update({
             "independent_experiments": len(independent),
             "development_failures": sum(r["source_status"] == "REJECTED" for r in development),
-            "promising_development": sum(r["source_status"] == "PASSED" and r["metrics"]["net_pnl"] > 0
+            "promising_development": sum(_verified_favorable_evidence(r)
+                and r["source_status"] == "PASSED" and r["metrics"]["net_pnl"] > 0
                 and r["contract"]["strategy_fingerprint"] not in rejected
+                and strategy_semantic_fingerprint(r["contract"]["strategy"]) not in rejected_semantic
                 and not {"CATASTROPHIC_LOSS", "SINGLE_WINNER_DEPENDENCE"}.intersection(r["risk_flags"]) for r in development),
             "mechanism_dead": any(r["outcome"] == "MECHANISM_DEAD" for r in development),
             "infra_blocked": False,
+        })
+    for semantic, row in semantic_strategies.items():
+        eligible = [r for r in row.pop("records") if r["metrics"]
+            and r["metrics"]["independent_event_count"] >= r["contract"]["minimum_events"]]
+        independent = _independent(eligible)
+        development = _independent([r for r in eligible if r["contract"]["split"] in DEVELOPMENT])
+        row.update({
+            "semantic_fingerprint": semantic,
+            "families": sorted(row["families"]),
+            "mechanisms": sorted(row["mechanisms"]),
+            "exact_fingerprints": sorted(row["exact_fingerprints"]),
+            "independent_experiments": len(independent),
+            "development_failures": sum(r["source_status"] == "REJECTED" for r in development),
+            "promising_development": sum(_verified_favorable_evidence(r)
+                and r["source_status"] == "PASSED" and r["metrics"]["net_pnl"] > 0
+                and r["contract"]["strategy_fingerprint"] not in rejected
+                and semantic not in rejected_semantic
+                and not {"CATASTROPHIC_LOSS", "SINGLE_WINNER_DEPENDENCE"}.intersection(r["risk_flags"])
+                for r in development),
+            "mechanism_dead": any(r["outcome"] == "MECHANISM_DEAD" for r in development),
+            "infra_blocked": any(r["outcome"] == "INFRA_DATA_FAILURE" for r in eligible),
         })
     for r in records:
         if r["outcome"] == "INFRA_DATA_FAILURE":
             families[r["contract"]["family"]]["infra_blocked"] = True
     return {"schema_version": 1, "experiments": records, "legacy_outcomes": legacy,
-            "proposals": proposals, "families": families, "components": components,
-            "interactions": interactions, "rejected_fingerprints": sorted(rejected), **SAFE}
+            "proposals": proposals, "families": families,
+            "semantic_strategies": semantic_strategies,
+            "strategy_semantic_by_fingerprint": semantic_by_fingerprint,
+            "rejected_semantic_fingerprints": sorted(rejected_semantic),
+            "components": components, "interactions": interactions,
+            "rejected_fingerprints": sorted(rejected), **SAFE}
 
 
 def _prepare_completion(events, experiment, *, ablation=None):
@@ -170,6 +229,7 @@ def _prepare_completion(events, experiment, *, ablation=None):
     """
     result = analyze(experiment)
     c = result["contract"]
+    result["favorable_evidence_provenance"] = UNVERIFIED_FAVORABLE_EVIDENCE
     result["input_digest"] = fingerprint({"experiment": experiment, "ablation": ablation})
     if ablation is not None:
         if ablation["contract"] != c:
@@ -199,7 +259,8 @@ def _prepare_completion(events, experiment, *, ablation=None):
                     or falsifier["minimum_independent_replications"] < 2):
                 raise ValueError("unsupported frozen mechanism falsifier")
             prior = [x["payload"] for x in events if x["kind"] == "experiment"] + [result]
-            failed = [r for r in prior if r["contract"]["strategy"]["mechanism"] == c["strategy"]["mechanism"]
+            semantic = strategy_semantic_fingerprint(c["strategy"])
+            failed = [r for r in prior if strategy_semantic_fingerprint(r["contract"]["strategy"]) == semantic
                 and r["contract"].get("mechanism_falsifier") == falsifier
                 and r["contract"]["split"] in DEVELOPMENT and r["source_status"] == "REJECTED"
                 and r["metrics"].get("independent_event_count", 0) >= r["contract"]["minimum_events"]

@@ -2,8 +2,9 @@
 from copy import deepcopy
 from datetime import timedelta
 
-from .contracts import (DEVELOPMENT, SAFE, fingerprint, number, text, timestamp,
-                        validate_contract)
+from .contracts import (DEVELOPMENT, SAFE, VERIFIED_FAVORABLE_EVIDENCE,
+                        fingerprint, number, text, timestamp, validate_contract,
+                        strategy_semantic_fingerprint)
 
 
 def _shape(strategy):
@@ -121,10 +122,14 @@ def rank_candidates(candidates, memory):
     for c in candidates:
         row = deepcopy(c)
         family = memory.get("families", {}).get(c.get("family"), {})
-        failures = family.get("development_failures", 0)
-        promising = family.get("promising_development", 0)
+        semantic = memory.get("semantic_strategies", {}).get(
+            c.get("strategy_semantic_fingerprint"), {}
+        )
+        evidence = semantic or family
+        failures = evidence.get("development_failures", 0)
+        promising = evidence.get("promising_development", 0)
         factor = max(.1, 1 / (1 + .3 * failures))
-        if family.get("mechanism_dead"):
+        if evidence.get("mechanism_dead"):
             factor *= .25
         factor *= 1 + min(.3, promising * .1)
         component_votes = []
@@ -132,7 +137,9 @@ def rank_candidates(candidates, memory):
             evidence = memory.get("components", {}).get(key, {})
             observations = [o for o in evidence.get("observations", [])
                        if o["split"] in DEVELOPMENT and o.get("effect")
-                       and o["effect"]["independent_event_count"] >= o["minimum_events"]]
+                       and o["effect"]["independent_event_count"] >= o["minimum_events"]
+                       and (o.get("favorable_evidence_verified")
+                            or o["effect"]["delta_compounded_return"] <= 0)]
             independent = []
             # Select within DEVELOPMENT first. Relabelled/overlapping windows
             # cannot add a vote or displace evidence with an OOS observation.
@@ -148,8 +155,8 @@ def rank_candidates(candidates, memory):
                 component_votes.append(signs[len(signs) // 2])
         component_factor = 1 + (.15 * sum(component_votes) / len(component_votes) if component_votes else 0)
         factor *= component_factor
-        mode = "EXPLOIT" if promising and not family.get("mechanism_dead") else "EXPLORE"
-        if family.get("infra_blocked"):
+        mode = "EXPLOIT" if promising and not evidence.get("mechanism_dead") else "EXPLORE"
+        if evidence.get("infra_blocked"):
             mode, factor = "LEARN", factor * .2
         def unit(key, default):
             value = number(c.get(key, default), key, minimum=0)
@@ -162,10 +169,12 @@ def rank_candidates(candidates, memory):
         value *= .75 + .25 * unit("novelty", .5)
         cost = 1 + unit("compute_cost", .5) + unit("monetary_cost", 0) + unit("time_to_result", .5)
         score = number(c.get("base_priority", 1), "base_priority", minimum=0) * value * unit("data_readiness", 1) * factor / cost
-        blocked = c.get("blocker") or c.get("strategy_fingerprint") in memory.get("rejected_fingerprints", [])
+        blocked = (c.get("blocker")
+            or c.get("strategy_fingerprint") in memory.get("rejected_fingerprints", [])
+            or c.get("strategy_semantic_fingerprint") in memory.get("rejected_semantic_fingerprints", []))
         row.update({"learning_priority": 0.0 if blocked else round(score, 8), "mode": mode,
                     "learning_factor": factor, "component_factor": component_factor,
-                    "learning_evidence": family, **SAFE})
+                    "learning_evidence": evidence, **SAFE})
         rows.append(row)
     return sorted(rows, key=lambda r: (-r["learning_priority"], str(r.get("id", ""))))
 
@@ -176,14 +185,26 @@ def learning_missions(memory, *, limit=20):
         if r["contract"]["split"] not in DEVELOPMENT:
             continue
         outcome = r["outcome"]
-        rejected = r["contract"]["strategy_fingerprint"] in memory.get("rejected_fingerprints", [])
+        favorable_verified = (
+            r.get("favorable_evidence_provenance")
+            == VERIFIED_FAVORABLE_EVIDENCE
+        )
+        semantic = strategy_semantic_fingerprint(r["contract"]["strategy"])
+        rejected = (r["contract"]["strategy_fingerprint"] in memory.get("rejected_fingerprints", [])
+            or semantic in memory.get("rejected_semantic_fingerprints", []))
         mode = "EXPLOIT" if outcome == "SUCCESS_LEARN" else "EXPLORE" if outcome == "MECHANISM_DEAD" else "LEARN"
+        if mode == "EXPLOIT" and not favorable_verified:
+            mode = "LEARN"
         if rejected and mode == "EXPLOIT":
             mode = "LEARN"
+        hypothesis = r["next_research_question"]
+        if rejected and outcome == "SUCCESS_LEARN":
+            hypothesis = "Investigate contradictory evidence/provenance; the original fingerprint remains rejected and may not be retested."
+        elif outcome == "SUCCESS_LEARN" and not favorable_verified:
+            hypothesis = "Bind the result to a verifier-issued executor receipt before using favorable economics."
         missions.append({"id": "learning-" + r["experiment_id"], "family": r["contract"]["family"],
             "strategy_fingerprint": r["contract"]["strategy_fingerprint"] if mode == "EXPLOIT" else None,
-            "hypothesis": ("Investigate contradictory evidence/provenance; the original fingerprint remains rejected and may not be retested."
-                           if rejected and outcome == "SUCCESS_LEARN" else r["next_research_question"]),
+            "hypothesis": hypothesis,
             "source_experiment_id": r["experiment_id"],
             "mode": mode, "base_priority": 1, "information_gain": .8,
             "expected_economic_upside": .6 if mode == "EXPLOIT" else .4,

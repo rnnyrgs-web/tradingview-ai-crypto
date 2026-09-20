@@ -102,6 +102,38 @@ def test_mechanism_dead_needs_frozen_falsifier_and_independent_failures(tmp_path
     assert m.snapshot()["families"]["momentum"]["mechanism_dead"]
 
 
+def test_family_mechanism_and_economic_prose_cannot_reset_failure_memory(tmp_path):
+    m = Memory(tmp_path / "memory.sqlite")
+    first = experiment([-10, -10, -10])
+    first["contract"]["mechanism_falsifier"] = {
+        "metric": "after_cost_expectancy_money",
+        "maximum": 0,
+        "minimum_independent_replications": 2,
+    }
+    m.complete(first)
+
+    relabeled = later(first)
+    relabeled["contract"]["family"] = "renamed-family"
+    relabeled["contract"]["strategy"]["mechanism"] = "rewritten mechanism prose"
+    relabeled["contract"]["strategy"]["components"][0]["economic_reason"] = (
+        "Rewritten economic narrative with identical executable behavior."
+    )
+    relabeled["contract"]["strategy_fingerprint"] = fingerprint(
+        relabeled["contract"]["strategy"]
+    )
+
+    result = m.complete(relabeled)
+    snapshot = Memory(tmp_path / "memory.sqlite", create=False).snapshot()
+
+    assert result["outcome"] == "MECHANISM_DEAD"
+    assert len(snapshot["semantic_strategies"]) == 1
+    semantic = next(iter(snapshot["semantic_strategies"].values()))
+    assert semantic["development_failures"] == 2
+    assert semantic["mechanism_dead"] is True
+    assert semantic["families"] == ["momentum", "renamed-family"]
+    assert semantic["semantic_fingerprint"] in snapshot["rejected_semantic_fingerprints"]
+
+
 def successor_contract(parent):
     c = deepcopy(later(parent, 60)["contract"])
     c["strategy"]["components"].append(component("exit", "inventory_normalization"))
@@ -211,6 +243,23 @@ def test_import_rejects_self_hashed_unsafe_schema(tmp_path):
         n.import_archive(archive)
 
 
+def test_import_cannot_self_assert_verified_favorable_provenance(tmp_path):
+    m = Memory(tmp_path / "memory.sqlite")
+    m.complete(experiment([10, 10, 10]))
+    archive = m.export()
+    archive["events"][0]["payload"]["favorable_evidence_provenance"] = (
+        "VERIFIED_EXECUTOR_BOUND_RESULT"
+    )
+    archive["events"][0]["digest"] = fingerprint(
+        archive["events"][0]["payload"]
+    )
+    archive["sha256"] = fingerprint(archive["events"])
+    n = Memory(tmp_path / "other.sqlite")
+
+    with pytest.raises(ValueError, match="schema"):
+        n.import_archive(archive)
+
+
 def test_same_semantic_successor_suppressed_across_fresh_windows(tmp_path):
     m = Memory(tmp_path / "memory.sqlite")
     e = experiment([-10, -10, -10])
@@ -307,6 +356,31 @@ def test_rejected_exact_strategy_never_becomes_exploit_mission(tmp_path):
     s = m.snapshot()
     assert s["families"]["momentum"]["promising_development"] == 0
     assert not any(r["mode"] == "EXPLOIT" and r["learning_priority"] > 0 for r in learning_missions(s))
+
+
+def test_rejected_semantic_relabel_never_becomes_exploit_mission(tmp_path):
+    m = Memory(tmp_path / "memory.sqlite")
+    m.complete(experiment([-10] * 3))
+    relabeled = later(experiment([10] * 3), 30)
+    relabeled["status"] = "PASSED"
+    relabeled["contract"]["family"] = "renamed-family"
+    relabeled["contract"]["strategy"]["mechanism"] = "renamed mechanism"
+    relabeled["contract"]["strategy"]["components"][0]["economic_reason"] = (
+        "renamed economic prose"
+    )
+    relabeled["contract"]["strategy_fingerprint"] = fingerprint(
+        relabeled["contract"]["strategy"]
+    )
+    m.complete(relabeled)
+
+    snapshot = m.snapshot()
+    semantic = next(iter(snapshot["semantic_strategies"].values()))
+
+    assert semantic["promising_development"] == 0
+    assert not any(
+        row["mode"] == "EXPLOIT" and row["learning_priority"] > 0
+        for row in learning_missions(snapshot)
+    )
 
 
 @pytest.mark.parametrize("field", ["source_status", "risk_flags", "attribution", "interaction_evidence", "input_digest"])

@@ -1,17 +1,35 @@
 """Versioned JSON contracts and deterministic identities for learning evidence."""
 from __future__ import annotations
 
+import ast
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
 import math
+from pathlib import Path
 
 DEVELOPMENT = {"DEVELOPMENT", "TRAINING"}
 SPLITS = DEVELOPMENT | {"CHRONOLOGICAL_VALIDATION", "RELEASED_OOS", "FORWARD"}
 COSTS = ("fees", "spread", "slippage", "funding_carry")
 SAFE = {"research_only": True, "trade_authority": False, "promotion_authority": False,
         "automatic_execution_authority": False, "broker_connected": False}
+UNVERIFIED_FAVORABLE_EVIDENCE = "UNVERIFIED_CALLER_RESULT"
+VERIFIED_FAVORABLE_EVIDENCE = "VERIFIED_EXECUTOR_BOUND_RESULT"
 MAX_TRADES = 100_000
+
+# These identifiers name reviewed executable implementations, not caller prose.
+# Adding an entry is a code change that must ship with an evaluator and tests.
+TRUSTED_EXECUTOR_IMPLEMENTATIONS = {
+    "restrictive_group_abstention_v1": (
+        "research_adaptive_accuracy._evaluate_frozen_filter@v1"
+    ),
+}
+TRUSTED_EXECUTOR_SOURCES = {
+    "restrictive_group_abstention_v1": {
+        "path": "research_adaptive_accuracy.py",
+        "ast_sha256": "12fd00d9be9f43f70f2b50624175e4270eebbbac4f230972095e7f56acd6f64f",
+    },
+}
 
 
 def canonical(value):
@@ -20,6 +38,43 @@ def canonical(value):
 
 def fingerprint(value):
     return sha256(canonical(value).encode()).hexdigest()
+
+
+def trusted_executor_implementation(execution_rule):
+    implementation_id = TRUSTED_EXECUTOR_IMPLEMENTATIONS.get(execution_rule)
+    source = TRUSTED_EXECUTOR_SOURCES.get(execution_rule)
+    if implementation_id is None or not isinstance(source, dict):
+        raise ValueError("unregistered research executor")
+    digest = source.get("ast_sha256")
+    if (not isinstance(digest, str) or len(digest) != 64
+            or any(char not in "0123456789abcdef" for char in digest)):
+        raise ValueError("invalid registered executor implementation digest")
+    return {"implementation_id": implementation_id, "ast_sha256": digest}
+
+
+def verified_executor_implementation(execution_rule):
+    """Bind a reviewed registry identity to the deployed evaluator AST.
+
+    Comments and formatting are intentionally excluded. Any executable module
+    change requires a reviewed digest update; stale identifiers fail closed.
+    """
+    expected = trusted_executor_implementation(execution_rule)
+    relative_path = TRUSTED_EXECUTOR_SOURCES[execution_rule].get("path")
+    if not isinstance(relative_path, str) or not relative_path.endswith(".py"):
+        raise ValueError("invalid registered executor source path")
+    root = Path(__file__).resolve().parent.parent
+    source_path = (root / relative_path).resolve()
+    if source_path.parent != root or not source_path.is_file():
+        raise ValueError("registered executor source is unavailable")
+    try:
+        tree = ast.parse(source_path.read_text(encoding="utf-8"))
+    except (OSError, SyntaxError, UnicodeError) as exc:
+        raise ValueError("registered executor source is unreadable") from exc
+    normalized = ast.dump(tree, annotate_fields=True, include_attributes=False)
+    actual = sha256(normalized.encode()).hexdigest()
+    if actual != expected["ast_sha256"]:
+        raise ValueError("registered executor implementation digest is stale")
+    return expected
 
 
 def number(value, name, *, minimum=None):
@@ -80,6 +135,32 @@ def validate_strategy(strategy):
     if len({fingerprint(c) for c in components}) != len(components):
         raise ValueError("duplicate components")
     return strategy
+
+
+def strategy_semantic_fingerprint(strategy):
+    """Label-invariant complete executable identity for durable learning."""
+    validate_strategy(strategy)
+    implementation_id = TRUSTED_EXECUTOR_IMPLEMENTATIONS.get(
+        strategy["execution_rule"], "UNVERIFIED_CALLER_DECLARATION"
+    )
+    source = TRUSTED_EXECUTOR_SOURCES.get(strategy["execution_rule"], {})
+    payload = {
+        "schema_version": 3,
+        "execution_rule": strategy["execution_rule"],
+        "executor_implementation": implementation_id,
+        "executor_implementation_sha256": source.get("ast_sha256"),
+        "assets": sorted(strategy["assets"]),
+        "timeframe": strategy["timeframe"],
+        "components": [
+            {
+                "kind": component["kind"],
+                "rule": component["rule"],
+                "parameters": component["parameters"],
+            }
+            for component in strategy["components"]
+        ],
+    }
+    return fingerprint(payload)
 
 
 def validate_contract(c):

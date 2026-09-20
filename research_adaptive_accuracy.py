@@ -13,9 +13,15 @@ from math import isfinite
 from statistics import NormalDist
 
 from calibration import wilson_lower_bound
+from profitability_learning.contracts import fingerprint
 from research_heavy_experiment_scheduler import build_heavy_dispatch_plan
 from research_learning import learning_diagnostics
-from research_quant_science_factory import build_quant_science_queue
+from research_quant_science_factory import (
+    MINIMUM_ACTIONABLE_COVERAGE as CANONICAL_MINIMUM_ACTIONABLE_COVERAGE,
+    MINIMUM_EFFECT_TO_CONTINUE,
+    MINIMUM_EVALUATION_SAMPLES as CANONICAL_MINIMUM_EVALUATION_SAMPLES,
+    build_quant_science_queue,
+)
 from selective_precision import _independent_rows
 
 DEFAULT_ROUND_TRIP_COST_PCT = 0.12
@@ -211,10 +217,25 @@ def _evaluate_frozen_filter(experiment, rows, horizon, *, cost_pct, adjusted_z=1
 
 
 def _passes_validation(evaluation, science_design):
-    minimum_effect = (science_design or {}).get("minimum_effect_to_continue") or {}
-    min_lift = float(minimum_effect.get("precision_absolute_improvement") or 0.02)
-    min_samples = int((science_design or {}).get("minimum_evaluation_samples") or MIN_VALIDATION_SAMPLES)
-    min_coverage = float((science_design or {}).get("minimum_actionable_coverage") or MIN_ACTIONABLE_COVERAGE)
+    design = science_design if isinstance(science_design, dict) else {}
+    consumed = {
+        "minimum_effect_to_continue": design.get("minimum_effect_to_continue"),
+        "minimum_evaluation_samples": design.get("minimum_evaluation_samples"),
+        "minimum_actionable_coverage": design.get("minimum_actionable_coverage"),
+    }
+    canonical = {
+        "minimum_effect_to_continue": MINIMUM_EFFECT_TO_CONTINUE,
+        "minimum_evaluation_samples": CANONICAL_MINIMUM_EVALUATION_SAMPLES,
+        "minimum_actionable_coverage": CANONICAL_MINIMUM_ACTIONABLE_COVERAGE,
+    }
+    try:
+        if fingerprint(consumed) != fingerprint(canonical):
+            return False
+    except (TypeError, ValueError):
+        return False
+    min_lift = MINIMUM_EFFECT_TO_CONTINUE["precision_absolute_improvement"]
+    min_samples = CANONICAL_MINIMUM_EVALUATION_SAMPLES
+    min_coverage = CANONICAL_MINIMUM_ACTIONABLE_COVERAGE
     baseline = evaluation.get("baseline") or {}
     filtered = evaluation.get("filtered") or {}
     lift = evaluation.get("precision_lift")

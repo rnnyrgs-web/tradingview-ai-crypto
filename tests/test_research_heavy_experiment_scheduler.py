@@ -1,9 +1,23 @@
+from profitability_learning.contracts import fingerprint
 from research_heavy_experiment_scheduler import build_heavy_dispatch_plan
+from research_quant_science_factory import _scientific_design
 
 
 def _experiment(experiment_id, priority, samples=20, *, profitability_impact=None, signal_quality_impact=None):
     scaled = min(1.0, max(0.0, float(priority) / 100.0))
-    return {
+    strategy = {
+        "mechanism": "Trend-regime structure may improve selective directional precision.",
+        "components": [{
+            "kind": "research_filter",
+            "rule": "restrictive_group_abstention_v1:market_regime",
+            "parameters": {"dimension": "market_regime", "group": "TREND"},
+            "economic_reason": "A predeclared regime condition can reduce false signals.",
+        }],
+        "assets": ["POINT_IN_TIME_RESEARCH_UNIVERSE"],
+        "timeframe": "both",
+        "execution_rule": "restrictive_group_abstention_v1",
+    }
+    row = {
         "experiment_id": experiment_id,
         "information_priority": priority,
         "source_samples": samples,
@@ -13,6 +27,8 @@ def _experiment(experiment_id, priority, samples=20, *, profitability_impact=Non
         "hypothesis": "A predeclared regime condition can reduce false signals.",
         "predicted_mechanism": "Trend-regime structure may improve selective directional precision.",
         "target_horizon": "both",
+        "strategy": strategy,
+        "strategy_fingerprint": fingerprint(strategy),
         "expected_signal_quality_effect": "Increase after-cost expectancy first; improve genuine BUY/SELL precision or WAIT quality second.",
         "evidence_needed": ["chronological backtest", "untouched OOS", "genuine forward evidence"],
         "falsification_criteria": ["no stable after-cost OOS improvement"],
@@ -36,6 +52,8 @@ def _experiment(experiment_id, priority, samples=20, *, profitability_impact=Non
         "trade_authority": False,
         "promotion_authority": False,
     }
+    row["science_design"] = _scientific_design(row)
+    return row
 
 
 def test_scheduler_admits_highest_priority_without_raising_concurrency():

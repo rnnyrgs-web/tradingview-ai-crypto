@@ -12,6 +12,7 @@ from math import isfinite
 from copy import deepcopy
 
 from profitability_learning.contracts import SAFE, number
+from research_quant_science_factory import verified_strategy_semantic_fingerprint
 
 from signal_development import objective_reference, priority_score, validate_task_contract
 
@@ -59,6 +60,11 @@ def _eligible(experiment: dict) -> bool:
     if not all(experiment.get(flag) is False for flag in forbidden):
         return False
     design = _science_design(experiment)
+    # Learned admission is allowed to change scarce-compute eligibility and
+    # priority. It must therefore carry a complete code-bound strategy/design;
+    # legacy compatibility cannot turn caller-asserted feedback into authority.
+    if "learning_feedback" in experiment and not design:
+        return False
     if design:
         if design.get("research_only") is not True:
             return False
@@ -92,6 +98,10 @@ def _eligible(experiment: dict) -> bool:
             return False
         if "dispatchable_now" in design and not design.get("executor_kind"):
             return False
+        try:
+            verified_strategy_semantic_fingerprint(experiment)
+        except (KeyError, TypeError, ValueError):
+            return False
     return True
 
 
@@ -105,7 +115,8 @@ def _learning_factor(row: dict) -> float:
             or feedback.get("changes_eligibility") is not False
             or not isinstance(feedback.get("reason"), str)
             or feedback.get("reason") not in {"no_matched_completion",
-                "prior_completion_requires_new_evidence", "matched_family_economic_evidence"}):
+                "prior_completion_requires_new_evidence", "matched_family_economic_evidence",
+                "matched_semantic_economic_evidence"}):
         return 0.0
     try:
         factor = number(feedback.get("factor"), "learning factor", minimum=0)
@@ -174,6 +185,7 @@ def build_heavy_dispatch_plan(experiment_queue: dict, *, running_experiment_ids=
             "hypothesis": row.get("hypothesis"),
             "research_method": design.get("research_method"),
             "executor_kind": design.get("executor_kind"),
+            "executor_implementation_id": design.get("executor_implementation_id"),
             "primary_endpoint": design.get("primary_endpoint"),
             "abstention_first": bool(design.get("abstention_first")),
             "falsification_criteria": list(row.get("falsification_criteria") or []),

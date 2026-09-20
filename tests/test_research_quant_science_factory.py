@@ -1,8 +1,14 @@
+import pytest
+
+from profitability_learning.contracts import fingerprint
 from research_heavy_experiment_scheduler import build_heavy_dispatch_plan
 from research_quant_science_factory import (
     MASSIVE_VIRTUAL_RESEARCH_CONSTRAINTS,
     MAX_PER_METHOD,
+    _scientific_design,
+    _strategy_identity,
     build_quant_science_queue,
+    verified_strategy_semantic_fingerprint,
 )
 
 
@@ -31,6 +37,10 @@ def test_quant_science_factory_predeclares_safe_scientific_design():
     assert design["minimum_evaluation_samples"] == 8
     assert design["minimum_actionable_coverage"] == 0.25
     assert design["executor_kind"] == "restrictive_group_abstention_v1"
+    assert design["executor_implementation_id"] == (
+        "research_adaptive_accuracy._evaluate_frozen_filter@v1"
+    )
+    assert len(design["executor_implementation_sha256"]) == 64
     assert design["dispatchable_now"] is True
     assert design["parameter_mining_allowed"] is False
     assert design["untouched_oos_reuse_allowed"] is False
@@ -42,8 +52,39 @@ def test_quant_science_factory_predeclares_safe_scientific_design():
     assert design["paid_compute_escalation_allowed"] is False
     assert design["idea_generation_counts_as_evidence"] is False
     assert design["abstention_first"] is True
+    assert experiment["strategy_fingerprint"] == fingerprint(experiment["strategy"])
+    assert experiment["strategy"]["execution_rule"] == design["executor_kind"]
     assert experiment["trade_authority"] is False
     assert experiment["promotion_authority"] is False
+
+
+def test_stale_executor_registry_identity_fails_closed(monkeypatch):
+    candidate = {
+        "dimension": "market_regime",
+        "group": "TREND",
+        "target_horizon": "both",
+        "predicted_mechanism": "predeclared mechanism",
+        "hypothesis": "predeclared hypothesis",
+    }
+    candidate["science_design"] = _scientific_design(candidate)
+    candidate["strategy"] = _strategy_identity(
+        candidate, candidate["science_design"]
+    )
+    candidate["strategy_fingerprint"] = fingerprint(candidate["strategy"])
+
+    import research_quant_science_factory as factory
+
+    def stale_implementation(_executor):
+        raise ValueError("registered executor implementation digest is stale")
+
+    monkeypatch.setattr(
+        factory,
+        "_verified_executor_implementation",
+        stale_implementation,
+        raising=False,
+    )
+    with pytest.raises(ValueError, match="implementation digest is stale"):
+        verified_strategy_semantic_fingerprint(candidate)
 
 
 def test_massive_virtual_scale_never_raises_physical_or_cost_authority():
