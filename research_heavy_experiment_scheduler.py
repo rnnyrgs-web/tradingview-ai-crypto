@@ -60,6 +60,11 @@ def _eligible(experiment: dict) -> bool:
     if not all(experiment.get(flag) is False for flag in forbidden):
         return False
     design = _science_design(experiment)
+    # Learned admission is allowed to change scarce-compute eligibility and
+    # priority. It must therefore carry a complete code-bound strategy/design;
+    # legacy compatibility cannot turn caller-asserted feedback into authority.
+    if "learning_feedback" in experiment and not design:
+        return False
     if design:
         if design.get("research_only") is not True:
             return False

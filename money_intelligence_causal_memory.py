@@ -7,7 +7,7 @@ append-only, chronology checked, provenance bound, and replay safe.
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import datetime, timedelta, timezone
 import hashlib
 import json
@@ -25,6 +25,8 @@ RESEARCH_LANES = {"big_move", "strategy_component"}
 RELATIVE_IMPACT_RATIOS = {"flow_float", "flow_liquidity"}
 TRUSTED_EVALUATION_IMPLEMENTATION = "paired-sign-exact-independent-units-v2"
 LEGACY_UNVERIFIED_IMPLEMENTATION = "legacy-unverified-v0"
+PROJECT_TESTING_PROTOCOL = "global-sequential-bonferroni-v1"
+PROJECT_ALPHA = 0.05
 TRUSTED_EVALUATION_METHODS = {
     "matched_control_mean_difference_v1",
     "matched_mean_diff_v1",
@@ -169,6 +171,12 @@ class FrozenHypothesis:
     evaluation_method: str
     family_size: int = 1
     alpha: float = 0.05
+    # Pre-outcome economic units for the sole confirmatory look. Empty plans
+    # remain eligible for exploratory research but cannot claim confirmation.
+    evaluation_units: tuple[tuple[str, str, int], ...] = ()
+    # Exact outcome/control observation identities, aligned one-for-one with
+    # evaluation_units and frozen before either side of a pair is observed.
+    evaluation_pairs: tuple[tuple[str, str], ...] = ()
 
     def __post_init__(self) -> None:
         if not self.hypothesis_id.strip() or not self.statement.strip():
@@ -207,6 +215,59 @@ class FrozenHypothesis:
         object.__setattr__(self, "source_observation_ids", sources)
         object.__setattr__(self, "created_at", _normalise_time(self.created_at))
         object.__setattr__(self, "alpha", float(self.alpha))
+        planned_units = []
+        for raw in self.evaluation_units:
+            if not isinstance(raw, (tuple, list)) or len(raw) != 3:
+                raise CausalMemoryError(
+                    "evaluation units must contain subject, start, window"
+                )
+            subject, start, window = raw
+            if (
+                not isinstance(subject, str)
+                or not subject.strip()
+                or type(window) is not int
+                or window <= 0
+            ):
+                raise CausalMemoryError(
+                    "evaluation units require subject and positive window"
+                )
+            if window != self.horizon_hours:
+                raise CausalMemoryError(
+                    "evaluation-unit window must match frozen hypothesis horizon"
+                )
+            start = _normalise_time(start)
+            if _parse_time(start) < _parse_time(self.created_at):
+                raise CausalMemoryError("evaluation units must begin after hypothesis freeze")
+            planned_units.append((subject.strip(), start, window))
+        if len(set(planned_units)) != len(planned_units):
+            raise CausalMemoryError("evaluation units cannot contain duplicates")
+        object.__setattr__(self, "evaluation_units", tuple(planned_units))
+        planned_pairs = []
+        for raw in self.evaluation_pairs:
+            if not isinstance(raw, (tuple, list)) or len(raw) != 2:
+                raise CausalMemoryError(
+                    "evaluation pairs must contain outcome and control observation ids"
+                )
+            outcome_id, control_id = raw
+            if (
+                not isinstance(outcome_id, str)
+                or not outcome_id.strip()
+                or not isinstance(control_id, str)
+                or not control_id.strip()
+                or outcome_id.strip() == control_id.strip()
+            ):
+                raise CausalMemoryError(
+                    "evaluation pairs require distinct outcome and control observation ids"
+                )
+            planned_pairs.append((outcome_id.strip(), control_id.strip()))
+        if planned_pairs and len(planned_pairs) != len(planned_units):
+            raise CausalMemoryError(
+                "evaluation pairs must align one-for-one with evaluation units"
+            )
+        planned_ids = [identifier for pair in planned_pairs for identifier in pair]
+        if len(set(planned_ids)) != len(planned_ids):
+            raise CausalMemoryError("evaluation pair observation ids cannot be reused")
+        object.__setattr__(self, "evaluation_pairs", tuple(planned_pairs))
 
     @property
     def fingerprint(self) -> str:
@@ -226,6 +287,10 @@ class FrozenHypothesis:
             "family_size": self.family_size,
             "alpha": self.alpha,
         }
+        if self.evaluation_units:
+            design["evaluation_units"] = list(self.evaluation_units)
+        if self.evaluation_pairs:
+            design["evaluation_pairs"] = list(self.evaluation_pairs)
         return f"mi-causal-v1:{_sha256(design)}"
 
 
@@ -336,6 +401,15 @@ class CausalRepricingMemory:
         self.claims: dict[str, EpistemicClaim] = {}
         self.hypotheses: dict[str, FrozenHypothesis] = {}
         self.events: dict[str, EvidenceEvent] = {}
+        # Immutable registration order is the project-wide testing ledger.
+        # Slot i spends at most alpha / (i * (i + 1)); the infinite sum is
+        # alpha, independent of family labels or the eventual search count.
+        self.hypothesis_order: list[str] = []
+        self.event_order: list[str] = []
+        self.registration_log: list[dict[str, str]] = []
+        # Digest-bound identities of historical underdeclared families. They
+        # remain auditable but can never authorize a fresh sibling or support.
+        self.legacy_underdeclared_hypotheses: set[str] = set()
 
     @staticmethod
     def _append_immutable(store: dict[str, object], key: str, value: object) -> bool:
@@ -348,9 +422,14 @@ class CausalRepricingMemory:
         raise ReplayConflictError(f"immutable id {key!r} replayed with different content")
 
     def register_observation(self, observation: PointInTimeObservation) -> bool:
-        return self._append_immutable(
+        added = self._append_immutable(
             self.observations, observation.observation_id, observation
         )
+        if added:
+            self.registration_log.append(
+                {"kind": "observation", "id": observation.observation_id}
+            )
+        return added
 
     def _require_sources_available(self, source_ids: Iterable[str], as_of: str) -> None:
         cutoff = _parse_time(as_of)
@@ -389,18 +468,55 @@ class CausalRepricingMemory:
             }
         )
 
+    @staticmethod
+    def _rejection_variants(
+        hypothesis: FrozenHypothesis,
+    ) -> tuple[FrozenHypothesis, ...]:
+        variants = [hypothesis]
+        # Pair identity was added after planned-unit identity. Preserve rejected
+        # memory across that schema strengthening instead of treating the new
+        # field as scientific novelty.
+        if hypothesis.evaluation_pairs:
+            variants.append(replace(hypothesis, evaluation_pairs=()))
+        if hypothesis.evaluation_units or hypothesis.evaluation_pairs:
+            variants.append(
+                replace(hypothesis, evaluation_units=(), evaluation_pairs=())
+            )
+        return tuple({variant.fingerprint: variant for variant in variants}.values())
+
     def _is_rejected(self, hypothesis: FrozenHypothesis) -> bool:
-        return (
-            hypothesis.fingerprint in self.rejected_fingerprints
-            or self.effective_fingerprint(hypothesis) in self.rejected_fingerprints
+        return any(
+            variant.fingerprint in self.rejected_fingerprints
+            or self.effective_fingerprint(variant) in self.rejected_fingerprints
+            for variant in self._rejection_variants(hypothesis)
         )
 
-    def register_hypothesis(self, hypothesis: FrozenHypothesis) -> bool:
+    def register_hypothesis(
+        self, hypothesis: FrozenHypothesis, *, _restore_legacy_undercount: bool = False
+    ) -> bool:
         self._require_sources_available(
             hypothesis.source_observation_ids, hypothesis.created_at
         )
         if self._is_rejected(hypothesis):
             raise CausalMemoryError("exact rejected hypothesis fingerprint is ineligible")
+        if hypothesis.hypothesis_id in self.hypotheses:
+            return self._append_immutable(
+                self.hypotheses, hypothesis.hypothesis_id, hypothesis
+            )
+        for subject, start, window in hypothesis.evaluation_units:
+            planned_start = _parse_time(start)
+            planned_end = planned_start + timedelta(hours=window)
+            for observation in self.observations.values():
+                if observation.subject_id != subject:
+                    continue
+                observed_start = _parse_time(observation.observed_at)
+                observed_end = observed_start + timedelta(
+                    hours=observation.measurement_window_hours
+                )
+                if planned_start < observed_end and observed_start < planned_end:
+                    raise CausalMemoryError(
+                        "evaluation plan cannot be frozen after its economic units are observed"
+                    )
         family_members = [
             member
             for member in self.hypotheses.values()
@@ -411,12 +527,30 @@ class CausalRepricingMemory:
         actual_family_size = len(family_members)
         if any(
             member.family_size < actual_family_size for member in family_members
+        ) and not (
+            _restore_legacy_undercount
+            and hypothesis.hypothesis_id in self.legacy_underdeclared_hypotheses
+            and not hypothesis.evaluation_units
+            and not hypothesis.evaluation_pairs
         ):
             raise CausalMemoryError(
                 "family_size cannot undercount registered hypotheses in the family"
             )
-        return self._append_immutable(
+        added = self._append_immutable(
             self.hypotheses, hypothesis.hypothesis_id, hypothesis
+        )
+        if added:
+            self.hypothesis_order.append(hypothesis.hypothesis_id)
+            self.registration_log.append(
+                {"kind": "hypothesis", "id": hypothesis.hypothesis_id}
+            )
+        return added
+
+    def _project_threshold(self, hypothesis: FrozenHypothesis) -> float:
+        slot = self.hypothesis_order.index(hypothesis.hypothesis_id) + 1
+        return min(
+            hypothesis.alpha / hypothesis.family_size,
+            PROJECT_ALPHA / (slot * (slot + 1)),
         )
 
     def reject_hypothesis(self, hypothesis_id: str) -> tuple[str, str]:
@@ -426,7 +560,10 @@ class CausalRepricingMemory:
             raise CausalMemoryError(f"unknown hypothesis: {hypothesis_id}")
         design = hypothesis.fingerprint
         effective = self.effective_fingerprint(hypothesis)
-        self.rejected_fingerprints.update((design, effective))
+        for variant in self._rejection_variants(hypothesis):
+            self.rejected_fingerprints.update(
+                (variant.fingerprint, self.effective_fingerprint(variant))
+            )
         return design, effective
 
     @staticmethod
@@ -662,16 +799,6 @@ class CausalRepricingMemory:
             verification = None
         else:
             verification = self._verified_evaluation(event, hypothesis)
-        if event.kind == "support" and event.confirmatory:
-            adjusted_alpha = hypothesis.alpha / hypothesis.family_size
-            if event.p_value is None:
-                raise CausalMemoryError(
-                    "confirmatory support requires the recomputed p_value assertion"
-                )
-            if verification is None or verification["verified_p_value"] > adjusted_alpha:
-                raise CausalMemoryError(
-                    "confirmatory support must pass the frozen Bonferroni family threshold"
-                )
         for existing in self.events.values():
             if (
                 frozenset(existing.outcome_observation_ids)
@@ -706,7 +833,63 @@ class CausalRepricingMemory:
                             raise CausalMemoryError(
                                 "verified independent units already consumed by another evidence event"
                             )
-        return self._append_immutable(self.events, event.event_id, event)
+        if event.kind == "support" and event.confirmatory and any(
+            prior.hypothesis_id == event.hypothesis_id
+            for prior in self.events.values()
+        ):
+            raise CausalMemoryError(
+                "repeated confirmatory looks require a new project-wide test slot"
+            )
+        if event.kind == "support" and event.confirmatory:
+            if not hypothesis.evaluation_units:
+                raise CausalMemoryError(
+                    "confirmatory support requires a pre-outcome evaluation plan"
+                )
+            if not hypothesis.evaluation_pairs:
+                raise CausalMemoryError(
+                    "confirmatory support requires frozen outcome/control pairs"
+                )
+            submitted_pairs = tuple(
+                zip(
+                    event.outcome_observation_ids,
+                    event.control_observation_ids,
+                    strict=True,
+                )
+            )
+            if submitted_pairs != hypothesis.evaluation_pairs:
+                raise CausalMemoryError(
+                    "confirmatory evidence must match the frozen outcome/control pairs"
+                )
+            actual_units = (
+                {
+                    (
+                        unit["subject_id"],
+                        unit["observed_at"],
+                        unit["measurement_window_hours"],
+                    )
+                    for unit in verification["independent_units"]
+                }
+                if verification is not None
+                else set()
+            )
+            if actual_units != set(hypothesis.evaluation_units):
+                raise CausalMemoryError(
+                    "confirmatory evidence must match the frozen evaluation units"
+                )
+            adjusted_alpha = self._project_threshold(hypothesis)
+            if event.p_value is None:
+                raise CausalMemoryError(
+                    "confirmatory support requires the recomputed p_value assertion"
+                )
+            if verification is None or verification["verified_p_value"] > adjusted_alpha:
+                raise CausalMemoryError(
+                    "confirmatory support must pass the frozen Bonferroni family and project-wide thresholds"
+                )
+        added = self._append_immutable(self.events, event.event_id, event)
+        if added:
+            self.event_order.append(event.event_id)
+            self.registration_log.append({"kind": "event", "id": event.event_id})
+        return added
 
     def confidence(self, hypothesis_id: str, *, as_of: str) -> ConfidenceSnapshot:
         if hypothesis_id not in self.hypotheses:
@@ -1005,7 +1188,21 @@ class CausalRepricingMemory:
                     "raw_p_value": event.p_value,
                     "verified_p_value": verified_p_value,
                     "adjusted_p_value": (
-                        min(1.0, float(verified_p_value) * hypothesis.family_size)
+                        min(
+                            1.0,
+                            float(verified_p_value)
+                            * max(
+                                hypothesis.family_size,
+                                (
+                                    self.hypothesis_order.index(hypothesis.hypothesis_id)
+                                    + 1
+                                )
+                                * (
+                                    self.hypothesis_order.index(hypothesis.hypothesis_id)
+                                    + 2
+                                ),
+                            ),
+                        )
                         if verified_p_value is not None
                         else None
                     ),
@@ -1033,6 +1230,12 @@ class CausalRepricingMemory:
                 "family_id": hypothesis.family_id,
                 "family_size": hypothesis.family_size,
                 "alpha": hypothesis.alpha,
+                "project_testing_protocol": PROJECT_TESTING_PROTOCOL,
+                "project_test_slot": self.hypothesis_order.index(hypothesis_id) + 1,
+                "project_alpha": PROJECT_ALPHA,
+                "confirmatory_p_threshold": self._project_threshold(hypothesis),
+                "evaluation_units": [list(unit) for unit in hypothesis.evaluation_units],
+                "evaluation_pairs": [list(pair) for pair in hypothesis.evaluation_pairs],
                 "evaluation_method": hypothesis.evaluation_method,
                 "direction": hypothesis.direction,
                 "horizon_hours": hypothesis.horizon_hours,
@@ -1049,6 +1252,11 @@ class CausalRepricingMemory:
             "schema_version": SCHEMA_VERSION,
             "half_life_days": self.half_life_days,
             "rejected_fingerprints": sorted(self.rejected_fingerprints),
+            "project_testing_protocol": PROJECT_TESTING_PROTOCOL,
+            "hypothesis_order": list(self.hypothesis_order),
+            "event_order": list(self.event_order),
+            "registration_log": list(self.registration_log),
+            "legacy_underdeclared_hypotheses": sorted(self.legacy_underdeclared_hypotheses),
             "observations": [
                 asdict(self.observations[key]) for key in sorted(self.observations)
             ],
@@ -1097,32 +1305,132 @@ class CausalRepricingMemory:
         if not supplied_digest or supplied_digest != _sha256(document):
             raise CausalMemoryError("causal-memory content digest mismatch")
 
+        protocol = document.get("project_testing_protocol")
+        if protocol not in (None, PROJECT_TESTING_PROTOCOL):
+            raise CausalMemoryError("unsupported project-wide testing protocol")
+        if protocol is None and any(
+            key in document
+            for key in ("hypothesis_order", "event_order", "registration_log")
+        ):
+            raise CausalMemoryError("incomplete project-wide testing ledger")
         # Historical hypotheses must remain loadable after later rejection. Rejection
         # blocks fresh admission and lane emission; it must not make durable memory
         # unrecoverable after a restart.
         persisted_rejected = tuple(str(value) for value in document.get("rejected_fingerprints", []))
-        memory = cls(
-            rejected_fingerprints=(),
-            half_life_days=float(document["half_life_days"]),
-        )
         try:
-            for raw in document.get("observations", []):
-                memory.register_observation(PointInTimeObservation(**raw))
-            for raw in document.get("claims", []):
-                raw = dict(raw)
-                raw["source_observation_ids"] = tuple(raw["source_observation_ids"])
-                memory.register_claim(EpistemicClaim(**raw))
-            for raw in document.get("hypotheses", []):
-                raw = dict(raw)
-                for field in (
-                    "mechanism_chain",
-                    "matched_controls",
-                    "lanes",
-                    "source_observation_ids",
+            observation_rows = document.get("observations", [])
+            hypothesis_rows = document.get("hypotheses", [])
+            event_rows = document.get("events", [])
+            memory = cls(half_life_days=float(document["half_life_days"]))
+            family_counts: dict[str, int] = {}
+            for raw in hypothesis_rows:
+                family = raw["family_id"]
+                family_counts[family] = family_counts.get(family, 0) + 1
+            underdeclared = {
+                raw["hypothesis_id"] for raw in hypothesis_rows
+                if raw["family_size"] < family_counts[raw["family_id"]]
+            }
+            marker = document.get("legacy_underdeclared_hypotheses", [])
+            if protocol is None:
+                if marker:
+                    raise CausalMemoryError("legacy document cannot assert migration markers")
+            elif (
+                not isinstance(marker, list)
+                or marker != sorted(underdeclared)
+                or any(
+                    raw.get("evaluation_units") or raw.get("evaluation_pairs")
+                    for raw in hypothesis_rows
+                    if raw["hypothesis_id"] in underdeclared
+                )
+            ):
+                raise CausalMemoryError("invalid legacy family migration marker")
+            memory.legacy_underdeclared_hypotheses = underdeclared
+            if protocol is not None:
+                order = document["registration_log"]
+                hypothesis_order = document["hypothesis_order"]
+                event_order = document["event_order"]
+                rows = {
+                    "observation": (observation_rows, "observation_id"),
+                    "hypothesis": (hypothesis_rows, "hypothesis_id"),
+                    "event": (event_rows, "event_id"),
+                }
+                if (
+                    not isinstance(order, list)
+                    or not isinstance(hypothesis_order, list)
+                    or not isinstance(event_order, list)
+                    or any(not isinstance(value, list) for value, _ in rows.values())
+                    or any(
+                        not isinstance(raw, dict) or type(raw.get(key)) is not str
+                        for value, key in rows.values()
+                        for raw in value
+                    )
+                    or any(
+                        not isinstance(item, dict)
+                        or set(item) != {"kind", "id"}
+                        or item["kind"] not in rows
+                        or type(item["id"]) is not str
+                        for item in order
+                    )
                 ):
-                    raw[field] = tuple(raw[field])
-                memory.register_hypothesis(FrozenHypothesis(**raw))
-            for raw in document.get("events", []):
+                    raise CausalMemoryError("invalid project-wide testing ledger")
+                expected = [
+                    (kind, raw[key])
+                    for kind, (value, key) in rows.items()
+                    for raw in value
+                ]
+                actual = [(item["kind"], item["id"]) for item in order]
+                if (
+                    len(actual) != len(expected)
+                    or len(set(actual)) != len(actual)
+                    or set(actual) != set(expected)
+                    or [ident for kind, ident in actual if kind == "hypothesis"]
+                    != hypothesis_order
+                    or [ident for kind, ident in actual if kind == "event"]
+                    != event_order
+                ):
+                    raise CausalMemoryError("invalid project-wide testing ledger")
+                by_kind = {
+                    kind: {raw[key]: raw for raw in value}
+                    for kind, (value, key) in rows.items()
+                }
+            else:
+                if any(raw.get("evaluation_units") for raw in hypothesis_rows):
+                    raise CausalMemoryError("legacy document cannot carry a new evaluation plan")
+                actual = (
+                    [("observation", raw["observation_id"]) for raw in observation_rows]
+                    + [("hypothesis", raw["hypothesis_id"]) for raw in hypothesis_rows]
+                    + [("event", raw["event_id"]) for raw in event_rows]
+                )
+                by_kind = {
+                    "observation": {raw["observation_id"]: raw for raw in observation_rows},
+                    "hypothesis": {raw["hypothesis_id"]: raw for raw in hypothesis_rows},
+                    "event": {raw["event_id"]: raw for raw in event_rows},
+                }
+            for kind, ident in actual:
+                raw = by_kind[kind][ident]
+                if kind == "observation":
+                    memory.register_observation(PointInTimeObservation(**raw))
+                    continue
+                if kind == "hypothesis":
+                    raw = dict(raw)
+                    for field in (
+                        "mechanism_chain", "matched_controls", "lanes",
+                        "source_observation_ids",
+                    ):
+                        raw[field] = tuple(raw[field])
+                    if "evaluation_units" in raw:
+                        raw["evaluation_units"] = tuple(
+                            tuple(unit) for unit in raw["evaluation_units"]
+                        )
+                    if "evaluation_pairs" in raw:
+                        raw["evaluation_pairs"] = tuple(
+                            tuple(pair) for pair in raw["evaluation_pairs"]
+                        )
+                    memory.register_hypothesis(
+                        FrozenHypothesis(**raw),
+                        _restore_legacy_undercount=raw["hypothesis_id"] in underdeclared,
+                    )
+                    continue
                 raw = dict(raw)
                 raw["matched_controls"] = tuple(raw["matched_controls"])
                 raw["outcome_observation_ids"] = tuple(
@@ -1143,6 +1451,15 @@ class CausalRepricingMemory:
                     )
                     raw["confirmatory"] = False
                     raw["p_value"] = None
+                if protocol is None:
+                    # Existing schema-v2 rows had only caller-chosen family labels.
+                    # Preserve their audit trail but remove unsupported
+                    # confirmatory authority during durable migration.
+                    raw["confirmatory"] = False
+                elif raw.get("kind") == "support" and not memory.hypotheses[
+                    raw["hypothesis_id"]
+                ].evaluation_pairs:
+                    raw["confirmatory"] = False
                 legacy_unverified = (
                     raw.get("evaluation_implementation")
                     == LEGACY_UNVERIFIED_IMPLEMENTATION
@@ -1151,8 +1468,12 @@ class CausalRepricingMemory:
                     EvidenceEvent(**raw),
                     _allow_legacy_unverified=legacy_unverified,
                 )
+            for raw in document.get("claims", []):
+                raw = dict(raw)
+                raw["source_observation_ids"] = tuple(raw["source_observation_ids"])
+                memory.register_claim(EpistemicClaim(**raw))
             memory.rejected_fingerprints.update(persisted_rejected)
-        except (KeyError, TypeError, CausalMemoryError) as exc:
+        except (KeyError, TypeError, ValueError, CausalMemoryError) as exc:
             raise CausalMemoryError(
                 "causal memory failed scientific-contract validation"
             ) from exc

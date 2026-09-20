@@ -64,6 +64,21 @@ def _hypothesis(source_ids=("flow",)) -> FrozenHypothesis:
         evaluation_method="matched_control_mean_difference_v1",
         family_size=2,
         alpha=0.05,
+        evaluation_units=tuple(
+            (
+                "BTC-USD" if index == 1 else f"BTC-USD-{index}",
+                "2026-09-02T01:00:00Z",
+                72,
+            )
+            for index in range(1, 7)
+        ),
+        evaluation_pairs=tuple(
+            (
+                "outcome" if index == 1 else f"outcome-{index}",
+                "control" if index == 1 else f"control-{index}",
+            )
+            for index in range(1, 7)
+        ),
     )
 
 
@@ -430,7 +445,8 @@ def test_representation_relabel_cannot_reconsume_after_restart(tmp_path):
 def test_economic_unit_consumption_is_global_across_hypotheses_and_families():
     memory = _memory_with_hypothesis()
     second_hypothesis = replace(
-        _hypothesis(), hypothesis_id="H2", family_id="OTHER-FAMILY"
+        _hypothesis(), hypothesis_id="H2", family_id="OTHER-FAMILY",
+        evaluation_units=(), evaluation_pairs=(),
     )
     memory.register_hypothesis(second_hypothesis)
     original = _support("first-hypothesis-evidence")
@@ -466,10 +482,12 @@ def test_nonoverlapping_temporal_realizations_remain_independent():
     )
     later = replace(later, evaluated_at="2026-09-09T03:00:00Z")
 
-    assert memory.record_evidence(later)
+    with pytest.raises(CausalMemoryError, match="repeated confirmatory looks"):
+        memory.record_evidence(later)
+    assert memory.record_evidence(replace(later, confirmatory=False))
     assert memory.confidence(
         "H1", as_of="2026-09-09T03:00:00Z"
-    ).confirmatory_support_count == 2
+    ).confirmatory_support_count == 1
 
 
 def test_distinct_cross_sectional_subjects_remain_independent():
@@ -483,12 +501,18 @@ def test_distinct_cross_sectional_subjects_remain_independent():
         distinct_subjects=True,
     )
 
-    assert memory.record_evidence(independent)
+    with pytest.raises(CausalMemoryError, match="repeated confirmatory looks"):
+        memory.record_evidence(independent)
+    assert memory.record_evidence(replace(independent, confirmatory=False))
     artifact = memory.research_artifact(
         "H1", lane="big_move", as_of="2026-09-03T00:00:00Z"
     )
     assert artifact is not None
     assert len(artifact["evidence_events"]) == 2
+    assert [event["confirmatory"] for event in artifact["evidence_events"]] == [
+        True,
+        False,
+    ]
     assert all(len(event["independent_units"]) == 6 for event in artifact["evidence_events"])
 
 
@@ -887,7 +911,7 @@ def test_point_in_time_chronology_and_narrative_separation_fail_closed():
 
 
 def test_hypothesis_is_frozen_fingerprinted_and_exact_rejection_is_vetoed():
-    hypothesis = _hypothesis()
+    hypothesis = replace(_hypothesis(), evaluation_units=(), evaluation_pairs=())
     with pytest.raises(FrozenInstanceError):
         hypothesis.statement = "post-hoc rewrite"  # type: ignore[misc]
 
@@ -931,8 +955,22 @@ def test_matched_controls_and_multiple_testing_are_predeclared_not_post_hoc():
         sample_size=5,
         p_value=0.03125,
     )
+    weak_memory = CausalRepricingMemory()
+    weak_memory.register_observation(memory.observations["flow"])
+    weak_memory.register_hypothesis(
+        replace(
+            _hypothesis(),
+            evaluation_units=_hypothesis().evaluation_units[:5],
+            evaluation_pairs=_hypothesis().evaluation_pairs[:5],
+        )
+    )
+    for source_id in (
+        weak_after_family_adjustment.outcome_observation_ids
+        + weak_after_family_adjustment.control_observation_ids
+    ):
+        weak_memory.register_observation(memory.observations[source_id])
     with pytest.raises(CausalMemoryError, match="Bonferroni"):
-        memory.record_evidence(weak_after_family_adjustment)
+        weak_memory.record_evidence(weak_after_family_adjustment)
 
     exploratory = EvidenceEvent(
         event_id="exploratory",
@@ -990,6 +1028,224 @@ def test_family_size_allows_predeclared_sibling_hypotheses():
 
     assert memory.register_hypothesis(first) is True
     assert memory.register_hypothesis(sibling) is True
+
+
+def test_distinct_family_labels_cannot_reset_project_wide_testing_budget():
+    memory = _memory_with_hypothesis()
+    assert memory.record_evidence(_support("first-family-support")) is True
+
+    sibling = replace(
+        _hypothesis(),
+        hypothesis_id="H2",
+        statement="A relabeled sibling of the same flow-scarcity search.",
+        family_id="RENAMED-FLOW-SCARCITY",
+        family_size=1,
+        evaluation_units=tuple(
+            (f"second-{subject}", start, window)
+            for subject, start, window in _hypothesis().evaluation_units
+        ),
+        evaluation_pairs=tuple(
+            (f"second-{outcome_id}", f"second-{control_id}")
+            for outcome_id, control_id in _hypothesis().evaluation_pairs
+        ),
+    )
+    assert memory.register_hypothesis(sibling) is True
+    original = _support()
+    for source_id in original.outcome_observation_ids + original.control_observation_ids:
+        observation = memory.observations[source_id]
+        memory.register_observation(
+            replace(
+                observation,
+                observation_id=f"second-{source_id}",
+                subject_id=f"second-{observation.subject_id}",
+            )
+        )
+    second = replace(
+        original,
+        event_id="second-family-support",
+        hypothesis_id="H2",
+        outcome_observation_ids=tuple(
+            f"second-{source_id}" for source_id in original.outcome_observation_ids
+        ),
+        control_observation_ids=tuple(
+            f"second-{source_id}" for source_id in original.control_observation_ids
+        ),
+    )
+    with pytest.raises(CausalMemoryError, match="project-wide"):
+        memory.record_evidence(second)
+    restored = CausalRepricingMemory.from_document(memory.to_document())
+    assert restored.hypothesis_order == ["H1", "H2"]
+    with pytest.raises(CausalMemoryError, match="project-wide"):
+        restored.record_evidence(second)
+
+
+def test_confirmatory_evaluation_cannot_change_frozen_sample_or_look_again():
+    memory = _memory_with_hypothesis()
+    partial = replace(
+        _support("sample-selected-after-outcomes"),
+        outcome_observation_ids=_support().outcome_observation_ids[:5],
+        control_observation_ids=_support().control_observation_ids[:5],
+        sample_size=5,
+        p_value=0.03125,
+    )
+    with pytest.raises(
+        CausalMemoryError,
+        match="frozen outcome/control pairs|frozen evaluation units",
+    ):
+        memory.record_evidence(partial)
+    assert memory.record_evidence(_support("first-frozen-look"))
+    later = _clone_evidence_units(
+        memory,
+        _support("first-frozen-look"),
+        suffix="unplanned-later-look",
+        distinct_subjects=True,
+    )
+    with pytest.raises(CausalMemoryError, match="repeated confirmatory looks"):
+        memory.record_evidence(later)
+
+
+def test_confirmatory_evidence_rejects_post_outcome_control_substitution():
+    memory = _memory_with_hypothesis()
+    replacement_ids = []
+    for index, source_id in enumerate(_support().control_observation_ids, start=1):
+        replacement_id = f"posthoc-control-{index}"
+        replacement_ids.append(replacement_id)
+        memory.register_observation(
+            replace(
+                memory.observations[source_id],
+                observation_id=replacement_id,
+                value=-1.0,
+            )
+        )
+
+    attack = replace(
+        _support("posthoc-control-substitution"),
+        control_observation_ids=tuple(replacement_ids),
+    )
+    with pytest.raises(CausalMemoryError, match="frozen outcome/control pairs"):
+        memory.record_evidence(attack)
+
+
+def test_evaluation_plan_cannot_be_registered_after_outcomes_are_present():
+    memory = _memory_with_hypothesis()
+    with pytest.raises(CausalMemoryError, match="after its economic units are observed"):
+        memory.register_hypothesis(
+            replace(_hypothesis(), hypothesis_id="LATE-PLAN", family_id="NEW-LABEL")
+        )
+    assert memory.register_hypothesis(_hypothesis()) is False
+
+
+def test_adding_evaluation_plan_cannot_rescue_prior_rejected_design():
+    legacy = replace(_hypothesis(), evaluation_units=(), evaluation_pairs=())
+    memory = CausalRepricingMemory(rejected_fingerprints={legacy.fingerprint})
+    memory.register_observation(_observation("flow"))
+    with pytest.raises(CausalMemoryError, match="rejected"):
+        memory.register_hypothesis(_hypothesis())
+
+
+def test_adding_frozen_pairs_cannot_rescue_prior_rejected_planned_design():
+    pre_pair_design = replace(_hypothesis(), evaluation_pairs=())
+    memory = CausalRepricingMemory(
+        rejected_fingerprints={pre_pair_design.fingerprint}
+    )
+    memory.register_observation(_observation("flow"))
+
+    with pytest.raises(CausalMemoryError, match="rejected"):
+        memory.register_hypothesis(_hypothesis())
+
+
+def test_rejected_planned_design_cannot_change_sample_schedule_to_reenter():
+    memory = _memory_with_hypothesis()
+    memory.reject_hypothesis("H1")
+    shifted = replace(
+        _hypothesis(),
+        hypothesis_id="H2",
+        evaluation_units=tuple(
+            (subject, "2026-09-20T01:00:00Z", window)
+            for subject, _, window in _hypothesis().evaluation_units
+        ),
+    )
+    with pytest.raises(CausalMemoryError, match="rejected"):
+        memory.register_hypothesis(shifted)
+
+
+def test_legacy_family_only_document_loses_confirmatory_authority():
+    memory = _memory_with_hypothesis()
+    assert memory.record_evidence(_support("legacy-family-only"))
+    document = memory.to_document()
+    document.pop("content_digest")
+    document.pop("project_testing_protocol")
+    document.pop("hypothesis_order")
+    document.pop("event_order")
+    document.pop("registration_log")
+    document["hypotheses"][0].pop("evaluation_units")
+    document["hypotheses"][0].pop("evaluation_pairs")
+    encoded = json.dumps(
+        document, sort_keys=True, separators=(",", ":"), ensure_ascii=True
+    ).encode("utf-8")
+    document["content_digest"] = hashlib.sha256(encoded).hexdigest()
+    restored = CausalRepricingMemory.from_document(document)
+    assert restored.events["legacy-family-only"].confirmatory is False
+    assert restored.research_artifact(
+        "H1", lane="big_move", as_of="2026-09-03T00:00:00Z"
+    ) is None
+    assert CausalRepricingMemory.from_document(restored.to_document()).to_document() == (
+        restored.to_document()
+    )
+
+
+def test_legacy_underdeclared_family_replays_without_admitting_a_new_sibling():
+    memory = CausalRepricingMemory()
+    memory.register_observation(_observation("flow"))
+    for index in (1, 2):
+        memory.register_hypothesis(replace(
+            _hypothesis(), hypothesis_id=f"H{index}",
+            statement=f"Historical family member {index}.",
+            evaluation_units=(), evaluation_pairs=(),
+        ))
+    document = memory.to_document()
+    for field in ("content_digest", "project_testing_protocol", "hypothesis_order", "event_order", "registration_log", "legacy_underdeclared_hypotheses"):
+        document.pop(field)
+    for index in (3, 4):
+        sibling = dict(document["hypotheses"][0])
+        sibling.update(hypothesis_id=f"H{index}", statement=f"Historical family member {index}.")
+        document["hypotheses"].append(sibling)
+    for sibling in document["hypotheses"]:
+        sibling.pop("evaluation_units")
+        sibling.pop("evaluation_pairs")
+    encoded = json.dumps(document, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
+    document["content_digest"] = hashlib.sha256(encoded).hexdigest()
+
+    restored = CausalRepricingMemory.from_document(document)
+    assert len(restored.hypotheses) == 4
+    assert CausalRepricingMemory.from_document(restored.to_document()).to_document() == restored.to_document()
+    with pytest.raises(CausalMemoryError, match="family_size cannot undercount"):
+        restored.register_hypothesis(replace(
+            _hypothesis(), hypothesis_id="H5", statement="New undeclared sibling.",
+            evaluation_units=(), evaluation_pairs=(),
+        ))
+
+
+def test_current_protocol_document_without_frozen_pairs_loses_confirmatory_authority():
+    memory = _memory_with_hypothesis()
+    assert memory.record_evidence(_support("pre-pair-contract-support"))
+    document = memory.to_document()
+    document.pop("content_digest")
+    document["hypotheses"][0].pop("evaluation_pairs")
+    encoded = json.dumps(
+        document, sort_keys=True, separators=(",", ":"), ensure_ascii=True
+    ).encode("utf-8")
+    document["content_digest"] = hashlib.sha256(encoded).hexdigest()
+
+    restored = CausalRepricingMemory.from_document(document)
+
+    assert restored.events["pre-pair-contract-support"].confirmatory is False
+    assert restored.confidence(
+        "H1", as_of="2026-09-03T00:00:00Z"
+    ).confirmatory_support_count == 0
+    assert restored.research_artifact(
+        "H1", lane="big_move", as_of="2026-09-03T00:00:00Z"
+    ) is None
 
 
 def test_confidence_can_gain_lose_and_decay_toward_neutral():
@@ -1170,6 +1426,12 @@ def test_supported_finding_can_feed_research_lanes_but_has_zero_authority():
         "family_id": "FLOW-SCARCITY-001",
         "family_size": 2,
         "alpha": 0.05,
+        "project_testing_protocol": "global-sequential-bonferroni-v1",
+        "project_test_slot": 1,
+        "project_alpha": 0.05,
+        "confirmatory_p_threshold": 0.025,
+        "evaluation_units": [list(unit) for unit in _hypothesis().evaluation_units],
+        "evaluation_pairs": [list(pair) for pair in _hypothesis().evaluation_pairs],
         "evaluation_method": "matched_control_mean_difference_v1",
         "direction": "positive",
         "horizon_hours": 72,

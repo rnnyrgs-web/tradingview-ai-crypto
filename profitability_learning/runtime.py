@@ -112,26 +112,30 @@ def _candidate_feedback(candidate, memory):
             try:
                 if sf != fingerprint(strategy):
                     raise ValueError("strategy fingerprint mismatch")
-                semantic = memory.get("strategy_semantic_by_fingerprint", {}).get(sf)
-                if semantic is None:
-                    declared_semantic = strategy_semantic_fingerprint(strategy)
-                    # It is safe to recognize an already rejected semantic from
-                    # its executable projection: doing so can only veto work.
-                    # Any new or favorable identity must be bound to a trusted
-                    # executor/design before it can affect admission.
-                    if declared_semantic in memory.get(
-                        "rejected_semantic_fingerprints", []
-                    ):
-                        semantic = declared_semantic
-                    else:
-                        semantic = verified_strategy_semantic_fingerprint(candidate)
+                stored_semantic = memory.get(
+                    "strategy_semantic_by_fingerprint", {}
+                ).get(sf)
+                declared_semantic = strategy_semantic_fingerprint(strategy)
+                # Rejected identity may be recognized from its executable
+                # projection because this can only veto work. Favorable or new
+                # learning must re-bind the complete candidate to the trusted
+                # executor/design even when its exact fingerprint is known.
+                if (sf in memory.get("rejected_fingerprints", [])
+                        or declared_semantic in memory.get(
+                            "rejected_semantic_fingerprints", []
+                        )):
+                    semantic = stored_semantic or declared_semantic
+                else:
+                    semantic = verified_strategy_semantic_fingerprint(candidate)
+                    if stored_semantic is not None and stored_semantic != semantic:
+                        raise ValueError("stored semantic identity mismatch")
             except (KeyError, TypeError, ValueError):
                 semantic_unverifiable = True
         else:
-            semantic = memory.get("strategy_semantic_by_fingerprint", {}).get(sf)
-            semantic_unverifiable = semantic is None and sf not in memory.get(
-                "rejected_fingerprints", []
-            )
+            # An exact fingerprint lookup is sufficient for a durable rejection
+            # veto, but never for a favorable admission: the candidate's actual
+            # behavior-driving fields and science design would remain unbound.
+            semantic_unverifiable = sf not in memory.get("rejected_fingerprints", [])
     semantic_evidence = memory.get("semantic_strategies", {}).get(semantic)
     if semantic_evidence is not None or family in memory.get("families", {}):
         ranked = rank_candidates([{

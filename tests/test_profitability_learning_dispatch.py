@@ -144,6 +144,13 @@ def _completed_factory_strategy(candidate):
     return rejected
 
 
+def _complete_positive_factory_strategy(candidate):
+    passed = _completed_factory_strategy(candidate)
+    passed["status"] = "PASSED"
+    passed["failure_reasons"] = []
+    return complete_experiment(passed)
+
+
 @pytest.mark.parametrize(
     "field",
     ["execution_rule", "component_rule", "component_parameters", "implementation_id"],
@@ -230,6 +237,42 @@ def test_caller_cannot_weaken_registered_validation_design(
     assert build_heavy_dispatch_plan(queue)["selected"] == []
 
 
+def test_known_positive_fingerprint_cannot_bypass_identity_with_omissions(
+    monkeypatch, tmp_path
+):
+    configure(monkeypatch, tmp_path)
+    source = _experiment("known-positive-source", 100)
+    source["family"] = "factory-restrictive-filter"
+    _complete_positive_factory_strategy(source)
+    candidate = _experiment("known-positive-identity-omission", 100)
+    candidate.pop("strategy")
+    candidate.pop("science_design")
+    candidate.update(dimension="direction", group="SELL")
+
+    queue = apply_queue_feedback({"experiments": [candidate]})
+
+    feedback = queue["experiments"][0]["learning_feedback"]
+    assert feedback["factor"] == 0
+    assert feedback["reason"] == "semantic_identity_unverifiable"
+    assert feedback["changes_eligibility"] is True
+    assert build_heavy_dispatch_plan(queue)["selected"] == []
+
+
+def test_scheduler_rejects_asserted_positive_feedback_without_full_identity():
+    candidate = _experiment("asserted-positive-identity-omission", 100)
+    candidate.pop("strategy")
+    candidate.pop("science_design")
+    candidate.update(dimension="direction", group="SELL")
+    candidate["learning_feedback"] = {
+        "factor": 1.1,
+        "reason": "matched_semantic_economic_evidence",
+        "changes_eligibility": False,
+        **SAFE,
+    }
+
+    assert build_heavy_dispatch_plan({"experiments": [candidate]})["selected"] == []
+
+
 def test_director_cannot_offer_rejected_exact_fingerprint(monkeypatch, tmp_path):
     import research_director_runtime as director
     monkeypatch.setattr(director, "probe_bybit_oi_access", lambda: {"status": "source_error", "points_observed": 0})
@@ -258,6 +301,32 @@ def test_director_cannot_offer_candidate_with_missing_strategy_identity(
                        "family": "renamed-family"}}}}})
     assert all(m.get("experiment_id") != "missing-identity" for m in state["next_missions"])
     assert all(m.get("experiment_id") != "missing-identity"
+               for m in state["daily_lead_report"]["highest_priority_next_missions"])
+
+
+def test_director_cannot_offer_known_positive_fingerprint_with_changed_behavior(
+    monkeypatch, tmp_path
+):
+    import research_director_runtime as director
+    monkeypatch.setattr(director, "probe_bybit_oi_access", lambda: {"status": "source_error", "points_observed": 0})
+    monkeypatch.setattr(director, "_STATE_PATH", tmp_path / "director.json")
+    configure(monkeypatch, tmp_path)
+    source = _experiment("known-positive-director-source", 100)
+    source["family"] = "factory-restrictive-filter"
+    _complete_positive_factory_strategy(source)
+    state = refresh_director({"workers": {"adaptive-accuracy": {
+        "state": "resting", "latest_evidence": {"evidence_conclusion": "pending_validation",
+        "experiment": {
+            "experiment_id": "known-positive-director-omission",
+            "hypothesis": "changed behavior without trusted identity",
+            "strategy_fingerprint": source["strategy_fingerprint"],
+            "dimension": "direction",
+            "group": "SELL",
+        }}}}})
+
+    assert all(m.get("experiment_id") != "known-positive-director-omission"
+               for m in state["next_missions"])
+    assert all(m.get("experiment_id") != "known-positive-director-omission"
                for m in state["daily_lead_report"]["highest_priority_next_missions"])
 
 

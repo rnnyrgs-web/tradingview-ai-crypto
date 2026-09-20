@@ -7,6 +7,7 @@ optimistic append RPC. It never falls back to an empty or ephemeral local state.
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import datetime, timedelta
 import json
 from typing import TypeVar
 
@@ -15,6 +16,8 @@ import db
 from money_intelligence_causal_memory import (
     CausalMemoryError,
     CausalRepricingMemory,
+    FrozenHypothesis,
+    _parse_time,
 )
 
 
@@ -62,13 +65,148 @@ class SupabaseCausalMemory:
         except CausalMemoryError as exc:
             raise CausalMemoryError("Supabase causal memory integrity failure") from exc
 
+    def _require_prior_durable_plan(
+        self,
+        previous: CausalRepricingMemory | None,
+        current: CausalRepricingMemory,
+    ) -> None:
+        """A server-timed plan must precede the start of its outcome units."""
+        prior_hypotheses = previous.hypotheses if previous is not None else {}
+        prior_observations = previous.observations if previous is not None else {}
+        prior_events = previous.events if previous is not None else {}
+        if previous is not None and (
+            any(current.hypotheses.get(key) != value for key, value in prior_hypotheses.items())
+            or any(current.observations.get(key) != value for key, value in prior_observations.items())
+            or any(current.events.get(key) != value for key, value in prior_events.items())
+            or not previous.rejected_fingerprints <= current.rejected_fingerprints
+            or current.half_life_days != previous.half_life_days
+            or current.legacy_underdeclared_hypotheses != previous.legacy_underdeclared_hypotheses
+            or current.registration_log[: len(previous.registration_log)]
+            != previous.registration_log
+        ):
+            raise CausalMemoryError("durable causal-memory history is immutable")
+        for hypothesis in current.hypotheses.values():
+            if not hypothesis.evaluation_units or hypothesis.hypothesis_id in prior_hypotheses:
+                continue
+            for observation in current.observations.values():
+                if observation.observation_id in prior_observations:
+                    continue
+                observed_start = _parse_time(observation.observed_at)
+                observed_end = observed_start + timedelta(
+                    hours=observation.measurement_window_hours
+                )
+                for subject, start, window in hypothesis.evaluation_units:
+                    planned_start = _parse_time(start)
+                    planned_end = planned_start + timedelta(hours=window)
+                    if (
+                        observation.subject_id == subject
+                        and observed_start < planned_end
+                        and planned_start < observed_end
+                    ):
+                        raise CausalMemoryError(
+                            "evaluation plan must be durable before outcome observations"
+                        )
+            if any(
+                event.hypothesis_id == hypothesis.hypothesis_id
+                and event.event_id not in prior_events
+                and event.kind == "support"
+                and event.confirmatory
+                for event in current.events.values()
+            ):
+                raise CausalMemoryError(
+                    "evaluation plan must be durable before confirmatory support"
+                )
+
+        for hypothesis in prior_hypotheses.values():
+            if not hypothesis.evaluation_units:
+                continue
+            new_support = any(
+                event.hypothesis_id == hypothesis.hypothesis_id
+                and event.event_id not in prior_events
+                and event.kind == "support"
+                and event.confirmatory
+                for event in current.events.values()
+            )
+            new_overlap = any(
+                observation.observation_id not in prior_observations
+                and observation.subject_id == subject
+                and _parse_time(observation.observed_at)
+                < _parse_time(start) + timedelta(hours=window)
+                and _parse_time(start)
+                < _parse_time(observation.observed_at)
+                + timedelta(hours=observation.measurement_window_hours)
+                for observation in current.observations.values()
+                for subject, start, window in hypothesis.evaluation_units
+            )
+            if not (new_support or new_overlap):
+                continue
+            committed_at = self._read_plan_commit(hypothesis)
+            if any(
+                committed_at >= _parse_time(start)
+                for _, start, _ in hypothesis.evaluation_units
+            ):
+                raise CausalMemoryError(
+                    "server-recorded plan commit must precede outcome-unit starts"
+                )
+
+    def _read_plan_commit(self, hypothesis: FrozenHypothesis) -> datetime:
+        """Read the first immutable version containing this exact frozen plan."""
+        hypothesis_id = hypothesis.hypothesis_id
+        try:
+            response = db.http.get(
+                f"{db.SUPABASE_URL}/rest/v1/{TABLE}",
+                headers=db.headers(),
+                params={
+                    "select": "sequence,content_digest,parent_digest,payload,created_at",
+                    "payload": "cs." + json.dumps(
+                        {"hypotheses": [{"hypothesis_id": hypothesis_id}]},
+                        separators=(",", ":"),
+                    ),
+                    "order": "sequence.asc",
+                    "limit": "1",
+                },
+            )
+        except Exception as exc:
+            raise CausalMemoryError("Supabase causal plan receipt read failed") from exc
+        if response.status_code >= 300:
+            self._failure("plan receipt read", response)
+        try:
+            rows = response.json()
+        except Exception as exc:
+            raise CausalMemoryError("Supabase causal plan receipt is invalid") from exc
+        if not isinstance(rows, list) or len(rows) != 1 or not isinstance(rows[0], dict):
+            raise CausalMemoryError("Supabase causal plan receipt is missing")
+        row = rows[0]
+        payload = row.get("payload")
+        if (
+            type(row.get("sequence")) is not int
+            or row["sequence"] <= 0
+            or not _valid_digest(row.get("content_digest"))
+            or (
+                row.get("parent_digest") is not None
+                and not _valid_digest(row.get("parent_digest"))
+            )
+            or not isinstance(payload, dict)
+            or payload.get("content_digest") != row["content_digest"]
+            or not isinstance(row.get("created_at"), str)
+            or _document_bytes(payload) > MAX_DOCUMENT_BYTES
+        ):
+            raise CausalMemoryError("Supabase causal plan receipt is invalid")
+        registered = self.document_to_memory(payload).hypotheses.get(hypothesis_id)
+        if registered != hypothesis:
+            raise CausalMemoryError("Supabase causal plan receipt changed after registration")
+        try:
+            return _parse_time(row["created_at"])
+        except CausalMemoryError as exc:
+            raise CausalMemoryError("Supabase causal plan receipt is invalid") from exc
+
     def _read_head(self) -> dict[str, object] | None:
         try:
             response = db.http.get(
                 f"{db.SUPABASE_URL}/rest/v1/{TABLE}",
                 headers=db.headers(),
                 params={
-                    "select": "sequence,content_digest,parent_digest,payload",
+                    "select": "sequence,content_digest,parent_digest,payload,created_at",
                     "order": "sequence.desc",
                     "limit": "2",
                 },
@@ -94,16 +232,22 @@ class SupabaseCausalMemory:
             digest = row.get("content_digest")
             parent = row.get("parent_digest")
             payload = row.get("payload")
+            committed_at = row.get("created_at")
             if (
                 type(sequence) is not int
                 or sequence <= 0
                 or not _valid_digest(digest)
                 or (parent is not None and not _valid_digest(parent))
                 or not isinstance(payload, dict)
+                or not isinstance(committed_at, str)
                 or payload.get("content_digest") != digest
                 or _document_bytes(payload) > MAX_DOCUMENT_BYTES
             ):
                 raise CausalMemoryError("Supabase causal memory integrity failure")
+            try:
+                _parse_time(committed_at)
+            except CausalMemoryError as exc:
+                raise CausalMemoryError("Supabase causal memory integrity failure") from exc
             self.document_to_memory(payload)
             validated.append(row)
 
@@ -168,6 +312,7 @@ class SupabaseCausalMemory:
                 if head["content_digest"] == document["content_digest"]:
                     return "EXISTS"
                 raise CausalMemoryError("Supabase causal memory is already initialized")
+            self._require_prior_durable_plan(None, memory)
             status = self._append(
                 document,
                 parent_digest=None,
@@ -195,7 +340,9 @@ class SupabaseCausalMemory:
             if head is None:
                 raise CausalMemoryError("Supabase causal memory is not initialized")
             memory = self.document_to_memory(head["payload"])
+            previous = self.document_to_memory(head["payload"])
             result = mutation(memory)
+            self._require_prior_durable_plan(previous, memory)
             document = memory.to_document()
             if document["content_digest"] == head["content_digest"]:
                 return result
