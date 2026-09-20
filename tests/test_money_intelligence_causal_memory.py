@@ -372,6 +372,45 @@ def test_matched_controls_and_multiple_testing_are_predeclared_not_post_hoc():
     assert snapshot.confirmatory_support_count == 0
 
 
+def test_family_size_cannot_undercount_registered_sibling_hypotheses():
+    memory = CausalRepricingMemory()
+    memory.register_observation(_observation("flow"))
+
+    first = FrozenHypothesis(**{**_hypothesis().__dict__, "family_size": 1})
+    assert memory.register_hypothesis(first) is True
+
+    sibling = FrozenHypothesis(
+        **{
+            **first.__dict__,
+            "hypothesis_id": "H2",
+            "statement": (
+                "A sibling flow-scarcity test must share the complete family correction."
+            ),
+        }
+    )
+    with pytest.raises(CausalMemoryError, match="family_size cannot undercount"):
+        memory.register_hypothesis(sibling)
+
+    assert tuple(memory.hypotheses) == ("H1",)
+
+
+def test_family_size_allows_predeclared_sibling_hypotheses():
+    memory = CausalRepricingMemory()
+    memory.register_observation(_observation("flow"))
+
+    first = _hypothesis()
+    sibling = FrozenHypothesis(
+        **{
+            **first.__dict__,
+            "hypothesis_id": "H2",
+            "statement": "A distinct predeclared sibling flow-scarcity test.",
+        }
+    )
+
+    assert memory.register_hypothesis(first) is True
+    assert memory.register_hypothesis(sibling) is True
+
+
 def test_confidence_can_gain_lose_and_decay_toward_neutral():
     memory = _memory_with_hypothesis(half_life_days=10.0)
     memory.record_evidence(_support())
