@@ -166,6 +166,19 @@ def _contract(ids: dict[str, str], base: datetime, pair_count: int = SUPPORT_PAI
             (ids[f"support_outcome_{index}"], ids[f"support_control_{index}"])
             for index in range(1, pair_count + 1)
         ),
+        evaluation_selectors=tuple(
+            (
+                (
+                    "matched_return", "phase2-runtime-acceptance-fixture",
+                    f"acceptance://{ids[f'support_outcome_{index}']}",
+                ),
+                (
+                    "matched_return", "phase2-runtime-acceptance-fixture",
+                    f"acceptance://{ids[f'support_control_{index}']}",
+                ),
+            )
+            for index in range(1, pair_count + 1)
+        ),
     )
 
 
