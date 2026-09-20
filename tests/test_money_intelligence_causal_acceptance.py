@@ -71,6 +71,8 @@ def test_phase2_runtime_acceptance_uses_default_mission_surface_and_is_replay_sa
     assert first["receipt_replay"] is False
     assert first["deployed_sha"] == "a" * 40
     assert first["support_consumed_by_default_director"] is True
+    assert first["verified_independent_unit_count"] == 6
+    assert first["independent_unit_contract"] == "material-unit-nonoverlap-v1"
     assert first["canonical_rejected_id_veto"] is True
     assert first["narrative_firewall"] is True
     assert first["stale_writer_replayed"] is True
@@ -89,6 +91,8 @@ def test_phase2_runtime_acceptance_uses_default_mission_surface_and_is_replay_sa
     assert second["ok"] is True
     assert second["receipt_replay"] is True
     assert second["canonical_rejected_id_veto"] is True
+    assert second["verified_independent_unit_count"] == 6
+    assert second["independent_unit_contract"] == "material-unit-nonoverlap-v1"
     assert second["final_mission_count"] == 0
     assert second["rejected_design_fingerprint"].startswith("mi-causal-v1:")
     assert second["rejected_effective_fingerprint"].startswith("mi-causal-pit-v1:")

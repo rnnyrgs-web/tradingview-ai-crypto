@@ -122,9 +122,23 @@ def _memory_with_hypothesis(*, half_life_days=30.0) -> CausalRepricingMemory:
             "adverse-outcome",
             "forward_return_72h",
             -0.08,
-            observed_at="2026-09-02T01:00:00Z",
-            available_at="2026-09-02T04:00:00Z",
-            retrieved_at="2026-09-02T05:00:00Z",
+            observed_at="2026-09-03T01:00:00Z",
+            available_at="2026-09-03T04:00:00Z",
+            retrieved_at="2026-09-03T05:00:00Z",
+            subject_id="BTC-USD-CONTRADICTION",
+            currency="ratio",
+            measurement_window_hours=72,
+        )
+    )
+    memory.register_observation(
+        _observation(
+            "adverse-control",
+            "matched_control_return_72h",
+            0.01,
+            observed_at="2026-09-03T01:00:00Z",
+            available_at="2026-09-03T04:00:00Z",
+            retrieved_at="2026-09-03T05:00:00Z",
+            subject_id="BTC-USD-CONTRADICTION",
             currency="ratio",
             measurement_window_hours=72,
         )
@@ -149,6 +163,7 @@ def _register_paired_evaluation(
                 observed_at="2026-09-02T01:00:00Z",
                 available_at="2026-09-02T04:00:00Z",
                 retrieved_at="2026-09-02T05:00:00Z",
+                subject_id=f"BTC-USD-{index}",
                 currency="ratio",
                 measurement_window_hours=72,
             )
@@ -161,6 +176,7 @@ def _register_paired_evaluation(
                 observed_at="2026-09-02T01:00:00Z",
                 available_at="2026-09-02T04:00:00Z",
                 retrieved_at="2026-09-02T05:00:00Z",
+                subject_id=f"BTC-USD-{index}",
                 currency="ratio",
                 measurement_window_hours=72,
             )
@@ -198,6 +214,171 @@ def test_confirmatory_support_rejects_inflated_sample_size():
                 }
             )
         )
+
+
+def test_confirmatory_support_rejects_cosmetic_ids_for_one_economic_unit():
+    memory = _memory_with_hypothesis()
+    outcome_ids = ["outcome"]
+    control_ids = ["control"]
+    for index in range(2, 7):
+        for prefix, value in (("clone-outcome", 0.08), ("clone-control", 0.01)):
+            observation_id = f"{prefix}-{index}"
+            memory.register_observation(
+                _observation(
+                    observation_id,
+                    "renamed_metric",
+                    value,
+                    observed_at="2026-09-02T01:00:00Z",
+                    available_at="2026-09-02T04:00:00Z",
+                    retrieved_at="2026-09-02T05:00:00Z",
+                    currency="ratio",
+                    measurement_window_hours=72,
+                )
+            )
+            (outcome_ids if prefix == "clone-outcome" else control_ids).append(
+                observation_id
+            )
+    pseudoreplicated = EvidenceEvent(
+        **{
+            **_support("pseudoreplicated-support").__dict__,
+            "outcome_observation_ids": tuple(outcome_ids),
+            "control_observation_ids": tuple(control_ids),
+        }
+    )
+
+    with pytest.raises(CausalMemoryError, match="independent economic units"):
+        memory.record_evidence(pseudoreplicated)
+
+
+def test_evidence_event_rejects_duplicate_and_cross_side_observation_ids():
+    with pytest.raises(CausalMemoryError, match="cannot contain duplicates"):
+        EvidenceEvent(
+            **{
+                **_support("duplicate-ids").__dict__,
+                "outcome_observation_ids": ("outcome", "outcome"),
+                "control_observation_ids": ("control", "control-2"),
+                "sample_size": 2,
+            }
+        )
+
+    with pytest.raises(CausalMemoryError, match="must be disjoint"):
+        EvidenceEvent(
+            **{
+                **_support("cross-side-id").__dict__,
+                "outcome_observation_ids": ("shared",),
+                "control_observation_ids": ("shared",),
+                "sample_size": 1,
+            }
+        )
+
+
+def test_cosmetic_clone_ids_cannot_reuse_units_across_evidence_events():
+    memory = _memory_with_hypothesis()
+    original = _support("original-unit-evidence")
+    memory.record_evidence(original)
+    cloned_outcomes = []
+    cloned_controls = []
+    for side, source_ids, destination in (
+        ("outcome", original.outcome_observation_ids, cloned_outcomes),
+        ("control", original.control_observation_ids, cloned_controls),
+    ):
+        for index, source_id in enumerate(source_ids, start=1):
+            source = memory.observations[source_id]
+            clone_id = f"cosmetic-{side}-{index}"
+            memory.register_observation(
+                PointInTimeObservation(
+                    **{
+                        **source.__dict__,
+                        "observation_id": clone_id,
+                        "metric_name": f"renamed-{side}",
+                        "source_id": f"renamed-source-{index}",
+                        "provenance_uri": f"clone://{clone_id}",
+                    }
+                )
+            )
+            destination.append(clone_id)
+    cloned = EvidenceEvent(
+        **{
+            **original.__dict__,
+            "event_id": "cosmetic-clone-unit-evidence",
+            "outcome_observation_ids": tuple(cloned_outcomes),
+            "control_observation_ids": tuple(cloned_controls),
+        }
+    )
+
+    with pytest.raises(CausalMemoryError, match="independent units already consumed"):
+        memory.record_evidence(cloned)
+
+
+def test_confirmatory_support_rejects_mismatched_paired_unit_identity():
+    memory = _memory_with_hypothesis()
+    memory.register_observation(
+        _observation(
+            "mismatched-control",
+            "matched_control_return_72h",
+            0.01,
+            observed_at="2026-09-05T01:00:00Z",
+            available_at="2026-09-08T02:00:00Z",
+            retrieved_at="2026-09-08T03:00:00Z",
+            currency="ratio",
+            measurement_window_hours=72,
+        )
+    )
+    event = EvidenceEvent(
+        **{
+            **_support("mismatched-unit").__dict__,
+            "outcome_observation_ids": ("outcome",),
+            "control_observation_ids": ("mismatched-control",),
+            "sample_size": 1,
+            "confirmatory": False,
+            "p_value": None,
+            "evaluated_at": "2026-09-09T00:00:00Z",
+        }
+    )
+
+    with pytest.raises(CausalMemoryError, match="same economic unit"):
+        memory.record_evidence(event)
+
+
+def test_confirmatory_support_rejects_overlapping_temporal_units():
+    memory = CausalRepricingMemory()
+    memory.register_observation(_observation("flow"))
+    memory.register_hypothesis(_hypothesis())
+    outcome_ids = []
+    control_ids = []
+    for index in range(1, 3):
+        observed_at = f"2026-09-{5 + index:02d}T12:00:00Z"
+        for prefix, value in (("overlap-outcome", 0.08), ("overlap-control", 0.01)):
+            observation_id = f"{prefix}-{index}"
+            memory.register_observation(
+                _observation(
+                    observation_id,
+                    "forward_return_72h",
+                    value,
+                    observed_at=observed_at,
+                    available_at=f"2026-09-{8 + index:02d}T13:00:00Z",
+                    retrieved_at=f"2026-09-{8 + index:02d}T14:00:00Z",
+                    currency="ratio",
+                    measurement_window_hours=72,
+                )
+            )
+            (outcome_ids if prefix == "overlap-outcome" else control_ids).append(
+                observation_id
+            )
+    event = EvidenceEvent(
+        **{
+            **_support("overlapping-units").__dict__,
+            "outcome_observation_ids": tuple(outcome_ids),
+            "control_observation_ids": tuple(control_ids),
+            "sample_size": 2,
+            "confirmatory": False,
+            "p_value": None,
+            "evaluated_at": "2026-09-12T00:00:00Z",
+        }
+    )
+
+    with pytest.raises(CausalMemoryError, match="non-overlapping"):
+        memory.record_evidence(event)
 
 
 def test_confirmatory_support_rejects_unsupported_evaluation_method():
@@ -257,8 +438,12 @@ def test_verified_evaluation_is_provenance_bound_and_stable_across_restart(tmp_p
     assert artifact is not None
     evidence = artifact["evidence_events"][0]
     assert evidence["verified_p_value"] == pytest.approx(0.015625)
-    assert evidence["evaluation_implementation"] == "paired-sign-exact-v1"
-    assert evidence["event_fingerprint"].startswith("mi-verified-evidence-v1:")
+    assert evidence["evaluation_implementation"] == (
+        "paired-sign-exact-independent-units-v2"
+    )
+    assert evidence["independent_unit_contract"] == "material-unit-nonoverlap-v1"
+    assert len(evidence["independent_units"]) == 6
+    assert evidence["event_fingerprint"].startswith("mi-verified-evidence-v2:")
 
     path = tmp_path / "verified-memory.json"
     memory.save(path)
@@ -580,7 +765,7 @@ def test_confidence_can_gain_lose_and_decay_toward_neutral():
             kind="contradiction",
             matched_controls=("market_beta", "volatility_regime"),
             outcome_observation_ids=("adverse-outcome",),
-            control_observation_ids=("control",),
+            control_observation_ids=("adverse-control",),
             evaluation_method="matched_control_mean_difference_v1",
             sample_size=1,
         )
@@ -764,7 +949,7 @@ def test_supported_finding_can_feed_research_lanes_but_has_zero_authority():
             kind="contradiction",
             matched_controls=("market_beta", "volatility_regime"),
             outcome_observation_ids=("adverse-outcome",),
-            control_observation_ids=("control",),
+            control_observation_ids=("adverse-control",),
             evaluation_method="matched_control_mean_difference_v1",
             sample_size=1,
         )

@@ -14,7 +14,15 @@ from money_intelligence_mission_integration import (
 )
 
 
-def _obs(ident, value, observed, available, *, metric="matched_return"):
+def _obs(
+    ident,
+    value,
+    observed,
+    available,
+    *,
+    metric="matched_return",
+    subject_id="SOL",
+):
     return PointInTimeObservation(
         observation_id=ident,
         metric_name=metric,
@@ -24,7 +32,7 @@ def _obs(ident, value, observed, available, *, metric="matched_return"):
         available_at=available,
         retrieved_at=available,
         source_id="fixture-source",
-        subject_id="SOL",
+        subject_id=subject_id,
         currency="USD",
         measurement_window_hours=24,
         venue="aggregate",
@@ -71,6 +79,7 @@ def _supported_memory(*, lanes=("big_move", "strategy_component"), family_id="tr
                 2.0 + index / 100,
                 "2026-09-02T00:00:00Z",
                 "2026-09-02T01:00:00Z",
+                subject_id=f"SOL-{index}",
             )
         )
         memory.register_observation(
@@ -79,6 +88,7 @@ def _supported_memory(*, lanes=("big_move", "strategy_component"), family_id="tr
                 0.0,
                 "2026-09-02T00:00:00Z",
                 "2026-09-02T01:00:00Z",
+                subject_id=f"SOL-{index}",
             )
         )
     memory.record_evidence(

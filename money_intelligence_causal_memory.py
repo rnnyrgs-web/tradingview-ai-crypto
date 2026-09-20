@@ -8,7 +8,7 @@ append-only, chronology checked, provenance bound, and replay safe.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 import math
@@ -23,7 +23,7 @@ EPISTEMIC_LEVELS = {"fact", "inference"}
 EVIDENCE_KINDS = {"support", "contradiction"}
 RESEARCH_LANES = {"big_move", "strategy_component"}
 RELATIVE_IMPACT_RATIOS = {"flow_float", "flow_liquidity"}
-TRUSTED_EVALUATION_IMPLEMENTATION = "paired-sign-exact-v1"
+TRUSTED_EVALUATION_IMPLEMENTATION = "paired-sign-exact-independent-units-v2"
 LEGACY_UNVERIFIED_IMPLEMENTATION = "legacy-unverified-v0"
 TRUSTED_EVALUATION_METHODS = {
     "matched_control_mean_difference_v1",
@@ -452,10 +452,81 @@ class CausalRepricingMemory:
             raise CausalMemoryError(
                 "trusted paired evaluation requires equal outcome and control counts"
             )
-        pair_count = len(event.outcome_observation_ids)
-        if event.sample_size != pair_count:
+
+        independent_units: list[dict[str, object]] = []
+        unit_fingerprints: set[str] = set()
+        intervals_by_subject: dict[
+            tuple[str, str, str, str], list[tuple[datetime, datetime]]
+        ] = {}
+        for outcome_id, control_id in zip(
+            event.outcome_observation_ids,
+            event.control_observation_ids,
+            strict=True,
+        ):
+            outcome = self.observations[outcome_id]
+            control = self.observations[control_id]
+            outcome_unit = {
+                "subject_id": outcome.subject_id,
+                "currency": outcome.currency,
+                "unit": outcome.unit,
+                "venue": outcome.venue,
+                "observed_at": outcome.observed_at,
+                "measurement_window_hours": outcome.measurement_window_hours,
+            }
+            control_unit = {
+                "subject_id": control.subject_id,
+                "currency": control.currency,
+                "unit": control.unit,
+                "venue": control.venue,
+                "observed_at": control.observed_at,
+                "measurement_window_hours": control.measurement_window_hours,
+            }
+            if outcome_unit != control_unit:
+                raise CausalMemoryError(
+                    "each outcome/control pair must represent the same economic unit"
+                )
+            unit_fingerprint = _sha256(outcome_unit)
+            if unit_fingerprint in unit_fingerprints:
+                raise CausalMemoryError(
+                    "matched pairs must represent distinct independent economic units"
+                )
+            unit_fingerprints.add(unit_fingerprint)
+            independent_units.append(
+                {
+                    **outcome_unit,
+                    "unit_fingerprint": unit_fingerprint,
+                }
+            )
+            interval_start = _parse_time(outcome.observed_at)
+            interval_end = interval_start + timedelta(
+                hours=outcome.measurement_window_hours
+            )
+            subject_scope = (
+                outcome.subject_id,
+                outcome.currency,
+                outcome.unit,
+                outcome.venue,
+            )
+            intervals_by_subject.setdefault(subject_scope, []).append(
+                (interval_start, interval_end)
+            )
+
+        for intervals in intervals_by_subject.values():
+            ordered = sorted(intervals)
+            if any(
+                current_start < previous_end
+                for (_, previous_end), (current_start, _) in zip(
+                    ordered, ordered[1:], strict=False
+                )
+            ):
+                raise CausalMemoryError(
+                    "temporal independent economic units must use non-overlapping windows"
+                )
+
+        independent_unit_count = len(unit_fingerprints)
+        if event.sample_size != independent_unit_count:
             raise CausalMemoryError(
-                "sample_size must equal the number of bound independent matched pairs"
+                "sample_size must equal the number of verified independent economic units"
             )
 
         differences = [
@@ -483,6 +554,7 @@ class CausalRepricingMemory:
 
         payload = {
             "evaluation_implementation": TRUSTED_EVALUATION_IMPLEMENTATION,
+            "independent_unit_contract": "material-unit-nonoverlap-v1",
             "evaluation_method": event.evaluation_method,
             "hypothesis_id": hypothesis.hypothesis_id,
             "family_id": hypothesis.family_id,
@@ -490,7 +562,8 @@ class CausalRepricingMemory:
             "alpha": hypothesis.alpha,
             "direction": hypothesis.direction,
             "matched_controls": list(event.matched_controls),
-            "sample_size": pair_count,
+            "sample_size": independent_unit_count,
+            "independent_units": independent_units,
             "non_tie_count": non_ties,
             "directional_win_count": wins,
             "verified_p_value": p_value,
@@ -515,7 +588,7 @@ class CausalRepricingMemory:
         }
         return {
             **payload,
-            "verified_fingerprint": "mi-verified-evidence-v1:" + _sha256(payload),
+            "verified_fingerprint": "mi-verified-evidence-v2:" + _sha256(payload),
         }
 
     def record_evidence(
@@ -565,7 +638,6 @@ class CausalRepricingMemory:
         ]
         comparison_keys = {
             (
-                observation.subject_id,
                 observation.currency,
                 observation.unit,
                 observation.measurement_window_hours,
@@ -575,7 +647,7 @@ class CausalRepricingMemory:
         }
         if len(comparison_keys) != 1:
             raise CausalMemoryError(
-                "outcome/control observations must be subject, unit, window, and venue comparable"
+                "outcome/control observations must be unit, window, and venue comparable"
             )
         outcome_mean = sum(
             self.observations[source_id].value
@@ -614,17 +686,37 @@ class CausalRepricingMemory:
                     "confirmatory support must pass the frozen Bonferroni family threshold"
                 )
         for existing in self.events.values():
+            if existing.hypothesis_id != event.hypothesis_id:
+                continue
             if (
-                existing.hypothesis_id == event.hypothesis_id
-                and frozenset(existing.outcome_observation_ids)
+                frozenset(existing.outcome_observation_ids)
                 == frozenset(event.outcome_observation_ids)
                 and frozenset(existing.control_observation_ids)
                 == frozenset(event.control_observation_ids)
-                and existing.event_id != event.event_id
             ):
                 raise CausalMemoryError(
                     "evaluation observations already consumed by another evidence event"
                 )
+            if (
+                verification is not None
+                and existing.evaluation_implementation
+                != LEGACY_UNVERIFIED_IMPLEMENTATION
+            ):
+                existing_verification = self._verified_evaluation(
+                    existing, hypothesis
+                )
+                current_units = {
+                    unit["unit_fingerprint"]
+                    for unit in verification["independent_units"]
+                }
+                existing_units = {
+                    unit["unit_fingerprint"]
+                    for unit in existing_verification["independent_units"]
+                }
+                if current_units & existing_units:
+                    raise CausalMemoryError(
+                        "verified independent units already consumed by another evidence event"
+                    )
         return self._append_immutable(self.events, event.event_id, event)
 
     def confidence(self, hypothesis_id: str, *, as_of: str) -> ConfidenceSnapshot:
@@ -905,6 +997,10 @@ class CausalRepricingMemory:
                     "confirmatory": event.confirmatory,
                     "evaluation_method": event.evaluation_method,
                     "evaluation_implementation": event.evaluation_implementation,
+                    "independent_unit_contract": verification.get(
+                        "independent_unit_contract"
+                    ),
+                    "independent_units": verification.get("independent_units", []),
                     "sample_size": event.sample_size,
                     "matched_controls": list(event.matched_controls),
                     "outcome_observation_ids": list(event.outcome_observation_ids),
