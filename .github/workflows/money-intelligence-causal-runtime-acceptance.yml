@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - .github/workflows/money-intelligence-causal-runtime-acceptance.yml
+      - Dockerfile
       - app.py
       - db.py
       - money_intelligence_causal_acceptance.py
