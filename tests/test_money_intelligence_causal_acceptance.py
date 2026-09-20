@@ -21,6 +21,16 @@ def test_runtime_acceptance_rechecks_deployment_packaging_changes():
     assert "Prospective guard passed; full synthetic runtime acceptance remains pending" in workflow
 
 
+def test_runtime_acceptance_requires_immutable_base_image():
+    dockerfile = Path("Dockerfile").read_text(encoding="utf-8")
+    first_instruction = next(
+        line.strip() for line in dockerfile.splitlines() if line.strip()
+    )
+
+    assert first_instruction.startswith("FROM python:3.12-slim@sha256:")
+    assert len(first_instruction.rsplit("@sha256:", 1)[1]) == 64
+
+
 def test_fixture_subject_is_unique_for_each_full_deployed_sha():
     first = acceptance._ids("a" * 16 + "b" * 24)
     second = acceptance._ids("a" * 16 + "c" * 24)
@@ -109,6 +119,7 @@ class FakeDurableCausalStore:
 def test_unrelated_redeploy_reuses_prospective_scientific_plan(monkeypatch):
     FakeDurableCausalStore.reset()
     monkeypatch.setattr(acceptance, "SupabaseCausalMemory", FakeDurableCausalStore)
+    monkeypatch.setattr(acceptance, "_runtime_environment_identity", lambda: b"runtime-a")
     clock = datetime(2026, 9, 20, tzinfo=timezone.utc)
     monkeypatch.setattr(acceptance, "_utc_now", lambda: clock)
 
@@ -145,7 +156,10 @@ def test_unrelated_redeploy_reuses_prospective_scientific_plan(monkeypatch):
     "requirements.txt",
     "Dockerfile",
 ])
-def test_scientific_plan_namespace_tracks_packaged_inputs_not_state_docs(tmp_path, changed_input):
+def test_scientific_plan_namespace_tracks_packaged_inputs_not_state_docs(
+    tmp_path, monkeypatch, changed_input
+):
+    monkeypatch.setattr(acceptance, "_runtime_environment_identity", lambda: b"runtime-a")
     inputs = (
         "money_intelligence_causal_memory.py",
         "profitability_learning/runtime.py",
@@ -194,9 +208,13 @@ def test_scientific_plan_namespace_tracks_resolved_runtime_identity(tmp_path, mo
     assert acceptance._scientific_plan_fingerprint(tmp_path) != first
 
 
-def test_runtime_identity_changes_with_resolved_distribution(monkeypatch):
+def test_runtime_identity_changes_with_resolved_distribution(tmp_path, monkeypatch):
+    module = tmp_path / "scientific_dependency.py"
+    module.write_text("VALUE = 'stable'\n", encoding="utf-8")
+
     class Distribution:
         metadata = {"Name": "scientific-dependency"}
+        files = ("scientific_dependency.py",)
 
         def __init__(self, version, record):
             self.version = version
@@ -205,6 +223,10 @@ def test_runtime_identity_changes_with_resolved_distribution(monkeypatch):
         def read_text(self, name):
             assert name == "RECORD"
             return self.record
+
+        @staticmethod
+        def locate_file(relative):
+            return tmp_path / relative
 
     installed = [Distribution("1.0", "original wheel")]
     monkeypatch.setattr(acceptance.metadata, "distributions", lambda: installed)
@@ -215,9 +237,68 @@ def test_runtime_identity_changes_with_resolved_distribution(monkeypatch):
     assert acceptance._runtime_environment_identity() != first
 
 
+def test_runtime_identity_changes_with_installed_distribution_contents(tmp_path, monkeypatch):
+    module = tmp_path / "scientific_dependency.py"
+    module.write_text("VALUE = 'original'\n", encoding="utf-8")
+
+    class Distribution:
+        metadata = {"Name": "scientific-dependency"}
+        version = "1.0"
+        files = ("scientific_dependency.py",)
+
+        @staticmethod
+        def read_text(name):
+            assert name == "RECORD"
+            return "scientific_dependency.py,sha256=unchanged-record,19"
+
+        @staticmethod
+        def locate_file(relative):
+            return tmp_path / relative
+
+    monkeypatch.setattr(acceptance.metadata, "distributions", lambda: [Distribution()])
+    first = acceptance._runtime_environment_identity()
+    module.write_text("VALUE = 'changed'\n", encoding="utf-8")
+    assert acceptance._runtime_environment_identity() != first
+
+
+def test_runtime_identity_ignores_generated_bytecode_cache_timestamps(tmp_path, monkeypatch):
+    source_relative = acceptance.metadata.PackagePath("dependency/module.py")
+    cache_relative = acceptance.metadata.PackagePath(
+        "dependency/__pycache__/module.cpython-312.pyc"
+    )
+    source = tmp_path / source_relative
+    cache = tmp_path / cache_relative
+    source.parent.mkdir(parents=True, exist_ok=True)
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    source.write_text("VALUE = 'stable'\n", encoding="utf-8")
+    cache.write_bytes(b"timestamp-a:compiled-semantics")
+
+    class Distribution:
+        metadata = {"Name": "scientific-dependency"}
+        version = "1.0"
+        files = (source_relative, cache_relative)
+
+        @staticmethod
+        def read_text(name):
+            assert name == "RECORD"
+            return "dependency/module.py,sha256=source,17\n"
+
+        @staticmethod
+        def locate_file(relative):
+            return tmp_path / relative
+
+    monkeypatch.setattr(acceptance.metadata, "distributions", lambda: [Distribution()])
+    first = acceptance._runtime_environment_identity()
+    cache.write_bytes(b"timestamp-b:compiled-semantics")
+    assert acceptance._runtime_environment_identity() == first
+    source.write_text("VALUE = 'changed'\n", encoding="utf-8")
+    assert acceptance._runtime_environment_identity() != first
+
+
 def test_phase2_runtime_acceptance_uses_default_mission_surface_and_is_replay_safe(monkeypatch):
     FakeDurableCausalStore.reset()
     monkeypatch.setattr(acceptance, "SupabaseCausalMemory", FakeDurableCausalStore)
+    monkeypatch.setattr(acceptance, "_runtime_environment_identity", lambda: b"runtime-a")
     monkeypatch.setenv("RENDER_GIT_COMMIT", "a" * 40)
     clock = [datetime(2026, 9, 20, tzinfo=timezone.utc)]
     monkeypatch.setattr(acceptance, "_utc_now", lambda: clock[0])

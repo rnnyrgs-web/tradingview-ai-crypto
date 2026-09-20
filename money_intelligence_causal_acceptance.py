@@ -116,15 +116,43 @@ def _runtime_environment_identity() -> bytes:
         record = distribution.read_text("RECORD")
         if record is None:
             raise CausalMemoryError(f"installed Python distribution has no RECORD: {name}")
-        distributions.append((name.casefold(), distribution.version, hashlib.sha256(record.encode("utf-8")).digest()))
+        files = distribution.files
+        if not files:
+            raise CausalMemoryError(f"installed Python distribution has no file manifest: {name}")
+        installed_digest = hashlib.sha256()
+        for relative in sorted(files, key=str):
+            relative_path = Path(str(relative))
+            if (
+                relative_path.suffix == ".pyc"
+                and "__pycache__" in relative_path.parts
+                and getattr(relative, "hash", None) is None
+            ):
+                # Pip generates these after wheel extraction. Their timestamp
+                # headers can differ across content-identical image rebuilds.
+                continue
+            path = Path(distribution.locate_file(relative))
+            if not path.is_file():
+                raise CausalMemoryError(
+                    f"installed Python distribution file is unavailable: {name}:{relative}"
+                )
+            installed_digest.update(str(relative).encode("utf-8"))
+            installed_digest.update(b"\0")
+            installed_digest.update(hashlib.sha256(path.read_bytes()).digest())
+        distributions.append((
+            name.casefold(),
+            distribution.version,
+            hashlib.sha256(record.encode("utf-8")).digest(),
+            installed_digest.digest(),
+        ))
     if not distributions:
         raise CausalMemoryError("installed Python distribution identity is unavailable")
-    for name, version, record_digest in sorted(distributions):
+    for name, version, record_digest, installed_digest in sorted(distributions):
         digest.update(name.encode("utf-8"))
         digest.update(b"\0")
         digest.update(version.encode("utf-8"))
         digest.update(b"\0")
         digest.update(record_digest)
+        digest.update(installed_digest)
     return digest.digest()
 
 
@@ -143,8 +171,8 @@ def _scientific_plan_fingerprint(project_root: Path | None = None) -> str:
         "requirements.txt",
         "orchestration/rejected_fingerprints.py",
         "orchestration/rejected_fingerprints.json",
-        "orchestration/trusted_executor_manifest.json",
         "orchestration/signal_development_objective.json",
+        "orchestration/trusted_executor_manifest.json",
         "orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz",
     )
     for relative in required:
