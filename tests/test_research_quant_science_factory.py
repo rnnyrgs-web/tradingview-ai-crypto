@@ -1,6 +1,11 @@
+from pathlib import Path
+
 import pytest
 
-from profitability_learning.contracts import fingerprint
+from profitability_learning.contracts import (
+    fingerprint,
+    verified_executor_implementation,
+)
 from research_heavy_experiment_scheduler import build_heavy_dispatch_plan
 from research_quant_science_factory import (
     MASSIVE_VIRTUAL_RESEARCH_CONSTRAINTS,
@@ -38,7 +43,7 @@ def test_quant_science_factory_predeclares_safe_scientific_design():
     assert design["minimum_actionable_coverage"] == 0.25
     assert design["executor_kind"] == "restrictive_group_abstention_v1"
     assert design["executor_implementation_id"] == (
-        "research_adaptive_accuracy._evaluate_frozen_filter@v1"
+        "research_adaptive_accuracy._evaluate_frozen_filter@v2-source-bundle"
     )
     assert len(design["executor_implementation_sha256"]) == 64
     assert design["dispatchable_now"] is True
@@ -85,6 +90,23 @@ def test_stale_executor_registry_identity_fails_closed(monkeypatch):
     )
     with pytest.raises(ValueError, match="implementation digest is stale"):
         verified_strategy_semantic_fingerprint(candidate)
+
+
+@pytest.mark.parametrize("dependency_name", ["selective_precision.py", "utils.py"])
+def test_transitive_executor_dependency_drift_fails_closed(
+    monkeypatch, dependency_name
+):
+    original_read_text = Path.read_text
+
+    def changed_dependency(path, *args, **kwargs):
+        source = original_read_text(path, *args, **kwargs)
+        if path.name == dependency_name:
+            return source + "\n_TRANSITIVE_EXECUTOR_DRIFT = True\n"
+        return source
+
+    monkeypatch.setattr(Path, "read_text", changed_dependency)
+    with pytest.raises(ValueError, match="implementation digest is stale"):
+        verified_executor_implementation("restrictive_group_abstention_v1")
 
 
 def test_massive_virtual_scale_never_raises_physical_or_cost_authority():

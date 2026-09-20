@@ -21,13 +21,24 @@ MAX_TRADES = 100_000
 # Adding an entry is a code change that must ship with an evaluator and tests.
 TRUSTED_EXECUTOR_IMPLEMENTATIONS = {
     "restrictive_group_abstention_v1": (
-        "research_adaptive_accuracy._evaluate_frozen_filter@v1"
+        "research_adaptive_accuracy._evaluate_frozen_filter@v2-source-bundle"
     ),
 }
 TRUSTED_EXECUTOR_SOURCES = {
     "restrictive_group_abstention_v1": {
-        "path": "research_adaptive_accuracy.py",
-        "ast_sha256": "12fd00d9be9f43f70f2b50624175e4270eebbbac4f230972095e7f56acd6f64f",
+        "paths": [
+            "research_adaptive_accuracy.py",
+            "calibration.py",
+            "config.py",
+            "selective_precision.py",
+            "utils.py",
+            "research_quant_science_factory.py",
+            "research_experiment_factory.py",
+            "research_heavy_experiment_scheduler.py",
+            "research_learning.py",
+            "signal_development.py",
+        ],
+        "ast_sha256": "db1e4b00732414506ca45c5c9f70bf045d9ef536072dd15afc8a73e3cd357f0f",
     },
 }
 
@@ -45,6 +56,11 @@ def trusted_executor_implementation(execution_rule):
     source = TRUSTED_EXECUTOR_SOURCES.get(execution_rule)
     if implementation_id is None or not isinstance(source, dict):
         raise ValueError("unregistered research executor")
+    paths = source.get("paths")
+    if (not isinstance(paths, list) or not paths
+            or len(paths) != len(set(paths))
+            or any(not isinstance(path, str) or not path.endswith(".py") for path in paths)):
+        raise ValueError("invalid registered executor source bundle")
     digest = source.get("ast_sha256")
     if (not isinstance(digest, str) or len(digest) != 64
             or any(char not in "0123456789abcdef" for char in digest)):
@@ -53,25 +69,28 @@ def trusted_executor_implementation(execution_rule):
 
 
 def verified_executor_implementation(execution_rule):
-    """Bind a reviewed registry identity to the deployed evaluator AST.
+    """Bind a reviewed registry identity to the deployed evaluator source bundle.
 
-    Comments and formatting are intentionally excluded. Any executable module
-    change requires a reviewed digest update; stale identifiers fail closed.
+    Comments and formatting are intentionally excluded. The bundle includes the
+    evaluator and its behavior-changing local dependencies so a dependency drift
+    cannot inherit evidence earned by an older implementation. Any executable
+    bundle change requires a reviewed digest update; stale identities fail closed.
     """
     expected = trusted_executor_implementation(execution_rule)
-    relative_path = TRUSTED_EXECUTOR_SOURCES[execution_rule].get("path")
-    if not isinstance(relative_path, str) or not relative_path.endswith(".py"):
-        raise ValueError("invalid registered executor source path")
     root = Path(__file__).resolve().parent.parent
-    source_path = (root / relative_path).resolve()
-    if source_path.parent != root or not source_path.is_file():
-        raise ValueError("registered executor source is unavailable")
-    try:
-        tree = ast.parse(source_path.read_text(encoding="utf-8"))
-    except (OSError, SyntaxError, UnicodeError) as exc:
-        raise ValueError("registered executor source is unreadable") from exc
-    normalized = ast.dump(tree, annotate_fields=True, include_attributes=False)
-    actual = sha256(normalized.encode()).hexdigest()
+    normalized = {}
+    for relative_path in TRUSTED_EXECUTOR_SOURCES[execution_rule]["paths"]:
+        source_path = (root / relative_path).resolve()
+        if source_path.parent != root or not source_path.is_file():
+            raise ValueError("registered executor source is unavailable")
+        try:
+            tree = ast.parse(source_path.read_text(encoding="utf-8"))
+        except (OSError, SyntaxError, UnicodeError) as exc:
+            raise ValueError("registered executor source is unreadable") from exc
+        normalized[relative_path] = ast.dump(
+            tree, annotate_fields=True, include_attributes=False
+        )
+    actual = sha256(canonical(normalized).encode()).hexdigest()
     if actual != expected["ast_sha256"]:
         raise ValueError("registered executor implementation digest is stale")
     return expected
