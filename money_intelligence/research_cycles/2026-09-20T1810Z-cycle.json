@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T1810Z",
+  "information_cutoff": "2026-09-20T18:10:22Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_observed_before_write": "305fb02d73af6d49e675d12b59fc48f86a0d994d",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles": true,
+    "searched_prediction_artifacts": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "last_owner_report_cycle": "2026-09-20T1630Z",
+    "run_start_utc": "2026-09-20T18:04:31Z",
+    "artifact_cutoff_utc": "2026-09-20T18:10:22Z",
+    "seconds_this_run_minimum": 351,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 0,
+    "minimum_cumulative_seconds_since_last_owner_report": 351,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted. The cumulative counter reset after the material owner report associated with the 16:30Z cycle; schedule gaps, idle time, publication timestamps and background time are excluded."
+  },
+  "highest_information_question": "Does ENA's current outperformance represent actual programmatic buyback/free-float flow, or expectation repricing around a still-inactive fee switch and a legally released but still Foundation-controlled StablecoinX treasury; and can the Nasdaq wrapper's discount to restricted ENA value produce a repeatable capital-flow edge rather than unstable high-beta tracking?",
+  "fresh_research": [
+    {
+      "topic": "ENA/StablecoinX big-move decomposition: fee-switch demand is not active at current USDe supply, and the October 5 lock-up waiver is not an automatic 3B-token market unlock",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / ENA / USDE / TOKENOMICS / PUBLIC-MARKET WRAPPER / FLOW ACCOUNTING",
+      "observed_facts": [
+        "CoinMarketCap at 18:07 UTC showed ENA near $0.22555, +12.31%/24h and +60.18%/7d, with turnover about 42.16% of market capitalization. The same live source showed USDe circulating supply about 4.872B, up about 6.06% in market-cap/supply terms over seven days but still far below the first fee-switch rung.",
+        "Ethena's primary governance proposal sets the first fee-switch rung at a $7.5B USDe supply level, with the recommended implementation using a 14-day trailing supply average. At that rung the take is 5% of gross protocol revenue; once active, 95% of the net revenue paid to the Foundation from the named core business lines is directed to ENA buybacks. The governance forum explicitly stated at $4.07B USDe on August 27 that the schedule took nothing, and the Snapshot vote was confirmed passed on September 8.",
+        "StablecoinX's September 17 SEC 8-K says the September 14 waiver becomes effective October 5 and permanently removes the 48-month lock-up/vesting/unlock schedule on its Subject ENA Tokens. However, any sale/transfer/disposition still requires prior written Ethena Foundation consent, and a Funding Sale requires at least five business days notice during which the Foundation can elect to acquire all or part of the tokens first.",
+        "StablecoinX reported roughly 3.0B ENA tokens at June 30. Its June 10-Q showed 24,029,375 Class A shares and 3,157,754 Class B shares; Class B has voting rights but no dividend or liquidation participation. The company also had 11.5M public warrants exercisable for one Class A share at $11.50, June cash of about $18.86M and total liabilities of about $18.29M.",
+        "StablecoinX Class A stock rose 24.35% on September 17 and 32.17% on September 18, with roughly 14M shares traded each session, versus about 1.3M on September 16. The SEC 8-K was accepted at 08:00:32 ET on September 17, making the waiver disclosure a timestamp-defensible catalyst. ENA itself rose much less on those individual sessions, so the equity wrapper exhibited very high beta/discount repricing rather than one-for-one tracking.",
+        "At ENA $0.22555, StablecoinX's approximately 3.029B-token treasury has a gross mark near $683M, or about $28.4 per currently outstanding economic Class A share before liabilities, taxes, dilution, transfer restrictions or market impact, versus the stock's Friday close of $10.19. A deliberately simple sensitivity using June cash/liabilities and a 21% federal corporate tax on mark-to-June-basis appreciation gives about $24.7 per current Class A share; assuming all 11.5M $11.50 warrants were exercised and proceeds added gives roughly $20.4 per diluted share. These are exposure illustrations, not realizable NAV estimates.",
+        "Matched negative control: on August 21 StablecoinX rose about 85% on extraordinary volume while ENA also rallied. ENA then gained further over the weekend into August 23, but StablecoinX fell 15.38% on Monday August 24. Weekend ENA strength therefore does not mechanically imply a positive Monday return in the equity wrapper.",
+        "Broad alt rotation is a meaningful control: at the same 18:07 UTC snapshot NEAR was +73.8%/7d, ARB +51.5%, UNI +38.7% and INJ +27.3%. ENA's move is strong but not isolated enough to attribute wholly to Ethena-specific tokenomics."
+      ],
+      "inference": "The current fee-switch story is an expectation/value-accrual narrative, not a verified programmatic ENA buyback flow, because current USDe supply is materially below the first activation rung. Likewise, the StablecoinX October 5 waiver increases the option value and flexibility of its treasury but does not convert roughly 3B ENA into unconstrained exchange sell supply. The listed equity behaves as a high-beta, discount-to-restricted-NAV wrapper whose price is set by ENA mark-to-market, perceived treasury liquidity, small-cap market structure, narrative/attention and discount compression/expansion. The large apparent NAV discount is real arithmetically but not a riskless arbitrage because a block near 20% of total ENA supply cannot be liquidated at screen price, Foundation consent remains binding, corporate tax/operating burn/warrant and plan dilution matter, and the non-economic Class B holders retain governance influence.",
+      "catalyst_transmission_amplifier": {
+        "catalysts": [
+          "September 8 passage of the conditional ENA fee-switch framework",
+          "September 17 public SEC filing of StablecoinX's October 5 lock-up waiver",
+          "rapid recovery in ENA and broader high-beta altcoins"
+        ],
+        "transmission": "higher perceived future ENA value capture + greater expected treasury flexibility -> ENA repricing and compression of the StablecoinX equity discount to its ENA treasury mark",
+        "amplifiers": [
+          "StablecoinX's concentrated ~3B ENA treasury relative to only ~24M economic Class A shares",
+          "small-cap/high-volatility equity market structure",
+          "ENA's high crypto turnover and broad alt momentum",
+          "attention around tokenomics and public-company treasury exposure"
+        ]
+      },
+      "matched_controls": [
+        "NEAR/ARB/UNI/INJ also rallied strongly over seven days, rejecting a purely Ethena-specific explanation for the full ENA move.",
+        "August 21-24 StablecoinX/ENA behavior rejects a deterministic weekend-underlying-gain -> Monday-wrapper-gain rule.",
+        "The fee-switch framework itself provides a pre-specified threshold control: with USDe around 4.87B versus a 7.5B first rung, any current rally cannot truthfully be called flow from that new programmatic buyback mechanism."
+      ],
+      "negative_findings": [
+        "Do not label the current ENA rally 'fee-switch buyback driven'; the live USDe supply does not meet the published first rung.",
+        "Do not label October 5 an automatic ~3B ENA exchange unlock from StablecoinX; Foundation consent and the Funding Sale first-look process remain.",
+        "Do not treat StablecoinX's screen-price ENA mark as liquidation NAV; its treasury is far too large relative to tradable ENA supply for mark-price liquidation to be assumed.",
+        "Do not freeze a Monday-up StablecoinX forecast solely from ENA's weekend strength; the August 24 matched control falsifies that simple rule."
+      ],
+      "decision_support": {
+        "ENA": {
+          "view": "WAIT / AVOID CHASING",
+          "horizon": "days to several weeks",
+          "confidence": "MODERATE-HIGH",
+          "confirmation": "USDe 14-day supply average actually crosses $7.5B and public buyback transactions begin; protocol revenue and supply continue rising; spot-led ENA demand persists without leverage excess.",
+          "invalidation_of_bull_narrative": "USDe growth stalls below the activation rung, value-capture expectations fail to translate into actual purchases, or high-turnover momentum reverses while broader alt beta weakens."
+        },
+        "StablecoinX_USDE": {
+          "view": "RESEARCH / WAIT; potential restricted-NAV discount deserves deeper valuation work, but no BUY yet",
+          "horizon": "days to months",
+          "confidence": "MODERATE on mechanism; LOW-MODERATE on expected return",
+          "confirmation": "Updated fully diluted share/warrant/RSU count, restriction-adjusted/tax-adjusted treasury valuation, evidence the discount remains unusually wide after controlling for ENA volatility and sale constraints, and price behavior that is not simply transient squeeze/momentum.",
+          "invalidation": "Discount is explained by additional dilution/liabilities, transfer restrictions become economically binding for long periods, ENA reverses materially, operating burn rises, or the equity again overshoots and mean-reverts despite a stronger treasury mark.",
+          "liquidity_cost_capacity": "USDE traded ~14M shares/day on Sep.17-18 but is historically a volatile small-cap with wide intraday ranges; ENA treasury liquidation capacity is far below screen-mark assumptions. No real-money trading authority."
+        }
+      },
+      "sources": [
+        "CoinMarketCap live quote connector snapshots at 2026-09-20T18:07Z for ENA, USDe and matched-control altcoins",
+        "https://gov.ethenafoundation.com/t/ena-fee-switch-activation/830",
+        "https://www.sec.gov/Archives/edgar/data/2080215/000121390026100751/ea0305686-8k_stablecoinx.htm",
+        "https://www.sec.gov/Archives/edgar/data/2080215/000121390026090250/ea0301482-10q_stable.htm",
+        "https://stockanalysis.com/stocks/usde/history/",
+        "https://coincodex.com/crypto/ethena/historical-data/"
+      ]
+    },
+    {
+      "topic": "Qatar's new Doha Investment platform is a sovereign capital-allocation regime signal, but not yet evidence of a one-third-QIA fresh domestic inflow",
+      "label": "SOVEREIGN WEALTH / GEOPOLITICS / DOMESTIC CAPITAL FORMATION",
+      "observed_facts": [
+        "On September 20 Qatar announced Doha Investment, a dedicated QIA platform for domestic investments, with a mandate to support national champions, emerging businesses, capital-market depth, privatization and private-sector participation.",
+        "Reuters reports the platform will manage 45 state-owned enterprises representing roughly one-third of QIA's estimated $580B of assets; Qatar Tribune describes more than 40 companies spanning finance, logistics, telecom/technology, real estate, hospitality, food and agriculture.",
+        "The announcement occurs while Qatar faces severe LNG export disruption and fiscal/economic stress from the Hormuz conflict, but officials described the platform partly as consolidation of an existing domestic portfolio rather than entirely new capital creation."
+      ],
+      "inference": "A major external-income shock can change sovereign-wealth constraints and preferences: external wealth maximization can shift toward domestic resilience, privatization and capital-market development. The price-relevant flow is not the gross size of the transferred portfolio but incremental new capital, follow-on financing, privatizations/listings and co-investment attracted by the new mandate.",
+      "negative_findings": [
+        "Do not interpret one-third of QIA's assets as a fresh domestic cash injection; much of the portfolio already existed and is being consolidated under a new manager.",
+        "No liquid Qatari equity BUY/SHORT thesis clears the evidence bar before incremental deployment amounts and transaction terms are visible."
+      ],
+      "decision_support": "RESEARCH / WAIT. Track new QIA/Doha Investment commitments, privatizations, QSE issuance/volume and sector-level capex to distinguish administrative relabeling from genuine marginal capital flow.",
+      "sources": [
+        "https://www.reuters.com/world/middle-east/qatar-launches-wealth-fund-division-domestic-investments-2026-09-20/",
+        "https://www.qatar-tribune.com/article/254868/latest-news/qatar-launches-doha-investment-to-accelerate-next-phase-of-economic-growth/amp"
+      ]
+    }
+  ],
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast added. A tempting weekend ENA -> Monday StablecoinX gap thesis was explicitly rejected as not yet scientifically defensible because the August 21-24 matched control contradicts the simple mapping."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. The ENA/StablecoinX flow-accounting distinction is materially useful and may become a canonical learning after an independent retest, but avoid rewriting dashboard/learning-ledger state in the same pass. No code or signal-system state changed.",
+  "next_research": [
+    "Build a restriction-adjusted StablecoinX treasury NAV model using current ENA price, economic Class A shares, public warrants, RSUs/incentive-plan dilution, taxes, operating burn, Foundation sale-consent economics and realistic block-liquidity discounts.",
+    "Run a daily event study since StablecoinX listing comparing ENA returns, USDE equity returns, discount-to-treasury mark, volume/short interest and filing/news timestamps; test whether discount compression has predictive value after controlling for ENA beta.",
+    "Track USDe's 14-day supply average and Ethena's public transparency/buyback dashboard; freeze a buyback-flow hypothesis only after the $7.5B rung and actual transactions are observed.",
+    "Treat October 5 as a legal-state change, then observe whether StablecoinX actually files/notices a Funding Sale or whether Foundation rights prevent public-market supply.",
+    "Continue AVAX Helicon pre/post event study and reconcile asset-level stablecoin/bridge flow after September 22 activation.",
+    "After U.S. ETF markets reopen, reconcile BTC/ETH finalized flows with spot breadth, leverage and exchange/on-chain absorption before changing BTC WAIT.",
+    "When crude futures reopen, resolve Saudi attack claims with physical loading/differential/curve evidence; keep attack headline separate from verified lost barrels."
+  ]
+}
