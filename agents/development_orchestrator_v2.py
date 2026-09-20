@@ -315,7 +315,7 @@ def validate_v2(state: Any) -> None:
                 else:
                     _require(record["status"] in {"READY_FOR_INTEGRATION", "REVIEW_REQUIRED",
                                                        "REVIEWING", "REVISION_REQUIRED", "REPAIR",
-                                                       "WAIT", "USER_ACTION_REQUIRED"}
+                                                       "WAIT", "BLOCKED", "USER_ACTION_REQUIRED"}
                              and isinstance(resumption, dict)
                              and set(resumption) == {"integration_id", "kind", "at",
                                                      "event_id", "event_digest", "source_event",

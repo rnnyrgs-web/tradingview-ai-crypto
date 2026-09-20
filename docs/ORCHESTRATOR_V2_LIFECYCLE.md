@@ -50,6 +50,11 @@ also retains the exact resume/rebase source event; successor routing retains
 its own exact source event, so re-digesting an altered timestamp or successor
 choice cannot pass reload validation. Missing or altered
 receipts fail closed, including after restart or duplicate event delivery.
+These digests detect partial state corruption and conflicting replay; they do
+not authenticate a writer who can replace the entire CAS document and every
+hash in it. The caller must independently verify GitHub merge/PR/CI facts and
+the Lead decision before submitting or trusting an integration event. V2-001
+does not enable a live adapter or grant merge authority.
 
 `DONE` frees the worker. A successor event can then cite only the completed
 task's canonical `next_task`, provided the Lead has updated the coordination

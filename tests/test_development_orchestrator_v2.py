@@ -835,6 +835,27 @@ def test_deferred_receipt_survives_new_head_review_wait_and_escalation():
     assert state["tasks"]["V2-A"]["integration"]["integration_id"] == "integration-A"
 
 
+def test_deferred_then_resumed_changed_head_can_end_in_blocked_review():
+    state = approved_for_integration()
+    state = advance(state, "INTEGRATION", 6, at="2026-09-21T00:00:00Z",
+                    integration_id="integration-A", review_id="review-A", pr_number=501,
+                    head_sha=HEAD, decision="DEFERRED", lead="human-lead",
+                    retry_at="2026-09-22T00:00:00Z")
+    state = advance(state, "RESUME", 7, at="2026-09-23T00:00:00Z", phase="integration")
+    state = advance(state, "HEAD_CHANGED", 8, at="2026-09-23T01:00:00Z",
+                    pr_number=501, head_sha=REPAIRED)
+    state = advance(state, "CI", 9, at="2026-09-23T02:00:00Z",
+                    ci_id="ci-B", pr_number=501, head_sha=REPAIRED,
+                    conclusion="success")
+    state = advance(state, "REVIEW", 10, at="2026-09-23T03:00:00Z",
+                    review_id="review-B", pr_number=501, head_sha=REPAIRED,
+                    reviewer_lanes=list(V1_REVIEW_LANES),
+                    outcomes=verdicts("REVISION_REQUIRED"), outcome="BLOCKED",
+                    findings=["terminal security defect"])
+    assert state["tasks"]["V2-A"]["status"] == "BLOCKED"
+    validate_v2(json.loads(json.dumps(state)))
+
+
 @pytest.mark.parametrize("field,value", [
     ("integration_id", "integration-A"), ("successor_task_id", "V2-forged"),
     ("engine", "codex"), ("routing_decision", "MANUAL"),
