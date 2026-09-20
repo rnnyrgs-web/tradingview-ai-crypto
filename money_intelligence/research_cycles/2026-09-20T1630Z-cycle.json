@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T1630Z",
+  "information_cutoff": "2026-09-20T16:30:09Z",
+  "status": "MATERIAL_CAUSAL_UPDATE_REPORT_GATE_MET",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_observed_before_write": "b50fbbf4d1216c4cd88237e374acd8d19c98cb1d",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles": true,
+    "searched_prediction_artifacts": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-20T16:22:41Z",
+    "artifact_cutoff_utc": "2026-09-20T16:30:09Z",
+    "seconds_this_run_minimum": 448,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 3156,
+    "minimum_cumulative_seconds_since_last_owner_report": 3604,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": true,
+    "method": "Only directly measured active runtime is counted; schedule gaps, idle time, publication timestamps and background time are excluded."
+  },
+  "highest_information_question": "Who actually captures economic value from the multi-year global LNG scarcity: operating U.S. exporters, merchant/commissioning cargo exposure, or pre-revenue greenfield developers—and can contract structure and financing duration explain why LNG equities can fall even while spot LNG scarcity remains extreme?",
+  "fresh_research": [
+    {
+      "topic": "LNG scarcity value capture is contract- and project-stage-dependent, not a one-factor shortage-beneficiary trade",
+      "label": "ENERGY / LNG / VALUE CAPTURE / CONTRACT STRUCTURE / FINANCING DURATION",
+      "observed_facts": [
+        "QatarEnergy said on September 20 that it is producing only a very small volume of LNG and that Hormuz disruption may delay North Field expansion equipment deliveries; separate Reuters reporting says about 12.8 Mtpa of Qatari capacity may be impaired for three to five years and QatarEnergy is seeking roughly 2-3 Mtpa of multi-year U.S. LNG supply through 2031.",
+        "North Asian spot LNG was about $26/MMBtu on September 17, roughly 150% above February, while September Asian imports were estimated at 20.09 Mt, the lowest September in eight years. High prices are destroying marginal demand in China, India and Pakistan while Europe attracts redirected cargoes.",
+        "Cheniere's June 2026 10-Q says 90% or more of expected Sabine Pass and Corpus Christi production is contracted through the mid-2030s, with weighted-average remaining contract life about 15 years. SPA fixed fees are generally payable even if a cargo is cancelled; uncontracted production can be sold by Cheniere Marketing.",
+        "Venture Global's Q2 2026 results say 91% of 2026 available cargoes were contracted at a weighted-average liquefaction fee of $5.05/MMBtu, while guidance assumed $12.50-$13.50/MMBtu for the remaining unsold cargoes. Its realized implied fixed liquefaction fee rose to $6.45/MMBtu in Q2 from $3.82 in Q1 as global LNG prices rose after the Middle East disruption.",
+        "An illustrative fee-mix sensitivity using Venture Global's disclosed 91% at $5.05 and 9% at a $13 midpoint gives a weighted fee near $5.77/MMBtu; the 9% unsold slice contributes about 20% of that illustrative fee pool and lifts the weighted fee roughly 14% versus every cargo at $5.05. This is an exposure illustration, not an EBITDA forecast.",
+        "Venture Global had about $41.5B of long-term debt at June 30, 2026 and remained in a heavy construction/capital-spending phase, so scarcity can improve merchant economics while higher discount rates and financing/execution risk simultaneously pressure equity value.",
+        "NextDecade's Rio Grande LNG Trains 1-5 total roughly 30 Mtpa planned capacity, with about 25.3 Mtpa under long-term SPAs and weighted-average contract tenor around 19.5 years. It does not expect significant operating cash flow until trains operate; Train 1 first LNG is targeted for H1 2027.",
+        "Matched non-move: from September 11 to September 18, while Qatar's outage remained severe and spot LNG stayed exceptionally high, Cheniere fell about 3.6%, Venture Global about 11.3%, NextDecade about 10.1% and Woodside about 2.2%, while the S&P 500 was roughly flat. Scarcity did not mechanically translate into exporter-equity appreciation.",
+        "Historical positive control: after Qatar quantified the multi-year outage on March 19, Cheniere rose about 7% intraday and Venture Global initially rose about 13%. Scarcity can reprice U.S. LNG equities, but the later control shows the effect is not sufficient or persistent by itself."
+      ],
+      "inference": "The reusable variable is not global LNG shortage alone. Equity/cash-flow value capture depends on operating spare capacity, contract-versus-merchant exposure, destination flexibility, expansion optionality, demand elasticity, capex/debt burden and discount rates. A contracted operator can have resilient base cash flow but limited direct spot upside; merchant/commissioning exposure has greater scarcity convexity but can carry larger construction/debt risk; pre-revenue projects monetize scarcity mainly through stronger contracting, financeability and future NPV rather than current-volume cash flow.",
+      "causal_chain": "Qatar/Hormuz impairment -> global replacement demand and high spot LNG -> price-sensitive Asian demand partly exits while Europe/security buyers compete -> U.S. terminals near capacity redirect cargoes and merchant/short-term pricing improves -> cash-flow capture depends on each operator's uncontracted/marketing exposure -> long-term scarcity improves SPA bargaining/project financeability -> higher rates, construction debt and delayed cash-flow realization discount greenfield equity -> exporter stocks can underperform even while physical scarcity is real.",
+      "source_destination_chain": "European/Asian utility and trader procurement budgets -> long-term SPAs / spot cargoes / marketing portfolios -> U.S. liquefaction operators; bank/project-finance and equity capital -> expansion/newbuild projects. Equity repricing is then set by expected after-financing cash-flow capture, not gross LNG price alone.",
+      "matched_controls": [
+        "March 19, 2026: acute Qatar outage disclosure produced a positive immediate LNG-equity repricing.",
+        "September 11-18, 2026: continuing severe spot scarcity coincided with negative returns across LNG, VG, NEXT and WDS, rejecting a deterministic shortage-to-equity rule.",
+        "Current Asia-versus-Europe demand divergence shows spot scarcity raises price but can reduce quantity demanded in price-sensitive markets."
+      ],
+      "negative_findings": [
+        "Do not use global LNG spot price as a standalone BUY signal for U.S. LNG equities.",
+        "Do not infer unlimited current U.S. export-volume upside when liquefaction terminals are already near physical capacity.",
+        "Do not equate long-term project capacity with near-term cash flow; greenfield projects are primarily duration/contracting/financing exposures before first LNG.",
+        "Do not infer the highest merchant exposure must outperform; Venture Global's recent underperformance despite higher spot-fee convexity shows financing, execution, prior pricing and risk premia can dominate."
+      ],
+      "learning_candidate": {
+        "id": "MI-H-20260920-LNG-CONTRACT-VALUE-CAPTURE",
+        "status": "SUPPORTED_REGIME_SPECIFIC_CANDIDATE",
+        "claim": "In capacity-constrained LNG infrastructure, scarcity-driven value capture is governed by operating capacity and contract/merchant exposure, while greenfield projects monetize scarcity mainly through contracting/financeability and future NPV. Demand destruction and funding/discount-rate risk can offset the physical-shortage benefit, so LNG shortage beneficiary is not a sufficient equity thesis."
+      },
+      "decision_support": {
+        "view": "HOLD / RESEARCH FOR BUY CANDIDATES; NO SECTOR-WIDE BUY",
+        "horizon": "months to several years",
+        "confidence": "MODERATE-HIGH on mechanism; LOW-MODERATE on individual-equity expected return before valuation work",
+        "relative_structure": [
+          "Cheniere: more defensive contracted cash-flow profile; direct spot scarcity beta concentrated in uncontracted/marketing and globally priced exposures.",
+          "Venture Global: greater current scarcity/merchant fee convexity, but materially higher construction, leverage and financing sensitivity.",
+          "NextDecade / Woodside Louisiana: primarily future contracting, financeability and NPV beneficiaries before first LNG; high duration and execution sensitivity."
+        ],
+        "confirmation": "New long-term SPAs at stronger economics, sustained utilization, merchant fees/netbacks remaining elevated, project debt spreads/financing terms improving, and equity relative strength after controlling for rates.",
+        "invalidation": "Rapid Qatar/Hormuz normalization, collapsing global LNG prices, stronger-than-expected demand destruction, material project cost/financing deterioration, or evidence scarcity rents accrue mainly elsewhere.",
+        "liquidity_cost_capacity": "Listed equities are liquid, but project-level exposure is capital-intensive and leverage-sensitive; no real-money trading authority."
+      },
+      "sources": [
+        "https://www.reuters.com/business/energy/qatarenergy-says-hormuz-crisis-may-delay-some-expansion-projects-2026-09-20/",
+        "https://www.reuters.com/business/energy/qatarenergy-seeks-us-lng-deals-through-2031-sources-say-2026-09-11/",
+        "https://www.reuters.com/commentary/reuters-open-interest/lng-spot-price-surge-deters-asian-buyers-saves-europe-2026-09-17/",
+        "https://www.sec.gov/Archives/edgar/data/3570/000000357026000028/lng-20260630.htm",
+        "https://investors.ventureglobal.com/news/news-details/2026/Venture-Global-Reports-Second-Quarter-2026-Results/default.aspx",
+        "https://www.sec.gov/Archives/edgar/data/1612720/000161272026000049/next-20260630.htm",
+        "https://www.reuters.com/business/energy/cheniere-venture-global-shares-surge-amid-iran-attacks-qatar-lng-infrastructure-2026-03-19/"
+      ]
+    },
+    {
+      "topic": "AVAX remains idiosyncratic but lacks new validated capital-flow confirmation",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / AVAX",
+      "observed_facts": [
+        "CoinMarketCap around 16:23 UTC showed AVAX near $11.20, +16.48%/24h and +51.78%/7d, with turnover around 29.15% of market cap and 24h volume up about 86%.",
+        "At the same snapshot BTC was -0.87%, ETH -1.05%, SOL -2.40%, XRP -2.51% and LINK -1.89% over 24h, confirming broad crypto beta is insufficient to explain AVAX.",
+        "AVAX had cooled from roughly +20.1%/24h around 16:00 UTC while remaining a major outlier.",
+        "Helicon remains scheduled for September 22 at 15:00 UTC; no new primary ICE/NYSE announcement selected Avalanche as the production settlement chain."
+      ],
+      "inference": "The move remains best classified as expectation repricing/momentum with possible market-structure amplification, not validated net-capital inflow or realized fundamental value capture.",
+      "decision_support": "WAIT / AVOID CHASING unchanged. Require reconciled stablecoin/bridge flows, price-normalized activity, spot-led continuation and post-Helicon fee/usage evidence before BUY consideration."
+    }
+  ],
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast clears the evidence bar; WAIT/HOLD research states preserved."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle. The LNG contract/financing/value-capture mechanism is materially supported by primary company disclosures plus current and historical matched controls, but no individual listed-equity BUY clears valuation/risk-adjusted evidence. Do not modify signal-engine state. Defer dashboard/learning-ledger promotion until the next independent retest or valuation pass.",
+  "next_research": [
+    "Build a comparable valuation/cash-flow matrix for Cheniere, Venture Global, NextDecade and Woodside Louisiana: EV, debt, committed capex, contracted fee economics, merchant exposure, first-LNG dates and sensitivity to LNG price and discount rates.",
+    "Test the 2022 Europe LNG crisis and March 2026 Qatar shock as historical controls for whether merchant exposure and spare operating capacity predict equity/cash-flow response better than headline spot LNG price.",
+    "Track new SPA signing economics and project debt spreads/terms; these are better pre-move indicators for greenfield value capture than spot-price headlines alone.",
+    "After U.S. ETF markets reopen, reconcile BTC/ETH finalized flows with spot breadth, leverage and exchange/on-chain absorption before changing BTC WAIT.",
+    "After Helicon activation, test AVAX price-normalized activity, stablecoin/bridge net flows, fees/revenue, validator/staking changes and derivatives leverage against the pre-event baseline.",
+    "When crude futures reopen, resolve Saudi weekend attack claims with verified loading/physical-differential/curve evidence rather than headlines."
+  ]
+}
