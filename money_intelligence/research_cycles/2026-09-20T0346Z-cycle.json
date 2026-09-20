@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T0346Z",
+  "information_cutoff": "2026-09-20T03:46:12Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_before_persist": "02e18823908988d27efbd7e2bd483fbf75efbf05",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-20T03:42:54Z",
+    "artifact_cutoff_utc": "2026-09-20T03:46:12Z",
+    "seconds_this_run_minimum": 198,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 0,
+    "minimum_cumulative_seconds_since_last_owner_report": 198,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted. The preceding owner-facing report covered the 2026-09-20T0243Z material update, so cumulative reporting time is reset for this cycle; schedule gaps and idle time are excluded."
+  },
+  "highest_information_question": "Does the BoE Sep.17 2026 gilt rally generalize to an expectation-adjusted net-duration-supply channel, rather than merely coinciding with a one-off bond rally?",
+  "fresh_research": [
+    {
+      "topic": "BoE Sep.18 2025 provides a matched non-move control for the 2026 QT-duration-supply case",
+      "label": "HISTORICAL MATCHED CONTROL / SUPPORTS REFINED CAUSAL RULE",
+      "observed_facts": [
+        "On Sep.18 2025 the BoE slowed its annual gilt-stock reduction from £100B to £70B and deliberately skewed active sales away from the long end to about 40% short, 40% medium and 20% long.",
+        "The 2025 decision was broadly anticipated: a Reuters poll median expected about £67.5B of annual QT versus the realized £70B.",
+        "Immediate market reaction was muted: the 10-year gilt yield was essentially unchanged near 4.622%, while the 30-year yield fell only about 1 bp to 5.423%. Sterling was roughly flat.",
+        "By contrast, on Sep.17 2026 the BoE held Bank Rate at 3.75% with a hawkish 6-3 vote split, yet paused all active gilt sales until April 2027, ended long-dated sales, retained £120B of post-2049 gilts to back banknotes, and set a multi-year unwind with £20B annual sales plus maturities.",
+        "The 2026 30-year yield fell about 11-12 bp, versus roughly 7 bp for the 10-year and 4 bp for the 2-year, even while markets retained a roughly 75% probability of a November rate hike and nearly four 25 bp hikes through end-2027.",
+        "The 2026 headline average unwind pace of ~£46B/year was itself near pre-event market expectations around £50B, and a halt of 20- and 30-year sales had been publicly discussed before the decision. Therefore the entire yield move cannot honestly be attributed to an unanticipated headline QT slowdown."
+      ],
+      "inference": "The stronger causal variable is not scalar QT stock reduction. It is the expectation-adjusted change in market-facing duration supply by maturity and implementation method. A largely anticipated 2025 slowdown/long-end skew produced little immediate long-end repricing, whereas the 2026 package increased certainty that the BoE would stop supplying long-duration gilts to the market, paused all sales for six months and opened a potential direct-transaction route with the DMO. The curve-specific response is consistent with a duration-supply channel, but part of the move may also reflect relief/positioning because several components had been telegraphed.",
+      "causal_chain": "pre-event expected fiscal/BoE duration supply -> policy announcement changes certainty/timing/maturity/method of market-facing central-bank supply -> marginal absorption requirement changes -> maturity-specific term premium reprices -> long-end yields move relative to front-end policy expectations",
+      "matched_control": {
+        "2025_event": "Expected QT slowdown plus fewer long sales; 30y ~-1bp, 10y ~flat immediately.",
+        "2026_event": "All-sales pause + permanent long-end retention + multi-year implementation/direct-DMO option; 30y ~-11/-12bp, 10y ~-7bp, 2y ~-4bp despite hawkish short-rate backdrop.",
+        "interpretation": "Supports expectation-adjusted duration-supply surprise as a better explanatory state variable than gross QT amount."
+      },
+      "negative_findings": [
+        "Do not estimate a stable bp-per-£bn QT elasticity from these two cases.",
+        "Do not claim the 2026 long-end sales halt was wholly unanticipated; Reuters reported the possibility before the decision and Deutsche Bank expected it.",
+        "Do not attribute the full 2026 gilt rally to QT without controlling for global yields, oil/inflation repricing and positioning.",
+        "A Fed May 1 2024 QT slowdown is a poor clean control because Treasury yields also reacted strongly to Powell's rate-path communication; QT and policy-rate surprises were entangled."
+      ],
+      "supported_method_refinement": "For sovereign-duration event studies, compute expected and realized NET MARKET-FACING DURATION SUPPLY by maturity bucket: fiscal issuance + central-bank active sales - maturities/reinvestment/retained holdings/official absorption. Compare the surprise in that schedule with 2y/10y/30y yield changes, policy-path surprise, global-rate controls and positioning. Treat active sales and passive runoff as economically distinct.",
+      "decision_support": "UK long duration remains WAIT after the already-realized rally. This cycle improves the research model, not an immediate trade thesis."
+    },
+    {
+      "topic": "China Sep.20 LPR hold is a fresh expectation-aligned policy control, not a new easing impulse",
+      "label": "CURRENT MACRO / EXPECTATION CONTROL",
+      "observed_facts": [
+        "China kept the one-year LPR at 3.00% and five-year LPR at 3.50% for a 16th consecutive month on Sep.20.",
+        "All 21 respondents in Reuters' pre-decision survey expected no change.",
+        "Credit demand remains weak in property/local-government-linked sectors while policymakers face constraints from narrow bank margins and the wide U.S.-China yield differential."
+      ],
+      "inference": "The decision itself contains little incremental easing information because it matched consensus. Any China-asset repricing should be attributed to subsequent credit/fiscal measures, growth data or trade-policy surprises rather than labeling the unchanged LPR as fresh stimulus.",
+      "decision_support": "No new China BUY/SHORT thesis from the LPR decision alone."
+    }
+  ],
+  "daily_big_move_lab_delta": {
+    "status": "NO NEW TRADITIONAL CASH-MARKET SESSION SINCE PRIOR DAILY SCAN",
+    "note": "The current day’s full cross-asset scan was already persisted in the 2026-09-20T0243Z cycle. This cycle deepened the highest-information historical matched control rather than duplicating a weekend scan. No fresh price move was promoted without a new timestamp-safe market session."
+  },
+  "learning_refinement_candidate": {
+    "parent_candidate": "MI-L-20260920-013",
+    "status": "SUPPORTED / REGIME-SPECIFIC / STRENGTHENED BY MATCHED CONTROL",
+    "claim": "Central-bank QT should be modeled as expectation-adjusted net market-facing duration supply by maturity and implementation method, not as a scalar balance-sheet-shrinkage number. The 2025 BoE expected QT slowdown/long-end skew was a muted non-move control, while the 2026 package produced a much larger long-end-specific rally despite hawkish short-rate pricing.",
+    "promotion_note": "Keep as a refinement of the existing 013 candidate rather than creating a duplicative canonical learning until the cross-central-bank sample is larger."
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast clears the evidence bar; existing WAIT states are preserved."
+  },
+  "canonical_update_decision": "Persist this append-only cycle only. The matched control materially strengthens the QT research model, but it does not change the high-level dashboard regime or create an actionable BUY/SHORT. Avoid noisy whole-file rewrites while main is active.",
+  "next_research": [
+    "Add a small cross-central-bank sample of Fed/ECB/BoC runoff changes, explicitly marking events where rate-path guidance contaminates identification.",
+    "For BoE 2026, collect a high-frequency Bund/UST/global-rate control around the announcement and estimate the UK-specific 30y residual before promoting any magnitude claim.",
+    "Build a maturity-bucket net-duration-supply table using DMO issuance, BoE sales/maturities and retained holdings to test whether curve responses scale with supply surprise across episodes.",
+    "After U.S. markets reopen, resume BTC ETF/derivatives confirmation work rather than inferring institutional accumulation from weekend price alone.",
+    "At crude reopen, require verified physical/logistics damage and price/physical-differential confirmation before changing crude WAIT."
+  ],
+  "sources": [
+    "https://www.bankofengland.co.uk/monetary-policy-summary-and-minutes/2025/september-2025",
+    "https://www.bankofengland.co.uk/markets/market-notices/2025/september/apf-gilt-sales-market-notice-18-september-2025",
+    "Reuters Sep.18 2025 market reaction syndicated at https://www.lse.co.uk/news/gilts-pound-steady-after-boe-slows-qt-keeps-rates-steady-h02aycih6xwrl55.html",
+    "https://www.bankofengland.co.uk/monetary-policy-summary-and-minutes/2026/september-2026",
+    "https://www.reuters.com/business/investors-cheer-boe-move-pause-gilt-sales-driving-bond-rally-2026-09-17/",
+    "https://www.reuters.com/business/finance/bank-england-halts-long-dated-gilt-sales-rewrites-plan-unwind-qe-2026-09-17/",
+    "Reuters Sep.15 2026 pre-event report syndicated at https://www.marketscreener.com/news/bank-of-england-to-stop-selling-20-and-30-year-gilts-telegraph-reports-ce785bddd889f620",
+    "https://www.federalreserve.gov/newsevents/pressreleases/monetary20240501a.htm",
+    "https://www.reuters.com/markets/us/fed-announces-reduction-balance-sheet-runoff-pace-2024-05-01/",
+    "https://www.reuters.com/business/finance/china-keeps-benchmark-lending-rates-unchanged-16th-month-september-2026-09-20/"
+  ],
+  "paid_resource_policy": "No new paid resources authorized; free/public/primary sources and high-quality contemporaneous reporting were used.",
+  "real_money_trading": "DISABLED / NOT AUTHORIZED"
+}
