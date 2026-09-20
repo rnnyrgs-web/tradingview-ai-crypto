@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T0902Z",
+  "information_cutoff": "2026-09-20T09:02:23Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_before_persist": "572bb6ac2d4d802e844d3fdc459b86df9e2a8acc",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-20T08:59:05Z",
+    "artifact_cutoff_utc": "2026-09-20T09:02:23Z",
+    "seconds_this_run_minimum": 198,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 928,
+    "minimum_cumulative_seconds_since_last_owner_report": 1126,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted; schedule gaps, idle time, publication timestamps and background time are excluded."
+  },
+  "highest_information_question": "When an asset rallies on an access or tokenomics narrative, does the mechanism create economically forced recurring native-token demand, or mainly reduce participation friction and amplify attention/positioning without changing fundamental cash demand?",
+  "fresh_research": [
+    {
+      "topic": "AVAX Helicon: shorter validator duration is a two-sided capital-liquidity change, not a one-way bullish staking lock",
+      "label": "DAILY BIG-MOVE CAUSAL LAB / PRIMARY-DOCUMENT FALSIFICATION",
+      "observed_facts": [
+        "CoinMarketCap at about 08:58 UTC showed AVAX near $9.63, +9.40%/24h and +31.88%/7d, with roughly $1.15B of 24h volume and turnover about 27.1% of market capitalization while BTC, ETH, SOL, XRP and LINK were negative over 24h.",
+        "Avalanche primary Helicon documentation schedules Mainnet activation for September 22, 2026 at 15:00 UTC.",
+        "ACP-273 reduces the minimum staking duration for new Primary Network validators from two weeks to 48 hours. Existing validators remain on their original staking periods; delegators are not affected and retain the existing minimum; Avalanche L1 validators are unaffected by this Primary Network rule.",
+        "Helicon simultaneously raises Primary Network validator uptime eligibility from 80% to 90%, adds auto-renewed staking, introduces dynamic minimum gas pricing and phases the minimum-consumption-rate lower bound from 10% to 7.5% over 90 days.",
+        "Primary documentation states the lower reward-curve floor has its greatest effect on short staking periods."
+      ],
+      "inference": "Reducing validator duration can increase access for institutions or operators unwilling to commit capital for weeks, but it also makes validator capital more reversible and lowers reward economics for short commitments. The sign on net AVAX lock-up, float reduction and durable token demand is therefore empirically ambiguous until post-activation validator participation, stake duration, total staked AVAX and reward behavior are observed.",
+      "causal_chain": "Helicon announcement/expectation -> lower validator-duration friction and auto-renewal optionality -> higher perceived institutional/operational accessibility -> AVAX-specific attention and momentum demand -> high-turnover relative-price strength; actual durable value capture depends on net new AVAX stake/gas/burn versus greater stake reversibility and lower short-duration rewards",
+      "capital_source_destination": "Price action is consistent with crypto capital rotating toward AVAX-specific upgrade/institutional optionality. No evidence establishes that institutions themselves are buying AVAX or that the upcoming rule change creates a fixed quantity of forced demand.",
+      "catalyst": "Approaching September 22 Helicon activation plus prior institutional/tokenization evaluation disclosures.",
+      "transmission_mechanism": "Expectation repricing around participation friction and future network use; native-token value capture remains a separate measurable bridge.",
+      "amplifiers": [
+        "Weekend/thinner liquidity",
+        "High relative turnover and momentum",
+        "Tokenization narrative",
+        "Potential AVAX-specific derivatives positioning not yet fully reconstructed"
+      ],
+      "matched_non_movers": "BTC, ETH, SOL, XRP and LINK were all negative while AVAX remained strongly positive, rejecting a simple market-beta explanation. Broad tokenization regulation is multi-chain and therefore also insufficient by itself to explain the AVAX-specific magnitude.",
+      "negative_findings": [
+        "Do not describe Helicon as unlocking all existing stakes; ACP-273 applies to new staking periods after activation.",
+        "Do not describe the 48-hour minimum as applying to delegators; delegation minimums are unchanged.",
+        "Do not infer that shorter staking duration mechanically reduces liquid AVAX supply; it can attract new stake but also increases reversibility.",
+        "Do not treat institutional accessibility as equivalent to economically forced AVAX demand."
+      ],
+      "confirmations": [
+        "Post-activation rise in Primary Network validator count and total AVAX staked without a large shortening of average effective stake persistence",
+        "Observable AVAX-denominated fees/burn/staking attributable to incremental usage",
+        "Sustained relative strength after the activation event rather than pre-event momentum reversal"
+      ],
+      "falsifiers": [
+        "Validator participation does not rise materially after lower minimum duration",
+        "Average stake persistence falls enough to offset new participation",
+        "AVAX price strength reverses without measurable on-chain/value-capture improvement"
+      ],
+      "decision_support": "AVAX WAIT / AVOID CHASING. Upgrade/accessibility is real; the direction and size of durable native-token demand remain unproven."
+    },
+    {
+      "topic": "ENA weekend attention shock: social catalyst and short-covering can dominate before fee-switch cash demand exists",
+      "label": "DAILY BIG-MOVE CAUSAL LAB / ATTENTION-VS-FUNDAMENTAL-FLOW CONTROL",
+      "observed_facts": [
+        "CoinMarketCap around 08:57 UTC showed ENA near $0.2007, +4.01%/24h and +44.97%/7d, with market cap about $2.03B, 24h volume about $938M and turnover about 46.3%.",
+        "Contemporaneous secondary reporting timestamped earlier on September 20 said Arthur Hayes publicly targeted $0.50 for ENA and that price rapidly moved from roughly $0.17 through $0.21, with intraday gains above 20%; by the later CMC snapshot much of the acute rolling-24h spike had decayed while turnover remained extreme.",
+        "Ethena's August 27 governance proposal states that ENA buybacks begin only when the first USDe supply milestone is reached; the first rung is $7.5B and carries a 5% take rate, with 95% of foundation net revenue from the covered business lines directed to buybacks once the applicable milestone is active.",
+        "The proposal's supporting analysis explicitly said that at then-current USDe supply of $4.07B the schedule takes nothing and nothing was immediate.",
+        "Live CoinMarketCap data around 08:58 UTC showed USDe circulating supply around 4.845B, still below the $7.5B first milestone. Therefore the new fee-switch schedule does not currently create protocol buyback demand under the published milestone logic.",
+        "Global crypto open interest was down roughly 4-5% over 24h and BTC liquidations were recently long-heavy, indicating broad deleveraging rather than a market-wide fresh-long leverage expansion. ENA-specific short covering is plausible from contemporaneous reports, but venue-complete positioning has not been reconstructed."
+      ],
+      "inference": "The sharp ENA impulse is better classified as an attention/expectation shock amplified by high turnover and some probable short covering, rather than as proof of same-day protocol buyback demand. The fee-switch creates conditional future value-accrual optionality, but the cash-flow bridge is not active at current USDe supply.",
+      "causal_chain": "widely followed trader price target + pre-existing fee-switch/value-accrual narrative -> attention/FOMO and spot buying -> shorts partially cover into a high-turnover weekend market -> price overshoots -> acute gain partially retraces as forced/attention demand fades; protocol buyback cash flow remains conditional on USDe supply reaching the published milestone",
+      "capital_source_destination": "Likely crypto-native momentum/attention capital and some short-cover flow into ENA; account-level source-of-funds and exact venue decomposition remain UNKNOWN.",
+      "catalyst": "Public $0.50 target from a high-attention crypto figure against an existing fee-switch narrative.",
+      "transmission_mechanism": "Attention changes marginal willingness to pay before underlying protocol cash demand changes.",
+      "amplifiers": [
+        "Very high turnover relative to market cap",
+        "Weekend/thinner liquidity",
+        "Probable short-covering",
+        "Existing tokenomics narrative"
+      ],
+      "matched_control": "Broad crypto market capitalization was down on the day and BTC/ETH/SOL/XRP/LINK were negative, while ENA remained positive and high-turnover. This favors an idiosyncratic attention/tokenomics explanation over broad beta.",
+      "negative_findings": [
+        "Do not label the September 20 move as protocol-buyback driven under the published schedule while USDe remains below $7.5B.",
+        "Do not equate governance approval of conditional buybacks with realized current market purchases.",
+        "Do not treat a public price target as fundamental information or a durable demand source.",
+        "Exact October unlock quantity and market impact require primary schedule verification before being used as a forecast input."
+      ],
+      "confirmations": [
+        "USDe circulating supply reaches and sustains the first milestone under the governing measurement convention",
+        "Foundation transparency dashboard shows actual ENA buybacks",
+        "Price strength persists with evidence of spot accumulation after attention-driven turnover normalizes"
+      ],
+      "falsifiers": [
+        "USDe remains below the first milestone and ENA strength fades with attention/turnover",
+        "Actual implemented fee-switch terms differ materially from the cited proposal",
+        "ENA-specific venue data show a different dominant mechanism than attention/short covering"
+      ],
+      "decision_support": "ENA WAIT / AVOID CHASING. The conditional value-accrual mechanism is real, but current published data do not support a claim that buybacks are already the marginal buyer."
+    },
+    {
+      "topic": "Saudi/Gulf market reaction is a matched non-catastrophe control for weekend attack headlines",
+      "label": "ENERGY / GEOPOLITICAL MATCHED CONTROL",
+      "observed_facts": [
+        "Reuters reported on September 20 that Saudi Arabia's TASI fell about 0.5%, Saudi Aramco about 0.6% and Saudi National Bank about 0.5% after Houthi claims of attacks around Riyadh; Qatar's index fell about 0.9% and Industries Qatar about 3.7%.",
+        "The visible local-equity reaction was negative but modest relative to what would normally be expected from a confirmed catastrophic loss of Saudi oil-export capacity.",
+        "Traditional crude futures were closed during this weekend control, so no oil-price inference is made from absent futures trading."
+      ],
+      "inference": "Local market pricing is consistent with elevated security risk but does not confirm a new large physical oil-supply loss. This strengthens the existing rule that attack headlines require physical-damage, loading, route and differential confirmation before being translated into lost barrels.",
+      "alternative_explanations": [
+        "Local equities may underreact before damage information is complete",
+        "Government support expectations or market microstructure may mute local pricing",
+        "Some geopolitical risk was already priced"
+      ],
+      "decision_support": "Crude WAIT / high tail risk. Reassess when oil markets reopen and physical logistics evidence updates."
+    },
+    {
+      "topic": "Moscow refinery drone strike is a physical-infrastructure risk, but lost throughput is not yet quantified",
+      "label": "ENERGY SUPPLY WATCH / FAIL-CLOSED",
+      "observed_facts": [
+        "Reuters reported September 20 that a very large Ukrainian drone attack damaged a facility at the Moscow oil refinery; the refinery processed about 11.6 million metric tons of crude in 2024.",
+        "Damage to a facility is verified at headline level, but this cycle did not obtain authoritative evidence quantifying current throughput loss, outage duration or product-volume impact."
+      ],
+      "inference": "The event can tighten Russian product supply only to the extent that actual operating capacity is impaired. Nameplate or historical throughput must not be treated as barrels lost.",
+      "decision_support": "WAIT on any oil/product supply thesis until unit-level outage and duration are verified."
+    },
+    {
+      "topic": "U.S.-China talks are live future information, not a realized policy catalyst",
+      "label": "MACRO/POLICY CONTROL",
+      "observed_facts": [
+        "Reuters reported September 20 that U.S. Treasury Secretary Scott Bessent and Chinese Vice Premier He Lifeng are meeting in Manhattan to discuss AI, trade, tariffs and critical minerals ahead of the Trump-Xi summit.",
+        "The reporting said neither side expected a major breakthrough and described the objective as demonstrating progress and extending the trade truce; no negotiated outcome was available at the cutoff."
+      ],
+      "inference": "Do not assign semiconductor, China-equity, dollar or critical-mineral directional winners from the meeting agenda alone. The information value comes from the realized agreement relative to expectations.",
+      "decision_support": "WAIT / NO EDGE before an outcome."
+    }
+  ],
+  "daily_big_move_lab_delta": {
+    "selected_or_retested": [
+      "AVAX +9.4%/24h and +31.9%/7d while majors were negative: Helicon access improvements are real, but shorter validator duration is economically two-sided and does not prove greater persistent AVAX lock-up.",
+      "ENA remained a high-turnover idiosyncratic mover after an earlier attention spike: current USDe supply remains below the published first buyback milestone, so the move should not be back-explained as active protocol buyback demand.",
+      "Saudi/Gulf equities fell modestly after attack claims, providing a useful non-catastrophe control while physical oil damage remains unverified.",
+      "Moscow refinery damage is logged as a physical-infrastructure event with throughput impact still UNKNOWN rather than converted mechanically into lost supply."
+    ],
+    "method_upgrade_candidate": "For access/tokenomics catalysts, explicitly separate (1) participation-friction reduction, (2) economically forced token purchase/lock/burn, (3) reversibility/effective float, (4) reward/cash-flow magnitude, and (5) attention/positioning amplifiers before assigning a token-level value-capture thesis."
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast clears the evidence bar; existing WAIT states are preserved."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. The AVAX Helicon primary-document correction and ENA attention-versus-active-buyback separation materially improve causal truthfulness, but they do not justify dashboard or learning-ledger churn yet. No code or signal-system state changed.",
+  "next_research": [
+    "After Helicon activates, measure Primary Network validator count, total AVAX staked, new-stake durations, effective stake persistence, validator exits/renewals and AVAX-denominated fee/burn changes versus the frozen pre-event state.",
+    "For ENA, verify the final implemented fee-switch vote/measurement convention and monitor the Foundation transparency dashboard for the first actual buyback rather than inferring it from price.",
+    "Reconstruct ENA-specific OI, funding, liquidations and spot-volume venues around the September 20 attention spike to estimate the role of short covering versus spot demand.",
+    "When crude markets reopen, compare Brent/WTI, Saudi-linked equities, physical differentials and verified Yanbu/loading data to test whether weekend attacks changed effective deliverable supply.",
+    "Obtain unit-level operating data for the Moscow refinery before translating the drone strike into product or crude-balance effects.",
+    "Continue the expectation-adjusted duration-supply model and Monday CXMT matched-response test once traditional markets reopen."
+  ],
+  "sources": [
+    "https://build.avax.network/docs/acps/273-reduce-minimum-staking-duration",
+    "https://build.avax.network/docs/primary-network/helicon-upgrade",
+    "https://build.avax.network/blog/helicon-upgrade",
+    "https://gov.ethenafoundation.com/t/ena-fee-switch-activation/830",
+    "https://www.reuters.com/world/middle-east/saudi-gulf-stocks-fall-after-houthis-claim-riyadh-attacks-2026-09-20/",
+    "https://www.reuters.com/world/europe/two-dead-moscow-region-drones-hit-oil-refinery-russian-capital-2026-09-20/",
+    "https://www.reuters.com/business/finance/us-treasurys-bessent-chinas-he-launch-talks-ai-trade-critical-minerals-2026-09-20/",
+    "CoinMarketCap connected real-time quotes/global metrics/derivatives metrics, 2026-09-20 08:57-08:58 UTC"
+  ],
+  "paid_resource_policy": "No new paid resources authorized; free/public/primary sources, connected CoinMarketCap data and high-quality contemporaneous reporting were used.",
+  "real_money_trading": "DISABLED / NOT AUTHORIZED"
+}
