@@ -16,8 +16,16 @@ SKIPPED_PATHS = {".github/workflows/security.yml"}
 
 PATTERNS: tuple[re.Pattern[str], ...] = (
     # Real API keys may be quoted, assigned, or appear after punctuation, but
-    # should not match the "sk-" inside ordinary words such as "risk-premium".
-    re.compile(r"(?<![A-Za-z0-9_])sk-[A-Za-z0-9_-]{20,}"),
+    # should not match the "sk-" inside ordinary words such as "risk-premium"
+    # or hyphenated organization names such as "sk-hynix". Legacy keys have
+    # one opaque segment; current project/service-account keys have a trusted
+    # type prefix before their opaque suffix.
+    re.compile(
+        r"(?<![A-Za-z0-9_])(?:"
+        r"sk-[A-Za-z0-9]{20,}"
+        r"|sk-(?:proj|svcacct)-[A-Za-z0-9_-]{20,}"
+        r")"
+    ),
     re.compile(r'''SUPABASE_SECRET_KEY\s*=\s*["'][^"']+["']'''),
     re.compile(r'''SCAN_SECRET\s*=\s*["'][^"']+["']'''),
     re.compile(r'''DASHBOARD_SECRET\s*=\s*["'][^"']+["']'''),
