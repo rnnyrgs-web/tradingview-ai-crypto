@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T1134Z",
+  "information_cutoff": "2026-09-20T11:34:28Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_observed": "105bc4aa6e7c0463c1e469bdf018b47fb36164e5",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_research_cycle_tree_and_latest_cycles": true,
+    "searched_for_separate_prediction_artifacts": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-20T11:30:34Z",
+    "artifact_cutoff_utc": "2026-09-20T11:34:28Z",
+    "seconds_this_run_minimum": 234,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 1642,
+    "minimum_cumulative_seconds_since_last_owner_report": 1876,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted; schedule gaps, idle time, publication timestamps and background time are excluded."
+  },
+  "highest_information_question": "Can the sovereign-duration model be made causally cleaner by separating reserve-liquidity creation from long-duration risk absorption, so that balance-sheet growth is not misclassified as long-end monetary easing?",
+  "fresh_research": [
+    {
+      "topic": "Fed balance-sheet size and duration absorption are separate state variables",
+      "label": "SOVEREIGN DURATION / CENTRAL-BANK BALANCE-SHEET COMPOSITION / MATCHED-MECHANISM CONTROL",
+      "observed_facts": [
+        "The Federal Reserve's July 2026 Monetary Policy Report states that since early January 2026 SOMA purchased nearly $250B of Treasury bills: about $160B of reserve-management purchases and about $90B of agency-principal reinvestments. Fed assets rose about $150B and reserves about $54B over that period.",
+        "The September 16, 2026 implementation directive says reserve-management purchases should be Treasury bills and, if needed, Treasury securities with remaining maturities of three years or less; all Treasury principal is rolled over and all agency principal is reinvested into Treasury bills.",
+        "The current New York Fed operating schedule for September 15-October 14 has approximately $15.6B of reinvestment purchases and zero reserve-management purchases; the August 14-September 14 period likewise had zero reserve-management purchases.",
+        "The September 17 H.4.1 release shows Treasury-bill holdings about $550.2B on the week-average measure, up about $354.7B year over year, while nominal Treasury notes and bonds were about $3.621T, up only about $36.1B year over year. The balance-sheet expansion is therefore heavily concentrated at the very front end rather than in long coupons.",
+        "The Fed's 2011-12 Maturity Extension Program explicitly purchased longer-term Treasuries while selling/redeeming shorter-term Treasuries, with the stated mechanism of reducing market supply of longer-term Treasuries to put downward pressure on longer-term rates. This is a useful mechanism control because balance-sheet size need not increase for duration absorption to change materially."
+      ],
+      "inference": "Central-bank balance-sheet SIZE is not a sufficient proxy for the amount of long-duration risk removed from private markets. Reserve-management bill purchases can raise reserves and Fed assets while doing little to absorb 10-30 year duration, whereas long-coupon QE or maturity extension changes private duration supply much more directly. The reserve-liquidity channel and the duration/term-premium channel must be modeled separately.",
+      "causal_chain": "reserve-management need -> Fed buys bills/very-short Treasuries -> bank reserves/SOMA assets can rise -> money-market reserve conditions ease or remain ample; separately, long-end Treasury issuance minus central-bank long-coupon absorption -> private investors/dealers must absorb duration -> term premium/long yields depend on marginal buyer capacity -> mortgages/credit/equity discount rates respond",
+      "matched_controls": [
+        "2011-12 Maturity Extension Program: near-zero net balance-sheet expansion but explicit short-to-long duration swap intended to lower long rates by removing long supply.",
+        "2026 reserve-management program: balance sheet/reserves can expand through Treasury-bill purchases while the implementation directive avoids long-coupon purchases.",
+        "September 2026 BoE control from the prior cycle: long-end gilt yields reacted strongly to a change in expected long-duration market-facing supply even though the short-rate stance remained hawkish."
+      ],
+      "negative_findings": [
+        "Do not label 2026 Fed reserve-management bill purchases as long-duration QE.",
+        "Do not infer that a rising Fed balance sheet mechanically means falling 10-30 year term premia.",
+        "Do not infer that bill purchases have zero macro effect; they can materially affect reserve abundance and money-market functioning, which is a separate transmission channel.",
+        "Do not use one scalar 'global liquidity' number where maturity composition and private duration supply are the relevant price-setting variables."
+      ],
+      "learning_candidate": {
+        "proposed_id": "MI-L-20260920-013",
+        "status": "SUPPORTED_METHOD_RULE_PENDING_SAFE_CANONICAL_LEDGER_PROMOTION",
+        "claim": "For sovereign-rate transmission, model reserve liquidity and duration absorption separately. Central-bank balance-sheet growth through bill/very-short purchases can add reserves without materially removing long-duration risk; long-coupon holdings, reinvestment/runoff/sales and fiscal issuance by maturity determine market-facing duration supply, which must then be conditioned on marginal-buyer and dealer capacity."
+      },
+      "decision_support": "Model upgrade only. No standalone U.S. Treasury BUY/SHORT thesis clears the evidence bar from this mechanism alone."
+    },
+    {
+      "topic": "Treasury liquidity-support buybacks are not one-for-one net duration removal",
+      "label": "U.S. DEBT MANAGEMENT / CAUSAL DECOMPOSITION / CONFIRMATION",
+      "observed_facts": [
+        "Treasury's August 3, 2026 borrowing estimate projects $739B of privately-held net marketable borrowing in July-September and $628B in October-December, and explicitly says buybacks are not expected to significantly affect privately-held net marketable borrowing because new issuance replaces securities bought back.",
+        "Treasury's August 5 refunding kept nominal coupon auction sizes broadly unchanged, including regular 10-, 20- and 30-year supply, while liquidity-support buybacks operate separately.",
+        "Treasury's buyback program description says the purpose is to give holders an outlet for less-liquid securities and allow market intermediaries to recycle balance-sheet risk; Treasury is a price-sensitive buyer and accepted amounts can be below the announced maximum.",
+        "Treasury evaluates some auction participation on a duration-adjusted ten-year-equivalent basis, confirming that notional dollars and duration risk are distinct quantities."
+      ],
+      "inference": "Gross buyback dollars should not be subtracted from private duration supply. The relevant net-duration effect is the duration of securities repurchased minus the duration of replacement issuance, while market-functioning benefits to dealers/intermediaries should be tracked as a separate liquidity channel.",
+      "decision_support": "No automatic bullish-duration inference from headline Treasury buyback size."
+    },
+    {
+      "topic": "Weekend Big-Move Lab: crypto cross-section remains selective while leverage contracts",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / LIVE CRYPTO CONTROL",
+      "observed_facts": [
+        "CoinMarketCap at approximately 11:32-11:33 UTC showed BTC about $80.42K (-1.03%/24h), ETH $2,575 (-2.38%), SOL $108.14 (-3.33%), XRP $1.376 (-3.50%) and LINK $12.01 (-3.96%).",
+        "AVAX was about $9.94, +7.25%/24h and +36.0%/7d with 24h turnover about 25% of market capitalization. ENA was about $0.2035, +7.28%/24h and +45.36%/7d with turnover about 44% of market capitalization. ZEC was about $1,436, -6.62%/24h but still +31.5%/7d.",
+        "Global crypto derivatives open interest was about $422.7B, down 5.6%/24h and 6.84%/7d. Average perpetual funding remained positive near 0.0064. BTC 12h liquidations were about $28.3M, of which about $27.0M were longs.",
+        "AVAX's September 22 Helicon activation is primary-source verified. Current primary documentation shows the bundle changes validator minimum duration, auto-renewal, uptime and reward economics, but does not mechanically prove more persistent AVAX lock-up or an activation-day burn increase.",
+        "A fresh authoritative same-day catalyst sufficient to explain ENA's current acceleration was not established in this cycle; secondary stories repeat a fee-switch/buyback narrative, but no primary activation evidence was promoted to fact."
+      ],
+      "inference": "AVAX and ENA relative strength is not explained by broad crypto beta or broad fresh leverage because major assets are down and aggregate OI is contracting. AVAX has a known near-dated protocol catalyst but realized token-value capture remains unproven; ENA's causal attribution remains UNKNOWN rather than post-hoc labeled from secondary narratives.",
+      "decision_support": "AVAX WAIT / AVOID CHASING; ENA WAIT / AVOID CHASING; BTC WAIT / tactical confirmation candidate; ZEC WAIT / AVOID CHASING."
+    },
+    {
+      "topic": "Weekend physical-risk controls: Saudi/Gulf equities and Russian refining",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / GEOPOLITICS / ENERGY",
+      "observed_facts": [
+        "Reuters reported Saudi TASI down about 0.5% on September 20 after Houthi claims of Riyadh attacks, with Saudi Aramco down about 0.6%; Qatar's index fell about 0.9%. This is a measurable regional risk repricing but not a crash.",
+        "No independently verified incremental loss of Saudi oil-export capacity was established in this cycle; therefore the equity reaction cannot be translated into lost-barrel estimates.",
+        "Reuters reported a large Ukrainian drone attack damaged part of an oil refinery in the Moscow region on September 20, adding to already stressed Russian product supply. Crude futures are closed, so no Sunday benchmark-price response is fabricated or attributed."
+      ],
+      "inference": "Geopolitical headlines can create regional risk-premium repricing without proving physical commodity scarcity. For energy, verified throughput/refinery capacity, alternate routes, inventories and product balances remain higher-information variables than attack claims alone.",
+      "decision_support": "Crude WAIT / high tail risk until reopened benchmark and physical-market evidence confirm a change in effective deliverable supply."
+    }
+  ],
+  "daily_big_move_lab_delta": {
+    "selected_or_retested": [
+      "AVAX +7.25%/24h against negative majors and contracting aggregate OI: idiosyncratic strength persists but value-capture remains unproven before Helicon activation.",
+      "ENA +7.28%/24h and +45.36%/7d with very high turnover: significant momentum, but no primary same-day causal catalyst was validated; preserve UNKNOWN rather than a fee-switch attribution.",
+      "ZEC -6.62%/24h after a very large multi-week advance: no new causal state change validated; existing corporate-action/flow-integrity safeguards remain necessary.",
+      "Saudi/Gulf equities show modest geopolitical repricing after attack claims; physical oil-loss evidence remains absent.",
+      "Russian refinery damage is physically relevant to product supply but benchmark crude is closed, so no price-causality claim is made."
+    ],
+    "method_upgrade": "For central-bank balance sheets, store at least two separate variables: reserve-liquidity provision by maturity and net long-duration risk removed from private markets. Do not collapse them into total assets."
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast clears the evidence bar; existing WAIT states are preserved."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. The sovereign-duration method rule is now materially strengthened by Fed 2011/2026 composition controls and Treasury borrowing/buyback mechanics, but the canonical JSONL ledger is not rewritten in this concurrent environment without a safe append primitive. Dashboard actionability remains unchanged, so no dashboard churn. No code or signal-system state changed.",
+  "next_research": [
+    "Build a timestamp-safe U.S. Treasury duration state vector: gross coupon issuance by maturity, SOMA holdings/reinvestments/runoff by maturity, Treasury buyback accepted CUSIPs and replacement issuance, expressed in ten-year-equivalent duration rather than notional dollars.",
+    "Add marginal-buyer capacity variables: dealer inventories and depth, pension/insurer duration demand, foreign official/private demand, hedge-fund basis/repo capacity, mutual-fund/household absorption and auction tails.",
+    "Use the 2011-12 Maturity Extension Program, 2019 bill-only reserve-management purchases and 2026 bill-heavy RMP regime as matched mechanism controls for balance-sheet composition versus size.",
+    "After U.S. ETF markets reopen, reconcile finalized BTC/ETH flows with OI/funding/basis and exchange/on-chain absorption before changing BTC WAIT.",
+    "After crude futures reopen, compare benchmark prices, physical differentials, Saudi Yanbu/loadings, Russian refinery throughput and verified route capacity before changing oil WAIT.",
+    "After Helicon activates September 22, measure realized AVAX validator count, stake persistence, issuance and gas-floor/burn changes against the frozen pre-event baseline."
+  ],
+  "sources": [
+    "https://www.federalreserve.gov/monetarypolicy/2026-07-mpr-part2.htm",
+    "https://www.federalreserve.gov/newsevents/pressreleases/monetary20260916a1.htm",
+    "https://www.federalreserve.gov/releases/h41/Current/",
+    "https://www.newyorkfed.org/markets/domestic-market-operations/monetary-policy-implementation/treasury-securities/treasury-securities-operational-details",
+    "https://www.newyorkfed.org/markets/opolicy/operating_policy_251210a",
+    "https://www.newyorkfed.org/markets/reserve-management-reinvestment-purchases-faq/archive/reserve-management-reinvestment-purchases-faq-251210",
+    "https://www.federalreserve.gov/monetarypolicy/maturityextensionprogram-faqs.htm",
+    "https://home.treasury.gov/news/press-releases/sb0584",
+    "https://home.treasury.gov/news/press-releases/sb0590",
+    "https://home.treasury.gov/news/press-releases/sb0607",
+    "https://home.treasury.gov/news/press-releases/sb0267",
+    "https://build.avax.network/docs/primary-network/helicon-upgrade",
+    "https://build.avax.network/docs/acps/285-reduce-minimum-consumption-rate",
+    "https://www.reuters.com/world/middle-east/saudi-gulf-stocks-fall-after-houthis-claim-riyadh-attacks-2026-09-20/",
+    "https://www.reuters.com/world/europe/two-dead-moscow-region-drones-hit-oil-refinery-russian-capital-2026-09-20/",
+    "CoinMarketCap connected real-time quotes/global derivatives metrics, 2026-09-20 11:32-11:33 UTC"
+  ],
+  "paid_resource_policy": "No new paid resources authorized; free/public/primary sources and existing connected market data only."
+}
