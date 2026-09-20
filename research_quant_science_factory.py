@@ -15,7 +15,9 @@ from profitability_learning.contracts import (
     TRUSTED_EXECUTOR_IMPLEMENTATIONS,
     fingerprint,
     strategy_semantic_fingerprint,
+    trusted_executor_implementation,
     validate_strategy,
+    verified_executor_implementation,
 )
 from research_experiment_factory import MAX_EXPERIMENTS, build_experiment_queue
 from signal_development import objective_reference
@@ -80,6 +82,11 @@ def _scientific_design(experiment: dict) -> dict:
     }
     dispatchable = method in DISPATCHABLE_METHODS
     executor = "restrictive_group_abstention_v1" if dispatchable else "design_only"
+    implementation = (
+        trusted_executor_implementation(executor)
+        if executor in TRUSTED_EXECUTOR_IMPLEMENTATIONS
+        else {}
+    )
     return {
         "research_method": method,
         "hypothesis_family_id": _family_id(method, dimension, group, horizon),
@@ -103,7 +110,8 @@ def _scientific_design(experiment: dict) -> dict:
         "max_candidate_mutations": 1,
         "abstention_first": abstention_first,
         "executor_kind": executor,
-        "executor_implementation_id": TRUSTED_EXECUTOR_IMPLEMENTATIONS.get(executor),
+        "executor_implementation_id": implementation.get("implementation_id"),
+        "executor_implementation_sha256": implementation.get("ast_sha256"),
         "dispatchable_now": dispatchable,
         "parameter_mining_allowed": False,
         "untouched_oos_reuse_allowed": False,
@@ -140,6 +148,10 @@ def _strategy_identity(experiment: dict, design: dict) -> dict:
     }
 
 
+def _verified_executor_implementation(executor: str) -> dict:
+    return verified_executor_implementation(executor)
+
+
 def verified_strategy_semantic_fingerprint(experiment: dict) -> str:
     """Return code-bound semantics only when the queued design matches its executor.
 
@@ -158,6 +170,12 @@ def verified_strategy_semantic_fingerprint(experiment: dict) -> str:
     executor = expected_design["executor_kind"]
     if executor not in TRUSTED_EXECUTOR_IMPLEMENTATIONS:
         raise ValueError("unregistered research executor")
+    implementation = _verified_executor_implementation(executor)
+    if (design.get("executor_implementation_id")
+            != implementation["implementation_id"]
+            or design.get("executor_implementation_sha256")
+            != implementation["ast_sha256"]):
+        raise ValueError("science design does not match deployed executor")
     # Every field is factory-owned. Canonical JSON hashing distinguishes
     # bool/int confusion and rejects missing, extra, or weakened values.
     if fingerprint(design) != fingerprint(expected_design):

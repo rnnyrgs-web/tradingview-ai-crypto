@@ -10,7 +10,11 @@ from profitability_learning.runtime import (
     apply_queue_feedback, complete_experiment, enrich_legacy_lesson, refresh_director,
 )
 from research_heavy_experiment_scheduler import build_heavy_dispatch_plan
-from research_quant_science_factory import _scientific_design, _strategy_identity
+from research_quant_science_factory import (
+    _scientific_design,
+    _strategy_identity,
+    verified_strategy_semantic_fingerprint,
+)
 from test_profitability_learning import experiment
 from test_research_heavy_experiment_scheduler import _experiment
 
@@ -206,6 +210,85 @@ def test_trusted_behavior_change_has_distinct_semantic_identity(monkeypatch, tmp
     )
     assert queue["experiments"][0]["learning_feedback"]["changes_eligibility"] is False
     assert build_heavy_dispatch_plan(queue)["selected_count"] == 1
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [("group", "RANGE"), ("target_horizon", "24h")],
+)
+def test_behavior_parameter_change_cannot_inherit_positive_semantic_evidence(
+    monkeypatch, tmp_path, field, value
+):
+    configure(monkeypatch, tmp_path)
+    source = _experiment("positive-trend-both", 100)
+    source["family"] = "factory-restrictive-filter"
+    _complete_positive_factory_strategy(source)
+
+    candidate = _experiment("behaviorally-distinct", 100)
+    candidate["family"] = "factory-restrictive-filter"
+    candidate[field] = value
+    candidate["science_design"] = _scientific_design(candidate)
+    candidate["strategy"] = _strategy_identity(
+        candidate, candidate["science_design"]
+    )
+    candidate["strategy_fingerprint"] = fingerprint(candidate["strategy"])
+
+    queue = apply_queue_feedback({"experiments": [candidate]})
+    feedback = queue["experiments"][0]["learning_feedback"]
+
+    assert feedback["factor"] == 1.0
+    assert feedback["reason"] != "matched_semantic_economic_evidence"
+    assert feedback["changes_eligibility"] is False
+    assert build_heavy_dispatch_plan(queue)["selected_count"] == 1
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [("group", "RANGE"), ("target_horizon", "24h")],
+)
+def test_behavior_parameter_change_is_not_over_vetoed_by_rejected_semantics(
+    monkeypatch, tmp_path, field, value
+):
+    configure(monkeypatch, tmp_path)
+    source = _experiment("rejected-trend-both", 100)
+    source["family"] = "factory-restrictive-filter"
+    complete_experiment(_completed_factory_strategy(source))
+
+    candidate = _experiment("distinct-after-rejection", 100)
+    candidate["family"] = "factory-restrictive-filter"
+    candidate[field] = value
+    candidate["science_design"] = _scientific_design(candidate)
+    candidate["strategy"] = _strategy_identity(
+        candidate, candidate["science_design"]
+    )
+    candidate["strategy_fingerprint"] = fingerprint(candidate["strategy"])
+
+    assert (
+        verified_strategy_semantic_fingerprint(source)
+        != verified_strategy_semantic_fingerprint(candidate)
+    )
+    queue = apply_queue_feedback({"experiments": [candidate]})
+    feedback = queue["experiments"][0]["learning_feedback"]
+    assert feedback["reason"] != "rejected_semantic_identity"
+    assert feedback["changes_eligibility"] is False
+    assert build_heavy_dispatch_plan(queue)["selected_count"] == 1
+
+
+def test_narrative_relabel_remains_semantically_identical():
+    original = _experiment("narrative-original", 100)
+    relabeled = deepcopy(original)
+    relabeled["predicted_mechanism"] = "rewritten mechanism prose"
+    relabeled["hypothesis"] = "rewritten economic story"
+    relabeled["science_design"] = _scientific_design(relabeled)
+    relabeled["strategy"] = _strategy_identity(
+        relabeled, relabeled["science_design"]
+    )
+    relabeled["strategy_fingerprint"] = fingerprint(relabeled["strategy"])
+
+    assert (
+        verified_strategy_semantic_fingerprint(original)
+        == verified_strategy_semantic_fingerprint(relabeled)
+    )
 
 
 @pytest.mark.parametrize(
