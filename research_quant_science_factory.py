@@ -11,6 +11,7 @@ from __future__ import annotations
 import hashlib
 from collections import defaultdict
 
+from profitability_learning.contracts import fingerprint
 from research_experiment_factory import MAX_EXPERIMENTS, build_experiment_queue
 from signal_development import objective_reference
 
@@ -110,13 +111,36 @@ def _scientific_design(experiment: dict) -> dict:
     }
 
 
+def _strategy_identity(experiment: dict, design: dict) -> dict:
+    """Bind an executable research rule to an exact, label-independent identity."""
+    dimension = str(experiment.get("dimension") or "unknown")
+    group = str(experiment.get("group") or "unknown")
+    executor = str(design.get("executor_kind") or "design_only")
+    return {
+        "mechanism": str(experiment.get("predicted_mechanism") or "restrictive research filter"),
+        "components": [{
+            "kind": "research_filter",
+            "rule": f"{executor}:{dimension}",
+            "parameters": {"dimension": dimension, "group": group},
+            "economic_reason": str(experiment.get("hypothesis") or "predeclared falsifiable research"),
+        }],
+        "assets": ["POINT_IN_TIME_RESEARCH_UNIVERSE"],
+        "timeframe": str(experiment.get("target_horizon") or "both"),
+        "execution_rule": executor,
+    }
+
+
 def build_quant_science_queue(diagnostics: dict, memory: dict | None = None, *, limit: int = MAX_EXPERIMENTS) -> dict:
     """Return a bounded, diversified queue of scientifically predeclared experiments."""
     base = build_experiment_queue(diagnostics, memory, limit=MAX_EXPERIMENTS)
     candidates = []
     for row in base.get("experiments") or []:
         enriched = dict(row)
-        enriched["science_design"] = _scientific_design(row)
+        design = _scientific_design(row)
+        strategy = _strategy_identity(row, design)
+        enriched["science_design"] = design
+        enriched["strategy"] = strategy
+        enriched["strategy_fingerprint"] = fingerprint(strategy)
         candidates.append(enriched)
 
     candidates.sort(

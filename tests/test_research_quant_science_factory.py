@@ -1,3 +1,4 @@
+from profitability_learning.contracts import fingerprint
 from research_heavy_experiment_scheduler import build_heavy_dispatch_plan
 from research_quant_science_factory import (
     MASSIVE_VIRTUAL_RESEARCH_CONSTRAINTS,
@@ -42,6 +43,8 @@ def test_quant_science_factory_predeclares_safe_scientific_design():
     assert design["paid_compute_escalation_allowed"] is False
     assert design["idea_generation_counts_as_evidence"] is False
     assert design["abstention_first"] is True
+    assert experiment["strategy_fingerprint"] == fingerprint(experiment["strategy"])
+    assert experiment["strategy"]["execution_rule"] == design["executor_kind"]
     assert experiment["trade_authority"] is False
     assert experiment["promotion_authority"] is False
 

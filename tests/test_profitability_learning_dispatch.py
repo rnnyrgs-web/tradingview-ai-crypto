@@ -108,6 +108,30 @@ def test_new_exact_fingerprint_without_verifiable_semantic_identity_fails_closed
     assert build_heavy_dispatch_plan(queue)["selected"] == []
 
 
+@pytest.mark.parametrize("identity_fields", [(), ("strategy",)])
+def test_missing_exact_identity_cannot_bypass_rejected_semantics(
+    monkeypatch, tmp_path, identity_fields
+):
+    configure(monkeypatch, tmp_path)
+    rejected = experiment([-10, -10, -10])
+    complete_experiment(rejected)
+    candidate = _experiment("identity-omission-relabel", 100)
+    candidate["family"] = "renamed-family"
+    candidate.pop("strategy_fingerprint")
+    if "strategy" in identity_fields:
+        candidate["strategy"] = deepcopy(rejected["contract"]["strategy"])
+    else:
+        candidate.pop("strategy")
+
+    queue = apply_queue_feedback({"experiments": [candidate]})
+
+    assert queue["experiments"][0]["learning_feedback"]["reason"] == (
+        "semantic_identity_unverifiable"
+    )
+    assert queue["experiments"][0]["learning_feedback"]["changes_eligibility"] is True
+    assert build_heavy_dispatch_plan(queue)["selected"] == []
+
+
 def test_material_rule_change_has_distinct_semantic_identity(monkeypatch, tmp_path):
     configure(monkeypatch, tmp_path)
     rejected = experiment([-10, -10, -10])
@@ -142,6 +166,22 @@ def test_director_cannot_offer_rejected_exact_fingerprint(monkeypatch, tmp_path)
                        "strategy_fingerprint": completed["contract"]["strategy_fingerprint"]}}}}})
     assert all(m.get("experiment_id") != "rejected" for m in state["next_missions"])
     assert all(m.get("experiment_id") != "rejected"
+               for m in state["daily_lead_report"]["highest_priority_next_missions"])
+
+
+def test_director_cannot_offer_candidate_with_missing_strategy_identity(
+    monkeypatch, tmp_path
+):
+    import research_director_runtime as director
+    monkeypatch.setattr(director, "probe_bybit_oi_access", lambda: {"status": "source_error", "points_observed": 0})
+    monkeypatch.setattr(director, "_STATE_PATH", tmp_path / "director.json")
+    configure(monkeypatch, tmp_path)
+    state = refresh_director({"workers": {"adaptive-accuracy": {
+        "state": "resting", "latest_evidence": {"evidence_conclusion": "pending_validation",
+        "experiment": {"experiment_id": "missing-identity", "hypothesis": "test rule",
+                       "family": "renamed-family"}}}}})
+    assert all(m.get("experiment_id") != "missing-identity" for m in state["next_missions"])
+    assert all(m.get("experiment_id") != "missing-identity"
                for m in state["daily_lead_report"]["highest_priority_next_missions"])
 
 

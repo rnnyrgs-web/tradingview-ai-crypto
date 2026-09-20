@@ -105,7 +105,8 @@ def _learning_factor(row: dict) -> float:
             or feedback.get("changes_eligibility") is not False
             or not isinstance(feedback.get("reason"), str)
             or feedback.get("reason") not in {"no_matched_completion",
-                "prior_completion_requires_new_evidence", "matched_family_economic_evidence"}):
+                "prior_completion_requires_new_evidence", "matched_family_economic_evidence",
+                "matched_semantic_economic_evidence"}):
         return 0.0
     try:
         factor = number(feedback.get("factor"), "learning factor", minimum=0)

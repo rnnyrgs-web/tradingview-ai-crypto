@@ -99,7 +99,13 @@ def _candidate_feedback(candidate, memory):
     sf = candidate.get("strategy_fingerprint")
     semantic = None
     semantic_unverifiable = False
-    if sf:
+    if not sf:
+        # Family names and narrative labels are not executable identity. Every
+        # candidate entering learned admission must bind a full strategy to its
+        # exact fingerprint, or reuse a fingerprint already known to durable
+        # memory. Missing either side cannot regain eligibility by relabeling.
+        semantic_unverifiable = True
+    else:
         strategy = candidate.get("strategy")
         if strategy is not None:
             try:
