@@ -44,7 +44,7 @@ def test_acceptance_fixture_can_confirm_after_prior_project_tests(prior_slots):
             acceptance._contract(ids, base),
             hypothesis_id=f"prior-{index}", family_id=f"prior-family-{index}",
             family_size=1, evaluation_units=(), evaluation_pairs=(),
-            evaluation_selectors=(),
+            evaluation_pair_contracts=(),
         ))
     memory.register_observation(replace(
         acceptance._observation(
@@ -61,19 +61,6 @@ def test_acceptance_fixture_can_confirm_after_prior_project_tests(prior_slots):
     assert len(hypothesis.evaluation_units) == verification["sample_size"]
     assert hypothesis.evaluation_pairs == tuple(
         (ids[f"support_outcome_{index}"], ids[f"support_control_{index}"])
-        for index in range(1, verification["sample_size"] + 1)
-    )
-    assert hypothesis.evaluation_selectors == tuple(
-        (
-            (
-                "matched_return", "phase2-runtime-acceptance-fixture",
-                f"acceptance://{ids[f'support_outcome_{index}']}",
-            ),
-            (
-                "matched_return", "phase2-runtime-acceptance-fixture",
-                f"acceptance://{ids[f'support_control_{index}']}",
-            ),
-        )
         for index in range(1, verification["sample_size"] + 1)
     )
     if prior_slots == 28:

@@ -3,6 +3,7 @@ from money_intelligence_causal_memory import (
     CausalMemoryError,
     CausalRepricingMemory,
     EpistemicClaim,
+    EvaluationPairContract,
     EvidenceEvent,
     FrozenHypothesis,
     PointInTimeObservation,
@@ -22,6 +23,7 @@ def _obs(
     *,
     metric="matched_return",
     subject_id="SOL",
+    selection_contract_id="",
 ):
     return PointInTimeObservation(
         observation_id=ident,
@@ -38,6 +40,7 @@ def _obs(
         venue="aggregate",
         max_age_hours=24 * 3650,
         provenance_uri=f"fixture://{ident}",
+        selection_contract_id=selection_contract_id,
     )
 
 
@@ -74,10 +77,17 @@ def _supported_memory(*, lanes=("big_move", "strategy_component"), family_id="tr
             (f"outcome-{index}", f"control-{index}")
             for index in range(1, 7)
         ),
-        evaluation_selectors=tuple(
-            (
-                ("matched_return", "fixture-source", f"fixture://outcome-{index}"),
-                ("matched_return", "fixture-source", f"fixture://control-{index}"),
+        evaluation_pair_contracts=tuple(
+            EvaluationPairContract(
+                outcome_observation_id=f"outcome-{index}",
+                control_observation_id=f"control-{index}",
+                outcome_metric_name="matched_return",
+                outcome_source_id="fixture-source",
+                outcome_provenance_uri=f"fixture://outcome-{index}",
+                control_metric_name="matched_return",
+                control_source_id="fixture-source",
+                control_provenance_uri=f"fixture://control-{index}",
+                control_selection_contract_id="matched-control-v1",
             )
             for index in range(1, 7)
         ),
@@ -104,6 +114,7 @@ def _supported_memory(*, lanes=("big_move", "strategy_component"), family_id="tr
                 "2026-09-02T00:00:00Z",
                 "2026-09-02T01:00:00Z",
                 subject_id=f"SOL-{index}",
+                selection_contract_id="matched-control-v1",
             )
         )
     memory.record_evidence(
