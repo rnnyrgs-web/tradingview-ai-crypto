@@ -8,7 +8,7 @@ from threading import Lock
 from money_intelligence_mission_integration import apply_causal_feedback
 
 from .analytics import analyze
-from .contracts import SAFE, fingerprint
+from .contracts import SAFE, fingerprint, strategy_semantic_fingerprint
 from .evolution import learning_missions, rank_candidates
 from .memory import Memory
 
@@ -97,14 +97,48 @@ def _candidate_feedback(candidate, memory):
         factor, reason = .5, "prior_completion_requires_new_evidence"
     family = candidate.get("family") or candidate.get("strategy_family")
     sf = candidate.get("strategy_fingerprint")
-    if family in memory.get("families", {}):
-        ranked = rank_candidates([{**candidate, "family": family, "id": ident}], memory)[0]
+    semantic = None
+    semantic_unverifiable = False
+    if sf:
+        strategy = candidate.get("strategy")
+        if strategy is not None:
+            try:
+                if sf != fingerprint(strategy):
+                    raise ValueError("strategy fingerprint mismatch")
+                semantic = strategy_semantic_fingerprint(strategy)
+            except (KeyError, TypeError, ValueError):
+                semantic_unverifiable = True
+        else:
+            semantic = memory.get("strategy_semantic_by_fingerprint", {}).get(sf)
+            semantic_unverifiable = semantic is None and sf not in memory.get(
+                "rejected_fingerprints", []
+            )
+    semantic_evidence = memory.get("semantic_strategies", {}).get(semantic)
+    if semantic_evidence is not None or family in memory.get("families", {}):
+        ranked = rank_candidates([{
+            **candidate,
+            "family": family,
+            "strategy_semantic_fingerprint": semantic,
+            "id": ident,
+        }], memory)[0]
         factor *= ranked["learning_factor"]
-        reason = "matched_family_economic_evidence"
+        reason = (
+            "matched_semantic_economic_evidence"
+            if semantic_evidence is not None
+            else "matched_family_economic_evidence"
+        )
     if sf and sf in memory.get("rejected_fingerprints", []):
         factor, reason = 0.0, "rejected_exact_fingerprint"
+    elif semantic in memory.get("rejected_semantic_fingerprints", []):
+        factor, reason = 0.0, "rejected_semantic_identity"
+    elif semantic_unverifiable:
+        factor, reason = 0.0, "semantic_identity_unverifiable"
     return {"factor": factor, "reason": reason,
-            "changes_eligibility": reason == "rejected_exact_fingerprint", **SAFE}
+            "changes_eligibility": reason in {
+                "rejected_exact_fingerprint",
+                "rejected_semantic_identity",
+                "semantic_identity_unverifiable",
+            }, **SAFE}
 
 
 def apply_queue_feedback(queue):
@@ -158,7 +192,7 @@ def refresh_director(army):
         # Never broaden legacy eligibility or disturb active claims. A remembered
         # exact rejection is a veto, not a low-priority runnable experiment.
         result["next_missions"] = sorted([deepcopy(by_id[m["mission_id"]]) for m in result["next_missions"]
-            if by_id[m["mission_id"]]["learning_feedback"]["reason"] != "rejected_exact_fingerprint"],
+            if not by_id[m["mission_id"]]["learning_feedback"]["changes_eligibility"]],
                                         key=lambda m: (-m["priority"], m["mission_id"]))
         for item in feedback["missions"]:
             mission = build_mission(lane="profitability-learning", horizon="fresh_chronological",

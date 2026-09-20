@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from profitability_learning.contracts import SAFE
+from profitability_learning.contracts import SAFE, fingerprint
 from profitability_learning.memory import Memory
 from profitability_learning.runtime import (
     apply_queue_feedback, complete_experiment, enrich_legacy_lesson, refresh_director,
@@ -55,6 +55,79 @@ def test_rejected_fingerprint_is_ineligible_even_when_only_candidate(monkeypatch
     queue = apply_queue_feedback({"experiments": [candidate]})
     assert build_heavy_dispatch_plan(queue)["selected"] == []
     assert queue["experiments"][0]["learning_feedback"]["changes_eligibility"] is True
+
+
+@pytest.mark.parametrize("relabel", ["family", "mechanism", "economic_reason"])
+def test_rejected_executable_semantics_cannot_reenter_by_relabeling(
+    monkeypatch, tmp_path, relabel
+):
+    configure(monkeypatch, tmp_path)
+    rejected = experiment([-10, -10, -10])
+    complete_experiment(rejected)
+
+    strategy = deepcopy(rejected["contract"]["strategy"])
+    family = rejected["contract"]["family"]
+    if relabel == "family":
+        family = "renamed-family"
+    elif relabel == "mechanism":
+        strategy["mechanism"] = "rewritten mechanism prose"
+    else:
+        strategy["components"][0]["economic_reason"] = "rewritten narrative"
+    candidate = _experiment(f"relabel-{relabel}", 100)
+    candidate.update(
+        family=family,
+        strategy=strategy,
+        strategy_fingerprint=fingerprint(strategy),
+    )
+
+    queue = apply_queue_feedback({"experiments": [candidate]})
+
+    expected_reason = (
+        "rejected_exact_fingerprint"
+        if relabel == "family"
+        else "rejected_semantic_identity"
+    )
+    assert queue["experiments"][0]["learning_feedback"]["reason"] == expected_reason
+    assert queue["experiments"][0]["learning_feedback"]["changes_eligibility"] is True
+    assert build_heavy_dispatch_plan(queue)["selected"] == []
+
+
+def test_new_exact_fingerprint_without_verifiable_semantic_identity_fails_closed(
+    monkeypatch, tmp_path
+):
+    configure(monkeypatch, tmp_path)
+    candidate = _experiment("unverifiable-semantic", 100)
+    candidate["strategy_fingerprint"] = "f" * 64
+
+    queue = apply_queue_feedback({"experiments": [candidate]})
+
+    assert queue["experiments"][0]["learning_feedback"]["reason"] == (
+        "semantic_identity_unverifiable"
+    )
+    assert queue["experiments"][0]["learning_feedback"]["changes_eligibility"] is True
+    assert build_heavy_dispatch_plan(queue)["selected"] == []
+
+
+def test_material_rule_change_has_distinct_semantic_identity(monkeypatch, tmp_path):
+    configure(monkeypatch, tmp_path)
+    rejected = experiment([-10, -10, -10])
+    complete_experiment(rejected)
+    strategy = deepcopy(rejected["contract"]["strategy"])
+    strategy["components"][0]["rule"] = "materially_distinct_inventory_rule"
+    candidate = _experiment("material-rule-change", 100)
+    candidate.update(
+        family="new-hypothesis-family",
+        strategy=strategy,
+        strategy_fingerprint=fingerprint(strategy),
+    )
+
+    queue = apply_queue_feedback({"experiments": [candidate]})
+
+    assert queue["experiments"][0]["learning_feedback"]["reason"] != (
+        "rejected_semantic_identity"
+    )
+    assert queue["experiments"][0]["learning_feedback"]["changes_eligibility"] is False
+    assert build_heavy_dispatch_plan(queue)["selected_count"] == 1
 
 
 def test_director_cannot_offer_rejected_exact_fingerprint(monkeypatch, tmp_path):

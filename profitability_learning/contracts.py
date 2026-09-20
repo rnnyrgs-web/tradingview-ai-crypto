@@ -82,6 +82,20 @@ def validate_strategy(strategy):
     return strategy
 
 
+def strategy_semantic_fingerprint(strategy):
+    """Label-invariant executable-rule identity for failure and novelty memory."""
+    validate_strategy(strategy)
+    payload = {
+        "schema_version": 1,
+        "execution_rule": strategy["execution_rule"],
+        "component_rules": sorted(
+            (component["kind"], component["rule"])
+            for component in strategy["components"]
+        ),
+    }
+    return fingerprint(payload)
+
+
 def validate_contract(c):
     if not isinstance(c, dict) or c.get("schema_version") != 1:
         raise ValueError("unknown contract schema")
