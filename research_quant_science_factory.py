@@ -21,6 +21,12 @@ from research_experiment_factory import MAX_EXPERIMENTS, build_experiment_queue
 from signal_development import objective_reference
 
 MAX_PER_METHOD = 4
+MINIMUM_EFFECT_TO_CONTINUE = {
+    "precision_absolute_improvement": 0.02,
+    "after_cost_expectancy_must_be_positive": True,
+}
+MINIMUM_EVALUATION_SAMPLES = 8
+MINIMUM_ACTIONABLE_COVERAGE = 0.25
 MASSIVE_VIRTUAL_RESEARCH_CONSTRAINTS = {
     "logical_idea_space_unbounded": True,
     "physical_heavy_concurrency_may_increase": False,
@@ -90,12 +96,9 @@ def _scientific_design(experiment: dict) -> dict:
             "point_in_time_universe_pass",
             "multiple_testing_firewall_pass",
         ],
-        "minimum_effect_to_continue": {
-            "precision_absolute_improvement": 0.02,
-            "after_cost_expectancy_must_be_positive": True,
-        },
-        "minimum_evaluation_samples": 8,
-        "minimum_actionable_coverage": 0.25,
+        "minimum_effect_to_continue": dict(MINIMUM_EFFECT_TO_CONTINUE),
+        "minimum_evaluation_samples": MINIMUM_EVALUATION_SAMPLES,
+        "minimum_actionable_coverage": MINIMUM_ACTIONABLE_COVERAGE,
         "predeclared_search_budget": 1,
         "max_candidate_mutations": 1,
         "abstention_first": abstention_first,
@@ -155,15 +158,10 @@ def verified_strategy_semantic_fingerprint(experiment: dict) -> str:
     executor = expected_design["executor_kind"]
     if executor not in TRUSTED_EXECUTOR_IMPLEMENTATIONS:
         raise ValueError("unregistered research executor")
-    for field in (
-        "research_method",
-        "hypothesis_family_id",
-        "executor_kind",
-        "executor_implementation_id",
-        "dispatchable_now",
-    ):
-        if design.get(field) != expected_design[field]:
-            raise ValueError(f"science design {field} mismatch")
+    # Every field is factory-owned. Canonical JSON hashing distinguishes
+    # bool/int confusion and rejects missing, extra, or weakened values.
+    if fingerprint(design) != fingerprint(expected_design):
+        raise ValueError("science design does not match registered executor design")
 
     canonical_strategy = _strategy_identity(experiment, expected_design)
     executable_fields = ("assets", "timeframe", "execution_rule")

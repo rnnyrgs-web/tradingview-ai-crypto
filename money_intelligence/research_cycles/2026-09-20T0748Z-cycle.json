@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T0748Z",
+  "information_cutoff": "2026-09-20T07:48:26Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_before_persist": "e699147ee7c14a5183084ab04154948445d1396e",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-20T07:44:43Z",
+    "artifact_cutoff_utc": "2026-09-20T07:48:26Z",
+    "seconds_this_run_minimum": 223,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 705,
+    "minimum_cumulative_seconds_since_last_owner_report": 928,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted; schedule gaps, idle time, publication timestamps and background time are excluded."
+  },
+  "highest_information_question": "When a major institution evaluates or deploys a blockchain, how much of that real infrastructure adoption is economically forced to accrue to the native token rather than to off-chain vendors, stablecoins, transfer agents, custom gas tokens or other chains?",
+  "fresh_research": [
+    {
+      "topic": "AVAX institutional-tokenization narrative: adoption and native-token value capture are distinct causal states",
+      "label": "DAILY BIG-MOVE CAUSAL LAB / VALUE-CAPTURE FALSIFICATION",
+      "observed_facts": [
+        "CoinMarketCap at about 07:43-07:44 UTC showed AVAX near $9.60, +12.27%/24h and +30.02%/7d, with about $1.16B 24h volume, turnover about 27.3% of market capitalization and volume up about 97.7% versus the prior 24h. BTC, ETH, SOL, XRP and LINK were all negative over the same 24h window.",
+        "Ava Labs President Charley Cooper said NYSE had spent roughly a year testing Avalanche technology and working with Ava Labs; ICE strategic-initiatives executive Michael Blaugrund said ICE was very engaged with Avalanche while evaluating platforms. Neither statement says Avalanche has been selected for production.",
+        "ICE's own January 19 platform announcement says the NYSE tokenized-securities design is intended to support multiple chains for settlement and custody. ICE later named Securitize as a digital-transfer-agent design partner and invested in OKX, explicitly citing multi-chain custody and wallet architecture.",
+        "Avalanche's current L1 validator model does not require the legacy 2,000-AVAX Primary Network stake for each L1 validator. L1 validators instead pay a continuous dynamic fee to the P-Chain; below the 10,000-validator target the documented fee is approximately 1.33 AVAX per validator per month. Each L1 can set additional validation/staking rules.",
+        "At the current AVAX price, the documented base L1-validator fee alone would equal only about $1.3K/month for 100 validators, $12.8K/month for 1,000 validators, or $127.7K/month for 10,000 validators before any fee-rate increase. These are hypothetical scale checks, not claims about NYSE architecture or current Avalanche L1 validator counts.",
+        "Centrifuge documentation already lists the NYLIM HYB tokenized high-yield fund on multiple chains including Avalanche, Ethereum and Pharos; the underlying NYLIM-Centrifuge fund partnership was publicly announced June 30. Therefore weekend narratives describing institutional tokenization as wholly new Avalanche-specific demand require deployment-timestamp and flow verification before causal attribution."
+      ],
+      "inference": "Institutional blockchain adoption should be decomposed into infrastructure evaluation/selection -> architecture and chain exclusivity -> required native-token purchase/lock/burn/gas -> scale relative to free float and executable depth -> recurring value capture. A large institutional brand can materially improve narrative probability and expected future network use while creating little immediate native-token cash flow if the architecture is multi-chain, uses stablecoins/custom gas, or requires only modest validator fees.",
+      "causal_chain": "public institutional evaluation disclosure + tokenization regulatory momentum + upcoming Helicon upgrade -> expectations of future Avalanche usage rise -> attention/momentum capital concentrates in AVAX while majors weaken -> high turnover amplifies price response; direct fundamental value capture remains contingent on production selection, chain architecture and AVAX-denominated economic requirements",
+      "capital_source_destination": "The relative move is consistent with crypto capital rotating toward AVAX-specific institutional/tokenization optionality. Account-level source-of-funds and venue-level marginal counterparties remain UNKNOWN; no claim is made that NYSE itself bought AVAX.",
+      "catalyst": "Fresh disclosure that NYSE/ICE had evaluated Avalanche technology, reinforced by the broader tokenization narrative and imminent Helicon upgrade.",
+      "transmission_mechanism": "Expectation repricing for future institutional adoption; actual native-token demand is a separate bridge that must be measured.",
+      "amplifiers": [
+        "Weekend/thinner liquidity",
+        "Momentum and narrative concentration",
+        "High relative turnover",
+        "Possible AVAX-specific derivatives positioning not yet fully reconstructed"
+      ],
+      "matched_non_movers": "BTC, ETH, SOL, XRP and LINK were negative over 24h while AVAX was double-digit positive. The SEC/NYSE tokenization theme is broad and ICE's own architecture is multi-chain, so the broad theme alone is insufficient to explain AVAX-specific magnitude.",
+      "alternative_explanations": [
+        "Short covering or derivatives positioning",
+        "Pre-positioning for the September 22 Helicon upgrade",
+        "Other Avalanche RWA deployments",
+        "Weekend momentum/technical breakout"
+      ],
+      "negative_findings": [
+        "No primary ICE/NYSE source reviewed in this cycle says Avalanche has been selected exclusively or finally for the production platform.",
+        "A production Avalanche L1 does not mechanically imply legacy 2,000-AVAX staking demand for every L1 validator.",
+        "The documented base L1-validator fee is too small by itself to justify a multi-billion-dollar token valuation re-rating without much larger validator counts, dynamic fees, C-Chain/Primary-Network use, AVAX gas/staking demand or other value-capture channels.",
+        "Do not treat an institution's total AUM as capital flowing into AVAX or into tokenized products; deployment size and underlying fund flows must be measured separately."
+      ],
+      "confirmations": [
+        "Primary ICE/NYSE production selection or regulatory filing naming Avalanche",
+        "Architecture requiring material AVAX-denominated validator, gas, staking or settlement demand",
+        "Observable growth in AVAX burn/stake/fees attributable to the institutional deployment",
+        "Sustained regulated/tokenized asset balances and transaction flow on Avalanche beyond headline announcements"
+      ],
+      "falsifiers": [
+        "ICE chooses other/multiple chains with no material Avalanche production role",
+        "Avalanche deployment uses architecture with negligible AVAX consumption",
+        "Narrative-driven price strength reverses without corresponding on-chain or institutional usage"
+      ],
+      "decision_support": "AVAX WAIT / AVOID CHASING. The catalyst is real enough to explain attention, but native-token value capture and durable marginal demand are not yet proven. No immutable directional forecast is frozen."
+    },
+    {
+      "topic": "CXMT fifth-generation DRAM mass production is a segment-specific supply shock, not a uniform bearish memory-sector signal",
+      "label": "PRE-MARKET CAUSAL WATCH / TECHNOLOGY SUPPLY",
+      "observed_facts": [
+        "Reuters reported at 03:54 UTC on September 20 that China's CXMT said its fifth-generation DRAM platform had entered mass production, with 24Gb LPDDR5X products and at least 50% more gross dies per wafer than its fourth-generation process on an 8Gb baseline.",
+        "CXMT had already announced on September 7 that LPDDR6 had entered mass production and debuted in Xiaomi's 18 Fold, so the September 20 disclosure is incremental evidence of process/yield/cost progress rather than the first public indication of CXMT's high-end mobile-memory progress.",
+        "South Korean semiconductor exports rose 169.6% year/year in January-August and represented 41% of national exports, showing current memory/AI demand is exceptionally strong rather than weak.",
+        "SK Hynix said in August that it expected memory shortages through 2030 and that HBM has higher barriers and stronger pricing power than conventional memory; it held about 58% of HBM revenue share in Q1 2026 according to the cited Counterpoint data."
+      ],
+      "inference": "The economically relevant variable is memory segment and substitutability. CXMT's new platform can increase competitive supply and lower-cost pressure in mobile/conventional DRAM, but it does not automatically eliminate HBM scarcity or the specialized packaging/process constraints that support AI-memory economics. A one-factor 'China memory breakthrough -> all memory incumbents down' rule is too coarse.",
+      "causal_chain": "CXMT process/yield improvement -> potential lower marginal cost and higher Chinese DRAM supply -> competitive pressure strongest where products are substitutable -> conventional/mobile DRAM pricing/margins potentially soften -> HBM impact depends on whether CXMT can meet HBM performance/qualification/packaging requirements -> incumbent equity response depends on segment mix, prior pricing and expectations",
+      "pre_move_status": "The September 20 disclosure occurred while major Korean/U.S. cash equity markets were closed, making it a timestamp-clean future market-response control. No Monday price reaction is backfilled in this cycle.",
+      "matched_control_requirement": "Compare Samsung/SK Hynix/Micron responses and subsequent DRAM contract/spot pricing across prior Chinese capacity/process announcements, separating conventional DRAM from HBM exposure and controlling for AI-demand and export-control news.",
+      "decision_support": "WAIT / NO TRADE from the headline alone. Watch Monday relative performance and segment-specific pricing rather than treating the entire memory complex as one asset."
+    },
+    {
+      "topic": "Weekend crypto deleveraging continues while BTC holds the $80K area",
+      "label": "LIVE CONTROL / NO ACTION UPGRADE",
+      "observed_facts": [
+        "CoinMarketCap at about 07:43 UTC showed BTC near $80.30K, -0.89%/24h and +4.14%/7d; BTC dominance was about 58.87%.",
+        "Connected derivatives data showed aggregate crypto open interest down materially over 24h (roughly 5-9% depending snapshot methodology), while average perpetual funding remained positive.",
+        "BTC 24h liquidations were about $50.3M, with roughly $34.7M longs versus $15.6M shorts; in the latest 12h window about $30.8M of $31.8M BTC liquidations were longs.",
+        "U.S. ETF markets are closed for the weekend, so no new regulated spot-flow confirmation exists."
+      ],
+      "inference": "BTC is absorbing leverage reduction better than many higher-beta majors, which weakens a pure fresh-long-leverage explanation for price resilience. Positive funding and absence of weekend ETF confirmation still prevent a durable institutional-accumulation claim.",
+      "decision_support": "BTC WAIT / tactical confirmation candidate. Reassess after reopened U.S. ETF sessions with OI/funding/basis and spot absorption."
+    }
+  ],
+  "daily_big_move_lab_delta": {
+    "selected_or_retested": [
+      "AVAX +12.3%/24h while BTC/ETH/SOL/XRP/LINK were negative: strong idiosyncratic move with credible institutional-evaluation narrative, but production selection and native-token value capture remain unproven.",
+      "ZEC remained an extreme high-volatility special situation at about -7.2%/24h but +28.0%/7d; no new timestamp-defensible wrapper flow was available in this run, so no causal upgrade was made.",
+      "BTC near $80.3K while aggregate OI contracts and recent BTC liquidations are long-heavy: constructive absorption but still insufficient for BUY without reopened ETF/spot confirmation.",
+      "CXMT DRAM mass-production announcement is logged as a clean pre-market event for Monday matched-response testing; no traditional-market price response is fabricated during the weekend."
+    ],
+    "method_upgrade_candidate": "For institutional blockchain adoption, separate infrastructure adoption from native-token value capture and quantify the forced token-demand bridge before converting a technology headline into an asset thesis."
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast clears the evidence bar. Existing WAIT states are preserved."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. AVAX value-capture falsification and the CXMT segment map are materially useful research, but they do not change the high-level regime or justify dashboard/action churn. The existing sovereign-duration learning candidate remains pending safe canonical-ledger promotion. No code or signal-system state changed.",
+  "next_research": [
+    "After Monday opens, test the CXMT event using Samsung, SK Hynix, Micron and memory-pricing controls, separating conventional/mobile DRAM from HBM exposure.",
+    "For AVAX, obtain primary ICE/NYSE production-architecture evidence and quantify actual AVAX-denominated burn/stake/gas attributable to any institutional deployment rather than relying on brand/AUM headlines.",
+    "Reconstruct AVAX-specific derivatives OI/funding/liquidations around the September 18-20 move to separate spot/narrative repricing from short covering and leverage.",
+    "After U.S. ETF markets reopen, reconcile finalized BTC ETF flows with native-unit OI/funding/basis and exchange/on-chain spot absorption before changing BTC WAIT.",
+    "Continue the expectation-adjusted net-duration-supply model across sovereign markets, keeping reserve-liquidity and term-premium channels separate."
+  ],
+  "sources": [
+    "https://ir.theice.com/press/news-details/2026/The-New-York-Stock-Exchange-Develops-Tokenized-Securities-Platform/",
+    "https://ir.theice.com/press/news-details/2026/New-York-Stock-Exchange-and-Securitize-Agree-to-Memorandum-of-Understanding-to-Support-Tokenized-Securities/",
+    "https://ir.theice.com/press/news-details/2026/ICE-Makes-Investment-in-OKX-Establishing-Strategic-Relationship/",
+    "https://www.theblock.co/news/ecosystems/2026-09-18-ava-labs-president-says-nyse-spent-a-year-testing-avalanche-technology-tokenization-plans-415509",
+    "https://build.avax.network/blog/l1-validator-fee",
+    "https://build.avax.network/docs/nodes",
+    "https://developer.centrifuge.io/developer/protocol/deployments/",
+    "https://centrifuge.io/blog/nylim-centrifuge",
+    "https://www.reuters.com/world/asia-pacific/chinas-cxmt-says-new-memory-chip-platform-enters-mass-production-2026-09-20/",
+    "https://www.cxmt.com/en/news/info_21.html",
+    "https://www.reuters.com/world/asia-pacific/sk-hynix-holds-groundbreaking-ceremony-4-billion-indiana-ai-chip-packaging-2026-08-27/",
+    "https://www.reuters.com/world/asia-pacific/south-korea-exports-surpass-full-year-record-hit-7094-billion-ytd-2026-09-05/",
+    "CoinMarketCap connected real-time quotes/global metrics/derivatives metrics, 2026-09-20 07:43-07:44 UTC"
+  ],
+  "paid_resource_policy": "No new paid resources authorized; free/public/primary sources, connected CoinMarketCap data and high-quality contemporaneous reporting were used.",
+  "real_money_trading": "DISABLED / NOT AUTHORIZED"
+}

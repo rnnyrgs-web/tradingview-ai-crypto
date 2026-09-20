@@ -25,7 +25,10 @@ def test_point_lift_alone_cannot_open_oos_when_adjusted_confidence_is_weak():
         "actionable_coverage": 0.50,
     }
     science_design = {
-        "minimum_effect_to_continue": {"precision_absolute_improvement": 0.02},
+        "minimum_effect_to_continue": {
+            "precision_absolute_improvement": 0.02,
+            "after_cost_expectancy_must_be_positive": True,
+        },
         "minimum_evaluation_samples": 8,
         "minimum_actionable_coverage": 0.25,
     }

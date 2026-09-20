@@ -201,6 +201,35 @@ def test_trusted_behavior_change_has_distinct_semantic_identity(monkeypatch, tmp
     assert build_heavy_dispatch_plan(queue)["selected_count"] == 1
 
 
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda design: design["minimum_effect_to_continue"].update(
+            precision_absolute_improvement=-1.0
+        ),
+        lambda design: design.update(minimum_evaluation_samples=1),
+        lambda design: design.update(minimum_actionable_coverage=0.001),
+        lambda design: design.update(minimum_evaluation_samples=True),
+        lambda design: design.pop("minimum_actionable_coverage"),
+        lambda design: design.update(caller_extension="weakened_gate"),
+    ],
+)
+def test_caller_cannot_weaken_registered_validation_design(
+    monkeypatch, tmp_path, mutation
+):
+    configure(monkeypatch, tmp_path)
+    candidate = _experiment("forged-validation-gate", 100)
+    mutation(candidate["science_design"])
+
+    assert build_heavy_dispatch_plan({"experiments": [candidate]})["selected"] == []
+    queue = apply_queue_feedback({"experiments": [candidate]})
+    assert queue["experiments"][0]["learning_feedback"]["reason"] == (
+        "semantic_identity_unverifiable"
+    )
+    assert queue["experiments"][0]["learning_feedback"]["changes_eligibility"] is True
+    assert build_heavy_dispatch_plan(queue)["selected"] == []
+
+
 def test_director_cannot_offer_rejected_exact_fingerprint(monkeypatch, tmp_path):
     import research_director_runtime as director
     monkeypatch.setattr(director, "probe_bybit_oi_access", lambda: {"status": "source_error", "points_observed": 0})

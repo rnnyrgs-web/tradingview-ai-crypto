@@ -3,8 +3,10 @@ from datetime import datetime, timedelta, timezone
 from research_adaptive_accuracy import (
     _lesson_fingerprint,
     _materially_more_evidence,
+    _passes_validation,
     build_adaptive_accuracy_report,
 )
+from research_quant_science_factory import _scientific_design
 
 
 def _rows(horizon="24h", count=90, *, start=None, validation_helpful=True):
@@ -68,6 +70,41 @@ def test_failed_validation_keeps_untouched_oos_sealed():
     assert report["experiment"]["untouched_oos"] is None
     assert report["evidence_conclusion"] == "validation_failed"
     assert report["memory_lesson"]["reason_not_to_repeat"]
+
+
+def test_validation_gate_rejects_forged_thresholds_but_accepts_canonical_design():
+    evaluation = {
+        "baseline": {"precision": 0.5},
+        "filtered": {
+            "samples": 8,
+            "after_cost_expectancy_pct": 0.1,
+            "precision_multiple_testing_lower": 0.6,
+            "expectancy_sample_complete": True,
+        },
+        "precision_lift": 0.02,
+        "actionable_coverage": 0.25,
+    }
+    canonical = _scientific_design(
+        {"dimension": "market_regime", "group": "TREND", "target_horizon": "both"}
+    )
+    assert _passes_validation(evaluation, canonical) is True
+
+    forged = dict(canonical)
+    forged["minimum_effect_to_continue"] = {
+        "precision_absolute_improvement": -1.0,
+        "after_cost_expectancy_must_be_positive": True,
+    }
+    forged["minimum_evaluation_samples"] = 1
+    forged["minimum_actionable_coverage"] = 0.001
+    assert _passes_validation(
+        {
+            **evaluation,
+            "filtered": {**evaluation["filtered"], "samples": 1},
+            "precision_lift": 0.0,
+            "actionable_coverage": 0.01,
+        },
+        forged,
+    ) is False
 
 
 def test_insufficient_resolved_history_fails_closed_without_dispatch():
