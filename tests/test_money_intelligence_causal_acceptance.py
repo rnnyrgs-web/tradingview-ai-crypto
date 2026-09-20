@@ -21,6 +21,15 @@ def test_runtime_acceptance_rechecks_deployment_packaging_changes():
     assert "Prospective guard passed; full synthetic runtime acceptance remains pending" in workflow
 
 
+def test_fixture_subject_is_unique_for_each_full_deployed_sha():
+    first = acceptance._ids("a" * 16 + "b" * 24)
+    second = acceptance._ids("a" * 16 + "c" * 24)
+    assert first["hypothesis"] != second["hypothesis"]
+    assert acceptance._fixture_subject(first["hypothesis"]) != acceptance._fixture_subject(
+        second["hypothesis"]
+    )
+
+
 @pytest.mark.parametrize("prior_slots", [4, 28])
 def test_acceptance_fixture_can_confirm_after_prior_project_tests(prior_slots):
     ids = acceptance._ids("b" * 40)
@@ -35,13 +44,36 @@ def test_acceptance_fixture_can_confirm_after_prior_project_tests(prior_slots):
             acceptance._contract(ids, base),
             hypothesis_id=f"prior-{index}", family_id=f"prior-family-{index}",
             family_size=1, evaluation_units=(), evaluation_pairs=(),
+            evaluation_selectors=(),
         ))
+    memory.register_observation(replace(
+        acceptance._observation(
+            ids["support_outcome_1"], metric_name="matched_return", value=1.0,
+            observed_at=base + timedelta(hours=1),
+            available_at=base + timedelta(hours=2, minutes=1), window_hours=1,
+        ),
+        observation_id="legacy-overlap", subject_id="PHASE2_ACCEPTANCE",
+        provenance_uri="acceptance://legacy-overlap",
+    ))
     acceptance._seed_support(memory, ids, base)
     hypothesis = memory.hypotheses[ids["hypothesis"]]
     verification = memory._verified_evaluation(memory.events[ids["support"]], hypothesis)
     assert len(hypothesis.evaluation_units) == verification["sample_size"]
     assert hypothesis.evaluation_pairs == tuple(
         (ids[f"support_outcome_{index}"], ids[f"support_control_{index}"])
+        for index in range(1, verification["sample_size"] + 1)
+    )
+    assert hypothesis.evaluation_selectors == tuple(
+        (
+            (
+                "matched_return", "phase2-runtime-acceptance-fixture",
+                f"acceptance://{ids[f'support_outcome_{index}']}",
+            ),
+            (
+                "matched_return", "phase2-runtime-acceptance-fixture",
+                f"acceptance://{ids[f'support_control_{index}']}",
+            ),
+        )
         for index in range(1, verification["sample_size"] + 1)
     )
     if prior_slots == 28:

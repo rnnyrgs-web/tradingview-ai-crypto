@@ -74,6 +74,13 @@ def _supported_memory(*, lanes=("big_move", "strategy_component"), family_id="tr
             (f"outcome-{index}", f"control-{index}")
             for index in range(1, 7)
         ),
+        evaluation_selectors=tuple(
+            (
+                ("matched_return", "fixture-source", f"fixture://outcome-{index}"),
+                ("matched_return", "fixture-source", f"fixture://control-{index}"),
+            )
+            for index in range(1, 7)
+        ),
     )
     memory.register_hypothesis(hypothesis)
     outcome_ids = tuple(f"outcome-{index}" for index in range(1, 7))

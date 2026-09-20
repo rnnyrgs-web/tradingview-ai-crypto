@@ -63,7 +63,7 @@ def _parse(value: str) -> datetime:
 
 
 def _ids(sha: str) -> dict[str, str]:
-    token = sha[:16]
+    token = sha
     identifiers = {
         key: f"{PREFIX}:{token}:{suffix}"
         for key, suffix in {
@@ -96,6 +96,12 @@ def _pair_count_for_slot(slot: int) -> int:
     raise CausalMemoryError("synthetic acceptance exceeded its bounded project test budget")
 
 
+def _fixture_subject(identifier: str) -> str:
+    # Every deployed SHA gets a distinct synthetic economic subject. Earlier
+    # acceptance windows remain in the immutable ledger and cannot be reused.
+    return identifier.rsplit(":", 1)[0]
+
+
 def _planned_pair_count(memory, ids: dict[str, str]) -> int:
     return len(memory.hypotheses[ids["hypothesis"]].evaluation_units)
 
@@ -119,7 +125,7 @@ def _observation(
         available_at=_ts(available_at),
         retrieved_at=_ts(available_at),
         source_id="phase2-runtime-acceptance-fixture",
-        subject_id="PHASE2_ACCEPTANCE",
+        subject_id=_fixture_subject(observation_id),
         currency="USD",
         measurement_window_hours=window_hours,
         venue="synthetic-matched-control",
@@ -159,11 +165,24 @@ def _contract(ids: dict[str, str], base: datetime, pair_count: int = SUPPORT_PAI
         family_size=1,
         alpha=0.05,
         evaluation_units=tuple(
-            ("PHASE2_ACCEPTANCE", _ts(base + timedelta(hours=index)), 1)
+            (_fixture_subject(ids["hypothesis"]), _ts(base + timedelta(hours=index)), 1)
             for index in range(1, pair_count + 1)
         ),
         evaluation_pairs=tuple(
             (ids[f"support_outcome_{index}"], ids[f"support_control_{index}"])
+            for index in range(1, pair_count + 1)
+        ),
+        evaluation_selectors=tuple(
+            (
+                (
+                    "matched_return", "phase2-runtime-acceptance-fixture",
+                    f"acceptance://{ids[f'support_outcome_{index}']}",
+                ),
+                (
+                    "matched_return", "phase2-runtime-acceptance-fixture",
+                    f"acceptance://{ids[f'support_control_{index}']}",
+                ),
+            )
             for index in range(1, pair_count + 1)
         ),
     )
