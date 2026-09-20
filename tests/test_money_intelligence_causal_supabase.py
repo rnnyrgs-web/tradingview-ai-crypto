@@ -12,6 +12,7 @@ from money_intelligence_causal_memory import (
 )
 from money_intelligence_causal_supabase import SupabaseCausalMemory
 from test_money_intelligence_causal_memory import (
+    _clone_evidence_units,
     _hypothesis,
     _memory_with_hypothesis,
     _observation,
@@ -169,6 +170,36 @@ def test_stale_writer_replays_mutation_against_fresh_durable_state(supabase):
     restarted = SupabaseCausalMemory().load()
     assert {"concurrent", "own"}.issubset(restarted.observations)
     assert supabase.append_attempts == 3  # initialize, stale write, successful retry
+
+
+def test_stale_writer_cannot_reconsume_units_after_concurrent_confirmatory_write(supabase):
+    memory = _memory_with_hypothesis()
+    original = _support("concurrent-confirmatory")
+    clone = _clone_evidence_units(
+        memory,
+        original,
+        suffix="stale-writer-clone",
+        observation_changes={"currency": "bp", "unit": "bp", "venue": "other"},
+        value_scale=10_000.0,
+    )
+    SupabaseCausalMemory().initialize(memory)
+
+    def concurrent(fake):
+        current = SupabaseCausalMemory.document_to_memory(fake.rows[-1]["payload"])
+        assert current.record_evidence(original)
+        fake.inject(current.to_document())
+
+    supabase.before_append = concurrent
+    with pytest.raises(CausalMemoryError, match="independent units already consumed"):
+        SupabaseCausalMemory().transact(
+            lambda current: current.record_evidence(clone)
+        )
+
+    restarted = SupabaseCausalMemory().load()
+    assert set(restarted.events) == {original.event_id}
+    assert restarted.confidence(
+        "H1", as_of="2026-09-03T00:00:00Z"
+    ).confirmatory_support_count == 1
 
 
 def test_outage_corruption_missing_state_and_repeated_stale_fail_closed(supabase):

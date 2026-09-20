@@ -1,4 +1,4 @@
-from dataclasses import FrozenInstanceError
+from dataclasses import FrozenInstanceError, asdict, replace
 import hashlib
 import json
 
@@ -310,6 +310,247 @@ def test_cosmetic_clone_ids_cannot_reuse_units_across_evidence_events():
         memory.record_evidence(cloned)
 
 
+def _clone_evidence_units(
+    memory: CausalRepricingMemory,
+    original: EvidenceEvent,
+    *,
+    suffix: str,
+    observation_changes: dict[str, object] | None = None,
+    value_scale: float = 1.0,
+    hypothesis_id: str | None = None,
+    distinct_subjects: bool = False,
+) -> EvidenceEvent:
+    """Give the same realizations fresh observation/provenance labels."""
+    changed = observation_changes or {}
+    cloned_sides = []
+    for side, source_ids in (
+        ("outcome", original.outcome_observation_ids),
+        ("control", original.control_observation_ids),
+    ):
+        new_ids = []
+        for index, source_id in enumerate(source_ids, start=1):
+            source = memory.observations[source_id]
+            clone_id = f"{suffix}-{side}-{index}"
+            source_changes = {
+                "subject_id": f"{source.subject_id}-independent"
+            } if distinct_subjects else {}
+            memory.register_observation(
+                replace(
+                    source,
+                    observation_id=clone_id,
+                    value=source.value * value_scale,
+                    source_id=f"{suffix}-source-{index}",
+                    provenance_uri=f"clone://{clone_id}",
+                    **source_changes,
+                    **changed,
+                )
+            )
+            new_ids.append(clone_id)
+        cloned_sides.append(tuple(new_ids))
+    return replace(
+        original,
+        event_id=f"{suffix}-event",
+        hypothesis_id=hypothesis_id or original.hypothesis_id,
+        outcome_observation_ids=cloned_sides[0],
+        control_observation_ids=cloned_sides[1],
+    )
+
+
+@pytest.mark.parametrize(
+    ("label", "changes", "value_scale"),
+    [
+        ("fresh-ids", {}, 1.0),
+        ("currency", {"currency": "basis-points"}, 1.0),
+        ("rescaled-unit", {"unit": "basis-points"}, 10_000.0),
+        ("unit", {"unit": "display-ratio"}, 1.0),
+        ("venue", {"venue": "relabeled-venue"}, 1.0),
+        ("metric", {"metric_name": "cosmetic-return-label"}, 1.0),
+        (
+            "combined",
+            {
+                "currency": "basis-points",
+                "unit": "basis-points",
+                "venue": "relabeled-venue",
+                "metric_name": "cosmetic-return-label",
+            },
+            10_000.0,
+        ),
+    ],
+)
+def test_representation_relabel_cannot_reconsume_economic_units(
+    label, changes, value_scale
+):
+    memory = _memory_with_hypothesis()
+    original = _support("original-economic-evidence")
+    assert memory.record_evidence(original)
+    clone = _clone_evidence_units(
+        memory,
+        original,
+        suffix=label,
+        observation_changes=changes,
+        value_scale=value_scale,
+    )
+    if label == "combined":
+        original_verification = memory._verified_evaluation(original, memory.hypotheses["H1"])
+        clone_verification = memory._verified_evaluation(clone, memory.hypotheses["H1"])
+        assert {
+            unit["unit_fingerprint"] for unit in original_verification["independent_units"]
+        } == {
+            unit["unit_fingerprint"] for unit in clone_verification["independent_units"]
+        }
+        assert original_verification["verified_fingerprint"] != clone_verification["verified_fingerprint"]
+
+    with pytest.raises(CausalMemoryError, match="independent units already consumed"):
+        memory.record_evidence(clone)
+    assert memory.confidence(
+        "H1", as_of="2026-09-03T00:00:00Z"
+    ).confirmatory_support_count == 1
+
+
+def test_representation_relabel_cannot_reconsume_after_restart(tmp_path):
+    memory = _memory_with_hypothesis()
+    original = _support("original-before-restart")
+    assert memory.record_evidence(original)
+    path = tmp_path / "durable-memory.json"
+    memory.save(path)
+    restored = CausalRepricingMemory.load(path)
+    clone = _clone_evidence_units(
+        restored,
+        original,
+        suffix="restart-clone",
+        observation_changes={"currency": "bp", "unit": "bp", "venue": "other"},
+        value_scale=10_000.0,
+    )
+
+    assert restored.record_evidence(original) is False
+    with pytest.raises(CausalMemoryError, match="independent units already consumed"):
+        restored.record_evidence(clone)
+
+
+def test_economic_unit_consumption_is_global_across_hypotheses_and_families():
+    memory = _memory_with_hypothesis()
+    second_hypothesis = replace(
+        _hypothesis(), hypothesis_id="H2", family_id="OTHER-FAMILY"
+    )
+    memory.register_hypothesis(second_hypothesis)
+    original = _support("first-hypothesis-evidence")
+    assert memory.record_evidence(original)
+    clone = _clone_evidence_units(
+        memory,
+        original,
+        suffix="other-family-clone",
+        observation_changes={"venue": "other"},
+        hypothesis_id="H2",
+    )
+
+    with pytest.raises(CausalMemoryError, match="independent units already consumed"):
+        memory.record_evidence(clone)
+    assert memory.confidence(
+        "H2", as_of="2026-09-03T00:00:00Z"
+    ).confirmatory_support_count == 0
+
+
+def test_nonoverlapping_temporal_realizations_remain_independent():
+    memory = _memory_with_hypothesis()
+    original = _support("first-temporal-evidence")
+    assert memory.record_evidence(original)
+    later = _clone_evidence_units(
+        memory,
+        original,
+        suffix="later-independent-window",
+        observation_changes={
+            "observed_at": "2026-09-06T01:00:00Z",
+            "available_at": "2026-09-09T01:00:00Z",
+            "retrieved_at": "2026-09-09T02:00:00Z",
+        },
+    )
+    later = replace(later, evaluated_at="2026-09-09T03:00:00Z")
+
+    assert memory.record_evidence(later)
+    assert memory.confidence(
+        "H1", as_of="2026-09-09T03:00:00Z"
+    ).confirmatory_support_count == 2
+
+
+def test_distinct_cross_sectional_subjects_remain_independent():
+    memory = _memory_with_hypothesis()
+    original = _support("first-cross-section")
+    assert memory.record_evidence(original)
+    independent = _clone_evidence_units(
+        memory,
+        original,
+        suffix="second-cross-section",
+        distinct_subjects=True,
+    )
+
+    assert memory.record_evidence(independent)
+    artifact = memory.research_artifact(
+        "H1", lane="big_move", as_of="2026-09-03T00:00:00Z"
+    )
+    assert artifact is not None
+    assert len(artifact["evidence_events"]) == 2
+    assert all(len(event["independent_units"]) == 6 for event in artifact["evidence_events"])
+
+
+def test_overlapping_temporal_realization_cannot_reconsume_across_events():
+    memory = _memory_with_hypothesis()
+    original = _support("first-overlap-evidence")
+    assert memory.record_evidence(original)
+    overlapping = _clone_evidence_units(
+        memory,
+        original,
+        suffix="overlapping-window",
+        observation_changes={
+            "observed_at": "2026-09-02T02:00:00Z",
+            "available_at": "2026-09-05T02:00:00Z",
+            "retrieved_at": "2026-09-05T03:00:00Z",
+        },
+    )
+    overlapping = replace(overlapping, evaluated_at="2026-09-05T04:00:00Z")
+
+    with pytest.raises(CausalMemoryError, match="independent units already consumed"):
+        memory.record_evidence(overlapping)
+
+
+@pytest.mark.parametrize("missing_field", ["subject_id", "source_id"])
+def test_rehashed_durable_memory_missing_identity_or_provenance_fails_closed(
+    missing_field,
+):
+    memory = _memory_with_hypothesis()
+    assert memory.record_evidence(_support())
+    document = memory.to_document()
+    document["observations"][0].pop(missing_field)
+    payload = {key: value for key, value in document.items() if key != "content_digest"}
+    document["content_digest"] = hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
+    ).hexdigest()
+
+    with pytest.raises(CausalMemoryError, match="scientific-contract validation"):
+        CausalRepricingMemory.from_document(document)
+
+
+def test_rehashed_durable_memory_cannot_replay_representational_clone():
+    memory = _memory_with_hypothesis()
+    original = _support("durable-original")
+    assert memory.record_evidence(original)
+    clone = _clone_evidence_units(
+        memory,
+        original,
+        suffix="forged-durable-clone",
+        observation_changes={"currency": "bp", "unit": "bp", "venue": "other"},
+        value_scale=10_000.0,
+    )
+    document = memory.to_document()
+    document["events"].append(asdict(clone))
+    payload = {key: value for key, value in document.items() if key != "content_digest"}
+    document["content_digest"] = hashlib.sha256(
+        json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
+    ).hexdigest()
+
+    with pytest.raises(CausalMemoryError, match="scientific-contract validation"):
+        CausalRepricingMemory.from_document(document)
+
+
 def test_confirmatory_support_rejects_mismatched_paired_unit_identity():
     memory = _memory_with_hypothesis()
     memory.register_observation(
@@ -441,9 +682,9 @@ def test_verified_evaluation_is_provenance_bound_and_stable_across_restart(tmp_p
     assert evidence["evaluation_implementation"] == (
         "paired-sign-exact-independent-units-v2"
     )
-    assert evidence["independent_unit_contract"] == "material-unit-nonoverlap-v1"
+    assert evidence["independent_unit_contract"] == "economic-realization-nonoverlap-v2"
     assert len(evidence["independent_units"]) == 6
-    assert evidence["event_fingerprint"].startswith("mi-verified-evidence-v2:")
+    assert evidence["event_fingerprint"].startswith("mi-verified-evidence-v3:")
 
     path = tmp_path / "verified-memory.json"
     memory.save(path)

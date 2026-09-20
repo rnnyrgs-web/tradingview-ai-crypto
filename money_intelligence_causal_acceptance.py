@@ -345,7 +345,7 @@ def _validate_receipt(store: SupabaseCausalMemory, ids: dict[str, str], sha: str
     )
     if (
         support_verification.get("independent_unit_contract")
-        != "material-unit-nonoverlap-v1"
+        != "economic-realization-nonoverlap-v2"
         or support_verification.get("sample_size") != 6
         or len(support_verification.get("independent_units", [])) != 6
     ):
@@ -363,7 +363,7 @@ def _validate_receipt(store: SupabaseCausalMemory, ids: dict[str, str], sha: str
         "durable_restart_reload": True,
         "support_consumed_by_default_director": True,
         "verified_independent_unit_count": 6,
-        "independent_unit_contract": "material-unit-nonoverlap-v1",
+        "independent_unit_contract": "economic-realization-nonoverlap-v2",
         "canonical_rejected_id_veto": True,
         "narrative_firewall": True,
         "contradiction_removed_missions": True,

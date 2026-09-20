@@ -455,9 +455,7 @@ class CausalRepricingMemory:
 
         independent_units: list[dict[str, object]] = []
         unit_fingerprints: set[str] = set()
-        intervals_by_subject: dict[
-            tuple[str, str, str, str], list[tuple[datetime, datetime]]
-        ] = {}
+        intervals_by_subject: dict[str, list[tuple[datetime, datetime]]] = {}
         for outcome_id, control_id in zip(
             event.outcome_observation_ids,
             event.control_observation_ids,
@@ -467,17 +465,11 @@ class CausalRepricingMemory:
             control = self.observations[control_id]
             outcome_unit = {
                 "subject_id": outcome.subject_id,
-                "currency": outcome.currency,
-                "unit": outcome.unit,
-                "venue": outcome.venue,
                 "observed_at": outcome.observed_at,
                 "measurement_window_hours": outcome.measurement_window_hours,
             }
             control_unit = {
                 "subject_id": control.subject_id,
-                "currency": control.currency,
-                "unit": control.unit,
-                "venue": control.venue,
                 "observed_at": control.observed_at,
                 "measurement_window_hours": control.measurement_window_hours,
             }
@@ -501,13 +493,8 @@ class CausalRepricingMemory:
             interval_end = interval_start + timedelta(
                 hours=outcome.measurement_window_hours
             )
-            subject_scope = (
-                outcome.subject_id,
-                outcome.currency,
-                outcome.unit,
-                outcome.venue,
-            )
-            intervals_by_subject.setdefault(subject_scope, []).append(
+            # A venue or display-unit relabel cannot split one subject's realization.
+            intervals_by_subject.setdefault(outcome.subject_id, []).append(
                 (interval_start, interval_end)
             )
 
@@ -554,7 +541,7 @@ class CausalRepricingMemory:
 
         payload = {
             "evaluation_implementation": TRUSTED_EVALUATION_IMPLEMENTATION,
-            "independent_unit_contract": "material-unit-nonoverlap-v1",
+            "independent_unit_contract": "economic-realization-nonoverlap-v2",
             "evaluation_method": event.evaluation_method,
             "hypothesis_id": hypothesis.hypothesis_id,
             "family_id": hypothesis.family_id,
@@ -588,7 +575,7 @@ class CausalRepricingMemory:
         }
         return {
             **payload,
-            "verified_fingerprint": "mi-verified-evidence-v2:" + _sha256(payload),
+            "verified_fingerprint": "mi-verified-evidence-v3:" + _sha256(payload),
         }
 
     def record_evidence(
@@ -686,8 +673,6 @@ class CausalRepricingMemory:
                     "confirmatory support must pass the frozen Bonferroni family threshold"
                 )
         for existing in self.events.values():
-            if existing.hypothesis_id != event.hypothesis_id:
-                continue
             if (
                 frozenset(existing.outcome_observation_ids)
                 == frozenset(event.outcome_observation_ids)
@@ -697,26 +682,30 @@ class CausalRepricingMemory:
                 raise CausalMemoryError(
                     "evaluation observations already consumed by another evidence event"
                 )
-            if (
-                verification is not None
-                and existing.evaluation_implementation
-                != LEGACY_UNVERIFIED_IMPLEMENTATION
-            ):
-                existing_verification = self._verified_evaluation(
-                    existing, hypothesis
-                )
-                current_units = {
-                    unit["unit_fingerprint"]
-                    for unit in verification["independent_units"]
-                }
-                existing_units = {
-                    unit["unit_fingerprint"]
-                    for unit in existing_verification["independent_units"]
-                }
-                if current_units & existing_units:
-                    raise CausalMemoryError(
-                        "verified independent units already consumed by another evidence event"
+            if verification is not None:
+                # Events and their observations are the durable global consumption
+                # ledger. Rebuild it on every write/restart, including legacy events;
+                # neither a new hypothesis/family nor a new representation resets it.
+                for current_unit in verification["independent_units"]:
+                    current_start = _parse_time(current_unit["observed_at"])
+                    current_end = current_start + timedelta(
+                        hours=current_unit["measurement_window_hours"]
                     )
+                    for source_id in (
+                        existing.outcome_observation_ids
+                        + existing.control_observation_ids
+                    ):
+                        consumed = self.observations[source_id]
+                        if consumed.subject_id != current_unit["subject_id"]:
+                            continue
+                        consumed_start = _parse_time(consumed.observed_at)
+                        consumed_end = consumed_start + timedelta(
+                            hours=consumed.measurement_window_hours
+                        )
+                        if current_start < consumed_end and consumed_start < current_end:
+                            raise CausalMemoryError(
+                                "verified independent units already consumed by another evidence event"
+                            )
         return self._append_immutable(self.events, event.event_id, event)
 
     def confidence(self, hypothesis_id: str, *, as_of: str) -> ConfidenceSnapshot:
