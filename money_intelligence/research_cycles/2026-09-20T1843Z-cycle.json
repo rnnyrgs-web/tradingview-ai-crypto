@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T1843Z",
+  "information_cutoff": "2026-09-20T18:42:50Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_observed_before_write": "be8868e616f7c5d9c9272204bf37618dffb224a3",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles": true,
+    "searched_prediction_artifacts": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "last_owner_report_cycle": "2026-09-20T1630Z",
+    "run_start_utc": "2026-09-20T18:36:41Z",
+    "artifact_cutoff_utc": "2026-09-20T18:42:50Z",
+    "seconds_this_run_minimum": 369,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 351,
+    "minimum_cumulative_seconds_since_last_owner_report": 720,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted. Schedule gaps, idle time, publication timestamps and background time are excluded."
+  },
+  "highest_information_question": "Does CXMT's newly announced G5 DRAM mass-production platform represent a meaningful pre-move supply/competition shock for incumbent commodity/mobile DRAM scarcity rents, or is the economically relevant constraint still qualified yield, customer adoption and HBM/server mix rather than headline gross-die density?",
+  "fresh_research": [
+    {
+      "topic": "CXMT G5 DRAM is a timestamp-defensible pre-market competition shock, but gross dies per wafer are not qualified supply and HBM exposure is a critical matched-control dimension",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / PRE-MOVE PREDICTOR / SEMICONDUCTORS / MEMORY / CHINA / SUPPLY / COMPETITION",
+      "observed_facts": [
+        "On Sunday September 20, Reuters reported that China's CXMT said its fifth-generation DRAM platform had entered mass production. CXMT introduced two 24Gb LPDDR5X products, said the platform uses quadruple patterning with 11.95nm feature spacing, and claimed at least 50% more gross dies per wafer than its prior generation.",
+        "The announcement is economically relevant because LPDDR5X is a high-volume mobile/portable-memory product and the disclosure was made while U.S. and Korean cash equity markets were closed, making it a timestamp-defensible pre-open information event rather than a post-hoc explanation for a completed move.",
+        "CXMT did not disclose independently verified G5 production yield, qualified shipment volume, monthly G5 wafer starts, customer acceptance rates or realized cost per saleable bit. Gross dies per wafer are therefore not equivalent to a 50% increase in economically saleable output.",
+        "CXMT's scale-up is already real rather than hypothetical: Reuters reported on June 29 that it had won a multi-year DRAM supply deal with Tencent worth more than 20 billion yuan, held about 7.7% global DRAM share at that time, and planned to expand monthly wafer capacity from roughly 300,000 to 600,000 wafers. Counterpoint-based reporting in September put CXMT near 10% of global DRAM revenue in Q2.",
+        "The incumbent market is simultaneously in a severe shortage regime. Reuters on September 16 reported smaller phone/laptop makers preparing for years of scarcity, while Samsung and SK hynix Q2 disclosures described record memory results and continued server/HBM-led demand. Micron's fiscal Q3 release guided about $50B of Q4 revenue and about 86% gross margin while stating HBM4 was already in high-volume shipment for a lead customer.",
+        "Segment exposure is not homogeneous. CXMT's new disclosed G5 products are LPDDR5X, so the direct near-term competitive channel is strongest in conventional/mobile DRAM. SK hynix and Micron retain substantial exposure to HBM and AI-server memory, where qualification, packaging and customer ecosystems are materially different and where CXMT has not demonstrated equivalent scale in this announcement.",
+        "Historical positive control: Reuters reported a severe memory-sector selloff on July 28 after CXMT's blockbuster IPO and broader China-competition/AI-financing fears. Samsung fell 13.4% and SK hynix 14.7%; the episode shows that changes in perceived Chinese memory supply/financing capacity can materially alter incumbent scarcity-rent expectations, although the move was confounded by valuation and AI-financing concerns.",
+        "Matched negative/current control: CXMT's planned NAND push was publicly reported on September 18, yet Micron closed +3.92%, Samsung +3.37% and SK hynix +6.42% that session. Memory shares were instead supported by tight-supply evidence, AI demand and other company/industry catalysts. A China-competition headline is therefore not a sufficient one-factor predictor.",
+        "As of September 16, TrendForce's public spot board still showed elevated DRAM pricing rather than an observable collapse in current physical pricing. That is consistent with the idea that any G5 supply effect must transmit through qualified volume and customer substitution before it can erode incumbent ASPs."
+      ],
+      "inference": "The reusable causal variable is qualified incremental saleable bits in the product categories where incumbents earn scarcity rents, not process-node headlines or gross dies per wafer. The likely chain is Chinese industrial-policy capital + customer pre-commitments + capacity/yield improvement -> more qualified domestic DRAM supply -> Chinese OEM/server substitution and incumbent share/ASP pressure in conventional/mobile DRAM -> potential compression of scarcity margins. The effect is partly insulated where incumbents earn more from HBM/AI-server products with different qualification and packaging bottlenecks. If G5 yields and customer qualifications remain weak, the headline can reprice expectations without materially changing near-term physical supply.",
+      "catalyst_transmission_amplifier": {
+        "catalyst": "CXMT's September 20 G5 mass-production announcement before the next U.S./Korean cash-equity open.",
+        "transmission": "credible lower-cost/higher-density Chinese DRAM supply expectations -> lower expected duration of conventional/mobile DRAM scarcity rents -> lower forward ASP/margin assumptions for exposed incumbents; Chinese customers gain bargaining power and a domestic substitution option.",
+        "amplifiers": [
+          "memory equities entered the event after enormous 2026 earnings and share-price gains, making duration-of-scarcity assumptions valuation-sensitive",
+          "CXMT has state support, a large IPO funding base, existing major-customer contracts and ongoing wafer-capacity expansion",
+          "industry supply remains constrained because incumbents prioritize HBM/server memory, so even modest qualified conventional capacity can have high marginal value"
+        ],
+        "dampeners": [
+          "G5 yield and qualified customer volume are undisclosed",
+          "U.S. export controls constrain access to leading lithography/equipment",
+          "current AI/HBM demand is strong enough to offset conventional competition for HBM-heavy suppliers",
+          "shortage conditions and long-term contracts can delay spot competition from flowing into realized incumbent ASPs"
+        ]
+      },
+      "matched_controls": [
+        "July 27-28 CXMT IPO/China-competition episode: large negative memory-sector repricing, but confounded by AI-financing and valuation concerns.",
+        "September 18 CXMT NAND-expansion disclosure: incumbent memory stocks rose strongly, rejecting a deterministic 'China competition headline -> incumbent stock down' rule.",
+        "Current product mix control: HBM/server-memory demand remains extremely strong, so HBM-heavy exposure should not be treated as identical to mobile/conventional DRAM exposure."
+      ],
+      "negative_findings": [
+        "Do not interpret CXMT's claimed +50% gross dies per wafer as +50% qualified saleable bits; yield and output are undisclosed.",
+        "Do not infer an immediate DRAM-price collapse before customer qualification, shipment volume and price data confirm additional physical supply.",
+        "Do not treat Samsung, SK hynix and Micron as equally exposed; HBM/server mix and geography materially change the transmission.",
+        "Do not freeze a Monday-down incumbent-memory forecast from one weekend announcement; July's positive control is confounded and September 18 provides a direct non-move control."
+      ],
+      "decision_support": {
+        "incumbent_memory_equities": {
+          "view": "HOLD / WAIT; competition-risk watch, no new short-thesis",
+          "horizon": "days to 12 months",
+          "confidence": "MODERATE-HIGH on mechanism; LOW on immediate price direction",
+          "confirmation": "Monday/next-session relative underperformance concentrated in conventional/mobile-memory-exposed names; subsequent customer qualifications or contracts for G5; rising CXMT qualified output; conventional/mobile DRAM prices or incumbent guidance soften relative to HBM/server pricing.",
+          "invalidation": "G5 yield/qualification disappoints, physical DRAM pricing remains tight, incumbents preserve ASPs/margins and HBM/server growth dominates consolidated earnings.",
+          "liquidity_cost_capacity": "Large listed incumbents are liquid; no real-money trading authority and no execution performed."
+        },
+        "cxmt": {
+          "view": "RESEARCH / WAIT; strategic supply-gain thesis is real, valuation edge unproven",
+          "horizon": "months to years",
+          "confidence": "MODERATE on share-gain mechanism; LOW on expected equity return without valuation and free-float analysis",
+          "confirmation": "G5 customer qualification, sustained cost/yield improvement, contracted shipments, wafer-output growth and continued share gains without destructive pricing/capex economics.",
+          "invalidation": "Poor yields, weak customer qualification, export-control bottlenecks, over-expansion or valuation already discounting unrealistic global share."
+        }
+      },
+      "sources": [
+        "Reuters 2026-09-20: China's CXMT says new memory-chip platform enters mass production",
+        "Reuters 2026-06-29: China's CXMT wins $3 billion memory supply deal with Tencent",
+        "Reuters 2026-07-28: Asian chip stocks slide as China competition fears rattle AI trade",
+        "Reuters 2026-09-16: Smaller phone and laptop makers dig in for years of memory scarcity",
+        "CXMT 2025-10-28: LPDDR5X mass production newsroom",
+        "Micron 2026 fiscal Q3 official earnings release",
+        "Samsung Electronics 2026 Q2 official results",
+        "SK hynix 2026 Q2 official results",
+        "TrendForce DRAM public spot board as of 2026-09-16"
+      ]
+    },
+    {
+      "topic": "U.S.-China LNG tariff talks mainly change destination economics and contractability, not a capacity-constrained U.S. export-volume switch",
+      "label": "ENERGY / LNG / TRADE / CONTRACT STRUCTURE / DESTINATION FLEXIBILITY",
+      "observed_facts": [
+        "Reuters reported that U.S. and Chinese negotiators were discussing reducing or removing China's 15% tariff on U.S. LNG ahead of the Trump-Xi summit.",
+        "Chinese buyers have continued honoring substantial long-term U.S. LNG contracts while often reselling cargoes into Europe rather than importing them directly into China. The tariff therefore changes destination netbacks and routing incentives without necessarily changing U.S. terminal throughput one-for-one.",
+        "A new September 14 Venture Global agreement with China Gas for 0.5 Mtpa over 20 years beginning in 2030 was signed while the tariff still existed, showing that long-duration contracting can proceed despite current destination friction.",
+        "The U.S. export system is already highly utilized and additional capacity comes online over time, while Asian demand has been destroyed at very high LNG prices. A tariff cut cannot create unlimited near-term liquefaction volume when physical capacity is the binding constraint."
+      ],
+      "inference": "For flexible U.S. LNG, a China tariff cut should be modeled first as buyer netback/routing improvement and a possible long-term contract/financeability catalyst, not as a mechanical near-term volume surge. Value capture depends on contract terms, merchant exposure, destination flexibility and spare/commissioning capacity. This independently supports the prior LNG learning that gross scarcity or policy headlines are insufficient equity signals.",
+      "negative_findings": [
+        "Do not treat tariff removal as a guaranteed near-term U.S. LNG export-volume increase when terminals are capacity constrained.",
+        "Do not assume Chinese direct imports are required for Chinese buyers to remain economically involved in U.S. LNG; resale into Europe already separates contract ownership from destination.",
+        "Do not promote a sector-wide LNG BUY solely on trade-talk headlines."
+      ],
+      "decision_support": "HOLD / RESEARCH FOR BUY CANDIDATES unchanged; monitor contract economics, destination spreads, new SPAs, commissioning capacity and financing rather than tariff headline alone.",
+      "sources": [
+        "Reuters 2026-09-20/2026-09-19 U.S.-China trade/LNG tariff reporting",
+        "Reuters reporting on Chinese resale of U.S. long-term LNG cargoes",
+        "Venture Global primary September 14, 2026 China Gas SPA announcement"
+      ]
+    },
+    {
+      "topic": "Weekend crypto big-move scan: AVAX and ENA remain idiosyncratic outliers while majors are flat/down and aggregate leverage is cooling but funding is richer",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / CRYPTO / POSITIONING / NEGATIVE FINDINGS",
+      "observed_facts": [
+        "CoinMarketCap at roughly 18:38 UTC showed BTC -0.34%/24h, ETH -0.33%, SOL -1.02% and XRP -1.29%, while AVAX was +14.63% and ENA +14.10%; AVAX was +49.58%/7d and ENA +60.44%/7d.",
+        "AVAX turnover was about 30.45% of market cap and ENA turnover about 43.05%, consistent with unusually active/high-beta market structure.",
+        "CoinMarketCap's global derivatives snapshot showed aggregate crypto open interest around $447.1B, -2.79%/24h, while average funding was positive near 0.00743% and had risen materially versus the prior day/week. BTC 24h liquidations were only about $45.8M and down 25.6%, so the earlier broad short-squeeze impulse was no longer dominant at this snapshot.",
+        "Avalanche Helicon is scheduled for mainnet activation September 22 at 15:00 UTC and was publicly signaled on September 8, so it is a known pre-event catalyst rather than a new Sunday disclosure. Public reporting says NYSE/ICE has tested Avalanche technology, but no primary evidence reviewed in this run shows NYSE selected Avalanche as its production settlement chain.",
+        "The prior ENA research remains intact: USDe supply is below the published first fee-switch rung, so current ENA strength cannot truthfully be labeled active fee-switch buyback flow."
+      ],
+      "inference": "Broad crypto beta is insufficient to explain AVAX/ENA outperformance. The evidence still supports expectation repricing, pre-event positioning, tokenomics/regulatory narratives and momentum as candidate causes, but not a validated source-to-venue net-capital-flow chain. Rising positive funding while aggregate OI falls is not itself bearish, but it raises the bar for chasing high-turnover outliers because remaining longs are paying more for exposure.",
+      "decision_support": {
+        "AVAX": "WAIT / AVOID CHASING until post-Helicon price-normalized activity, fees, net bridge/stablecoin flows and spot-versus-derivatives composition validate real demand.",
+        "ENA": "WAIT / AVOID CHASING unchanged; require actual fee-switch threshold activation and observable buyback transactions before labeling programmatic demand."
+      }
+    }
+  ],
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast added. The CXMT G5 disclosure is preserved as a timestamp-defensible pre-open predictor candidate, but immediate price direction is intentionally not frozen because yield/output are unknown and matched controls conflict."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. The CXMT qualified-supply-versus-gross-die distinction is high-information and timestamp-defensible but should be retested against next-session price action, customer qualification and physical DRAM data before promotion into dashboard/learning-ledger canonical state. LNG tariff research corroborates the existing contract/routing/value-capture framework rather than constituting a separate canonical regime change. No code or signal-system state changed.",
+  "next_research": [
+    "At the next Asian/U.S. cash-equity open, measure CXMT, Samsung, SK hynix, Micron and a broad semiconductor/control basket at 30m/1d/5d; separate the G5 surprise from market beta and contemporaneous memory/AI news.",
+    "Obtain same-definition G5 yield, monthly wafer starts, customer qualification and shipment data if published; compare conventional/mobile DRAM spot/contract prices against HBM/server pricing.",
+    "Build a historical event set around CXMT LPDDR5X May/October 2025, June 2026 Tencent contract and July 2026 IPO to test whether Chinese qualified-supply milestones predict incumbent relative returns better than generic China-competition headlines.",
+    "Continue LNG value-capture matrix; specifically test whether tariff/destination changes affect U.S. exporter throughput, merchant netbacks or only routing/contracting.",
+    "After U.S. ETF markets reopen, reconcile BTC/ETH finalized ETF flows with spot breadth, funding/open interest and exchange/on-chain absorption before changing BTC WAIT.",
+    "After Helicon activation, test AVAX price-normalized usage, fees, stablecoin/bridge net flows and derivatives leverage against the frozen pre-event baseline."
+  ]
+}
