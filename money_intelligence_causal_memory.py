@@ -1486,15 +1486,6 @@ class CausalRepricingMemory:
                         raw["evaluation_units"] = tuple(
                             tuple(unit) for unit in raw["evaluation_units"]
                         )
-                    if "evaluation_pairs" in raw:
-                        raw["evaluation_pairs"] = tuple(
-                            tuple(pair) for pair in raw["evaluation_pairs"]
-                        )
-                    if "evaluation_selectors" in raw:
-                        raw["evaluation_selectors"] = tuple(
-                            tuple(tuple(selector) for selector in pair)
-                            for pair in raw["evaluation_selectors"]
-                        )
                     memory.register_hypothesis(
                         FrozenHypothesis(**raw),
                         _restore_legacy_undercount=raw["hypothesis_id"] in underdeclared,

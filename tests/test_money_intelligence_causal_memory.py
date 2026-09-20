@@ -1324,6 +1324,27 @@ def test_current_protocol_document_without_selectors_loses_confirmatory_authorit
     ) is None
 
 
+@pytest.mark.parametrize("field, malformed", [
+    ("evaluation_selectors", ["abc", "def"]),
+    ("evaluation_pairs", "OC"),
+])
+def test_malformed_plan_document_cannot_coerce_strings_into_fields(field, malformed):
+    memory = CausalRepricingMemory()
+    memory.register_observation(_observation("flow"))
+    memory.register_hypothesis(_hypothesis())
+    document = memory.to_document()
+    document.pop("content_digest")
+    original = document["hypotheses"][0][field]
+    document["hypotheses"][0][field] = [malformed, *original[1:]]
+    encoded = json.dumps(
+        document, sort_keys=True, separators=(",", ":"), ensure_ascii=True
+    ).encode("utf-8")
+    document["content_digest"] = hashlib.sha256(encoded).hexdigest()
+
+    with pytest.raises(CausalMemoryError, match="scientific-contract validation"):
+        CausalRepricingMemory.from_document(document)
+
+
 def test_confidence_can_gain_lose_and_decay_toward_neutral():
     memory = _memory_with_hypothesis(half_life_days=10.0)
     memory.record_evidence(_support())
