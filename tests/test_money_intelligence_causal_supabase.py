@@ -1,4 +1,5 @@
 from copy import deepcopy
+from dataclasses import replace
 from pathlib import Path
 
 import db
@@ -295,6 +296,7 @@ def test_stale_writer_cannot_reconsume_units_after_concurrent_confirmatory_write
         observation_changes={"currency": "bp", "unit": "bp", "venue": "other"},
         value_scale=10_000.0,
     )
+    clone = replace(clone, confirmatory=False, p_value=None)
     SupabaseCausalMemory().initialize(_plan_only())
     SupabaseCausalMemory().transact(
         lambda current: _append_evaluation_observations(current, memory)
@@ -316,6 +318,43 @@ def test_stale_writer_cannot_reconsume_units_after_concurrent_confirmatory_write
     assert restarted.confidence(
         "H1", as_of="2026-09-03T00:00:00Z"
     ).confirmatory_support_count == 1
+
+
+def test_durable_control_substitution_cannot_create_confirmatory_support(supabase):
+    prepared = _memory_with_hypothesis()
+    adapter = SupabaseCausalMemory()
+    adapter.initialize(_plan_only())
+    replacement_ids = tuple(f"durable-posthoc-control-{index}" for index in range(1, 7))
+
+    def seed_observations(current):
+        _append_evaluation_observations(current, prepared)
+        for replacement_id, source_id in zip(
+            replacement_ids,
+            _support().control_observation_ids,
+            strict=True,
+        ):
+            current.register_observation(
+                replace(
+                    prepared.observations[source_id],
+                    observation_id=replacement_id,
+                    value=-1.0,
+                )
+            )
+
+    adapter.transact(seed_observations)
+    attack = replace(
+        _support("durable-posthoc-control-substitution"),
+        control_observation_ids=replacement_ids,
+    )
+
+    with pytest.raises(CausalMemoryError, match="frozen outcome/control pairs"):
+        adapter.transact(lambda current: current.record_evidence(attack))
+
+    restarted = SupabaseCausalMemory().load()
+    assert "durable-posthoc-control-substitution" not in restarted.events
+    assert restarted.confidence(
+        "H1", as_of="2026-09-03T00:00:00Z"
+    ).confirmatory_support_count == 0
 
 
 def test_outage_corruption_missing_state_and_repeated_stale_fail_closed(supabase):
