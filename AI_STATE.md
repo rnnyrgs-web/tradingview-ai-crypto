@@ -94,6 +94,8 @@ Exact production acceptance passed on canonical main SHA `c1737bd4b3340a9073bce6
 
 Durable acceptance contract: issue #462. Exactly one active milestone is canonical: `COORD-ARCH-ADVERSARIAL-001`, owner `testing-security`, status **READY**, branch `agent/testing-security`.
 
+Execution is already active under the durable issue #462 claim. The first bounded defect fix is integrated: PR #471 closed an underdeclared-family multiple-testing bypass in causal memory and merged as `8638dad86142f78f63bfbf936e1a52310bf97fd0` after exact-head Security & Reliability run `35488774983` passed with 1,242 tests passed / 2 skipped plus dependency, static-security and secret scans. This is one completed adversarial finding, not Phase-3 completion or self-certification.
+
 Independently trace and attempt to falsify the live merged paths, including:
 - durable Profitability Learning, Strategy Component Memory and causal memory actually changing ranking, eligibility, queueing and execution;
 - compounded after-cost economics, catastrophic-tail and return-concentration treatment rather than win-rate proxies;
@@ -166,4 +168,4 @@ Current truth: **Orchestrator V1 bounded canonical-main acceptance passed; Phase
 
 ## EXACT NEXT STEP
 
-After independent integration of this reconciliation, execute `COORD-ARCH-ADVERSARIAL-001` from current `main` on the canonical `agent/testing-security` branch under issue #462. Trace the real merged paths end to end, attempt each declared falsification, add focused regressions and isolated fixes for every defect, and require exact-head Security & Reliability plus independent review. Do not self-certify Phase 3, reopen protected OOS/forward evidence, or grant broker/trade/promotion authority.
+Continue the already-claimed `COORD-ARCH-ADVERSARIAL-001` from exact current `main` on the canonical `agent/testing-security` branch under issue #462. Treat PR #471 as the first completed bounded fix, then trace and falsify the remaining real merged paths end to end, adding focused regressions and isolated reviewed fixes for every concrete defect. Do not self-certify Phase 3, advance V2/Phase 4 ahead of the active milestone, reopen protected OOS/forward evidence, or grant broker/trade/promotion authority.
