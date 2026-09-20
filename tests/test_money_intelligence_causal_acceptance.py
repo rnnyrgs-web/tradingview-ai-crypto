@@ -37,6 +37,15 @@ def test_acceptance_fixture_can_confirm_after_prior_project_tests(prior_slots):
             family_size=1, evaluation_units=(), evaluation_pairs=(),
             evaluation_selectors=(),
         ))
+    memory.register_observation(replace(
+        acceptance._observation(
+            ids["support_outcome_1"], metric_name="matched_return", value=1.0,
+            observed_at=base + timedelta(hours=1),
+            available_at=base + timedelta(hours=2, minutes=1), window_hours=1,
+        ),
+        observation_id="legacy-overlap", subject_id="PHASE2_ACCEPTANCE",
+        provenance_uri="acceptance://legacy-overlap",
+    ))
     acceptance._seed_support(memory, ids, base)
     hypothesis = memory.hypotheses[ids["hypothesis"]]
     verification = memory._verified_evaluation(memory.events[ids["support"]], hypothesis)
