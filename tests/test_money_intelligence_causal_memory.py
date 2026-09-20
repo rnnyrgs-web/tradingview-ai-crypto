@@ -125,6 +125,33 @@ def _support(event_id="support-1", evaluated_at="2026-09-03T00:00:00Z") -> Evide
     )
 
 
+def _legacy_evaluation_selectors() -> list[list[list[str]]]:
+    return [
+        [
+            [
+                contract.outcome_metric_name,
+                contract.outcome_source_id,
+                contract.outcome_provenance_uri,
+            ],
+            [
+                contract.control_metric_name,
+                contract.control_source_id,
+                contract.control_provenance_uri,
+            ],
+        ]
+        for contract in _hypothesis().evaluation_pair_contracts
+    ]
+
+
+def _with_digest(document: dict[str, object]) -> dict[str, object]:
+    document.pop("content_digest", None)
+    encoded = json.dumps(
+        document, sort_keys=True, separators=(",", ":"), ensure_ascii=True
+    ).encode("utf-8")
+    document["content_digest"] = hashlib.sha256(encoded).hexdigest()
+    return document
+
+
 def _memory_with_hypothesis(*, half_life_days=30.0) -> CausalRepricingMemory:
     memory = CausalRepricingMemory(half_life_days=half_life_days)
     memory.register_observation(_observation("flow"))
@@ -1348,6 +1375,82 @@ def test_current_protocol_document_without_pair_provenance_loses_confirmatory_au
     assert restored.research_artifact(
         "H1", lane="big_move", as_of="2026-09-03T00:00:00Z"
     ) is None
+
+
+def test_current_protocol_legacy_selector_document_restores_audit_only_support():
+    memory = _memory_with_hypothesis()
+    assert memory.record_evidence(_support("legacy-selector-support"))
+    document = memory.to_document()
+    hypothesis = document["hypotheses"][0]
+    hypothesis.pop("evaluation_pair_contracts")
+    hypothesis["evaluation_selectors"] = _legacy_evaluation_selectors()
+    restored = CausalRepricingMemory.from_document(_with_digest(document))
+
+    assert restored.hypotheses["H1"].evaluation_selectors
+    assert restored.hypotheses["H1"].evaluation_pair_contracts == ()
+    assert restored.register_hypothesis(restored.hypotheses["H1"]) is False
+    assert restored.events["legacy-selector-support"].confirmatory is False
+    assert restored.confidence(
+        "H1", as_of="2026-09-03T00:00:00Z"
+    ).confirmatory_support_count == 0
+    assert restored.research_artifact(
+        "H1", lane="big_move", as_of="2026-09-03T00:00:00Z"
+    ) is None
+    assert CausalRepricingMemory.from_document(restored.to_document()).to_document() == (
+        restored.to_document()
+    )
+
+
+def test_legacy_selector_rejection_vetoes_equivalent_pair_contract_design():
+    document = _memory_with_hypothesis().to_document()
+    hypothesis = document["hypotheses"][0]
+    hypothesis.pop("evaluation_pair_contracts")
+    hypothesis["evaluation_selectors"] = _legacy_evaluation_selectors()
+    restored = CausalRepricingMemory.from_document(_with_digest(document))
+    legacy_fingerprint = restored.hypotheses["H1"].fingerprint
+
+    memory = CausalRepricingMemory(rejected_fingerprints={legacy_fingerprint})
+    memory.register_observation(_observation("flow"))
+    with pytest.raises(CausalMemoryError, match="rejected"):
+        memory.register_hypothesis(_hypothesis())
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda hypothesis: hypothesis["evaluation_selectors"][0][1].__setitem__(2, ""),
+        lambda hypothesis: hypothesis.__setitem__(
+            "evaluation_selectors", [hypothesis["evaluation_selectors"][0]]
+        ),
+        lambda hypothesis: hypothesis.__setitem__(
+            "evaluation_pair_contracts",
+            [asdict(contract) for contract in _hypothesis().evaluation_pair_contracts],
+        ),
+    ],
+)
+def test_malformed_or_ambiguous_legacy_selector_document_fails_closed(mutate):
+    document = _memory_with_hypothesis().to_document()
+    hypothesis = document["hypotheses"][0]
+    hypothesis.pop("evaluation_pair_contracts")
+    hypothesis["evaluation_selectors"] = _legacy_evaluation_selectors()
+    mutate(hypothesis)
+
+    with pytest.raises(CausalMemoryError, match="scientific-contract validation"):
+        CausalRepricingMemory.from_document(_with_digest(document))
+
+
+def test_fresh_hypothesis_cannot_use_legacy_selector_only_surface():
+    hypothesis = FrozenHypothesis(
+        **{
+            **_hypothesis().__dict__,
+            "evaluation_pair_contracts": (),
+            "evaluation_selectors": _legacy_evaluation_selectors(),
+        }
+    )
+    memory = CausalRepricingMemory()
+    memory.register_observation(_observation("flow"))
+    with pytest.raises(CausalMemoryError, match="audit-only"):
+        memory.register_hypothesis(hypothesis)
 
 
 def test_malformed_pair_document_cannot_coerce_string_into_observation_ids():
