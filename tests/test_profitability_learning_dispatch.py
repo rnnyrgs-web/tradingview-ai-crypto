@@ -7,7 +7,8 @@ import pytest
 from profitability_learning.contracts import SAFE, fingerprint
 from profitability_learning.memory import Memory
 from profitability_learning.runtime import (
-    apply_queue_feedback, complete_experiment, enrich_legacy_lesson, refresh_director,
+    apply_queue_feedback, complete_experiment, enrich_legacy_lesson,
+    factory_feedback, refresh_director,
 )
 from research_heavy_experiment_scheduler import build_heavy_dispatch_plan
 from research_quant_science_factory import (
@@ -153,6 +154,38 @@ def _complete_positive_factory_strategy(candidate):
     passed["status"] = "PASSED"
     passed["failure_reasons"] = []
     return complete_experiment(passed)
+
+
+def test_caller_declared_positive_completion_cannot_become_favorable_evidence(
+    monkeypatch, tmp_path
+):
+    path = configure(monkeypatch, tmp_path)
+    source = _experiment("caller-declared-positive", 100)
+    source["family"] = "factory-restrictive-filter"
+
+    completed = _complete_positive_factory_strategy(source)
+    restarted = Memory(path, create=False).snapshot()
+    semantic = verified_strategy_semantic_fingerprint(source)
+
+    assert completed["favorable_evidence_provenance"] == (
+        "UNVERIFIED_CALLER_RESULT"
+    )
+    assert restarted["families"][source["family"]]["promising_development"] == 0
+    assert restarted["semantic_strategies"][semantic]["promising_development"] == 0
+    assert not any(
+        mission["mode"] == "EXPLOIT"
+        for mission in factory_feedback()["missions"]
+    )
+
+    candidate = deepcopy(source)
+    candidate["experiment_id"] = "same-behavior-after-restart"
+    queue = apply_queue_feedback({"experiments": [candidate]})
+    feedback = queue["experiments"][0]["learning_feedback"]
+
+    assert feedback["factor"] == 1.0
+    assert feedback["reason"] == "no_matched_completion"
+    assert feedback["changes_eligibility"] is False
+    assert build_heavy_dispatch_plan(queue)["selected_count"] == 1
 
 
 @pytest.mark.parametrize(
@@ -492,7 +525,7 @@ def test_malformed_or_unsafe_feedback_cannot_admit_work(bad):
     assert build_heavy_dispatch_plan({"experiments": [candidate, healthy]})["selected"][0]["experiment_id"] == "healthy"
 
 
-def test_component_ablation_feedback_is_consumed_without_reopening_parent(monkeypatch, tmp_path):
+def test_unverified_component_ablation_can_penalize_but_not_boost(monkeypatch, tmp_path):
     from profitability_learning.development import run_ablation
     from profitability_learning.contracts import fingerprint
     from test_profitability_learning_development import setup_ablation, evaluator
@@ -509,7 +542,7 @@ def test_component_ablation_feedback_is_consumed_without_reopening_parent(monkey
     queue = apply_queue_feedback({"experiments": [harmful, useful]})
     plan = build_heavy_dispatch_plan(queue)
     assert plan["selected"][0]["experiment_id"] == "z-useful"
-    assert plan["selected"][0]["profitability_priority_score"] == pytest.approx(1.15 / 1.3)
+    assert plan["selected"][0]["profitability_priority_score"] == pytest.approx(1 / 1.3)
     assert build_heavy_dispatch_plan(apply_queue_feedback(queue))["selected"] == plan["selected"]
 
 

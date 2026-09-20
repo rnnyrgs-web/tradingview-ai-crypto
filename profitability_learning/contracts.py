@@ -13,6 +13,8 @@ SPLITS = DEVELOPMENT | {"CHRONOLOGICAL_VALIDATION", "RELEASED_OOS", "FORWARD"}
 COSTS = ("fees", "spread", "slippage", "funding_carry")
 SAFE = {"research_only": True, "trade_authority": False, "promotion_authority": False,
         "automatic_execution_authority": False, "broker_connected": False}
+UNVERIFIED_FAVORABLE_EVIDENCE = "UNVERIFIED_CALLER_RESULT"
+VERIFIED_FAVORABLE_EVIDENCE = "VERIFIED_EXECUTOR_BOUND_RESULT"
 MAX_TRADES = 100_000
 
 # These identifiers name reviewed executable implementations, not caller prose.

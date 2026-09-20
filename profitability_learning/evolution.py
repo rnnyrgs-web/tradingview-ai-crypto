@@ -2,8 +2,9 @@
 from copy import deepcopy
 from datetime import timedelta
 
-from .contracts import (DEVELOPMENT, SAFE, fingerprint, number, text, timestamp,
-                        validate_contract, strategy_semantic_fingerprint)
+from .contracts import (DEVELOPMENT, SAFE, VERIFIED_FAVORABLE_EVIDENCE,
+                        fingerprint, number, text, timestamp, validate_contract,
+                        strategy_semantic_fingerprint)
 
 
 def _shape(strategy):
@@ -136,7 +137,9 @@ def rank_candidates(candidates, memory):
             evidence = memory.get("components", {}).get(key, {})
             observations = [o for o in evidence.get("observations", [])
                        if o["split"] in DEVELOPMENT and o.get("effect")
-                       and o["effect"]["independent_event_count"] >= o["minimum_events"]]
+                       and o["effect"]["independent_event_count"] >= o["minimum_events"]
+                       and (o.get("favorable_evidence_verified")
+                            or o["effect"]["delta_compounded_return"] <= 0)]
             independent = []
             # Select within DEVELOPMENT first. Relabelled/overlapping windows
             # cannot add a vote or displace evidence with an OOS observation.
@@ -182,16 +185,26 @@ def learning_missions(memory, *, limit=20):
         if r["contract"]["split"] not in DEVELOPMENT:
             continue
         outcome = r["outcome"]
+        favorable_verified = (
+            r.get("favorable_evidence_provenance")
+            == VERIFIED_FAVORABLE_EVIDENCE
+        )
         semantic = strategy_semantic_fingerprint(r["contract"]["strategy"])
         rejected = (r["contract"]["strategy_fingerprint"] in memory.get("rejected_fingerprints", [])
             or semantic in memory.get("rejected_semantic_fingerprints", []))
         mode = "EXPLOIT" if outcome == "SUCCESS_LEARN" else "EXPLORE" if outcome == "MECHANISM_DEAD" else "LEARN"
+        if mode == "EXPLOIT" and not favorable_verified:
+            mode = "LEARN"
         if rejected and mode == "EXPLOIT":
             mode = "LEARN"
+        hypothesis = r["next_research_question"]
+        if rejected and outcome == "SUCCESS_LEARN":
+            hypothesis = "Investigate contradictory evidence/provenance; the original fingerprint remains rejected and may not be retested."
+        elif outcome == "SUCCESS_LEARN" and not favorable_verified:
+            hypothesis = "Bind the result to a verifier-issued executor receipt before using favorable economics."
         missions.append({"id": "learning-" + r["experiment_id"], "family": r["contract"]["family"],
             "strategy_fingerprint": r["contract"]["strategy_fingerprint"] if mode == "EXPLOIT" else None,
-            "hypothesis": ("Investigate contradictory evidence/provenance; the original fingerprint remains rejected and may not be retested."
-                           if rejected and outcome == "SUCCESS_LEARN" else r["next_research_question"]),
+            "hypothesis": hypothesis,
             "source_experiment_id": r["experiment_id"],
             "mode": mode, "base_priority": 1, "information_gain": .8,
             "expected_economic_upside": .6 if mode == "EXPLOIT" else .4,

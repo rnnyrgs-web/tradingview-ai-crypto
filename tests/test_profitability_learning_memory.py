@@ -243,6 +243,23 @@ def test_import_rejects_self_hashed_unsafe_schema(tmp_path):
         n.import_archive(archive)
 
 
+def test_import_cannot_self_assert_verified_favorable_provenance(tmp_path):
+    m = Memory(tmp_path / "memory.sqlite")
+    m.complete(experiment([10, 10, 10]))
+    archive = m.export()
+    archive["events"][0]["payload"]["favorable_evidence_provenance"] = (
+        "VERIFIED_EXECUTOR_BOUND_RESULT"
+    )
+    archive["events"][0]["digest"] = fingerprint(
+        archive["events"][0]["payload"]
+    )
+    archive["sha256"] = fingerprint(archive["events"])
+    n = Memory(tmp_path / "other.sqlite")
+
+    with pytest.raises(ValueError, match="schema"):
+        n.import_archive(archive)
+
+
 def test_same_semantic_successor_suppressed_across_fresh_windows(tmp_path):
     m = Memory(tmp_path / "memory.sqlite")
     e = experiment([-10, -10, -10])

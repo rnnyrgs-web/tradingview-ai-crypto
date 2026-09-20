@@ -137,7 +137,17 @@ def _candidate_feedback(candidate, memory):
             # behavior-driving fields and science design would remain unbound.
             semantic_unverifiable = sf not in memory.get("rejected_fingerprints", [])
     semantic_evidence = memory.get("semantic_strategies", {}).get(semantic)
-    if semantic_evidence is not None or family in memory.get("families", {}):
+    family_evidence = memory.get("families", {}).get(family)
+
+    def actionable(evidence):
+        return bool(evidence and (
+            evidence.get("promising_development", 0)
+            or evidence.get("development_failures", 0)
+            or evidence.get("mechanism_dead")
+            or evidence.get("infra_blocked")
+        ))
+
+    if actionable(semantic_evidence) or actionable(family_evidence):
         ranked = rank_candidates([{
             **candidate,
             "family": family,
@@ -147,7 +157,7 @@ def _candidate_feedback(candidate, memory):
         factor *= ranked["learning_factor"]
         reason = (
             "matched_semantic_economic_evidence"
-            if semantic_evidence is not None
+            if actionable(semantic_evidence)
             else "matched_family_economic_evidence"
         )
     if sf and sf in memory.get("rejected_fingerprints", []):

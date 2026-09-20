@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T1237Z",
+  "information_cutoff": "2026-09-20T12:37:38Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_observed": "582b6abb9d42f55474b660fb0a457e453c6275d5",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles": true,
+    "searched_prediction_artifacts": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-20T12:29:23Z",
+    "artifact_cutoff_utc": "2026-09-20T12:37:38Z",
+    "seconds_this_run_minimum": 495,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 1876,
+    "minimum_cumulative_seconds_since_last_owner_report": 2371,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted; schedule gaps, idle time, publication timestamps and background time are excluded."
+  },
+  "highest_information_question": "Can sovereign-duration risk be modeled with a timestamp-safe net-duration state vector that separates reserve creation, Treasury issuance/buybacks, and time-varying marginal-buyer capacity, and can the current AVAX/ENA outliers be separated into genuine pre-move flow/value-capture mechanisms versus narrative repricing?",
+  "fresh_research": [
+    {
+      "topic": "Treasury marginal-buyer identity is a time-varying state variable, not an auction label",
+      "label": "SOVEREIGN DURATION / MARGINAL BUYER / METHOD VALIDATION",
+      "observed_facts": [
+        "TreasuryDirect explicitly says the Indirect Bidder category contains domestic and foreign customers and therefore does not identify bidder domicile; separate Investor Class Auction Allotments are required to estimate foreign participation.",
+        "Federal Reserve Financial Accounts for 2026Q2 show Treasury issuance/absorption was highly heterogeneous by sector and maturity. The Federal Reserve's Treasury purchases were overwhelmingly bills, while household-sector, foreign, pension/fund and other sectors absorbed coupon duration in different amounts; broker-dealer holdings did not simply rise one-for-one with supply.",
+        "July 2026 TIC data likewise show aggregate foreign flows conceal maturity and official/private differences: foreign Treasury-bill buying can coexist with private foreign sales of Treasury notes/bonds and official purchases of coupons.",
+        "The Fed's historical research on QT finds the marginal Treasury absorber changes across episodes: households/residual investors and dealers were prominent in 2017-19, while insurers and the rest of world increased absorption in the 2022 QT phase; hedge-fund/basis participation is not a stable one-factor explanation.",
+        "September 2026 long-end auctions cleared with strong customer demand and low dealer awards in some maturities, despite elevated long yields, which is inconsistent with a simple claim that high yields prove buyer capacity is failing."
+      ],
+      "inference": "The sovereign-duration model should treat buyer identity and risk-bearing capacity as time-varying. Auction indirect-bidder share, aggregate foreign inflow, or dealer inventories alone are insufficient. A defensible state vector needs investor-class auction allotments, TIC official/private maturity flows, Z.1 sector holdings/transactions, dealer inventories/repo capacity, auction tails and bid-to-cover, and basis-fund financing conditions.",
+      "causal_chain": "gross fiscal issuance by maturity + central-bank duration absorption + buyback/replacement composition -> duration offered to private market -> marginal buyer mix and balance-sheet capacity -> auction/secondary-market clearing yield -> dealer inventory/repo/basis response -> term premium and long yields -> financing/valuation spillovers",
+      "negative_findings": [
+        "Do not call high indirect-bidder share foreign demand.",
+        "Do not call positive total TIC inflow foreign long-duration Treasury demand without maturity and official/private decomposition.",
+        "Do not infer buyer-capacity failure from high yields alone; auctions can clear strongly at high yields because price adjusts until demand appears.",
+        "Do not assume one sector is the permanent marginal buyer across QT/issuance regimes."
+      ],
+      "learning_candidate": {
+        "id": "MI-H-20260920-TREASURY-BUYER-DECOMPOSITION",
+        "status": "SUPPORTED_METHOD_CANDIDATE_NOT_YET_CANONICAL",
+        "claim": "Model net market-facing sovereign duration jointly with time-varying marginal-buyer identity/capacity. Auction bidder labels, aggregate foreign flows and total central-bank balance-sheet size are insufficient proxies."
+      },
+      "decision_support": "Method upgrade only; no Treasury BUY/SHORT thesis clears the evidence bar."
+    },
+    {
+      "topic": "2019 bill-only reserve-management purchases strengthen the reserve-liquidity versus duration-absorption distinction",
+      "label": "FED BALANCE SHEET / MATCHED MECHANISM CONTROL",
+      "observed_facts": [
+        "On October 11, 2019 the FOMC directed roughly $60B/month of Treasury-bill purchases to maintain ample reserves and explicitly said the action was technical and not a change in monetary-policy stance.",
+        "The Fed simultaneously used repo operations to damp money-market stress; later Fed reporting says the bill purchases and repos raised reserves and stabilized short-term funding.",
+        "The 2019 program concentrated purchases in bills rather than long coupons. Contemporary market reporting showed a steeper curve rather than a simple long-yield compression after the announcement, although trade/policy news contaminated the event window.",
+        "This is a mechanism control against 2011-12 Maturity Extension, where the Fed intentionally removed long-duration Treasuries from the market while offsetting with shorter holdings and explicitly targeted longer-term yields."
+      ],
+      "inference": "Balance-sheet growth can materially ease reserve/funding conditions without mechanically removing long-duration risk. Maturity composition is necessary to connect central-bank assets to term premium.",
+      "negative_findings": [
+        "Do not calibrate a long-yield coefficient from the October 2019 event because concurrent trade and policy expectations contaminate the window.",
+        "Do not label bill-only reserve-management purchases as equivalent to long-duration QE."
+      ],
+      "learning_candidate": {
+        "id": "MI-L-20260920-013",
+        "status": "SUPPORTED_METHOD_RULE_STRENGTHENED_PENDING_SAFE_CANONICAL_LEDGER_PROMOTION",
+        "claim": "For sovereign-rate transmission, model reserve liquidity and duration absorption separately; bill/very-short central-bank purchases can add reserves without materially removing long-duration risk."
+      }
+    },
+    {
+      "topic": "AVAX big-move causal reconstruction: real catalysts exist, but realized token demand/value capture is not yet proportional to price move",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / AVAX",
+      "observed_facts": [
+        "CoinMarketCap around 12:29 UTC showed AVAX about $10.29, +13.09%/24h and +40.49%/7d with turnover about 25.9% of market cap, while BTC, ETH, SOL, XRP and LINK were all negative over 24h.",
+        "Aggregate crypto derivatives open interest was about $436.1B, down 3.63%/24h and 4.34%/7d; perpetual funding remained positive but lower over 24h. The AVAX move is therefore not explained by broad fresh leverage expansion.",
+        "Ava Labs President Charley Cooper said NYSE spent roughly a year testing Avalanche technology, and ICE executive Michael Blaugrund said ICE is very engaged with Avalanche. ICE/NYSE has not selected Avalanche, and the planned tokenized-securities architecture is intended to support multiple blockchains.",
+        "Helicon is scheduled for September 22. Primary Avalanche documentation shows mixed token-supply effects: minimum validator duration falls to 48 hours, auto-renewal can increase persistence but is optional, minimum reward-consumption rate falls from 10% to 7.5% over time, and the dynamic gas-floor rule does not mechanically raise the burn at activation.",
+        "Ethena Pay launched in September as an app built exclusively on Avalanche; current Ethena Pay terms say card cashback is paid in AVAX. This creates a genuine recurring AVAX-demand channel, but current payment volumes/user scale are not publicly sufficient to quantify price impact.",
+        "DefiLlama's current chain snapshot shows Avalanche stablecoin market cap around $1.263B, down roughly 6.7% over seven days, and seven-day DEX volume down about 13%; therefore the AVAX price rally is not accompanied by an obvious broad stablecoin-liquidity or spot-DEX expansion."
+      ],
+      "inference": "The most defensible current explanation is expectation/narrative repricing around tokenization evaluation + Helicon front-running + payments/institutional adoption, amplified by technical momentum in a relatively smaller free-float market. Evidence does not yet show a commensurate realized increase in chain cash flows, stablecoin capital or forced broad leverage.",
+      "catalyst_transmission_amplifier": {
+        "catalysts": ["ICE/NYSE Avalanche evaluation disclosure", "September 22 Helicon activation", "Ethena Pay/Avalanche payments integration"],
+        "transmission": "higher probability of future institutional/payment usage -> higher expected future network/token demand -> discretionary AVAX buying",
+        "amplifiers": ["momentum/attention", "thin relative market depth versus BTC/ETH", "event front-running"],
+        "unknowns": ["whether ICE selects or materially uses Avalanche", "actual token demand from future NYSE architecture", "Ethena Pay current user/payment volume", "realized post-Helicon staking/issuance/burn changes"]
+      },
+      "matched_controls": [
+        "BTC/ETH/SOL/XRP/LINK were negative over the same 24h window.",
+        "Aggregate derivatives OI was contracting rather than expanding.",
+        "Avalanche stablecoin supply and weekly DEX volume were not confirming broad capital inflow."
+      ],
+      "decision_support": {
+        "view": "WAIT / AVOID CHASING",
+        "reason": "Price is a real idiosyncratic outlier, but the strongest fresh catalyst is still evaluation/expectation rather than selected production infrastructure or measured token-value capture.",
+        "confirmation": "ICE production selection/contract, persistent net stablecoin/bridge inflows, rising real activity/fees, and post-Helicon stake/issuance/burn changes that validate durable AVAX demand.",
+        "invalidation_of_bull_narrative": "No ICE production role, post-event activity/flows fail to improve, or Helicon increases liquidity/churn without offsetting demand/value capture."
+      }
+    },
+    {
+      "topic": "ENA rally: fee-switch/buyback attribution is contradicted by the trigger economics",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / ENA / NEGATIVE FINDING",
+      "observed_facts": [
+        "CoinMarketCap around 12:29 UTC showed ENA about $0.2071, +6.15%/24h and +47.74%/7d with turnover about 43.9% of market cap.",
+        "Current Ethena USDe circulating supply was about $4.847B at 12:34 UTC.",
+        "The primary Ethena governance fee-switch design says the first buyback rung is a 5% revenue take at a $7.5B USDe supply threshold, with a 14-day trailing average recommended for the trigger; the published committee analysis explicitly said that at supply below the first rung the schedule takes nothing.",
+        "The same governance analysis estimates that even while active, modeled buybacks are modest relative to scheduled ENA unlocks and notes the mechanism is procyclical because it activates at higher USDe supply."
+      ],
+      "inference": "The current ENA move should not be described as buyback-driven. The current USDe supply snapshot is far below the first $7.5B rung, and no primary evidence of active buybacks was established. The rally remains a high-turnover narrative/momentum move with exact marginal buyer/source-of-funds UNKNOWN.",
+      "negative_findings": [
+        "Reject 95% of protocol revenue is currently buying ENA as a causal explanation.",
+        "Do not confuse the proposed share of Foundation net revenue once a rung is active with a permanent 95% take on protocol gross revenue.",
+        "Do not infer durable value capture from price momentum alone."
+      ],
+      "decision_support": "WAIT / AVOID CHASING until primary activation data, actual buyback transactions, or another timestamp-defensible capital-flow catalyst appears."
+    },
+    {
+      "topic": "Weekend crypto control: deleveraging continues without broad stablecoin expansion",
+      "label": "CRYPTO LIQUIDITY / MATCHED CONTROL",
+      "observed_facts": [
+        "BTC was about $80.36K (-1.10%/24h), ETH $2,575 (-2.57%), SOL $108.27 (-3.10%), XRP $1.377 (-3.68%) and LINK $12.06 (-3.54%).",
+        "Aggregate crypto open interest was about $436.1B, down 3.63%/24h; BTC 24h liquidations were about $49.2M, mostly longs, while the latest 4h liquidation total had fallen below $1M.",
+        "USDT market cap was about $183.31B and USDC about $74.20B; both were approximately flat/slightly lower over seven days.",
+        "U.S. ETF markets are closed, so no fresh regulated spot-flow evidence exists after Friday's strong BTC/ETH ETF inflow session."
+      ],
+      "inference": "BTC continues to absorb leverage reduction reasonably well, but there is still no weekend evidence of a broad stablecoin-liquidity impulse. BTC remains a tactical-confirmation candidate rather than a BUY; ETF/spot evidence after reopening is the next high-information test.",
+      "decision_support": "BTC WAIT / tactical confirmation candidate; ETH WAIT; broad alt beta WAIT."
+    }
+  ],
+  "daily_big_move_lab_delta": {
+    "selected_or_retested": [
+      "AVAX +13.1%/24h and +40.5%/7d versus negative majors and contracting aggregate OI: significant idiosyncratic move; catalyst set is real but realized value capture remains unproven.",
+      "ENA +6.1%/24h and +47.7%/7d with 43.9% turnover: fee-switch/buyback attribution rejected because current USDe supply is well below the first documented trigger and no active buyback evidence was found.",
+      "BTC/ETH/major crypto weakened while leverage contracted; no broad stablecoin-supply expansion or new weekend ETF flow exists.",
+      "Traditional U.S./European cash markets and crude futures remain closed; no fabricated price response to weekend geopolitical headlines."
+    ],
+    "method_upgrade": "For high-beta crypto causal attribution, require a scale bridge from narrative/adoption event to actual token demand: public decision -> implementation -> usage/flow -> token-specific value capture -> size relative to liquidity/free float. Preserve narrative repricing as a separate causal channel when that bridge is absent."
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast clears the evidence bar; WAIT states preserved."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. No dashboard/actionability regime change is warranted. MI-L-20260920-013 is further strengthened and the Treasury buyer-decomposition rule is a new method candidate, but canonical JSONL replacement remains unnecessary/risky without an append primitive. No code or signal-system state changed.",
+  "next_research": [
+    "Build the U.S. Treasury duration state vector from issuance, SOMA holdings/reinvestments, buybacks/replacement issuance and maturity-specific investor absorption, ideally in 10-year-equivalent DV01 rather than notional dollars.",
+    "Use Treasury Investor Class Auction Allotments rather than indirect-bidder share to distinguish foreign versus domestic auction demand; reconcile with TIC official/private maturity flows and Z.1 sectors.",
+    "After U.S. markets reopen, reconcile BTC/ETH ETF flows with OI/funding/basis and spot/on-chain absorption before changing BTC WAIT.",
+    "After Helicon activates September 22, measure validator count, average stake persistence, issuance/reward rate, gas floor/fees/burn, stablecoin/bridge inflows and DEX activity against the pre-event baseline.",
+    "For AVAX, seek primary ICE/NYSE selection/implementation evidence and current Ethena Pay payment/reward volumes before upgrading future token-demand claims.",
+    "For ENA, monitor the 14-day USDe-supply trigger and primary transparency dashboard/actual buyback transactions rather than secondary fee-switch headlines.",
+    "After crude reopens, test whether weekend Saudi/Russian refinery developments alter benchmark prices, physical differentials and product cracks before changing oil WAIT."
+  ],
+  "sources": [
+    "MONEY_INTELLIGENCE_SPEC.md at canonical SHA cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+    "TreasuryDirect auction FAQ",
+    "Federal Reserve Financial Accounts Z.1, 2026Q2 Treasury transaction/level tables",
+    "U.S. Treasury TIC July 2026 release",
+    "Federal Reserve FEDS Note: Who Buys Treasuries When the Fed Reduces its Holdings",
+    "Federal Reserve October 11, 2019 Statement Regarding Monetary Policy Implementation",
+    "Federal Reserve 2019 monetary-policy tools/minutes on bill purchases and repo operations",
+    "U.S. Treasury August 3/5/19, 2026 borrowing/refunding/buyback releases",
+    "The Block, September 18, 2026 interview on NYSE/Avalanche evaluation",
+    "Avalanche Builder Hub primary Helicon/ACP documentation",
+    "Ethena Pay primary pricing/FAQ/September 3 launch materials",
+    "Ethena Governance: ENA Fee Switch Activation and Risk Committee analysis",
+    "CoinMarketCap connected real-time quotes/global derivatives metrics, 2026-09-20 12:28-12:34 UTC",
+    "DefiLlama Avalanche chain snapshot, crawled 2026-09-20"
+  ],
+  "paid_resource_policy": "No new paid resources authorized; free/public/primary data and existing connected market data used."
+}
