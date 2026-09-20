@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T2122Z",
+  "information_cutoff": "2026-09-20T21:22:51Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_observed_before_write": "34919d4a003ad786cd9666e5d1eb0ff24d4a6f6e",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles": true,
+    "searched_prediction_artifacts": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "last_owner_report_cycle": "2026-09-20T1630Z",
+    "run_start_utc": "2026-09-20T21:18:07Z",
+    "artifact_cutoff_utc": "2026-09-20T21:22:51Z",
+    "seconds_this_run_minimum": 284,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 1240,
+    "minimum_cumulative_seconds_since_last_owner_report": 1524,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active research/execution time is counted. Schedule gaps, idle time, publication timestamps and background time are excluded."
+  },
+  "highest_information_question": "For strategic critical minerals, which pre-move variables actually change executable economics and asset value: ownership/control headlines, export-control headlines, or physical licenses/shipments plus guaranteed offtake, price floors, financing and customer qualification?",
+  "fresh_research": [
+    {
+      "topic": "Rare-earth security headlines are weak asset-level predictors unless they change executable economics; MP Materials is a matched control",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / RARE EARTHS / MP MATERIALS / CHINA / INDUSTRIAL POLICY / OFFTAKE / PRICE FLOOR",
+      "observed_facts": [
+        "Reuters reported that China Rare Earth Group was in talks to acquire a controlling stake in Shenghe Resources, which owns roughly 3% of MP Materials. Shenghe publicly denied reports it described as false, and its controlling shareholder said it had no plan to transfer control, leaving the transaction state disputed at this cutoff.",
+        "MP Materials' 2025 annual report says MP ceased all sales to China in July 2025 to align with U.S. Department of War agreements and did not extend Shenghe's offtake agreement when it expired in January 2026. Shenghe therefore no longer has the same direct current offtake relationship that older ownership headlines can imply.",
+        "MP's July 2025 U.S. Department of War partnership materially changed executable project economics: a 10-year $110/kg NdPr price floor, long-duration magnet purchase support after 10X construction, a $150M DoD loan, a $400M convertible preferred investment plus warrants, and about $1B of construction financing arranged by JPMorgan/Goldman Sachs. MP said DoD would become its largest shareholder on an as-converted basis.",
+        "MP's official 2026 operating results show the domestic buildout is progressing: Q1 NdPr production reached 917 tonnes and sales 1,006 tonnes; Q1 revenue was about $90.6M plus $42.3M of price-protection-agreement income. In Q2 revenue was about $108.5M and price-protection-agreement income about $17.6M.",
+        "Historical negative control: when MP stopped China-bound shipments in April 2025 during the tariff/export-control escalation, the stock fell roughly 4%-5% as a major revenue channel was interrupted.",
+        "Historical positive control: the July 2025 DoD price-floor/offtake/financing package produced a very large positive MP repricing, with shares rising roughly 40%-50% around the announcement; Australian rare-earth peers also rallied sharply as markets repriced the possibility of government-backed scarcity economics.",
+        "Current non-confirmation: Reuters-linked market data showed Shenghe higher only modestly while MP fell on September 18 despite the alarming cross-ownership headline, rejecting a simple 'Chinese control of Shenghe -> immediate MP impairment' rule.",
+        "China's Ministry of Commerce states that selected medium/heavy rare-earth items require export licenses; later official statements documented approval of some general licenses. Export controls therefore change supply through licenses, quotas, shipment approvals and actual physical delivery, not through the legal headline alone."
+      ],
+      "inference": "The price-relevant state variable for strategic-mineral assets is executable economics and physical availability, not the political salience of the headline by itself. Ownership/control news matters only insofar as it changes governance rights, offtake, customer access, financing, permits or physical shipments. For MP specifically, the current Shenghe-control story has much lower direct economic transmission than an older data model might infer because MP no longer sells to China and the Shenghe offtake expired, while U.S. government price-floor/offtake/financing arrangements now dominate a large part of the marginal project economics.",
+      "causal_chain": "geopolitical/export-control shock -> licenses/quotas/shipments and buyer access change -> effective deliverable rare-earth supply changes -> physical prices/customer bargaining power change -> company-specific offtake, price floors, financing and qualified production determine cash-flow capture -> equity reprices; ownership headlines matter only if they alter one of those executable channels",
+      "source_destination_chain": "Government/defense industrial-policy capital and bank/project-finance capital -> guaranteed pricing/offtake and project construction -> domestic rare-earth processing/magnet capacity -> customer procurement budgets shift toward secured non-China supply. Direct marginal equity-account flows remain UNKNOWN.",
+      "matched_controls": [
+        "April 2025 MP China-sales interruption: executable revenue channel loss coincided with negative equity repricing.",
+        "July 2025 DoD agreement: explicit price floor, offtake, financing and equity support coincided with exceptionally positive MP repricing and sympathy gains across allied rare-earth producers.",
+        "September 2026 Shenghe control-talk headline: disputed transaction plus expired MP offtake and no current China sales produced no clean positive/negative MP mapping, showing ownership adjacency alone is insufficient."
+      ],
+      "pre_move_predictors": [
+        "Actual export-license approvals, quotas and shipment volumes rather than policy language alone",
+        "Physical rare-earth oxide/metal/magnet prices and lead times",
+        "Binding offtake volumes and counterparties",
+        "Government or customer price floors and minimum-purchase guarantees",
+        "Project-finance availability/cost and public-equity dilution",
+        "Qualified production yields, customer acceptance and saleable output",
+        "Changes in governance/control only when accompanied by enforceable operating or commercial rights"
+      ],
+      "negative_findings": [
+        "Do not infer that Shenghe's minority MP stake gives a potential Shenghe acquirer operational control over MP.",
+        "Do not use an export-control announcement as equivalent to a permanent physical export ban; license issuance and actual shipments must be measured.",
+        "Do not treat rare-earth scarcity alone as sufficient for an equity BUY; company-specific value capture can be capped or offset by capex, dilution, execution risk and valuation.",
+        "Do not freeze a directional MP forecast from the weekend U.S.-China talks before an executable official deliverable is published."
+      ],
+      "learning_candidate": {
+        "id": "MI-H-20260920-CRITICAL-MINERALS-EXECUTABLE-ECONOMICS",
+        "status": "SUPPORTED_PROVISIONAL_CANDIDATE",
+        "claim": "For strategic critical-mineral assets, export-control and ownership headlines are weak standalone predictors. The stronger causal variables are executable physical supply and company-level value-capture contracts: licenses/shipments, offtake, price floors, financing, customer qualification and saleable output."
+      },
+      "decision_support": {
+        "mp_materials": "HOLD / RESEARCH FOR BUY; mechanism and government-backed economics are strong, but no new BUY without current valuation, dilution, construction/execution and price-floor dependency work.",
+        "broad_rare_earths": "WAIT / research; do not chase geopolitical headlines without physical-flow and contract evidence.",
+        "confidence": "MODERATE-HIGH on causal mechanism; LOW on immediate price direction before a completed U.S.-China readout and fresh physical-flow data."
+      },
+      "sources": [
+        "Reuters 2026-09-18/20: China Rare Earth Group/Shenghe control-talk reporting and Shenghe denial",
+        "MP Materials 2025 Form 10-K / 2026 SEC filings",
+        "MP Materials 2025-07 U.S. Department of War public-private partnership announcement",
+        "MP Materials Q1 and Q2 2026 official earnings releases",
+        "China Ministry of Commerce 2025-04-04 rare-earth export-control announcement and later general-license statements",
+        "Reuters 2025-04-17 MP shipment halt control",
+        "Reuters 2025-07-10 MP DoD agreement market reaction control"
+      ]
+    },
+    {
+      "topic": "U.S.-China talks remain a pre-event condition set, not yet a verified critical-mineral flow signal",
+      "label": "GEOPOLITICS / U.S.-CHINA / CRITICAL MINERALS / PRE-MOVE WATCH",
+      "observed_facts": [
+        "U.S. Treasury Secretary Scott Bessent, USTR Jamieson Greer and Chinese Vice Premier He Lifeng began talks in New York on September 20 ahead of the Trump-Xi summit. Publicly reported topics include trade, AI safeguards and critical-mineral/rare-earth access.",
+        "U.S. officials publicly described China's implementation of rare-earth commitments as not yet satisfactory, but at this cutoff there was no completed official readout establishing a new export quota, license regime, tariff schedule or verified shipment increase."
+      ],
+      "inference": "The meeting changes the event-risk distribution but does not yet change executable supply. For critical-mineral assets, a useful post-meeting signal requires a measurable policy/physical channel such as licenses, quotas, shipment volumes, contract terms or financing commitments.",
+      "decision_support": "WAIT. Preserve the timestamped pre-event state and resolve against the final official readout plus subsequent physical shipment/price data."
+    },
+    {
+      "topic": "BTC weekend quality improves only modestly: leverage partially rebuilt while funding cooled and forced liquidations remained low; ETF confirmation is still unavailable",
+      "label": "CRYPTO / BTC / DERIVATIVES / ETF / WEEKEND CONTROL",
+      "observed_facts": [
+        "CoinMarketCap connected derivatives data showed aggregate crypto open interest around $441.8B, up about 2.6% over 24 hours but still down about 2.3% over seven days, indicating that some leverage rebuilt after the prior cooling phase.",
+        "Average perpetual funding was about 0.00497 and down roughly 24% versus the prior 24-hour window, so the leverage rebuild was not accompanied by a further funding-rate acceleration at this snapshot.",
+        "BTC 24-hour liquidations were about $39.7M, with roughly $32.2M longs and $7.5M shorts; no material 1-hour/4-hour BTC liquidation burst was present. The earlier large short-squeeze impulse is no longer the dominant mechanical buyer.",
+        "U.S. ETF venues are closed for the weekend, so there is still no fresh institutional-flow observation capable of confirming that BTC's hold near the post-breakout region is being financed by durable spot/ETF accumulation."
+      ],
+      "inference": "Price stability with lower funding and low forced-flow activity is healthier than a squeeze-dependent rally, but the partial OI rebuild prevents a clean 'deleveraging plus spot accumulation' conclusion. Monday/next-session ETF breadth and venue-grade spot-versus-derivative data remain the decisive confirmation test.",
+      "negative_findings": [
+        "Do not upgrade BTC to BUY from weekend holding behavior alone.",
+        "Do not equate aggregate crypto OI changes with BTC-specific spot absorption.",
+        "Do not infer institutional accumulation while the regulated U.S. flow channel is closed."
+      ],
+      "decision_support": "BTC WAIT / tactical-confirmation candidate unchanged."
+    },
+    {
+      "topic": "Fed inflation message remains restrictive; no fresh regime change",
+      "label": "MONETARY POLICY / FED / INFLATION",
+      "observed_facts": [
+        "Minneapolis Fed President Neel Kashkari said on September 20 that inflation remains too high broadly rather than being only an oil story and supported the September 16 25 bp increase to a 3.75%-4.00% target range."
+      ],
+      "inference": "This corroborates the existing restrictive-policy regime rather than creating a new state change. The higher-information test remains actual inflation/labor data and the evolution of expected policy paths and long yields.",
+      "decision_support": "No new trade thesis; preserve current restrictive-policy regime state."
+    }
+  ],
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast clears the evidence bar in this cycle."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. The critical-mineral executable-economics distinction is materially useful and supported by strong MP matched controls, but it should be independently retested against the completed U.S.-China readout and subsequent physical/license/shipment data before promotion to dashboard or learning ledger. BTC and Fed observations are refinements of existing states rather than regime changes. No code, signal-engine, paper-trading, promotion-gate or broker state changed.",
+  "next_research": [
+    "Resolve the U.S.-China New York talks against the final official readout; map any critical-mineral commitment into licenses, quotas, actual shipments, magnet lead times and physical prices before asset-level conclusions.",
+    "Build a current MP Materials value-capture/valuation bridge: realized NdPr output, price-protection income, DoD offtake/price-floor mechanics, construction capex, dilution, debt and 10X ramp sensitivity.",
+    "Compare MP, Lynas, Iluka and downstream rare-earth users after the next cash-equity session to test whether physical-security economics or generic China-risk beta explains relative price response.",
+    "When crude futures reopen, resolve the Saudi weekend episode with curve/backwardation, refined-product cracks, physical differentials, freight/loading and verified incremental capacity loss rather than attack headlines.",
+    "After the next completed U.S. ETF session, reconcile BTC/ETH ETF breadth with venue-grade spot, OI, funding, basis, liquidations and exchange/on-chain absorption before changing BTC WAIT.",
+    "After Avalanche Helicon activates September 22, compare price-normalized activity, fees, bridge/stablecoin net flows and leverage with the pre-event baseline before any AVAX upgrade."
+  ]
+}
