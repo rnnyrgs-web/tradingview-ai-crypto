@@ -22,10 +22,23 @@ PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r'''SCAN_SECRET\s*=\s*["'][^"']+["']'''),
     re.compile(r'''DASHBOARD_SECRET\s*=\s*["'][^"']+["']'''),
 )
+REUTERS_WORD_SLUG = re.compile(r"sk-(?:[a-z0-9]+-){3,}[a-z0-9]+")
+REUTERS_URL_PREFIX = re.compile(r"https://(?:www\.)?reuters\.com/[^\s\"']*$")
 
 
 def line_has_secret_pattern(line: str) -> bool:
-    return any(pattern.search(line) for pattern in PATTERNS)
+    if any(pattern.search(line) for pattern in PATTERNS[1:]):
+        return True
+    for match in PATTERNS[0].finditer(line):
+        # Reuters article slugs can start with the letters "sk" and contain
+        # many lowercase words. Keep key-shaped tokens, even in a URL, blocked.
+        if (
+            REUTERS_WORD_SLUG.fullmatch(match.group())
+            and REUTERS_URL_PREFIX.search(line[: match.start()])
+        ):
+            continue
+        return True
+    return False
 
 
 def scan_paths(paths: Iterable[Path]) -> list[str]:
