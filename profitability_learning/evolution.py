@@ -5,6 +5,7 @@ from datetime import timedelta
 from .contracts import (DEVELOPMENT, SAFE, VERIFIED_FAVORABLE_EVIDENCE,
                         fingerprint, number, text, timestamp, validate_contract,
                         strategy_semantic_fingerprint)
+from .risk_policy import SUCCESS_BLOCKING_RISK_FLAGS
 
 
 def _shape(strategy):
@@ -193,7 +194,12 @@ def learning_missions(memory, *, limit=20):
         rejected = (r["contract"]["strategy_fingerprint"] in memory.get("rejected_fingerprints", [])
             or semantic in memory.get("rejected_semantic_fingerprints", []))
         mode = "EXPLOIT" if outcome == "SUCCESS_LEARN" else "EXPLORE" if outcome == "MECHANISM_DEAD" else "LEARN"
+        risk_blocked = bool(
+            SUCCESS_BLOCKING_RISK_FLAGS.intersection(r.get("risk_flags", []))
+        )
         if mode == "EXPLOIT" and not favorable_verified:
+            mode = "LEARN"
+        if mode == "EXPLOIT" and risk_blocked:
             mode = "LEARN"
         if rejected and mode == "EXPLOIT":
             mode = "LEARN"
@@ -202,6 +208,8 @@ def learning_missions(memory, *, limit=20):
             hypothesis = "Investigate contradictory evidence/provenance; the original fingerprint remains rejected and may not be retested."
         elif outcome == "SUCCESS_LEARN" and not favorable_verified:
             hypothesis = "Bind the result to a verifier-issued executor receipt before using favorable economics."
+        elif outcome == "SUCCESS_LEARN" and risk_blocked:
+            hypothesis = "Resolve the catastrophic-loss or single-winner dependence before using favorable economics."
         missions.append({"id": "learning-" + r["experiment_id"], "family": r["contract"]["family"],
             "strategy_fingerprint": r["contract"]["strategy_fingerprint"] if mode == "EXPLOIT" else None,
             "hypothesis": hypothesis,

@@ -124,9 +124,14 @@ def analyze(experiment):
     flags = []
     if e["equity"][-1]["nav"] == 0:
         flags.append("INSOLVENT")
-    if metrics["max_drawdown"] >= .5 or (min(pnls, default=0) / c["initial_capital"] <= -.2):
+    event_tail = metrics["worst_event_money"]
+    if (metrics["max_drawdown"] >= .5
+            or min(pnls, default=0) / c["initial_capital"] <= -.2
+            or (event_tail is not None and event_tail / c["initial_capital"] <= -.2)):
         flags.append("CATASTROPHIC_LOSS")
     if positive and concentration["largest_winner_share"] > .5:
+        flags.append("SINGLE_WINNER_CONCENTRATION")
+    if metrics["net_pnl"] > 0 and concentration["net_pnl_without_best_trade"] <= 0:
         flags.append("SINGLE_WINNER_DEPENDENCE")
     if metrics["net_pnl"] > 0 and concentration["net_pnl_at_double_variable_cost"] <= 0:
         flags.append("COST_SENSITIVE")

@@ -33,9 +33,12 @@ categorical features and basic trade metadata. Numeric features must be binned b
 the upstream frozen contract, never optimized here after outcomes. Missing
 capacity, execution audit, cross-engine and walk-forward evidence stay unknown.
 
-Diagnostics flag catastrophic losses, concentration in a trade/asset/regime/period
-and cost-sensitive returns. Doubling costs and removing the best trade are
-arithmetic sensitivities, not rerun NAV backtests. Win rate is diagnostic only.
+Diagnostics flag catastrophic losses at the trade, overlapping-event and NAV-path
+levels, concentration in a trade/asset/regime/period and cost-sensitive returns.
+Single-winner concentration remains diagnostic; it becomes success-blocking
+dependence only when removing the best trade eliminates positive net P&L. Doubling
+costs and removing the best trade are arithmetic sensitivities, not rerun NAV
+backtests. Win rate is diagnostic only.
 
 ## Components, ablation and conditional research
 
@@ -71,7 +74,10 @@ combined with local rejected hashes; the data-blocked squeeze fingerprint is not
 mistakenly classified as strategy-rejected.
 
 Outcomes are LEARN_AND_PIVOT, MECHANISM_DEAD, INFRA_DATA_FAILURE, INCONCLUSIVE, and
-SUCCESS_LEARN for adequately sampled successful experiments. MECHANISM_DEAD
+SUCCESS_LEARN for adequately sampled successful experiments without catastrophic
+loss or single-winner dependence. Risk-blocked positive results remain
+LEARN_AND_PIVOT, and historical risk-blocked rows cannot generate EXPLOIT missions.
+MECHANISM_DEAD
 requires a frozen falsifier and independent failures, not simply a losing trade.
 Legacy summaries lacking a full economic contract remain INCONCLUSIVE with the
 missing evidence named. Infrastructure absence never becomes evidence of no edge.
