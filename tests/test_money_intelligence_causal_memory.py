@@ -17,6 +17,7 @@ from money_intelligence_causal_memory import (
 )
 
 _PRODUCTION_SELECTION_VERIFIER = causal_memory._trusted_control_selection
+_PRODUCTION_SUPPORT_ATTESTATION = causal_memory._trusted_support_attestation
 
 
 @pytest.fixture(autouse=True)
@@ -31,6 +32,7 @@ def _test_source_receipt(monkeypatch):
         return _PRODUCTION_SELECTION_VERIFIER(hypothesis, contract, outcome, control)
 
     monkeypatch.setattr(causal_memory, "_trusted_control_selection", verify)
+    monkeypatch.setattr(causal_memory, "_trusted_support_attestation", lambda memory, hypothesis, event: True)
 
 
 def _observation(
@@ -1231,6 +1233,7 @@ def test_caller_asserted_selection_id_cannot_confirm_posthoc_venue_revision(monk
     monkeypatch.setattr(
         causal_memory, "_trusted_control_selection", _PRODUCTION_SELECTION_VERIFIER
     )
+    monkeypatch.setattr(causal_memory, "_trusted_support_attestation", _PRODUCTION_SUPPORT_ATTESTATION)
     prepared = _memory_with_hypothesis()
     memory = CausalRepricingMemory()
     memory.register_observation(prepared.observations["flow"])
@@ -1253,6 +1256,7 @@ def test_prior_unattested_support_replays_for_audit_without_confirmatory_authori
     monkeypatch.setattr(
         causal_memory, "_trusted_control_selection", _PRODUCTION_SELECTION_VERIFIER
     )
+    monkeypatch.setattr(causal_memory, "_trusted_support_attestation", _PRODUCTION_SUPPORT_ATTESTATION)
 
     restored = CausalRepricingMemory.from_document(document)
     assert restored.events["pre-verifier-support"].confirmatory is False

@@ -7,8 +7,14 @@ from threading import Lock
 import pytest
 
 import money_intelligence_causal_acceptance as acceptance
+import money_intelligence_causal_memory as causal_memory
 from money_intelligence_causal_memory import CausalMemoryError, CausalRepricingMemory
 from money_intelligence_mission_integration import apply_causal_feedback
+
+
+@pytest.fixture(autouse=True)
+def _test_only_attestation_key(monkeypatch):
+    monkeypatch.setenv("CAUSAL_ACCEPTANCE_ATTESTATION_KEY", "ab" * 32)
 
 
 def test_runtime_acceptance_rechecks_deployment_packaging_changes():
@@ -28,6 +34,36 @@ def test_fixture_subject_is_unique_for_each_full_deployed_sha():
     assert acceptance._fixture_subject(first["hypothesis"]) != acceptance._fixture_subject(
         second["hypothesis"]
     )
+
+
+def test_trusted_synthetic_pair_verifier_binds_future_fingerprint_namespace():
+    ids = acceptance._ids("a" * 64)
+    base = datetime(2026, 9, 20, tzinfo=timezone.utc)
+    hypothesis = acceptance._contract(ids, base)
+    contract = hypothesis.evaluation_pair_contracts[0]
+    observed = base + timedelta(hours=1)
+    available = observed + timedelta(hours=1, minutes=1)
+    outcome = acceptance._observation(
+        ids["support_outcome_1"], metric_name="matched_return", value=2.01,
+        observed_at=observed, available_at=available, window_hours=1,
+    )
+    control = acceptance._observation(
+        ids["support_control_1"], metric_name="matched_return", value=0.0,
+        observed_at=observed, available_at=available, window_hours=1,
+        selection_contract_id="phase2-runtime-exact-matched-control-v1",
+    )
+    verify = causal_memory._trusted_control_selection
+    assert verify(hypothesis, contract, outcome, control)
+    assert not verify(
+        replace(hypothesis, statement="A real asset will outperform."),
+        contract, outcome, control,
+    )
+    for changed in (
+        replace(control, value=1.0),
+        replace(control, venue="selected-after-outcome"),
+        replace(control, revision_id="r2"),
+    ):
+        assert not verify(hypothesis, contract, outcome, changed)
 
 
 @pytest.mark.parametrize("prior_slots", [4, 28])
@@ -66,6 +102,34 @@ def test_acceptance_fixture_can_confirm_after_prior_project_tests(prior_slots):
     if prior_slots == 28:
         assert len(hypothesis.evaluation_units) > acceptance.SUPPORT_PAIRS
     assert verification["verified_p_value"] <= memory._project_threshold(hypothesis)
+
+
+def test_synthetic_namespace_cannot_self_attest_support(monkeypatch):
+    ids = acceptance._ids("c" * 40)
+    base = datetime(2026, 9, 20, tzinfo=timezone.utc)
+    signed = CausalRepricingMemory()
+    acceptance._seed_support(signed, ids, base)
+    event = signed.events[ids["support"]]
+    assert event.note.startswith("causal-acceptance-support-v1:")
+
+    unsigned = CausalRepricingMemory()
+    for item in signed.registration_log:
+        if item["kind"] == "observation":
+            unsigned.register_observation(signed.observations[item["id"]])
+        elif item["kind"] == "hypothesis":
+            unsigned.register_hypothesis(signed.hypotheses[item["id"]])
+    with pytest.raises(CausalMemoryError, match="trusted writer attestation"):
+        unsigned.record_evidence(replace(event, note=""))
+    with pytest.raises(CausalMemoryError, match="trusted writer attestation"):
+        unsigned.record_evidence(replace(event, note=event.note[:-1] + "0"))
+    assert unsigned.record_evidence(event)
+
+    document = signed.to_document()
+    assert CausalRepricingMemory.from_document(document).events[ids["support"]].confirmatory
+    monkeypatch.delenv("CAUSAL_ACCEPTANCE_ATTESTATION_KEY")
+    restored = CausalRepricingMemory.from_document(document)
+    assert restored.events[ids["support"]].confirmatory is False
+    assert restored.confidence(ids["hypothesis"], as_of=event.evaluated_at).confirmatory_support_count == 0
 
 
 class FakeDurableCausalStore:

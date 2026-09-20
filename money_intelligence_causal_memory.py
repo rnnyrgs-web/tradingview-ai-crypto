@@ -10,6 +10,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, replace
 from datetime import datetime, timedelta, timezone
 import hashlib
+import hmac
 import json
 import math
 import os
@@ -249,6 +250,36 @@ def _trusted_control_selection(
     ):
         return False
     namespace = f"{fixture_prefix}:{parts[1]}"
+    base = _parse_time(hypothesis.created_at) - timedelta(minutes=2)
+    pair_count = len(hypothesis.evaluation_pairs)
+    if (
+        hypothesis.statement != (
+            "A verified relative flow shock precedes matched relative "
+            "repricing in this synthetic acceptance fixture."
+        )
+        or hypothesis.mechanism_chain != (
+            "verified_flow", "relative_liquidity_impact", "matched_repricing"
+        )
+        or hypothesis.direction != "positive"
+        or hypothesis.falsifier != "matched outcomes do not exceed the frozen matched control"
+        or hypothesis.matched_controls != ("phase2-runtime-matched-control-v1",)
+        or hypothesis.lanes != ("big_move", "strategy_component")
+        or hypothesis.source_observation_ids != (f"{namespace}:formation",)
+        or hypothesis.family_id != f"{hypothesis.hypothesis_id}:family"
+        or hypothesis.family_size != 1
+        or hypothesis.alpha != 0.05
+        or hypothesis.evaluation_selectors
+        or not 14 <= pair_count <= 32
+        or hypothesis.evaluation_pairs != tuple(
+            (f"{namespace}:support-outcome-{i}", f"{namespace}:support-control-{i}")
+            for i in range(1, pair_count + 1)
+        )
+        or hypothesis.evaluation_units != tuple(
+            (namespace, _normalise_time((base + timedelta(hours=i)).isoformat()), 1)
+            for i in range(1, pair_count + 1)
+        )
+    ):
+        return False
     prefix = f"{namespace}:support-control-"
     if not contract.control_observation_id.startswith(prefix):
         return False
@@ -277,7 +308,6 @@ def _trusted_control_selection(
         f"acceptance://{contract.control_observation_id}",
     ):
         return False
-    base = _parse_time(hypothesis.created_at) - timedelta(minutes=2)
     observed = base + timedelta(hours=index)
     available = observed + timedelta(hours=1, minutes=1)
 
@@ -556,6 +586,41 @@ class EvidenceEvent:
     @property
     def fingerprint(self) -> str:
         return "mi-evidence-v1:" + _sha256(asdict(self))
+
+
+def _synthetic_support_attestation(
+    memory: "CausalRepricingMemory", hypothesis: FrozenHypothesis, event: EvidenceEvent
+) -> str | None:
+    """Bind a synthetic support event to the private acceptance writer's observations."""
+    key = os.getenv("CAUSAL_ACCEPTANCE_ATTESTATION_KEY", "")
+    if len(key) != 64 or any(char not in "0123456789abcdef" for char in key):
+        return None
+    if event.kind != "support" or not event.confirmatory:
+        return None
+    try:
+        provenance = [
+            memory.observations[ident].provenance_fingerprint
+            for ident in event.outcome_observation_ids + event.control_observation_ids
+        ]
+    except KeyError:
+        return None
+    payload = {
+        "protocol": "causal-acceptance-support-v1",
+        "hypothesis_fingerprint": hypothesis.fingerprint,
+        "event": {key: value for key, value in asdict(event).items() if key != "note"},
+        "observation_provenance": provenance,
+    }
+    signature = hmac.new(
+        bytes.fromhex(key), _canonical_json(payload).encode("utf-8"), hashlib.sha256
+    )
+    return "causal-acceptance-support-v1:" + signature.hexdigest()
+
+
+def _trusted_support_attestation(
+    memory: "CausalRepricingMemory", hypothesis: FrozenHypothesis, event: EvidenceEvent
+) -> bool:
+    expected = _synthetic_support_attestation(memory, hypothesis, event)
+    return expected is not None and hmac.compare_digest(event.note, expected)
 
 
 @dataclass(frozen=True)
@@ -1174,6 +1239,8 @@ class CausalRepricingMemory:
                 raise CausalMemoryError(
                     "confirmatory support must pass the frozen Bonferroni family and project-wide thresholds"
                 )
+            if not _trusted_support_attestation(self, hypothesis, event):
+                raise CausalMemoryError("confirmatory support lacks trusted writer attestation")
         added = self._append_immutable(self.events, event.event_id, event)
         if added:
             self.event_order.append(event.event_id)
@@ -1776,7 +1843,9 @@ class CausalRepricingMemory:
                     raw["confirmatory"] = False
                 elif raw.get("kind") == "support" and raw.get("confirmatory"):
                     hypothesis = memory.hypotheses[raw["hypothesis_id"]]
-                    if any(
+                    if not _trusted_support_attestation(
+                        memory, hypothesis, EvidenceEvent(**raw)
+                    ) or any(
                         not _trusted_control_selection(
                             hypothesis,
                             contract,

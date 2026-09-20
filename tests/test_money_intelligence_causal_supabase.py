@@ -37,6 +37,7 @@ def _test_source_receipt(monkeypatch):
         return production_verify(hypothesis, contract, outcome, control)
 
     monkeypatch.setattr(causal_memory, "_trusted_control_selection", verify)
+    monkeypatch.setattr(causal_memory, "_trusted_support_attestation", lambda memory, hypothesis, event: True)
 
 
 class Response:
