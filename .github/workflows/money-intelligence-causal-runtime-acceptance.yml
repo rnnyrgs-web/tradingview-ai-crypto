@@ -51,6 +51,7 @@ jobs:
               .deployed_sha == $sha and
               .durable_restart_reload == true and
               .support_consumed_by_default_director == true and
+              .canonical_rejected_id_veto == true and
               .narrative_firewall == true and
               .contradiction_removed_missions == true and
               .decay_removed_missions == true and
@@ -80,6 +81,7 @@ jobs:
               hypothesis_id: .hypothesis_id?,
               durable_restart_reload: .durable_restart_reload?,
               support_consumed_by_default_director: .support_consumed_by_default_director?,
+              canonical_rejected_id_veto: .canonical_rejected_id_veto?,
               narrative_firewall: .narrative_firewall?,
               contradiction_removed_missions: .contradiction_removed_missions?,
               decay_removed_missions: .decay_removed_missions?,

@@ -62,6 +62,7 @@ def test_phase2_runtime_acceptance_uses_default_mission_surface_and_is_replay_sa
     assert first["receipt_replay"] is False
     assert first["deployed_sha"] == "a" * 40
     assert first["support_consumed_by_default_director"] is True
+    assert first["canonical_rejected_id_veto"] is True
     assert first["narrative_firewall"] is True
     assert first["stale_writer_replayed"] is True
     assert first["conflicting_replay_failed_closed"] is True
@@ -78,6 +79,7 @@ def test_phase2_runtime_acceptance_uses_default_mission_surface_and_is_replay_sa
     second = acceptance.run_phase2_causal_runtime_acceptance()
     assert second["ok"] is True
     assert second["receipt_replay"] is True
+    assert second["canonical_rejected_id_veto"] is True
     assert second["final_mission_count"] == 0
     assert second["rejected_design_fingerprint"].startswith("mi-causal-v1:")
     assert second["rejected_effective_fingerprint"].startswith("mi-causal-pit-v1:")

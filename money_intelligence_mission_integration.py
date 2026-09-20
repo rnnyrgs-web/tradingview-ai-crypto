@@ -12,6 +12,7 @@ import json
 from typing import Any, Callable
 
 from money_intelligence_causal_memory import CausalMemoryError, CausalRepricingMemory
+from orchestration.rejected_fingerprints import load_rejected_fingerprints
 from research_director import build_mission
 
 SCHEMA_VERSION = 1
@@ -51,9 +52,16 @@ def _fingerprint(artifact: dict[str, object], lane: str) -> str:
 
 
 def build_supported_missions(memory: CausalRepricingMemory, *, as_of: str) -> list[dict[str, Any]]:
+    rejected_ids = {
+        str(entry["fingerprint_id"])
+        for entry in load_rejected_fingerprints()
+        if entry.get("do_not_resubmit_same_fingerprint") is True
+    }
     missions: list[dict[str, Any]] = []
     for hypothesis_id in sorted(memory.hypotheses):
         hypothesis = memory.hypotheses[hypothesis_id]
+        if {hypothesis.hypothesis_id, hypothesis.family_id} & rejected_ids:
+            continue
         for lane in sorted(hypothesis.lanes):
             artifact = memory.research_artifact(hypothesis_id, lane=lane, as_of=as_of)
             if artifact is None:

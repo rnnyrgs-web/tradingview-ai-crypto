@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 import os
 from threading import Barrier
@@ -16,6 +17,7 @@ from typing import Any
 
 from money_intelligence_causal_memory import (
     CausalMemoryError,
+    CausalRepricingMemory,
     EpistemicClaim,
     EvidenceEvent,
     FrozenHypothesis,
@@ -28,6 +30,7 @@ from profitability_learning.runtime import refresh_director
 
 
 PREFIX = "phase2-runtime-acceptance"
+CANONICAL_REJECTED_ACCEPTANCE_ID = "DISC-BTC-LEADLAG-001-v1"
 SAFE = {
     "research_only": True,
     "trade_authority": False,
@@ -227,6 +230,28 @@ def _acceptance_missions(state: dict[str, Any], hypothesis_id: str) -> list[dict
     ]
 
 
+def _canonical_rejected_id_veto_probe() -> bool:
+    """Exercise the deployed mission boundary without mutating durable memory."""
+    memory = CausalRepricingMemory(half_life_days=30)
+    ids = _ids("0" * 40)
+    base = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    _seed_support(memory, ids, base)
+    hypothesis = memory.hypotheses[ids["hypothesis"]]
+    memory.hypotheses[ids["hypothesis"]] = replace(
+        hypothesis,
+        family_id=CANONICAL_REJECTED_ACCEPTANCE_ID,
+    )
+    feedback = causal_feedback(
+        loader=lambda: memory,
+        as_of=_ts(base + timedelta(minutes=6, seconds=30)),
+    )
+    return (
+        feedback.get("status") == "AVAILABLE_NO_SUPPORTED_MECHANISMS"
+        and feedback.get("missions") == []
+        and feedback.get("mission_count") == 0
+    )
+
+
 def _live_stale_writer_probe(store: SupabaseCausalMemory, ids: dict[str, str], base: datetime) -> bool:
     barrier = Barrier(2)
 
@@ -295,6 +320,8 @@ def _validate_receipt(store: SupabaseCausalMemory, ids: dict[str, str], sha: str
         raise CausalMemoryError("Phase-2 runtime acceptance receipt is missing durable observations")
     if design not in memory.rejected_fingerprints or effective not in memory.rejected_fingerprints:
         raise CausalMemoryError("Phase-2 runtime acceptance receipt lost rejected fingerprints")
+    if not _canonical_rejected_id_veto_probe():
+        raise CausalMemoryError("canonical rejected strategy ID regained causal mission eligibility")
     return {
         "ok": True,
         "schema_version": 1,
@@ -303,6 +330,7 @@ def _validate_receipt(store: SupabaseCausalMemory, ids: dict[str, str], sha: str
         "hypothesis_id": ids["hypothesis"],
         "durable_restart_reload": True,
         "support_consumed_by_default_director": True,
+        "canonical_rejected_id_veto": True,
         "narrative_firewall": True,
         "contradiction_removed_missions": True,
         "decay_removed_missions": True,
@@ -319,6 +347,8 @@ def _validate_receipt(store: SupabaseCausalMemory, ids: dict[str, str], sha: str
 
 def run_phase2_causal_runtime_acceptance() -> dict[str, Any]:
     sha = _deployed_sha()
+    if not _canonical_rejected_id_veto_probe():
+        raise CausalMemoryError("canonical rejected strategy ID bypassed the causal mission boundary")
     ids = _ids(sha)
     store = SupabaseCausalMemory()
 
