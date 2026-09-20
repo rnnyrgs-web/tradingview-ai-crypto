@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Await exact deployed SHA and verify causal-memory consumption
+      - name: Verify exact deployed SHA and prospective causal guard
         env:
           ACCEPTANCE_URL: https://tradingview-ai-crypto.onrender.com/research/money-intelligence-causal/acceptance
           SCAN_SECRET: ${{ secrets.SCAN_SECRET }}
@@ -48,8 +48,15 @@ jobs:
               --connect-timeout 10 --max-time 45 \
               "$ACCEPTANCE_URL" || true)"
             if [ "$status" = "200" ] && jq -e --arg sha "$GITHUB_SHA" '
-              .ok == true and
               .deployed_sha == $sha and
+              ((
+              .ok == false and
+              .status == "WAIT_PROSPECTIVE_SYNTHETIC_EVALUATION" and
+              .plan_durable == true and
+              .scientific_forward_evidence == false and
+              .final_mission_count == 0
+              ) or (
+              .ok == true and
               .durable_restart_reload == true and
               .support_consumed_by_default_director == true and
               .canonical_rejected_id_veto == true and
@@ -62,7 +69,8 @@ jobs:
               .corrupt_document_failed_closed == true and
               .final_mission_count == 0 and
               (.rejected_design_fingerprint | startswith("mi-causal-v1:")) and
-              (.rejected_effective_fingerprint | startswith("mi-causal-pit-v1:")) and
+              (.rejected_effective_fingerprint | startswith("mi-causal-pit-v1:"))
+              )) and
               .safety.research_only == true and
               .safety.trade_authority == false and
               .safety.promotion_authority == false and
@@ -77,7 +85,10 @@ jobs:
           if jq -e 'type == "object"' "$response" >/dev/null 2>&1; then
             jq -c '{
               ok: .ok?,
+              status: .status?,
               deployed_sha: .deployed_sha?,
+              plan_durable: .plan_durable?,
+              scientific_forward_evidence: .scientific_forward_evidence?,
               receipt_replay: .receipt_replay?,
               hypothesis_id: .hypothesis_id?,
               durable_restart_reload: .durable_restart_reload?,

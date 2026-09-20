@@ -33,6 +33,7 @@ class Response:
 class FakeSupabase:
     def __init__(self):
         self.rows = []
+        self.server_time = "2026-09-02T00:30:00Z"
         self.available = True
         self.before_append = None
         self.force_stale = False
@@ -41,6 +42,19 @@ class FakeSupabase:
     def get(self, _url, **_kwargs):
         if not self.available:
             return Response(503, {"message": "unavailable"})
+        params = _kwargs.get("params", {})
+        if params.get("order") == "sequence.asc":
+            import json as json_module
+
+            hypothesis_id = json_module.loads(params["payload"][3:])["hypotheses"][0]["hypothesis_id"]
+            matches = [
+                row for row in self.rows
+                if any(
+                    hypothesis["hypothesis_id"] == hypothesis_id
+                    for hypothesis in row["payload"]["hypotheses"]
+                )
+            ]
+            return Response(payload=matches[:1])
         return Response(payload=list(reversed(self.rows[-2:])))
 
     def post(self, _url, *, json, **_kwargs):
@@ -78,6 +92,7 @@ class FakeSupabase:
                 "content_digest": json["p_content_digest"],
                 "parent_digest": json["p_parent_digest"],
                 "payload": deepcopy(json["p_payload"]),
+                "created_at": self.server_time,
             }
         )
         return Response(payload="APPENDED")
@@ -90,6 +105,7 @@ class FakeSupabase:
                 "content_digest": document["content_digest"],
                 "parent_digest": latest["content_digest"] if latest else None,
                 "payload": deepcopy(document),
+                "created_at": self.server_time,
             }
         )
 
@@ -167,6 +183,49 @@ def test_plan_and_outcomes_cannot_first_arrive_in_one_durable_version(supabase):
     assert adapter.load().confidence(
         "H1", as_of="2026-09-03T00:00:00Z"
     ).confirmatory_support_count == 1
+
+
+def test_backdated_plan_cannot_confirm_outcomes_that_started_before_server_commit(supabase):
+    supabase.server_time = "2026-09-03T00:00:00Z"
+    adapter = SupabaseCausalMemory()
+    adapter.initialize(_plan_only())
+    prepared = _memory_with_hypothesis()
+
+    with pytest.raises(CausalMemoryError, match="server-recorded plan commit"):
+        adapter.transact(lambda current: _append_evaluation_observations(current, prepared))
+    assert len(supabase.rows) == 1
+
+
+def test_original_plan_receipt_survives_unrelated_later_version(supabase):
+    adapter = SupabaseCausalMemory()
+    adapter.initialize(_plan_only())
+    supabase.server_time = "2026-09-03T00:00:00Z"
+    adapter.transact(
+        lambda current: current.register_observation(
+            _observation("unrelated", subject_id="ETH-USD")
+        )
+    )
+    prepared = _memory_with_hypothesis()
+    adapter.transact(
+        lambda current: (
+            _append_evaluation_observations(current, prepared),
+            current.record_evidence(_support()),
+        )
+    )
+    assert adapter.load().confidence(
+        "H1", as_of="2026-09-03T00:00:00Z"
+    ).confirmatory_support_count == 1
+
+
+def test_rejected_fingerprints_cannot_be_removed_from_durable_history(supabase):
+    adapter = SupabaseCausalMemory()
+    adapter.initialize(_plan_only())
+    adapter.transact(lambda current: current.reject_hypothesis("H1"))
+    original = set(adapter.load().rejected_fingerprints)
+
+    with pytest.raises(CausalMemoryError, match="durable causal-memory history is immutable"):
+        adapter.transact(lambda current: current.rejected_fingerprints.clear())
+    assert adapter.load().rejected_fingerprints == original
 
 
 def test_durable_restart_preserves_scientific_state_and_behavior(supabase):
@@ -324,3 +383,10 @@ def test_migration_is_private_append_only_digest_bound_and_optimistic():
         "return 'STALE'",
     ]
     assert all(fragment in sql for fragment in required)
+    server_time_migration = (
+        migrations / "20260920080642_causal_memory_server_time_insert_privileges.sql"
+    ).read_text()
+    assert "revoke insert on table public.money_intelligence_causal_memory_versions" in server_time_migration
+    assert "grant insert (content_digest, parent_digest, payload)" in server_time_migration
+    assert "grant insert (content_digest, parent_digest, payload, created_at)" not in server_time_migration
+    assert "alter column created_at set default clock_timestamp()" in server_time_migration

@@ -114,12 +114,18 @@ def _observation(
     )
 
 
+def _utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
 def _base_time(memory, ids: dict[str, str]) -> datetime:
     existing = memory.observations.get(ids["formation"])
     if existing is not None:
         return _parse(existing.observed_at)
-    now = datetime.now(timezone.utc).replace(second=0, microsecond=0)
-    return now - timedelta(hours=13)
+    now = _utc_now().replace(second=0, microsecond=0)
+    # Freeze before the first evaluation unit begins. The synthetic fixture is
+    # an integration diagnostic, never forward market evidence.
+    return now - timedelta(minutes=2)
 
 
 def _contract(ids: dict[str, str], base: datetime) -> FrozenHypothesis:
@@ -402,6 +408,22 @@ def run_phase2_causal_runtime_acceptance() -> dict[str, Any]:
     initial = store.load()
     base = _base_time(initial, ids)
     store.transact(lambda memory: _freeze_support_contract(memory, ids, base))
+    if _utc_now() < base + timedelta(hours=11):
+        pending = store.load()
+        if ids["hypothesis"] not in pending.hypotheses:
+            raise CausalMemoryError("prospective acceptance plan was not durable")
+        if _acceptance_missions(refresh_director({"workers": {}}), ids["hypothesis"]):
+            raise CausalMemoryError("unmatured synthetic acceptance plan emitted missions")
+        return {
+            "ok": False,
+            "status": "WAIT_PROSPECTIVE_SYNTHETIC_EVALUATION",
+            "deployed_sha": sha,
+            "plan_durable": True,
+            "scientific_forward_evidence": False,
+            "final_mission_count": 0,
+            "next_check_at": _ts(base + timedelta(hours=11)),
+            "safety": dict(SAFE),
+        }
     store.transact(lambda memory: _seed_support(memory, ids, base))
     restarted_after_support = store.load()
     support_as_of = _ts(base + timedelta(hours=8, minutes=1))
