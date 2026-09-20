@@ -1136,7 +1136,8 @@ def test_confirmatory_evidence_rejects_post_outcome_control_substitution():
 
 
 @pytest.mark.parametrize("changed_field", ["metric_name", "source_id", "provenance_uri"])
-def test_frozen_pair_ids_cannot_hide_post_outcome_control_selection(changed_field):
+@pytest.mark.parametrize("changed_role", ["outcome", "control"])
+def test_frozen_pair_ids_cannot_hide_post_outcome_selection(changed_field, changed_role):
     memory = CausalRepricingMemory()
     memory.register_observation(_observation("flow"))
     hypothesis = _hypothesis()
@@ -1148,16 +1149,18 @@ def test_frozen_pair_ids_cannot_hide_post_outcome_control_selection(changed_fiel
             retrieved_at="2026-09-05T02:00:00Z", subject_id=subject,
             currency="ratio", measurement_window_hours=window,
         )
-        memory.register_observation(_observation(
-            outcome_id, "forward_return_72h", 0.08, **common,
-        ))
+        outcome = _observation(outcome_id, "forward_return_72h", 0.08, **common)
         control = _observation(control_id, "matched_control_return_72h", 0.01, **common)
         replacement = {
             "metric_name": "posthoc_selected_control",
             "source_id": "posthoc-selected-provider",
             "provenance_uri": "source://posthoc-selection",
         }[changed_field]
-        control = replace(control, **{changed_field: replacement})
+        if changed_role == "outcome":
+            outcome = replace(outcome, **{changed_field: replacement})
+        else:
+            control = replace(control, **{changed_field: replacement})
+        memory.register_observation(outcome)
         memory.register_observation(control)
     with pytest.raises(CausalMemoryError, match="frozen.*provenance"):
         memory.record_evidence(_support("same-ids-posthoc-selection", "2026-09-05T03:00:00Z"))
