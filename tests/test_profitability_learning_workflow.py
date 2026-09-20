@@ -58,6 +58,7 @@ def test_runtime_acceptance_dependencies_are_packaged_in_web_image():
     for instruction in (
         "COPY profitability_learning/ profitability_learning/",
         "COPY orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz orchestration/evidence/",
+        "COPY orchestration/rejected_fingerprints.py orchestration/",
         "COPY orchestration/rejected_fingerprints.json orchestration/",
         "COPY orchestration/signal_development_objective.json orchestration/",
     ):

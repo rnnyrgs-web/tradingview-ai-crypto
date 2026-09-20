@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T0243Z",
+  "information_cutoff": "2026-09-20T02:43:10Z",
+  "status": "MATERIAL_CAUSAL_UPDATE_OWNER_REPORT_ELIGIBLE",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_before_persist": "c1737bd4b3340a9073bce64f9f9143f8a0bc03f8",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-20T02:39:02Z",
+    "artifact_cutoff_utc": "2026-09-20T02:43:10Z",
+    "seconds_this_run_minimum": 248,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 3439,
+    "minimum_cumulative_seconds_since_last_owner_report": 3687,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": true,
+    "method": "Only directly measured active runtime is counted; schedule gaps, idle time and article timestamps are excluded."
+  },
+  "highest_information_question": "Does central-bank QT affect sovereign long-end yields mainly through aggregate balance-sheet shrinkage, or can the maturity composition and market-facing sale method change term premia independently of the policy-rate path?",
+  "fresh_validated_observations": [
+    {
+      "topic": "Bank of England QT composition produced a high-information sovereign-duration move despite a hawkish short-rate backdrop",
+      "label": "DAILY BIG-MOVE CAUSAL LAB / SUPPORTED REGIME-SPECIFIC LEARNING",
+      "observed_facts": [
+        "On Sep.17 the Bank of England held Bank Rate at 3.75% by 6-3; three members preferred a 25 bp hike and the MPC warned that energy-driven inflation risks remained elevated.",
+        "The same decision retained £120B of the longest-dated APF gilts to back banknote issuance. The remaining monetary-policy portfolio is to be reduced through maturities plus a much smaller active-sales programme: roughly £222B maturing before 2035 is held to maturity and about £146B of 2035-2049 gilts may be sold at about £20B per year.",
+        "Contemporaneous Reuters reporting says active gilt auctions were paused for six months until April and long-dated sales were halted; the Bank/HMT are also considering direct sales to the Debt Management Office.",
+        "After the announcement the 30-year gilt yield fell about 12 bp to 5.74%, the 10-year about 8 bp and the 2-year about 6 bp. The 30-year decline was the largest daily fall since May, despite markets still pricing a high probability of a November hike and several hikes through 2027.",
+        "The prior 2025-26 QT programme targeted a £70B annual stock reduction and included active sales across maturity buckets, though already with fewer long-maturity sales than short/medium."
+      ],
+      "inference": "The monetary stance is multidimensional. Removing a price-insensitive expected seller of long-duration bonds can lower the long-end clearing yield/term premium even when the current policy rate is unchanged and expected future policy rates remain hawkish. The curve-specific response (30y rally larger than 10y and 2y) is consistent with a duration-supply channel rather than a simple short-rate-policy channel.",
+      "causal_chain": "high long-end yields + expected future APF sales -> BoE announces long-duration retention / six-month sales pause / slower active sales -> expected market-facing duration supply falls -> marginal buyers require less yield to absorb gilts -> long-end yields fall disproportionately -> UK financing conditions ease at the margin even while short-rate expectations remain restrictive",
+      "capital_source_destination": "Capital moved toward long-dated gilts / duration exposure while an expected future source of supply from the BoE was removed. Exact account-level buyers remain UNKNOWN; pension/insurer, macro, relative-value and short-cover demand are plausible but not directly identified.",
+      "catalyst": "BoE Sep.17 QT implementation redesign and long-dated sale cessation.",
+      "transmission_mechanism": "Expected net duration supply and price-insensitive central-bank selling changed independently of the policy-rate path.",
+      "amplifiers": [
+        "Long gilt yields had recently reached multi-decade highs",
+        "Potential short/underweight duration positioning",
+        "Thin long-end market depth and convexity",
+        "Potential future DMO absorption/direct-sale structure"
+      ],
+      "alternative_explanations": [
+        "The expected Bank Rate hold itself",
+        "Concurrent global yield moves",
+        "Energy/oil repricing",
+        "Positioning/short covering unrelated to QT"
+      ],
+      "matched_controls": [
+        "The rate hold was broadly expected and the inflation guidance was hawkish, yet the long end rallied more than the front end.",
+        "The 30y/10y/2y response gradient is directionally consistent with the maturity bucket where expected BoE supply changed most.",
+        "The total long-run unwind pace was not wholly surprising; therefore the composition/timing of market-facing supply is the higher-information variable than the headline annual stock reduction alone."
+      ],
+      "negative_findings": [
+        "Do not label all QT as one scalar liquidity variable; active sales, passive maturities, duration bucket and buyer capacity differ.",
+        "Do not infer a stable basis-point elasticity from this single event.",
+        "Do not treat the gilt rally as a clean directional BUY now that the supply surprise has already been repriced and UK inflation/fiscal risks remain material."
+      ],
+      "supported_method_rule": "For sovereign-duration research, track net duration supply by maturity: fiscal issuance + central-bank active sales - maturities/reinvestment/official absorption, alongside dealer balance-sheet capacity and structural pension/insurer demand. Model this separately from the overnight policy-rate path.",
+      "decision_support": "UK long duration: WAIT after the event-driven rally. Research implication is strong; immediate trade edge is not established."
+    },
+    {
+      "topic": "BTC remains resilient after the short-squeeze impulse faded, but leverage price is rising and regulated-flow confirmation is unavailable over the weekend",
+      "label": "LIVE CAUSAL CONTROL / WAIT",
+      "observed_facts": [
+        "CoinMarketCap at about 02:38-02:39 UTC showed BTC near $80.9K, -0.55%/24h and +4.78%/7d.",
+        "CoinMarketCap global derivatives metrics showed aggregate crypto open interest about $435B, down about 5.1%/24h, and BTC 24h liquidations about $26.6M, down about 90.6% from the preceding 24h window.",
+        "Average funding remained positive and higher than the prior week; exact aggregate funding-change percentages differ across CoinMarketCap endpoints/timestamps.",
+        "U.S. spot ETF markets are closed, so there is no new completed regulated-flow session with which to identify the marginal buyer."
+      ],
+      "inference": "BTC holding near the breakout while leverage quantity/notional aggregates contract is healthier than a pure squeeze continuation, but positive funding and the absence of fresh ETF confirmation prevent a durable-accumulation conclusion.",
+      "decision_support": "BTC remains WAIT / tactical confirmation candidate, not BUY."
+    },
+    {
+      "topic": "ENA and AVAX remain high-information crypto movers but neither currently has a timestamp-defensible fresh fundamental flow catalyst sufficient for a BUY thesis",
+      "label": "DAILY BIG-MOVE CAUSAL LAB / NEGATIVE FINDING",
+      "observed_facts": [
+        "At about 02:38 UTC ENA was near $0.207, +17.36%/24h, +46.78%/7d and +70.26%/30d, with about $1.0B 24h volume against ~$2.09B market cap (turnover ~48%).",
+        "The prior cycle established that ENA fee-switch buybacks are not active because USDe supply remains below the first $7.5B activation rung.",
+        "AVAX was near $9.60, +11.68%/24h and +29.63%/7d, with turnover ~25% of market cap.",
+        "Fresh public searching found secondary narratives around tokenization, institutional access and alt-L1 rotation for AVAX, but no newly dated authoritative catalyst was found that defensibly explains the current daily acceleration."
+      ],
+      "inference": "Both moves may include narrative/attention, momentum and positioning reflexivity. Without a timestamp-safe fresh cash-flow/fundamental catalyst, post-hoc narrative attribution should be rejected.",
+      "decision_support": "ENA: WAIT / AVOID CHASING. AVAX: WAIT / NO EDGE pending causal evidence."
+    },
+    {
+      "topic": "Saudi weekend escalation still has no verified incremental oil-capacity loss",
+      "label": "ENERGY FAILED-TRANSMISSION CONTROL / WAIT",
+      "observed_facts": [
+        "Reuters reported flames and black smoke near Riyadh airport on Sep.19 but the cause remained unclear.",
+        "The Saudi-led coalition said a missile aimed at Riyadh was intercepted and attacks including Yanbu were thwarted.",
+        "No incremental Sep.19 Yanbu/Aramco throughput or export-capacity loss was verified at this cutoff; benchmark crude markets remain closed for the weekend."
+      ],
+      "inference": "The causal variable remains verified change in effective deliverable barrels after interception, redundancy, inventories and rerouting, not attack headlines themselves.",
+      "decision_support": "Crude remains WAIT / high event risk pending physical and market-reopen confirmation."
+    }
+  ],
+  "daily_big_move_scan": {
+    "market_context": "Weekend: traditional cash markets are closed. Traditional-market cases use the latest completed session; live crypto is scanned without fabricating closed-market responses.",
+    "selected_or_retested": [
+      "UK 30-year gilts Sep.17: yield -~12bp versus 10y -~8bp and 2y -~6bp after BoE QT redesign; selected as a high-information duration-supply case.",
+      "ENA: +17.4%/24h and +46.8%/7d with ~48% turnover; no active fee-switch buyback and no new timestamp-safe catalyst sufficient to explain the final acceleration.",
+      "AVAX: +11.7%/24h and +29.6%/7d with ~25% turnover; fresh authoritative catalyst not established, so narrative explanations remain hypotheses.",
+      "BTC: ~$80.9K while aggregate OI is down ~5%/24h and the prior liquidation burst has faded; constructive but ETF confirmation unavailable over weekend.",
+      "ZEC: ~$1,461, -6.1%/24h but +29.8%/7d and +155%/30d; remains an extreme privacy/wrapper/free-float case rather than a clean new directional thesis.",
+      "Saudi/Yanbu Sep.19: attack claims/interceptions without verified incremental oil-capacity loss; retained as a failed-transmission energy control."
+    ]
+  },
+  "learning_ledger_promotion_candidate": {
+    "id": "MI-L-20260920-013",
+    "status": "supported_regime_specific",
+    "claim": "Central-bank balance-sheet runoff is not a one-dimensional liquidity variable: the maturity composition and market-facing method of QT can change sovereign term premia and long-end yields independently of the current policy-rate path. The Sep.17 2026 BoE event shows that removing expected long-duration gilt sales can rally the long end even alongside hawkish inflation guidance and persistent rate-hike pricing.",
+    "promotion_note": "Persisted in this append-only cycle as the smallest safe change while main is active; suitable for later canonical ledger/big-move-lab compaction after conflict-safe refetch."
+  },
+  "big_move_lab_promotion_candidate": {
+    "case_id": "2026-09-17-boe-qt-duration-supply-gilt-rally",
+    "status": "SUPPORTED / REGIME-SPECIFIC / NEEDS CROSS-EPISODE TESTING",
+    "cross_case_hypothesis": "For sovereign curves, net duration supply by maturity and market-facing central-bank sales can explain long-end term-premium moves independently of the policy-rate action sign."
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast clears the evidence bar. Existing WAIT states are preserved."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle as the smallest conflict-safe change. The new BoE result is a material validated learning and promotion candidate, but it does not change the dashboard's high-level restrictive/selective regime or create a new actionable BUY/SHORT. Avoid a risky whole-file dashboard/ledger rewrite while main is actively changing; compact the validated case into the canonical ledger/big-move library on a later conflict-safe pass.",
+  "next_research": [
+    "Build a timestamp-safe sovereign-duration event sample across BoE/Fed/ECB/QT changes and fiscal issuance changes, separating policy-rate surprise from net duration-supply surprise and testing 2y/10y/30y curve responses.",
+    "After U.S. markets reopen, reconcile finalized BTC ETF flows and test whether BTC holds above the breakout while contract-aware native-unit OI, funding, basis and liquidations remain controlled.",
+    "For AVAX, search primary chain/issuer/venue data for actual institutional/tokenization activity around the move; preserve NO EDGE if the catalyst remains narrative-only.",
+    "At crude reopen, compare Brent/WTI, physical differentials, freight/insurance and Saudi loading data against verified damage rather than attack claims.",
+    "Monitor the Sep.20 U.S.-China Bessent/He meeting and LNG-tariff negotiations for actual signed policy changes before inferring capital-flow beneficiaries."
+  ],
+  "sources": [
+    "https://www.bankofengland.co.uk/monetary-policy-summary-and-minutes/2026/september-2026",
+    "https://www.reuters.com/business/investors-cheer-boe-move-pause-gilt-sales-driving-bond-rally-2026-09-17/",
+    "https://www.reuters.com/business/finance/bank-england-halts-long-dated-gilt-sales-rewrites-plan-unwind-qe-2026-09-17/",
+    "CoinMarketCap connected real-time quotes/global derivatives/global metrics, 2026-09-20 02:38-02:39 UTC",
+    "https://www.reuters.com/world/middle-east/saudi-civil-defence-sends-all-clear-after-danger-warning-capital-riyadh-2026-09-19/"
+  ],
+  "paid_resource_policy": "No new paid resources authorized; free/public/primary sources and existing connected data were used.",
+  "real_money_trading": "DISABLED / NOT AUTHORIZED"
+}

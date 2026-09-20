@@ -41,7 +41,7 @@ def _coord():
 def _phase_two_task(coordination):
     return next(
         task for task in coordination["tasks"]
-        if task["id"] == "COORD-MI-CAUSAL-001"
+        if task["id"] == "COORD-MI-CAUSAL-002"
     )
 
 def _coord_with_ready_discovery_task():
@@ -76,6 +76,14 @@ def test_coordination_loader_applies_canonical_overrides():
     assert current["status"] == "DONE"
     assert current["fingerprint_id"] == "DISC-BTC-LEADLAG-001-v1"
     assert current["completion_evidence"]["decision"] == "REJECTED_PRE_OOS"
+    primitive = tasks["COORD-MI-CAUSAL-001"]
+    assert primitive["status"] == "DONE"
+    assert primitive["pr"] == 454
+    assert primitive["completion_evidence"]["exact_head_sha"] == (
+        "8da3ff1d212d28cfd9f04521c7ab7b5ec5a4d8e3"
+    )
+    assert primitive["completion_evidence"]["phase_2_complete"] is False
+    assert primitive["completion_evidence"]["broker_or_live_authority"] is False
     assert highest_ready_task(_config(), coordination) == _phase_two_task(coordination)
 
 def test_runner_is_single_execution_multi_role_cost_bounded_and_broker_disconnected():

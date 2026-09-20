@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-19T1951Z",
+  "information_cutoff": "2026-09-19T19:51:05Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "context_integrity": {
+    "read_current_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_research_cycle_inventory_and_latest_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-19T19:43:00Z",
+    "artifact_cutoff_utc": "2026-09-19T19:51:05Z",
+    "seconds_this_run": 485,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 290,
+    "minimum_cumulative_seconds_since_last_owner_report": 775,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted; schedule gaps, idle time and article timestamps are excluded."
+  },
+  "highest_information_question": "Does the StablecoinX ENA lock-up waiver create a genuine capital-flow edge, or does it mainly reprice wrapper monetizability while introducing latent token supply and equity dilution risks that make the signs differ across USDE equity and ENA token?",
+  "fresh_validated_observations": [
+    {
+      "topic": "StablecoinX waiver changes legal liquidity, not immediate offered ENA supply",
+      "label": "PRIMARY-SOURCE FACT / CAUSAL-MECHANISM REFINEMENT",
+      "observed_facts": [
+        "The Sep. 14 waiver, publicly filed Sep. 17, permanently removes contractual lock-up/unlocking/vesting schedules from StablecoinX ENA effective Oct. 5, 2026.",
+        "The waiver explicitly preserves Ethena Foundation consent/veto rights over ENA sale, transfer, lending, hedging, pledging and collateralization except through its Funding Sale procedure.",
+        "A Funding Sale requires at least five Business Days of notice specifying use of proceeds, maximum ENA, sale period, minimum price, execution method/counterparty types and required approvals.",
+        "The Foundation may acquire all or part of the proposed ENA directly for USD, USDC, USDe or USDtb; the parties explicitly state that direct Foundation acquisition can be the most efficient way to minimize market impact.",
+        "If ENA is sold externally, permitted methods include OTC, market-making/agency and exchange/VWAP-style execution, with a contractual orderly-market requirement.",
+        "Funding Notices, Acquisition Notices and related discussions are confidential except where disclosure is legally/exchange-required. Therefore absence of a public notice is not proof that no prospective sale exists."
+      ],
+      "inference": "The correct supply chain is legal unlock -> economically usable treasury -> proposed funding need -> Foundation review/direct-absorption decision -> actual third-party offered flow -> market impact. A legal unlock is therefore not equivalent to a circulating-supply dump. It can improve the wrapper's monetizability while simultaneously increasing latent ENA supply risk.",
+      "method_rule_candidate": "For token-treasury wrappers, separately track LEGAL_FLOAT, ECONOMICALLY_AVAILABLE_FLOAT, PROPOSED_FLOW, ABSORBED_OFF_MARKET_FLOW and ACTUAL_PUBLIC_MARKET_OFFERED_FLOW. Do not map legal unlock dates directly to sell-pressure magnitude."
+    },
+    {
+      "topic": "USDE equity repriced much faster than ENA after the waiver filing, consistent with wrapper discount compression rather than one-for-one token beta",
+      "label": "BIG-MOVE CAUSAL LAB / OBSERVED FACT + INFERENCE",
+      "observed_facts": [
+        "StablecoinX Class A stock closed $6.20 on Sep. 16, $7.71 on Sep. 17 (+24.35%) and $10.19 on Sep. 18 (+32.17%), a cumulative +64.35% from the Sep. 16 close. Volumes were about 14.17M and 14.58M shares on Sep. 17-18 versus 24.03M Class A shares outstanding as of Aug. 28.",
+        "The same stock has previously had extreme one-day moves, including +85.25% on Aug. 21, +34.95% on Aug. 27 and +31.21% on Aug. 31, so the Sep. 17-18 reaction is abnormal but not unprecedented for this highly volatile wrapper.",
+        "ENA rose materially less across the same completed sessions, while current live ENA has since accelerated to about $0.2035, +21.28%/24h and +44.68%/7d at 19:42Z Sep. 19.",
+        "StablecoinX's Aug. 28 reported Class A share count was 24,029,375. The company previously described an ENA treasury of approximately 3.0B tokens; at the current live ENA quote this is an illustrative gross token value of about $610.5M, or about $25.41 per Class A share if holdings/share count were unchanged. The $10.19 Sep. 18 stock close would then equal about 40% of this gross-token value. This is a scale illustration, not NAV, because liabilities, warrants, governance, taxes, execution discounts, staking requirements and treasury changes matter.",
+        "The waiver explicitly defines previously approved Rule 10b5-1 share repurchases as a possible Value-Accretive Activity eligible for funding from ENA realizations, but no evidence was found that such a buyback plan is currently adopted."
+      ],
+      "inference": "The equity move is consistent with a repricing of treasury monetizability/strategic optionality and partial discount compression in addition to ENA beta. The event can have opposite marginal-flow implications by instrument: USDE equity may benefit from better treasury usability while ENA may face latent supply if realizations eventually reach external buyers.",
+      "alternative_explanations": [
+        "USDE's very high pre-existing volatility and thin/episodic liquidity",
+        "Short covering or momentum amplification",
+        "Broader Ethena product/tokenomics narrative",
+        "Crypto risk-on beta",
+        "Speculative discount-to-token-NAV trading rather than a durable fundamental revaluation"
+      ],
+      "falsification": "Weaken the waiver/monetizability interpretation if USDE rapidly gives back the post-filing relative move without any change in perceived treasury usability, or if future matched token-treasury unlock events show no systematic wrapper-versus-underlying sign divergence after volatility and beta controls."
+    },
+    {
+      "topic": "USDE equity has very large contingent dilution/supply capacity near the current price, making gross treasury-NAV arbitrage unsafe",
+      "label": "PRIMARY-SOURCE FACT / CAPITAL-STRUCTURE RISK",
+      "observed_facts": [
+        "StablecoinX reported 24,029,375 Class A shares outstanding as of Aug. 28, 2026.",
+        "Its registration statement covers 19,124,586 shares issuable from outstanding warrants: 11.5M public warrants and 3.267679M sponsor Tranche A warrants at $11.50, plus 4.356907M sponsor Tranche B warrants at $15.00. This potential warrant share count is about 79.6% of the current Class A count before considering conditions/cashless mechanics.",
+        "The registration statement also covers up to 12,668,943 shares for selling stockholders and warns that future sales can pressure the stock; registration is not the same as actual issuance or sale.",
+        "The Sep. 18 stock close of $10.19 remains below the $11.50 exercise price of the public and Tranche A warrants, but it is now close enough that a further rally can materially change the contingent-supply/cash-financing state.",
+        "Class A holders have no voting rights while Class B remains outstanding; Class B holders have voting but no economic distribution rights. This governance split can rationally support a persistent discount to simple treasury-per-share arithmetic."
+      ],
+      "inference": "A naive USDE = ENA treasury value / current Class A shares thesis materially overstates a clean arbitrage. Warrant dilution, registered resale supply, governance rights, liabilities, treasury-disposition constraints and market impact must all be modeled."
+    },
+    {
+      "topic": "Current ENA fee-switch buyback narrative is still economically inactive while unlock pressure is large",
+      "label": "PRIMARY-SOURCE NEGATIVE FINDING / TOKENOMICS",
+      "observed_facts": [
+        "Ethena governance defines the first fee-switch rung at a 14-day average USDe supply of $7.5B, with zero scheduled take below that threshold.",
+        "Current connected USDe circulating supply is about $4.831B, roughly 35.6% below $7.5B and requiring about 55.2% growth from the current level to reach the threshold before persistence/averaging is considered.",
+        "The governance analysis states gross ENA unlocks continue at 267,187,500 tokens per month through Apr. 2028. At the current live ENA quote of about $0.2035, that gross scheduled amount is roughly $54.4M per month in notional terms; gross unlocks are not synonymous with immediate sell flow.",
+        "The governance analysis itself estimated the proposed fee-switch buyback would offset only about 10% of gross unlocks while active at its examined run rate, and under 2% on its panel-average basis."
+      ],
+      "inference": "Today's ENA move cannot truthfully be attributed to active fee-switch purchases. The buyback mechanism is a future conditional demand source, while scheduled unlocks and treasury monetization remain separate potential supply channels."
+    },
+    {
+      "topic": "ENA has developed asset-specific leverage/crowding while broad crypto leverage is not expanding comparably",
+      "label": "SECONDARY-MARKET EVIDENCE / PROVISIONAL MICROSTRUCTURE",
+      "observed_facts": [
+        "At 19:42Z ENA was about $0.2035, +21.28%/24h and +44.68%/7d, with about $852M 24h reported volume versus roughly $2.05B market capitalization.",
+        "Matched major-crypto controls near 19:47-19:48Z were far quieter: BTC about +0.14%/24h, ETH -0.20%, SOL -2.40%, XRP +1.68% and LINK +1.36%.",
+        "The connected global derivatives snapshot showed aggregate crypto open interest around $443B with no comparable broad expansion, while BTC liquidations had fallen to about $44.8M/24h and the latest 1h/4h windows were zero.",
+        "Secondary ENA-specific derivatives aggregators showed roughly $425M of perp open interest and a large 24h increase, with positive funding on major venues. Exact percentages vary by aggregator and are lower-quality than venue-primary data."
+      ],
+      "inference": "The current ENA acceleration is not explainable by broad crypto beta alone and is increasingly amplified by asset-specific leveraged long demand. That supports momentum persistence while simultaneously increasing crowded-long reversal risk if spot demand stalls or treasury/unlock supply becomes salient.",
+      "data_quality_warning": "Connected aggregate crypto endpoints produced inconsistent adjacent open-interest percentage changes, and ENA venue-level leverage was sourced from secondary aggregators. Preserve timestamps and do not claim precise leverage elasticity until direct venue data are reconciled."
+    }
+  ],
+  "causal_chain": {
+    "world_to_price": "Crypto/regulatory/token-treasury narrative -> StablecoinX waiver changes legal treasury usability -> wrapper monetizability and strategic-optionality expectations rise -> USDE equity discount partially compresses on very high turnover -> ENA ecosystem attention and token demand rise -> asset-specific perp OI/funding add reflexive momentum; simultaneously Oct. 5 legal unlock and scheduled token unlocks create latent supply optionality -> future sign depends on Foundation absorption versus actual public offered flow.",
+    "source_destination": "Current marginal capital source is not account-level identified. Plausible sources are crypto/alt-risk allocations and speculative equity capital rotating into the Ethena ecosystem. Any future StablecoinX Funding Sale could create a separate chain: treasury ENA -> Foundation/OTC/exchange buyer -> cash/stablecoins -> approved strategic use or potential share repurchase -> USDE equity, with ENA price impact depending on who absorbs the token flow.",
+    "catalyst": "Sep. 17 public filing of the Sep. 14 ENA lock-up waiver.",
+    "transmission": "Changed legal usability/monetizability of a large token treasury, not an immediate programmatic buyback or automatic token dump.",
+    "amplifiers": ["USDE wrapper volatility/liquidity", "ENA narrative attention", "Perpetual leverage/funding", "Treasury-to-equity reflexivity", "Potential discount-to-gross-token-value trading"],
+    "unknown": ["Actual marginal ENA buyers", "Whether/when a Funding Sale will be proposed", "Whether the Foundation would absorb it directly", "Current exact StablecoinX ENA treasury after June quarter", "Current ENA venue-level spot-vs-perp aggressive-flow decomposition", "Whether any 10b5-1 share-repurchase plan will be adopted"]
+  },
+  "matched_controls_and_negative_findings": [
+    "Do not treat the Oct. 5 waiver effective date as an automatic 3B-ENA market dump; Foundation controls and potential direct acquisition remain binding.",
+    "Do not call the current ENA rally fee-switch-buyback driven; current USDe supply is well below the first activation threshold.",
+    "Do not treat USDE's gross ENA-per-share arithmetic as a clean NAV arbitrage; contingent warrants, governance, liabilities and execution constraints matter.",
+    "Do not treat registration of warrant/resale shares as actual immediate issuance/selling.",
+    "Do not infer the waiver is the sole cause of the USDE move because the stock has a high base rate of extreme daily moves.",
+    "Do not infer broad crypto leverage from ENA-specific crowding; major-asset controls and global OI are much quieter."
+  ],
+  "decision_support": [
+    {
+      "asset": "ENA",
+      "action": "WAIT / AVOID CHASING",
+      "horizon": "days to weeks",
+      "confidence": "MODERATE",
+      "plausible_range": "Not frozen; volatility and leverage are too high for a defensible narrow range.",
+      "why": "Idiosyncratic momentum and ecosystem repricing are real, but current buybacks are inactive, scheduled unlocks are large, the StablecoinX waiver creates latent supply optionality and asset-specific leverage/funding are elevated.",
+      "confirmation": "Spot-led continuation with controlled funding/OI, sustained USDe supply growth toward the fee-switch threshold, and no evidence of disorderly treasury/unlock selling.",
+      "invalidation_of_wait_risk": "A clear, durable spot-demand regime with improving protocol cash-flow capture and declining leverage dependence could justify re-evaluation toward BUY; conversely confirmed large external Funding Sales/unlock distribution with weakening spot absorption would strengthen REDUCE/AVOID risk."
+    },
+    {
+      "asset": "StablecoinX Class A (USDE equity)",
+      "action": "WAIT / NO EDGE",
+      "horizon": "days to months",
+      "confidence": "MODERATE-HIGH that simple gross-NAV arbitrage is unsafe; LOW on direction",
+      "plausible_range": "Not frozen; historical daily volatility is extreme.",
+      "why": "Waiver plausibly improves treasury monetizability and the stock still trades far below illustrative gross ENA-per-share value, but large contingent warrant/resale supply, non-voting Class A governance, tiny operating revenue, ENA-price dependence and sale constraints make the discount structurally ambiguous.",
+      "confirmation": "Audited/current treasury reconciliation, disclosed capital-return policy, lower dilution uncertainty, evidence of stable recurring operating cash flow and persistent discount closure without leverage/narrative dependence.",
+      "invalidation": "Material warrant/resale supply, ENA drawdown, adverse treasury realization, governance discount persistence or rapid reversal of post-filing relative strength."
+    }
+  ],
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "status": "No immutable forward directional forecast clears the evidence bar; the new insight is mechanism/relative-sign structure, not a trade call."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. Do not churn dashboard_state, learning_ledger or big_move_lab in this run: the USDE/ENA causal case was already captured provisionally in the preceding cycle and this run materially deepens its balance-sheet/supply mechanics, but the general legal-unlock sign-divergence rule needs matched historical token-treasury controls before canonical promotion. No code or signal-system state change was made.",
+  "next_research": [
+    "Build matched historical token-treasury-wrapper cases around lock-up waivers/unlocks and measure wrapper-equity versus underlying-token relative returns before/after, controlling for beta and wrapper volatility.",
+    "Reconcile StablecoinX's most current ENA treasury, staking obligations, liabilities, warrant exercisability/redemption mechanics, RSUs and selling-stockholder float into a diluted NAV sensitivity table.",
+    "Capture direct venue ENA spot/perp OI, funding, basis and liquidation data to test whether the weekend extension is spot-led or leverage-led.",
+    "Track USDe 14-day average supply versus the $7.5B fee-switch threshold; do not use single-day supply as activation evidence.",
+    "After Oct. 5, distinguish legal waiver effectiveness from actual Funding Sale/transfer evidence and Foundation absorption; treat confidential-notice structure as an observability limitation.",
+    "Continue next U.S. session BTC/ETH/SOL ETF persistence test and reopened traditional-market Saudi/oil physical confirmation work."
+  ],
+  "sources": [
+    "https://www.sec.gov/Archives/edgar/data/2080215/000121390026100751/0001213900-26-100751-index.htm",
+    "https://www.sec.gov/Archives/edgar/data/2080215/000121390026100751/ea030568601ex10-1.htm",
+    "https://www.sec.gov/Archives/edgar/data/2080215/000121390026090250/ea0301482-10q_stable.htm",
+    "https://www.sec.gov/Archives/edgar/data/2080215/000121390026095808/ea0303782-s1_stable.htm",
+    "https://gov.ethenafoundation.com/t/ena-fee-switch-activation/830",
+    "https://stockanalysis.com/stocks/usde/history/",
+    "CoinMarketCap connected snapshots: ENA 2026-09-19T19:42Z; USDe 19:46Z; BTC/ETH/SOL/XRP/LINK 19:47-19:48Z; global derivatives/live metrics",
+    "Secondary ENA derivatives aggregators retained only as provisional evidence pending venue-primary reconciliation"
+  ],
+  "owner_report_gate": "NOT MET. Minimum cumulative directly measured active execution since the last owner-facing report is 775 seconds, below the required 3,600 seconds. Persist research quietly."
+}

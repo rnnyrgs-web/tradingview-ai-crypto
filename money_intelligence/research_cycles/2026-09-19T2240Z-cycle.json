@@ -1,0 +1,138 @@
+{
+  "cycle_id": "MI-CYCLE-20260919T2240Z",
+  "started_at": "2026-09-19T22:21:26Z",
+  "information_cutoff": "2026-09-19T22:40:42Z",
+  "spec_ref": {
+    "path": "MONEY_INTELLIGENCE_SPEC.md",
+    "default_branch": "main",
+    "sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505"
+  },
+  "default_branch_observed_before_write": "ae23d01686bc71422143e2335c78a8c527f7b72c",
+  "status": "MATERIAL_VALIDATED_METHOD_UPDATE_REPORT_GATE_NOT_YET_MET",
+  "verifiable_execution": {
+    "prior_cumulative_seconds_since_last_owner_report": 1383,
+    "seconds_this_run": 1156,
+    "cumulative_seconds_since_last_owner_report": 2539,
+    "owner_report_gate_seconds": 3600,
+    "owner_report_allowed": false,
+    "carry_forward_required": true,
+    "note": "Only active research/execution time is carried. No idle/padded time is counted."
+  },
+  "mandatory_artifacts_inspected": [
+    "MONEY_INTELLIGENCE_SPEC.md",
+    "money_intelligence/dashboard_state.json",
+    "money_intelligence/learning_ledger.jsonl",
+    "money_intelligence/big_move_lab.json",
+    "money_intelligence/research_cycles/2026-09-19T2131Z-cycle.json",
+    "prior 2026-09-19 Money Intelligence research cycles and prediction state"
+  ],
+  "prediction_state": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "reason_no_new_prediction": "The strongest result is a causal-method normalization rule, not a timestamp-defensible directional edge with sufficient ex-ante realization and execution certainty."
+  },
+  "validated_learning": {
+    "ledger_id": "MI-L-20260919-012",
+    "title": "Corporate crypto treasury headlines are not executable-flow equivalents",
+    "observed_facts": [
+      "Strategy acquired $2.01B of BTC during May 11-17 while BTC fell about 5.7% from the prior close through period-end; the disclosed purchase was roughly 6.2% of one average day's reported BTC turnover.",
+      "Strategy's BTC Monetization Program was publicly filed at 08:00:15 ET on June 29. Strategy then sold $216M of BTC through July 5 for preferred-distribution/USD-reserve purposes while BTC rose about 5.7% over the sale window.",
+      "KULR sold 333 BTC in open-market transactions during July 9-23 to repay a $20M Coinbase credit facility while BTC rose about 2.9%; it later sold the remaining approximately 764 BTC during Aug. 20-Sep. 11 while BTC also rose over that interval.",
+      "SharpLink disclosed a $75M financing after the June 23 close with stated intent to acquire ETH; it bought 10,000 ETH for $16.1M during June 24-26 while ETH fell about 5.3%. The actual immediate ETH purchase used only a minority of net offering proceeds.",
+      "Upexi increased its treasury by 265,500 locked SOL through an in-kind contribution for a convertible note, explicitly without an immediate on-chain transfer, validator exit or unstaking.",
+      "BitMine disclosed weekly ETH acquisitions of 32,447 ETH and 53,501 ETH in consecutive weeks; the smaller-buy week coincided with a large ETH rise while the larger-buy week coincided with a slight decline.",
+      "An exploratory 10-event Strategy BTC-buy panel had 6 positive and 4 negative interval returns. Purchase scale versus one average day's reported turnover had weak Pearson (~0.23) and Spearman (~0.21) association with interval return. A broader selected 16-event buy/sell panel aligned with the naive buy-up/sell-down sign only 7 times. These are negative controls, not calibrated estimates."
+    ],
+    "inference": "Financing capacity, realized financing, treasury holdings change and executable signed underlying flow must be represented as separate causal states. Even real acquisition/disposition can be dominated by competing flows and macro/derivatives/ETF conditions. Reported turnover is a rough scale denominator rather than market depth.",
+    "method_rule": "Normalize treasury events as financing authorization/capacity -> realized net financing -> declared allocation -> actual buy/sell -> execution mode -> public disclosure timestamp -> flow versus usable depth/free float -> competing flows -> price response. Do not treat a treasury headline or holdings delta as a standalone directional predictor.",
+    "limitations": [
+      "Issuer timing is endogenous.",
+      "Exact within-window order timestamps are often unavailable.",
+      "OTC, in-kind, locked, staked or hedged execution can differ from visible exchange flow.",
+      "Close-to-close windows can miss intraday impact.",
+      "The event panel is small/selected and unsuitable for causal effect-size estimation."
+    ]
+  },
+  "pre_move_predictor_tests": [
+    {
+      "case": "SharpLink ETH financing intent",
+      "public_timestamp": "2026-06-23T16:30:29-04:00",
+      "known_before_execution": true,
+      "evidence": "Public 8-K said net proceeds were intended for ETH/general working capital; actual 10,000 ETH purchase occurred June 24-26.",
+      "outcome": "ETH fell over the execution interval.",
+      "lesson": "Public use-of-proceeds intent still requires realized allocation size, execution mode and competing-flow context before forecasting price direction."
+    },
+    {
+      "case": "Strategy BTC Monetization Program",
+      "public_timestamp": "2026-06-29T08:00:15-04:00",
+      "known_before_or_during_execution": true,
+      "evidence": "Program created sale authority; Strategy subsequently disclosed $216M of actual BTC sales through July 5.",
+      "outcome": "BTC rose over the sale window.",
+      "lesson": "Public sell authority plus realized selling does not mechanically imply negative interval return."
+    },
+    {
+      "case": "KULR latent BTC supply",
+      "public_timestamp": "2026-06-26T08:30:00-04:00 public company release",
+      "known_before_execution": true,
+      "evidence": "KULR stated it may sell BTC instead of issuing equity to fund operations; actual open-market sales began July 9.",
+      "outcome": "BTC rose during the July 9-23 sale interval.",
+      "lesson": "Authorization is a conditional supply option; operating cash needs/debt constraints determine realization."
+    }
+  ],
+  "daily_big_price_move_causal_lab": {
+    "weekend_constraint": "Traditional cash markets were closed; Friday closes remain the latest completed session for equities/rates/FX/commodities. Crypto was live.",
+    "ena": {
+      "observed": {
+        "price_snapshot_usd": 0.2002,
+        "move_24h_pct": 18.0,
+        "move_7d_pct": 40.8,
+        "usde_supply_usd_b": 4.844,
+        "fee_switch_first_rung_usd_b": 7.5,
+        "broad_crypto_context": "BTC and ETH were roughly flat on the current 24h snapshot while aggregate crypto open interest was down, making ENA's move unusually idiosyncratic."
+      },
+      "catalysts_and_mechanisms": [
+        "Ethena Pay/product-distribution expansion is real but is not direct ENA buyback flow.",
+        "The approved fee-switch schedule remains inactive because the preferred 14-day USDe supply measure has not reached the $7.5B first rung; current spot supply is materially below it.",
+        "StablecoinX's Sep. 17 filing makes its ENA lockup waiver effective Oct. 5 but explicitly preserves Foundation consent and a structured Funding Sale process; the waiver confers no autonomous right to dump ENA.",
+        "Funding Notices and related discussions are confidential unless disclosure is legally/exchange required, so there is not necessarily a public five-business-day warning before a sale.",
+        "Third-party derivatives snapshots showed ENA open interest and positive funding rising sharply while broad crypto OI fell, consistent with an idiosyncratic leverage amplifier."
+      ],
+      "matched_control": "StablecoinX equity reacted sharply after the filing became public before the Sep. 17 stock-market open, while ENA had already begun rising before the filing; therefore the filing is a cleaner wrapper/equity catalyst than an explanation for the start of the token move.",
+      "decision_support": "WAIT / AVOID CHASING",
+      "confirmation": "Price holds while ENA OI/funding cools and USDe 14-day average supply continues to rise materially.",
+      "invalidation_of_bearish_crowding_concern": "Sustained spot/fundamental demand with falling leverage and progress toward the fee-switch threshold.",
+      "downside_risk_confirmation": "OI/funding stay elevated while USDe growth stalls and price fails, or a cleared Funding Sale creates meaningful external supply."
+    },
+    "saudi_energy_tail": {
+      "observed": "Saudi coalition/official reporting said the Sep. 19 ballistic-missile attempt toward Riyadh was intercepted and attempts including Yanbu were thwarted; Reuters observed flames/smoke near Riyadh airport but the cause was unclear. No new Yanbu oil-supply damage was verified at cutoff.",
+      "decision_support": "CRUDE WAIT / HIGH TAIL VOLATILITY",
+      "causal_rule": "Escalate the oil thesis only on verified loss of effective deliverable barrels, failed substitution routes, physical differentials/cargo tightness or confirmed logistics damage—not attack headlines alone."
+    }
+  },
+  "current_decision_support": [
+    {"asset_or_theme":"Public crypto-treasury headlines","view":"WAIT / NO STANDALONE EDGE","reason":"Execution realization and depth normalization required."},
+    {"asset_or_theme":"ENA","view":"WAIT / AVOID CHASING","reason":"Real growth narrative, but fee switch inactive; leverage crowded; future StablecoinX supply is controlled/conditional rather than automatic."},
+    {"asset_or_theme":"BTC","view":"WAIT / tactical confirmation candidate","reason":"Friday squeeze faded; ETF finalization remains incomplete and durable spot absorption still needs confirmation."},
+    {"asset_or_theme":"ETH","view":"WAIT","reason":"Institutional flow confirmation remains weaker than BTC."},
+    {"asset_or_theme":"SOL","view":"WAIT / research wrapper-capital path","reason":"Strong wrapper/public-equity beta exists but flow realization needs normalization."},
+    {"asset_or_theme":"Crude","view":"WAIT","reason":"Geopolitical hazard elevated, but no verified incremental physical loss from the Sep. 19 Yanbu attempt."}
+  ],
+  "canonical_changes": {
+    "learning_ledger": "Appended MI-L-20260919-012 via commit d72119329bbd6668e2bfb5877f31e38ce4b9054d.",
+    "dashboard_state": "Unchanged; no regime-level or sufficiently mature opportunity-state change justified a dashboard rewrite.",
+    "big_move_lab": "Research persisted in this cycle; no separate lab overwrite to avoid noisy/conflicting concurrent edits.",
+    "signal_engine": "Untouched",
+    "paper_trades": "Untouched",
+    "promotion_gates": "Untouched",
+    "broker_state": "Untouched"
+  },
+  "highest_information_value_next_tests": [
+    "Extend the timestamp-safe treasury event panel with more ex-ante financing/use-of-proceeds announcements and matched no-buy/no-sell controls; separate expected from realized flow.",
+    "For ENA, monitor 14-day USDe supply, venue-level OI/funding and any legally disclosed StablecoinX Funding Sale; do not infer an Oct. 5 dump from lockup waiver alone.",
+    "For BTC, wait for finalized next U.S. ETF sessions and test whether price holds while leverage normalizes after the short squeeze.",
+    "For Saudi oil risk, verify physical infrastructure/cargo effects before changing crude from WAIT."
+  ],
+  "paid_resource_policy": "No new paid resources authorized; public/primary sources and existing connected data were used.",
+  "real_money_trading": "DISABLED / NOT AUTHORIZED"
+}

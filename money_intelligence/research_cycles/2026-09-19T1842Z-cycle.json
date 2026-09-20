@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-19T1842Z",
+  "information_cutoff": "2026-09-19T18:42:17Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "context_integrity": {
+    "read_current_spec": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_research_cycle_inventory_and_latest_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-19T18:37:27Z",
+    "artifact_cutoff_utc": "2026-09-19T18:42:17Z",
+    "seconds_this_run": 290,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 0,
+    "minimum_cumulative_seconds_since_last_owner_report": 290,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime after the most recent owner-facing report is counted; schedule gaps, idle time and article timestamps are excluded."
+  },
+  "highest_information_question": "Can wrapper and token-treasury plumbing distinguish actual marginal underlying buying/selling from inventory transfers, legal unlocks and narrative repricing, and can that distinction explain the current ZCSH/ZEC and ENA/StablecoinX moves without post-hoc storytelling?",
+  "fresh_validated_observations": [
+    {
+      "topic": "ZCSH creation/redemption plumbing creates asymmetric evidence about underlying ZEC flow",
+      "label": "PRIMARY-SOURCE MARKET-STRUCTURE / METHOD REFINEMENT / NO THESIS PROMOTION",
+      "observed_facts": [
+        "The current Grayscale Zcash Trust prospectus permits both cash and in-kind creations. In-kind creations deliver ZEC directly from an Authorized Participant or AP designee to the Trust; cash creations cause a Liquidity Provider to obtain ZEC for the Trust.",
+        "As of the current prospectus, ZCSH does not permit in-kind redemptions. Authorized Participants may redeem only through Cash Orders; a Liquidity Provider receives the corresponding ZEC from the Trust and sells/disposes of it for cash on behalf of the Trust.",
+        "Jane Street Capital and Virtu Americas are disclosed Authorized Participants able to conduct cash creations/redemptions and in-kind creations. JSCT, Virtu Financial Singapore and Galaxy Digital Trading Cayman are disclosed Liquidity Providers for cash orders.",
+        "The prospectus states that cash-order liquidity-provider transactions generally occur OTC. Therefore even a cash creation/redemption cannot automatically be mapped to contemporaneous exchange order-book buying/selling.",
+        "A Basket is 10,000 shares. As of June 30, 2026 each share represented about 0.0805 ZEC, so one basket represented roughly 805 ZEC before subsequent fee drift and the announced forward split.",
+        "The September 18 3-for-1 forward split remains economically neutral and must be corporate-action-adjusted before any shares-outstanding flow calculation."
+      ],
+      "inference": "ZCSH has a directional asymmetry in what share-count changes imply about underlying spot flow. Positive creations can be either cash-funded acquisition or an in-kind inventory transfer, including related-party inventory, so a share increase is weak evidence of contemporaneous marginal ZEC buying unless the creation mode and sourcing window are known. Current redemptions are cash-only and necessarily involve the Trust disposing of corresponding ZEC to a Liquidity Provider, so a redemption is mechanically closer to evidence of underlying disposition than a creation is to evidence of fresh acquisition. Even then, pre-hedging, OTC execution and inventory netting mean the price impact and exact execution time remain UNKNOWN.",
+      "matched_control": "More mature U.S. spot crypto ETPs such as BlackRock ETHA permit both cash and in-kind creations and redemptions. ZCSH's current cash-only redemption/in-kind-creation asymmetry is therefore product-specific and should not be generalized to all crypto wrappers.",
+      "negative_control": "Recent secondary premium/discount observations for ZCSH have remained close to NAV, so the lack of in-kind redemptions has not, by itself, produced validated persistent closing-price arbitrage dysfunction. Do not infer market-making stress solely from the legal redemption mode.",
+      "method_rule_candidate": "For ZCSH, record CREATION_MODE={cash,in-kind,related-party in-kind,unknown}, REDEMPTION_MODE={cash,other if rules change}, order cutoff, trade date, sourcing/hedging window, settlement date, publication time, AP/LP identity where disclosed and execution venue where known. Treat a cash redemption as stronger evidence of underlying ZEC disposition than a creation is evidence of fresh ZEC acquisition, but never assume one-for-one public-exchange price impact.",
+      "decision_support": "ZEC/ZCSH remains WAIT / AVOID CHASING. This is a causal-accounting improvement, not a directional promotion."
+    },
+    {
+      "topic": "ENA/StablecoinX is a new cross-listed ecosystem big-move case; actual fee-switch buybacks are not yet active",
+      "label": "BIG-MOVE CAUSAL LAB / PRIMARY-SOURCE EVENT + MATCHED CONTROLS / WAIT",
+      "observed_facts": [
+        "At approximately 18:40 UTC, CoinMarketCap connected data showed ENA around $0.1987, +19.72% over 24 hours and +39.79% over seven days. In the same live snapshot BTC was +0.54%/24h, ETH +0.84%, SOL -1.37%, XRP +2.77% and LINK +2.48%, so ENA's move was strongly idiosyncratic relative to major liquid crypto beta.",
+        "Historical daily data show ENA closed around $0.1489 on September 16, $0.1546 on September 17 and $0.1684 on September 18; the current price is roughly 33% above the September 16 close.",
+        "StablecoinX filed an SEC 8-K/prospectus supplement on September 17 disclosing a September 14 waiver that becomes effective October 5. It permanently removes contractual lock-up/vesting schedules from ENA held or deliverable to StablecoinX.",
+        "The same primary waiver explicitly preserves Ethena Foundation consent/veto rights over sales, transfers, lending, hedging, pledging or other encumbrance of the ENA. Funding sales require at least five business days' notice, can be purchased directly by the Foundation, must meet stated value-accretive/working-capital criteria and are expected to be executed in an orderly manner.",
+        "StablecoinX reported approximately 3.0 billion ENA in its treasury at June 30, 2026, a very large fraction of total supply.",
+        "StablecoinX equity (USDE) closed $6.20 on September 16, $7.71 on September 17 (+24.35%) and $10.19 on September 18 (+32.17% for the session), a roughly +64% two-session move after the filing window. This greatly exceeded contemporaneous gains in broader crypto-linked equities reported around the SEC tokenized-stock exemption.",
+        "Ethena governance confirmed on September 8 that the new ENA fee-switch vote passed, but the mechanism begins only after its first USDe-supply milestone. The governance analysis sets that first milestone at $7.5B on a persistence-sensitive supply measure.",
+        "Current DefiLlama data show USDe on-chain AUM/supply around $4.8B, materially below the $7.5B first milestone. Therefore the current ENA rally cannot honestly be attributed to already-running fee-switch buybacks under this mechanism."
+      ],
+      "point_in_time_chain": "Pre-existing tokenomics reform and distribution/product narrative -> Sep. 17 public StablecoinX waiver filing clarifies that a ~3B-ENA treasury becomes legally unlocked Oct. 5 but remains subject to Foundation consent and structured sale controls -> StablecoinX financial flexibility and treasury optionality reprice sharply in its listed equity -> ENA itself rises while broader crypto beta is positive but much smaller -> weekend ENA acceleration occurs with the buyback mechanism still economically inactive because USDe supply remains below its activation threshold.",
+      "catalyst": "September 17 public SEC disclosure of StablecoinX's ENA lock-up waiver is a timestamp-defensible ecosystem-specific event inside a broader set of earlier Ethena tokenomics/product reforms.",
+      "transmission_mechanism": "The waiver changes the legal liquidity/flexibility of a major ENA treasury but preserves controls that limit immediate free-float supply. This can increase the listed treasury company's balance-sheet optionality without mechanically releasing all ENA into market circulation. The simultaneous ENA repricing may reflect reduced uncertainty, expectation of better ecosystem capital allocation, reflexive treasury-equity/token feedback and broader alt-risk appetite rather than realized fee-switch cash buying.",
+      "amplifiers": [
+        "High ENA turnover and liquid perpetual market",
+        "Narrative linkage between ENA token value and StablecoinX treasury equity",
+        "Weekend crypto liquidity",
+        "Broader BTC/altcoin rebound",
+        "Prior Ethena Pay/distribution and fee-switch governance narrative"
+      ],
+      "alternative_explanations": [
+        "Broad crypto risk-on and altcoin rotation",
+        "Speculative momentum/short covering",
+        "Older Ethena Pay, institutional integration and tokenomics news being repriced late",
+        "StablecoinX equity rally feeding back reflexively into ENA rather than the waiver directly causing both"
+      ],
+      "matched_controls": [
+        "BTC/ETH/SOL/XRP/LINK moved far less over the latest 24h, rejecting a pure broad-beta explanation for the full ENA move.",
+        "Coinbase, Circle, Robinhood and Strategy rose after the SEC's September 17 tokenization exemption, but published same-day gains were materially smaller than StablecoinX's approximately +24% September 17 move and +32% September 18 continuation, supporting an idiosyncratic StablecoinX component.",
+        "The actual ENA fee-switch buyback is not active at current USDe supply, rejecting 'current programmatic buybacks are buying ENA today' as the primary direct-flow explanation."
+      ],
+      "unknowns": [
+        "ENA-specific venue-level funding, basis, open interest and liquidation decomposition across the exact Sep. 17-19 move window has not yet been frozen.",
+        "No direct account-level evidence identifies the marginal ENA buyers.",
+        "The future size/timing of any StablecoinX Funding Sale is confidential unless disclosure becomes legally required; legal unlock does not equal realized sell flow.",
+        "The exact contribution of the waiver versus broader tokenomics/product narrative cannot yet be identified causally."
+      ],
+      "decision_support": "ENA remains WAIT / NO CLEAN EDGE after the sharp repricing. Do not chase the move on a false claim that fee-switch buybacks are already active, and do not treat the October 5 legal unlock as an automatic dump because material Foundation consent, notice, purchase-option and orderly-execution constraints remain. The high-information next test is venue-level leverage/spot composition plus any future Funding Sale notice/disclosure and USDe supply progress toward $7.5B."
+    },
+    {
+      "topic": "Crypto continuation remains selective rather than a fresh broad leverage impulse",
+      "label": "LIVE CONTEXT / OBSERVED FACT / NO BTC THESIS CHANGE",
+      "observed_facts": [
+        "At about 18:39-18:40 UTC BTC was ~$81,490 (+0.54%/24h, +5.61%/7d), ETH ~$2,643 (+0.84%/24h), SOL ~$111.17 (-1.37%/24h), XRP ~$1.429 (+2.77%/24h), LINK ~$12.53 (+2.48%/24h) and ZEC ~$1,480.55 (+2.10%/24h, +30.90%/7d).",
+        "The latest connected derivatives endpoint showed aggregate crypto open interest around $443.99B, approximately +0.35%/24h but roughly flat over seven days; perpetual funding around 0.0055688 was down about 24%/24h while still substantially above its 14-day comparison.",
+        "BTC 24h liquidations were about $57.95M, with shorts about $51.51M and longs about $6.44M; total forced BTC liquidation was about 76% lower than the preceding 24h window."
+      ],
+      "inference": "The original forced-short-cover impulse has faded materially while BTC still holds around $81.5K. Aggregate leverage is no longer falling as clearly as in the prior snapshot, but it is not showing a fresh explosive expansion either. This keeps BTC continuation healthier than a squeeze-only explanation while still failing the regulated-spot persistence test on a Saturday.",
+      "data_quality_note": "Different CoinMarketCap aggregate endpoints produced inconsistent open-interest snapshots/timestamps during the day. Preserve endpoint/time versions and prefer venue-level data before using small aggregate OI changes as a causal predictor.",
+      "decision_support": "BTC remains WAIT / tactical momentum confirmation candidate, not BUY."
+    },
+    {
+      "topic": "Saudi/Houthi weekend claims remain an unconfirmed physical energy catalyst",
+      "label": "OBSERVED EVENT / UNKNOWN TRANSMISSION / NO OIL THESIS CHANGE",
+      "observed_facts": [
+        "Reuters reported September 19 Houthi claims of attacks on sensitive Riyadh sites and an Aramco facility at Yanbu and separately observed flames/smoke near Riyadh airport.",
+        "At the research cutoff Saudi authorities had not confirmed the claimed targets or a new Yanbu energy/logistics impairment from those claims.",
+        "Benchmark Brent/WTI cash/futures markets are closed for the weekend, so there is no defensible open-market crude response to measure yet."
+      ],
+      "inference": "The event raises tail risk because Saudi substitute logistics are already important after earlier East-West/Yanbu disruption, but it is not yet evidence of lost deliverable barrels. Attribution, physical damage and route impact must be confirmed before upgrading the oil scarcity thesis.",
+      "decision_support": "Crude remains WAIT / high event-risk."
+    }
+  ],
+  "daily_big_move_scan": {
+    "market_context": "Saturday. Major cash equity, sovereign-bond, FX and benchmark commodity markets are closed. The scan therefore updates live crypto movers and reconstructs the latest completed traditional-market event windows without fabricating weekend moves in closed markets.",
+    "selected_or_retested": [
+      "ENA: ~+19.7%/24h and ~+39.8%/7d at the live cutoff, materially outperforming major crypto beta; studied against the Sep. 17 StablecoinX waiver filing and the inactive fee-switch threshold.",
+      "StablecoinX/USDE: +24.35% Sep. 17 and +32.17% Sep. 18 after the waiver filing, providing a listed-equity matched ecosystem case and evidence that the event changed perceived treasury optionality/flexibility.",
+      "ZEC/ZCSH: causal plumbing deepened; creation evidence is asymmetric because in-kind inventory transfers are allowed while current redemptions are cash-only.",
+      "BTC: holds around $81.5K while the original liquidation impulse is much smaller; still requires reopened U.S. regulated-demand confirmation.",
+      "Saudi security claims: kept as UNKNOWN until physical and open-market confirmation."
+    ],
+    "negative_findings": [
+      "Do not say current ENA fee-switch buybacks caused the September 19 rally: USDe supply remains far below the first activation milestone.",
+      "Do not treat StablecoinX's October 5 legal unlock as equivalent to immediate free-float supply; Foundation consent, five-business-day notice, purchase option and orderly-sale rules remain binding.",
+      "Do not attribute ENA's full move to broad crypto beta; major liquid peers moved much less over the same live 24h window.",
+      "Do not equate a ZCSH share creation with contemporaneous exchange spot buying; cash/in-kind/related-party inventory and AP/LP timing must be separated.",
+      "Do not assume ZCSH creations and redemptions have symmetric underlying-flow implications under current rules.",
+      "Do not infer ZCSH arbitrage is currently broken merely because in-kind redemptions are unavailable; recent close-to-NAV observations are a negative control.",
+      "Do not infer an oil move from unconfirmed weekend attack claims while benchmark crude markets are closed."
+    ]
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "status": "No new immutable directional forecast clears the evidence bar. Existing WAIT/HOLD-research states are preserved and no prior forecast is rewritten."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. Do not churn dashboard_state, learning_ledger or big_move_lab yet. The ZCSH flow asymmetry is materially useful but currently product-specific and should be cross-tested; the ENA/StablecoinX event is a high-information big-move case but exact marginal-buyer and leverage decomposition remains incomplete. No code change and no signal-system state change were made.",
+  "next_research": [
+    "Build a timestamped ZCSH creation/redemption ledger from direct issuer holdings/share data, separating legacy inventory, external cash creations, external in-kind creations, related-party in-kind, redemptions, sponsor fees, price/NAV changes and the Sep. 30 split.",
+    "Find historical ZCSH redemption episodes after uplisting and test whether cash-only redemptions show stronger contemporaneous/subsequent ZEC disposition than creation episodes show acquisition; compare with products permitting in-kind both ways.",
+    "Freeze ENA venue-level spot volume, perp OI, funding, basis and liquidations around Sep. 17 filing acceptance, Sep. 18 U.S. session and Sep. 19 weekend acceleration; distinguish spot-led repricing from leveraged amplification.",
+    "Track USDe 14-day average supply versus the $7.5B fee-switch milestone and the public buyback dashboard; only label actual buyback flow once activation and transactions are observed.",
+    "Track StablecoinX/Ethena disclosures for any Funding Notice, Foundation acquisition, sale/hedge consent or legally required disposition disclosure around/after Oct. 5; do not infer confidential sales in advance.",
+    "On reopening, reassess Saudi effective deliverable supply using confirmed infrastructure status, route volumes, physical differentials, curve shape, freight/insurance and inventories before changing crude decision support.",
+    "Next U.S. session: versioned BTC/ETH/SOL ETF tables plus premium/volume and venue-level OI/funding/basis to test whether the rebound becomes durable spot accumulation."
+  ],
+  "source_log": [
+    {"publisher":"SEC / Grayscale Zcash Trust prospectus","date":"2026-08","topic":"ZCSH cash/in-kind creation, cash-only redemption, AP/LP and basket mechanics","url":"https://www.sec.gov/Archives/edgar/data/1720265/000119312526363603/zcsh__424b3.htm"},
+    {"publisher":"SEC / StablecoinX waiver exhibit","date":"2026-09-17 filing; agreement dated 2026-09-14","topic":"ENA lock-up waiver effective Oct. 5; Foundation consent, Funding Sale notice, acquisition option and orderly-execution framework","url":"https://www.sec.gov/Archives/edgar/data/2080215/000121390026100751/ea030568601ex10-1.htm"},
+    {"publisher":"SEC / StablecoinX Q2 10-Q and results exhibit","date":"2026-08-14","topic":"Approximately 3.0B ENA treasury","url":"https://www.sec.gov/Archives/edgar/data/2080215/000121390026090250/ea0301482-10q_stable.htm"},
+    {"publisher":"Ethena Governance / Risk Committee","date":"2026-08-27 and 2026-09-08 update","topic":"ENA fee-switch milestones; first $7.5B USDe supply threshold; vote passed","url":"https://gov.ethenafoundation.com/t/ena-fee-switch-activation/830"},
+    {"publisher":"DefiLlama","date":"2026-09-19 crawl","topic":"USDe on-chain AUM/supply around $4.8B; below fee-switch first milestone","url":"https://defillama.com/rwa/asset/USDE"},
+    {"publisher":"CoinMarketCap connected data","date":"2026-09-19T18:39-18:40Z","topic":"Live BTC/ETH/SOL/XRP/LINK/ZEC/ENA quotes and aggregate derivatives metrics","url":"https://coinmarketcap.com/"},
+    {"publisher":"SEC","date":"2026-09-17","topic":"Tokenized-stock Innovation Exemption used as broad crypto-equity matched control","url":"https://www.sec.gov/newsroom/speeches-statements/peirce-slumber-number-innovation-exemption-statement-091726"},
+    {"publisher":"Reuters","date":"2026-09-19","topic":"Houthi claims regarding Riyadh/Yanbu; Saudi physical impact unconfirmed at cutoff","url":"https://www.reuters.com/"}
+  ],
+  "owner_report_gate": "NOT MET. Only 290 seconds of directly measured active execution have accumulated since the most recent owner-facing report, below the required 3,600 seconds. Persist research quietly and carry it forward."
+}

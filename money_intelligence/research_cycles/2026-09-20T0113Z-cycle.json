@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T0113Z",
+  "information_cutoff": "2026-09-20T01:13:31Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_before_persist": "1834c740c9ce85dfeb14f4f0544c7a4957755cbd",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-20T01:10:15Z",
+    "artifact_cutoff_utc": "2026-09-20T01:13:31Z",
+    "seconds_this_run": 196,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 3035,
+    "minimum_cumulative_seconds_since_last_owner_report": 3231,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted; schedule gaps, idle time and article timestamps are excluded."
+  },
+  "highest_information_question": "How should open interest be normalized across linear, inverse, coin-margined and fixed-multiplier futures so that Money Intelligence does not confuse mark-to-market changes in USD notional with genuine growth in position quantity or leverage?",
+  "fresh_validated_observations": [
+    {
+      "topic": "Open-interest normalization must be contract-aware; simple USD-OI/price normalization is not a universal rule",
+      "label": "DERIVATIVES METHOD CORRECTION / SUPPORTED",
+      "observed_facts": [
+        "Bybit's official V5 Open Interest documentation states that BTCUSD inverse-contract open interest is returned in USD while BTCUSDT linear-contract open interest is returned in BTC. The same field therefore carries different units depending on contract type.",
+        "Binance's official COIN-M open-interest-history documentation reports sumOpenInterest in contracts and sumOpenInterestValue in base-asset units, explicitly separating contract count from base-asset exposure value.",
+        "CME Bitcoin futures use a fixed contract unit of 5 BTC per standard BTC futures contract, so contract-count open interest can be translated into BTC exposure with a fixed multiplier before converting to USD at the relevant price.",
+        "Kraken ENA/USD snapshots expose both native-unit and USD-valued open interest. Between Sep.18 23:11 UTC and Sep.19 00:56 UTC, the displayed mark rose from about $0.1682 to $0.1743 (+3.6%) while native OI moved only from about 11.6M ENA to 11.7M ENA (+0.9%). This directly shows why USD-valued OI can rise even when position quantity changes very little.",
+        "The prior cycle's aggregate ENA calculation correctly identified large mark-to-market contamination in raw USD OI, but direct venue documentation shows that dividing every OI series by price is not universally valid because inverse, coin-margined and fixed-multiplier contracts use different exposure identities."
+      ],
+      "inference": "A large increase in aggregate USD open interest is partly a valuation statistic whenever the underlying price rises. The economically relevant new-position signal is the change in native position units or contract count after applying the correct contract multiplier and contract-type mapping. Aggregating venues before normalizing can mix incompatible units and create false leverage-growth stories.",
+      "supported_method_rule": "For every derivatives series, persist contract_type (linear/inverse/quanto/option/fixed-multiplier future), native OI units or contract count, contract multiplier, mark/index/reference price, settlement/margin currency and USD notional separately. Compute position-quantity growth in native units/contract count first. Convert to base-asset exposure and USD notional only with the instrument-specific contract identity. Never infer new leverage from raw USD-OI percentage change alone. For options, OI count is not directional exposure; delta/gamma/vega and strike/expiry distribution are required for directional or convexity claims.",
+      "matched_controls": [
+        "Bybit provides an explicit same-endpoint unit contrast: inverse BTCUSD OI is USD while linear BTCUSDT OI is BTC.",
+        "Binance COIN-M separates contract count from base-asset value, demonstrating that the two are distinct state variables rather than interchangeable OI measures.",
+        "CME fixed-multiplier futures provide a traditional-market control where OI is contract count and exposure comes from contract count x fixed multiplier x price.",
+        "Kraken's ENA display gives a live same-venue control: native-unit OI can remain nearly flat while the USD display changes with price."
+      ],
+      "negative_findings": [
+        "Do not divide inverse-contract USD OI by price and call the result a universally comparable position quantity without checking the contract's face-value and settlement formula.",
+        "Do not infer net-long direction from OI growth; every open contract has a long and short side, so funding, basis, liquidation side and aggressive spot/perp flow are still needed.",
+        "Do not use the prior small ENA/ZEC same-day correlations as calibrated predictive relationships."
+      ],
+      "practical_implication": "Future big-move causal work should downgrade any leverage explanation that rests only on aggregate USD OI. This specifically weakens the earlier description of ENA's current rally as a 35-50% explosion in leverage quantity; genuine position-unit growth appears materially smaller than the USD headline.",
+      "decision_support": "ENA remains WAIT / AVOID CHASING. Correcting the OI measurement weakens the leverage-explosion explanation but does not create a BUY because fee-switch buybacks remain inactive, funding/attention are positive, turnover is extremely high and future supply realization remains uncertain."
+    },
+    {
+      "topic": "Friday gold strength had a documented short-covering amplifier, so one-session price action is not pure evidence of new strategic allocation",
+      "label": "BIG-MOVE CAUSAL LAB / AMPLIFIER CORRECTION",
+      "observed_facts": [
+        "Reuters reported spot gold up about 1.2% to $4,390.11 on Sep.18 while the dollar reached a more than seven-week high.",
+        "Reuters quoted EverBank's Chris Gaffney saying investors had piled into gold shorts ahead of the expected Fed hike and rapidly unwound those positions as oil prices eased and the expected gold selloff failed to persist.",
+        "Lower crude prices simultaneously reduced the marginal inflation/rate-pressure narrative, providing a macro catalyst distinct from forced short covering."
+      ],
+      "inference": "The Sep.18 gold rise should be decomposed into catalyst (easing oil/inflation pressure), transmission (lower expected duration pressure / improved relative attractiveness), and amplifier (short covering). It should not be treated as clean proof that a new strategic sovereign/fund allocation wave alone caused the move.",
+      "decision_support": "The broader gold HOLD / accumulate-weakness research thesis is not invalidated, but confidence should come from persistent fund/official demand and cross-regime resilience rather than one squeeze-amplified session."
+    },
+    {
+      "topic": "Tokenized-securities regulation is structurally important but immediate token value capture remains unproven",
+      "label": "POLICY / CAPITAL-FLOW TRANSMISSION / FAIL-CLOSED",
+      "observed_facts": [
+        "The SEC's Sep.17 Innovation Exemption grants temporary conditional relief for Tokenized Securities Venues using permissioned AMM liquidity pools for tokenized NMS stock on public permissionless ledgers, with issuer-objection rights, same shareholder-rights requirements and trading-volume/symbol limits.",
+        "Current CoinMarketCap narrative data show the Real World Assets protocol category up about 4.1% over 24h and 11.7% over 7d, outperforming several broader crypto narrative baskets on the current weekend snapshot.",
+        "ONDO and other tokenization-linked assets rallied after the policy announcement, but the SEC did not designate a required chain, oracle or token and the exemption is deliberately conditional and volume-limited."
+      ],
+      "inference": "Regulatory permission can increase the future addressable market for tokenized-stock venues, liquidity provision, custody, settlement and data/oracle infrastructure, but policy eligibility is not the same as cash flow to a specific token. The current RWA rerating is evidence of narrative repricing, not yet evidence of durable value capture.",
+      "decision_support": "Tokenization infrastructure remains HOLD / RESEARCH FOR BUY CANDIDATES; do not promote any individual token from policy headlines alone."
+    },
+    {
+      "topic": "BTC continuation remains healthier than the original short squeeze but final regulated-flow confirmation is still incomplete",
+      "label": "LIVE CONTEXT / WAIT",
+      "observed_facts": [
+        "CoinMarketCap at about 01:08-01:09 UTC showed BTC near $81.23K, -0.26%/24h and +5.16%/7d; ETH near $2.625K, SOL near $110.75, ZEC near $1,476 and ENA near $0.2069.",
+        "Global crypto open interest was about $431.37B, down 5.41%/24h, while BTC 24h liquidations had fallen to about $27.1M, down about 90% versus the prior 24h window. The large forced-short-cover impulse has therefore faded while BTC remains near $81K.",
+        "Farside's current primary BTC table still showed Sep.18 at +$324.6M with the IBIT line unpopulated at the research cutoff, while secondary reports cite a larger complete figure. The exact Friday total therefore remains provisional in the primary table.",
+        "Farside's ETH table similarly showed Sep.18 +$29.4M with major fields still unpopulated, while its Solana table showed +$47.6M on Sep.18."
+      ],
+      "inference": "BTC holding after liquidation pressure and aggregate OI receded is more constructive than a squeeze-only move, but one partially finalized ETF session is insufficient to establish durable institutional accumulation.",
+      "decision_support": "BTC remains WAIT / tactical momentum confirmation candidate, not BUY. ETH remains WAIT. SOL remains WAIT / confirmation candidate after a strong regulated-flow day and large prior-session price move."
+    },
+    {
+      "topic": "Saudi weekend escalation still lacks a verified incremental physical-oil loss",
+      "label": "GEOPOLITICAL TAIL / UNKNOWN TRANSMISSION",
+      "observed_facts": [
+        "Reuters reports Houthi claims of attacks on Riyadh and an Aramco facility at Yanbu, while the Saudi-led coalition says attempts including Yanbu were thwarted.",
+        "Smoke/flames were observed near Riyadh airport but contemporaneous reporting did not establish the cause or an incremental oil-export-capacity loss.",
+        "Benchmark crude markets remain closed for the weekend, so there is not yet a price/physical-market confirmation of a new supply state."
+      ],
+      "inference": "Tail risk is higher, but the effective-deliverable-barrel model has not changed yet. Attack claims without verified damage should not be converted into a directional crude forecast.",
+      "decision_support": "Crude remains WAIT / high event risk."
+    }
+  ],
+  "daily_big_move_scan": {
+    "market_context": "Weekend: traditional U.S./European cash equities, sovereign bonds, FX and benchmark commodity markets are closed. The scan therefore uses the latest completed Friday session for traditional assets and live crypto for abnormal moves, without fabricating weekend price responses in closed markets.",
+    "selected_or_retested": [
+      "ENA: about $0.2069, +18.5%/24h, +46.3%/7d, with roughly $931M 24h volume against a ~$2.09B market cap; idiosyncratic extreme move while broad crypto OI contracts. Derivatives causal explanation corrected for USD-OI mark-to-market contamination.",
+      "ZEC: about $1,476, -6.5%/24h but +31.0%/7d and +158%/30d; remains an extreme-move control for price/OI normalization and wrapper/free-float research.",
+      "BTC: about $81.2K, nearly flat on 24h while aggregate derivatives OI falls and the prior liquidation burst fades; continuation is constructive but not yet enough for BUY.",
+      "Gold Sep.18: +1.2% to about $4,390 with a strong dollar; decomposition upgraded to include documented short-covering amplifier plus easing-oil catalyst.",
+      "JPY Sep.18: prior case unchanged; expected BOJ hike with dissent/lack of hawkish follow-through produced yen weakness, preserving expectation-adjusted policy-path rule.",
+      "Xenon Pharmaceuticals: >25% after-hours fall after voluntary pause in depression/bipolar trial enrollment on rare neurological/psychiatric adverse-event concerns; retained as an idiosyncratic fundamental/binary-equity move rather than a macro capital-flow signal.",
+      "Saudi/Yanbu weekend claims: geopolitical abnormality selected, but physical-price transmission remains UNKNOWN pending verified damage and market reopen."
+    ]
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No new immutable directional forecast clears the evidence bar; existing WAIT states are preserved."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle. The contract-aware OI normalization rule is now supported by multiple direct venue/official contract controls and is suitable for later compact-ledger promotion, but this run does not perform an unsafe whole-file ledger rewrite while concurrent main activity is ongoing. Dashboard regime and actionable states do not change enough to justify churn. No code or signal-system state changed.",
+  "next_research": [
+    "Build a venue-normalized OI schema for linear, inverse, coin-margined, quanto and options contracts; test native-unit OI + funding + basis + liquidation-side features across a larger timestamp-safe extreme-move sample and preserve null results.",
+    "Reconcile final Sep.18 IBIT/ETHA primary flow entries before upgrading BTC/ETH institutional-demand conclusions.",
+    "At the next crude market reopen, require verified logistics damage, physical differentials/freight and effective deliverable-barrel changes before altering crude WAIT.",
+    "Test post-SEC tokenization rerating against matched RWA/tokenization beneficiaries and non-beneficiaries, separating policy relevance from actual fee/revenue/token-value capture.",
+    "For gold, separate short-covering/CTA positioning from persistent ETF/official/fund demand before raising confidence on a near-term directional thesis."
+  ],
+  "sources": [
+    "https://bybit-exchange.github.io/docs/v5/market/open-interest",
+    "https://developers.binance.com/docs/derivatives/coin-margined-futures/market-data/rest-api/Get-Funding-Info",
+    "https://www.cmegroup.com/trading/bitcoin-futures.html",
+    "https://www.kraken.com/features/futures/ethena/usd",
+    "https://farside.co.uk/btc/",
+    "https://farside.co.uk/eth/",
+    "https://farside.co.uk/sol/",
+    "https://www.sec.gov/newsroom/press-releases/2026-90-sec-issues-innovation-exemption-facilitate-trading-tokenized-nms-stock-request-comment",
+    "https://www.reuters.com/business/gold-extends-gains-scale-one-week-high-crude-prices-ease-2026-09-18/",
+    "https://www.reuters.com/world/middle-east/saudi-civil-defence-sends-all-clear-after-danger-warning-capital-riyadh-2026-09-19/",
+    "https://www.reuters.com/business/healthcare-pharmaceuticals/xenon-pauses-new-enrollment-depression-bipolar-disorder-trials-over-side-effect-2026-09-17/"
+  ],
+  "paid_resource_policy": "No new paid resources authorized; free/public/primary sources and existing connected data were used.",
+  "real_money_trading": "DISABLED / NOT AUTHORIZED"
+}

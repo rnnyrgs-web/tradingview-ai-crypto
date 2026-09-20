@@ -130,7 +130,7 @@ def test_select_next_routes_phase_two_only_to_its_owner():
     assert task == next_task(state, "data-market")
     quant = select_next(state, "quant-research")
     assert quant == next_task(state, "quant-research")
-    assert quant["id"] == "COORD-MI-CAUSAL-001"
+    assert quant["id"] == "COORD-MI-CAUSAL-002"
     assert quant["issue"] == 451
 
 def test_select_next_returns_the_same_task_as_next_task_for_an_active_role():

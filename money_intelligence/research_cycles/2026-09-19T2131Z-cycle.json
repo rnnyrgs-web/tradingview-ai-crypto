@@ -1,0 +1,202 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-19T2131Z",
+  "information_cutoff": "2026-09-19T21:31:42Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-19T21:26:44Z",
+    "artifact_cutoff_utc": "2026-09-19T21:31:42Z",
+    "seconds_this_run": 298,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 1085,
+    "minimum_cumulative_seconds_since_last_owner_report": 1383,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted; schedule gaps, idle time and article timestamps are excluded."
+  },
+  "highest_information_question": "When a listed crypto-treasury wrapper rises with its underlying asset, which balance-sheet states create real incremental underlying demand and which merely create financing optionality, title transfer, leverage, senior claims or narrative beta?",
+  "daily_big_move_scan": {
+    "market_state": "Saturday; traditional cash markets closed, so the daily live scan is crypto-led while the most recent completed U.S. session supplies matched equity controls.",
+    "live_crypto_snapshot_utc": "2026-09-19T21:26:00Z to 2026-09-19T21:29:00Z",
+    "selected_abnormal_moves": [
+      "ENA approximately $0.1997, +16.9%/24h, +41.1%/7d and +76.6%/30d with roughly $887M 24h volume versus about $2.02B market capitalization; continuation remains highly idiosyncratic while BTC and ETH were slightly negative over 24h.",
+      "ZEC approximately $1,474.7, -1.0%/24h but +31.4%/7d and +156.6%/30d; privacy matched controls were materially weaker over seven days (XMR about flat, DASH about +6.1%), preserving the conclusion that the ZEC move is not explainable by broad privacy beta alone.",
+      "The highest-information completed-session move is SOL and its listed treasury wrappers on Sep. 18: SOL rose roughly 10.8%, DFDV +21.2%, FWDI +24.2%, UPXI +12.8% and STKE +9.1%, while the S&P 500 was only about +0.2% and Nasdaq about +0.4%."
+    ]
+  },
+  "fresh_validated_observations": [
+    {
+      "topic": "SOL-treasury equities formed a high-beta matched cluster on Sep. 18 rather than a DFDV-specific CHAD reaction",
+      "label": "BIG-MOVE CAUSAL LAB / MATCHED-CONTROL",
+      "observed_facts": [
+        "SOL rose about 10.8% on Sep. 18, from roughly $101.6 to about $112.7 in public historical data.",
+        "On the same completed U.S. session DFDV closed +21.2%, Forward Industries (FWDI) +24.2%, Upexi (UPXI) +12.8% and Sol Strategies (STKE) +9.1%.",
+        "Broad U.S. indices were nearly flat by comparison: S&P 500 about +0.2% and Nasdaq about +0.4%.",
+        "DFDV traded roughly 9.0M shares on Sep. 18 versus about 1.2M average volume in the current quote snapshot, and FWDI traded about 6.6M shares versus about 1.7M average, consistent with unusual wrapper attention/turnover rather than passive broad-market beta alone.",
+        "Farside's finalized Solana ETP table shows +$47.6M on Sep. 18, all attributed to BSOL, versus a long-run daily total-flow average of roughly $6.3M on that table. Sep. 14-18 summed to about +$60.7M. Under the existing MI-L-20260919-011 timing rule, finalized flow confirms regulated-product demand but is not automatically a public pre-move predictor or proof of same-session exchange buying."
+      ],
+      "inference": "The Sep. 18 equity move is better explained first as a SOL-treasury-wrapper factor with heterogeneous beta/premium repricing than as a company-specific reaction to DFDV's recently announced CHAD financing program. DFDV and FWDI amplified SOL by roughly 2x on the day, while UPXI and STKE were closer to underlying beta, showing that wrapper leverage/premium, capital structure, liquidity and financing optionality matter cross-sectionally.",
+      "alternative_explanations": [
+        "Crypto-regulatory enthusiasm and the broader BTC breakout lifted the whole crypto-equity complex.",
+        "Short covering or thin-float effects may have amplified individual wrapper equities; direct short-position evidence was not obtained in this cycle.",
+        "Company-specific announcements may contribute to cross-sectional differences, but peer co-movement rejects a purely DFDV-specific explanation."
+      ],
+      "matched_controls": [
+        "Broad equity indices moved only a fraction as much.",
+        "Multiple independent SOL-treasury wrappers rose together, weakening a single-company-news story.",
+        "STKE rose roughly in line with SOL while DFDV/FWDI substantially outperformed it, showing the wrapper multiplier is not constant."
+      ],
+      "pre_move_predictor_candidates": [
+        "Underlying SOL spot/ETF demand and price momentum",
+        "Wrapper premium/discount to fully diluted and liability-adjusted treasury value",
+        "Realized financing proceeds versus merely registered capacity",
+        "Financing instrument seniority/cash cost",
+        "Actual use-of-proceeds and acquisition window",
+        "Share/float liquidity and turnover",
+        "Short interest/borrow/options where available"
+      ],
+      "status": "SUPPORTED EVENT INTERPRETATION; cross-wrapper predictive return value remains untested."
+    },
+    {
+      "topic": "DFDV CHAD demonstrates that SOL-per-common-share accretion can coexist with expensive senior financing",
+      "label": "PRIMARY-SOURCE CAPITAL-STRUCTURE / METHOD RULE CANDIDATE",
+      "observed_facts": [
+        "DFDV's initial CHAD preferred offering settled Sep. 8: 1.375M preferred shares at $8 each, about $11.0M gross and approximately $10.3M net proceeds.",
+        "The CHAD stated amount and initial liquidation preference are $10/share; the initial annual dividend is 13% of stated amount, or $1.30/share/year. Relative to the $8 offer price the issuer described the initial effective yield as about 16.25%.",
+        "Using the SEC-disclosed 1.375M initial shares, annual stated dividends equal approximately $1.7875M, about 17.35% of the disclosed $10.3M net proceeds before considering future rate changes, issuance expenses already paid, or redemption economics.",
+        "CHAD ranks senior to common equity for dividends and liquidation distributions. The company also established a first-12-month dividend reserve of $1.30 per CHAD share from existing cash/cash equivalents, financial instruments and/or digital assets.",
+        "DFDV says substantially all net proceeds are intended for SOL and calls the transaction SOL-per-share accretive because CHAD is non-convertible and does not increase common share count.",
+        "DFDV's own filings describe historical staking/validator yield around 7%-8%, including about 7.5% in its Q1 2026 shareholder letter and 8.3% preliminary annualized organic yield for Q4 2025. Those historical yields are materially below CHAD's initial effective financing yield; current future staking yield is not guaranteed.",
+        "On Sep. 14 DFDV established up to $300M of CHAD ATM capacity, but its own release explicitly states that establishing the program does not represent an immediate capital raise and the company is not obligated to sell shares."
+      ],
+      "inference": "A treasury company can increase crypto units per current common share while simultaneously adding a high-cost senior cash claim. Therefore crypto-per-share is not equivalent to economic-value-per-share. A financing engine should be evaluated on liability-adjusted asset value, cash carry, seniority, duration/redemption terms and realized financing price, not only units of token per common share.",
+      "candidate_method_rule": "For treasury wrappers, compute at least (1) realized net financing proceeds, (2) actual asset acquired, (3) liquid/locked asset value, (4) annual cash carry and variable-rate/reset risk, (5) liquidation/redemption seniority, (6) fully diluted common claims, and (7) liability-adjusted treasury value per diluted common share. Treat 'token per share accretion' as an operating metric, not sufficient proof of economic accretion.",
+      "falsification": "Weaken this rule if matched financing episodes show that token-per-share accretion alone robustly predicts superior liability-adjusted common returns after financing cost and NAV premium/discount are controlled."
+    },
+    {
+      "topic": "Upexi provides a clean in-kind treasury-acquisition control: holdings can rise without contemporaneous public-market SOL buying",
+      "label": "PRIMARY-SOURCE FLOW-MECHANISM CONTROL",
+      "observed_facts": [
+        "Upexi's January 2026 financing issued an approximately $36M secured convertible note in exchange for the transfer/contribution of 265,500 locked SOL.",
+        "The SEC prospectus states the investor transferred beneficial and economic ownership of the locked SOL to Upexi; because the assets were locked/staked, the transfer did not require an immediate on-chain transfer, validator exit or unstaking.",
+        "The note bears 1% cash interest and can ultimately convert into common equity or, if not converted, be repaid with a pro-rata return of the corresponding SOL under the disclosed terms.",
+        "Upexi separately discloses that locked SOL has lower liquidity than liquid treasury SOL and has used a discount to spot in financial reporting/valuation contexts."
+      ],
+      "inference": "Treasury holdings growth caused by an in-kind asset-for-security exchange is a title/claim transfer, not evidence that the wrapper created a same-time marginal spot bid. Any original spot demand occurred when the contributor acquired the SOL, potentially long before the corporate financing event.",
+      "practical_implication": "Classify treasury growth by acquisition mode before assigning price impact: cash-funded buy, in-kind transfer, locked/discounted block, staking/organic yield, legal/ATM capacity, or asset sale for corporate obligations."
+    },
+    {
+      "topic": "Cross-wrapper financing taxonomy now has primary-source controls across BTC, ETH, SOL and ENA",
+      "label": "SUPPORTED METHOD-RULE CANDIDATE / NOT YET A RETURN FORECAST",
+      "observed_facts": [
+        "Strategy filings provide positive cash-financing-to-BTC-purchase examples and reverse BTC-sale-to-cash-obligation examples.",
+        "Sharplink filings provide equity-financing-to-ETH-acquisition examples.",
+        "DFDV provides both a closed preferred financing intended for SOL acquisition and a separate $300M ATM capacity that explicitly is not an immediate capital raise.",
+        "Upexi provides an in-kind locked-SOL contribution in exchange for a convertible security, where holdings rose without an immediate on-chain/spot purchase requirement.",
+        "StablecoinX provides a legal-unlock/monetizability example where Foundation approval and Funding Sale mechanics still separate legal capacity from actual public-market ENA flow."
+      ],
+      "inference": "The robust causal bridge is not 'treasury company announcement -> crypto demand'. It is financing or cash need -> realized proceeds/assets or obligation -> contractual/board allocation decision -> actual acquisition/disposition mode -> venue/counterparty -> marginal public-market flow. Registered capacity, legal permission and treasury size are state variables, not realized flow themselves.",
+      "proposed_canonical_rule": "Track FINANCING_EVENT, FINANCING_MODE, REALIZED_NET_CASH_OR_IN_KIND_ASSET, SENIORITY_AND_CASH_COST, DECLARED_USE_OF_PROCEEDS, ACTUAL_ASSET_ACQUISITION_OR_DISPOSITION, EXECUTION_WINDOW, LIQUID_VS_LOCKED_STATUS, OBLIGATION_CASH_NEED, and LIABILITY_ADJUSTED_ASSET_PER_DILUTED_COMMON_SHARE separately.",
+      "predictive_status": "Mechanism is supported across multiple primary-source controls; timestamp-safe predictive value for underlying/wrapper returns remains UNKNOWN and must be tested before promotion to a trading forecast."
+    },
+    {
+      "topic": "Weekend Middle-East escalation still lacks a verified incremental deliverable-barrel loss",
+      "label": "FRESH EVENT / FAIL-CLOSED",
+      "observed_facts": [
+        "Reuters reported Houthi claims of missile/drone attacks on Riyadh and an Aramco facility at Yanbu on Sep. 19, while a Saudi-led coalition said several attacks were intercepted/thwarted.",
+        "Reuters observed flames and smoke near Riyadh airport but the exact cause was unclear in contemporaneous reporting.",
+        "Prior Reuters reporting says Aramco planned roughly 60M barrels of Sep-Oct exports using Ras Tanura and ship-to-ship transfers near Sohar to offset Yanbu disruption, while some European October cargoes remained cancelled.",
+        "Benchmark crude markets were closed during the new weekend claims, so there is no open-market confirmation yet of a new physical-supply state."
+      ],
+      "inference": "The event raises tail risk but does not yet change the crude WAIT thesis. The relevant state variable remains net effective deliverable supply after damage, interception, substitution and inventories rather than attack claims alone."
+    }
+  ],
+  "causal_chain": {
+    "world_to_price": "crypto/regulatory demand and underlying SOL repricing -> SOL ETP/spot demand and treasury NAV rises -> listed SOL-treasury wrappers reprice at heterogeneous beta/premium -> higher wrapper prices can improve future financing economics -> if financing is actually executed and allocated to SOL, incremental underlying demand may follow -> higher SOL can further raise treasury NAV, creating a reflexive loop; however unused ATM capacity, in-kind asset transfers and high-cost senior financing can break or reverse the simple loop.",
+    "source_to_price": "investor cash or contributed crypto -> common/preferred/debt/in-kind treasury financing -> realized cash or transferred token -> board/contractual allocation -> OTC/spot/locked-block acquisition or no new market trade -> marginal counterparty -> price impact -> treasury mark-to-market -> wrapper premium/discount and future financing capacity.",
+    "catalyst_vs_mechanism_vs_amplifier": {
+      "catalysts": ["Sep. 18 SOL breakout", "large finalized BSOL creation-flow day", "recent treasury-company financing announcements"],
+      "transmission_mechanism": "Underlying SOL repricing changes wrapper treasury value; realized financing can later transmit wrapper capital into SOL only when proceeds/assets are actually obtained and allocated.",
+      "amplifiers": ["small-cap wrapper liquidity", "premium/discount reflexivity", "high turnover", "preferred/debt leverage and seniority", "short covering where present", "crypto narrative attention"]
+    }
+  },
+  "matched_controls_and_negative_findings": [
+    "Do not attribute DFDV's Sep. 18 +21.2% move mainly to CHAD without accounting for a simultaneous +10.8% SOL move and large gains across other SOL-treasury equities.",
+    "Do not treat DFDV's $300M CHAD ATM as $300M of new SOL demand; the issuer explicitly states the program is not an immediate capital raise and may never be fully used.",
+    "Do not treat a rise in treasury token holdings as proof of contemporaneous spot buying; Upexi's locked-SOL contribution is a direct in-kind counterexample.",
+    "Do not treat token-per-common-share accretion as sufficient evidence of common-equity economic accretion when high-cost senior preferred/debt claims are added.",
+    "Do not use finalized Sep. 18 SOL ETF flow as a public pre-move predictor; its economic demand information must be aligned with AP order/execution/publication timing under MI-L-20260919-011.",
+    "Do not infer a new crude supply loss from Sep. 19 attack claims before verified physical damage and reopened-market/physical-price confirmation."
+  ],
+  "decision_support": [
+    {
+      "asset": "SOL",
+      "action": "WAIT / confirmation candidate rather than chase",
+      "horizon": "days to weeks",
+      "confidence": "MODERATE that fresh regulated demand is real; LOW-MODERATE on immediate direction after a roughly 11% completed-session jump",
+      "plausible_range": "Not frozen; current volatility is too high for a narrow defensible range in this research-only cycle.",
+      "why": "A large finalized BSOL inflow and broad treasury-wrapper participation confirm real demand interest, but publication/execution timing prevents treating the flow as a pre-move signal and the sharp move raises short-term chase risk.",
+      "confirmation_for_upgrade": "Additional broad ETP/spot demand with controlled leverage, sustained SOL relative strength and no rapid reversal below the breakout zone.",
+      "invalidation": "Regulated demand reverses, price falls back through the breakout while leverage remains elevated, or treasury-wrapper premia collapse despite stable SOL."
+    },
+    {
+      "asset": "SOL treasury wrappers as a group",
+      "action": "WAIT / STRUCTURE-SPECIFIC",
+      "horizon": "days to months",
+      "confidence": "HIGH that balance-sheet structure must be modeled; LOW on a blanket directional trade",
+      "plausible_range": "No common range; wrapper beta is demonstrably heterogeneous.",
+      "why": "Same-day moves ranged from roughly underlying beta to about 2x SOL. Realized financing mode, premium/discount, liquidity, senior claims and cash obligations can dominate simple token-per-share narratives.",
+      "confirmation_for_individual_buy": "Liability-adjusted NAV discount or justified premium, favorable realized financing economics, explicit executed use-of-proceeds, durable underlying demand and adequate liquidity/capacity.",
+      "invalidation": "High-cost senior financing, dilution or cash obligations erode common residual value faster than token holdings grow."
+    },
+    {
+      "asset": "ENA",
+      "action": "WAIT / AVOID CHASING",
+      "horizon": "days to weeks",
+      "confidence": "MODERATE-HIGH that evidence still does not clear BUY",
+      "plausible_range": "Not frozen because realized volatility and uncertain spot/perp composition remain extreme.",
+      "why": "The move remains strongly idiosyncratic and persistent, but direct venue evidence is still insufficient to prove spot-led accumulation and the StablecoinX legal unlock creates latent, not realized, supply optionality.",
+      "confirmation_for_upgrade": "Direct spot-led continuation with controlled funding/OI, durable USDe growth and no disorderly Funding Sale/unlock distribution.",
+      "risk_confirmation": "Perp leverage expands into weakening spot absorption or disclosed external treasury/unlock supply arrives."
+    }
+  ],
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "status": "No new immutable directional forecast clears the evidence/calibration bar; this cycle strengthens causal accounting and a cross-wrapper matched-control pattern rather than a trade forecast."
+  },
+  "canonical_update_decision": "Persist this append-only cycle now. The cross-wrapper financing-mode rule is materially stronger and supported across BTC, ETH, SOL and ENA primary-source cases, but do not churn dashboard_state or big_move_lab in this short run. Promote the method rule into the learning ledger only after a clean append can be made without risking accidental overwrite and after at least one timestamp-safe predictive/control test checks whether the financing states add decision value beyond underlying beta and wrapper premium/discount.",
+  "next_research": [
+    "Build a timestamp-safe panel of crypto-treasury financing events: announced capacity, executed financing, net proceeds/in-kind assets, instrument cost/seniority, actual token acquisition/disposition window, wrapper premium/discount and 1d/5d/20d underlying/wrapper returns.",
+    "For Sep. 18 SOL, separate spot, ETP, perpetual/open-interest, liquidation and on-chain activity using direct venue/primary sources where possible; distinguish confirmed demand from post-hoc explanation.",
+    "Measure whether treasury-wrapper equity beta to the underlying is systematically related to premium-to-liability-adjusted NAV, float/liquidity and financing optionality.",
+    "For CHAD, track actual ATM sales, realized issue price, variable dividend rate, cash dividend burden and whether resulting SOL acquisitions exceed the liability-adjusted financing hurdle for common equity.",
+    "Continue the ENA/StablecoinX warrant and Funding Sale monitor and reconcile direct venue ENA leverage before changing WAIT.",
+    "At crude reopen, verify physical deliverability, differentials/backwardation and any confirmed Saudi infrastructure damage before changing the oil thesis."
+  ],
+  "sources": [
+    "https://www.sec.gov/Archives/edgar/data/1805526/000180552626000098/dfdv-20260903.htm",
+    "https://www.sec.gov/Archives/edgar/data/1805526/000180552626000098/dfdv-exx992_9826.htm",
+    "https://www.sec.gov/Archives/edgar/data/1805526/000180552626000107/dfdv-20260914.htm",
+    "https://www.sec.gov/Archives/edgar/data/1805526/000180552626000107/dfdv-exx991_91426.htm",
+    "https://www.sec.gov/Archives/edgar/data/1805526/000121390026100373/ea0305671-8k_defi.htm",
+    "https://www.sec.gov/Archives/edgar/data/1805526/000180552626000031/dfdvq12026shareholderlet.htm",
+    "https://www.sec.gov/Archives/edgar/data/1775194/000147793226000640/upxi_424b7.htm",
+    "https://www.sec.gov/Archives/edgar/data/1775194/000147793226005668/upxi_10k.htm",
+    "https://farside.co.uk/sol/",
+    "https://finance.yahoo.com/quote/DFDV/",
+    "https://finance.yahoo.com/quote/FWDI/",
+    "https://stockanalysis.com/stocks/upxi/history/",
+    "https://stockanalysis.com/stocks/stke/history/",
+    "https://www.reuters.com/business/nasdaq-futures-lead-wall-st-gains-oil-retreat-eases-inflation-worries-2026-09-18/"
+  ]
+}
