@@ -37,14 +37,33 @@ def test_lead_reconciliation_closes_stale_data_task_and_routes_safe_followup():
     assert tasks["COORD-DISC-QUANT-004"]["completion_evidence"]["decision"] == "REJECTED_PRE_OOS"
     assert tasks["COORD-DISC-QUANT-004"]["completion_evidence"]["untouched_oos_opened"] is False
 
-    phase_two = tasks["COORD-MI-CAUSAL-001"]
-    assert phase_two["status"] == "READY"
-    assert phase_two["owner"] == "quant-research"
-    assert phase_two["issue"] == 451
-    assert phase_two["pr"] is None
-    assert phase_two["blockers"] == []
-    requirements = " ".join(phase_two["evidence_required"]).lower()
-    assert "contradiction memory" in requirements
-    assert "staleness/decay" in requirements
-    assert "missing/non-comparable denominators remain unknown" in requirements
-    assert "no broker/trade/promotion authority" in requirements
+    primitive = tasks["COORD-MI-CAUSAL-001"]
+    assert primitive["status"] == "DONE"
+    assert primitive["owner"] == "quant-research"
+    assert primitive["issue"] == 451
+    assert primitive["pr"] == 454
+    assert primitive["blockers"] == []
+    evidence = primitive["completion_evidence"]
+    assert evidence["status"] == "PERSISTENT_CAUSAL_MEMORY_PRIMITIVE_INTEGRATED"
+    assert evidence["exact_head_sha"] == "8da3ff1d212d28cfd9f04521c7ab7b5ec5a4d8e3"
+    assert evidence["merge_sha"] == "dbc5e80c5c664863df645689dcd6df418db8194f"
+    assert evidence["exact_head_security_and_reliability_run"] == 35465434613
+    assert evidence["post_merge_security_and_reliability_run"] == 35467932500
+    assert evidence["phase_2_complete"] is False
+    assert evidence["broker_or_live_authority"] is False
+    assert primitive["next_task"] == "COORD-MI-CAUSAL-002"
+
+    runtime = tasks["COORD-MI-CAUSAL-002"]
+    assert runtime["status"] == "READY"
+    assert runtime["owner"] == "quant-research"
+    assert runtime["issue"] == 451
+    assert runtime["pr"] is None
+    assert runtime["blockers"] == []
+    assert runtime["dependencies"] == ["COORD-MI-CAUSAL-001"]
+    requirements = " ".join(runtime["evidence_required"]).lower()
+    assert "actual autonomous money intelligence runtime" in requirements
+    assert "big-move and strategy-component mission generation/ranking" in requirements
+    assert "unsupported narrative-only claims cannot affect" in requirements
+    assert "rejected exact strategy fingerprints remain ineligible" in requirements
+    assert "no oos/forward opening, broker/trade/promotion authority" in requirements
+    assert "exact-deployed-sha runtime acceptance" in requirements

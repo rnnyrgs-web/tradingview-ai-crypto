@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-19T2344Z",
+  "information_cutoff": "2026-09-19T23:44:57Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_at_persist_check": "870ce1cb680d757963b19d9dfc858f25eabf7eb2",
+  "context_integrity": {
+    "read_current_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles_before_conclusions": true,
+    "concurrent_main_change_checked": true,
+    "concurrent_change_touched_money_intelligence_state": false,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-19T23:36:41Z",
+    "artifact_cutoff_utc": "2026-09-19T23:44:57Z",
+    "seconds_this_run": 496,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 2539,
+    "minimum_cumulative_seconds_since_last_owner_report": 3035,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted; schedule gaps, idle time and article timestamps are excluded."
+  },
+  "highest_information_question": "When a crypto asset makes an abnormal move, how much of an apparent USD open-interest surge is true position-unit growth versus mechanical mark-to-market from the price move itself, and does correcting that decomposition improve causal leverage attribution?",
+  "fresh_validated_observations": [
+    {
+      "topic": "Raw USD open interest materially overstates ENA leverage expansion during the current price surge",
+      "label": "BIG-MOVE CAUSAL LAB / METHOD CORRECTION / SUPPORTED PROVISIONAL",
+      "observed_facts": [
+        "Coinranking reported ENA futures near $0.2028 (+21.25%) with aggregate open interest $403.63M (+34.53%) and average funding about +0.01%.",
+        "Coinranking completed daily history reports Sep.18 ENA close $0.168 with $301.17M OI, Sep.17 $0.155 with $275.89M OI, and Sep.16 $0.149 with $269.5M OI.",
+        "Coinranking defines openInterest as value of open contracts in the reference currency, so its USD OI incorporates mark-price changes as well as position-quantity changes.",
+        "A rough base-asset-equivalent normalization (USD OI / price) gives about 1.79B ENA-equivalent on Sep.18 versus about 1.99B at the current snapshot using Coinranking's own current price, approximately +11%, far below the reported +34.5% USD-OI change.",
+        "From Sep.16 to the current snapshot, raw USD OI rose about 50% while price rose about 36%; the same normalization implies only roughly 9-10% growth in underlying-equivalent exposure units.",
+        "Kraken ENA futures pages expose both ENA-unit OI and USD-valued OI separately. Bybit official docs state that linear-contract OI is returned in base-coin units while inverse OI uses USD units; Binance docs also separate contract count/base-asset value fields for OI statistics."
+      ],
+      "inference": "ENA has genuine asset-specific derivatives participation and positive funding, but the prior description of leverage as rising sharply based on raw dollar OI was overstated. A large part of apparent dollar-OI growth is mechanical repricing of existing contracts. The better interpretation is meaningful but moderate unit-exposure growth plus positive-funding crowding, not a 35-50% explosion in position quantity.",
+      "correction_to_prior_interpretation": "Preserve the prior cycle unchanged, but explicitly downgrade the strength of its raw-USD-OI leverage claim. Do not rewrite history.",
+      "matched_controls": [
+        "A 20-observation ENA exploratory daily window (Aug.30-Sep.18) showed raw USD-OI daily changes correlated about 0.91 with same-day price returns, while rough unit-normalized OI change correlation was about 0.51; neither raw nor normalized OI change had a useful positive next-day return correlation in this tiny sample.",
+        "A parallel ZEC Sep.1-18 extreme-move sample showed the same pattern: raw USD-OI daily changes correlated about 0.89 with same-day price returns versus about 0.63 for unit-normalized OI, and neither showed useful positive next-day return association in the small sample.",
+        "Live CoinMarketCap global derivatives data showed total crypto OI about $435.39B, down 3.66%/24h, while ENA continued its idiosyncratic rally. This preserves evidence of ENA-specific positioning even after downgrading the magnitude of leverage growth."
+      ],
+      "negative_findings": [
+        "Do not use a raw USD-OI percentage increase as proof that the same percentage of new leverage or contracts entered.",
+        "Do not infer directional long exposure from OI alone; funding, basis, liquidation/side information and spot/perp aggressive flow remain necessary.",
+        "Do not treat the small ENA/ZEC exploratory correlations as calibrated predictive estimates."
+      ],
+      "candidate_method_rule": "For derivatives causal work, store OI native units/contract count, contract type, mark/index price and USD notional separately. Decompose change in log USD OI into approximately change in log position units plus change in log price when contract structure permits. Prefer venue-native unit OI; if only aggregate USD OI is available, price-normalize before using it as evidence of leverage buildup and preserve the approximation caveat.",
+      "decision_support": "ENA remains WAIT / AVOID CHASING. This correction weakens a leverage-explosion story but does not create a BUY because the move remains highly idiosyncratic, funding is positive, fee-switch buybacks are not yet active and future unlock/treasury supply remains uncertain."
+    },
+    {
+      "topic": "ENA fee-switch demand is still not active despite the price acceleration",
+      "label": "PRIMARY-SOURCE NEGATIVE FINDING / NO THESIS PROMOTION",
+      "observed_facts": [
+        "Ethena governance specifies the first buyback rung at a $7.5B 14-day trailing average of USDe supply, with a 5% take at that rung.",
+        "Current CoinMarketCap USDe supply/market capitalization is about $4.84B, far below the $7.5B trigger.",
+        "The governance backtest itself characterizes the program as revenue sharing and estimates only a fraction of scheduled gross ENA unlocks would be offset while active."
+      ],
+      "inference": "The current ENA rally cannot truthfully be attributed to already-operating fee-switch buybacks. Product/ecosystem growth may be a forward narrative, but realized mechanical buyback demand remains absent.",
+      "decision_support": "ENA WAIT / AVOID CHASING unchanged."
+    },
+    {
+      "topic": "BTC continuation is healthier than a squeeze-only move but still lacks durable regulated-flow confirmation",
+      "label": "LIVE CONTEXT / WAIT",
+      "observed_facts": [
+        "Live CoinMarketCap: BTC about $81.34K, +0.51%/24h and +5.32%/7d; ETH about $2.635K, +0.98%/24h; SOL about $111.06, -1.65%/24h.",
+        "CoinMarketCap derivatives: total crypto OI about $435.39B, -3.66%/24h; BTC 24h liquidations about $44.2M, down 83.5% versus the prior 24h window, so the original forced-short-cover impulse has faded.",
+        "Farside's current primary BTC table still lacked the Sep.18 IBIT line at the research cutoff; secondary aggregations report a larger complete total. Treat Friday's exact final total as provisional until the primary table finalizes."
+      ],
+      "inference": "BTC holding near $81K after the liquidation impulse faded is more constructive than a squeeze-only explanation, but one late-week regulated-demand rebound is not enough to establish a durable institutional accumulation regime.",
+      "decision_support": "BTC remains WAIT / tactical momentum confirmation candidate, not BUY."
+    },
+    {
+      "topic": "Saudi weekend escalation still lacks verified incremental Yanbu barrel loss",
+      "label": "GEOPOLITICAL FACT / PHYSICAL TRANSMISSION UNKNOWN",
+      "observed_facts": [
+        "Reuters reports Houthi claims of attacks on Riyadh and an Aramco facility at Yanbu; the Saudi-led coalition says attempted attacks including Yanbu were thwarted.",
+        "Reuters observed flames/smoke near Riyadh airport but reported the cause was unclear.",
+        "No verified new Yanbu export-capacity damage from the Sep.19 claim was available at the cutoff, and benchmark crude markets were closed."
+      ],
+      "inference": "Geopolitical tail risk rose, but there is no new defensible effective-deliverable-barrel loss to feed into the oil scarcity model yet.",
+      "decision_support": "Crude remains WAIT / high event risk."
+    },
+    {
+      "topic": "Headline equity-fund flow direction is currently vendor/methodology sensitive",
+      "label": "CANDIDATE METHOD RULE / CONFLICT PRESERVED",
+      "observed_facts": [
+        "Reuters citing LSEG Lipper reported $31.44B of U.S. equity-fund net redemptions for its latest weekly measure, while sector funds including technology, financials and consumer discretionary received inflows.",
+        "Reuters citing BofA's EPFR-based Flow Show reported $63.8B entering U.S. stocks and $79.3B entering stocks globally over its week-to-Wednesday measure.",
+        "EPFR product documentation says flows are net contributions/redemptions across globally domiciled active/passive funds and can be sliced by ETF versus mutual fund, retail/institutional, domicile and other dimensions.",
+        "LSEG Lipper documentation/historical reports show same-period ETF and conventional mutual-fund flows can carry opposite signs and that its standard weekly fund-flow period is prior Thursday through Wednesday."
+      ],
+      "inference": "Do not promote a broad 'money entered/left equities' state from one vendor headline when universes/windows/product mixes are not harmonized. The robust overlap is narrower: corporate credit has shown outflow pressure and equity allocation is selective rather than uniformly broad.",
+      "status": "candidate only; exact current-week universe/product reconciliation remains incomplete."
+    }
+  ],
+  "daily_big_move_scan": {
+    "market_context": "Saturday. Traditional cash equity, sovereign-bond, FX and benchmark commodity markets are closed; live scan therefore emphasizes crypto and validates weekend geopolitical transmission without fabricating closed-market price responses.",
+    "selected_or_retested": [
+      "ENA: live about $0.2056, +22.4%/24h and +44.5%/7d; raw USD OI growth decomposed and materially downgraded after price normalization.",
+      "ZEC: live about $1,472, -6.2%/24h but +31.2%/7d; used as a second extreme-move control showing raw USD OI is also heavily contemporaneously price-linked.",
+      "BTC: about $81.3K while liquidation impulse fades and broad OI contracts; continuation remains constructive but unconfirmed by multiple finalized ETF sessions.",
+      "Saudi/Yanbu: fresh claims retained as UNKNOWN physical transmission until verified damage and reopened crude pricing."
+    ]
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "status": "No new immutable directional forecast clears the evidence bar. Existing WAIT states preserved; no prior forecast rewritten."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. Do not churn dashboard_state, learning_ledger or big_move_lab in this run. The OI decomposition rule is materially useful and corrects a prior overstatement, but promotion to the compact learning ledger should follow one more direct-venue/cross-contract validation to avoid codifying an aggregate approximation as a universal formula. No code or signal-system state changed.",
+  "next_research": [
+    "Validate the OI decomposition rule on direct venue-native linear and inverse contracts and formalize how contract multipliers, quanto/inverse exposure and exchange aggregation alter the simple USD-OI/price normalization.",
+    "Test whether unit-normalized OI, funding and basis jointly have better point-in-time predictive value than raw USD OI across a larger sample of extreme crypto moves; preserve null results.",
+    "Reconcile the final Sep.18 IBIT/ETHA ETF entries from primary sources before promoting the late-week institutional-flow rebound.",
+    "At crude reopen, check futures, physical differentials, freight and confirmed Yanbu/logistics capacity before changing the oil WAIT state.",
+    "Reconcile current Lipper versus EPFR equity-flow universe/product/window definitions before using either broad headline as a directional capital-flow state."
+  ],
+  "sources": [
+    "https://coinranking.com/coin/hscG8ouPP+ethena-ena/futures",
+    "https://coinranking.com/coin/aRGRWLf2RYNq4+zcash-zec/futures",
+    "https://coinranking.com/api/features/futures-api",
+    "https://developers.binance.com/docs/derivatives/coin-margined-futures/market-data/rest-api/Get-Funding-Info",
+    "https://bybit-exchange.github.io/docs/v5/market/open-interest",
+    "https://www.kraken.com/features/futures/ethena/usd",
+    "https://gov.ethenafoundation.com/t/ena-fee-switch-activation/830",
+    "https://coinmarketcap.com/currencies/ethena-usde/",
+    "https://www.reuters.com/world/middle-east/saudi-civil-defence-sends-all-clear-after-danger-warning-capital-riyadh-2026-09-19/",
+    "https://www.reuters.com/business/us-equity-funds-post-fourth-weekly-outflow-inflation-worries-rate-concerns-2026-09-18/",
+    "https://www.reuters.com/world/china/investors-buy-us-stocks-fastest-pace-three-months-bofa-says-2026-09-18/",
+    "https://epfr.com/wp-content/uploads/2023/09/EFPR-Product-Overview.pdf"
+  ]
+}

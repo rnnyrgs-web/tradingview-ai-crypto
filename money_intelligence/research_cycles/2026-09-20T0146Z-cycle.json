@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T0146Z",
+  "information_cutoff": "2026-09-20T01:46:06Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_before_persist": "70ac8e0007ef81ad53607a5d5b0eb319f211cff9",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-20T01:42:38Z",
+    "artifact_cutoff_utc": "2026-09-20T01:46:06Z",
+    "seconds_this_run": 208,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 3231,
+    "minimum_cumulative_seconds_since_last_owner_report": 3439,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted; schedule gaps, idle time and article timestamps are excluded."
+  },
+  "highest_information_question": "Can BTC preserve the post-squeeze price level while leverage quantity and forced-flow intensity normalize, and can ENA's extreme move be traced to realized token-value capture rather than narrative/supply-expectation repricing?",
+  "fresh_validated_observations": [
+    {
+      "topic": "BTC is absorbing additional derivatives deleveraging without retracing the Sep.18 breakout, but institutional-flow confirmation cannot advance over the weekend",
+      "label": "LIVE CAUSAL CONTROL / CONSTRUCTIVE BUT WAIT",
+      "observed_facts": [
+        "CoinMarketCap at 01:44 UTC showed BTC near $81,079, approximately flat over 24h and +4.9% over 7d.",
+        "CoinMarketCap global derivatives data showed aggregate crypto open interest roughly $421.6B-$428.1B depending endpoint/timestamp, down about 5%-8% over 24h, while BTC 24h liquidations were about $27.1M and down about 90% versus the preceding 24h window.",
+        "The large Sep.18 forced-short liquidation impulse has therefore faded while BTC continues to hold near $81K.",
+        "Funding remains positive and elevated versus the prior week; CoinMarketCap endpoints disagree on the exact day-over-day funding-rate change because of aggregation/timestamp differences, so no claim of clean funding normalization is made.",
+        "U.S. spot ETF markets are closed for the weekend, so there is no new regulated-flow session with which to validate the marginal buyer."
+      ],
+      "inference": "Price stability while aggregate leverage falls is healthier than a squeeze-only continuation and is consistent with voluntary absorption replacing some forced buying. However the source of that absorption is not identified, and weekend liquidity plus the closed ETF channel make a BUY upgrade premature.",
+      "negative_findings": [
+        "Do not interpret falling aggregate OI alone as spot accumulation; position closures can occur on both sides and endpoint units remain heterogeneous.",
+        "Do not treat weekend price resilience as institutional ETF confirmation when the ETF creation/redemption channel is closed."
+      ],
+      "decision_support": "BTC remains WAIT / tactical confirmation candidate. Upgrade requires completed broad ETF inflows after U.S. markets reopen plus continued price strength without renewed leverage expansion."
+    },
+    {
+      "topic": "ENA's +22% daily move is not being funded by an active fee-switch buyback; the strongest fundamental catalysts are expectation/supply-structure changes rather than realized token purchases",
+      "label": "DAILY BIG-MOVE CAUSAL LAB / NEGATIVE CAUSAL FINDING",
+      "observed_facts": [
+        "CoinMarketCap at 01:44 UTC showed ENA near $0.2081, +21.99%/24h, +47.41%/7d and +73.05%/30d, with roughly $947.6M of 24h volume against about $2.10B market capitalization (turnover about 45%). BTC was approximately flat and SOL down about 2.7% over the same 24h snapshot, confirming a strongly idiosyncratic move.",
+        "Ethena governance's Aug.27 fee-switch proposal, confirmed passed on Sep.8, specifies that buybacks begin only when the first USDe circulating-supply milestone is reached; the first rung is $7.5B.",
+        "Current public USDe supply snapshots are about $4.8B, materially below the $7.5B activation threshold. The fee-switch framework is therefore not presently generating programmatic ENA buy demand.",
+        "The Sep.14 StablecoinX waiver, filed with the SEC and effective Oct.5, releases contractual lock-up/vesting restrictions on its ENA, but dispositions remain subject to Ethena Foundation consent and funding sales require at least five business days' prior notice plus a Foundation purchase option. The legal unlock is therefore not identical to immediate freely marketable supply.",
+        "Ethena Foundation previously bought out locked allocations from early investors that had been selling and moved remaining original-investor vesting toward an early conclusion, reducing the recurring monthly-overhang narrative but not burning the tokens."
+      ],
+      "inference": "The current ENA rally cannot truthfully be attributed to realized fee-switch buybacks. The more defensible causal set is repricing of future value-capture optionality, reduced recurring seed-investor selling expectations, ecosystem/USDe growth and high-beta speculative rotation, with momentum/reflexivity amplifying the move. Because the key governance changes were known before the latest 24h spike, a fresh timestamp-defensible catalyst for the final acceleration remains UNKNOWN.",
+      "matched_controls": [
+        "BTC was roughly flat and SOL negative in the same 24h snapshot while ENA gained about 22%, ruling out broad crypto beta as a sufficient explanation.",
+        "USDe supply is growing but remains far below the fee-switch activation rung, separating protocol-growth expectations from actual token buyback flow.",
+        "StablecoinX's Oct.5 legal unlock retains sale constraints, so headline unlocked-token quantity is not equivalent to executable sell supply."
+      ],
+      "negative_findings": [
+        "Do not label the move 'buyback driven' while the on-chain/economic activation condition is unmet.",
+        "Do not label the full StablecoinX holding as an Oct.5 market sell wall; consent, notice, Foundation purchase rights and other legal restrictions constrain realizable supply.",
+        "No timestamp-safe fresh catalyst discovered in this cycle explains the final +22% daily acceleration by itself."
+      ],
+      "decision_support": "ENA remains WAIT / AVOID CHASING. A future BUY case would require actual fee-switch activation/value capture, durable USDe economics, clearer supply realization and a less reflexive entry after extreme turnover."
+    },
+    {
+      "topic": "The Sep.19 Saudi/Yanbu episode is a useful failed-transmission control: attack attempt does not equal lost deliverable barrels",
+      "label": "ENERGY MATCHED CONTROL / CONFIRMS EXISTING RULE",
+      "observed_facts": [
+        "Reuters and Saudi-coalition reporting say a ballistic missile toward Riyadh was intercepted and attempted attacks including Yanbu were thwarted; Reuters separately observed smoke/flames near Riyadh airport but did not establish their cause.",
+        "No incremental Sep.19 Yanbu/Aramco throughput or export-capacity loss has been verified at this cutoff.",
+        "By contrast, the Sep.8 Saudi energy attacks produced documented fires/operational halts and Brent settled about 0.9% higher at $97.92; the later East-West pipeline outage damaged multiple pumping stations and threatened 4%-5% of global supply-routing capacity, producing much larger crude repricing.",
+        "Benchmark crude markets are closed during the current weekend, so no conventional open-market reaction to the Sep.19 claims exists yet."
+      ],
+      "inference": "The pre-price causal variable is not attack headline count but verified change in effective deliverable supply after interception, redundancy, inventories, rerouting and repair capacity. Sep.19 currently belongs in the no-confirmed-new-barrels-lost control set.",
+      "decision_support": "Crude remains WAIT / high event risk; require verified physical impairment plus post-reopen physical/price confirmation before changing direction."
+    }
+  ],
+  "daily_big_move_scan": {
+    "market_context": "Weekend: traditional cash markets remain closed. Use live crypto and completed Friday traditional-market cases; do not fabricate closed-market reactions.",
+    "selected_or_retested": [
+      "ENA: ~$0.208, +22.0%/24h and +47.4%/7d with ~45% market-cap turnover; strongly idiosyncratic versus flat BTC and negative SOL. Fee-switch buyback is not active because USDe supply is ~4.8B versus the $7.5B first rung.",
+      "BTC: ~$81.1K, approximately flat over 24h while aggregate crypto OI falls another ~5%-8% and BTC liquidations collapse ~90%; constructive post-squeeze absorption but no weekend ETF confirmation.",
+      "ZEC: ~$1,469, -6.2%/24h but +30.0%/7d and +156%/30d; extreme prior move is consolidating while XMR is also down ~6.9%/24h, preserving the privacy-sector rotation/control interpretation rather than a one-way ZCSH-only story.",
+      "Saudi/Yanbu Sep.19: attack attempts/claims without verified incremental oil-capacity loss; retained as a failed-transmission energy control pending market reopen."
+    ]
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast clears the evidence bar. Existing WAIT states are preserved."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. The new observations strengthen existing methods but do not change the dashboard regime enough to justify dashboard/ledger churn. No code or signal-system state changed.",
+  "next_research": [
+    "After U.S. markets reopen, reconcile finalized BTC ETF flows and test whether BTC price holds while native-unit/contract-aware OI, funding and basis remain controlled.",
+    "For ENA, build a supply-realization map separating legal unlock, sale consent/notice rights, actual transferability, exchange deposits and realized sales; retest price around Oct.5 without assuming headline unlock equals sell flow.",
+    "Track USDe 14-day circulating-supply average against the $7.5B fee-switch rung; only treat buyback demand as OBSERVED after activation and public transparency evidence.",
+    "At crude reopen, compare Brent/WTI, physical differentials, freight/insurance and Saudi loading data against verified damage rather than attack claims."
+  ],
+  "sources": [
+    "CoinMarketCap connected real-time quotes/global metrics/global derivatives, 2026-09-20 01:44 UTC snapshot",
+    "https://gov.ethenafoundation.com/t/ena-fee-switch-activation/830",
+    "https://www.sec.gov/Archives/edgar/data/2080215/000121390026100751/ea030568601ex10-1.htm",
+    "https://defillama.com/token/USDE",
+    "https://www.reuters.com/world/middle-east/saudi-civil-defence-sends-all-clear-after-danger-warning-capital-riyadh-2026-09-19/",
+    "https://www.reuters.com/world/middle-east/saudi-led-coalition-yemen-says-73-injured-houthi-attacks-kingdom-2026-09-08/",
+    "https://www.reuters.com/business/energy/three-pumping-stations-along-saudi-east-west-pipeline-were-hit-recent-attack-2026-09-17/"
+  ],
+  "paid_resource_policy": "No new paid resources authorized; free/public/primary sources and existing connected data were used.",
+  "real_money_trading": "DISABLED / NOT AUTHORIZED"
+}

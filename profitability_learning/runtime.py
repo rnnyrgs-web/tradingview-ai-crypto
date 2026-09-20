@@ -5,6 +5,8 @@ import os
 import sqlite3
 from threading import Lock
 
+from money_intelligence_mission_integration import apply_causal_feedback
+
 from .analytics import analyze
 from .contracts import SAFE, fingerprint
 from .evolution import learning_missions, rank_candidates
@@ -176,6 +178,10 @@ def refresh_director(army):
         # The reporting surface must not revive rejected/stale recommendations.
         result["daily_lead_report"]["highest_priority_next_missions"] = deepcopy(result["next_missions"])
     result["daily_lead_report"]["profitability_learning"] = feedback
+    # Phase-2 causal memory is consumed here, on the same default director surface
+    # used by continuous_coordinator. The adapter itself is evidence-gated and
+    # fail-closed, so unavailable/corrupt memory cannot authorize stale missions.
+    result = apply_causal_feedback(result)
     with _lock:
         _director_state = deepcopy(result)
     return result
