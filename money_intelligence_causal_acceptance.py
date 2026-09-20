@@ -12,8 +12,11 @@ from copy import deepcopy
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 import hashlib
+from importlib import metadata
 import os
 from pathlib import Path
+import platform
+import sys
 from threading import Barrier
 from typing import Any
 
@@ -92,8 +95,41 @@ def _ids(namespace: str) -> dict[str, str]:
     return identifiers
 
 
+def _runtime_environment_identity() -> bytes:
+    """Bind the plan to resolved Python packages and the running base environment."""
+    digest = hashlib.sha256()
+    for value in (sys.version, platform.system(), platform.libc_ver()):
+        digest.update(repr(value).encode("utf-8"))
+        digest.update(b"\0")
+    if platform.system() == "Linux":
+        try:
+            digest.update(Path("/etc/os-release").read_bytes())
+        except OSError as exc:
+            raise CausalMemoryError("container OS release identity is unavailable") from exc
+    else:
+        digest.update(platform.version().encode("utf-8"))
+    distributions = []
+    for distribution in metadata.distributions():
+        name = distribution.metadata.get("Name")
+        if not isinstance(name, str) or not name.strip():
+            raise CausalMemoryError("installed Python distribution has no name")
+        record = distribution.read_text("RECORD")
+        if record is None:
+            raise CausalMemoryError(f"installed Python distribution has no RECORD: {name}")
+        distributions.append((name.casefold(), distribution.version, hashlib.sha256(record.encode("utf-8")).digest()))
+    if not distributions:
+        raise CausalMemoryError("installed Python distribution identity is unavailable")
+    for name, version, record_digest in sorted(distributions):
+        digest.update(name.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(version.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(record_digest)
+    return digest.digest()
+
+
 def _scientific_plan_fingerprint(project_root: Path | None = None) -> str:
-    """Bind synthetic units to deployed executable inputs, not a docs-only SHA."""
+    """Bind synthetic units to packaged code, configuration, and resolved runtime."""
     root = project_root or Path(__file__).resolve().parent
     package_paths = (
         path for path in (root / "profitability_learning").rglob("*")
@@ -103,10 +139,12 @@ def _scientific_plan_fingerprint(project_root: Path | None = None) -> str:
     )
     paths = [*root.glob("*.py"), *package_paths]
     required = (
+        "Dockerfile",
         "requirements.txt",
         "orchestration/rejected_fingerprints.py",
         "orchestration/rejected_fingerprints.json",
         "orchestration/signal_development_objective.json",
+        "orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz",
     )
     for relative in required:
         path = root / relative
@@ -120,6 +158,7 @@ def _scientific_plan_fingerprint(project_root: Path | None = None) -> str:
     if not files or not any(path.name == "money_intelligence_causal_memory.py" for path in files):
         raise CausalMemoryError("scientific plan source tree is incomplete")
     digest = hashlib.sha256()
+    digest.update(_runtime_environment_identity())
     for path in files:
         digest.update(path.relative_to(root).as_posix().encode("utf-8"))
         digest.update(b"\0")

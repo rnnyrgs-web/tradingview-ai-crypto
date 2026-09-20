@@ -140,7 +140,9 @@ def test_unrelated_redeploy_reuses_prospective_scientific_plan(monkeypatch):
     "money_intelligence_causal_memory.py",
     "profitability_learning/runtime.py",
     "orchestration/rejected_fingerprints.json",
+    "orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz",
     "requirements.txt",
+    "Dockerfile",
 ])
 def test_scientific_plan_namespace_tracks_packaged_inputs_not_state_docs(tmp_path, changed_input):
     inputs = (
@@ -149,7 +151,9 @@ def test_scientific_plan_namespace_tracks_packaged_inputs_not_state_docs(tmp_pat
         "orchestration/rejected_fingerprints.py",
         "orchestration/rejected_fingerprints.json",
         "orchestration/signal_development_objective.json",
+        "orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz",
         "requirements.txt",
+        "Dockerfile",
     )
     for relative in inputs:
         path = tmp_path / relative
@@ -165,6 +169,47 @@ def test_scientific_plan_namespace_tracks_packaged_inputs_not_state_docs(tmp_pat
     assert acceptance._scientific_plan_fingerprint(tmp_path) == first
     (tmp_path / changed_input).write_text("changed science input", encoding="utf-8")
     assert acceptance._scientific_plan_fingerprint(tmp_path) != first
+
+
+def test_scientific_plan_namespace_tracks_resolved_runtime_identity(tmp_path, monkeypatch):
+    inputs = (
+        "money_intelligence_causal_memory.py",
+        "requirements.txt",
+        "Dockerfile",
+        "orchestration/rejected_fingerprints.py",
+        "orchestration/rejected_fingerprints.json",
+        "orchestration/signal_development_objective.json",
+        "orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz",
+    )
+    for relative in inputs:
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("original", encoding="utf-8")
+    monkeypatch.setattr(acceptance, "_runtime_environment_identity", lambda: b"dependency-a")
+    first = acceptance._scientific_plan_fingerprint(tmp_path)
+    monkeypatch.setattr(acceptance, "_runtime_environment_identity", lambda: b"dependency-b")
+    assert acceptance._scientific_plan_fingerprint(tmp_path) != first
+
+
+def test_runtime_identity_changes_with_resolved_distribution(monkeypatch):
+    class Distribution:
+        metadata = {"Name": "scientific-dependency"}
+
+        def __init__(self, version, record):
+            self.version = version
+            self.record = record
+
+        def read_text(self, name):
+            assert name == "RECORD"
+            return self.record
+
+    installed = [Distribution("1.0", "original wheel")]
+    monkeypatch.setattr(acceptance.metadata, "distributions", lambda: installed)
+    first = acceptance._runtime_environment_identity()
+    installed[0] = Distribution("2.0", "original wheel")
+    assert acceptance._runtime_environment_identity() != first
+    installed[0] = Distribution("1.0", "different wheel")
+    assert acceptance._runtime_environment_identity() != first
 
 
 def test_phase2_runtime_acceptance_uses_default_mission_surface_and_is_replay_safe(monkeypatch):

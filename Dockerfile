@@ -4,6 +4,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+COPY Dockerfile ./
 COPY *.py ./
 COPY profitability_learning/ profitability_learning/
 COPY orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz orchestration/evidence/
