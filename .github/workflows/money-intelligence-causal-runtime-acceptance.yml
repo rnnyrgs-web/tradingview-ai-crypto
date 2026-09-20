@@ -1,0 +1,98 @@
+name: Money Intelligence Causal Runtime Acceptance
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/money-intelligence-causal-runtime-acceptance.yml
+      - Dockerfile
+      - app.py
+      - db.py
+      - money_intelligence_causal_acceptance.py
+      - money_intelligence_causal_memory.py
+      - money_intelligence_causal_runtime.py
+      - money_intelligence_causal_supabase.py
+      - research_director.py
+      - research_director_runtime.py
+      - orchestration/rejected_fingerprints.json
+      - supabase/migrations/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: money-intelligence-causal-runtime-acceptance
+  cancel-in-progress: false
+
+jobs:
+  exact-deployed-sha:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Await exact deployed SHA and verify causal research loop
+        env:
+          ACCEPTANCE_URL: https://tradingview-ai-crypto.onrender.com/research/money-intelligence/causal-acceptance
+          SCAN_SECRET: ${{ secrets.SCAN_SECRET }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main"
+          test -n "$SCAN_SECRET"
+          response="$(mktemp)"
+          for attempt in $(seq 1 30); do
+            status="$(curl --silent --show-error \
+              --output "$response" --write-out '%{http_code}' \
+              --request POST \
+              --header "X-Scan-Secret: $SCAN_SECRET" \
+              --connect-timeout 10 --max-time 45 \
+              "$ACCEPTANCE_URL" || true)"
+            if [ "$status" = "200" ] && jq -e --arg sha "$GITHUB_SHA" '
+              .ok == true and
+              .deployed_sha == $sha and
+              .persistence.replay_idempotent == true and
+              .persistence.restart_equal == true and
+              .persistence.target_hypothesis_count == 2 and
+              .persistence.target_event_count == 3 and
+              .transitions.support_stage.mission_count == 4 and
+              .transitions.contradiction_removed == true and
+              .transitions.decay_removed == true and
+              .transitions.current_acceptance_mission_count == 0 and
+              .safety.research_only == true and
+              .safety.trade_authority == false and
+              .safety.promotion_authority == false and
+              .safety.oos_opening_authority == false and
+              .safety.broker_connected == false
+            ' "$response" >/dev/null; then
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "last_http_status=$status" >&2
+          if jq -e 'type == "object"' "$response" >/dev/null 2>&1; then
+            jq -c '{
+              ok: .ok?,
+              deployed_sha: .deployed_sha?,
+              persistence: {
+                replay_idempotent: .persistence.replay_idempotent?,
+                restart_equal: .persistence.restart_equal?,
+                target_hypothesis_count: .persistence.target_hypothesis_count?,
+                target_event_count: .persistence.target_event_count?
+              },
+              transitions: {
+                support_mission_count: .transitions.support_stage.mission_count?,
+                contradiction_removed: .transitions.contradiction_removed?,
+                decay_removed: .transitions.decay_removed?,
+                current_acceptance_mission_count: .transitions.current_acceptance_mission_count?
+              },
+              safety: {
+                trade_authority: .safety.trade_authority?,
+                promotion_authority: .safety.promotion_authority?,
+                oos_opening_authority: .safety.oos_opening_authority?,
+                broker_connected: .safety.broker_connected?
+              }
+            }' "$response" >&2
+          else
+            echo "response_not_json" >&2
+          fi
+          echo "Exact deployed-SHA causal runtime acceptance did not pass" >&2
+          exit 1

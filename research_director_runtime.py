@@ -4,13 +4,15 @@ import json
 import logging
 import os
 import tempfile
+from dataclasses import fields
 from datetime import datetime, timezone
 from pathlib import Path
 from threading import Lock
 from typing import Any
 
 from bybit_oi_access_probe import ALLOWED_STATUSES as BYBIT_OI_ALLOWED_STATUSES, SOURCE_ID as BYBIT_OI_SOURCE_ID, SYSTEM_ID as BYBIT_OI_SYSTEM_ID, probe as probe_bybit_oi_access
-from research_director import build_daily_lead_report, build_mission, claim_mission, rank_missions
+from money_intelligence_causal_runtime import causal_mission_feedback
+from research_director import ResearchMission, build_daily_lead_report, build_mission, claim_mission, rank_missions
 
 _STATE_PATH = Path(os.getenv("RESEARCH_DIRECTOR_STATE_PATH", str(Path(tempfile.gettempdir()) / "tradingview-ai-research-director.json")))
 _lock = Lock()
@@ -86,16 +88,64 @@ def _write_state(payload: dict[str, Any]) -> None:
     except OSError: return
 
 
+def _causal_runtime_missions() -> tuple[dict[str, Any], list[ResearchMission], dict[str, dict[str, Any]]]:
+    """Validate the internal adapter boundary before affecting real ranking."""
+    try:
+        feedback = causal_mission_feedback()
+        rows = feedback.get("missions") if isinstance(feedback, dict) else None
+        if not isinstance(rows, list):
+            raise ValueError("invalid causal mission feedback")
+        allowed = {field.name for field in fields(ResearchMission)}
+        missions: list[ResearchMission] = []
+        metadata: dict[str, dict[str, Any]] = {}
+        for row in rows:
+            if (
+                not isinstance(row, dict)
+                or row.get("research_only") is not True
+                or row.get("trade_authority") is not False
+                or row.get("promotion_authority") is not False
+                or row.get("oos_opening_authority") is not False
+                or not isinstance(row.get("causal_evidence"), dict)
+            ):
+                raise ValueError("unsafe causal mission feedback")
+            mission = ResearchMission(**{key: row[key] for key in allowed})
+            missions.append(mission)
+            metadata[mission.mission_id] = {
+                "causal_evidence": row["causal_evidence"],
+                "research_only": True,
+                "trade_authority": False,
+                "promotion_authority": False,
+                "oos_opening_authority": False,
+            }
+        return feedback, missions, metadata
+    except (KeyError, TypeError, ValueError):
+        return (
+            {
+                "status": "WAIT_MEMORY_UNAVAILABLE",
+                "missions": [],
+                "research_only": True,
+                "trade_authority": False,
+                "promotion_authority": False,
+                "oos_opening_authority": False,
+                "broker_connected": False,
+            },
+            [],
+            {},
+        )
+
+
 def refresh_director(army: dict[str, Any]) -> dict[str, Any]:
-    bybit_probe = _ensure_bybit_probe(); workers = army.get("workers") if isinstance(army.get("workers"), dict) else {}; missions = [_mission_for_worker(name, row if isinstance(row, dict) else {}) for name, row in sorted(workers.items())]; claims=[]
+    bybit_probe = _ensure_bybit_probe(); workers = army.get("workers") if isinstance(army.get("workers"), dict) else {}; worker_missions = [_mission_for_worker(name, row if isinstance(row, dict) else {}) for name, row in sorted(workers.items())]; causal_feedback, causal_missions, causal_metadata = _causal_runtime_missions(); missions = worker_missions + causal_missions; claims=[]
     for name, row in sorted(workers.items()):
         if not isinstance(row, dict) or row.get("state") not in {"queued", "running"}: continue
-        mission = next((item for item in missions if item.theme == name or item.lane == name), None)
-        if mission is None: mission = next((item for item in missions if item.lane == "adaptive-accuracy" and name == "adaptive-accuracy"), None)
+        mission = next((item for item in worker_missions if item.theme == name or item.lane == name), None)
+        if mission is None: mission = next((item for item in worker_missions if item.lane == "adaptive-accuracy" and name == "adaptive-accuracy"), None)
         if mission is not None: claims.append(claim_mission(mission, worker_id=name, owner_lane=mission.lane).to_dict())
     claimed_ids={claim["mission_id"] for claim in claims}; next_missions=[m for m in rank_missions(missions) if not m.blocker and m.mission_id not in claimed_ids][:5]
     visible_missions=sorted(missions, key=lambda m:(m.priority,m.falsification_value,m.actionable_evidence_probability,m.expected_information_gain,m.expected_signal_impact,m.mission_id), reverse=True)
-    payload={"updated_at":_now(),"missions":[m.to_dict() for m in visible_missions],"claims":claims,"next_missions":[m.to_dict() for m in next_missions],"daily_lead_report":_daily_report(army,missions),"bybit_oi_access_probe":bybit_probe,"research_only":True,"trade_authority":False,"promotion_authority":False,"write_authority":False,"broker_connected":False,"automatic_strategy_promotion":False}
+    def row(mission): return {**mission.to_dict(), **causal_metadata.get(mission.mission_id, {})}
+    payload={"updated_at":_now(),"missions":[row(m) for m in visible_missions],"claims":claims,"next_missions":[row(m) for m in next_missions],"daily_lead_report":_daily_report(army,missions),"money_intelligence_causal_memory":causal_feedback,"bybit_oi_access_probe":bybit_probe,"research_only":True,"trade_authority":False,"promotion_authority":False,"write_authority":False,"broker_connected":False,"automatic_strategy_promotion":False}
+    payload["daily_lead_report"]["highest_priority_next_missions"] = json.loads(json.dumps(payload["next_missions"]))
     with _lock: _state.clear(); _state.update(payload)
     _write_state(payload); return payload
 

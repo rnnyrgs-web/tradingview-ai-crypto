@@ -124,6 +124,24 @@ def profitability_learning_runtime_acceptance(
         )
 
 
+@app.post("/research/money-intelligence/causal-acceptance")
+def money_intelligence_causal_runtime_acceptance(
+    x_scan_secret: Optional[str] = Header(default=None),
+):
+    """Run only the sealed research-only causal-memory acceptance contract."""
+    verify_secret(None, x_scan_secret)
+    try:
+        from money_intelligence_causal_acceptance import run_causal_runtime_acceptance
+
+        return run_causal_runtime_acceptance()
+    except Exception as e:
+        internal_error(
+            "money_intelligence_causal_runtime_acceptance",
+            e,
+            "Money Intelligence causal runtime acceptance failed",
+        )
+
+
 @app.get("/selective-precision")
 def selective_precision_observability(
     secret: Optional[str] = None,
