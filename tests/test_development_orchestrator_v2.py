@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from agents.development_orchestrator import REVIEW_LANES as V1_REVIEW_LANES
+from agents.development_orchestrator import REVIEW_LANES as V1_REVIEW_LANES, add_review_record
 from agents.development_orchestrator_v2 import (
     ADAPTERS, apply_event, empty_v2, persist_event, route_task, select_task,
 )
@@ -56,7 +56,13 @@ def verdicts(outcome):
 
 
 def advance(state, kind, n, **fields):
+    document = {"version": 1, "reviews": {}, "review_attempts": {}, "dispatches": {}, "runs": []}
+    if kind == "REVIEW":
+        document = add_review_record(document, task_id="V2-A", pr_number=fields["pr_number"],
+                                     head_sha=fields["head_sha"], ci_state="success",
+                                     outcomes=fields["outcomes"], now=NOW)
     return apply_event(state, event(kind, n, **fields), queue(), current_main_sha=MAIN,
+                       v1_document=document,
                        selection_evidence={"claimed_branches": set(), "active_prs": set(),
                                            "rejected": [], "strategy_queue": {"active_deep_candidate": None}})
 
@@ -427,3 +433,93 @@ def test_rebase_open_approved_pr_requires_new_ci_and_review():
                                  head_sha=REPAIRED, reviewer_lanes=list(V1_REVIEW_LANES),
                                  outcomes=verdicts("APPROVED"), outcome="APPROVED",
                                  findings=[]), queue(), current_main_sha=MERGED)
+
+
+def test_review_requires_matching_v1_receipt():
+    state = claimed()
+    state = advance(state, "DISPATCH", 2, attempt_id="attempt-A", dispatch_id="dispatch-A")
+    state = advance(state, "WORKER_OUTCOME", 3, attempt_id="attempt-A", result_id="result-A",
+                    outcome="PR_CREATED", pr_number=501, head_sha=HEAD)
+    state = advance(state, "CI", 4, ci_id="ci-A", pr_number=501, head_sha=HEAD,
+                    conclusion="success")
+    review = event("REVIEW", 5, review_id="review-A", pr_number=501, head_sha=HEAD,
+                   reviewer_lanes=list(V1_REVIEW_LANES), outcomes=verdicts("APPROVED"),
+                   outcome="APPROVED", findings=[])
+    with pytest.raises(ValueError, match="V1 review receipt"):
+        apply_event(state, review, queue(), current_main_sha=MAIN)
+    reject = {"version": 1, "reviews": {}, "review_attempts": {}, "dispatches": {}, "runs": []}
+    reject = add_review_record(reject, task_id="V2-A", pr_number=501, head_sha=HEAD,
+                               ci_state="success", outcomes=verdicts("REVISION_REQUIRED"),
+                               now=NOW)
+    with pytest.raises(ValueError, match="V1 review receipt"):
+        apply_event(state, review, queue(), current_main_sha=MAIN, v1_document=reject)
+
+
+@pytest.mark.parametrize("field,value", [("branch", "auto/data-market/other"),
+                                          ("adapter", "claude_runner"),
+                                          ("request_id", "forged")])
+def test_persisted_attempt_identity_is_immutable(field, value):
+    state = claimed()
+    state["tasks"]["V2-A"]["attempts"]["attempt-A"][field] = value
+    with pytest.raises(ValueError, match="attempt"):
+        advance(state, "DISPATCH", 2, attempt_id="attempt-A", dispatch_id="dispatch-A")
+
+
+def test_persisted_repair_findings_and_active_identity_are_immutable():
+    state = claimed()
+    state = advance(state, "DISPATCH", 2, attempt_id="attempt-A", dispatch_id="dispatch-A")
+    state = advance(state, "WORKER_OUTCOME", 3, attempt_id="attempt-A", result_id="result-A",
+                    outcome="PR_CREATED", pr_number=501, head_sha=HEAD)
+    state = advance(state, "CI", 4, ci_id="ci-A", pr_number=501, head_sha=HEAD,
+                    conclusion="success")
+    state = advance(state, "REVIEW", 5, review_id="review-A", pr_number=501,
+                    head_sha=HEAD, reviewer_lanes=list(V1_REVIEW_LANES),
+                    outcomes=verdicts("REVISION_REQUIRED"), outcome="REVISION_REQUIRED",
+                    findings=["real finding"])
+    state = advance(state, "REPAIR", 6, repair_id="repair-A", review_id="review-A",
+                    attempt_id="attempt-A", owner="data-market")
+    for field, value in [("findings", ["forged"]), ("attempt_id", "fake"), ("number", 2)]:
+        corrupt = copy.deepcopy(state)
+        corrupt["tasks"]["V2-A"]["repairs"]["repair-A"][field] = value
+        with pytest.raises(ValueError, match="repair"):
+            advance(corrupt, "REPAIRED_HEAD", 7, repair_id="repair-A", head_sha=REPAIRED)
+
+
+def test_rebase_cannot_reuse_old_head_or_overlap_running_worker():
+    state = claimed()
+    running = advance(state, "DISPATCH", 2, attempt_id="attempt-A", dispatch_id="dispatch-A")
+    running = advance(running, "RUNNING", 3, attempt_id="attempt-A")
+    with pytest.raises(ValueError, match="rebase|worker"):
+        apply_event(running, event("REBASE", 4, attempt_id="attempt-B", request_id="request-B",
+                                   base_main_sha=MERGED, budget_reservation_id="reservation-B"),
+                    queue(), current_main_sha=MERGED)
+    state = advance(running, "WORKER_OUTCOME", 4, attempt_id="attempt-A", result_id="result-A",
+                    outcome="PR_CREATED", pr_number=501, head_sha=HEAD)
+    state = advance(state, "CI", 5, ci_id="ci-A", pr_number=501, head_sha=HEAD,
+                    conclusion="success")
+    state = advance(state, "HEAD_CHANGED", 6, pr_number=501, head_sha=REPAIRED)
+    with pytest.raises(ValueError, match="head|CI"):
+        apply_event(state, event("REBASE", 7, attempt_id="attempt-B", request_id="request-B",
+                                 base_main_sha=MERGED, budget_reservation_id="reservation-B",
+                                 head_sha=HEAD), queue(), current_main_sha=MERGED)
+
+
+def test_repaired_head_must_match_current_repair():
+    state = claimed()
+    state = advance(state, "DISPATCH", 2, attempt_id="attempt-A", dispatch_id="dispatch-A")
+    state = advance(state, "WORKER_OUTCOME", 3, attempt_id="attempt-A", result_id="result-A",
+                    outcome="PR_CREATED", pr_number=501, head_sha=HEAD)
+    for n, head, next_head in [(4, HEAD, REPAIRED), (9, REPAIRED, "e" * 40)]:
+        state = advance(state, "CI", n, ci_id=f"ci-{n}", pr_number=501,
+                        head_sha=head, conclusion="success")
+        state = advance(state, "REVIEW", n + 1, review_id=f"review-{n}", pr_number=501,
+                        head_sha=head, reviewer_lanes=list(V1_REVIEW_LANES),
+                        outcomes=verdicts("REVISION_REQUIRED"), outcome="REVISION_REQUIRED",
+                        findings=["finding"])
+        state = advance(state, "REPAIR", n + 2, repair_id=f"repair-{n}",
+                        review_id=f"review-{n}", attempt_id="attempt-A", owner="data-market")
+        if n == 9:
+            with pytest.raises(ValueError, match="repair"):
+                advance(state, "REPAIRED_HEAD", n + 3, repair_id="repair-4", head_sha=next_head)
+        state = advance(state, "REPAIRED_HEAD", n + 3,
+                        repair_id=f"repair-{n}", head_sha=next_head)

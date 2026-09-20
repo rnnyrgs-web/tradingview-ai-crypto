@@ -21,14 +21,16 @@ and `SUCCESSOR` rerun the same canonical selector with explicit branch/PR,
 rejected-fingerprint, strategy-capacity, and time evidence. A worker outcome
 of `PR_CREATED` enters review. `NO_CHANGE`, `BLOCKED`, `TASK_MISMATCH`, and
 `FAILED` block; `WAIT` and provider timeout require `retry_at`. CI failure
-cannot enter review. Review must cite V1's Security, Lead, and Claude
-adversarial lanes, each with an explicit verdict, V1's exact-head receipt
-identity, and successful Security and Reliability CI on the exact PR head. Revisions
+cannot enter review. Review must match an existing V1 exact-head receipt for
+Security, Lead, and Claude adversarial lanes, with each verdict matching the
+V2 event and successful Security and Reliability CI on the exact PR head and
+base main SHA. Revisions
 preserve exact findings and the existing owner, and are limited to two repair
 cycles. A further revision blocks the task. A changed PR head returns to
 `REVIEW_REQUIRED` and needs fresh CI and review. Main advancement requires a
 `REBASE` event with a new immutable attempt and, for an open PR, a new head
-that needs fresh CI and review. `WAIT`/provider timeout can create at most one
+that needs fresh CI and review. A running worker must finish before rebase;
+previously seen heads cannot regain an earlier CI approval. `WAIT`/provider timeout can create at most one
 new attempt after `retry_at`; the prior attempt remains in the record. A human
 Lead records the integration decision after merge and binds it to the resulting
 current main SHA; the reducer never merges.
@@ -47,6 +49,8 @@ conflicting redelivery raises. Task, attempt, engine, adapter, request, branch,
 base SHA, PR, worker result, CI, review, repair, integration, and successor
 identities are stored with the record. A `PR_CREATED` event requires the exact
 repository, claimed head branch, main base branch, and attempt base SHA.
+Attempt and repair identities carry durable content digests, and each repaired
+head must cite the current repair claim.
 Callers must submit only verified GitHub facts and actual shared-budget
 reservation IDs, persist the reduced value through `persist_event`, and reload after any
 CAS conflict. No V2 event grants direct-main write, autonomous merge, broker,
