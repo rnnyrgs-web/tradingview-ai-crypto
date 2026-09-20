@@ -7,7 +7,7 @@
     "role": "testing-security",
     "task_id": "COORD-TEST-001"
   },
-  "last_seen_main_sha": "d1d5efd19eb7cfe0317b1df341052c7dc3a87fce",
+  "last_seen_main_sha": "21006d14bc6b3c96827800bac545f72479697827",
   "next_eligible_at": null,
   "paused_reason": "TASK_RETRY_LIMIT",
   "runs": [
