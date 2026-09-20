@@ -1,1 +1,1 @@
-{"lock": {"acquired_at": null, "expires_at": null, "holder": null}, "pending_reservations": [{"amount_usd": 0.504, "engine": "openai", "expires_at": "2026-09-20T01:36:51Z", "reservation_id": "6a03444b-1e76-4e0f-81ad-6642b3e0d1b6", "reserved_at": "2026-09-20T00:51:51Z", "role": "quant-research"}], "version": 1}
+{"lock": {"acquired_at": "2026-09-20T01:48:40Z", "expires_at": "2026-09-20T01:50:40Z", "holder": "openai:quant-research:e112de01-295a-4e64-9db5-c77d1b84ec85"}, "pending_reservations": [], "version": 1}
