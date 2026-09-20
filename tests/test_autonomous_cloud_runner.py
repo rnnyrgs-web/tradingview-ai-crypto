@@ -38,12 +38,6 @@ def _coord():
     return load_coordination()
 
 
-def _phase_two_task(coordination):
-    return next(
-        task for task in coordination["tasks"]
-        if task["id"] == "COORD-MI-CAUSAL-002"
-    )
-
 def _coord_with_ready_discovery_task():
     coordination = copy.deepcopy(_coord())
     completed = next(
@@ -84,7 +78,14 @@ def test_coordination_loader_applies_canonical_overrides():
     )
     assert primitive["completion_evidence"]["phase_2_complete"] is False
     assert primitive["completion_evidence"]["broker_or_live_authority"] is False
-    assert highest_ready_task(_config(), coordination) == _phase_two_task(coordination)
+    runtime = tasks["COORD-MI-CAUSAL-002"]
+    assert runtime["status"] == "DONE"
+    assert runtime["completion_evidence"]["phase_2_complete"] is True
+    adversarial = tasks["COORD-ARCH-ADVERSARIAL-001"]
+    assert adversarial["status"] == "READY"
+    assert adversarial["owner"] == "testing-security"
+    assert adversarial["branch"] == "agent/testing-security"
+    assert highest_ready_task(_config(), coordination) is None
 
 def test_runner_is_single_execution_multi_role_cost_bounded_and_broker_disconnected():
     config = _config()
@@ -299,11 +300,10 @@ def test_completion_handoff_clears_discovery_lease_after_lead_marks_task_done():
     recovered = recover_state(state, coordination, NOW)
     assert recovered["active_task"] is None
 
-    # The rejected strategy remains terminal while the separately routed
-    # Phase-2 architecture task becomes eligible.
+    # The rejected strategy remains terminal. Phase 3 is owned by the manual
+    # testing-security lane and cannot be claimed by the API cloud runner.
     next_ready = highest_ready_task(_config(), coordination)
-    assert next_ready == _phase_two_task(coordination)
-    assert next_ready.get("fingerprint_id") is None
+    assert next_ready is None
 
 def test_shutdown_restart_recovers_abandoned_running_lease_without_losing_usage_history():
     state = default_state()
@@ -338,9 +338,12 @@ def test_current_data_coordination_retires_rejected_candidates_and_advances():
 
 
 
-def test_coordination_priority_advances_to_phase_two_after_terminal_strategy_rejection():
+def test_coordination_priority_routes_phase_three_outside_cloud_runner():
     coordination = _coord()
-    assert highest_ready_task(_config(), coordination) == _phase_two_task(coordination)
+    assert highest_ready_task(_config(), coordination) is None
+    phase_three = next(row for row in coordination["tasks"] if row["id"] == "COORD-ARCH-ADVERSARIAL-001")
+    assert phase_three["status"] == "READY"
+    assert phase_three["owner"] == "testing-security"
     current = next(row for row in coordination["tasks"] if row["id"] == "COORD-DISC-QUANT-004")
     assert current["status"] == "DONE"
     assert current["completion_evidence"]["decision"] == "REJECTED_PRE_OOS"
@@ -363,7 +366,7 @@ def test_legacy_swarm_is_manual_only_and_new_workflow_cannot_merge_main_or_trade
 
 def test_terminal_rejection_does_not_reopen_hypothesis_freeze():
     coordination = copy.deepcopy(_coord())
-    assert highest_ready_task(_config(), coordination) == _phase_two_task(coordination)
+    assert highest_ready_task(_config(), coordination) is None
     assert next(row for row in coordination["tasks"] if row["id"] == "COORD-DISC-DATA-004")["status"] == "DONE"
     rejected = next(row for row in coordination["tasks"] if row["id"] == "COORD-DISC-QUANT-004")
     assert rejected["status"] == "DONE"

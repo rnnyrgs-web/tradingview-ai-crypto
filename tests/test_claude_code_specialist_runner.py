@@ -108,8 +108,8 @@ def test_disabled_config_still_blocks_all_execution():
 
 
 
-def test_plan_waits_when_its_candidate_specific_role_is_parked():
-    """A runner must not invent work before QUANT-004 freezes a candidate."""
+def test_plan_respects_task_engine_eligibility_for_manual_phase_three_review():
+    """Claude Code cannot claim a ChatGPT/human-only testing-security task."""
     decision = plan_decision(_config(), _coord(), default_state(), MAIN_SHA, NOW)
     assert decision.run is False
     assert decision.reason == "NO_READY_AUTONOMOUS_TASK"

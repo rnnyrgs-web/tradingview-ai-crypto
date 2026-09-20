@@ -267,7 +267,19 @@ def recover_state(state: dict[str, Any], coordination: dict[str, Any], now: date
 
 def highest_ready_task(config: dict[str, Any], coordination: dict[str, Any]) -> dict[str, Any] | None:
     roles = set(config["autonomous_roles"])
-    candidates = [t for t in coordination["tasks"] if t.get("owner") in roles and t.get("status") == "READY" and not t.get("blockers")]
+    engine = config.get("engine")
+    candidates = [
+        task
+        for task in coordination["tasks"]
+        if task.get("owner") in roles
+        and task.get("status") == "READY"
+        and not task.get("blockers")
+        and (
+            not engine
+            or not task.get("eligible_engines")
+            or engine in task["eligible_engines"]
+        )
+    ]
     return min(candidates, key=lambda t: (int(t.get("priority", 999999)), str(t.get("id", ""))), default=None)
 
 
