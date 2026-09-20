@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T1338Z",
+  "information_cutoff": "2026-09-20T13:38:09Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_observed": "69806f20d6d1a16b606c6b0da0dd60c256d7bc2b",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles": true,
+    "searched_prediction_artifacts": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-20T13:33:06Z",
+    "artifact_cutoff_utc": "2026-09-20T13:38:09Z",
+    "seconds_this_run_minimum": 303,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 2371,
+    "minimum_cumulative_seconds_since_last_owner_report": 2674,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted; schedule gaps, idle time, publication timestamps and background time are excluded."
+  },
+  "highest_information_question": "Can large asset-specific price moves be separated into true net capital inflow, mark-to-market accounting changes, expectation repricing and derivatives amplification, while sovereign-duration transmission is modeled independently from reserve liquidity and the short-rate path?",
+  "fresh_research": [
+    {
+      "topic": "BoE September QT redesign is a live duration-supply natural experiment",
+      "label": "SOVEREIGN DURATION / QT COMPOSITION / MATCHED MECHANISM CONTROL",
+      "observed_facts": [
+        "The Bank of England held Bank Rate at 3.75% on September 17, with three of nine MPC members preferring a 25 bp hike to 4%, so the short-rate/inflation signal remained hawkish rather than dovish.",
+        "The MPC set aside £120B of the longest-dated APF gilts to back banknotes, will allow £222B to mature passively by expected QT completion, and plans to sell the remaining £146B at £20B per year; the average annual stock reduction becomes £46B through September 2034.",
+        "All APF auctions are paused until April 2027 while the Bank and DMO consider a direct-sale implementation; long-dated active sales have effectively been removed from the market-facing supply path.",
+        "Reuters reported the 30-year gilt yield fell about 12 bp to 5.74% after the announcement, versus about 8 bp for the 10-year and 6 bp for the 2-year, even while markets still priced additional Bank Rate tightening.",
+        "The prior 2025-26 APF program had deliberately reduced but not eliminated long-maturity active sales; Q3 2026 already had no long auctions, while the new plan structurally removes the longest £120B from future sale."
+      ],
+      "inference": "The maturity composition and market-facing duration of central-bank runoff matter independently of reserve creation and the expected policy-rate path. Removing a price-insensitive long-duration seller can compress long-end term premium even when the short-rate stance remains hawkish.",
+      "causal_chain": "hawkish short-rate path + reduced market-facing long-gilt supply -> lower marginal duration that private investors must absorb -> lower clearing term premium/long yield relative to front end -> easier long-duration financing/valuation at the margin",
+      "matched_control": "The contemporaneous 2-year yield fell less than the 30-year yield, while three MPC members preferred a hike; this cross-maturity response is more consistent with a duration-supply shock than with a simple dovish-rate shock, though oil/global-rate moves still contaminate the event window.",
+      "negative_findings": [
+        "Do not call slower QT equivalent to a rate cut.",
+        "Do not infer long-yield effects from central-bank balance-sheet notional alone; maturity/DV01 and whether securities are sold into the market are necessary.",
+        "Do not calibrate a universal basis-point coefficient from this single event because global yields and energy news moved simultaneously."
+      ],
+      "learning_candidate": {
+        "id": "MI-L-20260920-013",
+        "status": "SUPPORTED_METHOD_RULE_STRENGTHENED",
+        "claim": "For sovereign-rate transmission, model reserve liquidity and market-facing duration absorption separately; maturity composition and active-sale supply can move long yields even when the short-rate stance is unchanged or hawkish."
+      },
+      "sources": [
+        "https://www.bankofengland.co.uk/monetary-policy-summary-and-minutes/2026/september-2026",
+        "https://www.bankofengland.co.uk/markets/market-notices/2026/june/apf-gilt-sales-market-notice-19-june-2026",
+        "https://www.reuters.com/business/investors-cheer-boe-move-pause-gilt-sales-driving-bond-rally-2026-09-17/"
+      ],
+      "decision_support": "Method upgrade only; no standalone UK gilt BUY/SHORT thesis clears the evidence bar."
+    },
+    {
+      "topic": "AVAX outlier strengthens, but flow attribution remains unconfirmed and derivatives amplification is material",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / AVAX / FLOW-ACCOUNTING CONTROL",
+      "observed_facts": [
+        "CoinMarketCap at about 13:33 UTC showed AVAX near $10.61, +15.07%/24h and +45.14%/7d with 24h turnover about 26.2% of market cap, while BTC, ETH, SOL, XRP and LINK were all negative over 24h.",
+        "ICE's January 19 primary announcement says NYSE's tokenized-securities platform is designed to support multiple blockchains for settlement and custody; ICE/NYSE has not publicly selected Avalanche as the production blockchain.",
+        "Reports from the September 17 Avalanche Summit quote ICE executive Michael Blaugrund saying ICE is very engaged with Avalanche and Ava Labs President Charley Cooper saying NYSE has tested Avalanche for roughly a year, but both stop short of a production selection.",
+        "Avalanche's primary documentation schedules Helicon mainnet activation for September 22 at 15:00 UTC; the upgrade changes execution, staking duration/renewal, uptime requirements, gas-floor logic and the reward curve, but does not mechanically guarantee a one-time token burn or demand shock.",
+        "Ethena Pay's current official pricing terms say qualifying cashback is credited in AVAX after card transactions settle, creating AVAX-denominated reward obligations. The public terms do not establish whether each reward is financed by contemporaneous market purchases versus inventory/treasury sourcing, so reward denomination is not equivalent to spot buy flow.",
+        "DefiLlama's current Avalanche page showed DeFi TVL about $584.8M, +9.97%/24h, stablecoin market cap about $1.358B and only +0.34%/7d, DEX volume about $698M over seven days and -13.14% week/week, plus a displayed 24h inflow of about -$1.69M.",
+        "The same DefiLlama page explicitly allows TVL to be displayed in USD or AVAX. During a +15% native-token rally, a rise in USD-denominated TVL is therefore not sufficient evidence of fresh deposits because mark-to-market valuation can contribute materially.",
+        "CoinGlass showed AVAX open interest about $489M, 24h futures volume about $1.87B versus roughly $310M spot volume and about $5.3M of 24h futures liquidations, confirming substantial derivatives participation during the move."
+      ],
+      "inference": "The best-supported current causal explanation remains expectation repricing around ICE/NYSE evaluation, the broader tokenization/regulatory theme and Helicon front-running, with derivatives/momentum amplification. Current on-chain flow evidence does not validate a broad Avalanche capital-inflow wave proportional to the price move.",
+      "catalyst_transmission_amplifier": {
+        "catalysts": [
+          "ICE/NYSE Avalanche evaluation disclosure on September 17-18",
+          "SEC tokenized-securities regulatory opening on September 17",
+          "Helicon activation scheduled for September 22",
+          "Ethena Pay AVAX-denominated cashback integration"
+        ],
+        "transmission": "higher perceived probability of future institutional/payment/network usage -> higher expected future AVAX utility/value capture -> discretionary spot buying and repricing",
+        "amplifiers": [
+          "high turnover and attention/momentum",
+          "large futures volume relative to visible spot volume",
+          "material open interest and liquidation activity",
+          "smaller market depth/free float than BTC/ETH"
+        ],
+        "unknowns": [
+          "whether ICE/NYSE selects Avalanche for any production role",
+          "actual incremental AVAX demand if selected in a multi-chain architecture",
+          "Ethena Pay transaction volume and whether reward AVAX is purchased contemporaneously",
+          "post-Helicon changes in stake persistence, issuance, fees/burn and chain usage"
+        ]
+      },
+      "matched_controls": [
+        "Major crypto assets were negative over the same 24h window, so broad beta cannot explain the AVAX move.",
+        "Stablecoin supply was approximately flat over seven days and DEX weekly volume was down, contradicting a simple broad on-chain-liquidity explanation.",
+        "USD TVL rose less than AVAX price over 24h; because TVL is marked in USD, that metric alone cannot distinguish deposits from asset-price revaluation."
+      ],
+      "method_learning_candidate": {
+        "id": "MI-H-20260920-MARK-TO-MARKET-IS-NOT-FLOW",
+        "status": "SUPPORTED_CASE_CANDIDATE_NOT_YET_CANONICAL",
+        "claim": "During large native-token moves, USD-denominated TVL and market-cap changes are not net-capital-flow measures. Separate marked-to-market valuation from stablecoin/bridge net flows, token-unit balances, actual deposits/withdrawals and executable spot flow before attributing price to capital inflow. Likewise, token-denominated rewards create obligations but not necessarily contemporaneous market buys unless sourcing is known."
+      },
+      "decision_support": {
+        "view": "WAIT / AVOID CHASING",
+        "reason": "AVAX is a genuine idiosyncratic leader, but production selection and realized value capture remain unproven while derivatives participation is large and broad on-chain flow confirmation is weak.",
+        "confirmation": "ICE/NYSE production selection or contract; persistent bridge/stablecoin inflows; price-normalized/token-unit TVL growth; rising fees/real activity; post-Helicon stake/issuance/burn effects; spot-led price continuation without leverage excess.",
+        "invalidation_of_bull_narrative": "No production role, post-Helicon real activity/flows fail to improve, derivatives leverage reverses, or institutional narrative does not translate into AVAX-specific fee/stake/demand capture."
+      },
+      "sources": [
+        "https://ir.theice.com/press/news-details/2026/The-New-York-Stock-Exchange-Develops-Tokenized-Securities-Platform/",
+        "https://build.avax.network/blog/helicon-upgrade",
+        "https://pay.ethena.fi/pricing",
+        "https://defillama.com/chain/avalanche",
+        "https://www.coinglass.com/currencies/AVAX",
+        "https://www.theblock.co/news/ecosystems/2026-09-18-ava-labs-president-says-nyse-spent-a-year-testing-avalanche-technology-tokenization-plans-415509"
+      ]
+    },
+    {
+      "topic": "Saudi Sunday equity response is a live control against equating attack headlines with verified lost barrels",
+      "label": "ENERGY / GEOPOLITICS / MATCHED NON-MOVE CONTROL",
+      "observed_facts": [
+        "Reuters reported flames and thick smoke near Riyadh airport after Houthi claims of attacks on Riyadh and a major Yanbu oil facility; Saudi authorities had not confirmed the claimed oil-facility damage at the cutoff.",
+        "Saudi Arabia's TASI index pared early losses and closed only 0.3% lower on Sunday; Saudi Aramco reversed an early decline and closed 1.3% higher, while Qatar fell 1.1%.",
+        "Iran separately warned that a major new U.S./allied attack would trigger sustained retaliation and reiterated it would not reopen Hormuz under current terms, preserving severe geopolitical tail risk.",
+        "Crude futures were still closed during this research window, so there is no open benchmark-oil price confirmation of incremental supply loss."
+      ],
+      "inference": "The first liquid local-equity response did not price a catastrophic verified loss of Saudi export capacity. This strengthens the rule that attack claims must be translated into confirmed physical deliverability before changing a crude thesis, while leaving a large upside tail because oil markets have not reopened and physical damage remains unresolved.",
+      "negative_findings": [
+        "Do not use Aramco's positive close as proof that no infrastructure was damaged; higher oil-risk premia can support producer equity and local equity markets are imperfect physical-supply sensors.",
+        "Do not call the weekend event bullish crude until verified export/logistics impairment or Monday physical/futures pricing confirms it."
+      ],
+      "decision_support": "CRUDE WAIT / HIGH TAIL RISK; next high-information evidence is verified Yanbu/logistics damage, loading data, physical differentials and the reopened futures curve.",
+      "sources": [
+        "https://www.reuters.com/world/middle-east/saudi-gulf-stocks-fall-after-houthis-claim-riyadh-attacks-2026-09-20/",
+        "https://www.reuters.com/world/asia-pacific/iran-warns-against-new-escalation-by-us-allies-2026-09-20/"
+      ]
+    },
+    {
+      "topic": "China LPR hold confirms structural credit-demand weakness rather than a fresh broad monetary impulse",
+      "label": "CHINA / MONEY / CREDIT / GLOBAL DIVERGENCE",
+      "observed_facts": [
+        "China kept the one-year LPR at 3.00% and five-year LPR at 3.50% for a 16th consecutive month on September 20.",
+        "August new bank lending was only about 60B yuan versus roughly 400B expected; household borrowing contracted for a sixth consecutive month and outstanding yuan-loan growth slowed to 4.9% year over year.",
+        "PBOC Governor Pan Gongsheng has described slower loan growth as a new normal as property and local-government credit demand shrinks and financing shifts toward bonds/equity in some sectors."
+      ],
+      "inference": "China remains a monetary-policy divergence case versus tightening developed-market central banks, but weak credit demand means low policy rates do not automatically produce strong private-money creation. Credit quantity and borrower balance-sheet willingness must be modeled separately from the policy-rate level.",
+      "decision_support": "No new China directional trade; this is a macro-state confirmation, not a regime change.",
+      "sources": [
+        "https://www.reuters.com/business/finance/china-keeps-benchmark-lending-rates-unchanged-16th-month-september-2026-09-20/",
+        "https://www.reuters.com/business/finance/china-august-bank-lending-disappoints-credit-demand-stays-weak-2026-09-14/",
+        "https://www.reuters.com/world/china/chinas-slower-loan-growth-is-new-normal-central-bank-governor-says-2026-09-16/"
+      ]
+    }
+  ],
+  "crypto_snapshot": {
+    "timestamp_utc": "2026-09-20T13:33:00Z",
+    "BTC": {"price": 80473.40, "pct_24h": -0.94, "pct_7d": 5.00},
+    "ETH": {"price": 2580.23, "pct_24h": -2.05, "pct_7d": 4.46},
+    "SOL": {"price": 108.18, "pct_24h": -2.92, "pct_7d": 8.64},
+    "XRP": {"price": 1.3776, "pct_24h": -4.14, "pct_7d": 3.20},
+    "LINK": {"price": 12.0968, "pct_24h": -2.88, "pct_7d": 7.83},
+    "AVAX": {"price": 10.6134, "pct_24h": 15.07, "pct_7d": 45.14, "turnover": 0.2618},
+    "ENA": {"price": 0.20276, "pct_24h": 2.67, "pct_7d": 47.24, "turnover": 0.4301},
+    "ZEC": {"price": 1449.16, "pct_24h": -5.53, "pct_7d": 33.61},
+    "HYPE": {"price": 91.01, "pct_24h": -1.34, "pct_7d": 18.13},
+    "stablecoin_context": "CoinMarketCap showed USDT market cap roughly $183.33B (-0.07%/7d) and USDC roughly $74.22B (-0.01%/7d); there is no broad stablecoin-supply impulse."
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast clears the evidence bar; existing WAIT states preserved."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. The AVAX mark-to-market-versus-flow rule is a useful method candidate and the BoE event strengthens the existing duration-absorption learning, but neither requires a dashboard regime change yet. No code or signal-system state changed.",
+  "next_research": [
+    "After crude markets reopen, test the Saudi weekend event against Brent/WTI, prompt spreads, physical differentials, tanker/loading data and verified Yanbu damage before changing crude WAIT.",
+    "After Helicon activates September 22, compare AVAX price-normalized/token-unit TVL, stablecoin supply, bridge inflows, DEX volumes, chain fees/revenue, validator count/stake persistence, issuance/burn and derivatives OI/funding to the pre-event baseline.",
+    "Seek primary ICE/NYSE production-selection disclosure; continue to treat evaluation/testing as different from a signed production role and multi-chain architecture as different from AVAX-exclusive value capture.",
+    "After U.S. markets reopen, reconcile finalized BTC/ETH ETF flows with spot relative strength, OI/funding/basis and exchange/on-chain absorption before changing BTC WAIT.",
+    "Continue the sovereign-duration state vector using maturity-weighted issuance, central-bank holdings/sales/reinvestments, buybacks and investor-class absorption rather than balance-sheet notional alone."
+  ]
+}
