@@ -1,3 +1,4 @@
+import money_intelligence_mission_integration as integration
 from money_intelligence_causal_memory import (
     CausalMemoryError,
     CausalRepricingMemory,
@@ -32,7 +33,7 @@ def _obs(ident, value, observed, available, *, metric="matched_return"):
     )
 
 
-def _supported_memory(*, lanes=("big_move", "strategy_component")):
+def _supported_memory(*, lanes=("big_move", "strategy_component"), family_id="treasury-flow-family"):
     memory = CausalRepricingMemory(half_life_days=30)
     formation = _obs(
         "formation-flow",
@@ -53,7 +54,7 @@ def _supported_memory(*, lanes=("big_move", "strategy_component")):
         lanes=lanes,
         created_at="2026-09-01T02:00:00Z",
         source_observation_ids=("formation-flow",),
-        family_id="treasury-flow-family",
+        family_id=family_id,
         evaluation_method="matched_mean_diff_v1",
         family_size=2,
         alpha=0.05,
@@ -149,6 +150,28 @@ def test_decay_and_rejection_each_fail_closed_for_downstream_emission():
     memory = _supported_memory(lanes=("strategy_component",))
     memory.reject_hypothesis("h-flow-impact")
     assert build_supported_missions(memory, as_of="2026-09-02T03:00:00Z") == []
+
+
+def test_canonical_rejected_strategy_family_cannot_emit_causal_mission():
+    memory = _supported_memory(
+        lanes=("strategy_component",),
+        family_id="DISC-BTC-LEADLAG-001-v1",
+    )
+
+    assert build_supported_missions(memory, as_of="2026-09-02T03:00:00Z") == []
+
+
+def test_unreadable_canonical_rejection_registry_fails_closed(monkeypatch):
+    memory = _supported_memory(lanes=("strategy_component",))
+
+    def broken_registry():
+        raise RuntimeError("canonical rejection registry unavailable")
+
+    monkeypatch.setattr(integration, "load_rejected_fingerprints", broken_registry)
+    feedback = causal_feedback(loader=lambda: memory, as_of="2026-09-02T03:00:00Z")
+
+    assert feedback["status"] == "WAIT_CAUSAL_MEMORY_UNAVAILABLE"
+    assert feedback["missions"] == []
 
 
 def test_unavailable_or_corrupt_durable_memory_cannot_authorize_stale_causal_work():
