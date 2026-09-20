@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import re
 from datetime import timedelta
 from pathlib import Path
 
@@ -22,6 +23,7 @@ if __package__:
         load_state,
         reserved_cost_usd,
         retry_delay_seconds,
+        safe_branch,
         save_state,
         utc_now,
     )
@@ -35,6 +37,7 @@ else:
         load_state,
         reserved_cost_usd,
         retry_delay_seconds,
+        safe_branch,
         save_state,
         utc_now,
     )
@@ -100,6 +103,68 @@ def mark_failure(state: dict, *, reason_code: str, config_path: Path = CONFIG_PA
     return updated
 
 
+def mark_dispatch_result(state: dict, *, request_id: str, task_id: str,
+                         workflow_run_id: int, base_main_sha: str, plan: dict,
+                         result: dict | None, pr_number: int | None,
+                         head_sha: str | None) -> dict:
+    """Bind one worker result to the immutable workflow dispatch in runner state."""
+    if (not re.fullmatch(r"[0-9a-f]{24}", request_id)
+            or not re.fullmatch(r"[A-Z0-9][A-Z0-9_-]{2,99}", task_id)
+            or not isinstance(workflow_run_id, int) or workflow_run_id <= 0
+            or not re.fullmatch(r"[0-9a-f]{40}", base_main_sha)
+            or not isinstance(plan, dict) or not isinstance(state, dict)
+            or state.get("version") != 1):
+        raise ValueError("malformed dispatch result identity")
+    if plan.get("run") is True:
+        if plan.get("task_id") != task_id:
+            raise ValueError("worker plan task ID mismatch")
+        worker = result.get("outcome") if isinstance(result, dict) else None
+        worker_status = worker.get("status") if isinstance(worker, dict) else None
+        if worker_status == "READY_FOR_PR":
+            if (not isinstance(pr_number, int) or pr_number <= 0
+                    or not isinstance(head_sha, str)
+                    or not re.fullmatch(r"[0-9a-f]{40}", head_sha)):
+                raise ValueError("published PR receipt missing exact head")
+            status, reason = "PR_CREATED", "candidate PR published"
+        elif worker_status in {"NO_CHANGE", "BLOCKED"}:
+            summary = worker.get("summary")
+            if not isinstance(summary, str) or not summary.strip():
+                raise ValueError("worker outcome summary missing")
+            status, reason = worker_status, summary.strip()[:500]
+        else:
+            status, reason = "FAILED", "WORKER_RESULT_MISSING_OR_MALFORMED"
+    elif plan.get("run") is False:
+        reason = plan.get("reason")
+        if not isinstance(reason, str) or not reason.strip():
+            raise ValueError("worker plan reason missing")
+        if reason == "DISPATCH_TASK_ID_MISMATCH":
+            status = "TASK_MISMATCH"
+        elif reason == "NO_READY_AUTONOMOUS_TASK":
+            status = "NOT_CLAIMED"
+        else:
+            status = "WAIT"
+    else:
+        raise ValueError("worker plan run flag malformed")
+    receipt = {"request_id": request_id, "workflow_run_id": workflow_run_id,
+               "task_id": task_id, "base_main_sha": base_main_sha,
+               "branch": safe_branch("data-market", task_id),
+               "status": status, "reason": reason}
+    if status == "PR_CREATED":
+        receipt.update(pr_number=pr_number, head_sha=head_sha)
+    if status == "WAIT":
+        receipt["retry_at"] = state.get("next_eligible_at") or iso(utc_now() + timedelta(hours=1))
+    updated = copy.deepcopy(state)
+    results = updated.setdefault("dispatch_results", {})
+    if not isinstance(results, dict):
+        raise ValueError("malformed durable dispatch results")
+    if request_id in results:
+        if results[request_id] != receipt:
+            raise ValueError("dispatch result identity already has a different outcome")
+        return state
+    results[request_id] = receipt
+    return updated
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
@@ -123,6 +188,17 @@ def main() -> int:
     show = sub.add_parser("show")
     show.add_argument("--state", required=True)
 
+    dispatch = sub.add_parser("mark-dispatch-result")
+    dispatch.add_argument("--state", required=True)
+    dispatch.add_argument("--request-id", required=True)
+    dispatch.add_argument("--task-id", required=True)
+    dispatch.add_argument("--run-id", required=True, type=int)
+    dispatch.add_argument("--base-sha", required=True)
+    dispatch.add_argument("--plan", required=True)
+    dispatch.add_argument("--result", required=True)
+    dispatch.add_argument("--pr-number", default="")
+    dispatch.add_argument("--head-sha", default="")
+
     args = parser.parse_args()
     path = Path(args.state)
     state = load_state(path)
@@ -140,6 +216,18 @@ def main() -> int:
         return 0
     if args.command == "show":
         print(json.dumps(state, indent=2, sort_keys=True))
+        return 0
+    if args.command == "mark-dispatch-result":
+        plan = json.loads(Path(args.plan).read_text(encoding="utf-8"))
+        result_path = Path(args.result)
+        result = json.loads(result_path.read_text(encoding="utf-8")) if result_path.exists() else None
+        state = mark_dispatch_result(
+            state, request_id=args.request_id, task_id=args.task_id,
+            workflow_run_id=args.run_id, base_main_sha=args.base_sha,
+            plan=plan, result=result,
+            pr_number=int(args.pr_number) if args.pr_number else None,
+            head_sha=args.head_sha or None)
+        save_state(path, state)
         return 0
     raise PolicyError("unknown state command")
 

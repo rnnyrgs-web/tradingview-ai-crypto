@@ -300,7 +300,7 @@ def highest_ready_task(config: dict[str, Any], coordination: dict[str, Any]) -> 
     return min(candidates, key=lambda t: (int(t.get("priority", 999999)), str(t.get("id", ""))), default=None)
 
 
-def plan_decision(config: dict[str, Any], coordination: dict[str, Any], state: dict[str, Any], current_main_sha: str, now: datetime) -> Decision:
+def plan_decision(config: dict[str, Any], coordination: dict[str, Any], state: dict[str, Any], current_main_sha: str, now: datetime, requested_task_id: str | None = None) -> Decision:
     if not config.get("enabled"):
         return Decision(False, "RUNNER_DISABLED")
     state = recover_state(state, coordination, now)
@@ -313,6 +313,8 @@ def plan_decision(config: dict[str, Any], coordination: dict[str, Any], state: d
     task = highest_ready_task(config, coordination)
     if task is None:
         return Decision(False, "NO_READY_AUTONOMOUS_TASK")
+    if requested_task_id and task.get("id") != requested_task_id:
+        return Decision(False, "DISPATCH_TASK_ID_MISMATCH")
     role = str(task["owner"])
     if task.get("branch") != coordination["roles"].get(role, {}).get("branch"):
         return Decision(False, "COORDINATION_BRANCH_MISMATCH")
@@ -456,7 +458,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
     val = sub.add_parser("validate"); val.add_argument("--config", default=str(CONFIG_PATH))
-    plan = sub.add_parser("plan"); plan.add_argument("--state", required=True); plan.add_argument("--main-sha", required=True); plan.add_argument("--output", required=True)
+    plan = sub.add_parser("plan"); plan.add_argument("--state", required=True); plan.add_argument("--main-sha", required=True); plan.add_argument("--output", required=True); plan.add_argument("--task-id", default="")
     execute = sub.add_parser("execute"); execute.add_argument("--state", required=True); execute.add_argument("--decision", required=True); execute.add_argument("--output", required=True)
     args = parser.parse_args()
     config = load_config(Path(getattr(args, "config", CONFIG_PATH)))
@@ -465,7 +467,7 @@ def main() -> int:
     coordination = load_coordination()
     if args.command == "plan":
         path = Path(args.state); state = recover_state(load_state(path), coordination, utc_now())
-        decision = plan_decision(config, coordination, state, args.main_sha, utc_now())
+        decision = plan_decision(config, coordination, state, args.main_sha, utc_now(), requested_task_id=args.task_id)
         state["last_seen_main_sha"] = args.main_sha; save_state(path, state)
         Path(args.output).write_text(json.dumps(decision.as_dict(), indent=2) + "\n", encoding="utf-8")
         print(json.dumps(decision.as_dict(), separators=(",", ":"))); return 0
