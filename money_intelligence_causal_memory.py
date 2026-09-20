@@ -390,6 +390,20 @@ class CausalRepricingMemory:
         )
         if self._is_rejected(hypothesis):
             raise CausalMemoryError("exact rejected hypothesis fingerprint is ineligible")
+        family_members = [
+            member
+            for member in self.hypotheses.values()
+            if member.family_id == hypothesis.family_id
+            and member.hypothesis_id != hypothesis.hypothesis_id
+        ]
+        family_members.append(hypothesis)
+        actual_family_size = len(family_members)
+        if any(
+            member.family_size < actual_family_size for member in family_members
+        ):
+            raise CausalMemoryError(
+                "family_size cannot undercount registered hypotheses in the family"
+            )
         return self._append_immutable(
             self.hypotheses, hypothesis.hypothesis_id, hypothesis
         )
