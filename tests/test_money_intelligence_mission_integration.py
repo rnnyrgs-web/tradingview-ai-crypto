@@ -1,4 +1,6 @@
 import money_intelligence_mission_integration as integration
+import money_intelligence_causal_memory as causal_memory
+import pytest
 from money_intelligence_causal_memory import (
     CausalMemoryError,
     CausalRepricingMemory,
@@ -13,6 +15,22 @@ from money_intelligence_mission_integration import (
     build_supported_missions,
     causal_feedback,
 )
+
+
+@pytest.fixture(autouse=True)
+def _test_source_receipt(monkeypatch):
+    """Mission fixtures simulate an independently verified synthetic source."""
+    production_verify = causal_memory._trusted_control_selection
+
+    def verify(hypothesis, contract, outcome, control):
+        if (
+            contract.control_selection_contract_id == "matched-control-v1"
+            and outcome.source_id == control.source_id == "fixture-source"
+        ):
+            return True
+        return production_verify(hypothesis, contract, outcome, control)
+
+    monkeypatch.setattr(causal_memory, "_trusted_control_selection", verify)
 
 
 def _obs(

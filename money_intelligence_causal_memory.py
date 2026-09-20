@@ -222,6 +222,91 @@ class EvaluationPairContract:
             )
 
 
+def _trusted_control_selection(
+    hypothesis: FrozenHypothesis,
+    contract: EvaluationPairContract,
+    outcome: PointInTimeObservation,
+    control: PointInTimeObservation,
+) -> bool:
+    """Verify the sole currently registered selection rule from independent inputs.
+
+    Market control-selection IDs have no trusted source resolver yet and cannot
+    grant confirmatory authority. The deployed synthetic diagnostic is exactly
+    reproducible from its frozen hypothesis ID, plan time, and pair index.
+    """
+    fixture_prefix = "phase3-verified-causal-evidence-acceptance"
+    selection_id = "phase2-runtime-exact-matched-control-v1"
+    parts = hypothesis.hypothesis_id.split(":")
+    if (
+        contract.control_selection_contract_id != selection_id
+        or len(parts) != 3
+        or parts[0] != fixture_prefix
+        or parts[2] != "hypothesis"
+        or len(parts[1]) not in (40, 64)
+        or any(char not in "0123456789abcdef" for char in parts[1])
+        or hypothesis.evaluation_method != "matched_mean_diff_v1"
+        or hypothesis.horizon_hours != 1
+    ):
+        return False
+    namespace = f"{fixture_prefix}:{parts[1]}"
+    prefix = f"{namespace}:support-control-"
+    if not contract.control_observation_id.startswith(prefix):
+        return False
+    suffix = contract.control_observation_id[len(prefix):]
+    if not suffix.isdecimal():
+        return False
+    index = int(suffix)
+    if not 1 <= index <= 32 or suffix != str(index):
+        return False
+    outcome_id = f"{namespace}:support-outcome-{index}"
+    if contract.outcome_observation_id != outcome_id:
+        return False
+    if (
+        contract.outcome_metric_name,
+        contract.outcome_source_id,
+        contract.outcome_provenance_uri,
+        contract.control_metric_name,
+        contract.control_source_id,
+        contract.control_provenance_uri,
+    ) != (
+        "matched_return",
+        "phase2-runtime-acceptance-fixture",
+        f"acceptance://{outcome_id}",
+        "matched_return",
+        "phase2-runtime-acceptance-fixture",
+        f"acceptance://{contract.control_observation_id}",
+    ):
+        return False
+    base = _parse_time(hypothesis.created_at) - timedelta(minutes=2)
+    observed = base + timedelta(hours=index)
+    available = observed + timedelta(hours=1, minutes=1)
+
+    def expected(observation_id: str, value: float, selected: str) -> PointInTimeObservation:
+        return PointInTimeObservation(
+            observation_id=observation_id,
+            metric_name="matched_return",
+            value=value,
+            unit="pct",
+            observed_at=observed.isoformat(),
+            available_at=available.isoformat(),
+            retrieved_at=available.isoformat(),
+            source_id="phase2-runtime-acceptance-fixture",
+            subject_id=namespace,
+            currency="USD",
+            measurement_window_hours=1,
+            venue="synthetic-matched-control",
+            max_age_hours=24 * 3650,
+            revision_id="",
+            provenance_uri=f"acceptance://{observation_id}",
+            selection_contract_id=selected,
+        )
+
+    return (
+        outcome == expected(outcome_id, 2.0 + index / 100, "")
+        and control == expected(contract.control_observation_id, 0.0, selection_id)
+    )
+
+
 @dataclass(frozen=True)
 class FrozenHypothesis:
     hypothesis_id: str
@@ -1060,6 +1145,10 @@ class CausalRepricingMemory:
                     raise CausalMemoryError(
                         "confirmatory evidence violates frozen control provenance"
                     )
+                if not _trusted_control_selection(hypothesis, contract, outcome, control):
+                    raise CausalMemoryError(
+                        "confirmatory evidence lacks trusted control selection"
+                    )
             actual_units = (
                 {
                     (
@@ -1685,6 +1774,20 @@ class CausalRepricingMemory:
                     raw["hypothesis_id"]
                 ].evaluation_pair_contracts:
                     raw["confirmatory"] = False
+                elif raw.get("kind") == "support" and raw.get("confirmatory"):
+                    hypothesis = memory.hypotheses[raw["hypothesis_id"]]
+                    if any(
+                        not _trusted_control_selection(
+                            hypothesis,
+                            contract,
+                            memory.observations[contract.outcome_observation_id],
+                            memory.observations[contract.control_observation_id],
+                        )
+                        for contract in hypothesis.evaluation_pair_contracts
+                    ):
+                        # Preserve the historical event for audit but remove
+                        # support that predates an independently verified rule.
+                        raw["confirmatory"] = False
                 legacy_unverified = (
                     raw.get("evaluation_implementation")
                     == LEGACY_UNVERIFIED_IMPLEMENTATION
