@@ -90,6 +90,10 @@ def _time(value: Any) -> bool:
         return False
 
 
+def _at(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
 def _nonempty(value: Any) -> bool:
     return isinstance(value, str) and bool(value.strip())
 
@@ -131,6 +135,7 @@ def validate_v2(state: Any) -> None:
     _require(isinstance(state, dict) and state.get("version") == 2, "malformed v2 state")
     _require(all(isinstance(state.get(k), dict) for k in
                  ("tasks", "events", "escalations", "successors")), "malformed v2 maps")
+    integration_ids: set[str] = set()
     for task_id, record in state["tasks"].items():
         _require(_nonempty(task_id) and isinstance(record, dict)
                  and record.get("task_id") == task_id and _nonempty(record.get("status"))
@@ -200,6 +205,144 @@ def validate_v2(state: Any) -> None:
                      "malformed repair identity")
         _require((record.get("active_repair") in record["repairs"])
                  == (record["status"] == "REPAIR"), "malformed active repair")
+        history = record.get("integration_history", [])
+        current = record.get("integration")
+        _require(isinstance(history, list) and (not history or current is not None),
+                 "malformed integration history")
+        receipts = history + ([current] if current is not None else [])
+        _require(record["status"] != "DONE" or bool(receipts),
+                 "DONE requires integration receipt")
+        for index, integration in enumerate(receipts):
+            _require(isinstance(integration, dict), "malformed integration receipt")
+            decision = integration.get("decision")
+            fields = {"integration_id", "task_id", "review_id", "review_identity",
+                      "pr_number", "head_sha", "decision", "lead", "at", "event_id",
+                      "event_digest", "source_event", "content_digest"}
+            if decision == "INTEGRATED":
+                fields.add("resulting_main_sha")
+            elif decision == "DEFERRED":
+                fields.add("retry_at")
+            if index:
+                fields.update({"previous_integration_id", "resumed_at", "resume_kind"})
+            review = record["reviews"].get(integration.get("review_id"))
+            _require(set(integration) == fields
+                     and _nonempty(integration.get("integration_id"))
+                     and integration["integration_id"] not in integration_ids
+                     and integration.get("task_id") == task_id
+                     and type(integration.get("pr_number")) is int
+                     and integration["pr_number"] > 0
+                     and _sha(integration.get("head_sha"))
+                     and _nonempty(integration.get("lead"))
+                     and decision in {"INTEGRATED", "REJECTED", "DEFERRED"}
+                     and _time(integration.get("at"))
+                     and isinstance(review, dict) and review.get("outcome") == "APPROVED"
+                     and review.get("pr_number") == integration["pr_number"]
+                     and review.get("head_sha") == integration["head_sha"]
+                     and review.get("fingerprint") == integration.get("review_identity")
+                     and _at(integration["at"]) >= _at(review["at"])
+                     and _nonempty(integration.get("event_id"))
+                     and isinstance(integration.get("source_event"), dict)
+                     and integration["source_event"].get("event_id") == integration["event_id"]
+                     and integration["source_event"].get("type") == "INTEGRATION"
+                     and integration["source_event"].get("task_id") == task_id
+                     and all(integration["source_event"].get(k) == integration.get(k)
+                             for k in ("integration_id", "review_id", "pr_number",
+                                       "head_sha", "decision", "lead", "at"))
+                     and (decision != "INTEGRATED" or
+                          integration["source_event"].get("resulting_main_sha") ==
+                          integration.get("resulting_main_sha"))
+                     and (decision != "DEFERRED" or
+                          integration["source_event"].get("retry_at") == integration.get("retry_at"))
+                     and _digest(integration["source_event"]) == integration["event_digest"]
+                     and state["events"].get(integration["event_id"]) == integration.get("event_digest")
+                     and integration.get("content_digest") == _digest({k: v for k, v in
+                            integration.items() if k != "content_digest"}),
+                     "malformed integration receipt")
+            integration_ids.add(integration["integration_id"])
+            if index < len(history):
+                _require(decision == "DEFERRED", "historical integration must be deferred")
+            if decision == "INTEGRATED":
+                _require(_sha(integration.get("resulting_main_sha")),
+                         "malformed integration resulting main")
+            if decision == "DEFERRED":
+                _require(_time(integration.get("retry_at"))
+                         and _at(integration["retry_at"]) > _at(integration["at"]),
+                         "malformed integration retry time")
+            if index:
+                previous = receipts[index - 1]
+                _require(previous["decision"] == "DEFERRED"
+                         and integration.get("previous_integration_id") == previous["integration_id"]
+                         and integration.get("resume_kind") in {"RESUME", "REBASE"}
+                         and _time(integration.get("resumed_at"))
+                         and _at(integration["at"]) > _at(previous["at"])
+                         and _at(integration["at"]) >= _at(previous["retry_at"])
+                         and _at(integration["at"]) >= _at(integration["resumed_at"])
+                         and _at(integration["resumed_at"]) >= _at(previous["at"])
+                         and (integration["resume_kind"] == "REBASE" or
+                              _at(integration["resumed_at"]) >= _at(previous["retry_at"])),
+                         "malformed integration chronology or resume link")
+        if receipts:
+            latest = receipts[-1]
+            resumption = record.get("integration_resumption")
+            if latest["decision"] == "INTEGRATED":
+                _require(record["status"] == "DONE" and record.get("worker_free") is True
+                         and record.get("completed_main_sha") == latest["resulting_main_sha"]
+                         and latest["pr_number"] == record.get("pr_number")
+                         and latest["head_sha"] == record.get("head_sha")
+                         and resumption is None, "inconsistent completed integration")
+            elif latest["decision"] == "REJECTED":
+                _require(record["status"] in {"BLOCKED", "USER_ACTION_REQUIRED"}
+                         and resumption is None
+                         and latest["pr_number"] == record.get("pr_number")
+                         and latest["head_sha"] == record.get("head_sha"),
+                         "inconsistent rejected integration")
+            else:
+                if (record["status"] in {"WAIT", "USER_ACTION_REQUIRED"}
+                        and record.get("wait_phase") == "integration"):
+                    _require(record.get("wait_phase") == "integration"
+                             and record.get("retry_at") == latest["retry_at"]
+                             and resumption is None, "inconsistent deferred integration wait")
+                else:
+                    _require(record["status"] in {"READY_FOR_INTEGRATION", "REVIEW_REQUIRED",
+                                                       "REVIEWING", "REVISION_REQUIRED", "REPAIR",
+                                                       "WAIT", "USER_ACTION_REQUIRED"}
+                             and isinstance(resumption, dict)
+                             and set(resumption) == {"integration_id", "kind", "at",
+                                                     "event_id", "event_digest", "source_event",
+                                                     "content_digest"}
+                             and resumption["integration_id"] == latest["integration_id"]
+                             and resumption["kind"] in {"RESUME", "REBASE"}
+                             and _time(resumption["at"])
+                             and isinstance(resumption["source_event"], dict)
+                             and resumption["source_event"].get("event_id") == resumption["event_id"]
+                             and resumption["source_event"].get("type") == resumption["kind"]
+                             and resumption["source_event"].get("task_id") == task_id
+                             and resumption["source_event"].get("at") == resumption["at"]
+                             and _digest(resumption["source_event"]) == resumption["event_digest"]
+                             and _at(resumption["at"]) >= _at(latest["at"])
+                             and (resumption["kind"] == "REBASE" or
+                                  _at(resumption["at"]) >= _at(latest["retry_at"]))
+                             and state["events"].get(resumption["event_id"]) ==
+                                 resumption["event_digest"]
+                             and resumption["content_digest"] == _digest({k: v for k, v in
+                                  resumption.items() if k != "content_digest"}),
+                             "inconsistent integration resumption")
+                    if record["status"] == "WAIT":
+                        _require(record.get("wait_phase") == "review"
+                                 and _time(record.get("retry_at")),
+                                 "inconsistent post-rebase review wait")
+        else:
+            _require(record.get("integration_resumption") is None
+                     and record.get("completed_main_sha") is None,
+                     "orphan integration state")
+    for task_id, successor in state["successors"].items():
+        record = state["tasks"].get(task_id)
+        _require(isinstance(successor, dict) and isinstance(record, dict)
+                 and record["status"] == "DONE"
+                 and record.get("integration", {}).get("decision") == "INTEGRATED"
+                 and successor.get("previous_task_id") == task_id
+                 and successor.get("integration_id") == record["integration"]["integration_id"],
+                 "successor integration identity mismatch")
     _require(all(_nonempty(k) and isinstance(v, str)
                  and bool(re.fullmatch(r"[0-9a-f]{64}", v))
                  for k, v in state["events"].items()),
@@ -421,6 +564,9 @@ def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str,
                  and _nonempty(e.get("attempt_id")) and e["attempt_id"] not in r["attempts"]
                  and _nonempty(e.get("request_id"))
                  and _nonempty(e.get("budget_reservation_id")), "invalid rebase identity")
+        if status == "WAIT" and r.get("wait_phase") == "integration":
+            r["integration_resumption"] = _integration_resumption(
+                r["integration"]["integration_id"], "REBASE", e)
         old = r["attempts"][r["active_attempt"]]
         if "dispatch_id" in r:
             old["dispatch_id"] = r.pop("dispatch_id")
@@ -495,6 +641,9 @@ def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str,
                      datetime.fromisoformat(r["retry_at"].replace("Z", "+00:00")),
                  "resume is not due or phase differs")
         r["status"] = "REVIEW_REQUIRED" if e["phase"] == "review" else "READY_FOR_INTEGRATION"
+        if e["phase"] == "integration":
+            r["integration_resumption"] = _integration_resumption(
+                r["integration"]["integration_id"], "RESUME", e)
         r.pop("retry_at")
         r.pop("wait_phase")
     elif kind == "REVIEW":
@@ -577,18 +726,50 @@ def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str,
                  and _nonempty(e.get("integration_id")) and _nonempty(e.get("lead"))
                  and e.get("decision") in {"INTEGRATED", "REJECTED", "DEFERRED"},
                  "invalid Lead integration decision")
+        _require(all(e["integration_id"] != receipt["integration_id"]
+                     for task_record in state["tasks"].values()
+                     for receipt in task_record.get("integration_history", [])
+                     + ([task_record["integration"]] if "integration" in task_record else [])),
+                 "duplicate integration identity")
+        previous = r.get("integration")
+        resumption = r.get("integration_resumption")
+        if previous is not None:
+            _require(previous["decision"] == "DEFERRED" and isinstance(resumption, dict)
+                     and resumption["integration_id"] == previous["integration_id"]
+                     and _at(e["at"]) > _at(previous["at"])
+                     and _at(e["at"]) >= _at(previous["retry_at"])
+                     and _at(e["at"]) >= _at(resumption["at"]),
+                     "integration resume chronology mismatch")
         if e["decision"] == "INTEGRATED":
             _require(_sha(e.get("resulting_main_sha")), "integrated main SHA required")
+            _require(e.get("retry_at") is None, "integrated decision cannot defer")
         if e["decision"] == "DEFERRED":
-            _require(_time(e.get("retry_at")) and r.get("wait_count", 0) < 2,
+            _require(_time(e.get("retry_at")) and _at(e["retry_at"]) > _at(e["at"])
+                     and e.get("resulting_main_sha") is None
+                     and r.get("wait_count", 0) < 2,
                      "deferred integration requires bounded retry_at")
             r["wait_count"] = r.get("wait_count", 0) + 1
             r["retry_at"], r["wait_phase"] = e["retry_at"], "integration"
-        if "integration" in r:
-            r.setdefault("integration_history", []).append(r["integration"])
-        r["integration"] = {k: e.get(k) for k in ("integration_id", "review_id", "pr_number",
-                                                    "head_sha", "decision", "lead",
-                                                    "resulting_main_sha", "at")}
+        if e["decision"] == "REJECTED":
+            _require(e.get("retry_at") is None and e.get("resulting_main_sha") is None,
+                     "rejected integration has contradictory fields")
+        if previous is not None:
+            r.setdefault("integration_history", []).append(copy.deepcopy(previous))
+        integration = {k: e[k] for k in ("integration_id", "review_id", "pr_number",
+                                          "head_sha", "decision", "lead", "at", "event_id")}
+        integration.update(task_id=r["task_id"], review_identity=review["fingerprint"],
+                           event_digest=_digest(e), source_event=copy.deepcopy(e))
+        if e["decision"] == "INTEGRATED":
+            integration["resulting_main_sha"] = e["resulting_main_sha"]
+            r["completed_main_sha"] = e["resulting_main_sha"]
+        elif e["decision"] == "DEFERRED":
+            integration["retry_at"] = e["retry_at"]
+        if previous is not None:
+            integration.update(previous_integration_id=previous["integration_id"],
+                               resumed_at=resumption["at"], resume_kind=resumption["kind"])
+            r.pop("integration_resumption")
+        integration["content_digest"] = _digest(integration)
+        r["integration"] = integration
         r["status"] = "DONE" if e["decision"] == "INTEGRATED" else "BLOCKED" if e["decision"] == "REJECTED" else "WAIT"
         r["worker_free"] = e["decision"] == "INTEGRATED"
     elif kind == "SUCCESSOR":
@@ -606,6 +787,7 @@ def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str,
         state["successors"][r["task_id"]] = {k: e[k] for k in
                                              ("previous_task_id", "successor_task_id", "engine",
                                               "routing_decision", "deduplication_proof", "at")}
+        state["successors"][r["task_id"]]["integration_id"] = r["integration"]["integration_id"]
     elif kind == "USER_ACTION_REQUIRED":
         _require(_nonempty(e.get("escalation_id")) and e.get("reason") in ESCALATIONS
                  and e.get("severity") in {"LOW", "MEDIUM", "HIGH", "CRITICAL"}
@@ -619,6 +801,14 @@ def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str,
         r["status"] = "USER_ACTION_REQUIRED"
     else:
         raise ValueError("unsupported lifecycle event")
+
+
+def _integration_resumption(integration_id: str, kind: str, event: dict) -> dict:
+    receipt = {"integration_id": integration_id, "kind": kind, "at": event["at"],
+               "event_id": event["event_id"], "event_digest": _digest(event),
+               "source_event": copy.deepcopy(event)}
+    receipt["content_digest"] = _digest(receipt)
+    return receipt
 
 
 def _replace_pr_head(record: dict, head_sha: str) -> None:

@@ -39,6 +39,15 @@ rebase, and that rebase binds the new head to the repair findings. A human
 Lead records the integration decision after merge and binds it to the resulting
 current main SHA; the reducer never merges.
 
+Every Lead decision has a globally unique integration ID and an immutable
+receipt bound to the task, PR, exact head, approved review identity, Lead,
+decision, event hash, and decision-specific main SHA or retry time. A deferred
+decision stays in ordered history after resume; a later decision requires a
+new ID and records which resume or rebase released the deferral. Reload
+validation checks every current and historical receipt, chronology, the
+completed main SHA, and the successor's integration ID. Missing or altered
+receipts fail closed, including after restart or duplicate event delivery.
+
 `DONE` frees the worker. A successor event can then cite only the completed
 task's canonical `next_task`, provided the Lead has updated the coordination
 queue to mark that successor `READY`. The selection function evaluates
