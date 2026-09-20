@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T1022Z",
+  "information_cutoff": "2026-09-20T10:22:14Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_before_persist": "d200f84db125b6ee716c605a6f59044d6fc2dcfd",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles_before_conclusions": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "run_start_utc": "2026-09-20T10:18:47Z",
+    "artifact_cutoff_utc": "2026-09-20T10:22:14Z",
+    "seconds_this_run_minimum": 207,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 1435,
+    "minimum_cumulative_seconds_since_last_owner_report": 1642,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted; schedule gaps, idle time, publication timestamps and background time are excluded."
+  },
+  "highest_information_question": "Can expectation-adjusted private/free-float duration supply by maturity and marginal-buyer capacity explain long-end sovereign repricing more faithfully than scalar QE/QT or gross buyback amounts?",
+  "fresh_research": [
+    {
+      "topic": "BoE 2025 versus 2026 matched control strengthens expectation-adjusted maturity-composition mechanism",
+      "label": "SOVEREIGN DURATION / MATCHED POLICY CONTROL / METHOD VALIDATION",
+      "observed_facts": [
+        "In September 2025 the BoE reduced its annual APF rundown target from GBP100B to GBP70B and changed active-sale weights to roughly 40% short, 40% medium and 20% long. The Reuters poll median had expected about GBP67.5B, so the aggregate slowdown was substantially anticipated.",
+        "The 2025 same-day market reaction was mild: Reuters-republished market data showed the 2-year gilt yield about 2.5bp lower and the 30-year about 1bp lower, consistent with little special long-end surprise.",
+        "Before the September 2026 review, the BoE July Market Participants Survey median expected a GBP50B APF stock reduction for Oct.2026-Sep.2027; among respondents expecting active sales, the mean expected maturity weights were 43.3% short, 41.1% medium and 15.6% long.",
+        "The September 2026 decision set a multi-year average rundown of GBP46B per year and GBP20B annual active sales, so the aggregate pace was only modestly below the July survey median. The much larger structural change was the long-end path: GBP120B of the longest APF gilts, including all gilts maturing after 2049 and part of the 2049 issue, were retained to back banknotes; GBP222B of shorter holdings were designated to mature naturally; GBP146B maturing from 2035 to 2049 were designated for future sales; APF auctions were paused while a possible DMO implementation model is reviewed.",
+        "After the September 2026 announcement, Reuters reported the 30-year gilt yield fell about 12bp to 5.74%, versus about 8bp for the 10-year and 6bp for the 2-year, even though the Bank Rate decision itself remained hawkish: Bank Rate was held at 3.75% and three MPC members voted for a 25bp hike.",
+        "BoE July 2026 analysis estimates cumulative QT since 2022 raised 10-year gilt yields by only about 20-30bp, while roughly 200bp of the broader rise in term premia reflected a much wider set of forces including global policy uncertainty, high sovereign issuance and structurally weaker domestic long-duration demand."
+      ],
+      "inference": "The 2025/2026 matched comparison supports, without proving a universal elasticity, the view that sovereign-bond markets respond to the EXPECTATION-ADJUSTED change in market-facing duration by maturity rather than the headline annual QT number. In 2026 the aggregate rundown surprise was small relative to survey expectations, while the long-duration path changed much more materially and the 30-year sector outperformed the front end despite a hawkish short-rate backdrop. In 2025 the largely expected slowdown and maturity skew produced only a mild long-end reaction.",
+      "causal_chain": "pre-event expected APF runoff/sales by maturity -> realized retention/maturity/sale path differs -> expected private free-float duration at the long end falls relative to prior expectations -> marginal pension/insurer/dealer/relative-value buyers face less price-insensitive supply -> long-term term premium falls relative to front-end policy-rate pricing -> long yields rally even while Bank Rate expectations can remain hawkish",
+      "capital_source_destination": "The mechanism is principally a change in who must absorb duration and at what yield, not evidence of a cash injection into risk assets. Any spillover into equities, mortgages or credit occurs secondarily through lower long discount rates and financing costs.",
+      "matched_control": "September 2025: QT slowdown and long-sale skew were broadly expected; 30-year gilt reaction was around -1bp versus roughly -2.5bp for 2-year. September 2026: aggregate pace near survey expectation but a much stronger structural long-duration retention/sales-path change; 30-year about -12bp versus 2-year about -6bp. Concurrent global bond/oil news prevents causal purity, so this is mechanism-supporting rather than a calibrated causal coefficient.",
+      "negative_findings": [
+        "Do not interpret the GBP46B average rundown as the sole causal variable; it was close to the survey median GBP50B expectation.",
+        "Do not say all long gilts will never be sold: the retained GBP120B consists of the longest holdings, while the GBP146B sale pool spans 2035-2049 maturities and future implementation is still being designed.",
+        "Do not infer a universal basis-point effect from QT dollars or from this single event.",
+        "Do not merge the short-rate policy channel with the duration/term-premium channel; the September 2026 event shows they can move in opposite directions.",
+        "Do not treat the BoE decision as pure monetary easing: the Bank Rate stance remained hawkish and the balance-sheet plan still removes monetary-policy holdings over time."
+      ],
+      "learning_candidate": {
+        "proposed_id": "MI-L-20260920-013",
+        "status": "SUPPORTED_METHOD_RULE_PENDING_SAFE_CANONICAL_LEDGER_PROMOTION",
+        "claim": "For sovereign bond markets, model expectation-adjusted private/free-float duration equivalents by maturity and marginal-buyer risk-bearing capacity rather than scalar QE/QT or balance-sheet dollars. Separate policy-rate expectations, central-bank holdings/retention/reinvestment/runoff/sales, fiscal issuance, debt-manager operations and buyer capacity."
+      },
+      "decision_support": "Research-model upgrade only; no standalone sovereign-duration BUY/SHORT is authorized from this mechanism."
+    },
+    {
+      "topic": "Treasury buybacks are liquidity/intermediation operations, not automatic net duration removal",
+      "label": "U.S. DEBT MANAGEMENT / CAUSAL MODEL CORRECTION",
+      "observed_facts": [
+        "On August 19, 2026 the U.S. Treasury at least doubled the maximum size of long-end liquidity-support buybacks in the 10-20y and 20-30y nominal sectors from $2B to at least $4B per operation, citing strong high-quality offers and a desire to support liquidity.",
+        "Treasury's August 3, 2026 borrowing estimate explicitly states that buybacks are not expected to significantly affect privately-held net marketable borrowing because new issuance replaces securities bought back.",
+        "Treasury's buyback design materials describe liquidity-support buybacks as an outlet for off-the-run holdings that can free dealer/intermediary balance sheet and improve willingness to make markets. They are not intended as a fixed-quantity QE program or as an acute-stress backstop.",
+        "Treasury officials have said the buyback program is small relative to total debt and has changed weighted-average maturity only by a few weeks; direct effects on broad duration are therefore limited unless replacement issuance composition materially differs.",
+        "Treasury uses duration-adjusted ten-year-equivalent measures in evaluating auction participation for expanded direct buyback access, reinforcing that notional dollars and duration exposure are distinct state variables."
+      ],
+      "inference": "Gross Treasury buyback volume must not be subtracted mechanically from private duration supply. The correct bridge is buyback security/maturity and dealer-balance-sheet relief minus replacement issuance and its maturity/duration. Buybacks can improve local liquidity and reduce intermediation frictions while leaving net marketable borrowing largely unchanged.",
+      "causal_chain": "Treasury buys off-the-run securities -> dealers/investors gain a price-sensitive exit and balance-sheet capacity -> local liquidity/on-the-run-off-the-run dislocations can improve -> Treasury replaces financing through issuance -> net private borrowing may be little changed -> duration effect depends on maturity/duration difference between bought-back and replacement securities rather than gross buyback dollars",
+      "negative_findings": [
+        "Do not classify Treasury liquidity-support buybacks as QE.",
+        "Do not subtract gross buybacks one-for-one from net Treasury supply.",
+        "Do not infer that doubling the operation cap creates a commensurate fall in long yields; actual accepted amounts, replacement issuance, pre-event expectations and market depth matter.",
+        "Do not mix market-functioning/liquidity effects with the portfolio-balance duration channel."
+      ],
+      "method_upgrade_candidate": "In the sovereign-duration state vector, track debt-manager buybacks as two legs: securities removed by CUSIP/maturity/duration and replacement issuance by maturity/duration, plus a separate dealer/intermediation-liquidity variable."
+    },
+    {
+      "topic": "Weekend crypto control: AVAX remains idiosyncratic while broad leverage continues to contract",
+      "label": "DAILY BIG-MOVE CAUSAL LAB / LIVE CROSS-SECTION",
+      "observed_facts": [
+        "CoinMarketCap at 10:19 UTC showed BTC about $80.36K (-1.06%/24h), ETH $2,575.7 (-2.42%), SOL $108.06 (-3.33%), XRP $1.378 (-2.48%) and LINK $11.99 (-4.18%).",
+        "AVAX was about $9.79, +9.02%/24h and +33.47%/7d with turnover about 26.0% of market cap, while ZEC was about $1,442, -8.38%/24h but +31.92%/7d and +122.73%/30d.",
+        "Global crypto derivatives open interest was about $439.5B, down 2.71%/24h; perpetual OI was down 2.72%. Average perpetual funding remained positive around 0.0063.",
+        "BTC 24h liquidations were about $47.95M, with $34.61M longs versus $13.34M shorts; the latest 12h window was overwhelmingly long liquidations. U.S. ETF markets are closed, so no fresh regulated spot-flow evidence exists."
+      ],
+      "inference": "AVAX remains a real idiosyncratic relative-strength outlier rather than simple broad-beta leverage expansion, but earlier primary-document work shows Helicon's native-token value capture is economically two-sided and not yet proven. BTC continues to absorb deleveraging relatively well but still lacks fresh institutional-flow confirmation.",
+      "decision_support": "AVAX WAIT / AVOID CHASING. BTC WAIT / tactical confirmation candidate. ZEC WAIT / AVOID CHASING."
+    }
+  ],
+  "daily_big_move_lab_delta": {
+    "selected_or_retested": [
+      "September 2026 BoE long-gilt rally: 30y yields fell roughly twice the 2y move despite a hawkish Bank Rate backdrop; matched against September 2025 where a broadly expected QT slowdown/skew generated only a mild long-end reaction.",
+      "AVAX remained roughly +9%/24h while major crypto assets were negative and aggregate OI contracted, preserving the idiosyncratic-move classification without upgrading the token-value-capture thesis.",
+      "BTC near $80.4K during continuing OI contraction and long-heavy liquidations remains constructive absorption but not a BUY without reopened ETF/spot evidence.",
+      "Traditional U.S./European cash markets and crude futures remain closed for the weekend; no price response is fabricated."
+    ],
+    "method_upgrade_candidate": "For sovereign duration, freeze pre-event expectations and calculate net market-facing duration by maturity from fiscal issuance + central-bank retention/reinvestment/runoff/sales + debt-manager buyback/replacement issuance, then condition the expected price impact on marginal-buyer and dealer/basis capacity."
+  },
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast clears the evidence bar; existing WAIT states are preserved."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. MI-L-20260920-013 is now materially strengthened by a 2025/2026 BoE matched control and U.S. Treasury debt-management decomposition, but safe JSONL append should be done only when the canonical ledger can be updated without truncation/race risk. Dashboard/actionability is unchanged, so no dashboard churn. No code or signal-system state changed.",
+  "next_research": [
+    "Build an event-study table for BoE 2024-2026 QT reviews with pre-event survey expectations, realized annual rundown, active-sale amount, maturity weights/retention and 2y/10y/30y responses at 30m/close/5d.",
+    "Extend the net-duration state vector to U.S. Treasuries using coupon issuance, SOMA redemptions/holdings, Treasury buyback accepted CUSIPs and replacement issuance, with ten-year-equivalent duration rather than notional dollars.",
+    "Add marginal-buyer capacity variables: dealer inventories/depth, pension/insurer structural demand, foreign official/private demand, hedge-fund basis exposure/repo capacity and household/mutual-fund absorption.",
+    "After U.S. markets reopen, reconcile finalized BTC ETF flows with native-unit OI/funding/basis and exchange/on-chain spot absorption before changing BTC WAIT.",
+    "After crude futures reopen, compare benchmark prices, physical differentials, Yanbu/loadings and verified Saudi/Russian infrastructure throughput before changing the oil WAIT state.",
+    "After Helicon activates September 22, measure validator count, total AVAX staked, new stake-cycle durations, auto-renew/exit behavior, issuance/reward rate, minimum gas floor, fees and burn against the frozen baseline."
+  ],
+  "sources": [
+    "https://www.bankofengland.co.uk/monetary-policy-summary-and-minutes/2026/september-2026",
+    "https://www.bankofengland.co.uk/markets/market-intelligence/survey-results/2026/market-participants-survey-results-july-2026",
+    "https://www.bankofengland.co.uk/markets/market-notices/2026/asset-purchase-facility-gilt-sales-market-notice-17-september-2026",
+    "https://www.bankofengland.co.uk/bank-insights/2026/the-promise-to-pay-what-backs-banknotes",
+    "https://www.bankofengland.co.uk/monetary-policy-report/2026/july-2026",
+    "https://www.bankofengland.co.uk/monetary-policy-summary-and-minutes/2025/september-2025",
+    "https://www.reuters.com/world/uk/bank-england-slows-pace-qt-skews-away-long-dated-gilt-sales-2025-09-18/",
+    "https://www.reuters.com/business/investors-cheer-boe-move-pause-gilt-sales-driving-bond-rally-2026-09-17/",
+    "https://home.treasury.gov/news/press-releases/sb0607",
+    "https://home.treasury.gov/news/press-releases/sb0584",
+    "https://home.treasury.gov/news/press-releases/jy1757",
+    "https://www.federalreserve.gov/econres/notes/feds-notes/who-buys-treasuries-when-the-fed-reduces-its-holdings-20240614.html",
+    "https://www.federalreserve.gov/econres/notes/feds-notes/the-cross-border-trail-of-the-treasury-basis-trade-20251015.html",
+    "CoinMarketCap connected real-time quotes/global derivatives metrics, 2026-09-20 10:19 UTC"
+  ],
+  "paid_resource_policy": "No new paid resources authorized; free/public/primary sources, connected CoinMarketCap data and high-quality contemporaneous reporting were used.",
+  "real_money_trading": "DISABLED / NOT AUTHORIZED"
+}
