@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import UUID
 
+import httpx
 import pytest
 
 import db
@@ -373,6 +374,52 @@ def test_strategy_display_logic_is_independent_of_2x_ledger_failure(tmp_path, mo
     snapshot = _snapshot(tmp_path)
     assert len(snapshot["strategies"]) == 1
     assert snapshot["candidates_2x"] == []
+
+
+@pytest.mark.parametrize("transport_error", [httpx.ConnectError, httpx.TimeoutException])
+def test_2x_transport_failure_preserves_independent_results(tmp_path, monkeypatch, transport_error):
+    cycle = {
+        "information_cutoff": "2026-09-19T18:42:17Z",
+        "fresh_validated_observations": [{
+            "topic": "ENA/StablecoinX event", "observed_facts": ["Timestamped filing"],
+            "inference": "Possible repricing", "unknowns": ["Marginal buyer unknown"],
+            "decision_support": "WAIT",
+        }],
+        "next_research": ["Freeze ENA spot flow"],
+        "source_log": [{"url": "https://www.sec.gov/example", "topic": "ENA filing"}],
+    }
+    _base(tmp_path, [_strategy()], [_evidence()], cycle=cycle,
+          lab={"forward_candidates": [_forward_candidate(0)]})
+
+    def fail_lookup(request):
+        raise transport_error("Supabase unavailable", request=request)
+
+    with httpx.Client(transport=httpx.MockTransport(fail_lookup)) as client:
+        monkeypatch.setattr(db, "configured", lambda: True)
+        monkeypatch.setattr(db, "SUPABASE_URL", "https://supabase.example")
+        monkeypatch.setattr(db, "SUPABASE_SECRET_KEY", "test")
+        monkeypatch.setattr(db, "http", client)
+        snapshot = _snapshot(tmp_path)
+        body = render_results_html(snapshot)
+
+    assert snapshot["candidates_2x"] == []
+    assert len(snapshot["strategies"]) == 1
+    assert snapshot["strategies"][0]["fingerprint"] == "STRAT-1"
+    assert len(snapshot["closest_research"]) == 1
+    assert "STRAT-1" in body
+    assert "ENA/StablecoinX" in body
+    assert "No promising 90-day 2x+ candidates currently clear the evidence bar" in body
+
+
+def test_2x_lookup_programming_error_is_not_swallowed(tmp_path, monkeypatch):
+    _base(tmp_path, lab={"forward_candidates": [_forward_candidate(0)]})
+
+    def fail_lookup(_identity):
+        raise AssertionError("unrelated programming error")
+
+    monkeypatch.setattr(db, "fetch_prediction_by_id", fail_lookup)
+    with pytest.raises(AssertionError, match="unrelated programming error"):
+        _snapshot(tmp_path)
 
 
 def test_app_declares_results_route_and_all_three_pages_link_it():
