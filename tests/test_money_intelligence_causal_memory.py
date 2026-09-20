@@ -72,6 +72,13 @@ def _hypothesis(source_ids=("flow",)) -> FrozenHypothesis:
             )
             for index in range(1, 7)
         ),
+        evaluation_pairs=tuple(
+            (
+                "outcome" if index == 1 else f"outcome-{index}",
+                "control" if index == 1 else f"control-{index}",
+            )
+            for index in range(1, 7)
+        ),
     )
 
 
@@ -439,7 +446,7 @@ def test_economic_unit_consumption_is_global_across_hypotheses_and_families():
     memory = _memory_with_hypothesis()
     second_hypothesis = replace(
         _hypothesis(), hypothesis_id="H2", family_id="OTHER-FAMILY",
-        evaluation_units=(),
+        evaluation_units=(), evaluation_pairs=(),
     )
     memory.register_hypothesis(second_hypothesis)
     original = _support("first-hypothesis-evidence")
@@ -904,7 +911,7 @@ def test_point_in_time_chronology_and_narrative_separation_fail_closed():
 
 
 def test_hypothesis_is_frozen_fingerprinted_and_exact_rejection_is_vetoed():
-    hypothesis = replace(_hypothesis(), evaluation_units=())
+    hypothesis = replace(_hypothesis(), evaluation_units=(), evaluation_pairs=())
     with pytest.raises(FrozenInstanceError):
         hypothesis.statement = "post-hoc rewrite"  # type: ignore[misc]
 
@@ -951,7 +958,11 @@ def test_matched_controls_and_multiple_testing_are_predeclared_not_post_hoc():
     weak_memory = CausalRepricingMemory()
     weak_memory.register_observation(memory.observations["flow"])
     weak_memory.register_hypothesis(
-        replace(_hypothesis(), evaluation_units=_hypothesis().evaluation_units[:5])
+        replace(
+            _hypothesis(),
+            evaluation_units=_hypothesis().evaluation_units[:5],
+            evaluation_pairs=_hypothesis().evaluation_pairs[:5],
+        )
     )
     for source_id in (
         weak_after_family_adjustment.outcome_observation_ids
@@ -1033,6 +1044,10 @@ def test_distinct_family_labels_cannot_reset_project_wide_testing_budget():
             (f"second-{subject}", start, window)
             for subject, start, window in _hypothesis().evaluation_units
         ),
+        evaluation_pairs=tuple(
+            (f"second-{outcome_id}", f"second-{control_id}")
+            for outcome_id, control_id in _hypothesis().evaluation_pairs
+        ),
     )
     assert memory.register_hypothesis(sibling) is True
     original = _support()
@@ -1073,7 +1088,10 @@ def test_confirmatory_evaluation_cannot_change_frozen_sample_or_look_again():
         sample_size=5,
         p_value=0.03125,
     )
-    with pytest.raises(CausalMemoryError, match="frozen evaluation units"):
+    with pytest.raises(
+        CausalMemoryError,
+        match="frozen outcome/control pairs|frozen evaluation units",
+    ):
         memory.record_evidence(partial)
     assert memory.record_evidence(_support("first-frozen-look"))
     later = _clone_evidence_units(
@@ -1086,6 +1104,28 @@ def test_confirmatory_evaluation_cannot_change_frozen_sample_or_look_again():
         memory.record_evidence(later)
 
 
+def test_confirmatory_evidence_rejects_post_outcome_control_substitution():
+    memory = _memory_with_hypothesis()
+    replacement_ids = []
+    for index, source_id in enumerate(_support().control_observation_ids, start=1):
+        replacement_id = f"posthoc-control-{index}"
+        replacement_ids.append(replacement_id)
+        memory.register_observation(
+            replace(
+                memory.observations[source_id],
+                observation_id=replacement_id,
+                value=-1.0,
+            )
+        )
+
+    attack = replace(
+        _support("posthoc-control-substitution"),
+        control_observation_ids=tuple(replacement_ids),
+    )
+    with pytest.raises(CausalMemoryError, match="frozen outcome/control pairs"):
+        memory.record_evidence(attack)
+
+
 def test_evaluation_plan_cannot_be_registered_after_outcomes_are_present():
     memory = _memory_with_hypothesis()
     with pytest.raises(CausalMemoryError, match="after its economic units are observed"):
@@ -1096,9 +1136,20 @@ def test_evaluation_plan_cannot_be_registered_after_outcomes_are_present():
 
 
 def test_adding_evaluation_plan_cannot_rescue_prior_rejected_design():
-    legacy = replace(_hypothesis(), evaluation_units=())
+    legacy = replace(_hypothesis(), evaluation_units=(), evaluation_pairs=())
     memory = CausalRepricingMemory(rejected_fingerprints={legacy.fingerprint})
     memory.register_observation(_observation("flow"))
+    with pytest.raises(CausalMemoryError, match="rejected"):
+        memory.register_hypothesis(_hypothesis())
+
+
+def test_adding_frozen_pairs_cannot_rescue_prior_rejected_planned_design():
+    pre_pair_design = replace(_hypothesis(), evaluation_pairs=())
+    memory = CausalRepricingMemory(
+        rejected_fingerprints={pre_pair_design.fingerprint}
+    )
+    memory.register_observation(_observation("flow"))
+
     with pytest.raises(CausalMemoryError, match="rejected"):
         memory.register_hypothesis(_hypothesis())
 
@@ -1128,6 +1179,7 @@ def test_legacy_family_only_document_loses_confirmatory_authority():
     document.pop("event_order")
     document.pop("registration_log")
     document["hypotheses"][0].pop("evaluation_units")
+    document["hypotheses"][0].pop("evaluation_pairs")
     encoded = json.dumps(
         document, sort_keys=True, separators=(",", ":"), ensure_ascii=True
     ).encode("utf-8")
@@ -1140,6 +1192,28 @@ def test_legacy_family_only_document_loses_confirmatory_authority():
     assert CausalRepricingMemory.from_document(restored.to_document()).to_document() == (
         restored.to_document()
     )
+
+
+def test_current_protocol_document_without_frozen_pairs_loses_confirmatory_authority():
+    memory = _memory_with_hypothesis()
+    assert memory.record_evidence(_support("pre-pair-contract-support"))
+    document = memory.to_document()
+    document.pop("content_digest")
+    document["hypotheses"][0].pop("evaluation_pairs")
+    encoded = json.dumps(
+        document, sort_keys=True, separators=(",", ":"), ensure_ascii=True
+    ).encode("utf-8")
+    document["content_digest"] = hashlib.sha256(encoded).hexdigest()
+
+    restored = CausalRepricingMemory.from_document(document)
+
+    assert restored.events["pre-pair-contract-support"].confirmatory is False
+    assert restored.confidence(
+        "H1", as_of="2026-09-03T00:00:00Z"
+    ).confirmatory_support_count == 0
+    assert restored.research_artifact(
+        "H1", lane="big_move", as_of="2026-09-03T00:00:00Z"
+    ) is None
 
 
 def test_confidence_can_gain_lose_and_decay_toward_neutral():
@@ -1325,6 +1399,7 @@ def test_supported_finding_can_feed_research_lanes_but_has_zero_authority():
         "project_alpha": 0.05,
         "confirmatory_p_threshold": 0.025,
         "evaluation_units": [list(unit) for unit in _hypothesis().evaluation_units],
+        "evaluation_pairs": [list(pair) for pair in _hypothesis().evaluation_pairs],
         "evaluation_method": "matched_control_mean_difference_v1",
         "direction": "positive",
         "horizon_hours": 72,
