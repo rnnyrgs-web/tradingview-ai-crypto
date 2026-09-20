@@ -80,6 +80,7 @@ class SupabaseCausalMemory:
             or any(current.events.get(key) != value for key, value in prior_events.items())
             or not previous.rejected_fingerprints <= current.rejected_fingerprints
             or current.half_life_days != previous.half_life_days
+            or current.legacy_underdeclared_hypotheses != previous.legacy_underdeclared_hypotheses
             or current.registration_log[: len(previous.registration_log)]
             != previous.registration_log
         ):
