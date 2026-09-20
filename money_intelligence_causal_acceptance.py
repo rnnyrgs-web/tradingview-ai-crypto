@@ -114,12 +114,18 @@ def _observation(
     )
 
 
+def _utc_now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
 def _base_time(memory, ids: dict[str, str]) -> datetime:
     existing = memory.observations.get(ids["formation"])
     if existing is not None:
         return _parse(existing.observed_at)
-    now = datetime.now(timezone.utc).replace(second=0, microsecond=0)
-    return now - timedelta(hours=13)
+    now = _utc_now().replace(second=0, microsecond=0)
+    # Freeze before the first evaluation unit begins. The synthetic fixture is
+    # an integration diagnostic, never forward market evidence.
+    return now - timedelta(minutes=2)
 
 
 def _contract(ids: dict[str, str], base: datetime) -> FrozenHypothesis:
@@ -128,7 +134,7 @@ def _contract(ids: dict[str, str], base: datetime) -> FrozenHypothesis:
         statement="A verified relative flow shock precedes matched relative repricing in this synthetic acceptance fixture.",
         mechanism_chain=("verified_flow", "relative_liquidity_impact", "matched_repricing"),
         direction="positive",
-        horizon_hours=24,
+        horizon_hours=1,
         falsifier="matched outcomes do not exceed the frozen matched control",
         matched_controls=("phase2-runtime-matched-control-v1",),
         lanes=("big_move", "strategy_component"),
@@ -138,10 +144,14 @@ def _contract(ids: dict[str, str], base: datetime) -> FrozenHypothesis:
         evaluation_method="matched_mean_diff_v1",
         family_size=2,
         alpha=0.05,
+        evaluation_units=tuple(
+            ("PHASE2_ACCEPTANCE", _ts(base + timedelta(hours=index)), 1)
+            for index in range(1, 7)
+        ),
     )
 
 
-def _seed_support(memory, ids: dict[str, str], base: datetime) -> None:
+def _freeze_support_contract(memory, ids: dict[str, str], base: datetime) -> None:
     if ids["formation"] not in memory.observations:
         memory.register_observation(
             _observation(
@@ -150,10 +160,15 @@ def _seed_support(memory, ids: dict[str, str], base: datetime) -> None:
                 value=10.0,
                 observed_at=base,
                 available_at=base + timedelta(minutes=1),
+                window_hours=1,
             )
         )
     if ids["hypothesis"] not in memory.hypotheses:
         memory.register_hypothesis(_contract(ids, base))
+
+
+def _seed_support(memory, ids: dict[str, str], base: datetime) -> None:
+    _freeze_support_contract(memory, ids, base)
     outcome_ids = tuple(ids[f"support_outcome_{index}"] for index in range(1, 7))
     control_ids = tuple(ids[f"support_control_{index}"] for index in range(1, 7))
     for index, (outcome_id, control_id) in enumerate(
@@ -392,6 +407,23 @@ def run_phase2_causal_runtime_acceptance() -> dict[str, Any]:
 
     initial = store.load()
     base = _base_time(initial, ids)
+    store.transact(lambda memory: _freeze_support_contract(memory, ids, base))
+    if _utc_now() < base + timedelta(hours=11):
+        pending = store.load()
+        if ids["hypothesis"] not in pending.hypotheses:
+            raise CausalMemoryError("prospective acceptance plan was not durable")
+        if _acceptance_missions(refresh_director({"workers": {}}), ids["hypothesis"]):
+            raise CausalMemoryError("unmatured synthetic acceptance plan emitted missions")
+        return {
+            "ok": False,
+            "status": "WAIT_PROSPECTIVE_SYNTHETIC_EVALUATION",
+            "deployed_sha": sha,
+            "plan_durable": True,
+            "scientific_forward_evidence": False,
+            "final_mission_count": 0,
+            "next_check_at": _ts(base + timedelta(hours=11)),
+            "safety": dict(SAFE),
+        }
     store.transact(lambda memory: _seed_support(memory, ids, base))
     restarted_after_support = store.load()
     support_as_of = _ts(base + timedelta(hours=8, minutes=1))

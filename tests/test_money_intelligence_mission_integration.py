@@ -66,6 +66,10 @@ def _supported_memory(*, lanes=("big_move", "strategy_component"), family_id="tr
         evaluation_method="matched_mean_diff_v1",
         family_size=2,
         alpha=0.05,
+        evaluation_units=tuple(
+            (f"SOL-{index}", "2026-09-02T00:00:00Z", 24)
+            for index in range(1, 7)
+        ),
     )
     memory.register_hypothesis(hypothesis)
     outcome_ids = tuple(f"outcome-{index}" for index in range(1, 7))

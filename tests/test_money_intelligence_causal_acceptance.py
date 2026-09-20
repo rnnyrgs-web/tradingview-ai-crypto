@@ -1,4 +1,5 @@
 from copy import deepcopy
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from threading import Lock
 
@@ -13,6 +14,8 @@ def test_runtime_acceptance_rechecks_deployment_packaging_changes():
     ).read_text(encoding="utf-8")
 
     assert "      - Dockerfile" in workflow
+    assert "  schedule:" in workflow
+    assert "Prospective guard passed; full synthetic runtime acceptance remains pending" in workflow
 
 
 class FakeDurableCausalStore:
@@ -57,15 +60,27 @@ def test_phase2_runtime_acceptance_uses_default_mission_surface_and_is_replay_sa
     FakeDurableCausalStore.reset()
     monkeypatch.setattr(acceptance, "SupabaseCausalMemory", FakeDurableCausalStore)
     monkeypatch.setenv("RENDER_GIT_COMMIT", "a" * 40)
+    clock = [datetime(2026, 9, 20, tzinfo=timezone.utc)]
+    monkeypatch.setattr(acceptance, "_utc_now", lambda: clock[0])
 
     def fake_refresh(_army):
         return apply_causal_feedback(
             {"missions": [], "next_missions": [], "daily_lead_report": {}},
             loader=FakeDurableCausalStore().load,
+            as_of=clock[0].isoformat(),
         )
 
     monkeypatch.setattr(acceptance, "refresh_director", fake_refresh)
 
+    pending = acceptance.run_phase2_causal_runtime_acceptance()
+    assert pending["ok"] is False
+    assert pending["status"] == "WAIT_PROSPECTIVE_SYNTHETIC_EVALUATION"
+    assert pending["scientific_forward_evidence"] is False
+    assert pending["plan_durable"] is True
+    assert pending["final_mission_count"] == 0
+    assert FakeDurableCausalStore().load().events == {}
+
+    clock[0] += timedelta(hours=13)
     first = acceptance.run_phase2_causal_runtime_acceptance()
     assert first["ok"] is True
     assert first["receipt_replay"] is False
