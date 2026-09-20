@@ -14,6 +14,8 @@ def test_runtime_acceptance_rechecks_deployment_packaging_changes():
     ).read_text(encoding="utf-8")
 
     assert "      - Dockerfile" in workflow
+    assert "  schedule:" in workflow
+    assert "Prospective guard passed; full synthetic runtime acceptance remains pending" in workflow
 
 
 class FakeDurableCausalStore:

@@ -2,6 +2,8 @@ name: Money Intelligence Causal Runtime Acceptance
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '17 4 * * *'
   push:
     branches: [main]
     paths:
@@ -77,6 +79,9 @@ jobs:
               .safety.broker_authority == false and
               .safety.oos_opening_authority == false
             ' "$response" >/dev/null; then
+              if jq -e '.status == "WAIT_PROSPECTIVE_SYNTHETIC_EVALUATION"' "$response" >/dev/null; then
+                echo "Prospective guard passed; full synthetic runtime acceptance remains pending until the frozen units mature." >> "$GITHUB_STEP_SUMMARY"
+              fi
               exit 0
             fi
             sleep 10
