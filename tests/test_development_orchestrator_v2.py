@@ -159,7 +159,7 @@ def test_failed_ci_stale_head_and_main_advance_never_approve():
                 outcome="APPROVED", findings=[])
     with pytest.raises(ValueError):
         advance(state, "CI", 6, ci_id="ci-B", pr_number=501, head_sha=REPAIRED, conclusion="success")
-    with pytest.raises(ValueError, match="main"):
+    with pytest.raises(ValueError, match="main|repair"):
         apply_event(state, event("REPAIR", 7, repair_id="repair-A", review_id="review-A",
                                  attempt_id="attempt-A", owner="data-market"), queue(),
                     current_main_sha=MERGED)
@@ -523,3 +523,68 @@ def test_repaired_head_must_match_current_repair():
                 advance(state, "REPAIRED_HEAD", n + 3, repair_id="repair-4", head_sha=next_head)
         state = advance(state, "REPAIRED_HEAD", n + 3,
                         repair_id=f"repair-{n}", head_sha=next_head)
+
+
+def test_review_wait_and_deferred_integration_resume_at_retry_time():
+    state = claimed()
+    state = advance(state, "DISPATCH", 2, attempt_id="attempt-A", dispatch_id="dispatch-A")
+    state = advance(state, "WORKER_OUTCOME", 3, attempt_id="attempt-A", result_id="result-A",
+                    outcome="PR_CREATED", pr_number=501, head_sha=HEAD)
+    state = advance(state, "CI", 4, ci_id="ci-A", pr_number=501, head_sha=HEAD,
+                    conclusion="success")
+    state = advance(state, "REVIEW_WAIT", 5, pr_number=501, head_sha=HEAD,
+                    retry_at="2026-09-21T00:00:00Z")
+    assert state["tasks"]["V2-A"]["status"] == "WAIT"
+    with pytest.raises(ValueError, match="resume"):
+        advance(state, "RESUME", 6, phase="review")
+    state = advance(state, "RESUME", 6, at="2026-09-22T00:00:00Z", phase="review")
+    assert state["tasks"]["V2-A"]["status"] == "REVIEW_REQUIRED"
+    state = advance(state, "REVIEW", 7, review_id="review-A", pr_number=501,
+                    head_sha=HEAD, reviewer_lanes=list(V1_REVIEW_LANES),
+                    outcomes=verdicts("APPROVED"), outcome="APPROVED", findings=[])
+    state = advance(state, "INTEGRATION", 8, integration_id="integration-A",
+                    review_id="review-A", pr_number=501, head_sha=HEAD,
+                    decision="DEFERRED", lead="human-lead",
+                    retry_at="2026-09-23T00:00:00Z")
+    assert state["tasks"]["V2-A"]["status"] == "WAIT"
+    state = advance(state, "RESUME", 9, at="2026-09-24T00:00:00Z", phase="integration")
+    assert state["tasks"]["V2-A"]["status"] == "READY_FOR_INTEGRATION"
+
+
+def test_provider_wait_can_retry_on_new_main_after_due_time():
+    state = claimed()
+    state = advance(state, "DISPATCH", 2, attempt_id="attempt-A", dispatch_id="dispatch-A")
+    state = advance(state, "PROVIDER_TIMEOUT", 3, attempt_id="attempt-A",
+                    retry_at="2026-09-21T00:00:00Z")
+    state = apply_event(state, event("RETRY", 4, at="2026-09-22T00:00:00Z",
+                                     attempt_id="attempt-B", request_id="request-B",
+                                     budget_reservation_id="reservation-B",
+                                     base_main_sha=MERGED), queue(), current_main_sha=MERGED)
+    assert state["tasks"]["V2-A"]["attempts"]["attempt-B"]["base_main_sha"] == MERGED
+
+
+def test_rebase_after_rejected_review_requires_counted_repair():
+    state = claimed()
+    state = advance(state, "DISPATCH", 2, attempt_id="attempt-A", dispatch_id="dispatch-A")
+    state = advance(state, "WORKER_OUTCOME", 3, attempt_id="attempt-A", result_id="result-A",
+                    outcome="PR_CREATED", pr_number=501, head_sha=HEAD)
+    state = advance(state, "CI", 4, ci_id="ci-A", pr_number=501, head_sha=HEAD,
+                    conclusion="success")
+    state = advance(state, "REVIEW", 5, review_id="review-A", pr_number=501,
+                    head_sha=HEAD, reviewer_lanes=list(V1_REVIEW_LANES),
+                    outcomes=verdicts("REVISION_REQUIRED"), outcome="REVISION_REQUIRED",
+                    findings=["must repair"])
+    rebase = event("REBASE", 6, attempt_id="attempt-B", request_id="request-B",
+                   base_main_sha=MERGED, budget_reservation_id="reservation-B",
+                   head_sha=REPAIRED)
+    with pytest.raises(ValueError, match="rebase"):
+        apply_event(state, rebase, queue(), current_main_sha=MERGED)
+    state = apply_event(state, event("REPAIR", 7, repair_id="repair-A", review_id="review-A",
+                                     attempt_id="attempt-A", owner="data-market"),
+                        queue(), current_main_sha=MERGED)
+    with pytest.raises(ValueError, match="repair"):
+        apply_event(state, rebase, queue(), current_main_sha=MERGED)
+    state = apply_event(state, {**rebase, "repair_id": "repair-A"}, queue(),
+                        current_main_sha=MERGED)
+    assert state["tasks"]["V2-A"]["repairs"]["repair-A"]["updated_head_sha"] == REPAIRED
+    assert state["tasks"]["V2-A"]["status"] == "REVIEW_REQUIRED"

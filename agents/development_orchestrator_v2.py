@@ -176,7 +176,7 @@ def validate_v2(state: Any) -> None:
                      and review.get("head_sha") in record["ci"]
                      and record["ci"][review["head_sha"]]["conclusion"] == "success"
                      and set(review.get("reviewer_lanes") or []) == REVIEW_LANES
-                     and review.get("outcome") in {"APPROVED", "REVISION_REQUIRED", "BLOCKED", "WAIT"}
+                     and review.get("outcome") in {"APPROVED", "REVISION_REQUIRED", "BLOCKED"}
                      and isinstance(review.get("outcomes"), dict)
                      and set(review["outcomes"]) == REVIEW_LANES
                      and review.get("reviewer_lanes") == list(V1_REVIEW_LANES)
@@ -319,7 +319,7 @@ def apply_event(state: dict, event: dict, coordination: dict, *, current_main_sh
         elif kind == "INTEGRATION" and event.get("decision") == "INTEGRATED":
             _require(event.get("resulting_main_sha") == current_main_sha,
                      "integration main SHA mismatch")
-        elif kind != "SUCCESSOR":
+        elif kind not in {"SUCCESSOR", "RETRY", "REPAIR"}:
             _require(current_main_sha == old_base,
                      "main advanced; rebase and re-review required")
         _advance_record(updated, record, task, event, kind, coordination,
@@ -375,6 +375,7 @@ def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str,
         elif e["outcome"] == "WAIT":
             _require(_time(e.get("retry_at")), "WAIT requires retry_at")
             r["retry_at"] = e["retry_at"]
+            r["wait_phase"] = "worker"
             r["status"] = "WAIT" if len(r["attempts"]) < 2 else "BLOCKED"
         else:
             r["status"] = "BLOCKED"
@@ -383,9 +384,11 @@ def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str,
                  and e.get("attempt_id") == r["active_attempt"]
                  and _time(e.get("retry_at")), "invalid provider timeout")
         r["retry_at"] = e["retry_at"]
+        r["wait_phase"] = "worker"
         r["status"] = "WAIT" if len(r["attempts"]) < 2 else "BLOCKED"
     elif kind == "RETRY":
-        _require(status == "WAIT" and _time(r.get("retry_at"))
+        _require(status == "WAIT" and r.get("wait_phase") == "worker"
+                 and _time(r.get("retry_at"))
                  and datetime.fromisoformat(e["at"].replace("Z", "+00:00")) >=
                  datetime.fromisoformat(r["retry_at"].replace("Z", "+00:00")),
                  "retry is not due")
@@ -404,10 +407,17 @@ def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str,
         r["attempts"][e["attempt_id"]] = new
         r["active_attempt"], r["status"] = e["attempt_id"], "CLAIMED"
         r.pop("retry_at", None)
+        r.pop("wait_phase", None)
     elif kind == "REBASE":
         _require(status in {"CLAIMED", "REVIEW_REQUIRED", "REVIEWING",
-                            "REVISION_REQUIRED", "READY_FOR_INTEGRATION"}
-                 and e.get("base_main_sha") == current_main_sha
+                            "READY_FOR_INTEGRATION", "REPAIR"}
+                 or status == "WAIT" and r.get("wait_phase") in {"review", "integration"},
+                 "invalid rebase state")
+        if status == "REPAIR":
+            _require(e.get("repair_id") == r.get("active_repair"),
+                     "rebase must cite current repair")
+        _require(
+                 e.get("base_main_sha") == current_main_sha
                  and _nonempty(e.get("attempt_id")) and e["attempt_id"] not in r["attempts"]
                  and _nonempty(e.get("request_id"))
                  and _nonempty(e.get("budget_reservation_id")), "invalid rebase identity")
@@ -421,6 +431,8 @@ def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str,
         new["content_digest"] = _digest(new)
         r["attempts"][e["attempt_id"]] = new
         r["active_attempt"] = e["attempt_id"]
+        r.pop("retry_at", None)
+        r.pop("wait_phase", None)
         if r.get("pr_number"):
             _require(_sha(e.get("head_sha")) and e["head_sha"] != r["head_sha"]
                      and e["head_sha"] not in r["ci"]
@@ -428,6 +440,9 @@ def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str,
                              for v in r.get("pr_history", [])),
                      "rebased PR needs a new unreviewed head")
             r.setdefault("pr_history", []).append(copy.deepcopy(r["pr_identity"]))
+            if status == "REPAIR":
+                r["repairs"][e["repair_id"]]["updated_head_sha"] = e["head_sha"]
+                r.pop("active_repair")
             r["head_sha"] = e["head_sha"]
             r["pr_identity"] = {**r["pr_identity"], "head_sha": e["head_sha"],
                                 "pr_base_main_sha": current_main_sha}
@@ -463,6 +478,25 @@ def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str,
                      r["attempts"][r["active_attempt"]]["base_main_sha"]
                  and _nonempty(e.get("request_id")), "invalid review request")
         r["review_request_id"], r["status"] = e["request_id"], "REVIEWING"
+    elif kind == "REVIEW_WAIT":
+        _require(status in {"REVIEW_REQUIRED", "REVIEWING"}
+                 and e.get("pr_number") == r.get("pr_number")
+                 and e.get("head_sha") == r.get("head_sha")
+                 and r["ci"].get(r["head_sha"], {}).get("conclusion") == "success"
+                 and _time(e.get("retry_at"))
+                 and r.get("wait_count", 0) < 2, "invalid review wait")
+        r["wait_count"] = r.get("wait_count", 0) + 1
+        r["retry_at"], r["wait_phase"], r["status"] = e["retry_at"], "review", "WAIT"
+    elif kind == "RESUME":
+        _require(status == "WAIT" and e.get("phase") == r.get("wait_phase")
+                 and e.get("phase") in {"review", "integration"}
+                 and _time(r.get("retry_at"))
+                 and datetime.fromisoformat(e["at"].replace("Z", "+00:00")) >=
+                     datetime.fromisoformat(r["retry_at"].replace("Z", "+00:00")),
+                 "resume is not due or phase differs")
+        r["status"] = "REVIEW_REQUIRED" if e["phase"] == "review" else "READY_FOR_INTEGRATION"
+        r.pop("retry_at")
+        r.pop("wait_phase")
     elif kind == "REVIEW":
         _require(status in {"REVIEW_REQUIRED", "REVIEWING", "REVISION_REQUIRED"}
                  and e.get("pr_number") == r.get("pr_number")
@@ -476,7 +510,7 @@ def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str,
                  and isinstance(e.get("outcomes"), dict)
                  and set(e["outcomes"]) == REVIEW_LANES
                  and all(value in {"APPROVE", "REJECT"} for value in e["outcomes"].values())
-                 and e.get("outcome") in {"APPROVED", "REVISION_REQUIRED", "BLOCKED", "WAIT"}
+                 and e.get("outcome") in {"APPROVED", "REVISION_REQUIRED", "BLOCKED"}
                  and isinstance(e.get("findings"), list), "malformed independent review")
         _require((e["outcome"] == "APPROVED") ==
                  all(value == "APPROVE" for value in e["outcomes"].values()),
@@ -545,6 +579,13 @@ def _advance_record(state: dict, r: dict, task: dict, e: dict, kind: str,
                  "invalid Lead integration decision")
         if e["decision"] == "INTEGRATED":
             _require(_sha(e.get("resulting_main_sha")), "integrated main SHA required")
+        if e["decision"] == "DEFERRED":
+            _require(_time(e.get("retry_at")) and r.get("wait_count", 0) < 2,
+                     "deferred integration requires bounded retry_at")
+            r["wait_count"] = r.get("wait_count", 0) + 1
+            r["retry_at"], r["wait_phase"] = e["retry_at"], "integration"
+        if "integration" in r:
+            r.setdefault("integration_history", []).append(r["integration"])
         r["integration"] = {k: e.get(k) for k in ("integration_id", "review_id", "pr_number",
                                                     "head_sha", "decision", "lead",
                                                     "resulting_main_sha", "at")}

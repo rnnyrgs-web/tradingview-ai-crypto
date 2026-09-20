@@ -31,7 +31,11 @@ cycles. A further revision blocks the task. A changed PR head returns to
 `REBASE` event with a new immutable attempt and, for an open PR, a new head
 that needs fresh CI and review. A running worker must finish before rebase;
 previously seen heads cannot regain an earlier CI approval. `WAIT`/provider timeout can create at most one
-new attempt after `retry_at`; the prior attempt remains in the record. A human
+new attempt after `retry_at`, reconciling a newly advanced main if needed;
+the prior attempt remains in the record. Review delay and deferred Lead
+integration use distinct bounded `WAIT`/`RESUME` paths, preserving the current
+PR and review identity. A rejected review must open a counted repair before
+rebase, and that rebase binds the new head to the repair findings. A human
 Lead records the integration decision after merge and binds it to the resulting
 current main SHA; the reducer never merges.
 
