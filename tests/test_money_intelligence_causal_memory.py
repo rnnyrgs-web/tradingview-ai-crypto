@@ -1,4 +1,5 @@
 from dataclasses import FrozenInstanceError
+import hashlib
 import json
 
 import pytest
@@ -73,12 +74,18 @@ def _support(event_id="support-1", evaluated_at="2026-09-03T00:00:00Z") -> Evide
         evaluated_at=evaluated_at,
         kind="support",
         matched_controls=("market_beta", "volatility_regime"),
-        outcome_observation_ids=("outcome",),
-        control_observation_ids=("control",),
+        outcome_observation_ids=tuple(
+            "outcome" if index == 1 else f"outcome-{index}"
+            for index in range(1, 7)
+        ),
+        control_observation_ids=tuple(
+            "control" if index == 1 else f"control-{index}"
+            for index in range(1, 7)
+        ),
         evaluation_method="matched_control_mean_difference_v1",
-        sample_size=40,
+        sample_size=6,
         confirmatory=True,
-        p_value=0.01,
+        p_value=0.015625,
     )
 
 
@@ -122,7 +129,178 @@ def _memory_with_hypothesis(*, half_life_days=30.0) -> CausalRepricingMemory:
             measurement_window_hours=72,
         )
     )
+    _register_paired_evaluation(memory)
     return memory
+
+
+def _register_paired_evaluation(
+    memory: CausalRepricingMemory, *, pair_count: int = 6
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    outcome_ids = ["outcome"]
+    control_ids = ["control"]
+    for index in range(2, pair_count + 1):
+        outcome_id = f"outcome-{index}"
+        control_id = f"control-{index}"
+        memory.register_observation(
+            _observation(
+                outcome_id,
+                "forward_return_72h",
+                0.08 + index / 10_000,
+                observed_at="2026-09-02T01:00:00Z",
+                available_at="2026-09-02T04:00:00Z",
+                retrieved_at="2026-09-02T05:00:00Z",
+                currency="ratio",
+                measurement_window_hours=72,
+            )
+        )
+        memory.register_observation(
+            _observation(
+                control_id,
+                "matched_control_return_72h",
+                0.01,
+                observed_at="2026-09-02T01:00:00Z",
+                available_at="2026-09-02T04:00:00Z",
+                retrieved_at="2026-09-02T05:00:00Z",
+                currency="ratio",
+                measurement_window_hours=72,
+            )
+        )
+        outcome_ids.append(outcome_id)
+        control_ids.append(control_id)
+    return tuple(outcome_ids), tuple(control_ids)
+
+
+def test_confirmatory_support_recomputes_p_value_from_bound_pairs():
+    memory = _memory_with_hypothesis()
+    invented = EvidenceEvent(
+        **{
+            **_support("invented-significance").__dict__,
+            "outcome_observation_ids": ("outcome",),
+            "control_observation_ids": ("control",),
+            "sample_size": 1,
+            "p_value": 1e-9,
+        }
+    )
+
+    with pytest.raises(CausalMemoryError, match="recomputed p_value"):
+        memory.record_evidence(invented)
+
+
+def test_confirmatory_support_rejects_inflated_sample_size():
+    memory = _memory_with_hypothesis()
+
+    with pytest.raises(CausalMemoryError, match="sample_size must equal"):
+        memory.record_evidence(
+            EvidenceEvent(
+                **{
+                    **_support("inflated-sample-size").__dict__,
+                    "sample_size": 40,
+                }
+            )
+        )
+
+
+def test_confirmatory_support_rejects_unsupported_evaluation_method():
+    memory = CausalRepricingMemory()
+    memory.register_observation(_observation("flow"))
+    hypothesis = FrozenHypothesis(
+        **{
+            **_hypothesis().__dict__,
+            "evaluation_method": "caller_supplied_regression_v1",
+        }
+    )
+    memory.register_hypothesis(hypothesis)
+    for observation_id, value in (("outcome", 0.08), ("control", 0.01)):
+        memory.register_observation(
+            _observation(
+                observation_id,
+                "forward_return_72h",
+                value,
+                observed_at="2026-09-02T01:00:00Z",
+                available_at="2026-09-02T04:00:00Z",
+                retrieved_at="2026-09-02T05:00:00Z",
+                currency="ratio",
+                measurement_window_hours=72,
+            )
+        )
+    event = EvidenceEvent(
+        **{
+            **_support("unsupported-method").__dict__,
+            "evaluation_method": "caller_supplied_regression_v1",
+            "outcome_observation_ids": ("outcome",),
+            "control_observation_ids": ("control",),
+            "sample_size": 1,
+            "p_value": 0.5,
+        }
+    )
+
+    with pytest.raises(CausalMemoryError, match="unsupported confirmatory evaluation method"):
+        memory.record_evidence(event)
+
+
+def test_verified_evaluation_is_provenance_bound_and_stable_across_restart(tmp_path):
+    memory = _memory_with_hypothesis()
+    outcome_ids, control_ids = _register_paired_evaluation(memory)
+    event = EvidenceEvent(
+        **{
+            **_support("verified-support").__dict__,
+            "outcome_observation_ids": outcome_ids,
+            "control_observation_ids": control_ids,
+            "sample_size": 6,
+            "p_value": 0.015625,
+        }
+    )
+    assert memory.record_evidence(event) is True
+    artifact = memory.research_artifact(
+        "H1", lane="big_move", as_of="2026-09-03T00:00:00Z"
+    )
+    assert artifact is not None
+    evidence = artifact["evidence_events"][0]
+    assert evidence["verified_p_value"] == pytest.approx(0.015625)
+    assert evidence["evaluation_implementation"] == "paired-sign-exact-v1"
+    assert evidence["event_fingerprint"].startswith("mi-verified-evidence-v1:")
+
+    path = tmp_path / "verified-memory.json"
+    memory.save(path)
+    restored = CausalRepricingMemory.load(path)
+    assert restored.research_artifact(
+        "H1", lane="big_move", as_of="2026-09-03T00:00:00Z"
+    ) == artifact
+
+    conflicting = EvidenceEvent(**{**event.__dict__, "p_value": 0.5})
+    with pytest.raises(ReplayConflictError):
+        restored.record_evidence(conflicting)
+
+
+def test_legacy_caller_asserted_significance_loads_as_unverified_not_confirmatory():
+    memory = _memory_with_hypothesis()
+    memory.record_evidence(_support("legacy-support"))
+    document = memory.to_document()
+    document.pop("content_digest")
+    event = document["events"][0]
+    event.pop("evaluation_implementation")
+    event["outcome_observation_ids"] = ["outcome"]
+    event["control_observation_ids"] = ["control"]
+    event["sample_size"] = 40
+    event["p_value"] = 0.01
+    encoded = json.dumps(
+        document, sort_keys=True, separators=(",", ":"), ensure_ascii=True
+    ).encode("utf-8")
+    document["content_digest"] = hashlib.sha256(encoded).hexdigest()
+
+    restored = CausalRepricingMemory.from_document(document)
+
+    assert restored.events["legacy-support"].confirmatory is False
+    assert restored.events["legacy-support"].p_value is None
+    assert restored.confidence(
+        "H1", as_of="2026-09-03T00:00:00Z"
+    ).confirmatory_support_count == 0
+    assert restored.research_artifact(
+        "H1", lane="big_move", as_of="2026-09-03T00:00:00Z"
+    ) is None
+    assert CausalRepricingMemory.from_document(restored.to_document()).to_document() == (
+        restored.to_document()
+    )
 
 
 def test_system_retrieval_time_blocks_late_backfill_from_earlier_decisions():
@@ -228,30 +406,7 @@ def test_evidence_weight_is_bounded_and_derived_not_caller_controlled():
 
 def test_evidence_reuse_guard_is_order_insensitive_for_observation_sets():
     memory = _memory_with_hypothesis()
-    for observation_id, metric_name, value in (
-        ("outcome-2", "forward_return_72h", 0.07),
-        ("control-2", "matched_control_return_72h", 0.02),
-    ):
-        memory.register_observation(
-            _observation(
-                observation_id,
-                metric_name,
-                value,
-                observed_at="2026-09-02T01:00:00Z",
-                available_at="2026-09-02T04:00:00Z",
-                retrieved_at="2026-09-02T05:00:00Z",
-                currency="ratio",
-                measurement_window_hours=72,
-            )
-        )
-
-    first = EvidenceEvent(
-        **{
-            **_support("multi-source").__dict__,
-            "outcome_observation_ids": ("outcome", "outcome-2"),
-            "control_observation_ids": ("control", "control-2"),
-        }
-    )
+    first = _support("multi-source")
     memory.record_evidence(first)
     reordered = EvidenceEvent(
         **{
@@ -344,11 +499,11 @@ def test_matched_controls_and_multiple_testing_are_predeclared_not_post_hoc():
         evaluated_at="2026-09-03T00:00:00Z",
         kind="support",
         matched_controls=("market_beta", "volatility_regime"),
-        outcome_observation_ids=("outcome",),
-        control_observation_ids=("control",),
+        outcome_observation_ids=_support().outcome_observation_ids[:5],
+        control_observation_ids=_support().control_observation_ids[:5],
         evaluation_method="matched_control_mean_difference_v1",
-        sample_size=40,
-        p_value=0.04,
+        sample_size=5,
+        p_value=0.03125,
     )
     with pytest.raises(CausalMemoryError, match="Bonferroni"):
         memory.record_evidence(weak_after_family_adjustment)
@@ -362,7 +517,7 @@ def test_matched_controls_and_multiple_testing_are_predeclared_not_post_hoc():
         outcome_observation_ids=("outcome",),
         control_observation_ids=("control",),
         evaluation_method="matched_control_mean_difference_v1",
-        sample_size=40,
+        sample_size=1,
         confirmatory=False,
         p_value=None,
     )
@@ -427,7 +582,7 @@ def test_confidence_can_gain_lose_and_decay_toward_neutral():
             outcome_observation_ids=("adverse-outcome",),
             control_observation_ids=("control",),
             evaluation_method="matched_control_mean_difference_v1",
-            sample_size=40,
+            sample_size=1,
         )
     )
     after_contradiction = memory.confidence("H1", as_of="2026-09-04T00:00:00Z")
@@ -595,11 +750,11 @@ def test_supported_finding_can_feed_research_lanes_but_has_zero_authority():
     }
     assert artifact["evidence_events"][0]["event_id"] == "support-1"
     assert artifact["evidence_events"][0]["event_fingerprint"]
-    assert artifact["evidence_events"][0]["outcome_observation_ids"] == ["outcome"]
-    assert artifact["evidence_events"][0]["control_observation_ids"] == ["control"]
+    assert len(artifact["evidence_events"][0]["outcome_observation_ids"]) == 6
+    assert len(artifact["evidence_events"][0]["control_observation_ids"]) == 6
     assert artifact["evidence_events"][0]["outcome_provenance_fingerprints"]
     assert artifact["evidence_events"][0]["control_provenance_fingerprints"]
-    assert artifact["evidence_events"][0]["adjusted_p_value"] == pytest.approx(0.02)
+    assert artifact["evidence_events"][0]["adjusted_p_value"] == pytest.approx(0.03125)
 
     memory.record_evidence(
         EvidenceEvent(
@@ -611,7 +766,7 @@ def test_supported_finding_can_feed_research_lanes_but_has_zero_authority():
             outcome_observation_ids=("adverse-outcome",),
             control_observation_ids=("control",),
             evaluation_method="matched_control_mean_difference_v1",
-            sample_size=40,
+            sample_size=1,
         )
     )
     assert (

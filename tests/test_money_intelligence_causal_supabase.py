@@ -112,9 +112,9 @@ def _contradiction(event_id="contradiction-1"):
         outcome_observation_ids=("adverse-outcome",),
         control_observation_ids=("control",),
         evaluation_method="matched_control_mean_difference_v1",
-        sample_size=40,
+        sample_size=1,
         confirmatory=True,
-        p_value=0.01,
+        p_value=None,
     )
 
 

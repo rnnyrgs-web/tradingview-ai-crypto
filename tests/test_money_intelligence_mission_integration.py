@@ -60,12 +60,27 @@ def _supported_memory(*, lanes=("big_move", "strategy_component"), family_id="tr
         alpha=0.05,
     )
     memory.register_hypothesis(hypothesis)
-    memory.register_observation(
-        _obs("outcome-1", 2.0, "2026-09-02T00:00:00Z", "2026-09-02T01:00:00Z")
-    )
-    memory.register_observation(
-        _obs("control-1", 0.0, "2026-09-02T00:00:00Z", "2026-09-02T01:00:00Z")
-    )
+    outcome_ids = tuple(f"outcome-{index}" for index in range(1, 7))
+    control_ids = tuple(f"control-{index}" for index in range(1, 7))
+    for index, (outcome_id, control_id) in enumerate(
+        zip(outcome_ids, control_ids, strict=True), start=1
+    ):
+        memory.register_observation(
+            _obs(
+                outcome_id,
+                2.0 + index / 100,
+                "2026-09-02T00:00:00Z",
+                "2026-09-02T01:00:00Z",
+            )
+        )
+        memory.register_observation(
+            _obs(
+                control_id,
+                0.0,
+                "2026-09-02T00:00:00Z",
+                "2026-09-02T01:00:00Z",
+            )
+        )
     memory.record_evidence(
         EvidenceEvent(
             event_id="support-1",
@@ -73,12 +88,12 @@ def _supported_memory(*, lanes=("big_move", "strategy_component"), family_id="tr
             evaluated_at="2026-09-02T02:00:00Z",
             kind="support",
             matched_controls=("matched-control-v1",),
-            outcome_observation_ids=("outcome-1",),
-            control_observation_ids=("control-1",),
+            outcome_observation_ids=outcome_ids,
+            control_observation_ids=control_ids,
             evaluation_method="matched_mean_diff_v1",
-            sample_size=20,
+            sample_size=6,
             confirmatory=True,
-            p_value=0.01,
+            p_value=0.015625,
         )
     )
     return memory
@@ -120,10 +135,10 @@ def test_narrative_claim_cannot_change_mission_eligibility_or_fingerprint():
 def test_later_contradiction_removes_causal_mission_from_autonomous_eligibility():
     memory = _supported_memory(lanes=("big_move",))
     memory.register_observation(
-        _obs("outcome-2", -2.0, "2026-09-03T00:00:00Z", "2026-09-03T01:00:00Z")
+        _obs("adverse-outcome", -2.0, "2026-09-03T00:00:00Z", "2026-09-03T01:00:00Z")
     )
     memory.register_observation(
-        _obs("control-2", 0.0, "2026-09-03T00:00:00Z", "2026-09-03T01:00:00Z")
+        _obs("adverse-control", 0.0, "2026-09-03T00:00:00Z", "2026-09-03T01:00:00Z")
     )
     memory.record_evidence(
         EvidenceEvent(
@@ -132,10 +147,10 @@ def test_later_contradiction_removes_causal_mission_from_autonomous_eligibility(
             evaluated_at="2026-09-03T02:00:00Z",
             kind="contradiction",
             matched_controls=("matched-control-v1",),
-            outcome_observation_ids=("outcome-2",),
-            control_observation_ids=("control-2",),
+            outcome_observation_ids=("adverse-outcome",),
+            control_observation_ids=("adverse-control",),
             evaluation_method="matched_mean_diff_v1",
-            sample_size=20,
+            sample_size=1,
             confirmatory=True,
         )
     )

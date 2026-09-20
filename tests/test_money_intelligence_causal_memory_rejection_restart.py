@@ -84,8 +84,9 @@ def test_rejected_historical_hypothesis_survives_restart_and_stays_ineligible(tm
             outcome_observation_ids=("outcome",),
             control_observation_ids=("control",),
             evaluation_method="matched_control_mean_difference_v1",
-            sample_size=40,
-            p_value=0.01,
+            sample_size=1,
+            confirmatory=False,
+            p_value=None,
         )
     )
     design_fp, effective_fp = memory.reject_hypothesis("H1")
