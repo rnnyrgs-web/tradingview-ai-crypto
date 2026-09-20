@@ -1,4 +1,5 @@
 from copy import deepcopy
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from threading import Lock
@@ -16,6 +17,27 @@ def test_runtime_acceptance_rechecks_deployment_packaging_changes():
     assert "      - Dockerfile" in workflow
     assert "  schedule:" in workflow
     assert "Prospective guard passed; full synthetic runtime acceptance remains pending" in workflow
+
+
+def test_acceptance_fixture_can_confirm_after_four_prior_project_tests():
+    ids = acceptance._ids("b" * 40)
+    base = datetime(2026, 9, 20, tzinfo=timezone.utc)
+    memory = CausalRepricingMemory()
+    memory.register_observation(acceptance._observation(
+        ids["formation"], metric_name="flow_intensity", value=10.0,
+        observed_at=base, available_at=base + timedelta(minutes=1), window_hours=1,
+    ))
+    for index in range(4):
+        memory.register_hypothesis(replace(
+            acceptance._contract(ids, base),
+            hypothesis_id=f"prior-{index}", family_id=f"prior-family-{index}",
+            family_size=1, evaluation_units=(),
+        ))
+    acceptance._seed_support(memory, ids, base)
+    hypothesis = memory.hypotheses[ids["hypothesis"]]
+    verification = memory._verified_evaluation(memory.events[ids["support"]], hypothesis)
+    assert len(hypothesis.evaluation_units) == verification["sample_size"]
+    assert verification["verified_p_value"] <= memory._project_threshold(hypothesis)
 
 
 class FakeDurableCausalStore:
@@ -80,13 +102,13 @@ def test_phase2_runtime_acceptance_uses_default_mission_surface_and_is_replay_sa
     assert pending["final_mission_count"] == 0
     assert FakeDurableCausalStore().load().events == {}
 
-    clock[0] += timedelta(hours=13)
+    clock[0] += timedelta(hours=21)
     first = acceptance.run_phase2_causal_runtime_acceptance()
     assert first["ok"] is True
     assert first["receipt_replay"] is False
     assert first["deployed_sha"] == "a" * 40
     assert first["support_consumed_by_default_director"] is True
-    assert first["verified_independent_unit_count"] == 6
+    assert first["verified_independent_unit_count"] == acceptance.SUPPORT_PAIRS
     assert first["independent_unit_contract"] == "economic-realization-nonoverlap-v2"
     assert first["canonical_rejected_id_veto"] is True
     assert first["narrative_firewall"] is True
@@ -106,7 +128,7 @@ def test_phase2_runtime_acceptance_uses_default_mission_surface_and_is_replay_sa
     assert second["ok"] is True
     assert second["receipt_replay"] is True
     assert second["canonical_rejected_id_veto"] is True
-    assert second["verified_independent_unit_count"] == 6
+    assert second["verified_independent_unit_count"] == acceptance.SUPPORT_PAIRS
     assert second["independent_unit_contract"] == "economic-realization-nonoverlap-v2"
     assert second["final_mission_count"] == 0
     assert second["rejected_design_fingerprint"].startswith("mi-causal-v1:")

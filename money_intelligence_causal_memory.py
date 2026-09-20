@@ -376,6 +376,9 @@ class CausalRepricingMemory:
         self.hypothesis_order: list[str] = []
         self.event_order: list[str] = []
         self.registration_log: list[dict[str, str]] = []
+        # Digest-bound identities of historical underdeclared families. They
+        # remain auditable but can never authorize a fresh sibling or support.
+        self.legacy_underdeclared_hypotheses: set[str] = set()
 
     @staticmethod
     def _append_immutable(store: dict[str, object], key: str, value: object) -> bool:
@@ -447,7 +450,9 @@ class CausalRepricingMemory:
             or self.effective_fingerprint(legacy_design) in self.rejected_fingerprints
         )
 
-    def register_hypothesis(self, hypothesis: FrozenHypothesis) -> bool:
+    def register_hypothesis(
+        self, hypothesis: FrozenHypothesis, *, _restore_legacy_undercount: bool = False
+    ) -> bool:
         self._require_sources_available(
             hypothesis.source_observation_ids, hypothesis.created_at
         )
@@ -481,6 +486,10 @@ class CausalRepricingMemory:
         actual_family_size = len(family_members)
         if any(
             member.family_size < actual_family_size for member in family_members
+        ) and not (
+            _restore_legacy_undercount
+            and hypothesis.hypothesis_id in self.legacy_underdeclared_hypotheses
+            and not hypothesis.evaluation_units
         ):
             raise CausalMemoryError(
                 "family_size cannot undercount registered hypotheses in the family"
@@ -1191,6 +1200,7 @@ class CausalRepricingMemory:
             "hypothesis_order": list(self.hypothesis_order),
             "event_order": list(self.event_order),
             "registration_log": list(self.registration_log),
+            "legacy_underdeclared_hypotheses": sorted(self.legacy_underdeclared_hypotheses),
             "observations": [
                 asdict(self.observations[key]) for key in sorted(self.observations)
             ],
@@ -1256,6 +1266,28 @@ class CausalRepricingMemory:
             hypothesis_rows = document.get("hypotheses", [])
             event_rows = document.get("events", [])
             memory = cls(half_life_days=float(document["half_life_days"]))
+            family_counts: dict[str, int] = {}
+            for raw in hypothesis_rows:
+                family = raw["family_id"]
+                family_counts[family] = family_counts.get(family, 0) + 1
+            underdeclared = {
+                raw["hypothesis_id"] for raw in hypothesis_rows
+                if raw["family_size"] < family_counts[raw["family_id"]]
+            }
+            marker = document.get("legacy_underdeclared_hypotheses", [])
+            if protocol is None:
+                if marker:
+                    raise CausalMemoryError("legacy document cannot assert migration markers")
+            elif (
+                not isinstance(marker, list)
+                or marker != sorted(underdeclared)
+                or any(
+                    raw.get("evaluation_units") for raw in hypothesis_rows
+                    if raw["hypothesis_id"] in underdeclared
+                )
+            ):
+                raise CausalMemoryError("invalid legacy family migration marker")
+            memory.legacy_underdeclared_hypotheses = underdeclared
             if protocol is not None:
                 order = document["registration_log"]
                 hypothesis_order = document["hypothesis_order"]
@@ -1333,7 +1365,10 @@ class CausalRepricingMemory:
                         raw["evaluation_units"] = tuple(
                             tuple(unit) for unit in raw["evaluation_units"]
                         )
-                    memory.register_hypothesis(FrozenHypothesis(**raw))
+                    memory.register_hypothesis(
+                        FrozenHypothesis(**raw),
+                        _restore_legacy_undercount=raw["hypothesis_id"] in underdeclared,
+                    )
                     continue
                 raw = dict(raw)
                 raw["matched_controls"] = tuple(raw["matched_controls"])

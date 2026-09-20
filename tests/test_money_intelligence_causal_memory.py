@@ -1142,6 +1142,35 @@ def test_legacy_family_only_document_loses_confirmatory_authority():
     )
 
 
+def test_legacy_underdeclared_family_replays_without_admitting_a_new_sibling():
+    memory = CausalRepricingMemory()
+    memory.register_observation(_observation("flow"))
+    for index in (1, 2):
+        memory.register_hypothesis(replace(
+            _hypothesis(), hypothesis_id=f"H{index}",
+            statement=f"Historical family member {index}.", evaluation_units=(),
+        ))
+    document = memory.to_document()
+    for field in ("content_digest", "project_testing_protocol", "hypothesis_order", "event_order", "registration_log", "legacy_underdeclared_hypotheses"):
+        document.pop(field)
+    for index in (3, 4):
+        sibling = dict(document["hypotheses"][0])
+        sibling.update(hypothesis_id=f"H{index}", statement=f"Historical family member {index}.")
+        document["hypotheses"].append(sibling)
+    for sibling in document["hypotheses"]:
+        sibling.pop("evaluation_units")
+    encoded = json.dumps(document, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
+    document["content_digest"] = hashlib.sha256(encoded).hexdigest()
+
+    restored = CausalRepricingMemory.from_document(document)
+    assert len(restored.hypotheses) == 4
+    assert CausalRepricingMemory.from_document(restored.to_document()).to_document() == restored.to_document()
+    with pytest.raises(CausalMemoryError, match="family_size cannot undercount"):
+        restored.register_hypothesis(replace(
+            _hypothesis(), hypothesis_id="H5", statement="New undeclared sibling.", evaluation_units=(),
+        ))
+
+
 def test_confidence_can_gain_lose_and_decay_toward_neutral():
     memory = _memory_with_hypothesis(half_life_days=10.0)
     memory.record_evidence(_support())
