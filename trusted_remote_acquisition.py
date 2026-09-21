@@ -29,11 +29,13 @@ from typing import Any
 from urllib.parse import quote, urlencode, urlsplit
 
 CONTRACT_PATH = "money_intelligence/trusted_remote_acquisition_contract_v1.json"
-CONTRACT_SHA256 = "69d4501bbd90d20c6ae9d0fe146d3000513adf15bc75218edaf7b969c0168396"
+CONTRACT_SHA256 = "cc8a90a1659720001d97844d7489587a8f92d1fa8f9293bbacc7d34a79a946a5"
 CONTRACT_ID = "PIT-TRUSTED-REMOTE-ACQUISITION-001-v1"
 EXPECTED_REPOSITORY = "rnnyrgs-web/tradingview-ai-crypto"
 EXPECTED_EVENT = "workflow_dispatch"
 EXPECTED_REF = "refs/heads/main"
+EXPECTED_WORKFLOW_PATH = ".github/workflows/pit-trusted-remote-acquisition.yml"
+EXPECTED_WORKFLOW_REF = f"{EXPECTED_REPOSITORY}/{EXPECTED_WORKFLOW_PATH}@{EXPECTED_REF}"
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 COLLECTION_RE = re.compile(r"^CC-MAIN-\d{4}-\d{2}$")
 WARC_FILENAME_RE = re.compile(
@@ -286,10 +288,10 @@ def trusted_github_context(env: dict[str, str] | None = None) -> dict[str, Any]:
         raise ValueError("trusted acquisition must be workflow_dispatch")
     if not isinstance(sha, str) or not re.fullmatch(r"[0-9a-f]{40}", sha):
         raise ValueError("GITHUB_SHA must be a full commit SHA")
-    if not isinstance(workflow_ref, str) or not workflow_ref.startswith(
-        f"{EXPECTED_REPOSITORY}/.github/workflows/"
-    ) or not workflow_ref.endswith("@refs/heads/main"):
-        raise ValueError("GITHUB_WORKFLOW_REF must identify a canonical-main workflow")
+    if workflow_ref != EXPECTED_WORKFLOW_REF:
+        raise ValueError(
+            "GITHUB_WORKFLOW_REF must identify the exact trusted acquisition workflow on canonical main"
+        )
     if not isinstance(run_id, str) or not run_id.isdigit() or int(run_id) <= 0:
         raise ValueError("GITHUB_RUN_ID must be positive")
     if not isinstance(run_attempt, str) or not run_attempt.isdigit() or int(run_attempt) <= 0:
