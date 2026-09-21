@@ -65,18 +65,24 @@ def test_raw_provenance_and_archive_corrections_fail_closed():
     assert "source schema cannot be independently verified" in contract["fail_closed_conditions"]
 
 
-def test_data_ready_requires_cryptographically_attested_server_acquisition():
+def test_data_ready_reuses_single_shared_cryptographic_acquisition_boundary():
     contract = _load()
     provenance = contract["source_provenance"]
     assert provenance["trusted_acquisition_required"] is True
     assert provenance["local_archive_checksum_pair_sufficient_for_data_ready"] is False
-    assert provenance["trusted_acquisition_workflow"] == ".github/workflows/c101h_binance_pit_acquisition.yml"
-    assert provenance["trusted_acquisition_signer_workflow"] == (
-        "rnnyrgs-web/tradingview-ai-crypto/.github/workflows/c101h_binance_pit_acquisition.yml"
-    )
+    assert provenance["trusted_acquisition_contract_id"] == "PIT-TRUSTED-REMOTE-ACQUISITION-001-v1"
+    assert provenance["trusted_acquisition_expected_workflow"] == ".github/workflows/pit-trusted-remote-acquisition.yml"
     assert provenance["trusted_acquisition_source_ref"] == "refs/heads/main"
     assert provenance["trusted_attestation_predicate_type"] == "https://slsa.dev/provenance/v1"
+    assert provenance["trusted_acquisition_required_request_shapes"] == [
+        "BINANCE_ARCHIVE_OBJECT_GET",
+        "BINANCE_CHECKSUM_OBJECT_GET",
+    ]
+    assert provenance["trusted_acquisition_dependency_state"] == (
+        "BLOCKED_UNTIL_SHARED_BOUNDARY_SUPPORTS_EXACT_BINANCE_OBJECT_GET"
+    )
     assert "trusted acquisition attestation missing, unverifiable, or signer/ref policy mismatch" in contract["fail_closed_conditions"]
+    assert "do not create a parallel acquisition workflow" in contract["exact_next_action"]
 
 
 def test_contract_does_not_authorize_outcome_inspection_or_trading():
