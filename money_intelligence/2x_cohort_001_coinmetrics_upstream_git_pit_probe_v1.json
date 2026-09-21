@@ -1,0 +1,51 @@
+{
+  "schema": "two_x_coinmetrics_upstream_git_pit_probe.v1",
+  "artifact_id": "2X-COHORT-001-COINMETRICS-UPSTREAM-GIT-PIT-PROBE-v1",
+  "observed_date": "2026-09-21",
+  "purpose": "Prove that sampled historical Coin Metrics commit and CSV blob identities remain directly resolvable in original upstream coinmetrics/data at two Cohort 001 Monday cutoffs. No outcomes are read.",
+  "repository": "coinmetrics/data",
+  "author_login_expected": "coinmetricsbot",
+  "samples": [
+    {
+      "decision_at": "2021-01-04T00:00:00Z",
+      "historical_commit_sha": "25e3b1d90ffddef11c1663f8fa43696f60bc8061",
+      "commit_at": "2021-01-03T13:09:06Z",
+      "tree_sha": "c0c58a48402cb33032c6c3f00402cb50e1923fd8",
+      "csv_path": "csv/btc.csv",
+      "csv_blob_sha": "a8c0c48690d381f7dcf4fb4cb5d06f785990eafc",
+      "upstream_commit_api_url": "https://api.github.com/repos/coinmetrics/data/commits/25e3b1d90ffddef11c1663f8fa43696f60bc8061",
+      "upstream_file_url": "https://github.com/coinmetrics/data/blob/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/btc.csv",
+      "chronology": "COMMIT_TIMESTAMP_PRECEDES_DECISION",
+      "upstream_resolution": "VERIFIED_DURING_PROBE"
+    },
+    {
+      "decision_at": "2024-01-01T00:00:00Z",
+      "historical_commit_sha": "028cc389e272a99ebf408f31cd92087a2e300653",
+      "commit_at": "2023-12-31T13:27:49Z",
+      "tree_sha": "6d147e6e0ea65003a569c91922e335c4ecc3483a",
+      "csv_path": "csv/btc.csv",
+      "csv_blob_sha": "f58903f0158c10e4a6982e3f3fb629e2a11fe55a",
+      "upstream_commit_api_url": "https://api.github.com/repos/coinmetrics/data/commits/028cc389e272a99ebf408f31cd92087a2e300653",
+      "upstream_file_url": "https://github.com/coinmetrics/data/blob/028cc389e272a99ebf408f31cd92087a2e300653/csv/btc.csv",
+      "chronology": "COMMIT_TIMESTAMP_PRECEDES_DECISION",
+      "upstream_resolution": "VERIFIED_DURING_PROBE",
+      "observed_columns": ["CapMrktCurUSD", "SplyCur"],
+      "latest_complete_row_observed_in_probe": "2023-12-30"
+    }
+  ],
+  "scientific_interpretation": {
+    "classification": "INFERENCE",
+    "claim": "Historical upstream Git object identity and exact CSV blob binding are technically feasible for PIT market-cap/supply reconstruction. This probe does not by itself prove GitHub public push time or full multi-asset coverage, so the authoritative label gate remains blocked pending capture/provenance acceptance and broader coverage validation."
+  },
+  "prohibited_inferences": [
+    "Do not infer that 12-asset / 624-snapshot / 52-decision coverage is already satisfied.",
+    "Do not infer a 2x precursor, base rate, or candidate from this source probe.",
+    "Do not use the third-party fork file contents as evidence; it may only index historical SHA candidates.",
+    "Do not treat commit timestamp alone as cryptographic proof of public availability."
+  ],
+  "outcomes_opened": false,
+  "candidate_formed": false,
+  "prediction_authority": false,
+  "trade_authority": false,
+  "broker_connected": false
+}
