@@ -21,6 +21,7 @@ CAPABILITY_WORKFLOW = ".github/workflows/claude_code_subscription_probe.yml"
 SHA = re.compile(r"^[0-9a-f]{40}$")
 SAFE_AUTH_MODES = {SUBSCRIPTION, API_METERED, MANUAL_ADAPTER_REQUIRED, UNKNOWN}
 SECRET_ENV_NAMES = {"CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_API_KEY"}
+DIRECT_MAIN_BRANCHES = {"main", "master", "refs/heads/main", "refs/heads/master"}
 
 
 class AuthPolicyError(RuntimeError):
@@ -50,6 +51,16 @@ def _valid_time(value: Any) -> bool:
 
 def _valid_sha(value: Any) -> bool:
     return isinstance(value, str) and bool(SHA.fullmatch(value))
+
+
+def _validate_branch_identity(branch: Any) -> str:
+    if not isinstance(branch, str) or not branch:
+        raise AuthPolicyError("branch identity must be non-empty")
+    if branch != branch.strip():
+        raise AuthPolicyError("branch identity must not contain surrounding whitespace")
+    if branch in DIRECT_MAIN_BRANCHES:
+        raise AuthPolicyError("adapter attempt cannot target main")
+    return branch
 
 
 @dataclass(frozen=True)
@@ -119,12 +130,12 @@ def validate_capability_receipt(
         raise AuthPolicyError("capability success reason mismatch")
     if receipt.get("repository") != REPO:
         raise AuthPolicyError("capability repository mismatch")
-    if receipt.get("event_name") not in {"workflow_dispatch", "pull_request"}:
-        raise AuthPolicyError("unsupported capability event")
+    if receipt.get("event_name") != "workflow_dispatch":
+        raise AuthPolicyError("capability event must be trusted-main workflow_dispatch")
     if receipt.get("head_sha") != trusted_workflow_sha:
         raise AuthPolicyError("capability proof is not bound to trusted workflow SHA")
-    if not _valid_sha(receipt.get("execution_sha")):
-        raise AuthPolicyError("malformed capability execution SHA")
+    if receipt.get("execution_sha") != trusted_workflow_sha:
+        raise AuthPolicyError("capability execution SHA is not bound to trusted workflow SHA")
     if receipt.get("probe_step_outcome") != "success" or receipt.get("probe_conclusion") != "success":
         raise AuthPolicyError("capability action did not succeed")
     if receipt.get("structured_probe_verified") is not True:
@@ -139,8 +150,8 @@ def validate_capability_receipt(
         raise AuthPolicyError("capability proof reference mismatch")
 
     workflow_ref = receipt.get("workflow_ref")
-    expected_prefix = f"{REPO}/{CAPABILITY_WORKFLOW}@"
-    if not isinstance(workflow_ref, str) or not workflow_ref.startswith(expected_prefix):
+    expected_workflow_ref = f"{REPO}/{CAPABILITY_WORKFLOW}@refs/heads/main"
+    if workflow_ref != expected_workflow_ref:
         raise AuthPolicyError("capability workflow identity mismatch")
 
     unsigned = {k: v for k, v in receipt.items() if k != "content_digest"}
@@ -317,8 +328,7 @@ def make_auth_receipt(
     """Create an immutable, secret-free receipt for one adapter attempt."""
     if not all(isinstance(v, str) and v.strip() for v in (task_id, request_id, branch, base_main_sha)):
         raise AuthPolicyError("receipt identity fields must be non-empty")
-    if branch in {"main", "master"}:
-        raise AuthPolicyError("adapter attempt cannot target main")
+    _validate_branch_identity(branch)
     if not _valid_sha(base_main_sha):
         raise AuthPolicyError("base_main_sha must be a lowercase 40-character SHA")
     validate_decision(decision.as_dict())
@@ -357,8 +367,7 @@ def validate_auth_receipt(receipt: Mapping[str, Any]) -> None:
         raise AuthPolicyError("unsupported auth receipt version")
     if receipt.get("provider") != "anthropic" or receipt.get("engine") != "claude-code":
         raise AuthPolicyError("provider/engine mismatch")
-    if receipt.get("branch") in {"main", "master"}:
-        raise AuthPolicyError("receipt cannot target main")
+    _validate_branch_identity(receipt.get("branch"))
     if not _valid_sha(receipt.get("base_main_sha")):
         raise AuthPolicyError("malformed base main SHA")
     for field in ("task_id", "request_id", "branch", "attempt_id", "reason", "content_digest"):
