@@ -6,8 +6,8 @@
     "use": "DATA_PREFLIGHT_ONLY_UNTIL_QUALIFIED"
   },
   "contract_id": "C101-H-BINANCE-PIT-DATA-v1",
-  "contract_sha256": "4428cb58ed64a2f43350d2b6831e0d38d76f3784be083c7f183fe5ea66eaa741",
-  "exact_next_action": "Verify every required Binance-hosted archive/checksum and source schema for the frozen common interval, then build the retained raw manifest and deterministic normalized dataset. If any frozen source cannot satisfy this contract, persist DATA_BLOCKED; do not substitute venue/symbols or shorten coverage after outcomes.",
+  "contract_sha256": "a811dd7555ee575ccac4b7723da94e594cc2cbf186c973829fdf168b3ea39524",
+  "exact_next_action": "Integrate the shared PIT-TRUSTED-REMOTE-ACQUISITION-001-v1 boundary, extend that single reusable boundary with exact Binance archive/checksum object GET shapes constrained to this frozen C101-H source contract, then acquire and verify attested source bundles before normalization. If any frozen source cannot satisfy this contract, persist DATA_BLOCKED; do not create a parallel acquisition workflow, substitute venue/symbols, or shorten coverage after outcomes.",
   "fail_closed_conditions": [
     "missing Binance-hosted archive or checksum for any frozen symbol/source/month",
     "checksum mismatch or archive correction not versioned",
@@ -107,10 +107,15 @@
     "usdm_perp_kline_path_template": "data/futures/um/monthly/klines/{symbol}/1h/{symbol}-1h-{yyyy_mm}.zip",
     "trusted_acquisition_required": true,
     "local_archive_checksum_pair_sufficient_for_data_ready": false,
-    "trusted_acquisition_workflow": ".github/workflows/c101h_binance_pit_acquisition.yml",
-    "trusted_acquisition_signer_workflow": "rnnyrgs-web/tradingview-ai-crypto/.github/workflows/c101h_binance_pit_acquisition.yml",
     "trusted_acquisition_source_ref": "refs/heads/main",
-    "trusted_attestation_predicate_type": "https://slsa.dev/provenance/v1"
+    "trusted_attestation_predicate_type": "https://slsa.dev/provenance/v1",
+    "trusted_acquisition_contract_id": "PIT-TRUSTED-REMOTE-ACQUISITION-001-v1",
+    "trusted_acquisition_expected_workflow": ".github/workflows/pit-trusted-remote-acquisition.yml",
+    "trusted_acquisition_required_request_shapes": [
+      "BINANCE_ARCHIVE_OBJECT_GET",
+      "BINANCE_CHECKSUM_OBJECT_GET"
+    ],
+    "trusted_acquisition_dependency_state": "BLOCKED_UNTIL_SHARED_BOUNDARY_SUPPORTS_EXACT_BINANCE_OBJECT_GET"
   },
   "status": "PREDECLARED_SOURCE_CONTRACT",
   "timestamp_and_funding_semantics": {
