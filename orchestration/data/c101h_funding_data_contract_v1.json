@@ -1,0 +1,115 @@
+{
+  "consumer": {
+    "candidate_id": "C101-H",
+    "cohort": "COHORT-001",
+    "mechanism": "delta-neutral positive-funding carry",
+    "use": "DATA_PREFLIGHT_ONLY_UNTIL_QUALIFIED"
+  },
+  "contract_id": "C101-H-BINANCE-PIT-DATA-v1",
+  "contract_sha256": "e08b2f6d2dde09a66838e69c4ca34356139bee2397b4f72c0f181bbeaa42c8b1",
+  "exact_next_action": "Verify every required Binance-hosted archive/checksum and source schema for the frozen common interval, then build the retained raw manifest and deterministic normalized dataset. If any frozen source cannot satisfy this contract, persist DATA_BLOCKED; do not substitute venue/symbols or shorten coverage after outcomes.",
+  "fail_closed_conditions": [
+    "missing Binance-hosted archive or checksum for any frozen symbol/source/month",
+    "checksum mismatch or archive correction not versioned",
+    "source schema cannot be independently verified",
+    "requested common coverage cannot be met for every frozen symbol/source",
+    "future-dated funding relative to its source availability semantics",
+    "duplicate or non-monotonic source timestamps",
+    "missing spot/perpetual bar at a required exact join timestamp",
+    "funding interval inferred by assumption instead of adjacent source events",
+    "contract, unit, venue, symbol or timestamp-unit mismatch",
+    "normalized hash changes on deterministic rerun"
+  ],
+  "frozen_source": {
+    "coverage_shortening_after_outcomes_allowed": false,
+    "development_coverage_end_utc": "2026-08-31T23:00:00+00:00",
+    "development_coverage_start_utc": "2023-07-01T00:00:00+00:00",
+    "perpetual_market": "USD-M_PERPETUAL",
+    "price_bar_interval": "1h",
+    "protected_start_utc": "2026-09-01T00:00:00+00:00",
+    "spot_market": "SPOT",
+    "symbol_substitution_allowed": false,
+    "symbols": [
+      "BTCUSDT",
+      "ETHUSDT",
+      "SOLUSDT"
+    ],
+    "venue": "BINANCE",
+    "venue_substitution_allowed": false
+  },
+  "normalization_and_join": {
+    "canonical_funding_fields": [
+      "exchange",
+      "instrument",
+      "funding_ts",
+      "realized_funding_rate",
+      "interval_seconds",
+      "source_id",
+      "source_release_ts"
+    ],
+    "contract_or_unit_mismatch_allowed": false,
+    "duplicate_timestamps_allowed": false,
+    "funding_join": "SOURCE_NATIVE_SETTLEMENT_EVENTS_ONLY",
+    "missing_funding_interpolation_allowed": false,
+    "missing_price_interpolation_allowed": false,
+    "source_native_gap_masks_required": true,
+    "spot_and_perp_hourly_join": "EXACT_COMPLETED_UTC_HOUR_ONLY"
+  },
+  "qualification_receipt": {
+    "accept_status": "DATA_READY_FOR_FROZEN_CONSUMER",
+    "blocked_status": "DATA_BLOCKED",
+    "required": [
+      "raw_archive_sha256",
+      "checksum_sidecar_sha256",
+      "checksum_verification_status",
+      "archive_path",
+      "retrieved_at_utc",
+      "parser_version",
+      "normalized_dataset_sha256",
+      "coverage_start_utc",
+      "coverage_end_utc",
+      "rows_per_symbol_and_source",
+      "duplicate_count",
+      "gap_count",
+      "stale_count",
+      "funding_interval_distribution_seconds",
+      "parse_rerun_hash_equal"
+    ]
+  },
+  "schema_version": 1,
+  "scientific_safety": {
+    "broker_connected": false,
+    "candidate_return_may_be_inspected_during_data_build": false,
+    "genuine_forward_opened": false,
+    "promotion_authority": false,
+    "protected_oos_opened": false,
+    "strategy_outcomes_may_be_computed_during_data_build": false,
+    "trade_authority": false
+  },
+  "source_provenance": {
+    "archive_corrections_create_new_dataset_version": true,
+    "archive_host": "https://data.binance.vision",
+    "checksum_sidecar_suffix": ".CHECKSUM",
+    "funding_path_requires_binance_hosted_object_verification": true,
+    "public_data_repository": "binance/binance-public-data",
+    "public_data_repository_pinned_commit": "5c7f3197591c0d54d85dc43066226bc4c671d47a",
+    "raw_archive_and_checksum_retention_required": true,
+    "silent_archive_mutation_allowed": false,
+    "spot_kline_path_template": "data/spot/monthly/klines/{symbol}/1h/{symbol}-1h-{yyyy_mm}.zip",
+    "usdm_funding_path_template": "data/futures/um/monthly/fundingRate/{symbol}/{symbol}-fundingRate-{yyyy_mm}.zip",
+    "usdm_perp_kline_path_template": "data/futures/um/monthly/klines/{symbol}/1h/{symbol}-1h-{yyyy_mm}.zip"
+  },
+  "status": "PREDECLARED_SOURCE_CONTRACT",
+  "timestamp_and_funding_semantics": {
+    "fixed_8h_interval_assumption_allowed": false,
+    "funding_event_timestamp_is_source_native": true,
+    "funding_forward_fill_as_cashflow_allowed": false,
+    "funding_interval_seconds_is_derived_from_adjacent_source_events": true,
+    "funding_is_event_based": true,
+    "future_dated_funding_allowed": false,
+    "last_known_settled_rate_as_state_allowed_only_if_strategy_contract_explicitly_permits": true,
+    "spot_2025_timestamp_unit_change_must_be_handled_explicitly": true,
+    "spot_timestamp_unit_must_be_source_verified": true,
+    "timezone": "UTC"
+  }
+}
