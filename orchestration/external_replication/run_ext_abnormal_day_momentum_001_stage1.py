@@ -96,6 +96,29 @@ def _validate_contracts(predecl: dict[str, Any], execution: dict[str, Any]) -> N
     if 3.0 not in [float(value) for value in costs["stress_multipliers"]]:
         raise RuntimeError("3x cost stress is not predeclared")
 
+    gates = execution.get("stage1_gates")
+    if not isinstance(gates, dict):
+        raise RuntimeError("Stage-1 gates must be an object")
+    predecl_gates = predecl["cheap_stage_gates"]
+    if gates.get("minimum_independent_utc_signal_days_train") != predecl_gates[
+        "minimum_independent_trades_train"
+    ]:
+        raise RuntimeError("train independent-day gate drifted from predeclaration")
+    if gates.get("minimum_independent_utc_signal_days_validation") != predecl_gates[
+        "minimum_independent_trades_validation"
+    ]:
+        raise RuntimeError("validation independent-day gate drifted from predeclaration")
+    if gates.get("train_profit_factor_gt") != 1.0 or gates.get("validation_profit_factor_gt") != 1.0:
+        raise RuntimeError("profit-factor threshold must remain strictly above one")
+    if gates.get("single_winner_dependence_veto") != (
+        "leave_largest_positive_independent_utc_signal_day_block_out_total_must_be_positive_in_train_and_validation"
+    ):
+        raise RuntimeError("single-winner veto must use the frozen independent UTC-day block")
+    if gates.get("catastrophic_tail_veto") != (
+        "repeat_worst_independent_utc_signal_day_block_once_more_total_must_be_positive_in_train_and_validation"
+    ):
+        raise RuntimeError("catastrophic-tail veto must use the frozen independent UTC-day block")
+
 
 def _load_development_rows(dataset_path: Path) -> tuple[list[dict[str, object]], dict[str, Any]]:
     qualification = qualify_cohort001_dataset(dataset_path)
@@ -142,19 +165,42 @@ def _load_development_rows(dataset_path: Path) -> tuple[list[dict[str, object]],
 
 
 def _finite_summary(scored: Iterable[ScoredEvent]) -> dict[str, Any]:
-    summary = summarize(tuple(scored))
+    events = tuple(scored)
+    summary = summarize(events)
     cleaned: dict[str, Any] = {}
     for key, value in summary.items():
         if isinstance(value, float) and not math.isfinite(value):
             cleaned[key] = "Infinity" if value > 0 else "-Infinity"
         else:
             cleaned[key] = value
+
+    day_blocks: dict[object, float] = {}
+    for event in events:
+        day = event.signal.signal_timestamp.astimezone(UTC).date()
+        day_blocks[day] = day_blocks.get(day, 0.0) + event.net_return
+    block_values = list(day_blocks.values())
+    block_total = sum(block_values)
+    largest_positive_block = max((value for value in block_values if value > 0), default=0.0)
+    worst_block = min(block_values, default=0.0)
+    cleaned.update(
+        {
+            "independent_utc_signal_day_blocks": len(day_blocks),
+            "largest_positive_independent_day_block_return": largest_positive_block,
+            "leave_largest_independent_day_block_out_total": block_total - largest_positive_block,
+            "worst_independent_day_block_return": worst_block,
+            "repeat_worst_independent_day_block_total": block_total + worst_block,
+        }
+    )
     return cleaned
 
 
-def _positive_profit_factor(summary: dict[str, Any]) -> bool:
+def _positive_profit_factor(summary: dict[str, Any], threshold: float) -> bool:
     value = summary["profit_factor"]
-    return value == "Infinity" or (isinstance(value, (int, float)) and not isinstance(value, bool) and value > 1.0)
+    return value == "Infinity" or (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and value > threshold
+    )
 
 
 def _subset_by_signal_time(
@@ -202,14 +248,14 @@ def evaluate_stage1_gates(
         "positive_after_cost_validation": validation_summary["total_net_return"] > gates["validation_total_after_cost_return_gt"],
         "validation_first_half_positive": summaries["validation_first_half"]["total_net_return"] > gates["validation_first_half_total_after_cost_return_gt"],
         "validation_second_half_positive": summaries["validation_second_half"]["total_net_return"] > gates["validation_second_half_total_after_cost_return_gt"],
-        "profit_factor_train": _positive_profit_factor(train_summary),
-        "profit_factor_validation": _positive_profit_factor(validation_summary),
+        "profit_factor_train": _positive_profit_factor(train_summary, gates["train_profit_factor_gt"]),
+        "profit_factor_validation": _positive_profit_factor(validation_summary, gates["validation_profit_factor_gt"]),
         "three_x_cost_positive_train": train_summary["total_3x_cost_return"] > gates["train_total_3x_cost_return_gt"],
         "three_x_cost_positive_validation": validation_summary["total_3x_cost_return"] > gates["validation_total_3x_cost_return_gt"],
-        "single_winner_veto_train": train_summary["leave_largest_winner_out_total"] > 0.0,
-        "single_winner_veto_validation": validation_summary["leave_largest_winner_out_total"] > 0.0,
-        "catastrophic_tail_veto_train": train_summary["repeat_worst_event_stressed_total"] > 0.0,
-        "catastrophic_tail_veto_validation": validation_summary["repeat_worst_event_stressed_total"] > 0.0,
+        "single_winner_veto_train": train_summary["leave_largest_independent_day_block_out_total"] > 0.0,
+        "single_winner_veto_validation": validation_summary["leave_largest_independent_day_block_out_total"] > 0.0,
+        "catastrophic_tail_veto_train": train_summary["repeat_worst_independent_day_block_total"] > 0.0,
+        "catastrophic_tail_veto_validation": validation_summary["repeat_worst_independent_day_block_total"] > 0.0,
     }
     if not gate_results["minimum_independent_days_train"] or not gate_results["minimum_independent_days_validation"]:
         classification = "UNDERPOWERED"

@@ -21,10 +21,17 @@ def _json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _event(day: datetime, *, period: str, net: float = 0.01, stress: float = 0.004) -> ScoredEvent:
+def _event(
+    day: datetime,
+    *,
+    period: str,
+    net: float = 0.01,
+    stress: float = 0.004,
+    instrument: str = "BTC-USDT-SWAP",
+) -> ScoredEvent:
     signal_ts = day.replace(hour=12, minute=0, second=0, microsecond=0, tzinfo=UTC)
     signal = SignalEvent(
-        instrument="BTC-USDT-SWAP",
+        instrument=instrument,
         period=period,
         signal_timestamp=signal_ts,
         entry_timestamp=signal_ts + timedelta(hours=1),
@@ -50,6 +57,12 @@ def _daily_events(start: datetime, count: int, *, period: str, net: float = 0.01
     return tuple(_event(start + timedelta(days=index), period=period, net=net) for index in range(count))
 
 
+def _healthy_validation() -> tuple[ScoredEvent, ...]:
+    return _daily_events(datetime(2026, 5, 1, tzinfo=UTC), 12, period="validation") + _daily_events(
+        datetime(2026, 7, 1, tzinfo=UTC), 12, period="validation"
+    )
+
+
 def test_execution_contract_is_bound_to_reviewed_predeclaration_and_closed_oos() -> None:
     predecl = _json(PREDECLARATION_PATH)
     execution = _json(EXECUTION_CONTRACT_PATH)
@@ -59,6 +72,12 @@ def test_execution_contract_is_bound_to_reviewed_predeclaration_and_closed_oos()
     assert execution["screen"]["base_total_cost_bps"] == 24.0
     assert execution["screen"]["stress_multiplier"] == 3.0
     assert execution["successor_policy"]["no_threshold_tuning_after_result"] is True
+    assert "independent_utc_signal_day_block" in execution["stage1_gates"][
+        "single_winner_dependence_veto"
+    ]
+    assert "independent_utc_signal_day_block" in execution["stage1_gates"][
+        "catastrophic_tail_veto"
+    ]
     assert execution["authority"]["trade_authority"] is False
 
 
@@ -67,6 +86,16 @@ def test_execution_contract_fails_closed_if_protected_ohlcv_is_enabled() -> None
     execution = _json(EXECUTION_CONTRACT_PATH)
     execution["dataset_contract"]["protected_ohlcv_may_be_decoded"] = True
     with pytest.raises(RuntimeError, match="protected OHLCV"):
+        _validate_contracts(predecl, execution)
+
+
+def test_execution_contract_fails_closed_if_independent_block_veto_drifts() -> None:
+    predecl = _json(PREDECLARATION_PATH)
+    execution = _json(EXECUTION_CONTRACT_PATH)
+    execution["stage1_gates"]["single_winner_dependence_veto"] = (
+        "leave_largest_raw_asset_event_out"
+    )
+    with pytest.raises(RuntimeError, match="independent UTC-day block"):
         _validate_contracts(predecl, execution)
 
 
@@ -79,6 +108,7 @@ def test_stage1_survivor_requires_all_frozen_gates_and_both_validation_halves() 
     assert classification == "STAGE1_SURVIVOR_REQUIRES_FROZEN_CONTROLS"
     assert all(gates.values())
     assert summaries["train"]["independent_utc_signal_days"] == 45
+    assert summaries["train"]["independent_utc_signal_day_blocks"] == 45
     assert summaries["validation"]["independent_utc_signal_days"] == 24
     assert summaries["validation_first_half"]["n"] == 12
     assert summaries["validation_second_half"]["n"] == 12
@@ -104,3 +134,45 @@ def test_negative_second_validation_half_rejects_without_retuning() -> None:
     classification, gates, _ = evaluate_stage1_gates(train, first + second, execution)
     assert classification == "STAGE1_REJECTED"
     assert gates["validation_second_half_positive"] is False
+
+
+def test_correlated_multi_asset_winning_day_cannot_evade_concentration_veto() -> None:
+    execution = _json(EXECUTION_CONTRACT_PATH)
+    start = datetime(2025, 6, 1, tzinfo=UTC)
+    train = list(_daily_events(start, 39, period="train", net=-0.001))
+    dominant_day = start + timedelta(days=39)
+    train.extend(
+        _event(dominant_day, period="train", net=0.02, instrument=instrument)
+        for instrument in ("BTC-USDT-SWAP", "ETH-USDT-SWAP", "SOL-USDT-SWAP")
+    )
+
+    classification, gates, summaries = evaluate_stage1_gates(
+        tuple(train), _healthy_validation(), execution
+    )
+
+    # Raw-event removal would still look positive: +0.021 total - 0.020 = +0.001.
+    assert summaries["train"]["leave_largest_winner_out_total"] > 0.0
+    assert summaries["train"]["leave_largest_independent_day_block_out_total"] < 0.0
+    assert gates["single_winner_veto_train"] is False
+    assert classification == "STAGE1_REJECTED"
+
+
+def test_correlated_multi_asset_adverse_day_cannot_evade_tail_veto() -> None:
+    execution = _json(EXECUTION_CONTRACT_PATH)
+    start = datetime(2025, 6, 1, tzinfo=UTC)
+    train = list(_daily_events(start, 39, period="train", net=0.0015))
+    adverse_day = start + timedelta(days=39)
+    train.extend(
+        _event(adverse_day, period="train", net=-0.01, stress=-0.02, instrument=instrument)
+        for instrument in ("BTC-USDT-SWAP", "ETH-USDT-SWAP", "SOL-USDT-SWAP")
+    )
+
+    classification, gates, summaries = evaluate_stage1_gates(
+        tuple(train), _healthy_validation(), execution
+    )
+
+    # Raw-event repeat would pass: +0.0285 total - 0.010 = +0.0185.
+    assert summaries["train"]["repeat_worst_event_stressed_total"] > 0.0
+    assert summaries["train"]["repeat_worst_independent_day_block_total"] < 0.0
+    assert gates["catastrophic_tail_veto_train"] is False
+    assert classification == "STAGE1_REJECTED"

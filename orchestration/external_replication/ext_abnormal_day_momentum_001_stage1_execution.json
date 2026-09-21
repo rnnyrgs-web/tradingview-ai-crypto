@@ -37,8 +37,8 @@
     "validation_profit_factor_gt": 1.0,
     "train_total_3x_cost_return_gt": 0.0,
     "validation_total_3x_cost_return_gt": 0.0,
-    "single_winner_dependence_veto": "leave_largest_winner_out_total_must_be_positive_in_train_and_validation",
-    "catastrophic_tail_veto": "repeat_worst_event_once_more_total_must_be_positive_in_train_and_validation"
+    "single_winner_dependence_veto": "leave_largest_positive_independent_utc_signal_day_block_out_total_must_be_positive_in_train_and_validation",
+    "catastrophic_tail_veto": "repeat_worst_independent_utc_signal_day_block_once_more_total_must_be_positive_in_train_and_validation"
   },
   "classification": {
     "insufficient_independent_days": "UNDERPOWERED",
