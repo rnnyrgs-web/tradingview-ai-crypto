@@ -75,7 +75,7 @@ def _rejection_for(candidate: dict) -> dict:
 
 
 def test_behavior_field_semantics_contract_is_versioned() -> None:
-    assert BEHAVIOR_FIELD_SEMANTICS_VERSION == 2
+    assert BEHAVIOR_FIELD_SEMANTICS_VERSION == 3
     assert BEHAVIOR_SCHEMA_REGISTRY_VERSION == 1
     assert resolve_behavior_schema_id(_candidate()) == "TEST_FIELD_SEMANTICS_V1"
 
@@ -157,3 +157,38 @@ def test_known_cross_mechanism_field_cannot_rescue_real_rejected_design() -> Non
     genuine_change["signal_rules"]["underreaction_gap_min"] = 0.006
     assert resolve_behavior_schema_id(genuine_change) == "DISC_BTC_LEADLAG_V1"
     assert strategy_behavior_sha256(genuine_change) != original_digest
+
+
+def test_real_rejected_design_cannot_escape_by_paraphrasing_behavior_token() -> None:
+    entries = load_rejected_fingerprints()
+    rejected = next(
+        entry
+        for entry in entries
+        if entry.get("fingerprint_id") == "DISC-BTC-LEADLAG-001-v1"
+    )
+    original = copy.deepcopy(rejected["projection"])
+    original_digest = strategy_behavior_sha256(original)
+    assert original_digest == rejected["strategy_behavior_sha256"]
+
+    for section, field, paraphrase in (
+        ("signal_rules", "direction", "follow the direction of the qualifying BTC impulse"),
+        ("execution_rules", "entry_price", "open of the follower's next bar"),
+        ("signal_rules", "return_definition", "aligned one-hour close to close return"),
+    ):
+        rescue = copy.deepcopy(original)
+        rescue[section][field] = paraphrase
+        with pytest.raises(RuntimeError, match="unrecognized closed behavior token"):
+            strategy_behavior_sha256(rescue)
+
+
+def test_behavior_value_type_is_schema_specific_and_fail_closed() -> None:
+    entries = load_rejected_fingerprints()
+    rejected = next(
+        entry
+        for entry in entries
+        if entry.get("fingerprint_id") == "DISC-BTC-LEADLAG-001-v1"
+    )
+    wrong_type = copy.deepcopy(rejected["projection"])
+    wrong_type["signal_rules"]["underreaction_gap_min"] = True
+    with pytest.raises(RuntimeError, match="native JSON number"):
+        strategy_behavior_sha256(wrong_type)
