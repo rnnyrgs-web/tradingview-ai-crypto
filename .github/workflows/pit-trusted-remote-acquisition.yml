@@ -9,10 +9,16 @@ on:
         type: choice
         options:
           - BINANCE_LISTOBJECTS_V2
+          - BINANCE_C101H_ARCHIVE
+          - BINANCE_C101H_CHECKSUM
           - COMMONCRAWL_INDEX
           - COMMONCRAWL_WARC_RANGE
       prefix:
         description: "Binance S3 prefix (BINANCE_LISTOBJECTS_V2 only)"
+        required: false
+        type: string
+      object_path:
+        description: "Exact frozen Binance C101-H archive/.CHECKSUM path"
         required: false
         type: string
       continuation_token:
@@ -78,6 +84,7 @@ jobs:
         env:
           SOURCE_KIND: ${{ inputs.source_kind }}
           PREFIX: ${{ inputs.prefix }}
+          OBJECT_PATH: ${{ inputs.object_path }}
           CONTINUATION_TOKEN: ${{ inputs.continuation_token }}
           PREDECESSOR_RECEIPT_SHA256: ${{ inputs.predecessor_receipt_sha256 }}
           COLLECTION: ${{ inputs.collection }}
@@ -87,16 +94,24 @@ jobs:
           LENGTH: ${{ inputs.length }}
         run: |
           set -euo pipefail
-          args=(--source-kind "$SOURCE_KIND" --output-dir trusted-acquisition-output)
-          if [[ -n "$PREFIX" ]]; then args+=(--prefix "$PREFIX"); fi
-          if [[ -n "$CONTINUATION_TOKEN" ]]; then args+=(--continuation-token "$CONTINUATION_TOKEN"); fi
-          if [[ -n "$PREDECESSOR_RECEIPT_SHA256" ]]; then args+=(--predecessor-receipt-sha256 "$PREDECESSOR_RECEIPT_SHA256"); fi
-          if [[ -n "$COLLECTION" ]]; then args+=(--collection "$COLLECTION"); fi
-          if [[ -n "$TARGET_URL" ]]; then args+=(--target-url "$TARGET_URL"); fi
-          if [[ -n "$FILENAME" ]]; then args+=(--filename "$FILENAME"); fi
-          if [[ -n "$OFFSET" ]]; then args+=(--offset "$OFFSET"); fi
-          if [[ -n "$LENGTH" ]]; then args+=(--length "$LENGTH"); fi
-          python3 trusted_remote_acquisition.py "${args[@]}"
+          if [[ "$SOURCE_KIND" == "BINANCE_C101H_ARCHIVE" || "$SOURCE_KIND" == "BINANCE_C101H_CHECKSUM" ]]; then
+            test -n "$OBJECT_PATH"
+            python3 c101h_binance_direct_acquisition.py \
+              --source-kind "$SOURCE_KIND" \
+              --object-path "$OBJECT_PATH" \
+              --output-dir trusted-acquisition-output
+          else
+            args=(--source-kind "$SOURCE_KIND" --output-dir trusted-acquisition-output)
+            if [[ -n "$PREFIX" ]]; then args+=(--prefix "$PREFIX"); fi
+            if [[ -n "$CONTINUATION_TOKEN" ]]; then args+=(--continuation-token "$CONTINUATION_TOKEN"); fi
+            if [[ -n "$PREDECESSOR_RECEIPT_SHA256" ]]; then args+=(--predecessor-receipt-sha256 "$PREDECESSOR_RECEIPT_SHA256"); fi
+            if [[ -n "$COLLECTION" ]]; then args+=(--collection "$COLLECTION"); fi
+            if [[ -n "$TARGET_URL" ]]; then args+=(--target-url "$TARGET_URL"); fi
+            if [[ -n "$FILENAME" ]]; then args+=(--filename "$FILENAME"); fi
+            if [[ -n "$OFFSET" ]]; then args+=(--offset "$OFFSET"); fi
+            if [[ -n "$LENGTH" ]]; then args+=(--length "$LENGTH"); fi
+            python3 trusted_remote_acquisition.py "${args[@]}"
+          fi
 
       - name: Attest exact acquisition bundle
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
