@@ -19,6 +19,12 @@
   "purpose": "Freeze outcome-blind Cohort 001 coverage rules before any <=90d 2x labels or prospective candidates are opened.",
   "outcome_access": "SEALED_UNTIL_COVERAGE_READY",
   "forward_formation_status": "BLOCKED_UNTIL_TRUSTED_RECEIPT",
+  "evidence_authenticity": {
+    "policy": "A caller-supplied source ID, digest, timestamp or feature value is never sufficient to open labels. Every accepted evidence record must match retained immutable JSON bytes whose SHA-256 is recomputed by the gate. Derived evidence must bind transform ID/version, exact parameters and retained input digests. Critical cohort gates are deterministically recomputed from retained inputs.",
+    "artifact_root_required_for_ready": true,
+    "raw_digest_only_without_bytes": "STRUCTURAL_ONLY_NOT_SCIENTIFIC_EVIDENCE",
+    "repair_reason": "Independent review found that the original structural validator could accept a fabricated manifest carrying an allowed source ID and arbitrary caller value."
+  },
   "historical_universe_rule": {
     "venue": "BINANCE_SPOT",
     "quote_asset": "USDT",
@@ -73,8 +79,7 @@
       "COINMETRICS_COMMUNITY_MARKET_CANDLE"
     ],
     "liquidity_usd": [
-      "BINANCE_PUBLIC_DATA_SPOT_RAW",
-      "COINMETRICS_COMMUNITY_TRUSTED_SPOT_VOLUME"
+      "TRAILING_30D_MEDIAN_QUOTE_VOLUME_USD_V1"
     ],
     "market_cap_usd": [
       "COINMETRICS_COMMUNITY_CAP_MRKT_CUR_USD",
@@ -85,8 +90,7 @@
       "TIMESTAMPED_PRIMARY_SUPPLY_DISCLOSURE"
     ],
     "listing_age_days": [
-      "BINANCE_PUBLIC_DATA_SPOT_RAW",
-      "COINMETRICS_COMMUNITY_MARKET_CATALOG"
+      "DERIVED_BINANCE_LISTING_AGE_DAYS_V1"
     ],
     "volatility_30d": [
       "DERIVED_PRE_CUTOFF_VENUE_BARS_V1"
@@ -101,25 +105,42 @@
       "DERIVED_BTC_MARKET_REGIME_V1"
     ],
     "tradable": [
-      "BINANCE_PUBLIC_DATA_SPOT_RAW",
-      "COINMETRICS_COMMUNITY_MARKET_CATALOG"
+      "DERIVED_BINANCE_HISTORICAL_MEMBERSHIP_V1"
     ],
     "member": [
-      "BINANCE_PUBLIC_DATA_SPOT_RAW",
-      "COINMETRICS_COMMUNITY_MARKET_CATALOG"
+      "DERIVED_BINANCE_HISTORICAL_MEMBERSHIP_V1"
     ]
   },
   "source_semantics": {
+    "BINANCE_PUBLIC_DATA_SPOT_RAW": "Eligible only when a retained raw/normalized evidence artifact is present under the trusted artifact root and its bytes reproduce the frozen SHA-256. Current exchange metadata cannot stand in for historical evidence.",
     "COINMETRICS_COMMUNITY_SPLY_CUR": "Eligible only for assets/dates where the community catalog proves SplyCur coverage and the retained response has a time/status-time compatible with the historical cutoff; missing coverage is missing, never imputed.",
     "PIT_PRIMARY_FUNCTIONAL_CLASSIFIER_V1": "Mechanical functional-role classification from primary launch/protocol documentation that was public by the decision timestamp. If role is ambiguous or changed, exclude the interval instead of applying today's category.",
-    "DERIVED_PRE_CUTOFF_VENUE_BARS_V1": "Derived only from completed bars/trades timestamped no later than the decision cutoff, with raw archive digest pinned.",
-    "DERIVED_BTC_MARKET_REGIME_V1": "Frozen ex-ante market-regime rule computed only from BTC market data available by the same cutoff."
+    "DERIVED_PRE_CUTOFF_VENUE_BARS_V1": "Derived only from completed bars/trades timestamped no later than the decision cutoff. The evidence artifact must bind transform ID/version, parameters and retained input digests; raw caller values are insufficient.",
+    "DERIVED_BTC_MARKET_REGIME_V1": "Frozen ex-ante market-regime rule computed only from BTC market data available by the same cutoff, with transform metadata and verified retained input digests.",
+    "TRAILING_30D_MEDIAN_QUOTE_VOLUME_USD_V1": "Exactly the median of the previous 30 completed UTC daily venue quote-volume observations before decision_at. All 30 dates are mandatory. The validator recomputes the median from retained input artifacts; a current or one-day liquidity value cannot satisfy this field.",
+    "DERIVED_BINANCE_LISTING_AGE_DAYS_V1": "Floor elapsed days from the retained first verified venue trade timestamp to decision_at, recomputed by the validator. Today's listing metadata cannot substitute.",
+    "DERIVED_BINANCE_HISTORICAL_MEMBERSHIP_V1": "Historical member/tradable state at exactly decision_at from retained pre-outcome market-presence evidence. The validator recomputes the boolean from the retained input artifact."
+  },
+  "derivation_parameters": {
+    "TRAILING_30D_MEDIAN_QUOTE_VOLUME_USD_V1": {
+      "window_days": 30,
+      "statistic": "median",
+      "measure": "quote_volume_usd",
+      "completed_daily_bars_only": true
+    },
+    "DERIVED_BINANCE_LISTING_AGE_DAYS_V1": {
+      "basis": "first_verified_venue_trade",
+      "rounding": "floor_elapsed_days"
+    },
+    "DERIVED_BINANCE_HISTORICAL_MEMBERSHIP_V1": {
+      "rule": "verified_market_presence_at_decision"
+    }
   },
   "matching_precommitment": {
     "builder_owner": "PR_433",
     "pool_build_order": [
       "freeze stable identities and source versions",
-      "compute PIT features",
+      "compute PIT features from retained verified source artifacts",
       "apply frozen coverage/liquidity gates",
       "freeze matching calipers/distance and neighbor pools",
       "hash pools",
@@ -151,7 +172,7 @@
       "repaired PR #506 integrated on main",
       "trusted durable non-backdateable receipt/store proves formation existed before outcome",
       "full formation payload and PIT evidence provenance bound to receipt",
-      "trusted reference-price observation identity and timestamp",
+      "trusted fresh reference-price observation identity and timestamp",
       "<=90d horizon, target and invalidation frozen",
       "evidence-for and evidence-against frozen",
       "historical matched-control/base-rate evidence clears frozen research threshold"
