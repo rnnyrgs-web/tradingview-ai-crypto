@@ -12,7 +12,10 @@ from orchestration.rejected_fingerprints import (
     rejection_record,
     semantic_rejection_record,
 )
-from orchestration.scientific_design_identity import scientific_design_sha256
+from orchestration.scientific_design_identity import (
+    scientific_design_sha256,
+    strategy_behavior_sha256,
+)
 
 SCHEMA_VERSION = 1
 
@@ -60,6 +63,12 @@ REQUIRED_COST_FIELDS = {
     "slippage_bps",
     "funding_bps_per_day",
     "stress_multipliers",
+}
+
+IDENTITY_FIELDS = {
+    "contract_sha256",
+    "scientific_design_sha256",
+    "strategy_behavior_sha256",
 }
 
 
@@ -127,15 +136,12 @@ def _find_outcome_fields(value: Any, path: str = "candidate") -> list[str]:
 def canonical_predeclaration_bytes(candidate: dict[str, Any]) -> bytes:
     """Return deterministic bytes for the full immutable pre-outcome contract.
 
-    Both digests are excluded: ``scientific_design_sha256`` is the
-    label-invariant behavior identity, while ``contract_sha256`` is the digest
-    of every other frozen field, including labels/prose/search ancestry.
+    Identity digests are excluded from the contract digest because they are
+    deterministic derivatives of the frozen fields. ``scientific_design_sha256``
+    captures the full scientific protocol; ``strategy_behavior_sha256`` captures
+    executable behavior for rejected-memory/no-rescue admission.
     """
-    payload = {
-        key: value
-        for key, value in candidate.items()
-        if key not in {"contract_sha256", "scientific_design_sha256"}
-    }
+    payload = {key: value for key, value in candidate.items() if key not in IDENTITY_FIELDS}
     try:
         encoded = json.dumps(
             payload,
@@ -269,10 +275,16 @@ def validate_predeclaration(
         raise RuntimeError(f"rejected fingerprint cannot be predeclared again: {fingerprint_id}")
 
     design_digest = scientific_design_sha256(candidate)
-    semantic_rejection = semantic_rejection_record(design_digest, active_rejections)
+    behavior_digest = strategy_behavior_sha256(candidate)
+    semantic_rejection = semantic_rejection_record(
+        behavior_digest,
+        active_rejections,
+        scientific_design_digest=design_digest,
+    )
     if semantic_rejection is not None:
         raise RuntimeError(
-            "rejected scientific design cannot be predeclared under a renamed/cosmetic identity: "
+            "rejected strategy behavior cannot be predeclared under a renamed/cosmetic or "
+            "validation-only identity: "
             f"{semantic_rejection['fingerprint_id']}"
         )
     _validate_predecessor_claims(candidate, active_rejections)
@@ -281,15 +293,26 @@ def validate_predeclaration(
     if supplied_design_digest is not None:
         if not isinstance(supplied_design_digest, str) or supplied_design_digest != design_digest:
             raise RuntimeError(
-                "scientific_design_sha256 does not match the computed behavior-driving design"
+                "scientific_design_sha256 does not match the computed full scientific protocol"
+            )
+
+    supplied_behavior_digest = candidate.get("strategy_behavior_sha256")
+    if supplied_behavior_digest is not None:
+        if (
+            not isinstance(supplied_behavior_digest, str)
+            or supplied_behavior_digest != behavior_digest
+        ):
+            raise RuntimeError(
+                "strategy_behavior_sha256 does not match the computed executable behavior"
             )
 
     digest = predeclaration_sha256(candidate)
     supplied_digest = candidate.get("contract_sha256")
     if supplied_digest is not None:
-        if supplied_design_digest is None:
+        if supplied_design_digest is None or supplied_behavior_digest is None:
             raise RuntimeError(
-                "frozen predeclaration with contract_sha256 must persist scientific_design_sha256"
+                "frozen predeclaration with contract_sha256 must persist both "
+                "scientific_design_sha256 and strategy_behavior_sha256"
             )
         if not isinstance(supplied_digest, str) or supplied_digest != digest:
             raise RuntimeError("contract_sha256 does not match the frozen predeclaration")
@@ -306,13 +329,15 @@ def freeze_predeclaration(
     *,
     rejected_entries: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    """Validate and return a detached contract carrying both immutable digests."""
+    """Validate and return a detached contract carrying immutable identities."""
     detached = json.loads(json.dumps(candidate, allow_nan=False))
     detached.pop("contract_sha256", None)
     detached.pop("scientific_design_sha256", None)
+    detached.pop("strategy_behavior_sha256", None)
 
     validate_predeclaration(detached, rejected_entries=rejected_entries)
     detached["scientific_design_sha256"] = scientific_design_sha256(detached)
+    detached["strategy_behavior_sha256"] = strategy_behavior_sha256(detached)
     detached["contract_sha256"] = predeclaration_sha256(detached)
     validate_predeclaration(detached, rejected_entries=rejected_entries)
     return detached
