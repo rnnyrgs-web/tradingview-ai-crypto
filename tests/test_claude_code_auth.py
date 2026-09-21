@@ -6,6 +6,7 @@ from agents.claude_code_auth import (
     API_METERED,
     MANUAL_ADAPTER_REQUIRED,
     SUBSCRIPTION,
+    AuthDecision,
     AuthPolicyError,
     make_auth_receipt,
     resolve_auth,
@@ -59,6 +60,30 @@ def test_environment_values_are_never_serialized():
     assert "CLAUDE_CODE_OAUTH_TOKEN" in payload
 
 
+def test_nonexecuting_modes_cannot_be_laundered_into_execution():
+    bad = AuthDecision(
+        auth_mode=MANUAL_ADAPTER_REQUIRED,
+        execute=True,
+        credential_ref="ANTHROPIC_API_KEY",
+        budget_gate_required=True,
+        reason="tampered",
+    )
+    with pytest.raises(AuthPolicyError, match="non-executable"):
+        bad.as_dict()
+
+
+def test_subscription_cannot_silently_gain_api_budget_authority():
+    bad = AuthDecision(
+        auth_mode=SUBSCRIPTION,
+        execute=True,
+        credential_ref="CLAUDE_CODE_OAUTH_TOKEN",
+        budget_gate_required=True,
+        reason="tampered",
+    )
+    with pytest.raises(AuthPolicyError, match="non-metered"):
+        bad.as_dict()
+
+
 def test_auth_receipt_is_deterministic_secret_free_and_immutable(monkeypatch):
     monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "never-persist-this-token")
     decision = resolve_auth(oauth_present=True, api_key_present=False)
@@ -96,6 +121,19 @@ def test_receipt_refuses_direct_main_write_identity(branch):
             base_main_sha=MAIN,
             decision=decision,
             observed_at="2026-09-21T07:45:00Z",
+        )
+
+
+def test_receipt_requires_timezone_aware_observation_time():
+    decision = resolve_auth(oauth_present=True, api_key_present=False)
+    with pytest.raises(AuthPolicyError, match="timezone-aware"):
+        make_auth_receipt(
+            task_id="V2-004-PROBE",
+            request_id="run-1",
+            branch="auto/testing-security/v2-004-probe",
+            base_main_sha=MAIN,
+            decision=decision,
+            observed_at="2026-09-21T07:45:00",
         )
 
 
