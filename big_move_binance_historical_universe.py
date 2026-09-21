@@ -24,9 +24,10 @@ import xml.etree.ElementTree as ET
 
 CONTRACT_PATH = "money_intelligence/2x_binance_historical_universe_contract_v1.json"
 CONTRACT_ARTIFACT_ID = "2X-BINANCE-HISTORICAL-UNIVERSE-001-v1"
-CONTRACT_GIT_BLOB_SHA = "7e55fd09a4af2aca5faa5bfc020e72cc8f2f8042"
+CONTRACT_GIT_BLOB_SHA = "b49c67cef3d16ba907a58fef2f8c7414ec0e905e"
 EXPECTED_PREFIX = "data/spot/monthly/klines/"
-EXPECTED_HOST = "data.binance.vision"
+EXPECTED_HOST = "s3-ap-northeast-1.amazonaws.com"
+EXPECTED_BUCKET_PATH = "/data.binance.vision"
 MAX_PAGE_BYTES = 16 * 1024 * 1024
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 OBJECT_RE = re.compile(
@@ -69,6 +70,16 @@ def load_contract(repo_root: str | Path | None = None) -> dict[str, Any]:
         raise ValueError("historical-universe contract is malformed") from exc
     if not isinstance(contract, dict) or contract.get("artifact_id") != CONTRACT_ARTIFACT_ID:
         raise ValueError("unexpected historical-universe contract identity")
+    if contract.get("source") != {
+        "provider": "BINANCE_PUBLIC_DATA",
+        "download_host": "data.binance.vision",
+        "listing_host": EXPECTED_HOST,
+        "listing_bucket_path": EXPECTED_BUCKET_PATH,
+        "archive_family": "data/spot/monthly/klines/<SYMBOL>/1d/<SYMBOL>-1d-YYYY-MM.zip",
+        "checksum_suffix": ".CHECKSUM",
+        "quote_asset": "USDT",
+    }:
+        raise ValueError("historical-universe source contract drifted")
     return contract
 
 
@@ -119,12 +130,18 @@ def _request_token(locator: Any, *, field: str) -> str | None:
     if (
         parts.scheme != "https"
         or parts.hostname != EXPECTED_HOST
+        or parts.path != EXPECTED_BUCKET_PATH
         or parts.username
         or parts.password
         or parts.fragment
     ):
-        raise ValueError(f"{field}.request_locator must use clean HTTPS on {EXPECTED_HOST}")
+        raise ValueError(
+            f"{field}.request_locator must use clean HTTPS on "
+            f"{EXPECTED_HOST}{EXPECTED_BUCKET_PATH}"
+        )
     query = parse_qs(parts.query, keep_blank_values=True)
+    if set(query) - {"list-type", "prefix", "continuation-token"}:
+        raise ValueError(f"{field}.request_locator contains unsupported query parameters")
     if query.get("list-type") != ["2"]:
         raise ValueError(f"{field}.request_locator must use S3 ListObjectsV2 list-type=2")
     if query.get("prefix") != [EXPECTED_PREFIX]:
