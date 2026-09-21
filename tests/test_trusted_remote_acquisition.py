@@ -139,6 +139,16 @@ def test_trusted_context_fails_closed_outside_canonical_main_dispatch():
             trusted_github_context(modified)
 
 
+def test_trusted_context_rejects_sibling_workflow_on_same_repo_main():
+    modified = dict(GOOD_CONTEXT)
+    modified["GITHUB_WORKFLOW_REF"] = (
+        "rnnyrgs-web/tradingview-ai-crypto/.github/workflows/"
+        "sibling.yml@refs/heads/main"
+    )
+    with pytest.raises(ValueError, match="exact trusted acquisition workflow"):
+        trusted_github_context(modified)
+
+
 def test_receipt_binds_exact_response_bytes_and_runner_identity():
     request = freeze_binance_listobjects_request(
         prefix="data/spot/monthly/klines/BTCUSDT/1d/"
