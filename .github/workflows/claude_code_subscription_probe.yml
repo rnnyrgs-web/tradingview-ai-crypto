@@ -7,17 +7,20 @@ on:
     paths:
       - agents/claude_code_auth.py
       - tests/test_claude_code_auth.py
+      - tests/test_claude_code_subscription_probe_contract.py
       - .github/workflows/claude_code_subscription_probe.yml
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   subscription-capability-probe:
     if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      CLAUDE_CODE_SUBPROCESS_ENV_SCRUB: "1"
+      TARGET_HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
     steps:
       - id: preflight
         name: Detect subscription credential without exposing it
@@ -35,15 +38,17 @@ jobs:
         name: Prove official subscription-backed automation
         if: steps.preflight.outputs.configured == 'true'
         continue-on-error: true
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@cfc3eb22bfed5c26ef66e3223c982af27e4524de
         with:
           github_token: ${{ github.token }}
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt: >-
             Authentication capability probe only. Do not modify files, open pull requests,
-            run shell commands, or use GitHub write operations. Reply with exactly
-            SUBSCRIPTION_PROBE_OK and nothing else.
-          claude_args: "--max-turns 1"
+            run shell commands, use GitHub write operations, or use network/search tools.
+            Reply with exactly SUBSCRIPTION_PROBE_OK and nothing else.
+          claude_args: >-
+            --max-turns 1
+            --disallowedTools "Edit,Write,Replace,NotebookEditCell,Bash,WebSearch,WebFetch"
 
       - id: receipt
         name: Emit secret-free capability receipt
@@ -55,19 +60,31 @@ jobs:
         run: |
           python - <<'PY'
           import hashlib, json, os
+
           configured = os.environ.get("CONFIGURED") == "true"
           outcome = os.environ.get("PROBE_OUTCOME") or "skipped"
           if configured and outcome == "success":
               status = "SUBSCRIPTION_AUTOMATED"
               reason = "OFFICIAL_OAUTH_ACTION_PROBE_SUCCEEDED"
+              proof_ref = (
+                  f"github-actions://{os.environ['GITHUB_REPOSITORY']}/runs/"
+                  f"{os.environ['GITHUB_RUN_ID']}/attempts/{os.environ['GITHUB_RUN_ATTEMPT']}"
+              )
           elif not configured:
               status = "MANUAL_ADAPTER_REQUIRED"
               reason = "CLAUDE_CODE_OAUTH_TOKEN_NOT_CONFIGURED"
+              proof_ref = None
           else:
               status = "UNKNOWN"
               reason = "SUBSCRIPTION_OAUTH_PROBE_FAILED"
+              proof_ref = None
+
+          target_head = os.environ["TARGET_HEAD_SHA"]
+          if len(target_head) != 40 or any(c not in "0123456789abcdef" for c in target_head):
+              raise SystemExit("invalid target head SHA")
+
           receipt = {
-              "version": 1,
+              "version": 2,
               "provider": "anthropic",
               "engine": "claude-code",
               "auth_mode": status,
@@ -75,7 +92,11 @@ jobs:
               "repository": os.environ["GITHUB_REPOSITORY"],
               "run_id": os.environ["GITHUB_RUN_ID"],
               "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
-              "head_sha": os.environ["GITHUB_SHA"],
+              "event_name": os.environ["GITHUB_EVENT_NAME"],
+              "head_sha": target_head,
+              "execution_sha": os.environ["GITHUB_SHA"],
+              "workflow_ref": os.environ.get("GITHUB_WORKFLOW_REF"),
+              "proof_ref": proof_ref,
           }
           raw = json.dumps(receipt, sort_keys=True, separators=(",", ":")).encode()
           receipt["content_digest"] = hashlib.sha256(raw).hexdigest()
@@ -87,7 +108,7 @@ jobs:
 
       - name: Upload capability receipt
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: claude-subscription-capability-${{ github.run_id }}-${{ github.run_attempt }}
           path: /tmp/claude-subscription-capability.json
@@ -96,6 +117,7 @@ jobs:
 
       - name: Fail closed on configured-but-invalid subscription credential
         if: steps.preflight.outputs.configured == 'true' && steps.oauth_probe.outcome != 'success'
+        shell: bash
         run: |
           echo "Claude subscription OAuth was configured but the official action probe did not succeed."
           exit 1
