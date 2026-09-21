@@ -198,3 +198,7 @@ def test_legacy_specialist_workflow_is_manual_and_lead_remains_review_only():
     assert "ANTHROPIC_API_KEY" in lead_workflow
     assert "Fail closed if Claude adversarial review could not run" in lead_workflow
     assert "MANUAL LEAD INTEGRATION REQUIRED" in lead_workflow
+    assert "Record controlled WAIT for transient reviewer throttling" in lead_workflow
+    assert "429 Too Many Requests" in lead_workflow
+    assert "WAIT_RETRYABLE" in lead_workflow
+    assert "Candidate was **not approved** and was **not merged**" in lead_workflow
