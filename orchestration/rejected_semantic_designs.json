@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "description": "Label-invariant structured scientific/executable identities augmenting the canonical exact rejected-fingerprint registry. Backfills are derived only from packaged frozen contracts; unreconstructible legacy entries are marked unavailable rather than guessed.",
+  "identity_definition": "SHA256 of canonical UTF-8 JSON over target_markets,target_timeframes,data_contract,signal_rules,execution_rules,cost_model,validation_plan with sorted keys and compact separators; hypothesis/fingerprint/family labels and display prose are excluded.",
+  "records": [
+    {
+      "fingerprint_id": "DATA-BASIS-001",
+      "semantic_identity_status": "SEMANTIC_BACKFILL_UNAVAILABLE",
+      "reason": "The historical rejection predates the standardized strategy predeclaration schema and no exact behavior-driving frozen contract is packaged that can be translated without guessing. Exact fingerprint rejection remains authoritative."
+    },
+    {
+      "fingerprint_id": "DATA-FUNDING-001",
+      "semantic_identity_status": "SEMANTIC_BACKFILL_UNAVAILABLE",
+      "reason": "The historical rejection predates the standardized strategy predeclaration schema and no exact behavior-driving frozen contract is packaged that can be translated without guessing. Exact fingerprint rejection remains authoritative."
+    },
+    {
+      "fingerprint_id": "ACC-002",
+      "semantic_identity_status": "SEMANTIC_BACKFILL_UNAVAILABLE",
+      "reason": "The archived selection evidence does not provide one unambiguous standardized executable predeclaration projection for the rejected family. Exact fingerprint rejection remains authoritative; semantic identity is not guessed."
+    },
+    {
+      "fingerprint_id": "DISC-VOL-BREAKOUT-001-v1",
+      "semantic_identity_status": "BACKFILLED_STRUCTURED_CONTRACT",
+      "scientific_design_sha256": "9fd0ee3b5c68aa08c304de97ad1aa21662183c4d2a670757633926f2612a91f5",
+      "source_artifact": "orchestration/disc_vol_breakout_001.json",
+      "source_blob_sha": "15e6aa34d432e868fe1b998ffb27a7dddbad79d4",
+      "source_contract_sha256": "46fcc97626c98dd1c37e3ee0eaa1d7c0b07d4d9b1d38ce9d24b91a09dcdad0ce",
+      "derivation": "Standardized behavior projection of the frozen source contract under identity_definition; labels/prose omitted."
+    },
+    {
+      "fingerprint_id": "DISC-LIQUIDITY-MEANREV-001-v1",
+      "semantic_identity_status": "BACKFILLED_STRUCTURED_CONTRACT",
+      "scientific_design_sha256": "10765b36a8367bbbebaf811245329a5b8dcd65de975c456e43de9ebfb2c13cf8",
+      "source_artifact": "orchestration/disc_liquidity_meanrev_001.json",
+      "source_blob_sha": "359815d912df394606b8831991296d9fcc3768e0",
+      "source_contract_sha256": "19252de4464fc997632b0500fded857bc58d5bdad49d6f72e3660eba75a28b57",
+      "derivation": "Standardized behavior projection of the frozen source contract under identity_definition; labels/prose omitted."
+    },
+    {
+      "fingerprint_id": "DISC-BTC-LEADLAG-001-v1",
+      "semantic_identity_status": "BACKFILLED_STRUCTURED_CONTRACT",
+      "scientific_design_sha256": "b3cc849ab961652a96c2e9968041b94b9822fffd3a66316674de9ee8496f1598",
+      "source_artifact": "orchestration/disc_btc_leadlag_001.json",
+      "source_blob_sha": "0be7879d2e8127e3bb6d859f18a43c8e4e871dc8",
+      "source_contract_sha256": "8d991f723c65a583b1d3188aa7f4f77493d08cfd198ee6aa4be508294d770989",
+      "derivation": "Standardized behavior projection of the frozen source contract under identity_definition; labels/prose omitted."
+    }
+  ]
+}
