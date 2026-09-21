@@ -7,6 +7,7 @@
     "redirect_following",
     "non_main_execution",
     "non_workflow_dispatch_execution",
+    "sibling_workflow_signing_authority",
     "unattested_bundle_as_authority"
   ],
   "receipt": {
@@ -64,6 +65,15 @@
   "trusted_runtime": {
     "event_name": "workflow_dispatch",
     "ref": "refs/heads/main",
-    "repository": "rnnyrgs-web/tradingview-ai-crypto"
+    "repository": "rnnyrgs-web/tradingview-ai-crypto",
+    "workflow_path": ".github/workflows/pit-trusted-remote-acquisition.yml",
+    "workflow_ref": "rnnyrgs-web/tradingview-ai-crypto/.github/workflows/pit-trusted-remote-acquisition.yml@refs/heads/main"
+  },
+  "verification": {
+    "github_attestation": {
+      "repository": "rnnyrgs-web/tradingview-ai-crypto",
+      "signer_workflow": "rnnyrgs-web/tradingview-ai-crypto/.github/workflows/pit-trusted-remote-acquisition.yml",
+      "source_ref": "refs/heads/main"
+    }
   }
 }
