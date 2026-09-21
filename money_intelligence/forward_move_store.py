@@ -1,17 +1,16 @@
-"""Durable formation path that binds a forecast to a stored reference receipt.
+"""Durable formation path bound to a DB-fetched trusted reference receipt.
 
-This module is intentionally narrower than reference-price acquisition. It proves that
-formation persistence consumes the exact append-only reference-observation receipt and
-that the database returns the same receipt back with the formation. It does NOT make a
-caller-constructible market capture provider-authentic; that independent service-boundary
-problem remains fail-closed until separately repaired and reviewed.
+The reference receipt is created by the trusted Postgres boundary after Postgres itself
+fetches two fixed spot-provider endpoints.  This module then proves that forecast
+formation consumes exactly that append-only observation and that the joined database
+response returns the same receipt back with the formation.
 
 Research only. No prediction, promotion, broker or trading authority is granted.
 """
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any
 
@@ -28,12 +27,18 @@ from money_intelligence.trusted_reference_store import (
 
 
 def _parse_time(value: Any, *, field: str) -> datetime:
-    if not isinstance(value, str) or not value.endswith("Z"):
-        raise ValueError(f"{field} must be RFC3339 UTC ending in Z")
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{field} must be an RFC3339 UTC timestamp")
+    text = value.strip()
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
     try:
-        return datetime.fromisoformat(value[:-1] + "+00:00").astimezone(timezone.utc)
+        parsed = datetime.fromisoformat(text)
     except ValueError as exc:
         raise ValueError(f"{field} must be valid RFC3339 UTC") from exc
+    if parsed.tzinfo is None or parsed.utcoffset() != timedelta(0):
+        raise ValueError(f"{field} must be UTC")
+    return parsed.astimezone(timezone.utc)
 
 
 def verify_forecast_reference_receipt(
@@ -77,9 +82,6 @@ def _verify_returned_reference(
     stored = row.get("reference_observation")
     if not isinstance(stored, dict):
         raise ValueError("formation did not return the bound reference observation")
-    # The formation RPC returns the reference row payload plus its authoritative
-    # created_at separately. Reattach it before using the same strict parser used for
-    # the direct reference-observation RPC response.
     stored_with_created_at = dict(stored)
     stored_with_created_at["created_at"] = row.get("reference_observation_created_at")
     parsed = reference_receipt_from_store_row(stored_with_created_at)
