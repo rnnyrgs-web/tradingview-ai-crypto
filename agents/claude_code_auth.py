@@ -34,6 +34,15 @@ def _present(value: str | None) -> bool:
     return bool(value and value.strip())
 
 
+def _valid_time(value: Any) -> bool:
+    if not isinstance(value, str) or not value.strip():
+        return False
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).tzinfo is not None
+    except ValueError:
+        return False
+
+
 @dataclass(frozen=True)
 class AuthDecision:
     auth_mode: str
@@ -102,21 +111,27 @@ def resolve_auth_from_environment(
 
 
 def validate_decision(payload: Mapping[str, Any]) -> None:
-    if payload.get("auth_mode") not in SAFE_AUTH_MODES:
+    mode = payload.get("auth_mode")
+    if mode not in SAFE_AUTH_MODES:
         raise AuthPolicyError("unsupported auth mode")
     if not isinstance(payload.get("execute"), bool):
         raise AuthPolicyError("execute must be boolean")
     if not isinstance(payload.get("budget_gate_required"), bool):
         raise AuthPolicyError("budget_gate_required must be boolean")
+    if not isinstance(payload.get("reason"), str) or not payload["reason"].strip():
+        raise AuthPolicyError("auth decision reason is required")
     ref = payload.get("credential_ref")
     if ref is not None and ref not in SECRET_ENV_NAMES:
         raise AuthPolicyError("credential reference is not an approved secret name")
-    if payload.get("auth_mode") == SUBSCRIPTION:
-        if ref != "CLAUDE_CODE_OAUTH_TOKEN" or payload.get("budget_gate_required"):
-            raise AuthPolicyError("subscription auth must be non-metered OAuth")
-    if payload.get("auth_mode") == API_METERED:
-        if ref != "ANTHROPIC_API_KEY" or not payload.get("budget_gate_required"):
-            raise AuthPolicyError("API auth must retain the budget gate")
+    if mode == SUBSCRIPTION:
+        if payload.get("execute") is not True or ref != "CLAUDE_CODE_OAUTH_TOKEN" or payload.get("budget_gate_required"):
+            raise AuthPolicyError("subscription auth must be executable non-metered OAuth")
+    elif mode == API_METERED:
+        if payload.get("execute") is not True or ref != "ANTHROPIC_API_KEY" or not payload.get("budget_gate_required"):
+            raise AuthPolicyError("API auth must be executable and retain the budget gate")
+    else:
+        if payload.get("execute") is not False or ref is not None or payload.get("budget_gate_required"):
+            raise AuthPolicyError("non-executable auth modes cannot carry credentials or budget authority")
 
 
 def make_auth_receipt(
@@ -137,6 +152,8 @@ def make_auth_receipt(
         raise AuthPolicyError("base_main_sha must be a lowercase 40-character SHA")
     validate_decision(decision.as_dict())
     at = observed_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    if not _valid_time(at):
+        raise AuthPolicyError("observed_at must be a timezone-aware ISO timestamp")
     identity = {
         "task_id": task_id,
         "request_id": request_id,
@@ -172,9 +189,11 @@ def validate_auth_receipt(receipt: Mapping[str, Any]) -> None:
     sha = receipt.get("base_main_sha")
     if not isinstance(sha, str) or len(sha) != 40 or any(c not in "0123456789abcdef" for c in sha):
         raise AuthPolicyError("malformed base main SHA")
-    for field in ("task_id", "request_id", "branch", "attempt_id", "observed_at", "reason", "content_digest"):
+    for field in ("task_id", "request_id", "branch", "attempt_id", "reason", "content_digest"):
         if not isinstance(receipt.get(field), str) or not receipt[field].strip():
             raise AuthPolicyError(f"missing receipt field: {field}")
+    if not _valid_time(receipt.get("observed_at")):
+        raise AuthPolicyError("malformed observed_at")
     decision = {
         "auth_mode": receipt.get("auth_mode"),
         "execute": receipt.get("execute"),
