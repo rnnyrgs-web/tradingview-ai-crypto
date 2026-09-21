@@ -75,14 +75,19 @@ def test_data_ready_reuses_single_shared_cryptographic_acquisition_boundary():
     assert provenance["trusted_acquisition_source_ref"] == "refs/heads/main"
     assert provenance["trusted_attestation_predicate_type"] == "https://slsa.dev/provenance/v1"
     assert provenance["trusted_acquisition_required_request_shapes"] == [
-        "BINANCE_ARCHIVE_OBJECT_GET",
-        "BINANCE_CHECKSUM_OBJECT_GET",
+        "BINANCE_C101H_ARCHIVE",
+        "BINANCE_C101H_CHECKSUM",
     ]
-    assert provenance["trusted_acquisition_dependency_state"] == (
-        "BLOCKED_UNTIL_SHARED_BOUNDARY_SUPPORTS_EXACT_BINANCE_OBJECT_GET"
+    assert provenance["trusted_acquisition_dependency_state"] == "READY_FOR_TRUSTED_DIRECT_OBJECT_ACQUISITION"
+    assert provenance["trusted_pair_consumer"] == (
+        "c101h_binance_pair.verify_attested_c101h_archive_checksum_pair"
     )
     assert "trusted acquisition attestation missing, unverifiable, or signer/ref policy mismatch" in contract["fail_closed_conditions"]
-    assert "do not create a parallel acquisition workflow" in contract["exact_next_action"]
+    assert (
+        "attested archive/checksum pair is not verified through the canonical C101-H pair consumer"
+        in contract["fail_closed_conditions"]
+    )
+    assert "independently freeze the exact authenticated Binance funding CSV field order/types" in contract["exact_next_action"]
 
 
 def test_contract_does_not_authorize_outcome_inspection_or_trading():
