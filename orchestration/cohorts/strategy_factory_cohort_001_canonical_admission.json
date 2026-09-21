@@ -11,7 +11,7 @@
       "screening_authority": false,
       "selection_dataset_receipt_sha256": null,
       "status": "HOLD_ACTIVE_OWNERSHIP_COLLISION",
-      "strategy_behavior_sha256": "63146dfb0d70062b90962c4990499632c4a5ce725abacc05a4bb416c9184b375",
+      "strategy_behavior_sha256": "8a15f6d3e3a247ef73012fd4891b2055fc7e3875efa6441d9b0bea61802af983",
       "trade_authority": false,
       "untouched_oos_opened": false
     },
@@ -24,7 +24,7 @@
       "screening_authority": true,
       "selection_dataset_receipt_sha256": "910759b7448baec737f5a884b9531cf29726a842e09aa54abbd5cc6d9f4cab22",
       "status": "ADMITTED_DATA_QUALIFIED",
-      "strategy_behavior_sha256": "b4ca055b5f069a2e6c88a9bef7bba5079091ff9e039a259ce9043f282b7743c7",
+      "strategy_behavior_sha256": "5353080405cb0d8e68bc57d661b5b564af1d457b34667978c4371f71ed0900ff",
       "trade_authority": false,
       "untouched_oos_opened": false
     },
@@ -37,7 +37,7 @@
       "screening_authority": true,
       "selection_dataset_receipt_sha256": "910759b7448baec737f5a884b9531cf29726a842e09aa54abbd5cc6d9f4cab22",
       "status": "ADMITTED_DATA_QUALIFIED",
-      "strategy_behavior_sha256": "adc7326c9904ad7d17f38ea5999bfd45acd3dd1c51e7bf71c493c808b131b677",
+      "strategy_behavior_sha256": "876f9d0cb428808064d08ce983e615532c3adf55ad8a7e9a7fc32dfb1b8192ec",
       "trade_authority": false,
       "untouched_oos_opened": false
     },
@@ -50,7 +50,7 @@
       "screening_authority": true,
       "selection_dataset_receipt_sha256": "910759b7448baec737f5a884b9531cf29726a842e09aa54abbd5cc6d9f4cab22",
       "status": "ADMITTED_DATA_QUALIFIED",
-      "strategy_behavior_sha256": "b31af65712176638055a21c006d8ee4818c8fddd8655c7f8369e80f87b612316",
+      "strategy_behavior_sha256": "4187cb1952482edc4f1aacb1a05fa87a69b6ab6af19b029d11a7cd6d50150201",
       "trade_authority": false,
       "untouched_oos_opened": false
     },
@@ -63,7 +63,7 @@
       "screening_authority": true,
       "selection_dataset_receipt_sha256": "910759b7448baec737f5a884b9531cf29726a842e09aa54abbd5cc6d9f4cab22",
       "status": "ADMITTED_DATA_QUALIFIED_POWER_RISK",
-      "strategy_behavior_sha256": "133cd45962ea966068cd39c4c81aac66d50fd3a10df66625488cf99751bba0b5",
+      "strategy_behavior_sha256": "1293e8457be524ebc823a640883ac27f7ed0e49555a38fbbadf8b8fbd2b21e52",
       "trade_authority": false,
       "untouched_oos_opened": false
     },
@@ -76,7 +76,7 @@
       "screening_authority": true,
       "selection_dataset_receipt_sha256": "910759b7448baec737f5a884b9531cf29726a842e09aa54abbd5cc6d9f4cab22",
       "status": "ADMITTED_DATA_QUALIFIED",
-      "strategy_behavior_sha256": "1ef766b96125fa63cbfeaad8b9405bf7893f6b4781043f053162c59ada2793fe",
+      "strategy_behavior_sha256": "f878906f9643627e6554326d24a21493410235cd1868652e807d96a5816689f1",
       "trade_authority": false,
       "untouched_oos_opened": false
     },
@@ -89,7 +89,7 @@
       "screening_authority": true,
       "selection_dataset_receipt_sha256": "910759b7448baec737f5a884b9531cf29726a842e09aa54abbd5cc6d9f4cab22",
       "status": "ADMITTED_DATA_QUALIFIED",
-      "strategy_behavior_sha256": "b86a1bd4ec2076472e759233f5eb2d7526114a85edb9626349793041617eb045",
+      "strategy_behavior_sha256": "1b0261b0fc14366259f15663756cb400569a705e3709171d7be301577ef226b4",
       "trade_authority": false,
       "untouched_oos_opened": false
     },
@@ -115,7 +115,7 @@
   "outcomes_read": false,
   "planned_hypothesis_count": 8,
   "protected_oos_opened": false,
-  "receipt_sha256": "6ed799511faaf9b47be23da9ae1f9b9741c823ceaf52c9ccd7c08af548a8ce3f",
+  "receipt_sha256": "fc7c237e67600390cca369965161ccfc555dd2bc9bebbabc83d774fafd57182a",
   "schema_version": 3,
   "selection_dataset_qualification": {
     "development_end_utc": "2026-08-31T23:00:00+00:00",
