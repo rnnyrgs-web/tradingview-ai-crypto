@@ -267,20 +267,11 @@ def test_strict_derivation_cannot_be_replayed_across_raw_digest():
     )
 
 
-@pytest.mark.parametrize(
-    "mutator",
-    [
-        lambda rec: rec["value"].__setitem__("execution_band_usd", 50000),
-        lambda rec: rec["value"].__setitem__(
-            "window_start_at", "2026-09-21T10:00:00Z"
-        ),
-    ],
-)
-def test_strict_derivation_cannot_be_replayed_across_band_or_window(mutator):
+def test_strict_derivation_cannot_be_replayed_across_execution_band():
     snap = _snapshot()
     trusted_derivation = _derivation_sha(snap)
     strict = snap["assets"][0]["features"]["strict_tradability"]
-    mutator(strict)
+    strict["value"]["execution_band_usd"] = 50000
     strict["value"]["microstructure_evidence_sha256"] = (
         strict_tradability_derivation_sha256(strict, _contract())
     )
@@ -296,6 +287,24 @@ def test_strict_derivation_cannot_be_replayed_across_band_or_window(mutator):
         "STRICT_TRADABILITY_DERIVATION_UNVERIFIED"
         in result["assets"][0]["blockers"]
     )
+
+
+def test_short_strict_window_is_contract_invalid_before_derivation_replay():
+    snap = _snapshot()
+    trusted_derivation = _derivation_sha(snap)
+    strict = snap["assets"][0]["features"]["strict_tradability"]
+    strict["value"]["window_start_at"] = "2026-09-21T10:00:00Z"
+    strict["value"]["microstructure_evidence_sha256"] = (
+        strict_tradability_derivation_sha256(strict, _contract())
+    )
+
+    with pytest.raises(ValueError, match="window shorter than frozen lookback"):
+        evaluate_snapshot(
+            _contract(),
+            snap,
+            verified_receipt_sha256s=VERIFIED,
+            verified_strict_derivation_sha256s={trusted_derivation},
+        )
 
 
 def test_strict_transform_version_is_frozen():
