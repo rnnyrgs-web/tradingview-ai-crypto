@@ -30,8 +30,6 @@ def _candidate() -> dict:
         },
         "execution_rules": {
             "entry_delay_bars": 1,
-            "maximum_hold_bars": 24,
-            "one_position_per_instrument": True,
             "exit_rule": "fixed_holding_window",
         },
         "cost_model": {
