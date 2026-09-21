@@ -1,0 +1,127 @@
+name: PIT Trusted Remote Acquisition
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_kind:
+        description: "Frozen provider request kind"
+        required: true
+        type: choice
+        options:
+          - BINANCE_LISTOBJECTS_V2
+          - BINANCE_C101H_ARCHIVE
+          - BINANCE_C101H_CHECKSUM
+          - COMMONCRAWL_INDEX
+          - COMMONCRAWL_WARC_RANGE
+      prefix:
+        description: "Binance S3 prefix (BINANCE_LISTOBJECTS_V2 only)"
+        required: false
+        type: string
+      object_path:
+        description: "Exact frozen Binance C101-H archive/.CHECKSUM path"
+        required: false
+        type: string
+      continuation_token:
+        description: "Binance continuation token (paginated request only)"
+        required: false
+        type: string
+      predecessor_receipt_sha256:
+        description: "Prior authenticated page receipt SHA-256 (required with continuation token)"
+        required: false
+        type: string
+      collection:
+        description: "Common Crawl collection, e.g. CC-MAIN-2026-34"
+        required: false
+        type: string
+      target_url:
+        description: "Exact original HTTPS document URL (COMMONCRAWL_INDEX only)"
+        required: false
+        type: string
+      filename:
+        description: "Exact Common Crawl WARC filename from authenticated index row"
+        required: false
+        type: string
+      offset:
+        description: "Common Crawl WARC byte offset"
+        required: false
+        type: string
+      length:
+        description: "Common Crawl WARC byte length"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: pit-trusted-acquisition-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Refuse non-canonical execution
+        env:
+          EXPECTED_REPOSITORY: rnnyrgs-web/tradingview-ai-crypto
+          EXPECTED_WORKFLOW_REF: rnnyrgs-web/tradingview-ai-crypto/.github/workflows/pit-trusted-remote-acquisition.yml@refs/heads/main
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "$EXPECTED_REPOSITORY"
+          test "$GITHUB_REF" = "refs/heads/main"
+          test "$GITHUB_EVENT_NAME" = "workflow_dispatch"
+          test "$GITHUB_WORKFLOW_REF" = "$EXPECTED_WORKFLOW_REF"
+
+      - name: Checkout exact trusted main workflow source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Fetch provider bytes and build canonical receipt
+        env:
+          SOURCE_KIND: ${{ inputs.source_kind }}
+          PREFIX: ${{ inputs.prefix }}
+          OBJECT_PATH: ${{ inputs.object_path }}
+          CONTINUATION_TOKEN: ${{ inputs.continuation_token }}
+          PREDECESSOR_RECEIPT_SHA256: ${{ inputs.predecessor_receipt_sha256 }}
+          COLLECTION: ${{ inputs.collection }}
+          TARGET_URL: ${{ inputs.target_url }}
+          FILENAME: ${{ inputs.filename }}
+          OFFSET: ${{ inputs.offset }}
+          LENGTH: ${{ inputs.length }}
+        run: |
+          set -euo pipefail
+          if [[ "$SOURCE_KIND" == "BINANCE_C101H_ARCHIVE" || "$SOURCE_KIND" == "BINANCE_C101H_CHECKSUM" ]]; then
+            test -n "$OBJECT_PATH"
+            python3 c101h_binance_direct_acquisition.py \
+              --source-kind "$SOURCE_KIND" \
+              --object-path "$OBJECT_PATH" \
+              --output-dir trusted-acquisition-output
+          else
+            args=(--source-kind "$SOURCE_KIND" --output-dir trusted-acquisition-output)
+            if [[ -n "$PREFIX" ]]; then args+=(--prefix "$PREFIX"); fi
+            if [[ -n "$CONTINUATION_TOKEN" ]]; then args+=(--continuation-token "$CONTINUATION_TOKEN"); fi
+            if [[ -n "$PREDECESSOR_RECEIPT_SHA256" ]]; then args+=(--predecessor-receipt-sha256 "$PREDECESSOR_RECEIPT_SHA256"); fi
+            if [[ -n "$COLLECTION" ]]; then args+=(--collection "$COLLECTION"); fi
+            if [[ -n "$TARGET_URL" ]]; then args+=(--target-url "$TARGET_URL"); fi
+            if [[ -n "$FILENAME" ]]; then args+=(--filename "$FILENAME"); fi
+            if [[ -n "$OFFSET" ]]; then args+=(--offset "$OFFSET"); fi
+            if [[ -n "$LENGTH" ]]; then args+=(--length "$LENGTH"); fi
+            python3 trusted_remote_acquisition.py "${args[@]}"
+          fi
+
+      - name: Attest exact acquisition bundle
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: trusted-acquisition-output/trusted-acquisition.tar
+
+      - name: Upload attested acquisition bundle
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: trusted-remote-acquisition-${{ github.run_id }}-${{ github.run_attempt }}
+          path: trusted-acquisition-output/trusted-acquisition.tar
+          if-no-files-found: error
+          retention-days: 30

@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "artifact_type": "strategy_factory_cohort_baseline_halving_plan",
+  "cohort_planning_id": "STRATEGY-FACTORY-COHORT-001-BASELINE-HALVING-PLAN-v1",
+  "formed_at": "2026-09-21T08:05:00+00:00",
+  "main_sha_observed": "460e46e8de9f0217b5df5777aaeccdf8da9f2f34",
+  "source_cohort_pr": 515,
+  "source_cohort_head_observed": "bc812903aad30feeea229514d4ffd17697118764",
+  "related_issues": [
+    504,
+    510,
+    513,
+    517,
+    520
+  ],
+  "status": "OUTCOME_BLIND_PLAN_FROZEN_WAITING_CANONICAL_BINDING",
+  "purpose": "Freeze the Cohort-001 baseline/ablation gauntlet and successive-halving rules before any cheap-screen outcomes are opened, so simple baselines cannot be substituted after seeing results.",
+  "binding": {
+    "candidate_labels_are_planning_only": true,
+    "candidate_scientific_design_sha256_required_before_stage_1": true,
+    "baseline_bundle_sha256_required_before_medium_stage": true,
+    "canonical_binding_must_use_integrated_507_identity": true,
+    "regenerate_or_reject_if_515_candidate_contract_changes": true,
+    "protected_outcome_data_used_to_form_plan": false
+  },
+  "global_evidence_locks": {
+    "selection_data_only": true,
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false,
+    "broker_connected": false,
+    "trade_authority": false,
+    "post_outcome_baseline_substitution_allowed": false,
+    "post_outcome_threshold_tuning_allowed": false
+  },
+  "cheap_stage": {
+    "execution": "Run every semantically admitted and data-ready Cohort-001 candidate in deterministic parallel; do not serial-rank cheap OHLCV screens.",
+    "held_candidate": {
+      "fingerprint_id": "DISC-BREADTH-PERSIST-001-v1",
+      "reason": "HOLD_ACTIVE_OWNERSHIP_COLLISION with canonical COORD-DATA-005 / DATA-BREADTH-001 unless ownership is durably released/reconciled."
+    },
+    "data_blocked_candidate": {
+      "fingerprint_id": "DISC-DELTA-CARRY-001-v1",
+      "reason": "Exclude until issue #520 reaches DATA_READY_FOR_FROZEN_CONSUMER for the frozen spot/perp/funding contract."
+    },
+    "candidate_economic_gate": {
+      "minimum_independent_trades_train": 40,
+      "minimum_independent_trades_validation": 20,
+      "require_positive_after_cost_train": true,
+      "require_positive_after_cost_validation": true,
+      "require_validation_halves_positive": true,
+      "require_profit_factor_above_one": true,
+      "require_3x_cost_positive": true,
+      "catastrophic_tail_veto": true,
+      "single_winner_dependence_veto": true,
+      "nominal_positive_pnl_alone_is_insufficient": true
+    }
+  },
+  "baseline_generation_rules": {
+    "formation_timing": "Generate candidate signals and baseline schedules from frozen inputs/rules before reading any forward return used to score candidate or baseline.",
+    "randomized_timing": {
+      "seed_rule": "uint64(first_16_hex(SHA256(cohort_planning_id + '|' + canonical_candidate_scientific_design_sha256 + '|randomized_timing_v1')))",
+      "eligible_pool": "Decision timestamps satisfying the candidate's frozen data availability, warmup, chronology and non-overlap rules.",
+      "matching": "Match candidate event count and long/short counts separately within training and validation; choose timestamps without replacement by deterministic SHA256(seed|timestamp|direction) rank.",
+      "no_outcome_conditioning": true
+    },
+    "delayed_signal": "Shift the candidate entry by exactly one completed 1h bar, preserve original signal direction, holding period and non-overlap semantics; do not recompute the signal with future bars.",
+    "costs": "Every baseline uses the same fee/spread/slippage/funding semantics as the candidate unless the baseline necessarily changes leg count; if leg count changes, apply the same per-leg cost model transparently.",
+    "independence": "Use the same independent-event/non-overlap accounting as the candidate whenever comparable; never increase sample size by counting overlapping realizations."
+  },
+  "candidate_baselines": [
+    {
+      "fingerprint_id": "DISC-BREADTH-PERSIST-001-v1",
+      "status": "HELD_ACTIVE_OWNERSHIP_COLLISION",
+      "primary_mechanism_baseline": "Equal-weight BTC/ETH/SOL basket direction over the same 6h holding windows without the low-dispersion filter.",
+      "additional_falsifiers": [
+        "Single-asset BTC direction proxy on the same decision windows.",
+        "Equal-weight basket buy/hold beta over matched 6h windows.",
+        "One-bar delayed candidate signal.",
+        "Frequency- and direction-matched randomized eligible-window timing."
+      ]
+    },
+    {
+      "fingerprint_id": "DISC-RESIDUAL-REV-001-v1",
+      "status": "PLANNED_WAIT_507_BINDING",
+      "primary_mechanism_baseline": "Simple follower 6h reversal with the same follower universe/hold/costs but no beta residualization or correlation gate.",
+      "additional_falsifiers": [
+        "Unhedged follower reversal using the candidate residual sign.",
+        "Beta-hedged residual reversion without the correlation gate.",
+        "One-bar delayed candidate signal.",
+        "Frequency- and direction-matched randomized timing for the beta-hedged pair."
+      ]
+    },
+    {
+      "fingerprint_id": "DISC-SIGNED-VOLUME-DRIFT-001-v1",
+      "status": "PLANNED_WAIT_507_BINDING",
+      "primary_mechanism_baseline": "Simple 4h price momentum with the same 3h hold and no quote-volume-pressure condition.",
+      "additional_falsifiers": [
+        "Signed-volume pressure rule without the close-location gate.",
+        "One-bar delayed candidate signal.",
+        "Frequency- and direction-matched randomized timing.",
+        "Explicit diagnostic label that signed candle-body volume is an OHLCV proxy, not authenticated aggressive order flow."
+      ]
+    },
+    {
+      "fingerprint_id": "DISC-LOWVOL-DRIFT-REV-001-v1",
+      "status": "PLANNED_WAIT_507_BINDING",
+      "primary_mechanism_baseline": "Simple 8h move reversal with the same 6h hold and no low-participation condition.",
+      "additional_falsifiers": [
+        "Same move gate with ordinary/high participation rather than low participation.",
+        "Same move gate without the shock-exclusion filter.",
+        "One-bar delayed candidate signal.",
+        "Frequency- and direction-matched randomized timing."
+      ]
+    },
+    {
+      "fingerprint_id": "DISC-WEEKEND-NORMALIZE-001-v1",
+      "status": "PLANNED_WAIT_507_BINDING_UNDERPOWERED_RISK",
+      "primary_mechanism_baseline": "Unconditional opposite-direction Monday reversal after the same fixed Friday-22:00-to-Sunday-23:00 UTC weekend window.",
+      "additional_falsifiers": [
+        "Weekend move gate without the participation filter.",
+        "Weekday pseudo-weekend placebo using the same elapsed duration and clock offset where chronology permits.",
+        "One-bar delayed Monday entry.",
+        "Do not loosen thresholds or add weeks post hoc if sample power is insufficient."
+      ]
+    },
+    {
+      "fingerprint_id": "DISC-MODERATEVOL-AUTOCORR-001-v1",
+      "status": "PLANNED_WAIT_507_BINDING",
+      "primary_mechanism_baseline": "Plain three-bar same-sign continuation with the candidate holding period and no moderate-volatility filter.",
+      "additional_falsifiers": [
+        "Same continuation rule without the volatility-state restriction.",
+        "One-bar delayed candidate signal.",
+        "Sign-shuffled or frequency-matched randomized timing baseline."
+      ]
+    },
+    {
+      "fingerprint_id": "DISC-RANGE-AUCTION-REV-001-v1",
+      "status": "PLANNED_WAIT_507_BINDING",
+      "primary_mechanism_baseline": "Simple range-edge reversal with the same hold/costs but without the low-efficiency/auction condition.",
+      "additional_falsifiers": [
+        "Generic short-horizon reversal with matched hold.",
+        "One-bar delayed candidate signal.",
+        "Frequency- and direction-matched randomized timing."
+      ]
+    },
+    {
+      "fingerprint_id": "DISC-DELTA-CARRY-001-v1",
+      "status": "WAIT_520_DATA_READY",
+      "primary_mechanism_baseline": "Always-on delta-neutral spot/perpetual hedge under the same frozen venue/instruments/capital accounting.",
+      "additional_falsifiers": [
+        "Positive-funding rule without any additional filter.",
+        "No-trade/cash.",
+        "One actual funding-event delayed entry.",
+        "1x/2x/3x candidate-consistent fee, spread, slippage and financing stress.",
+        "Never treat future realized funding as known at entry."
+      ]
+    }
+  ],
+  "stage_2_incremental_value_gate": {
+    "applies_only_after_candidate_passes_cheap_economic_gate": true,
+    "primary_metric": "mean_after_cost_return_per_independent_event_on_committed_capital",
+    "hard_requirements": [
+      "Candidate minus primary mechanism baseline > 0 in training.",
+      "Candidate minus primary mechanism baseline > 0 in validation.",
+      "Candidate minus relevant ablation > 0 in training and validation when an ablation is defined.",
+      "One-bar delayed and randomized/placebo baselines must not equal or exceed the candidate in both training and validation.",
+      "Any result dominated by catastrophic tail or a single winner is rejected regardless of baseline margin."
+    ],
+    "complexity_rule": "If a simpler baseline captures the same or better after-cost economics, reject/deprioritize the complex candidate; complexity has no independent value."
+  },
+  "medium_stage_ranking": {
+    "only_if_multiple_stage_2_survivors": true,
+    "inputs": [
+      "independent_event_count_and_power",
+      "after_cost_margin_over_primary_baseline",
+      "stability_across_training_validation_halves_and_assets",
+      "tail_and_winner_concentration_safety",
+      "mechanism_plausibility",
+      "data_quality",
+      "compute_time_cost",
+      "family_novelty"
+    ],
+    "protected_oos_or_forward_inputs_forbidden": true,
+    "tie_break": "Prefer stronger independent-event support, then simpler executable mechanism; never use headline win rate as tie-break.",
+    "max_expensive_deep_candidates": 1
+  },
+  "failure_learning": {
+    "issue": 510,
+    "route_every_reject_or_inconclusive": true,
+    "classify_at_experiment_and_family_component_level": true,
+    "materially_distinct_successor_required": true,
+    "rejected_exact_or_semantic_identity_may_not_be_rescued": true
+  },
+  "early_shadowing": {
+    "eligible_after": "A candidate is canonically frozen/admitted and passes a legitimate development cheap screen plus baseline gate.",
+    "immutable_research_only_collection": true,
+    "tuning_code_must_not_read_shadow_outcomes": true,
+    "promotion_authority": false
+  },
+  "exact_next_actions": [
+    "Obtain one fresh independent exact-head review of PR #507 head 54b940946c5235d2d01d025b50cc30e806a5466a; this worker must not self-certify it.",
+    "If #507 integrates, regenerate/admit PR #515 candidates with the canonical label-invariant identity and bind this plan to each accepted scientific_design_sha256 before reading cheap-screen outcomes.",
+    "Keep DISC-BREADTH-PERSIST-001-v1 held unless the existing DATA-BREADTH-001 ownership collision is durably reconciled.",
+    "Keep DISC-DELTA-CARRY-001-v1 out of Stage 1 until #520 is DATA_READY_FOR_FROZEN_CONSUMER.",
+    "Run all other admitted/data-ready cheap screens deterministically in parallel, then apply this frozen baseline gauntlet before any medium-stage allocation."
+  ],
+  "planning_contract_sha256": "4cf46291af242a350d065bf24418b8fdf5c6d36e4fea1b923a9cb1a51046c392"
+}
