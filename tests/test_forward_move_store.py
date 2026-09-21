@@ -5,8 +5,10 @@ import pytest
 
 import money_intelligence.forward_move_store as store
 from money_intelligence.forward_move_ledger import ForwardMoveForecast
-from money_intelligence.trusted_reference_price import SOURCE_ID
-from money_intelligence.trusted_reference_store import TrustedReferenceReceipt
+from money_intelligence.trusted_reference_store import (
+    DB_SOURCE_ID,
+    TrustedReferenceReceipt,
+)
 
 
 UTC = timezone.utc
@@ -21,12 +23,12 @@ MANIFEST_SHA = hashlib.sha256(b"pit-evidence-manifest").hexdigest()
 def _reference_receipt(**overrides):
     values = dict(
         sequence=41,
-        asset_id="ASSET-USD",
+        asset_id="ASSETUSDT",
         reference_price="10",
         observed_at=OBSERVED,
         captured_at=CAPTURED,
         server_created_at=REFERENCE_RECEIPT_AT,
-        source_id=SOURCE_ID,
+        source_id=DB_SOURCE_ID,
         evidence_sha256=EVIDENCE_SHA,
         evidence={"fixture": True},
     )
@@ -82,7 +84,11 @@ def test_forecast_must_exactly_match_durable_reference_receipt():
 
 def test_forecast_cannot_claim_formation_before_reference_receipt():
     reference = _reference_receipt()
-    forecast = _forecast(reference, formed_at=REFERENCE_RECEIPT_AT - timedelta(seconds=1), evidence_cutoff=REFERENCE_RECEIPT_AT - timedelta(seconds=1))
+    forecast = _forecast(
+        reference,
+        formed_at=REFERENCE_RECEIPT_AT - timedelta(seconds=1),
+        evidence_cutoff=REFERENCE_RECEIPT_AT - timedelta(seconds=1),
+    )
     with pytest.raises(ValueError, match="before durable reference receipt"):
         store.verify_forecast_reference_receipt(forecast, reference)
 
