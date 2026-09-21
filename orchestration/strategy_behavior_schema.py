@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import Any
+from contextlib import contextmanager
+from contextvars import ContextVar
+from typing import Any, Iterator
 
 BEHAVIOR_SCHEMA_REGISTRY_VERSION = 1
 BEHAVIOR_SECTIONS = ("data_contract", "signal_rules", "execution_rules", "cost_model")
@@ -332,8 +334,10 @@ BEHAVIOR_SCHEMAS: dict[str, dict[str, frozenset[str]]] = {
         ),
         cost_model=COMMON_PREDECLARATION_COST,
     ),
-    # Exact-shape regression fixtures. These remain explicit reviewed schemas;
-    # tests do not receive a generic bypass around the production resolver.
+    # Exact-shape regression fixtures. These are retained in the complete
+    # registry for value-contract coverage, but production resolution excludes
+    # them by construction. Tests may opt in only through the process-local
+    # context manager below; no candidate field can enable them.
     "TEST_SYNTHETIC_LIQUIDITY_V1": _schema(
         data_contract=_fields("source", "point_in_time", "historical_universe"),
         signal_rules=_fields("shock_definition", "entry_condition"),
@@ -387,6 +391,39 @@ BEHAVIOR_SCHEMAS: dict[str, dict[str, frozenset[str]]] = {
     ),
 }
 
+PRODUCTION_BEHAVIOR_SCHEMAS: dict[str, dict[str, frozenset[str]]] = {
+    schema_id: schema
+    for schema_id, schema in BEHAVIOR_SCHEMAS.items()
+    if not schema_id.startswith("TEST_")
+}
+TEST_BEHAVIOR_SCHEMAS: dict[str, dict[str, frozenset[str]]] = {
+    schema_id: schema
+    for schema_id, schema in BEHAVIOR_SCHEMAS.items()
+    if schema_id.startswith("TEST_")
+}
+if not PRODUCTION_BEHAVIOR_SCHEMAS or not TEST_BEHAVIOR_SCHEMAS:
+    raise RuntimeError("behavior schema registry must contain production and test-only partitions")
+
+_ALLOW_TEST_SCHEMAS: ContextVar[bool] = ContextVar(
+    "strategy_behavior_allow_test_schemas",
+    default=False,
+)
+
+
+@contextmanager
+def allow_test_behavior_schemas() -> Iterator[None]:
+    """Explicit process-local injection for regression fixtures only.
+
+    Production resolution defaults to the reviewed production partition. A
+    candidate cannot select this context through its payload, labels, schema id,
+    or any other predeclaration field.
+    """
+    token = _ALLOW_TEST_SCHEMAS.set(True)
+    try:
+        yield
+    finally:
+        _ALLOW_TEST_SCHEMAS.reset(token)
+
 
 def behavior_shape(candidate: dict[str, Any]) -> dict[str, frozenset[str]]:
     if not isinstance(candidate, dict):
@@ -402,9 +439,10 @@ def behavior_shape(candidate: dict[str, Any]) -> dict[str, frozenset[str]]:
 
 def resolve_behavior_schema_id(candidate: dict[str, Any]) -> str:
     observed = behavior_shape(candidate)
+    registry = BEHAVIOR_SCHEMAS if _ALLOW_TEST_SCHEMAS.get() else PRODUCTION_BEHAVIOR_SCHEMAS
     matches = [
         schema_id
-        for schema_id, schema in BEHAVIOR_SCHEMAS.items()
+        for schema_id, schema in registry.items()
         if all(observed[section] == schema[section] for section in BEHAVIOR_SECTIONS)
     ]
     if not matches:
