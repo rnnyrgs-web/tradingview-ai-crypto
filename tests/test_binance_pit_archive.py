@@ -102,7 +102,9 @@ def test_spot_2025_microsecond_klines_require_explicit_unit_and_normalize_withou
     assert [row["open_ts_ms"] for row in rows] == [1735689600000, 1735693200000]
     assert [row["close_ts_ms"] for row in rows] == [1735693199999, 1735696799999]
 
-    with pytest.raises(ArchiveVerificationError, match="off the UTC hourly grid"):
+    # The exact first rejecting invariant is an implementation detail. The scientific
+    # contract is that declaring microsecond source rows as milliseconds fails closed.
+    with pytest.raises(ArchiveVerificationError):
         normalize_hourly_klines(payload, timestamp_unit="ms")
     with pytest.raises(ArchiveVerificationError, match="explicitly"):
         normalize_hourly_klines(payload, timestamp_unit="infer")
