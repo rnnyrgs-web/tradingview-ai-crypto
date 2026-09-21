@@ -25,6 +25,7 @@ ALLOWED_METRICS = frozenset({"CapMrktCurUSD", "SplyCur"})
 EXPECTED_REPOSITORY = "coinmetrics/data"
 EXPECTED_AUTHOR_LOGIN = "coinmetricsbot"
 MAX_CSV_BYTES = 64 * 1024 * 1024
+MAX_METRIC_STALENESS_DAYS = 2
 
 
 def git_blob_sha(raw: bytes) -> str:
@@ -87,8 +88,8 @@ def validate_snapshot_attestation(attestation: dict[str, Any], *, decision_at: s
     if commit_url != expected_commit_url:
         raise ValueError("upstream commit URL is not bound to original repository and commit SHA")
     contents_url = attestation.get("upstream_contents_api_url")
-    expected_prefix = f"https://api.github.com/repos/{EXPECTED_REPOSITORY}/contents/{path}?ref={attestation['commit_sha']}"
-    if contents_url != expected_prefix:
+    expected_contents_url = f"https://api.github.com/repos/{EXPECTED_REPOSITORY}/contents/{path}?ref={attestation['commit_sha']}"
+    if contents_url != expected_contents_url:
         raise ValueError("upstream contents URL is not bound to original repository/blob ref")
     if attestation.get("capture_verdict") != "UPSTREAM_RESOLUTION_VERIFIED":
         raise ValueError("trusted capture must verify historical SHA in original upstream repository")
@@ -147,6 +148,11 @@ def bind_metric_from_snapshot(
     if not candidates:
         raise ValueError(f"no nonblank {metric} row exists strictly before decision date")
     selected_date, selected_raw = max(candidates, key=lambda item: item[0])
+    staleness_days = (cutoff_date - selected_date).days
+    if staleness_days < 1 or staleness_days > MAX_METRIC_STALENESS_DAYS:
+        raise ValueError(
+            f"latest nonblank {metric} row is too stale for frozen PIT rule: {staleness_days} days"
+        )
     value = _metric_value(selected_raw, metric=metric, row_date=selected_date.isoformat())
     return {
         "schema": "coinmetrics_upstream_git_metric_binding.v1",
@@ -159,8 +165,10 @@ def bind_metric_from_snapshot(
         "decision_at": decision_at,
         "metric": metric,
         "row_date": selected_date.isoformat(),
+        "staleness_days": staleness_days,
+        "max_staleness_days": MAX_METRIC_STALENESS_DAYS,
         "value": str(value),
-        "row_rule": "LATEST_NONBLANK_ROW_STRICTLY_BEFORE_DECISION_DATE",
+        "row_rule": "LATEST_NONBLANK_ROW_STRICTLY_BEFORE_DECISION_DATE_MAX_2D_STALENESS",
         "fork_contents_used_as_evidence": False,
         "outcome_access": "SEALED",
         "prediction_authority": False,
