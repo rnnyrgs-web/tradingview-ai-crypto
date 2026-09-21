@@ -17,7 +17,11 @@ from agents.autonomous_orchestrator import (
 )
 from orchestration.protected_paths import find_protected_matches
 
-MAX_DIFF_BYTES = 80_000
+# Protected scientific repairs such as #507 legitimately span schema, durable
+# rejected-memory and regression files. Keep a hard context bound, but size it
+# for one coherent full exact-head review rather than silently forcing a partial
+# review of a >80 kB scientific gate change.
+MAX_DIFF_BYTES = 256_000
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
