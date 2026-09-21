@@ -22,6 +22,7 @@ from research_artifact import sha256_hex
 from strategy_dataset_preflight import (
     DEVELOPMENT_END_UTC,
     PROTECTED_START_UTC,
+    _git_blob_sha1,
     _parse_development_view,
     _parse_hour,
     qualify_cohort001_dataset,
@@ -107,6 +108,8 @@ def _load_development_rows(dataset_path: Path) -> tuple[list[dict[str, object]],
         raise RuntimeError("protected OOS was opened during qualification")
 
     compressed = dataset_path.read_bytes()
+    if _git_blob_sha1(compressed) != qualification["source_git_blob_sha1"]:
+        raise RuntimeError("dataset bytes changed after protected-safe qualification")
     uncompressed = gzip.decompress(compressed)
     cutoff = _parse_hour(DEVELOPMENT_END_UTC)
     protected = _parse_hour(PROTECTED_START_UTC)
@@ -254,6 +257,7 @@ def run_stage1(dataset_path: Path = DATASET_PATH) -> dict[str, Any]:
             "schema_version": 1,
             "replication_id": predecl["replication_id"],
             "execution_contract_id": execution["execution_contract_id"],
+            "execution_contract_sha256": sha256_hex(execution),
             "classification": "DATA/PIT_INCONCLUSIVE",
             "schedule_sha256": sha256_hex(schedule_payload),
             "scheduled_events": len(schedule_payload),
@@ -286,6 +290,7 @@ def run_stage1(dataset_path: Path = DATASET_PATH) -> dict[str, Any]:
         "schema_version": 1,
         "replication_id": predecl["replication_id"],
         "execution_contract_id": execution["execution_contract_id"],
+        "execution_contract_sha256": sha256_hex(execution),
         "classification": classification,
         "schedule_sha256": sha256_hex(schedule_payload),
         "scheduled_events": len(schedule_payload),
