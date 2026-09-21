@@ -105,6 +105,14 @@ jobs:
               continue
             fi
 
+            ATTEMPT_PREFIX="exact-head-review-attempt: pr=$PR_NUMBER sha=$REQUESTED_SHA run="
+            ATTEMPT_COUNT="$(printf '%s' "$APPROVALS" | jq --arg prefix "$ATTEMPT_PREFIX" '[.[] | select(.title | startswith($prefix))] | length')"
+            if [ "$ATTEMPT_COUNT" -ge 3 ]; then
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Bounded reviewer retry limit reached for PR #$PR_NUMBER exact head $REQUESTED_SHA after $ATTEMPT_COUNT attempts. Closing without approval; create a new request only after the provider/runtime blocker is materially resolved."
+              gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
+              continue
+            fi
+
             REVIEW_REF="refs/remotes/origin/review-pr/$PR_NUMBER"
             git fetch --no-tags origin "+refs/pull/$PR_NUMBER/head:$REVIEW_REF"
             FETCHED_SHA="$(git rev-parse "$REVIEW_REF")"
@@ -203,7 +211,8 @@ jobs:
           # 256 kB; never truncate it into a superficially reviewable subset.
           test "$BYTES" -le 256000 || { echo "Diff too large for one coherent exact-head review; fail closed and split the PR."; exit 1; }
 
-      - name: Run Security, Lead and Claude adversarial exact-head reviews in parallel
+      - id: review_models
+        name: Run independent exact-head reviewers with bounded transient WAIT
         if: steps.select.outputs.pr_number != ''
         env:
           PR_NUMBER: ${{ steps.select.outputs.pr_number }}
@@ -211,20 +220,93 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python -m orchestration.exact_head_review review --reviewer security --diff /tmp/candidate.diff --output /tmp/security-review.json --pr-number "$PR_NUMBER" --head-sha "$HEAD_SHA" &
-          PID_SECURITY=$!
-          python -m orchestration.exact_head_review review --reviewer lead --diff /tmp/candidate.diff --output /tmp/lead-review.json --pr-number "$PR_NUMBER" --head-sha "$HEAD_SHA" &
-          PID_LEAD=$!
-          python -m orchestration.exact_head_review review --reviewer claude-adversarial --diff /tmp/candidate.diff --output /tmp/claude-adversarial-review.json --pr-number "$PR_NUMBER" --head-sha "$HEAD_SHA" &
-          PID_CLAUDE=$!
+
+          is_transient_reviewer_failure() {
+            python - "$1" <<'PY'
+          import pathlib
+          import re
+          import sys
+
+          text = pathlib.Path(sys.argv[1]).read_text(errors="replace")
+          transient = re.search(
+              r"429 Too Many Requests|rate[ -]?limit|temporarily unavailable|overloaded",
+              text,
+              re.I,
+          )
+          raise SystemExit(0 if transient else 1)
+          PY
+          }
+
           STATUS=0
-          wait "$PID_SECURITY" || STATUS=1
-          wait "$PID_LEAD" || STATUS=1
-          wait "$PID_CLAUDE" || STATUS=1
-          exit "$STATUS"
+          WAIT=0
+
+          # Different providers may run in parallel, but keep the two OpenAI
+          # reviewers serial so they do not compete for the same rate-limit bucket.
+          set +e
+          python -m orchestration.exact_head_review review --reviewer claude-adversarial --diff /tmp/candidate.diff --output /tmp/claude-adversarial-review.json --pr-number "$PR_NUMBER" --head-sha "$HEAD_SHA" >/tmp/claude-review.log 2>&1 &
+          PID_CLAUDE=$!
+
+          python -m orchestration.exact_head_review review --reviewer security --diff /tmp/candidate.diff --output /tmp/security-review.json --pr-number "$PR_NUMBER" --head-sha "$HEAD_SHA" 2>&1 | tee /tmp/security-review.log
+          SECURITY_STATUS=${PIPESTATUS[0]}
+          set -e
+          if [ "$SECURITY_STATUS" -ne 0 ]; then
+            if is_transient_reviewer_failure /tmp/security-review.log; then
+              WAIT=1
+            else
+              STATUS=1
+            fi
+          fi
+
+          if [ "$STATUS" -eq 0 ] && [ "$WAIT" -eq 0 ]; then
+            set +e
+            python -m orchestration.exact_head_review review --reviewer lead --diff /tmp/candidate.diff --output /tmp/lead-review.json --pr-number "$PR_NUMBER" --head-sha "$HEAD_SHA" 2>&1 | tee /tmp/lead-review.log
+            LEAD_STATUS=${PIPESTATUS[0]}
+            set -e
+            if [ "$LEAD_STATUS" -ne 0 ]; then
+              if is_transient_reviewer_failure /tmp/lead-review.log; then
+                WAIT=1
+              else
+                STATUS=1
+              fi
+            fi
+          fi
+
+          set +e
+          wait "$PID_CLAUDE"
+          CLAUDE_STATUS=$?
+          set -e
+          cat /tmp/claude-review.log
+          if [ "$CLAUDE_STATUS" -ne 0 ]; then
+            if is_transient_reviewer_failure /tmp/claude-review.log; then
+              WAIT=1
+            else
+              STATUS=1
+            fi
+          fi
+
+          if [ "$STATUS" -ne 0 ]; then
+            echo "wait=false" >> "$GITHUB_OUTPUT"
+            exit "$STATUS"
+          fi
+          if [ "$WAIT" -eq 1 ]; then
+            echo "wait=true" >> "$GITHUB_OUTPUT"
+            echo "Transient reviewer throttling/overload detected; exact head remains unapproved and may retry only within the bounded attempt limit."
+            exit 0
+          fi
+          echo "wait=false" >> "$GITHUB_OUTPUT"
+
+      - name: Record controlled WAIT for transient reviewer capacity
+        if: steps.select.outputs.pr_number != '' && steps.review_models.outputs.wait == 'true'
+        run: |
+          {
+            echo "### Controlled WAIT — independent reviewer capacity"
+            echo "- Candidate remains **unapproved** and **unmerged**."
+            echo "- No scientific, security, or exact-head gate was weakened."
+            echo "- The same explicit request may retry on a later queue cycle, bounded to three attempts."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Require all three independent reviewers to approve
-        if: steps.select.outputs.pr_number != ''
+        if: steps.select.outputs.pr_number != '' && steps.review_models.outputs.wait != 'true'
         run: |
           jq -e '.approve == true and .integration_authority == "NONE"' /tmp/security-review.json
           jq -e '.approve == true and .integration_authority == "NONE"' /tmp/lead-review.json
@@ -232,7 +314,7 @@ jobs:
 
       - id: approval_record
         name: Record review-only approval for exact head
-        if: steps.select.outputs.pr_number != ''
+        if: steps.select.outputs.pr_number != '' && steps.review_models.outputs.wait != 'true'
         env:
           PR_NUMBER: ${{ steps.select.outputs.pr_number }}
           HEAD_SHA: ${{ steps.select.outputs.sha }}
@@ -289,6 +371,7 @@ jobs:
           REQUEST_ISSUE: ${{ steps.select.outputs.request_issue }}
           ATTEMPT_ISSUE: ${{ steps.attempt.outputs.issue }}
           APPROVAL_OUTCOME: ${{ steps.approval_record.outputs.outcome }}
+          CONTROLLED_WAIT: ${{ steps.review_models.outputs.wait }}
         run: |
           python - <<'PY'
           import json
@@ -313,7 +396,10 @@ jobs:
               verdicts.append(value)
 
           approved_outcome = os.environ.get("APPROVAL_OUTCOME", "")
-          if approved_outcome.startswith("REVIEW_APPROVED_"):
+          controlled_wait = os.environ.get("CONTROLLED_WAIT", "").lower() == "true"
+          if controlled_wait:
+              outcome = "WAIT_RETRYABLE"
+          elif approved_outcome.startswith("REVIEW_APPROVED_"):
               outcome = approved_outcome
           elif all(value is not None for value in verdicts) and any(not value["approve"] for value in verdicts):
               outcome = "REJECTED"
@@ -340,8 +426,12 @@ jobs:
           gh issue edit "$ATTEMPT_ISSUE" --repo "$GITHUB_REPOSITORY" --body-file /tmp/exact-head-review-attempt.md
           OUTCOME="$(cat /tmp/exact-head-review-outcome.txt)"
           if gh issue view "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --json state --jq '.state' | grep -qx OPEN; then
-            gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as $OUTCOME. This request is closed to prevent unbounded paid retries. FAILED/REJECTED does not permanently blacklist the exact SHA: after the cause is repaired or an explicit bounded retry is justified, create a new request with the same {pr, sha}."
-            gh issue close "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY"
+            if [ "$OUTCOME" = "WAIT_RETRYABLE" ]; then
+              gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as WAIT_RETRYABLE because an independent reviewer provider was throttled/unavailable. Candidate remains unapproved. Request stays open for a later bounded retry (maximum three attempts)."
+            else
+              gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as $OUTCOME. This request is closed to prevent unbounded paid retries. FAILED/REJECTED does not permanently blacklist the exact SHA: after the cause is repaired or an explicit bounded retry is justified, create a new request with the same {pr, sha}."
+              gh issue close "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY"
+            fi
           fi
           {
             echo "### Exact-head independent review"
