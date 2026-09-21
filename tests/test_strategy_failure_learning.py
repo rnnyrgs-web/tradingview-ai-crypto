@@ -32,17 +32,18 @@ def _candidate() -> dict:
         "target_timeframes": ["1h"],
         "formation_cutoff": "2026-09-20T20:00:00+00:00",
         "data_contract": {
-            "source": "timestamped public venue candles",
+            "source": "public timestamped venue data",
             "point_in_time": True,
-            "historical_universe": "fixed_assets",
+            "historical_universe": "fixed_predeclared_assets",
         },
         "signal_rules": {
-            "impulse": "completed 1h return above frozen threshold",
-            "confirmation": "spot share above frozen threshold",
+            "shock_definition": "frozen before outcomes",
+            "entry_condition": "frozen before outcomes",
         },
         "execution_rules": {
-            "entry": "next completed-bar open",
-            "exit": "fixed six-hour hold",
+            "entry_delay_bars": 1,
+            "exit_rule": "fixed_holding_window",
+            "position_overlap": "forbidden",
         },
         "cost_model": {
             "fees_bps": 8,
@@ -259,8 +260,8 @@ def _successor(parent: dict, fingerprint: str, score: tuple[float, float, float,
     child["economic_mechanism"] = "Inventory replenishment after spot-led dislocation can produce short-horizon reversion."
     child["hypothesis"] = "A frozen inventory-replenishment condition has positive after-cost expectancy."
     child["signal_rules"] = {
-        "dislocation": "completed bar shock above frozen threshold",
-        "replenishment": "quoted depth recovers before next-open entry",
+        "shock_definition": "frozen before outcomes",
+        "entry_condition": "independent materially different frozen rule",
     }
     child["validation_plan"]["successor_uses_fresh_nonoverlapping_selection_window"] = True
     child["search_plan"]["planned_hypothesis_count"] = parent["search_plan"]["planned_hypothesis_count"] + 1
