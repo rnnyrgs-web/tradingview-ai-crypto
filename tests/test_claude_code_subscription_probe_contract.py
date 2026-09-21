@@ -40,11 +40,25 @@ def test_probe_receipt_binds_pull_request_run_to_exact_pr_head_not_merge_ref():
     assert '"proof_ref": proof_ref' in text
 
 
+def test_subscription_success_requires_model_structured_output_not_only_action_exit_zero():
+    text = _text()
+    assert "--json-schema" in text
+    assert '"subscription_probe_ok"' in text
+    assert 'PROBE_CONCLUSION: ${{ steps.oauth_probe.outputs.conclusion }}' in text
+    assert 'PROBE_STRUCTURED_OUTPUT: ${{ steps.oauth_probe.outputs.structured_output }}' in text
+    assert 'structured_ok = structured == {"subscription_probe_ok": True}' in text
+    assert 'authenticated = configured and outcome == "success" and conclusion == "success" and structured_ok' in text
+    assert '"structured_probe_verified": structured_ok' in text
+
+
 def test_missing_or_failed_oauth_never_becomes_subscription_automated():
     text = _text()
-    assert 'if configured and outcome == "success":' in text
+    assert "if authenticated:" in text
     assert 'status = "SUBSCRIPTION_AUTOMATED"' in text
     assert 'elif not configured:' in text
     assert 'status = "MANUAL_ADAPTER_REQUIRED"' in text
     assert 'status = "UNKNOWN"' in text
-    assert "steps.preflight.outputs.configured == 'true' && steps.oauth_probe.outcome != 'success'" in text
+    assert "steps.preflight.outputs.configured == 'true'" in text
+    assert "steps.oauth_probe.outcome != 'success'" in text
+    assert "steps.oauth_probe.outputs.conclusion != 'success'" in text
+    assert "subscription_probe_ok != true" in text
