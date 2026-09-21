@@ -114,8 +114,9 @@ def _timestamp_to_ms(raw: str, *, timestamp_unit: str) -> int:
     if timestamp_unit == "ms":
         result = value
     elif timestamp_unit == "us":
-        if value % 1000:
-            raise ArchiveVerificationError("microsecond timestamp is not millisecond-aligned")
+        # Binance spot archives use microseconds from 2025 onward. Source close
+        # timestamps may end at the final microsecond of the interval, so retain
+        # explicit source-unit semantics and floor only for canonical ms storage.
         result = value // 1000
     else:
         raise ArchiveVerificationError("timestamp_unit must be explicitly 'ms' or 'us'")
