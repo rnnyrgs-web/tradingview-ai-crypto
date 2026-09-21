@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "execution_contract_id": "EXT-ABNORMAL-DAY-MOMENTUM-001-v1-STAGE1",
+  "replication_id": "EXT-ABNORMAL-DAY-MOMENTUM-001-v1",
+  "formed_before_outcomes": true,
+  "source_predeclaration": "orchestration/external_replication/ext_abnormal_day_momentum_001_v1.json",
+  "dataset_contract": {
+    "normalized_rows_sha256": "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f",
+    "development_end_utc": "2026-08-31T23:00:00Z",
+    "protected_oos_start_utc": "2026-09-01T00:00:00Z",
+    "protected_ohlcv_may_be_decoded": false
+  },
+  "screen": {
+    "parameter_variants": 1,
+    "reference_days": 90,
+    "sigma_multiple": 1.5,
+    "latest_signal_hour_utc": 22,
+    "base_total_cost_bps": 24.0,
+    "stress_multiplier": 3.0,
+    "independent_sample_unit": "unique_utc_signal_day_pooled_across_fixed_instruments"
+  },
+  "validation_halves": {
+    "definition": "fixed_wall_clock_split_frozen_before_outcomes",
+    "first_start_utc": "2026-05-01T00:00:00Z",
+    "first_end_utc": "2026-06-30T23:00:00Z",
+    "second_start_utc": "2026-07-01T00:00:00Z",
+    "second_end_utc": "2026-08-31T23:00:00Z"
+  },
+  "stage1_gates": {
+    "minimum_independent_utc_signal_days_train": 40,
+    "minimum_independent_utc_signal_days_validation": 20,
+    "train_total_after_cost_return_gt": 0.0,
+    "validation_total_after_cost_return_gt": 0.0,
+    "validation_first_half_total_after_cost_return_gt": 0.0,
+    "validation_second_half_total_after_cost_return_gt": 0.0,
+    "train_profit_factor_gt": 1.0,
+    "validation_profit_factor_gt": 1.0,
+    "train_total_3x_cost_return_gt": 0.0,
+    "validation_total_3x_cost_return_gt": 0.0,
+    "single_winner_dependence_veto": "leave_largest_winner_out_total_must_be_positive_in_train_and_validation",
+    "catastrophic_tail_veto": "repeat_worst_event_once_more_total_must_be_positive_in_train_and_validation"
+  },
+  "classification": {
+    "insufficient_independent_days": "UNDERPOWERED",
+    "missing_required_entry_or_exit_bar": "DATA/PIT_INCONCLUSIVE",
+    "any_economic_gate_false": "STAGE1_REJECTED",
+    "all_gates_true": "STAGE1_SURVIVOR_REQUIRES_FROZEN_CONTROLS"
+  },
+  "successor_policy": {
+    "no_threshold_tuning_after_result": true,
+    "no_window_tuning_after_result": true,
+    "no_protected_oos_access": true,
+    "failure_or_inconclusive_must_route_to_issue_510": true,
+    "survivor_must_route_to_issue_517_controls_before_medium_or_deep_validation": true
+  },
+  "authority": {
+    "research_only": true,
+    "promotion_authority": false,
+    "broker_connected": false,
+    "trade_authority": false
+  }
+}
