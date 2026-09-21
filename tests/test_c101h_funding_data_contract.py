@@ -65,6 +65,20 @@ def test_raw_provenance_and_archive_corrections_fail_closed():
     assert "source schema cannot be independently verified" in contract["fail_closed_conditions"]
 
 
+def test_data_ready_requires_cryptographically_attested_server_acquisition():
+    contract = _load()
+    provenance = contract["source_provenance"]
+    assert provenance["trusted_acquisition_required"] is True
+    assert provenance["local_archive_checksum_pair_sufficient_for_data_ready"] is False
+    assert provenance["trusted_acquisition_workflow"] == ".github/workflows/c101h_binance_pit_acquisition.yml"
+    assert provenance["trusted_acquisition_signer_workflow"] == (
+        "rnnyrgs-web/tradingview-ai-crypto/.github/workflows/c101h_binance_pit_acquisition.yml"
+    )
+    assert provenance["trusted_acquisition_source_ref"] == "refs/heads/main"
+    assert provenance["trusted_attestation_predicate_type"] == "https://slsa.dev/provenance/v1"
+    assert "trusted acquisition attestation missing, unverifiable, or signer/ref policy mismatch" in contract["fail_closed_conditions"]
+
+
 def test_contract_does_not_authorize_outcome_inspection_or_trading():
     contract = _load()
     safety = contract["scientific_safety"]
@@ -77,7 +91,7 @@ def test_contract_does_not_authorize_outcome_inspection_or_trading():
     assert safety["broker_connected"] is False
 
 
-def test_acceptance_receipt_requires_reproducibility_and_gap_diagnostics():
+def test_acceptance_receipt_requires_reproducibility_gap_and_trusted_source_diagnostics():
     contract = _load()
     required = set(contract["qualification_receipt"]["required"])
     assert {
@@ -90,6 +104,12 @@ def test_acceptance_receipt_requires_reproducibility_and_gap_diagnostics():
         "stale_count",
         "funding_interval_distribution_seconds",
         "parse_rerun_hash_equal",
+        "trusted_acquisition_attestation_id",
+        "trusted_acquisition_manifest_sha256",
+        "trusted_requested_url",
+        "trusted_final_url",
+        "trusted_workflow_run_id",
+        "trusted_workflow_sha",
     } <= required
     assert contract["qualification_receipt"]["accept_status"] == "DATA_READY_FOR_FROZEN_CONSUMER"
     assert contract["qualification_receipt"]["blocked_status"] == "DATA_BLOCKED"
