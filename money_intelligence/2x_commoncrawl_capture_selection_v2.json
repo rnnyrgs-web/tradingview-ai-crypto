@@ -1,0 +1,31 @@
+{
+  "schema": "two_x_commoncrawl_capture_selection.v2",
+  "artifact_id": "2X-COMMONCRAWL-CAPTURE-SELECTION-002-v1",
+  "purpose": "Freeze outcome-blind deterministic selection when an exact Common Crawl URL query returns multiple authentic HTTP-200 captures in one collection.",
+  "provider": "COMMON_CRAWL",
+  "candidate_filter": {
+    "url": "EXACT_PRIMARY_UPSTREAM_LOCATOR",
+    "http_status": 200,
+    "timestamp": "AT_OR_BEFORE_DECISION_AT",
+    "collection": "EXACT_FROZEN_INDEX_COLLECTION",
+    "warc_filename": "SAME_COLLECTION_WARC_PATH",
+    "digest": "BARE_BASE32_SHA1"
+  },
+  "selection_order": {
+    "primary": "LATEST_CAPTURE_TIMESTAMP",
+    "same_timestamp_tie_break": [
+      "FILENAME_ASC",
+      "OFFSET_ASC_NUMERIC",
+      "LENGTH_ASC_NUMERIC",
+      "DIGEST_ASC"
+    ],
+    "identical_duplicate_rows": "COLLAPSE_TO_ONE_CANONICAL_IDENTITY"
+  },
+  "persistence": {
+    "selected_index_row_must_be_frozen_in_capture_proof": true,
+    "declared_selection_must_equal_deterministic_selection": true,
+    "warc_request_must_be_derived_from_selected_row": true
+  },
+  "unsupported_policy": "FAIL_CLOSED_COVERAGE_BLOCKED",
+  "authority": "HISTORICAL_AVAILABILITY_EVIDENCE_ONLY_NO_OUTCOME_OR_PREDICTION_AUTHORITY"
+}

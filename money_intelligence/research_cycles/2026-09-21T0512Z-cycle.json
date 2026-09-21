@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-21T0512Z",
+  "information_cutoff": "2026-09-21T05:12:32Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_observed_before_write": "5e720e8adbd3e0bcf539d97fdaa5a0c71428dbca",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles": true,
+    "searched_prediction_artifacts": true,
+    "inspected_2x_source_provenance_preflight": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "last_owner_report_cycle": "2026-09-20T1630Z",
+    "run_start_utc": "2026-09-21T05:06:10Z",
+    "artifact_cutoff_utc": "2026-09-21T05:12:32Z",
+    "seconds_this_run_minimum": 382,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 1524,
+    "minimum_cumulative_seconds_since_last_owner_report": 1906,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active research/execution time is counted. Schedule gaps, idle time, publication timestamps and background time are excluded."
+  },
+  "highest_information_question": "When a benchmark/index change creates known compulsory future demand, where in time does the price impact actually occur, how much is pre-positioned before implementation, and what implementation/free-float/ownership/liquidity constraints determine which assets capture the flow?",
+  "fresh_research": [
+    {
+      "topic": "Vietnam FTSE inclusion shows benchmark-flow demand is real but temporally distributed across announcement, anticipation, closing-auction implementation and later tranches",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / VIETNAM / FTSE / PASSIVE FLOWS / BENCHMARK REBALANCING / MARKET STRUCTURE",
+      "observed_facts": [
+        "FTSE Russell first announced Vietnam's move from Frontier to Secondary Emerging on October 7, 2025, with an effective date of September 21, 2026 subject to an interim review. The VN-Index had already risen roughly 30%-33% in 2025 before the announcement; on October 8 it opened more than 2% higher, then gave back much of the initial gain and closed about 0.74% higher, consistent with meaningful anticipation and profit-taking rather than an unpriced one-day shock.",
+        "FTSE Russell confirmed the upgrade in April 2026 and explicitly designed a four-tranche implementation to manage anticipated capital inflows and liquidity: 10% investability weight in September 2026, +20% in March 2027, +35% in June 2027 and +35% in September 2027.",
+        "Reuters reported that the upgrade could redirect up to roughly $6B over time, while Vanguard said it intended to build about $2.5B of Vietnam exposure over coming years. Those are not same-session flow numbers.",
+        "Foreign investors net bought about $104M of Vietnamese shares in the week of September 14-18 immediately before the effective date, showing active/passive positioning before the official September 21 start. They nevertheless remained large year-to-date net sellers, so inclusion demand had not erased the broader foreign-flow regime.",
+        "On Friday September 18, the final session before the FTSE change became effective from Monday's open, foreign investors net bought about $47M while multiple ETFs rebalanced; the VN-Index nevertheless fell after the closing auction. Forced foreign buying therefore met substantial offsetting supply and constituent-specific selling rather than mechanically lifting the index.",
+        "On Monday September 21, the VN-Index opened only about 0.54% higher and then retreated despite the headline 'up to $6B' inclusion estimate, consistent with much of the first-tranche implementation having been anticipated/traded before the effective open and with only 10% of investability weight entering in the first tranche.",
+        "SSI estimated constituent-level first-round flows are heterogeneous: some eligible stocks should receive inflows while Vingroup could face net outflows because deletions/reweights in existing vehicles offset upgrade-related demand. Foreign-ownership limits and low free float remain binding constraints for some companies."
+      ],
+      "historical_matched_controls": [
+        "Saudi Arabia 2019 FTSE inclusion was also phased. Before the first tranche, foreigners had already been net buyers every week and Saudi equities were up about 9%-10% year to date. On the first FTSE inclusion day the index rose about 1.1%, not in proportion to the roughly $15B-$20B eventual passive-flow estimate.",
+        "Ahead of Saudi Arabia's May 28, 2019 MSCI tranche, the index rose 2% on the implementation session with exceptionally high turnover, then fell more than 2% the next day. This supports a closing-rebalance/temporary-price-pressure mechanism rather than a permanent same-day mechanical alpha rule.",
+        "Kuwait's November 2020 MSCI inclusion generated exceptionally high turnover and foreign inflow on the implementation date, but Kuwait had actually underperformed frontier and emerging-market benchmarks between the June 2019 inclusion announcement and implementation. Real passive demand did not guarantee pre-event outperformance."
+      ],
+      "inference": "Benchmark inclusion is a genuine source-of-funds shock because index trackers must converge toward new weights, but the correct causal clock is announcement -> active/front-running/pre-positioning -> index-provider confirmation -> closing-auction/rebalance execution -> effective inclusion -> subsequent tranches. Price impact depends on the marginal forced flow relative to available free float and offsetting sellers, not the headline eventual flow estimate. Tranche size, benchmark-tracking AUM, investability weight, constituent weight, foreign-ownership headroom, liquidity/market depth, existing ETF deletions/reweights and prior active positioning are the relevant pre-move variables.",
+      "source_destination_chain": "Global passive and benchmark-aware active portfolios -> rebalance budgets -> brokers/closing auction/eligible local shares -> marginal local/foreign sellers -> temporary price impact and liquidity transfer; later active allocations and subsequent tranches can create additional demand, while existing frontier/other index vehicles may create offsetting sales.",
+      "catalyst": "FTSE country reclassification and staged GEIS inclusion.",
+      "transmission_mechanism": "Rules-based target weights force benchmark-tracking capital to acquire eligible shares, but implementation timing and market microstructure determine when and at what price the flow clears.",
+      "amplifiers": [
+        "Low free float / foreign ownership headroom",
+        "Closing-auction concentration",
+        "Active front-running and local retail anticipation",
+        "Constituent-specific liquidity",
+        "Leverage/momentum around widely publicized inclusion"
+      ],
+      "negative_findings": [
+        "Do not map an eventual multi-billion-dollar inclusion estimate directly to same-day net buying or same-day index return.",
+        "Do not assume every eligible constituent receives positive net flow; existing index deletions/reweights can offset new benchmark demand.",
+        "Do not treat the effective-date open as the start of the causal clock when the announcement and implementation schedule were known months earlier.",
+        "Do not infer passive-flow alpha without measuring the forced-flow-to-free-float/liquidity ratio and prior foreign/active positioning."
+      ],
+      "pre_move_predictors": [
+        "Index announcement and confirmation timestamps",
+        "Tranche/inclusion factor and effective date",
+        "Benchmark-tracking AUM and estimated target weights",
+        "Forced net flow after deletions/reweights",
+        "Free float and foreign-ownership headroom",
+        "Closing-auction depth and expected imbalance",
+        "Foreign net buying before implementation",
+        "Relative performance between announcement and rebalance"
+      ],
+      "learning_candidate": {
+        "id": "MI-H-20260921-BENCHMARK-FLOW-CAUSAL-CLOCK",
+        "status": "SUPPORTED_REGIME_SPECIFIC_CANDIDATE",
+        "claim": "Benchmark inclusion creates real mechanical demand, but price impact is temporally distributed and must be modeled using announcement/anticipation, tranche size, rebalance timing, target-weight flow relative to free float/depth, foreign-ownership constraints and offsetting index flows. The eventual headline inflow estimate is not a same-day price predictor."
+      },
+      "decision_support": {
+        "vietnam_broad_equities": "HOLD / WAIT; do not chase the inclusion headline. The first tranche is small relative to the full schedule and much information was known/pre-positioned. Future opportunities require constituent-level forced-flow/free-float analysis and valuation.",
+        "confidence": "MODERATE-HIGH on causal mechanism; LOW on immediate broad-index direction."
+      },
+      "sources": [
+        "FTSE Russell/LSEG 2025 country-classification announcement",
+        "FTSE Russell/LSEG April 2026 Vietnam reclassification FAQ and phased implementation plan",
+        "Reuters 2025-10-08 Vietnam upgrade market reaction",
+        "Reuters 2026-09-18 foreign buying ahead of upgrade",
+        "Reuters 2026-09-21 Vietnam first inclusion day",
+        "Reuters 2019 Saudi FTSE/MSCI inclusion controls",
+        "Kuwait 2020 MSCI inclusion/market-flow controls"
+      ]
+    },
+    {
+      "topic": "Saudi/Hormuz Monday reopen is a direct negative control for headline-disruption oil trading: effective deliverable barrels improved and Brent fell despite fresh attacks and extremely low visible vessel counts",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / BRENT / SAUDI / HORMUZ / PHYSICAL FLOWS",
+      "observed_facts": [
+        "Only 12 trackable commodity vessels traversed the Strait of Hormuz over the latest weekend versus roughly 35 the prior weekend and about 125 large commercial vessels per day before the war; some tankers are believed to sail dark, so visible count is an incomplete flow measure.",
+        "Despite the headline shipping collapse and fresh Houthi attack claims, provisional Kpler data showed Saudi crude exports above 4 mb/d so far in September versus 2.4 mb/d in August, with Saudi oil moving through Hormuz about 2.9 mb/d over the latest six days versus roughly 0.7 mb/d in August.",
+        "Thirteen mostly VLCC tankers carrying about 34M barrels exited the strait in the week of September 13, with Saudi Arabia about half the volume. JPMorgan estimated broader Middle East oil flows at roughly 17.1 mb/d over the prior ten days, surprisingly resilient despite East-West pipeline disruption.",
+        "Aramco is using Gulf/Sohar ship-to-ship logistics and plans roughly 60M barrels of September-October exports through that route, offsetting impaired Yanbu/Red Sea logistics at a high freight cost.",
+        "Brent fell more than 2% Monday toward about $101.7/bbl, its lowest in more than a week, as markets priced recovering Saudi exports and renewed diplomacy despite the weekend security escalation."
+      ],
+      "inference": "This is a strong out-of-sample confirmation of the existing effective-deliverable-supply rule. Vessel counts, attacked infrastructure and geopolitical headlines matter only through their effect on actual delivered barrels, route substitution, inventory/freight constraints and expected outage duration. Visible shipping statistics alone can badly overstate supply loss when dark sailing and alternative logistics exist.",
+      "causal_chain": "attack/chokepoint headline -> fear of lost deliverable supply -> producers/logistics substitute routes and increase Gulf/Hormuz loadings -> actual export barrels recover despite lower visible vessel count -> expected net shortage falls -> marginal scarcity hedge unwinds -> Brent declines even while geopolitical risk remains high",
+      "matched_control": "This extends the September 15-18 Yanbu substitution reversal already in the causal library: a renewed weekend attack did not restore the crude risk premium when physical export recovery continued.",
+      "negative_findings": [
+        "Do not use gross attacked pipeline capacity as lost-barrel estimate.",
+        "Do not use AIS-visible vessel count as a standalone effective-supply estimate in a conflict where ships sail dark.",
+        "Do not upgrade crude solely from attack claims without verified loading/export/physical-differential/curve confirmation."
+      ],
+      "decision_support": "Crude WAIT / high tail risk unchanged; physical supply and route resilience currently argue against chasing geopolitical headlines."
+    },
+    {
+      "topic": "Managed-FX constraint tolerance is a candidate causal state variable for CNY; current yuan strength occurred as PBOC resistance softened while the broad dollar was nearly unchanged",
+      "label": "FX / CNY / PBOC / MANAGED FLOAT / POLICY CONSTRAINTS",
+      "observed_facts": [
+        "On September 21 the onshore yuan reached about 6.6957 per dollar, its strongest level in more than three and a half years, while the dollar index was roughly flat near 100.23.",
+        "Reuters reported that the PBOC set the daily midpoint at 6.7487, its strongest since February 2023 but still about 536 pips weaker than the Reuters market estimate, and market participants interpreted the narrowing fixing gap as softer resistance to appreciation ahead of the Trump-Xi summit.",
+        "In late February 2026, the PBOC used the opposite constraint signal: it cut the FX forward risk-reserve requirement from 20% to zero to make dollar buying cheaper and slow a rapid yuan rally. The onshore/offshore yuan weakened immediately and a 10-day winning streak ended.",
+        "In January-April 2025, the PBOC repeatedly used stronger-than-market fixings and state-bank dollar selling/reduced dollar purchases to resist yuan depreciation, demonstrating that the authority can lean against either direction without fully fixing the spot rate."
+      ],
+      "inference": "For a managed currency such as CNY, central-bank tolerance for the market-clearing direction is itself a causal constraint. The fixing gap versus market estimates, macroprudential FX reserve tools and state-bank flow guidance can change how far underlying trade/capital-flow pressure is allowed to express itself. This can create CNY moves that are poorly explained by DXY alone.",
+      "matched_controls": [
+        "February 2026: explicit anti-appreciation tool relaxation reduced the cost of dollar buying and immediately interrupted yuan appreciation.",
+        "2025 tariff stress: strong fixings/state-bank support moderated depreciation even while tariff and dollar pressures pointed weaker.",
+        "September 2026: reduced resistance coincides with a multi-year yuan high while DXY is nearly unchanged."
+      ],
+      "negative_findings": [
+        "Do not equate a strong/weak fixing level alone with directional intent; the fixing must be compared with market expectations and other policy tools.",
+        "Do not infer a durable CNY trend from summit optics alone; China's weak domestic demand and U.S.-China rate differential remain counterweights.",
+        "Do not treat the managed-FX policy signal as sufficient for an asset-level BUY before a larger historical sample and flow decomposition."
+      ],
+      "learning_candidate": {
+        "id": "MI-H-20260921-CNY-CONSTRAINT-TOLERANCE",
+        "status": "SUPPORTED_PROVISIONAL_CANDIDATE",
+        "claim": "In managed FX regimes, the central bank's tolerance/resistance to the market-clearing direction—measured by fixing surprise, macroprudential FX tools and state-bank flow guidance—can be a more informative near-term causal variable than the fixing level itself or broad-dollar movement alone."
+      },
+      "decision_support": "CNY HOLD / WAIT; monitor fixing-surprise trajectory, state-bank flows, forward-reserve tools, exporter dollar conversion, capital flows and summit deliverables before directional upgrade."
+    },
+    {
+      "topic": "Final U.S.-China pre-summit talks did not produce an executable critical-mineral supply change",
+      "label": "GEOPOLITICS / U.S.-CHINA / CRITICAL MINERALS / EVENT RESOLUTION",
+      "observed_facts": [
+        "Bessent, Greer and He Lifeng concluded September 20 talks with proposed AI-safety dialogue/notifications and discussion of tariff reductions on non-sensitive goods.",
+        "Public U.S. readouts did not announce a new rare-earth export quota, license regime, verified shipment increase, price-floor/offtake agreement or other executable critical-mineral supply change. Separate reporting continued to describe U.S. dissatisfaction with China's implementation of earlier rare-earth commitments."
+      ],
+      "inference": "The completed meeting is a clean retest of the prior critical-minerals candidate: high-level political dialogue without executable license/shipment/contract terms does not yet change effective supply or company economics.",
+      "decision_support": "Broad rare-earth geopolitical headline trade remains WAIT. Preserve focus on licenses, actual shipments, physical prices/lead times, offtake and financing rather than summit language."
+    },
+    {
+      "topic": "BTC weekend state remains healthier than the initial squeeze but still lacks the next U.S. ETF confirmation",
+      "label": "CRYPTO / BTC / DERIVATIVES / WEEKEND CONTROL",
+      "observed_facts": [
+        "Connected market data around the cutoff showed total crypto market cap around $2.79T, BTC dominance about 58.5%, aggregate derivatives open interest near $436B and positive perpetual funding.",
+        "Aggregate open interest remained lower over seven days even after partial rebuilding, while near-term BTC liquidation bursts were small compared with the September 18 short squeeze.",
+        "BTC remained near the post-breakout region around $81K-$82K, but U.S. ETF markets were still closed at this cutoff."
+      ],
+      "inference": "Lower forced-flow intensity while price holds is healthier than a squeeze-only rally, but durable institutional spot absorption still cannot be verified until the next completed U.S. ETF session and venue-grade spot/derivative reconciliation.",
+      "decision_support": "BTC WAIT / tactical-confirmation candidate unchanged; no new immutable forecast."
+    }
+  ],
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast clears the evidence bar in this cycle."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. Benchmark-flow causal-clock evidence is materially useful and supported by Vietnam plus Saudi/Kuwait matched controls, but it should be retested across more inclusion/deletion episodes before promotion to the learning ledger/dashboard. The oil episode strengthens an existing validated mechanism rather than requiring a duplicate ledger entry. CNY policy-constraint tolerance remains provisional. No code, signal-engine, paper-trading, promotion-gate or broker state changed.",
+  "next_research": [
+    "Quantify Vietnam first-tranche forced flow by constituent: target benchmark weight x tracking AUM minus existing holdings/deletions, divided by foreign-accessible free float and normal closing-auction depth; compare predicted imbalance with September 18 closing-auction price/volume.",
+    "Expand benchmark-inclusion matched controls across Saudi 2019, Kuwait 2020 and selected bond-index inclusions/deletions to estimate how much return typically occurs at announcement, pre-positioning, rebalance close and post-event reversal.",
+    "Build a CNY policy-signal panel using fixing surprise versus consensus, forward risk-reserve changes, state-bank flow reports and DXY/rate controls; test whether policy-resistance relaxation adds predictive value for next-session CNY moves.",
+    "Continue crude verification with physical differentials, Brent time spreads, freight and actual loadings; distinguish high logistical cost from outright barrel loss.",
+    "After the next completed U.S. ETF session, reconcile BTC/ETH finalized flows with venue-grade spot breadth, OI, funding, basis, liquidations and exchange/on-chain absorption before changing BTC WAIT.",
+    "After Avalanche Helicon activates September 22, compare price-normalized activity, fees, bridge/stablecoin net flows and leverage with the pre-event baseline before any AVAX upgrade."
+  ]
+}
