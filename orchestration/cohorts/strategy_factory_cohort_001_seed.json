@@ -1,0 +1,332 @@
+{
+  "schema_version": 0,
+  "artifact_type": "strategy_factory_predeclaration_seed",
+  "cohort_id": "STRATEGY-FACTORY-COHORT-001-SEED",
+  "formed_at": "2026-09-21T04:40:37+00:00",
+  "main_sha_at_formation": "09015514f97d0b21107d033748446e606468e06d",
+  "status": "PREDECLARED_SEED_NOT_SCREENED",
+  "depends_on": {"issue_504": 504, "pr_507": 507, "issue_510": 510, "issue_513": 513},
+  "blocking_gate": "PR #507 must first gain label-invariant semantic rejected-design admission and be independently integrated; no screening is authorized before that.",
+  "identity_spec": {
+    "scientific_design_sha256": "SHA256(canonical JSON of resolved target_markets,target_timeframes,data_contract,signal_rules,execution_rules,cost_model,validation_plan); labels and prose excluded",
+    "contract_sha256": "SHA256(canonical JSON of the full resolved candidate excluding contract_sha256)",
+    "canonical_json": "UTF-8, sorted keys, separators ',' and ':', finite JSON values"
+  },
+  "multiple_testing": {
+    "family_id": "STRATEGY-FACTORY-COHORT-001-20260921",
+    "planned_hypothesis_count": 8,
+    "planned_parameter_variants_per_candidate": 1,
+    "post_outcome_parameter_search_allowed": false
+  },
+  "common_ohlcv_contract": {
+    "target_markets": ["BTC-USDT-SWAP", "ETH-USDT-SWAP", "SOL-USDT-SWAP"],
+    "target_timeframes": ["1h"],
+    "formation_cutoff": "2026-09-21T04:40:37+00:00",
+    "data_contract": {
+      "source": "OKX /api/v5/market/history-candles",
+      "bar": "1H",
+      "fixed_instruments": ["BTC-USDT-SWAP", "ETH-USDT-SWAP", "SOL-USDT-SWAP"],
+      "normalized_rows_sha256": "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f",
+      "normalized_row_count": 35997,
+      "coverage_start_utc": "2025-05-07T05:00:00+00:00",
+      "coverage_end_utc": "2026-09-19T03:00:00+00:00",
+      "selection_train_start_utc": "2025-05-07T05:00:00+00:00",
+      "selection_train_end_utc": "2026-04-30T23:00:00+00:00",
+      "selection_validation_start_utc": "2026-05-01T00:00:00+00:00",
+      "selection_validation_end_utc": "2026-08-31T23:00:00+00:00",
+      "protected_oos_start_utc": "2026-09-01T00:00:00+00:00",
+      "protected_oos_end_utc": "2026-09-19T03:00:00+00:00",
+      "point_in_time": true,
+      "screen_may_read_protected_oos": false,
+      "historical_universe": "fixed_predeclared_assets"
+    },
+    "cost_model": {
+      "fees_bps": 12.0,
+      "spread_bps": 2.0,
+      "slippage_bps": 6.0,
+      "funding_bps_per_day": 0.0,
+      "stress_multipliers": [1.0, 2.0, 3.0]
+    },
+    "search_plan": {
+      "multiple_testing_family_id": "STRATEGY-FACTORY-COHORT-001-20260921",
+      "planned_hypothesis_count": 8,
+      "planned_parameter_variants": 1,
+      "post_outcome_parameter_search_allowed": false
+    },
+    "validation_plan": {
+      "chronological": true,
+      "selection_uses_training_and_validation_only": true,
+      "untouched_oos_required": true,
+      "genuine_forward_required": true,
+      "minimum_independent_trades_train": 40,
+      "minimum_independent_trades_validation": 20,
+      "require_positive_after_cost_train": true,
+      "require_positive_after_cost_validation": true,
+      "require_validation_halves_positive": true,
+      "require_profit_factor_above_one": true,
+      "require_3x_cost_positive": true,
+      "catastrophic_tail_veto": true,
+      "single_winner_dependence_veto": true
+    },
+    "protected_evidence": {"untouched_oos_opened": false, "genuine_forward_opened": false},
+    "screen_status": "NOT_RUN",
+    "screen_permission": "WAIT_507_SEMANTIC_MEMORY_INTEGRATION"
+  },
+  "rejected_design_guard": {
+    "exact_registry": "orchestration/rejected_fingerprints.json",
+    "known_rejected_or_terminal_designs_reviewed": ["DATA-BASIS-001", "DATA-FUNDING-001", "ACC-002", "DISC-VOL-BREAKOUT-001-v1", "DISC-LIQUIDITY-MEANREV-001-v1", "DISC-BTC-LEADLAG-001-v1"],
+    "additional_nonterminal_or_blocked_lanes_reviewed": ["DISC-RESIDUAL-MOMENTUM-001-v1", "DISC-SQUEEZE-RETENTION-001-v1", "DISC-FRIZZ-PLAYBIT-EMA-001-v1"],
+    "semantic_admission_gate": "WAIT: PR #507 exact-head review found label-only rejected-memory insufficient; revalidate every seed against repaired label-invariant semantic memory before execution.",
+    "renamed_rescue_forbidden": true
+  },
+  "screening_authority": {
+    "screening_started": false,
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false,
+    "deep_candidate_promoted": false,
+    "broker_connected": false,
+    "trade_authority": false
+  },
+  "candidates": [
+    {
+      "hypothesis_id": "DISC-BREADTH-PERSIST-001",
+      "fingerprint_id": "DISC-BREADTH-PERSIST-001-v1",
+      "family": "synchronized_market_breadth_continuation",
+      "economic_mechanism": "Simultaneous directional movement across BTC, ETH, and SOL can reflect broad capital or risk-flow rebalancing rather than single-asset noise; when dispersion stays contained, that common flow may persist for several hours.",
+      "hypothesis": "A synchronized, low-dispersion 6-hour directional breadth impulse across the fixed BTC/ETH/SOL basket has positive same-direction after-cost expectancy over the next 6 hours.",
+      "data_readiness": "READY_EXISTING_FROZEN_DATASET",
+      "signal_rules": {
+        "lookback_hours": 6,
+        "per_asset_return": "close_t / close_t_minus_6h - 1",
+        "direction_gate": "all three 6h returns have the same non-zero sign",
+        "strength_gate": "median(abs(6h return across assets)) >= rolling_30d_median_of_same_statistic",
+        "dispersion_gate": "cross_sectional_std(6h returns) <= rolling_30d_60th_percentile_of_same_statistic",
+        "decision_time": "completed 1h bar close only",
+        "warmup_hours": 720
+      },
+      "execution_rules": {
+        "entry": "next completed bar open after signal",
+        "direction": "same as synchronized basket sign",
+        "portfolio": "equal notional BTC/ETH/SOL basket",
+        "hold_hours": 6,
+        "overlap": "ignore new signals while basket position is open",
+        "stop": "none in cheap screen; fixed-hold falsification only"
+      },
+      "scientific_design_sha256": "c6d351cceecc7b54fb1cebaa17a0cb07f5f3b2a6af0635603161a27e56a1bbea",
+      "contract_sha256": "e3ded4750b623c8bb495e67e2a658ea4d5665ef118f6ec69626594df8fb1c3da",
+      "distinctness_note": "Synchronous breadth basket; not BTC-follower underreaction and not compression/range breakout."
+    },
+    {
+      "hypothesis_id": "DISC-RESIDUAL-REV-001",
+      "fingerprint_id": "DISC-RESIDUAL-REV-001-v1",
+      "family": "market_neutral_residual_mean_reversion",
+      "economic_mechanism": "Short-horizon idiosyncratic overshoots in ETH or SOL relative to the broad BTC factor can mean-revert as arbitrage and portfolio rebalancing restore the prior factor relationship.",
+      "hypothesis": "Extreme 6-hour ETH/BTC or SOL/BTC beta residuals revert after costs when traded as a beta-hedged pair using only pre-signal rolling estimates.",
+      "data_readiness": "READY_EXISTING_FROZEN_DATASET",
+      "signal_rules": {
+        "beta_estimation_hours": 336,
+        "beta_input": "hourly close-to-close returns ending at t",
+        "residual_horizon_hours": 6,
+        "residual": "follower_6h_return - rolling_beta * btc_6h_return",
+        "zscore_window_hours": 720,
+        "entry_gate": "abs(residual_zscore) >= 2.0 and rolling follower/BTC return correlation >= 0.60",
+        "decision_time": "completed 1h bar close only",
+        "warmup_hours": 720
+      },
+      "execution_rules": {
+        "entry": "next completed bar open",
+        "direction": "opposite residual sign in follower; BTC hedge sized by frozen rolling beta",
+        "hold_hours": 6,
+        "exit": "fixed 6h hold",
+        "overlap": "one open pair per follower; same-follower signals ignored until flat",
+        "gross_notional": "1.0 follower leg plus abs(beta) BTC hedge leg"
+      },
+      "scientific_design_sha256": "5bed1be0df5bcbb72aa877603d0cf15e705e4084cce1819097e9bb332d468128",
+      "contract_sha256": "6a7f89b906ee8da2a97653dc394b34be969ff365bc80ad874df8e7ef76d88f76",
+      "distinctness_note": "Opposite economic sign from residual-momentum lane; beta-hedged reversion, not cross-sectional continuation."
+    },
+    {
+      "hypothesis_id": "DISC-SIGNED-VOLUME-DRIFT-001",
+      "fingerprint_id": "DISC-SIGNED-VOLUME-DRIFT-001-v1",
+      "family": "signed_volume_pressure_continuation",
+      "economic_mechanism": "Persistent price-body direction accompanied by unusually large quote-volume participation can proxy sustained aggressive demand or supply; short continuation may survive after the flow is visible.",
+      "hypothesis": "A four-hour signed-volume pressure burst with consistent candle direction and close-location confirmation has positive same-direction 3-hour after-cost expectancy.",
+      "data_readiness": "READY_EXISTING_FROZEN_DATASET",
+      "signal_rules": {
+        "signed_volume_per_bar": "sign(close-open) * quote_volume / rolling_30d_median_quote_volume",
+        "aggregation_hours": 4,
+        "direction_consistency": "at least 3 of last 4 completed bars share aggregate sign",
+        "pressure_gate": "abs(sum(last_4_signed_volume)) >= rolling_30d_90th_percentile_abs_sum",
+        "close_location_gate": "long if close_location_in_bar >= 0.80; short if <= 0.20",
+        "range_guard": "current true range <= rolling_30d_90th_percentile_true_range",
+        "decision_time": "completed 1h bar close only",
+        "warmup_hours": 720
+      },
+      "execution_rules": {
+        "entry": "next completed bar open",
+        "direction": "same as aggregate signed-volume sign",
+        "hold_hours": 3,
+        "exit": "fixed 3h hold",
+        "overlap": "one position per asset; ignore overlapping same-asset signals"
+      },
+      "scientific_design_sha256": "f1c12d518b7994d15139d4206a27641f81693b709339ef8ea1e8cdcfef4ce094",
+      "contract_sha256": "9fe1a7a6443086d64b27a6045cbea9d36a3cc61b3939795be85fa99603e16685",
+      "distinctness_note": "Transparent OHLCV participation proxy; continuation and extreme-range exclusion, not high-volume shock reversion."
+    },
+    {
+      "hypothesis_id": "DISC-LOWVOL-DRIFT-REV-001",
+      "fingerprint_id": "DISC-LOWVOL-DRIFT-REV-001-v1",
+      "family": "low_participation_drift_reversion",
+      "economic_mechanism": "Large multi-hour price drift without normal trading participation is less likely to reflect durable information and may partially reverse when ordinary liquidity returns.",
+      "hypothesis": "An unusually large 8-hour move formed on low quote-volume participation and without extreme hourly range has positive opposite-direction 6-hour after-cost expectancy.",
+      "data_readiness": "READY_EXISTING_FROZEN_DATASET",
+      "signal_rules": {
+        "move_horizon_hours": 8,
+        "move_gate": "abs(8h return) >= rolling_30d_80th_percentile_abs_8h_return",
+        "participation_gate": "mean_quote_volume_last_8h <= 0.60 * rolling_30d_median_hourly_quote_volume",
+        "shock_exclusion": "max_true_range_last_8h < rolling_30d_70th_percentile_hourly_true_range",
+        "decision_time": "completed 1h bar close only",
+        "warmup_hours": 720
+      },
+      "execution_rules": {
+        "entry": "next completed bar open",
+        "direction": "opposite sign of 8h return",
+        "hold_hours": 6,
+        "exit": "fixed 6h hold",
+        "overlap": "one position per asset; ignore overlapping same-asset signals"
+      },
+      "scientific_design_sha256": "0a0b90a53b274418780152d624f4035e527937b3f666c67c303277b0e793eca6",
+      "contract_sha256": "61fc73a5e6904328f3284e82d956900143542d73457eaad38848353937c19095",
+      "distinctness_note": "Requires low participation across 8h and excludes shock-like range expansion; opposite of rejected high-volume/wide-range one-hour shock setup."
+    },
+    {
+      "hypothesis_id": "DISC-WEEKEND-NORMALIZE-001",
+      "fingerprint_id": "DISC-WEEKEND-NORMALIZE-001-v1",
+      "family": "weekend_liquidity_normalization_reversal",
+      "economic_mechanism": "Crypto weekend liquidity is often thinner and institutionally different from weekday liquidity; sufficiently large weekend dislocations formed on depressed participation may partially normalize when weekday liquidity returns.",
+      "hypothesis": "A large low-participation weekend move from Friday 22:00 UTC through Sunday 23:00 UTC has positive opposite-direction after-cost expectancy during the first 12 hours of Monday UTC.",
+      "data_readiness": "READY_EXISTING_FROZEN_DATASET",
+      "signal_rules": {
+        "measurement_window": "Friday 22:00 UTC close to Sunday 23:00 UTC close",
+        "signal_clock": "Sunday 23:00 UTC completed bar",
+        "move_gate": "abs(weekend_return) >= 1.25%",
+        "participation_gate": "median_weekend_hourly_quote_volume <= 0.80 * median_hourly_quote_volume_of_prior_20_weekdays",
+        "minimum_history_days": 30,
+        "decision_time": "Sunday 23:00 UTC completed bar only"
+      },
+      "execution_rules": {
+        "entry": "Monday 00:00 UTC bar open",
+        "direction": "opposite weekend return sign",
+        "hold_hours": 12,
+        "exit": "fixed 12h hold",
+        "overlap": "maximum one position per asset per calendar week"
+      },
+      "scientific_design_sha256": "9e615f6bff816f986ab331a0d351cc7893c2c49b3e0b7bafaec9bb67561bdd13",
+      "contract_sha256": "92a039e496585c819f32f9105cef36d72e0beb43d1fe9b63e4004638b3b6456a",
+      "distinctness_note": "Fixed UTC calendar/liquidity-handoff mechanism, not generic shock reversion."
+    },
+    {
+      "hypothesis_id": "DISC-MODERATEVOL-AUTOCORR-001",
+      "fingerprint_id": "DISC-MODERATEVOL-AUTOCORR-001-v1",
+      "family": "moderate_volatility_time_series_continuation",
+      "economic_mechanism": "Persistent execution programs can create short serial correlation, but extreme-volatility shocks are often unstable; continuation may be most reliable in a predeclared moderate-volatility band.",
+      "hypothesis": "Three consecutive same-direction hourly returns in a moderate realized-volatility regime have positive same-direction 3-hour after-cost expectancy.",
+      "data_readiness": "READY_EXISTING_FROZEN_DATASET",
+      "signal_rules": {
+        "direction_gate": "last 3 completed hourly close-to-close returns all strictly positive or all strictly negative",
+        "realized_vol_window_hours": 24,
+        "vol_reference_window_hours": 2160,
+        "vol_regime": "24h realized volatility between trailing 90d 35th and 70th percentiles",
+        "participation_guard": "current quote_volume between trailing_30d 40th and 90th percentiles",
+        "decision_time": "completed 1h bar close only",
+        "warmup_hours": 2160
+      },
+      "execution_rules": {
+        "entry": "next completed bar open",
+        "direction": "same as last 3 hourly returns",
+        "hold_hours": 3,
+        "exit": "fixed 3h hold",
+        "overlap": "one position per asset; ignore overlapping same-asset signals"
+      },
+      "scientific_design_sha256": "85716f31fb5d1eec421c5b2c60cdda830d9aac0f61794819933ca2bda8ba9291",
+      "contract_sha256": "0cfc4ca0856b9428a20719b41b5ca68736395ac40dad4ba2fbd47eacd32f473a",
+      "distinctness_note": "Time-series autocorrelation in moderate volatility; no compression, range breakout, follower lag, or cross-sectional rank."
+    },
+    {
+      "hypothesis_id": "DISC-RANGE-AUCTION-REV-001",
+      "fingerprint_id": "DISC-RANGE-AUCTION-REV-001-v1",
+      "family": "range_edge_auction_reversion",
+      "economic_mechanism": "In a demonstrably low-efficiency range regime, repeated auctions toward a recent range edge can mean-revert because price discovery is two-sided rather than directional.",
+      "hypothesis": "When 24-hour price efficiency is low, a close in the outer 10% of the prior 48-hour range on non-extreme volume has positive opposite-direction expectancy toward the range midpoint.",
+      "data_readiness": "READY_EXISTING_FROZEN_DATASET",
+      "signal_rules": {
+        "range_lookback_hours": 48,
+        "efficiency_ratio": "abs(close_t-close_t_minus_24h) / sum(abs(hourly_close_change), last_24h)",
+        "regime_gate": "efficiency_ratio <= 0.25",
+        "range_position": "(close_t-prior_48h_low)/(prior_48h_high-prior_48h_low), prior range excludes current bar",
+        "entry_gate": "short if range_position >= 0.90; long if <= 0.10",
+        "volume_guard": "current quote_volume <= trailing_30d_60th_percentile",
+        "atr_window_hours": 14,
+        "decision_time": "completed 1h bar close only",
+        "warmup_hours": 720
+      },
+      "execution_rules": {
+        "entry": "next completed bar open",
+        "direction": "toward prior 48h range midpoint",
+        "take_profit": "exit at next bar open after a completed bar close crosses the frozen prior-range midpoint",
+        "stop": "exit at next bar open after a completed bar high/low breaches entry by 1.0 * ATR14 against position",
+        "max_hold_hours": 6,
+        "overlap": "one position per asset; ignore overlapping same-asset signals"
+      },
+      "scientific_design_sha256": "0c338f73d1e6040eee7bba6b5d3941d1870273f6dc37fbc0a13899c2c83333aa",
+      "contract_sha256": "9876702dcd1127f518ae3cc00790e031c168f4a8fda79e3abee2eda4f402fe27",
+      "distinctness_note": "Low-efficiency auction/range mechanism; no large-return shock threshold or high-volume depletion condition."
+    },
+    {
+      "hypothesis_id": "DISC-DELTA-CARRY-001",
+      "fingerprint_id": "DISC-DELTA-CARRY-001-v1",
+      "family": "delta_neutral_funding_carry",
+      "economic_mechanism": "Persistently positive perpetual funding transfers cash from long perp holders to short perp holders; a long-spot/short-perp hedge can harvest that carry without requiring directional price prediction when transaction costs and basis risk are controlled.",
+      "hypothesis": "After three consecutive positive realized funding payments, entering a long-spot/short-perp hedge only when frozen trailing carry exceeds two-leg base costs has positive net carry over the next funding interval.",
+      "data_readiness": "PREFLIGHT_REQUIRED_PUBLIC_DATA",
+      "target_markets": ["BTC-USDT spot+swap", "ETH-USDT spot+swap", "SOL-USDT spot+swap"],
+      "data_contract": {
+        "source": "Public OKX/Binance funding history plus OKX completed spot/perpetual candles; no paid provider",
+        "bar": "1H plus realized funding timestamps",
+        "fixed_instruments": ["BTC-USDT-SWAP", "ETH-USDT-SWAP", "SOL-USDT-SWAP"],
+        "spot_hedges": ["BTC-USDT", "ETH-USDT", "SOL-USDT"],
+        "point_in_time": true,
+        "historical_universe": "fixed_predeclared_assets",
+        "required_freeze_before_screen": ["exact-shared-timestamp spot/perp price panel", "realized funding rows with source timestamps", "normalized dataset SHA256", "coverage bounds and missingness report"],
+        "screen_may_read_protected_oos": false
+      },
+      "signal_rules": {
+        "funding_history": "three most recent realized funding payments available strictly before decision time",
+        "direction_gate": "all three realized funding rates > 0",
+        "carry_gate": "sum(last_3_realized_funding_bps) / 3 > frozen_two_leg_round_trip_cost_bps / 3",
+        "basis_guard": "abs(perp_close/spot_close-1) <= 0.50%",
+        "decision_time": "first completed 1h bar after a realized funding timestamp",
+        "future_funding_rate_usage": "forbidden"
+      },
+      "execution_rules": {
+        "entry": "next completed 1h bar open after signal",
+        "legs": "long spot 1.0 notional and short perpetual 1.0 notional in same base asset",
+        "hold": "until first completed 1h bar after the next realized funding payment",
+        "exit": "close both legs at that bar open",
+        "overlap": "one hedge per base asset; no overlapping carry positions",
+        "borrow_assumption": "none; only positive-funding long-spot/short-perp direction is permitted"
+      },
+      "cost_model": {
+        "fees_bps": 24.0,
+        "spread_bps": 4.0,
+        "slippage_bps": 12.0,
+        "funding_bps_per_day": 0.0,
+        "stress_multipliers": [1.0, 1.5, 2.0]
+      },
+      "screen_permission": "WAIT_DATASET_FREEZE",
+      "scientific_design_sha256": "ed5240af1167ec2a23daf92f37a26c399822fb70fac37a4f27ffd1f4455b6eb6",
+      "contract_sha256": "b355f12c487fea3f4f537b559fd432319789af5730c6d0fabdadc90be8ec7a47",
+      "distinctness_note": "Delta-neutral carry capture, not directional return prediction from funding; negative-funding spot-short path is excluded because borrow data are not frozen."
+    }
+  ]
+}
