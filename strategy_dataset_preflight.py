@@ -329,6 +329,11 @@ def qualify_cohort001_dataset(
         raise ValueError("development window must end strictly before protected evidence")
     if int((protected_start - development_end).total_seconds()) != HOUR_SECONDS:
         raise ValueError("Cohort-001 development/protected boundary must be contiguous hourly chronology")
+    if (
+        development_end != _parse_hour(DEVELOPMENT_END_UTC)
+        or protected_start != _parse_hour(PROTECTED_START_UTC)
+    ):
+        raise ValueError("Cohort-001 authoritative chronology is frozen")
 
     compressed_bytes = path.read_bytes()
     actual_blob_sha1 = _git_blob_sha1(compressed_bytes)
