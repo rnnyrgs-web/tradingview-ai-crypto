@@ -70,7 +70,7 @@ def _candidate() -> dict:
 
 def test_behavior_identity_contract_versions_are_explicit():
     assert SCIENTIFIC_IDENTITY_VERSION == 2
-    assert STRATEGY_BEHAVIOR_IDENTITY_VERSION == 2
+    assert STRATEGY_BEHAVIOR_IDENTITY_VERSION == 3
     assert SCIENTIFIC_SCALAR_CANONICALIZATION_VERSION == 1
     assert resolve_behavior_schema_id(_candidate()) == "TEST_BEHAVIOR_IDENTITY_V1"
 
