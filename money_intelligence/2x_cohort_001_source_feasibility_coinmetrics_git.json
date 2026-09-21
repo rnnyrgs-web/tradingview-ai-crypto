@@ -1,0 +1,50 @@
+{
+  "schema": "two_x_source_feasibility.v1",
+  "artifact_id": "2X-COHORT-001-SOURCE-FEASIBILITY-COINMETRICS-GIT-v1",
+  "observed_date": "2026-09-21",
+  "cohort_issue": 514,
+  "source": {
+    "provider": "Coin Metrics",
+    "repository": "coinmetrics/data",
+    "default_branch": "master",
+    "repository_purpose": "Free Community-tier CSV archives generated from Coin Metrics data"
+  },
+  "observations": [
+    {
+      "classification": "FACT",
+      "claim": "The current public repository metadata says the repository was created in 2018, but its current default-branch head was last pushed on 2026-05-24."
+    },
+    {
+      "classification": "FACT",
+      "claim": "A GitHub commits query on the current default branch with an until cutoff of 2026-01-01 returned no commits."
+    },
+    {
+      "classification": "FACT",
+      "claim": "The current public repository exposes only the master branch in the branch listing checked during this research step."
+    }
+  ],
+  "inference": {
+    "classification": "INFERENCE",
+    "claim": "The presently reachable default-branch history cannot serve as a weekly point-in-time revision archive for Cohort 001 across 2021-2025. A current CSV may contain historical observations, but current/revised historical values are not equivalent to evidence that the value/revision was available at each historical decision cutoff."
+  },
+  "allowed_use": [
+    "source-discovery and current coverage inspection",
+    "supplemental cross-checking",
+    "historical value use only when a separately trusted PIT availability/revision proof satisfies the frozen cutoff"
+  ],
+  "prohibited_use": [
+    "treating the current CSV repository state as proof of 2021-2025 point-in-time availability",
+    "using present-day revised supply/market-cap values to fill Cohort 001 missing PIT fields",
+    "weakening the 12-asset / 624-snapshot / 52-decision coverage gate because revision history is unavailable"
+  ],
+  "next_source_actions": [
+    "continue evaluating Coin Metrics provider-native metric status/status-time where an exact raw response can prove the value was reviewed/revised by the historical cutoff",
+    "seek other source-native or primary-document PIT evidence for supply/market-cap intervals that fail that test",
+    "persist COVERAGE_BLOCKED when no defensible PIT value exists"
+  ],
+  "outcomes_opened": false,
+  "candidate_formed": false,
+  "prediction_authority": false,
+  "trade_authority": false,
+  "broker_connected": false
+}
