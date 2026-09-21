@@ -94,6 +94,13 @@ def _validate_value(value: Any, kind: str, *, field: str) -> None:
     raise ValueError(f"unsupported feature kind for {field}: {kind}")
 
 
+def _historical_rule(contract: dict[str, Any]) -> dict[str, Any]:
+    rule = contract.get("historical_universe_rule")
+    if not isinstance(rule, dict):
+        raise ValueError("historical_universe_rule missing")
+    return rule
+
+
 def validate_contract(contract: dict[str, Any]) -> None:
     _walk_forbidden(contract)
     if contract.get("schema") != SCHEMA:
@@ -105,6 +112,22 @@ def validate_contract(contract: dict[str, Any]) -> None:
             "forward formation must remain blocked until trusted receipt integration"
         )
     _utc(contract.get("frozen_at"), field="frozen_at")
+
+    rule = _historical_rule(contract)
+    for key in ("venue", "quote_asset"):
+        value = rule.get(key)
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f"historical_universe_rule.{key} must be a non-empty string")
+    if rule.get("decision_grid") != "MONDAY_00_UTC_WEEKLY":
+        raise ValueError("unsupported decision_grid; expected MONDAY_00_UTC_WEEKLY")
+    grid_start = _utc(rule.get("grid_start"), field="historical_universe_rule.grid_start")
+    grid_end = _utc(rule.get("grid_end"), field="historical_universe_rule.grid_end")
+    if grid_start > grid_end:
+        raise ValueError("historical_universe_rule grid_start must be <= grid_end")
+    for key in ("listing_age_min_days", "trailing_30d_median_quote_volume_usd_min"):
+        value = rule.get(key)
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
+            raise ValueError(f"historical_universe_rule.{key} must be nonnegative")
 
     required = contract.get("required_features")
     if (
@@ -191,6 +214,61 @@ def _validate_source(
     _validate_value(record["value"], kind, field=field)
 
 
+def _validate_frozen_universe_gates(
+    snapshot: dict[str, Any],
+    contract: dict[str, Any],
+    *,
+    decision_at: datetime,
+) -> list[str]:
+    reasons: list[str] = []
+    rule = _historical_rule(contract)
+
+    if snapshot.get("venue") != rule["venue"]:
+        reasons.append("venue does not match frozen historical universe")
+
+    grid_start = _utc(rule["grid_start"], field="historical_universe_rule.grid_start")
+    grid_end = _utc(rule["grid_end"], field="historical_universe_rule.grid_end")
+    if decision_at < grid_start or decision_at > grid_end:
+        reasons.append("decision_at lies outside frozen grid range")
+    if not (
+        decision_at.weekday() == 0
+        and decision_at.hour == 0
+        and decision_at.minute == 0
+        and decision_at.second == 0
+        and decision_at.microsecond == 0
+    ):
+        reasons.append("decision_at is not on MONDAY_00_UTC_WEEKLY grid")
+
+    features = snapshot.get("features")
+    if not isinstance(features, dict):
+        return reasons
+
+    listing = features.get("listing_age_days")
+    if isinstance(listing, dict):
+        try:
+            listing_value = float(listing.get("value"))
+            if listing_value < float(rule["listing_age_min_days"]):
+                reasons.append("listing_age_days below frozen minimum")
+        except (TypeError, ValueError):
+            pass
+
+    liquidity = features.get("liquidity_usd")
+    if isinstance(liquidity, dict):
+        try:
+            liquidity_value = float(liquidity.get("value"))
+            if liquidity_value < float(rule["trailing_30d_median_quote_volume_usd_min"]):
+                reasons.append("liquidity_usd below frozen minimum")
+        except (TypeError, ValueError):
+            pass
+
+    for field in ("tradable", "member"):
+        evidence = features.get(field)
+        if isinstance(evidence, dict) and evidence.get("value") is not True:
+            reasons.append(f"{field} must be true at decision_at")
+
+    return reasons
+
+
 def validate_snapshot(
     snapshot: dict[str, Any], contract: dict[str, Any]
 ) -> tuple[bool, tuple[str, ...]]:
@@ -205,6 +283,10 @@ def validate_snapshot(
         value = snapshot.get(key)
         if not isinstance(value, str) or not value.strip():
             reasons.append(f"{key} missing")
+
+    reasons.extend(
+        _validate_frozen_universe_gates(snapshot, contract, decision_at=decision_at)
+    )
 
     identity = snapshot.get("identity")
     if not isinstance(identity, dict):
@@ -251,6 +333,15 @@ def validate_snapshot(
     return not reasons, tuple(sorted(set(reasons)))
 
 
+def _snapshot_identity_key(snapshot: dict[str, Any]) -> tuple[str, str, str] | None:
+    asset = snapshot.get("stable_asset_id")
+    venue = snapshot.get("venue")
+    decision_at = snapshot.get("decision_at")
+    if not all(isinstance(value, str) and value.strip() for value in (asset, venue, decision_at)):
+        return None
+    return asset, venue, decision_at
+
+
 def evaluate_coverage(
     contract: dict[str, Any], snapshots: list[dict[str, Any]]
 ) -> dict[str, Any]:
@@ -259,6 +350,15 @@ def evaluate_coverage(
         raise ValueError("snapshots must be a list")
     _walk_forbidden(snapshots)
 
+    key_counts = Counter(
+        key
+        for snapshot in snapshots
+        if isinstance(snapshot, dict)
+        for key in [_snapshot_identity_key(snapshot)]
+        if key is not None
+    )
+    duplicate_keys = {key for key, count in key_counts.items() if count > 1}
+
     accepted: list[dict[str, Any]] = []
     excluded: list[dict[str, Any]] = []
     per_asset = Counter()
@@ -266,6 +366,21 @@ def evaluate_coverage(
         if not isinstance(snapshot, dict):
             excluded.append({"index": index, "reasons": ["snapshot must be an object"]})
             continue
+
+        key = _snapshot_identity_key(snapshot)
+        if key is not None and key in duplicate_keys:
+            excluded.append(
+                {
+                    "index": index,
+                    "stable_asset_id": snapshot.get("stable_asset_id"),
+                    "decision_at": snapshot.get("decision_at"),
+                    "reasons": [
+                        "duplicate stable_asset_id/venue/decision_at snapshot is ambiguous and cannot count toward coverage"
+                    ],
+                }
+            )
+            continue
+
         ok, reasons = validate_snapshot(snapshot, contract)
         if ok:
             accepted.append(snapshot)
@@ -305,6 +420,7 @@ def evaluate_coverage(
         "eligible_asset_count": len(eligible_assets),
         "eligible_assets": eligible_assets,
         "per_asset_snapshot_counts": dict(sorted(per_asset.items())),
+        "duplicate_snapshot_key_count": len(duplicate_keys),
         "exclusions": excluded,
         "outcome_access": (
             "MAY_OPEN_ONLY_IN_SEPARATE_LABEL_STAGE" if ready else "SEALED"
