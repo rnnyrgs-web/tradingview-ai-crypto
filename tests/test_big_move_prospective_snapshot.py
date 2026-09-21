@@ -58,11 +58,11 @@ def _strict(*, state="STRICT_TRADABLE", spread=12.0, band=10000, blob=TRAD_BLOB)
 def _snapshot(*, receipt_kind="TRUSTED_REMOTE_ACQUISITION_ATTESTATION"):
     contract = _contract()
     features = {family: _unknown() for family in contract["feature_families"]}
-    features["stable_identity"] = _known("asset:test", kind=receipt_kind)
-    features["venue_membership"] = _known(True, kind=receipt_kind)
-    features["liquidity_proxy"] = _known(25_000_000, kind=receipt_kind)
+    features["stable_identity"] = _known({"canonical_asset_id": "asset:test"}, kind=receipt_kind)
+    features["venue_membership"] = _known({"active_spot": True}, kind=receipt_kind)
+    features["liquidity_proxy"] = _known({"trailing_30d_quote_volume_usd": 25_000_000}, kind=receipt_kind)
     features["strict_tradability"] = _known(_strict(), kind=receipt_kind)
-    features["market_regime"] = _known("BTC_RISK_ON", kind=receipt_kind)
+    features["market_regime"] = _known({"regime": "BTC_RISK_ON"}, kind=receipt_kind)
     return {
         "schema": "two_x_prospective_snapshot.v1",
         "snapshot_id": "2X-PROSPECTIVE-20260921T1555Z-v1",
@@ -91,9 +91,10 @@ def _snapshot(*, receipt_kind="TRUSTED_REMOTE_ACQUISITION_ATTESTATION"):
     }
 
 
-def test_contract_pins_freshness_and_tradability():
+def test_contract_pins_freshness_tradability_and_feature_schema():
     contract = _contract()
     validate_contract(contract)
+    assert contract["feature_value_schema"] == "two_x_feature_values.v1"
     assert contract["strict_tradability_binding"]["git_blob_sha"] == TRAD_BLOB
     assert contract["freshness_max_age_seconds"]["strict_tradability"] == 3600
     assert contract["formation_authority"] is False
@@ -183,7 +184,7 @@ def test_future_outcome_key_and_near_2x_target_are_rejected():
 def test_unknown_record_cannot_fake_value_or_chronology():
     snap = _snapshot()
     snap["assets"][0]["features"]["relationship_graph"]["value"] = "same-sector"
-    with pytest.raises(ValueError, match="UNKNOWN record"):
+    with pytest.raises(ValueError, match="schema mismatch"):
         evaluate_snapshot(_contract(), snap, verified_receipt_sha256s=VERIFIED)
 
 
@@ -193,4 +194,53 @@ def test_duplicate_asset_identity_rejected_and_digest_deterministic():
     assert digest(snap) == digest(reordered)
     snap["assets"].append(copy.deepcopy(snap["assets"][0]))
     with pytest.raises(ValueError, match="duplicate asset_id"):
+        evaluate_snapshot(_contract(), snap, verified_receipt_sha256s=VERIFIED)
+
+
+def test_unknown_keys_fail_closed_at_contract_snapshot_asset_record_and_argument_boundaries():
+    contract = _contract()
+    contract["post90_peak_multiple"] = 3.4
+    with pytest.raises(ValueError, match="contract schema mismatch"):
+        validate_contract(contract)
+
+    snap = _snapshot()
+    snap["y90"] = 1
+    with pytest.raises(ValueError, match="snapshot schema mismatch"):
+        evaluate_snapshot(_contract(), snap, verified_receipt_sha256s=VERIFIED)
+
+    snap = _snapshot()
+    snap["assets"][0]["post90_peak_multiple"] = 3.4
+    with pytest.raises(ValueError, match="asset schema mismatch"):
+        evaluate_snapshot(_contract(), snap, verified_receipt_sha256s=VERIFIED)
+
+    snap = _snapshot()
+    snap["assets"][0]["features"]["stable_identity"]["y90"] = 1
+    with pytest.raises(ValueError, match="KNOWN record schema mismatch"):
+        evaluate_snapshot(_contract(), snap, verified_receipt_sha256s=VERIFIED)
+
+    snap = _snapshot()
+    snap["assets"][0]["features"]["relationship_graph"]["post90_peak_multiple"] = 3.4
+    with pytest.raises(ValueError, match="UNKNOWN record schema mismatch"):
+        evaluate_snapshot(_contract(), snap, verified_receipt_sha256s=VERIFIED)
+
+    snap = _snapshot()
+    snap["assets"][0]["evidence_for"][0]["peak90"] = 3.4
+    with pytest.raises(ValueError, match="evidence argument schema mismatch"):
+        evaluate_snapshot(_contract(), snap, verified_receipt_sha256s=VERIFIED)
+
+
+def test_feature_family_value_shapes_reject_free_form_nested_future_payloads():
+    snap = _snapshot()
+    snap["assets"][0]["features"]["stable_identity"]["value"]["post90_peak_multiple"] = 3.4
+    with pytest.raises(ValueError, match="stable_identity.value schema mismatch"):
+        evaluate_snapshot(_contract(), snap, verified_receipt_sha256s=VERIFIED)
+
+    snap = _snapshot()
+    snap["assets"][0]["features"]["liquidity_proxy"]["value"] = {"peak90": 3.4}
+    with pytest.raises(ValueError, match="liquidity_proxy.value schema mismatch"):
+        evaluate_snapshot(_contract(), snap, verified_receipt_sha256s=VERIFIED)
+
+    snap = _snapshot()
+    snap["assets"][0]["features"]["strict_tradability"]["value"]["metrics"]["post90_peak_multiple"] = 3.4
+    with pytest.raises(ValueError, match="strict_tradability.metrics schema mismatch"):
         evaluate_snapshot(_contract(), snap, verified_receipt_sha256s=VERIFIED)
