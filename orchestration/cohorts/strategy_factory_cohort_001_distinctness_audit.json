@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "artifact_type": "strategy_factory_cohort_distinctness_audit",
+  "cohort_id": "STRATEGY-FACTORY-COHORT-001-SEED",
+  "formed_at": "2026-09-21T05:12:00+00:00",
+  "main_sha_observed": "5e720e8adbd3e0bcf539d97fdaa5a0c71428dbca",
+  "purpose": "Outcome-blind pre-screen audit of the remaining Cohort 001 mechanisms against known active/rejected/deprioritized strategy designs. This is advisory preparation only and does not substitute for the repaired #507 canonical label-invariant semantic admission gate.",
+  "canonical_comparators": [
+    {
+      "id": "DATA-BREADTH-001",
+      "artifact": "orchestration/data_breadth_001_candidate.json",
+      "state": "ACTIVE_OWNED_READY",
+      "mechanism": "broad cross-sectional participation predicting subsequent market direction"
+    },
+    {
+      "id": "DISC-RESIDUAL-MOMENTUM-001-v1",
+      "artifact": "orchestration/disc_residual_momentum_001.json",
+      "state": "DEPRIORITIZED_EVIDENCE_LIMITED",
+      "mechanism": "beta-neutral idiosyncratic cross-sectional residual continuation"
+    },
+    {
+      "id": "DATA-FUNDING-001",
+      "artifact": "orchestration/data_funding_001_candidate.json",
+      "state": "REJECTED_CURRENT_FINGERPRINT",
+      "mechanism": "realized funding pressure as a directional predictor for 24h/7d returns"
+    },
+    {
+      "id": "DISC-LIQUIDITY-MEANREV-001-v1",
+      "artifact": "orchestration/disc_liquidity_meanrev_001.json",
+      "state": "REJECTED_PRE_OOS",
+      "mechanism": "large one-hour high-volume/wide-range liquidity shock followed by six-hour reversal"
+    },
+    {
+      "id": "DISC-VOL-BREAKOUT-001-v1",
+      "artifact": "orchestration/disc_vol_breakout_001.json",
+      "state": "REJECTED_PRE_OOS",
+      "mechanism": "ATR compression followed by 20-bar price breakout continuation"
+    },
+    {
+      "id": "DISC-BTC-LEADLAG-001-v1",
+      "artifact": "orchestration/disc_btc_leadlag_001.json",
+      "state": "REJECTED_PRE_OOS",
+      "mechanism": "BTC impulse followed by beta-defined ETH/SOL underreaction continuation"
+    }
+  ],
+  "audits": [
+    {
+      "fingerprint_id": "DISC-BREADTH-PERSIST-001-v1",
+      "status": "HOLD_ACTIVE_OWNERSHIP_COLLISION",
+      "closest_comparator": "DATA-BREADTH-001",
+      "reason": "Both test breadth/participation as a market-wide persistence signal and canonical COORD-DATA-005 is actively owned. Exact rules differ, but duplication risk is material enough to hold this seed before screening.",
+      "screening_authority": false
+    },
+    {
+      "fingerprint_id": "DISC-RESIDUAL-REV-001-v1",
+      "status": "PROVISIONALLY_MATERIALLY_DISTINCT_PENDING_507",
+      "closest_comparator": "DISC-RESIDUAL-MOMENTUM-001-v1",
+      "reason": "The comparator ranks a broad survivor-prone cross-section for residual continuation over a 24h horizon. This seed uses only fixed ETH/SOL versus BTC, explicitly trades opposite extreme six-hour beta residuals as a beta-hedged pair, and tests short-horizon reversion. Direction, portfolio construction, universe contract, holding horizon and causal mechanism differ materially. Canonical semantic admission remains mandatory.",
+      "screening_authority": false
+    },
+    {
+      "fingerprint_id": "DISC-SIGNED-VOLUME-DRIFT-001-v1",
+      "status": "PROVISIONALLY_MATERIALLY_DISTINCT_PENDING_507",
+      "closest_comparator": "DISC-LIQUIDITY-MEANREV-001-v1",
+      "reason": "The rejected comparator requires a single large one-hour return shock plus abnormal volume and range, then reverses it. This seed aggregates four-hour signed candle-body/quote-volume pressure, excludes extreme range, requires close-location confirmation and trades continuation for three hours. It is not a threshold rescue of the rejected shock-reversal design.",
+      "screening_authority": false
+    },
+    {
+      "fingerprint_id": "DISC-LOWVOL-DRIFT-REV-001-v1",
+      "status": "PROVISIONALLY_MATERIALLY_DISTINCT_PENDING_507",
+      "closest_comparator": "DISC-LIQUIDITY-MEANREV-001-v1",
+      "reason": "The rejected design specifically interprets high-volume, wide-range one-hour shocks as forced-flow overshoot. This seed requires an eight-hour drift with depressed participation and explicitly excludes extreme hourly range, hypothesizing weak-information drift rather than forced-flow depletion. Mechanism and conditioning are opposite on participation/range.",
+      "screening_authority": false
+    },
+    {
+      "fingerprint_id": "DISC-WEEKEND-NORMALIZE-001-v1",
+      "status": "PROVISIONALLY_MATERIALLY_DISTINCT_PENDING_507_POWER_RISK",
+      "closest_comparator": "DISC-LIQUIDITY-MEANREV-001-v1",
+      "reason": "This is a fixed calendar/liquidity-handoff hypothesis measured over the weekend and closed during early Monday, not a generic one-hour shock reversal. Main risk is statistical power because independent weekends are scarce; if underpowered it must be classified inconclusive rather than thresholds widened.",
+      "screening_authority": false
+    },
+    {
+      "fingerprint_id": "DISC-MODERATEVOL-AUTOCORR-001-v1",
+      "status": "PROVISIONALLY_MATERIALLY_DISTINCT_PENDING_507",
+      "closest_comparator": "DISC-VOL-BREAKOUT-001-v1",
+      "reason": "The rejected design selects low-ATR compression then a 20-bar range breakout with ATR stop/target. This seed selects three same-sign hourly returns only inside a trailing moderate-volatility band with ordinary participation and uses a fixed three-hour continuation hold. It contains no compression or range-breakout trigger.",
+      "screening_authority": false
+    },
+    {
+      "fingerprint_id": "DISC-RANGE-AUCTION-REV-001-v1",
+      "status": "PROVISIONALLY_MATERIALLY_DISTINCT_PENDING_507",
+      "closest_comparator": "DISC-LIQUIDITY-MEANREV-001-v1",
+      "reason": "This seed requires a low-efficiency 24h regime and a close at the outer edge of the prior 48h range on non-extreme volume, with midpoint/ATR exits. The rejected design requires an abnormal one-hour return/volume/range shock and a fixed six-hour reversal. The range-auction mechanism does not reuse the rejected shock threshold or liquidity-depletion condition.",
+      "screening_authority": false
+    },
+    {
+      "fingerprint_id": "DISC-DELTA-CARRY-001-v1",
+      "status": "PROVISIONALLY_MATERIALLY_DISTINCT_PENDING_507_AND_DATA_PREFLIGHT",
+      "closest_comparator": "DATA-FUNDING-001",
+      "reason": "DATA-FUNDING-001 used realized funding pressure to predict future directional crypto return. This seed proposes a delta-neutral long-spot/short-perpetual hedge intended to harvest realized positive funding carry without a directional price forecast, subject to two-leg transaction costs and basis risk. The execution premise and target PnL source are materially different, but screening remains blocked until an exact synchronized spot/perp/funding dataset is frozen and the canonical semantic gate accepts it.",
+      "screening_authority": false
+    }
+  ],
+  "global_findings": {
+    "active_owned_collisions": 1,
+    "provisionally_distinct_seeds": 7,
+    "screenable_now": 0,
+    "reason_screenable_now": "PR #507 canonical semantic rejected-design gate is not integrated; Cohort 001 identities must be regenerated against that implementation before any outcome inspection.",
+    "replacement_seed_required_now": false,
+    "replacement_reason": "Do not manufacture a new hypothesis merely to maintain a target cohort count. Six non-breadth OHLCV designs already remain for post-gate preflight, while carry has a real data blocker."
+  },
+  "no_outcomes_inspected": true,
+  "protected_oos_opened": false,
+  "genuine_forward_opened": false,
+  "deep_candidate_promoted": false,
+  "broker_connected": false,
+  "trade_authority": false
+}
