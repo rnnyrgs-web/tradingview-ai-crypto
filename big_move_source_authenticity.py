@@ -14,9 +14,10 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import hashlib
 import json
+import math
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 SOURCE_POLICY_PATH = "money_intelligence/2x_source_provenance_preflight_v1.json"
 SOURCE_POLICY_GIT_BLOB_SHA = "f0c9048228dac566def31f5872406d3437d114c7"
@@ -24,11 +25,12 @@ SOURCE_POLICY_ARTIFACT_ID = "2X-SOURCE-PREFLIGHT-001-v1"
 MAX_PROOF_BYTES = 16_000_000
 
 BINANCE_SOURCES = {"BINANCE_PUBLIC_DATA_SPOT_RAW"}
+# Only asset metrics whose Community response exposes a provider-native review status
+# and status-time are eligible here. Catalog/candle coverage is useful for audits but
+# does not by itself establish historical value availability.
 COINMETRICS_STATUS_SOURCES = {
     "COINMETRICS_COMMUNITY_CAP_MRKT_CUR_USD": "CapMrktCurUSD",
     "COINMETRICS_COMMUNITY_SPLY_CUR": "SplyCur",
-    "COINMETRICS_COMMUNITY_MARKET_CANDLE": None,
-    "COINMETRICS_COMMUNITY_ASSET_CATALOG": None,
 }
 PRIMARY_DOCUMENT_SOURCES = {
     "PRIMARY_CONTRACT_OR_GENESIS_DOC",
@@ -42,10 +44,11 @@ DERIVED_SOURCES = {
     "DERIVED_BTC_MARKET_REGIME_V1",
     "DERIVED_BINANCE_HISTORICAL_MEMBERSHIP_V1",
 }
-# Historical CoinGecko responses retrieved later do not prove that the exact value
-# was historically available. They may be used only after a separately archived,
-# independently timestamped receipt is implemented.
-BLOCKED_DIRECT_SOURCES = {"COINGECKO_EXISTING_AUTHORIZED_MARKET_CHART"}
+BLOCKED_DIRECT_SOURCES = {
+    "COINGECKO_EXISTING_AUTHORIZED_MARKET_CHART",
+    "COINMETRICS_COMMUNITY_MARKET_CANDLE",
+    "COINMETRICS_COMMUNITY_ASSET_CATALOG",
+}
 
 
 def _utc(value: Any, *, field: str) -> datetime:
@@ -58,6 +61,19 @@ def _utc(value: Any, *, field: str) -> datetime:
     if parsed.tzinfo is None or parsed.utcoffset() != timezone.utc.utcoffset(parsed):
         raise ValueError(f"{field} must be UTC")
     return parsed
+
+
+def _same_value(left: Any, right: Any) -> bool:
+    if type(left) is bool or type(right) is bool:
+        return left is right
+    try:
+        lnum = float(left)
+        rnum = float(right)
+    except (TypeError, ValueError):
+        return left == right
+    return math.isfinite(lnum) and math.isfinite(rnum) and math.isclose(
+        lnum, rnum, rel_tol=1e-12, abs_tol=1e-12
+    )
 
 
 def _safe_path(root: Path, relpath: Any, *, field: str) -> Path:
@@ -177,29 +193,80 @@ def _validate_binance_proof(
 
 
 def _validate_coinmetrics_proof(
-    proof: dict[str, Any], source_id: str, record: dict[str, Any], decision_at: datetime, *, field: str
+    proof: dict[str, Any],
+    root: Path,
+    source_id: str,
+    record: dict[str, Any],
+    decision_at: datetime,
+    *,
+    field: str,
 ) -> None:
-    if proof.get("schema") != "coinmetrics_provider_status_proof.v1":
-        raise ValueError(f"{field} requires coinmetrics_provider_status_proof.v1")
-    _https_locator(proof.get("upstream_locator"), field=field, required_host="api.coinmetrics.io")
+    if proof.get("schema") != "coinmetrics_raw_response_proof.v1":
+        raise ValueError(f"{field} requires coinmetrics_raw_response_proof.v1")
+    locator = _https_locator(
+        proof.get("upstream_locator"),
+        field=field,
+        required_host="community-api.coinmetrics.io",
+    )
     if proof.get("source_id") != source_id:
         raise ValueError(f"{field} Coin Metrics proof source mismatch")
-    expected_metric = COINMETRICS_STATUS_SOURCES[source_id]
-    if expected_metric is not None and proof.get("metric") != expected_metric:
+    metric = COINMETRICS_STATUS_SOURCES[source_id]
+    if proof.get("metric") != metric:
         raise ValueError(f"{field} Coin Metrics metric mismatch")
-    for key in ("asset", "frequency", "record_id"):
-        if not isinstance(proof.get(key), str) or not proof[key].strip():
-            raise ValueError(f"{field} Coin Metrics {key} missing")
-    if proof.get("status") not in {"reviewed", "revised"}:
-        raise ValueError(f"{field} Coin Metrics proof must be reviewed or revised")
-    status_time = _utc(proof.get("status_time"), field=f"{field}.status_time")
+    asset = proof.get("asset")
+    frequency = proof.get("frequency")
+    record_time = proof.get("record_time")
+    if not isinstance(asset, str) or not asset.strip():
+        raise ValueError(f"{field} Coin Metrics asset missing")
+    if not isinstance(frequency, str) or not frequency.strip():
+        raise ValueError(f"{field} Coin Metrics frequency missing")
+    _utc(record_time, field=f"{field}.record_time")
+
+    parsed = urlsplit(locator)
+    params = parse_qs(parsed.query)
+    if asset not in ",".join(params.get("assets", [])).split(","):
+        raise ValueError(f"{field} Coin Metrics locator asset mismatch")
+    if metric not in ",".join(params.get("metrics", [])).split(","):
+        raise ValueError(f"{field} Coin Metrics locator metric mismatch")
+    if params.get("frequency") != [frequency]:
+        raise ValueError(f"{field} Coin Metrics locator frequency mismatch")
+
+    raw = _verified_bytes(
+        root,
+        proof.get("raw_response_relpath"),
+        proof.get("raw_response_sha256"),
+        field=f"{field}.coinmetrics_raw_response",
+    )
+    try:
+        response = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"{field} Coin Metrics raw response must be JSON") from exc
+    rows = response.get("data") if isinstance(response, dict) else None
+    if not isinstance(rows, list):
+        raise ValueError(f"{field} Coin Metrics raw response data missing")
+    matches = [
+        row for row in rows
+        if isinstance(row, dict)
+        and row.get("asset") == asset
+        and row.get("time") == record_time
+        and metric in row
+    ]
+    if len(matches) != 1:
+        raise ValueError(f"{field} Coin Metrics record identity is not unique")
+    row = matches[0]
+    status_key = f"{metric}-status"
+    status_time_key = f"{metric}-status-time"
+    if row.get(status_key) not in {"reviewed", "revised"}:
+        raise ValueError(f"{field} Coin Metrics raw metric must be reviewed or revised")
+    status_time = _utc(row.get(status_time_key), field=f"{field}.status_time")
     if status_time > decision_at:
         raise ValueError(f"{field} Coin Metrics status_time is after decision_at")
-    observed_at = _utc(proof.get("observed_at"), field=f"{field}.proof_observed_at")
-    if observed_at != _utc(record.get("observed_at"), field=f"{field}.observed_at"):
+    if _utc(record_time, field=f"{field}.record_time") != _utc(
+        record.get("observed_at"), field=f"{field}.observed_at"
+    ):
         raise ValueError(f"{field} Coin Metrics observation time mismatch")
-    if "value" not in proof or proof.get("value") != record.get("value"):
-        raise ValueError(f"{field} Coin Metrics proof value mismatch")
+    if not _same_value(row.get(metric), record.get("value")):
+        raise ValueError(f"{field} Coin Metrics raw value mismatch")
 
 
 def _validate_primary_document_proof(
@@ -236,7 +303,7 @@ def _validate_input_authenticity(
     if source_id in BINANCE_SOURCES:
         _validate_binance_proof(proof, root, decision_at, field=field)
     elif source_id in COINMETRICS_STATUS_SOURCES:
-        _validate_coinmetrics_proof(proof, source_id, artifact, decision_at, field=field)
+        _validate_coinmetrics_proof(proof, root, source_id, artifact, decision_at, field=field)
     elif source_id in PRIMARY_DOCUMENT_SOURCES:
         _validate_primary_document_proof(proof, root, source_id, artifact, decision_at, field=field)
     else:
@@ -293,7 +360,7 @@ def validate_record_authenticity(
     if source_id in BINANCE_SOURCES:
         _validate_binance_proof(proof, artifact_root, decision_at, field=field)
     elif source_id in COINMETRICS_STATUS_SOURCES:
-        _validate_coinmetrics_proof(proof, source_id, record, decision_at, field=field)
+        _validate_coinmetrics_proof(proof, artifact_root, source_id, record, decision_at, field=field)
     elif source_id in PRIMARY_DOCUMENT_SOURCES:
         _validate_primary_document_proof(
             proof, artifact_root, source_id, record, decision_at, field=field
