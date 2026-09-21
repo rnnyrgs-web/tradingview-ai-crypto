@@ -75,3 +75,22 @@ def test_model_review_cannot_run_before_exact_head_green_ci() -> None:
     assert selection < review
     assert 'CONCLUSION\" != \"success\"' in text
     assert "Review models were not invoked" in text
+
+
+def test_transient_reviewer_capacity_is_controlled_wait_not_approval() -> None:
+    text = _text()
+    assert "id: review_models" in text
+    assert "WAIT_RETRYABLE" in text
+    assert "maximum three attempts" in text
+    assert "Bounded reviewer retry limit reached" in text
+    assert "Candidate remains **unapproved** and **unmerged**" in text
+    assert "steps.review_models.outputs.wait != 'true'" in text
+
+
+def test_openai_reviewers_are_serial_while_claude_can_run_in_parallel() -> None:
+    text = _text()
+    claude = text.index("PID_CLAUDE=$!")
+    security = text.index("SECURITY_STATUS=")
+    lead = text.index("LEAD_STATUS=")
+    assert claude < security < lead
+    assert "same rate-limit bucket" in text
