@@ -41,7 +41,8 @@ def _fixture(
     if content_encoding:
         http_headers.append(f"Content-Encoding: {content_encoding}".encode("ascii"))
     http_block = b"\r\n".join(http_headers) + b"\r\n\r\n" + document
-    payload_digest = "sha1:" + _sha1_base32(document)
+    payload_sha1_base32 = _sha1_base32(document)
+    payload_digest = "sha1:" + payload_sha1_base32
     block_digest = "sha1:" + _sha1_base32(http_block)
     warc_date = datetime.strptime(capture_timestamp, "%Y%m%d%H%M%S").replace(tzinfo=timezone.utc)
     warc_date_text = warc_date.isoformat().replace("+00:00", "Z")
@@ -66,7 +67,9 @@ def _fixture(
         "url": locator,
         "timestamp": capture_timestamp,
         "status": "200",
-        "digest": row_digest_override or payload_digest,
+        # Common Crawl CDX JSON uses bare Base32 SHA-1; the WARC header uses
+        # WARC-Payload-Digest: sha1:<Base32>. Keep the real provider formats distinct.
+        "digest": row_digest_override or payload_sha1_base32,
         "filename": filename,
         "offset": "12345",
         "length": str(len(compressed)),
@@ -119,8 +122,14 @@ def test_post_decision_capture_cannot_be_backdated(tmp_path):
 
 
 def test_index_digest_must_match_warc_payload_digest(tmp_path):
-    capture, document, digest = _fixture(tmp_path, row_digest_override="sha1:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+    capture, document, digest = _fixture(tmp_path, row_digest_override="A" * 32)
     with pytest.raises(ValueError, match="index digest"):
+        _validate(tmp_path, capture, document, digest)
+
+
+def test_index_digest_must_use_real_commoncrawl_bare_base32_format(tmp_path):
+    capture, document, digest = _fixture(tmp_path, row_digest_override="sha1:" + "A" * 32)
+    with pytest.raises(ValueError, match="index digest missing or unsupported"):
         _validate(tmp_path, capture, document, digest)
 
 
