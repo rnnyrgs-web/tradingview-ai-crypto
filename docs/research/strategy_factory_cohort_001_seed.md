@@ -11,7 +11,7 @@ No protected OOS or forward evidence was opened. No candidate was promoted. Brok
 
 ## Cohort
 
-Eight frozen seed designs were prepared under one multiple-testing family. Seven use the already certified fixed BTC/ETH/SOL 1H OKX development dataset (`047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f`) with a strict selection cutoff at 2026-08-31T23:00Z; rows from 2026-09-01 onward are explicitly protected from cheap-screen access for these candidates. One carry design remains **data-preflight only** until a synchronized spot/perp/funding dataset is frozen and hashed.
+Eight outcome-blind seed designs were prepared under one multiple-testing family. Seven use the already certified fixed BTC/ETH/SOL 1H OKX development dataset (`047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f`) with a strict selection cutoff at 2026-08-31T23:00Z; rows from 2026-09-01 onward are explicitly protected from cheap-screen access for these candidates. One carry design remains **data-preflight only** until a synchronized spot/perp/funding dataset is frozen and hashed.
 
 1. `DISC-BREADTH-PERSIST-001-v1` — synchronized low-dispersion market-breadth continuation.
 2. `DISC-RESIDUAL-REV-001-v1` — beta-hedged ETH/SOL residual mean reversion versus BTC.
@@ -22,7 +22,13 @@ Eight frozen seed designs were prepared under one multiple-testing family. Seven
 7. `DISC-RANGE-AUCTION-REV-001-v1` — low-efficiency range-edge auction reversion.
 8. `DISC-DELTA-CARRY-001-v1` — long-spot/short-perp positive-funding carry, data-preflight only; directional funding prediction is not reused.
 
-Each seed carries exact signal/execution rules, realistic base costs and stress multipliers, fixed chronology and protected-evidence locks, one planned parameter variant only, family-wide search breadth of eight, a label/prose-invariant scientific-design SHA-256, a full contract SHA-256, and explicit data-readiness state.
+Each seed records exact signal/execution rules, realistic base costs and stress multipliers, fixed chronology and protected-evidence locks, one planned parameter variant only, family-wide search breadth of eight, and explicit data-readiness state.
+
+## Fail-closed identity self-audit
+
+A self-audit caught that the first draft of `strategy_factory_cohort_001_seed.json` contained inline `scientific_design_sha256` and `contract_sha256` strings that had not actually been generated from the declared canonicalization. Those inline values are **invalid and non-authoritative** and must not be used for admission, screening, rejection memory, or promotion.
+
+The independently recomputed identities are recorded in `orchestration/cohorts/strategy_factory_cohort_001_identity_correction.json`. PR #515 must remain blocked/draft until the seed JSON itself is regenerated to contain only those canonical values and the repaired #507 semantic-rejection implementation independently validates the candidates. This fail-closed correction was made before any screen or outcome inspection.
 
 ## Rejected-design audit
 
@@ -30,18 +36,18 @@ The seed set was constructed to avoid cosmetic reopening of currently known reje
 
 It also avoids claiming readiness for the blocked/deprioritized `DISC-RESIDUAL-MOMENTUM-001-v1`, `DISC-SQUEEZE-RETENTION-001-v1`, and `DISC-FRIZZ-PLAYBIT-EMA-001-v1`.
 
-The JSON artifact must still be revalidated against the repaired label-invariant rejected-design memory once #507 changes. If any seed collides semantically under the canonical implementation, reject that seed rather than renaming it.
+The cohort must still be revalidated against the repaired label-invariant rejected-design memory once #507 changes. If any seed collides semantically under the canonical implementation, reject that seed rather than renaming it.
 
 ## Exact next action
 
 After a repaired #507 is independently reviewed, merged, and exact-head green:
 
-1. run the canonical admission validator against all eight seeds;
-2. reject any semantic collision without rescue;
-3. freeze/build the exact selection dataset partition for each admitted design;
-4. run the seven currently data-ready cheap screens in deterministic parallel;
-5. classify every failure/inconclusive result through #510;
-6. keep OOS/forward locked;
-7. promote **at most one** genuine survivor to expensive validation.
+1. regenerate the seed JSON with the recomputed canonical identities and verify them deterministically;
+2. run the canonical semantic admission validator against all eight seeds;
+3. reject any semantic collision without rescue;
+4. freeze/build the exact selection dataset partition for each admitted design;
+5. run the admitted data-ready cheap screens in deterministic parallel;
+6. classify every failure/inconclusive result through #510;
+7. keep OOS/forward locked and promote **at most one** genuine survivor to expensive validation.
 
-The machine-readable source of truth for this preparation is `orchestration/cohorts/strategy_factory_cohort_001_seed.json`.
+Machine-readable preparation lives under `orchestration/cohorts/strategy_factory_cohort_001_*`.
