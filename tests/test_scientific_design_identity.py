@@ -11,6 +11,7 @@ from orchestration.rejected_fingerprints import (
 from orchestration.scientific_design_identity import (
     SCIENTIFIC_LIST_SEMANTICS_VERSION,
     scientific_design_sha256,
+    strategy_behavior_sha256,
 )
 from orchestration.strategy_predeclaration import validate_predeclaration
 
@@ -77,16 +78,18 @@ def test_unordered_market_timeframe_and_fixed_instrument_permutations_share_iden
     permuted["data_contract"]["fixed_instruments"] = ["ETH-USDC", "SOL-USDC", "BTC-USDC"]
 
     assert scientific_design_sha256(original) == scientific_design_sha256(permuted)
+    assert strategy_behavior_sha256(original) == strategy_behavior_sha256(permuted)
 
     rejected = [{
         "fingerprint_id": "OLD-REJECTED-v1",
         "do_not_resubmit_same_fingerprint": True,
         "semantic_identity_status": "BACKFILLED_STRUCTURED_CONTRACT",
         "scientific_design_sha256": scientific_design_sha256(original),
+        "strategy_behavior_sha256": strategy_behavior_sha256(original),
     }]
     permuted["hypothesis_id"] = "COSMETIC-PERMUTATION-RESCUE"
     permuted["fingerprint_id"] = "COSMETIC-PERMUTATION-RESCUE-v1"
-    with pytest.raises(RuntimeError, match="rejected scientific design"):
+    with pytest.raises(RuntimeError, match="rejected strategy behavior"):
         validate_predeclaration(permuted, rejected_entries=rejected)
 
 
@@ -97,10 +100,12 @@ def test_nonhardcoded_symbols_set_permutation_cannot_create_fresh_identity():
     permuted = copy.deepcopy(original)
     permuted["data_contract"]["symbols"] = ["SOLUSDT", "BTCUSDT", "ETHUSDT"]
     assert scientific_design_sha256(original) == scientific_design_sha256(permuted)
+    assert strategy_behavior_sha256(original) == strategy_behavior_sha256(permuted)
 
     membership_change = copy.deepcopy(original)
     membership_change["data_contract"]["symbols"] = ["BTCUSDT", "ETHUSDT"]
     assert scientific_design_sha256(original) != scientific_design_sha256(membership_change)
+    assert strategy_behavior_sha256(original) != strategy_behavior_sha256(membership_change)
 
 
 def test_cohort_delta_carry_set_fields_are_permutation_invariant():
@@ -119,10 +124,12 @@ def test_cohort_delta_carry_set_fields_are_permutation_invariant():
         reversed(original["data_contract"]["required_freeze_before_screen"])
     )
     assert scientific_design_sha256(original) == scientific_design_sha256(permuted)
+    assert strategy_behavior_sha256(original) == strategy_behavior_sha256(permuted)
 
     membership_change = copy.deepcopy(original)
     membership_change["data_contract"]["spot_hedges"] = ["BTC-USDT", "ETH-USDT"]
     assert scientific_design_sha256(original) != scientific_design_sha256(membership_change)
+    assert strategy_behavior_sha256(original) != strategy_behavior_sha256(membership_change)
 
 
 def test_undeclared_behavior_list_path_fails_closed():
@@ -131,6 +138,8 @@ def test_undeclared_behavior_list_path_fails_closed():
 
     with pytest.raises(RuntimeError, match="scientific list semantics are undeclared.*mystery_assets"):
         scientific_design_sha256(candidate)
+    with pytest.raises(RuntimeError, match="scientific list semantics are undeclared.*mystery_assets"):
+        strategy_behavior_sha256(candidate)
 
 
 def test_real_market_or_timeframe_membership_change_changes_identity():
@@ -140,10 +149,12 @@ def test_real_market_or_timeframe_membership_change_changes_identity():
     market_change["target_markets"].append("XRP-USDC")
     market_change["data_contract"]["fixed_instruments"].append("XRP-USDC")
     assert scientific_design_sha256(original) != scientific_design_sha256(market_change)
+    assert strategy_behavior_sha256(original) != strategy_behavior_sha256(market_change)
 
     timeframe_change = copy.deepcopy(original)
     timeframe_change["target_timeframes"].append("15m")
     assert scientific_design_sha256(original) != scientific_design_sha256(timeframe_change)
+    assert strategy_behavior_sha256(original) != strategy_behavior_sha256(timeframe_change)
 
 
 def test_genuinely_ordered_rule_sequence_remains_order_sensitive():
@@ -152,6 +163,7 @@ def test_genuinely_ordered_rule_sequence_remains_order_sensitive():
     reordered_rules["signal_rules"]["ordered_sequence"] = ["second", "first"]
 
     assert scientific_design_sha256(original) != scientific_design_sha256(reordered_rules)
+    assert strategy_behavior_sha256(original) != strategy_behavior_sha256(reordered_rules)
 
 
 def test_actual_rejected_btc_leadlag_follower_permutation_stays_rejected():
@@ -161,22 +173,26 @@ def test_actual_rejected_btc_leadlag_follower_permutation_stays_rejected():
         entry for entry in entries if entry["fingerprint_id"] == "DISC-BTC-LEADLAG-001-v1"
     )
     original_projection = copy.deepcopy(rejected["projection"])
-    original_digest = scientific_design_sha256(original_projection)
-    assert original_digest == rejected["scientific_design_sha256"]
+    original_scientific_digest = scientific_design_sha256(original_projection)
+    original_behavior_digest = strategy_behavior_sha256(original_projection)
+    assert original_scientific_digest == rejected["scientific_design_sha256"]
+    assert original_behavior_digest == rejected["strategy_behavior_sha256"]
 
     permuted_projection = copy.deepcopy(original_projection)
     permuted_projection["data_contract"]["fixed_follower_instruments"] = [
         "SOL-USDT-SWAP",
         "ETH-USDT-SWAP",
     ]
-    permuted_digest = scientific_design_sha256(permuted_projection)
-    assert permuted_digest == original_digest
-    matched = semantic_rejection_record(permuted_digest, entries)
+    permuted_scientific_digest = scientific_design_sha256(permuted_projection)
+    permuted_behavior_digest = strategy_behavior_sha256(permuted_projection)
+    assert permuted_scientific_digest == original_scientific_digest
+    assert permuted_behavior_digest == original_behavior_digest
+    matched = semantic_rejection_record(permuted_behavior_digest, entries)
     assert matched is not None
     assert matched["fingerprint_id"] == "DISC-BTC-LEADLAG-001-v1"
 
     membership_change = copy.deepcopy(original_projection)
     membership_change["data_contract"]["fixed_follower_instruments"] = ["ETH-USDT-SWAP"]
-    changed_digest = scientific_design_sha256(membership_change)
-    assert changed_digest != original_digest
-    assert semantic_rejection_record(changed_digest, entries) is None
+    changed_behavior_digest = strategy_behavior_sha256(membership_change)
+    assert changed_behavior_digest != original_behavior_digest
+    assert semantic_rejection_record(changed_behavior_digest, entries) is None
