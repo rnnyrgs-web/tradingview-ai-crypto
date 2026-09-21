@@ -26,10 +26,10 @@ def test_evidence_argument_must_bind_exact_frozen_feature_record():
     }
     features = {family: dict(unknown) for family in contract["feature_families"]}
     for family, value in {
-        "stable_identity": "asset:test",
-        "venue_membership": True,
-        "liquidity_proxy": 20_000_000,
-        "market_regime": "BTC_RISK_ON",
+        "stable_identity": {"canonical_asset_id": "asset:test"},
+        "venue_membership": {"active_spot": True},
+        "liquidity_proxy": {"trailing_30d_quote_volume_usd": 20_000_000},
+        "market_regime": {"regime": "BTC_RISK_ON"},
     }.items():
         features[family] = dict(base, value=value)
     features["strict_tradability"] = dict(base, value={
