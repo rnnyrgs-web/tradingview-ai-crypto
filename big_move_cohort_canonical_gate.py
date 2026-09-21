@@ -4,9 +4,10 @@
 structural/scientific evaluator, including in tests. A generic caller-provided
 contract must not, however, become authority to open historical 2x labels.
 
-This wrapper loads and Git-blob-pins the exact Cohort 001 contract itself. It also
-recomputes the accepted return/volatility/regime values from retained checksum-bound
-Binance spot 1d archives. Remaining source/value and sector-classifier gaps stay
+This wrapper loads and Git-blob-pins the exact Cohort 001 contract itself. It
+recomputes accepted return/volatility/regime values from retained checksum-bound
+Binance spot 1d archives and independently binds each direct Binance decision price
+to the exact retained archive close. Remaining primary-document/sector gaps stay
 explicit hard blockers, so this module still cannot open outcome labels.
 
 No outcome data are read here. No forecast/trading authority is granted.
@@ -19,6 +20,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from big_move_binance_price_binding import validate_binance_decision_price
 from big_move_cohort_preflight import digest, evaluate_coverage
 from big_move_derived_output_binding import (
     COMPLETED_DERIVED_FIELDS,
@@ -30,18 +32,18 @@ CANONICAL_CONTRACT_ARTIFACT_ID = "2X-COHORT-001-PREFLIGHT-v1"
 CANONICAL_CONTRACT_GIT_BLOB_SHA = "07eb6d26d760444b711cb277be424063ab39802a"
 AUTHORITATIVE_SCHEMA = "two_x_cohort_authoritative_gate.v1"
 
-# Market-derived return/volatility/regime are now recomputed from retained
+# Market-derived return/volatility/regime are recomputed from retained
 # checksum-bound Binance archives in `big_move_derived_output_binding`. Sector remains
 # blocked until the mechanical primary-document classifier itself is value-bound.
 DERIVED_OUTPUT_BINDING_BLOCKERS = ("sector",)
 DERIVED_OUTPUT_BOUND_FIELDS = COMPLETED_DERIVED_FIELDS
 
-# Source proofs currently authenticate retained support artifacts but do not yet
-# deterministically bind these normalized/claimed values back to the retained source
-# bytes. Until a parser/attestation closes that gap, canonical label opening remains
-# blocked even if structural coverage thresholds are met.
+# Direct Binance decision price is now deterministically parsed from the retained,
+# checksum-authenticated 1d archive. The only remaining systemic source/value blocker
+# is primary-document claim/classification binding. Any bad Binance price becomes a
+# per-snapshot binding failure rather than a hidden trusted caller value.
+SOURCE_VALUE_BOUND_FIELDS = ("price",)
 SOURCE_VALUE_BINDING_BLOCKERS = (
-    "BINANCE_NORMALIZED_VALUE_NOT_PARSED_FROM_RETAINED_ARCHIVE",
     "PRIMARY_DOCUMENT_CLAIM_VALUE_NOT_PARSED_OR_ATTESTED",
 )
 
@@ -90,27 +92,53 @@ def evaluate_authoritative_coverage(
     if structural.get("status") != "READY_FOR_LABEL_OPEN":
         blockers.append("PIT_COVERAGE_NOT_READY")
 
-    binding_failures: list[dict[str, Any]] = []
     excluded_indices = {
         item.get("index")
         for item in structural.get("exclusions", [])
         if isinstance(item, dict) and isinstance(item.get("index"), int)
     }
+
+    derived_binding_failures: list[dict[str, Any]] = []
+    source_value_binding_failures: list[dict[str, Any]] = []
     if artifact_root is not None:
         for index, snapshot in enumerate(snapshots):
             if index in excluded_indices:
                 continue
+            stable_asset_id = snapshot.get("stable_asset_id") if isinstance(snapshot, dict) else None
+            decision_at = snapshot.get("decision_at") if isinstance(snapshot, dict) else None
             try:
                 validate_snapshot_derived_output_bindings(snapshot, artifact_root)
             except (TypeError, ValueError, OSError) as exc:
-                binding_failures.append({
+                derived_binding_failures.append({
                     "index": index,
-                    "stable_asset_id": snapshot.get("stable_asset_id") if isinstance(snapshot, dict) else None,
-                    "decision_at": snapshot.get("decision_at") if isinstance(snapshot, dict) else None,
+                    "stable_asset_id": stable_asset_id,
+                    "decision_at": decision_at,
                     "reason": str(exc),
                 })
-    if binding_failures:
+            try:
+                features = snapshot.get("features") if isinstance(snapshot, dict) else None
+                if not isinstance(features, dict):
+                    raise ValueError("snapshot features missing")
+                validate_binance_decision_price(
+                    features.get("price"),
+                    venue_symbol=snapshot.get("venue_symbol"),
+                    decision_at=decision_at,
+                    artifact_root=artifact_root,
+                    repo_root=repo_root,
+                )
+            except (TypeError, ValueError, OSError) as exc:
+                source_value_binding_failures.append({
+                    "index": index,
+                    "stable_asset_id": stable_asset_id,
+                    "decision_at": decision_at,
+                    "field": "price",
+                    "reason": str(exc),
+                })
+
+    if derived_binding_failures:
         blockers.append("DERIVED_OUTPUT_ARCHIVE_BINDING_FAILED")
+    if source_value_binding_failures:
+        blockers.append("DIRECT_SOURCE_VALUE_BINDING_FAILED:price")
 
     blockers.extend(
         f"DERIVED_OUTPUT_NOT_DETERMINISTICALLY_BOUND:{field}"
@@ -128,9 +156,12 @@ def evaluate_authoritative_coverage(
         "status": "COVERAGE_BLOCKED",
         "blockers": blockers,
         "derived_output_bound_fields": list(DERIVED_OUTPUT_BOUND_FIELDS),
-        "derived_output_binding_status": "FAILED" if binding_failures else "PASSED_FOR_STRUCTURALLY_ACCEPTED_SNAPSHOTS",
-        "derived_output_binding_failures": binding_failures,
+        "derived_output_binding_status": "FAILED" if derived_binding_failures else "PASSED_FOR_STRUCTURALLY_ACCEPTED_SNAPSHOTS",
+        "derived_output_binding_failures": derived_binding_failures,
         "derived_output_binding_blockers": list(DERIVED_OUTPUT_BINDING_BLOCKERS),
+        "source_value_bound_fields": list(SOURCE_VALUE_BOUND_FIELDS),
+        "source_value_binding_status": "FAILED" if source_value_binding_failures else "PASSED_FOR_STRUCTURALLY_ACCEPTED_SNAPSHOTS",
+        "source_value_binding_failures": source_value_binding_failures,
         "source_value_binding_blockers": list(SOURCE_VALUE_BINDING_BLOCKERS),
         "outcome_access": "SEALED",
         "labels_opened": False,
