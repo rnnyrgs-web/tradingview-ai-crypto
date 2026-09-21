@@ -103,6 +103,28 @@ def test_nonhardcoded_symbols_set_permutation_cannot_create_fresh_identity():
     assert scientific_design_sha256(original) != scientific_design_sha256(membership_change)
 
 
+def test_cohort_delta_carry_set_fields_are_permutation_invariant():
+    original = _candidate()
+    original["data_contract"]["spot_hedges"] = ["BTC-USDT", "ETH-USDT", "SOL-USDT"]
+    original["data_contract"]["required_freeze_before_screen"] = [
+        "exact-shared-timestamp spot/perp price panel",
+        "realized funding rows with source timestamps",
+        "normalized dataset SHA256",
+        "coverage bounds and missingness report",
+    ]
+
+    permuted = copy.deepcopy(original)
+    permuted["data_contract"]["spot_hedges"] = ["SOL-USDT", "BTC-USDT", "ETH-USDT"]
+    permuted["data_contract"]["required_freeze_before_screen"] = list(
+        reversed(original["data_contract"]["required_freeze_before_screen"])
+    )
+    assert scientific_design_sha256(original) == scientific_design_sha256(permuted)
+
+    membership_change = copy.deepcopy(original)
+    membership_change["data_contract"]["spot_hedges"] = ["BTC-USDT", "ETH-USDT"]
+    assert scientific_design_sha256(original) != scientific_design_sha256(membership_change)
+
+
 def test_undeclared_behavior_list_path_fails_closed():
     candidate = _candidate()
     candidate["data_contract"]["mystery_assets"] = ["BTCUSDT", "ETHUSDT"]
