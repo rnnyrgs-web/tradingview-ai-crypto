@@ -13,15 +13,15 @@ BEHAVIOR_VALUE_CONTRACT_VERSION = 1
 _NUMBER = "NUMBER"
 _BOOL = "BOOL"
 _NULL = "NULL"
-_TOKEN = "TOKEN"
+_CLOSED_LITERAL = "TOKEN"
 _INSTRUMENT = "INSTRUMENT"
 _SHA256 = "SHA256"
 _UTC_TIMESTAMP = "UTC_TIMESTAMP"
 _NUMBER_LIST = "NUMBER_LIST"
 _INSTRUMENT_SET = "INSTRUMENT_SET"
 _SYMBOL_SET = "SYMBOL_SET"
-_TOKEN_SET = "TOKEN_SET"
-_ORDERED_TOKEN_LIST = "ORDERED_TOKEN_LIST"
+_CLOSED_LITERAL_SET = "TOKEN_SET"
+_ORDERED_LITERAL_LIST = "ORDERED_TOKEN_LIST"
 
 _INSTRUMENT_RE = re.compile(r"^[A-Z0-9]+(?:-[A-Z0-9]+)+$")
 _SYMBOL_RE = re.compile(r"^[A-Z0-9]+$")
@@ -50,7 +50,7 @@ def null() -> ValueRule:
 def token(*values: str) -> ValueRule:
     if not values:
         raise RuntimeError("closed token rule requires at least one value")
-    return ValueRule(_TOKEN, frozenset(values))
+    return ValueRule(_CLOSED_LITERAL, frozenset(values))
 
 
 def instrument() -> ValueRule:
@@ -80,13 +80,13 @@ def symbol_set() -> ValueRule:
 def token_set(*values: str) -> ValueRule:
     if not values:
         raise RuntimeError("closed token-set rule requires at least one value")
-    return ValueRule(_TOKEN_SET, frozenset(values))
+    return ValueRule(_CLOSED_LITERAL_SET, frozenset(values))
 
 
 def ordered_tokens(*values: str) -> ValueRule:
     if not values:
         raise RuntimeError("ordered token-list rule requires at least one value")
-    return ValueRule(_ORDERED_TOKEN_LIST, frozenset(values))
+    return ValueRule(_ORDERED_LITERAL_LIST, frozenset(values))
 
 
 def _section(**rules: ValueRule) -> dict[str, ValueRule]:
@@ -551,7 +551,7 @@ def _validate_rule(value: Any, rule: ValueRule, path: str) -> None:
         if value is not None:
             raise RuntimeError(f"{path} must be null")
         return
-    if rule.kind == _TOKEN:
+    if rule.kind == _CLOSED_LITERAL:
         if not isinstance(value, str) or value not in rule.tokens:
             raise RuntimeError(f"{path} contains an unrecognized closed behavior token")
         return
@@ -572,7 +572,7 @@ def _validate_rule(value: Any, rule: ValueRule, path: str) -> None:
         for index, item in enumerate(value):
             _validate_number(item, f"{path}[{index}]")
         return
-    if rule.kind in {_INSTRUMENT_SET, _SYMBOL_SET, _TOKEN_SET, _ORDERED_TOKEN_LIST}:
+    if rule.kind in {_INSTRUMENT_SET, _SYMBOL_SET, _CLOSED_LITERAL_SET, _ORDERED_LITERAL_LIST}:
         if not isinstance(value, list) or not value:
             raise RuntimeError(f"{path} must be a non-empty list")
         if not all(isinstance(item, str) for item in value):
@@ -584,9 +584,9 @@ def _validate_rule(value: Any, rule: ValueRule, path: str) -> None:
                 raise RuntimeError(f"{path} contains a non-canonical instrument identifier")
             if rule.kind == _SYMBOL_SET and not _SYMBOL_RE.fullmatch(item):
                 raise RuntimeError(f"{path} contains a non-canonical symbol identifier")
-            if rule.kind in {_TOKEN_SET, _ORDERED_TOKEN_LIST} and item not in rule.tokens:
+            if rule.kind in {_CLOSED_LITERAL_SET, _ORDERED_LITERAL_LIST} and item not in rule.tokens:
                 raise RuntimeError(f"{path} contains an unrecognized closed behavior token")
-        if rule.kind == _TOKEN_SET and set(value) != set(rule.tokens):
+        if rule.kind == _CLOSED_LITERAL_SET and set(value) != set(rule.tokens):
             raise RuntimeError(f"{path} must contain the exact reviewed closed-token set")
         return
     raise RuntimeError(f"unsupported behavior value rule kind {rule.kind!r} for {path}")
