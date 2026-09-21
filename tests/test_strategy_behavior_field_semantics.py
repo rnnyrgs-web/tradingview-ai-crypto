@@ -9,6 +9,10 @@ from orchestration.scientific_design_identity import (
     BEHAVIOR_FIELD_SEMANTICS_VERSION,
     strategy_behavior_sha256,
 )
+from orchestration.strategy_behavior_schema import (
+    BEHAVIOR_SCHEMA_REGISTRY_VERSION,
+    resolve_behavior_schema_id,
+)
 from orchestration.strategy_predeclaration import validate_predeclaration
 
 
@@ -71,7 +75,9 @@ def _rejection_for(candidate: dict) -> dict:
 
 
 def test_behavior_field_semantics_contract_is_versioned() -> None:
-    assert BEHAVIOR_FIELD_SEMANTICS_VERSION == 1
+    assert BEHAVIOR_FIELD_SEMANTICS_VERSION == 2
+    assert BEHAVIOR_SCHEMA_REGISTRY_VERSION == 1
+    assert resolve_behavior_schema_id(_candidate()) == "TEST_FIELD_SEMANTICS_V1"
 
 
 @pytest.mark.parametrize(
@@ -127,3 +133,27 @@ def test_real_rejected_projection_cannot_accept_inert_nested_note() -> None:
     projection["signal_rules"]["display_note"] = "same executable lead-lag rules"
     with pytest.raises(RuntimeError, match="undeclared behavior field"):
         strategy_behavior_sha256(projection)
+
+
+def test_known_cross_mechanism_field_cannot_rescue_real_rejected_design() -> None:
+    """A recognized field from another executor must not mint a fresh identity."""
+    entries = load_rejected_fingerprints()
+    rejected = next(
+        entry
+        for entry in entries
+        if entry.get("fingerprint_id") == "DISC-BTC-LEADLAG-001-v1"
+    )
+    projection = copy.deepcopy(rejected["projection"])
+    original_digest = strategy_behavior_sha256(projection)
+    assert resolve_behavior_schema_id(projection) == "DISC_BTC_LEADLAG_V1"
+
+    # compression_quantile is legitimate for the volatility-breakout executor,
+    # but inert for the lead/lag executor. The old global union admitted it.
+    projection["signal_rules"]["compression_quantile"] = 0.2
+    with pytest.raises(RuntimeError, match="unsupported behavior schema shape"):
+        strategy_behavior_sha256(projection)
+
+    genuine_change = copy.deepcopy(rejected["projection"])
+    genuine_change["signal_rules"]["underreaction_gap_min"] = 0.006
+    assert resolve_behavior_schema_id(genuine_change) == "DISC_BTC_LEADLAG_V1"
+    assert strategy_behavior_sha256(genuine_change) != original_digest
