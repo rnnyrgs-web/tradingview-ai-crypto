@@ -114,6 +114,21 @@ def test_extract_json_accepts_plain_and_fenced_json():
     assert extract_json('```json\n{"approve": false}\n```') == {"approve": False}
 
 
+def test_extract_json_accepts_single_object_with_harmless_surrounding_prose():
+    text = 'Review result:\n{"approve": true, "reason": "bounded", "risk": "low"}\nDone.'
+    assert extract_json(text)["approve"] is True
+
+
+def test_extract_json_rejects_multiple_verdict_objects():
+    text = '{"approve": true} trailing {"approve": false}'
+    try:
+        extract_json(text)
+    except RuntimeError as exc:
+        assert "multiple JSON objects" in str(exc)
+    else:
+        raise AssertionError("ambiguous multiple reviewer verdicts were accepted")
+
+
 def test_worker_completion_marker_is_required():
     payload = {"output_text": "done"}
     try:
@@ -183,3 +198,7 @@ def test_legacy_specialist_workflow_is_manual_and_lead_remains_review_only():
     assert "ANTHROPIC_API_KEY" in lead_workflow
     assert "Fail closed if Claude adversarial review could not run" in lead_workflow
     assert "MANUAL LEAD INTEGRATION REQUIRED" in lead_workflow
+    assert "Record controlled WAIT for transient reviewer throttling" in lead_workflow
+    assert "429 Too Many Requests" in lead_workflow
+    assert "WAIT_RETRYABLE" in lead_workflow
+    assert "Candidate was **not approved** and was **not merged**" in lead_workflow
