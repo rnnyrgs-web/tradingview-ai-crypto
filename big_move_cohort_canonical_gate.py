@@ -6,9 +6,11 @@ contract must not, however, become authority to open historical 2x labels.
 
 This wrapper loads and Git-blob-pins the exact Cohort 001 contract itself. It
 recomputes accepted return/volatility/regime values from retained checksum-bound
-Binance spot 1d archives and independently binds each direct Binance decision price
-to the exact retained archive close. Remaining primary-document/sector gaps stay
-explicit hard blockers, so this module still cannot open outcome labels.
+Binance spot 1d archives, independently binds each direct Binance decision price to
+the exact retained archive close, and mechanically binds any primary-document claim
+used by an accepted snapshot to literal text in the exact retained document bytes.
+The remaining sector-classifier transform stays an explicit hard blocker, so this
+module still cannot open outcome labels.
 
 No outcome data are read here. No forecast/trading authority is granted.
 """
@@ -26,6 +28,11 @@ from big_move_derived_output_binding import (
     COMPLETED_DERIVED_FIELDS,
     validate_snapshot_derived_output_bindings,
 )
+from big_move_primary_document_binding import (
+    ELIGIBLE_SOURCE_IDS as PRIMARY_SOURCE_IDS,
+    load_retained_record,
+    validate_primary_document_literal_claim,
+)
 
 CANONICAL_CONTRACT_PATH = "money_intelligence/2x_cohort_001_preflight_contract.json"
 CANONICAL_CONTRACT_ARTIFACT_ID = "2X-COHORT-001-PREFLIGHT-v1"
@@ -34,18 +41,17 @@ AUTHORITATIVE_SCHEMA = "two_x_cohort_authoritative_gate.v1"
 
 # Market-derived return/volatility/regime are recomputed from retained
 # checksum-bound Binance archives in `big_move_derived_output_binding`. Sector remains
-# blocked until the mechanical primary-document classifier itself is value-bound.
+# blocked until the mechanical primary-document functional classifier is itself
+# frozen/value-bound; literal source claims alone do not justify a semantic category.
 DERIVED_OUTPUT_BINDING_BLOCKERS = ("sector",)
 DERIVED_OUTPUT_BOUND_FIELDS = COMPLETED_DERIVED_FIELDS
 
-# Direct Binance decision price is now deterministically parsed from the retained,
-# checksum-authenticated 1d archive. The only remaining systemic source/value blocker
-# is primary-document claim/classification binding. Any bad Binance price becomes a
-# per-snapshot binding failure rather than a hidden trusted caller value.
-SOURCE_VALUE_BOUND_FIELDS = ("price",)
-SOURCE_VALUE_BINDING_BLOCKERS = (
-    "PRIMARY_DOCUMENT_CLAIM_VALUE_NOT_PARSED_OR_ATTESTED",
-)
+# Direct Binance decision price and all primary-document literal claims can now be
+# reproduced from retained source bytes. Per-snapshot failures remain fail-closed.
+# There is no longer a known systemic source/value parser gap; semantic sector mapping
+# is tracked separately above.
+SOURCE_VALUE_BOUND_FIELDS = ("price", "primary_document_literal_claims")
+SOURCE_VALUE_BINDING_BLOCKERS: tuple[str, ...] = ()
 
 
 def _git_blob_sha(raw: bytes) -> str:
@@ -76,6 +82,85 @@ def load_canonical_contract(repo_root: str | Path | None = None) -> dict[str, An
     }:
         raise ValueError("canonical Cohort 001 coverage thresholds drifted")
     return contract
+
+
+def _validate_primary_record_if_used(
+    record: Any,
+    *,
+    decision_at: str,
+    artifact_root: str | Path,
+    repo_root: str | Path | None,
+    field: str,
+) -> None:
+    if not isinstance(record, dict):
+        return
+    if record.get("source_id") not in PRIMARY_SOURCE_IDS:
+        return
+    try:
+        validate_primary_document_literal_claim(
+            record,
+            decision_at=decision_at,
+            artifact_root=artifact_root,
+            repo_root=repo_root,
+        )
+    except (TypeError, ValueError, OSError) as exc:
+        raise ValueError(f"{field}: {exc}") from exc
+
+
+def _validate_snapshot_primary_claims(
+    snapshot: dict[str, Any],
+    *,
+    artifact_root: str | Path,
+    repo_root: str | Path | None,
+) -> None:
+    decision_at = snapshot.get("decision_at")
+    if not isinstance(decision_at, str):
+        raise ValueError("snapshot decision_at missing")
+
+    identity = snapshot.get("identity")
+    if isinstance(identity, dict):
+        _validate_primary_record_if_used(
+            identity.get("evidence"),
+            decision_at=decision_at,
+            artifact_root=artifact_root,
+            repo_root=repo_root,
+            field="identity.evidence",
+        )
+
+    features = snapshot.get("features")
+    if not isinstance(features, dict):
+        raise ValueError("snapshot features missing")
+    for feature_name, record in features.items():
+        _validate_primary_record_if_used(
+            record,
+            decision_at=decision_at,
+            artifact_root=artifact_root,
+            repo_root=repo_root,
+            field=f"features.{feature_name}",
+        )
+        if not isinstance(record, dict):
+            continue
+        derivation = record.get("derivation")
+        if not isinstance(derivation, dict):
+            continue
+        inputs = derivation.get("inputs")
+        if not isinstance(inputs, list):
+            continue
+        for input_index, ref in enumerate(inputs):
+            if not isinstance(ref, dict):
+                continue
+            retained = load_retained_record(
+                ref,
+                artifact_root=artifact_root,
+                field=f"features.{feature_name}.derivation.inputs[{input_index}]",
+            )
+            _validate_primary_record_if_used(
+                retained,
+                decision_at=decision_at,
+                artifact_root=artifact_root,
+                repo_root=repo_root,
+                field=f"features.{feature_name}.derivation.inputs[{input_index}]",
+            )
 
 
 def evaluate_authoritative_coverage(
@@ -126,19 +211,23 @@ def evaluate_authoritative_coverage(
                     artifact_root=artifact_root,
                     repo_root=repo_root,
                 )
+                _validate_snapshot_primary_claims(
+                    snapshot,
+                    artifact_root=artifact_root,
+                    repo_root=repo_root,
+                )
             except (TypeError, ValueError, OSError) as exc:
                 source_value_binding_failures.append({
                     "index": index,
                     "stable_asset_id": stable_asset_id,
                     "decision_at": decision_at,
-                    "field": "price",
                     "reason": str(exc),
                 })
 
     if derived_binding_failures:
         blockers.append("DERIVED_OUTPUT_ARCHIVE_BINDING_FAILED")
     if source_value_binding_failures:
-        blockers.append("DIRECT_SOURCE_VALUE_BINDING_FAILED:price")
+        blockers.append("DIRECT_SOURCE_VALUE_BINDING_FAILED")
 
     blockers.extend(
         f"DERIVED_OUTPUT_NOT_DETERMINISTICALLY_BOUND:{field}"
