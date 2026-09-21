@@ -7,8 +7,13 @@ from pathlib import Path
 
 import pytest
 
+import big_move_commoncrawl_trusted_origin as trusted_origin
 from big_move_primary_historical_availability import (
     validate_primary_document_historical_availability,
+)
+from trusted_remote_acquisition import (
+    freeze_commoncrawl_index_request,
+    freeze_commoncrawl_warc_request,
 )
 
 
@@ -53,20 +58,27 @@ def _record(root: Path, *, capture_timestamp="20200102030405", document=b"Bitcoi
         "url": locator,
         "timestamp": capture_timestamp,
         "status": "200",
-        # Common Crawl CDX JSON carries bare Base32 SHA-1 while the WARC
-        # payload header carries the same digest as sha1:<Base32>.
         "digest": payload_sha1_base32,
         "filename": filename,
         "offset": "42",
         "length": str(len(compressed)),
     }
+    index_request = freeze_commoncrawl_index_request(collection=collection, target_url=locator)
+    warc_request = freeze_commoncrawl_warc_request(
+        collection=collection,
+        filename=filename,
+        offset=42,
+        length=len(compressed),
+    )
     capture = {
         "schema": "commoncrawl_warc_capture_proof.v1",
         "index_collection": collection,
-        "index_query_locator": f"https://index.commoncrawl.org/{collection}-index?url=example.org%2Foriginal-document&output=json",
+        "index_query_locator": index_request.url,
         "index_response": _write(root, "cc/index.jsonl", json.dumps(row, sort_keys=True).encode() + b"\n"),
-        "warc_range_locator": f"https://data.commoncrawl.org/{filename}",
+        "index_acquisition_bundle": {"artifact_relpath": "attested/index/trusted-acquisition.tar"},
+        "warc_range_locator": warc_request.url,
         "warc_range": _write(root, "cc/range.warc.gz", compressed),
+        "warc_acquisition_bundle": {"artifact_relpath": "attested/warc/trusted-acquisition.tar"},
     }
     capture_ref = _json(root, "cc/capture.json", capture)
     document_ref = _write(root, "primary/document.txt", document)
@@ -94,8 +106,42 @@ def _record(root: Path, *, capture_timestamp="20200102030405", document=b"Bitcoi
     return record, proof_ref
 
 
-def test_primary_document_requires_exact_predecision_archive_binding(tmp_path):
+def _install_fake_attested_provider(monkeypatch, root: Path):
+    def fake_verify(bundle_path, *, expected_source_kind):
+        bundle_name = str(bundle_path)
+        row = json.loads((root / "cc/index.jsonl").read_text().strip())
+        collection = row["filename"].split("/")[1]
+        if expected_source_kind == "COMMONCRAWL_INDEX":
+            request = freeze_commoncrawl_index_request(collection=collection, target_url=row["url"])
+            raw = (root / "cc/index.jsonl").read_bytes()
+            receipt_sha = "a" * 64
+        elif expected_source_kind == "COMMONCRAWL_WARC_RANGE":
+            request = freeze_commoncrawl_warc_request(
+                collection=collection,
+                filename=row["filename"],
+                offset=int(row["offset"]),
+                length=int(row["length"]),
+            )
+            raw = (root / "cc/range.warc.gz").read_bytes()
+            receipt_sha = "b" * 64
+        else:
+            raise AssertionError(expected_source_kind)
+        assert bundle_name.endswith("trusted-acquisition.tar")
+        return {
+            "request": {
+                "method": "GET",
+                "url": request.url,
+                "range_header": request.range_header,
+            },
+            "receipt_sha256": receipt_sha,
+        }, raw
+
+    monkeypatch.setattr(trusted_origin, "verify_attested_acquisition_bundle", fake_verify)
+
+
+def test_primary_document_requires_exact_predecision_archive_binding(tmp_path, monkeypatch):
     record, _ = _record(tmp_path)
+    _install_fake_attested_provider(monkeypatch, tmp_path)
     result = validate_primary_document_historical_availability(
         record,
         decision_at="2024-01-01T00:00:00Z",
@@ -103,6 +149,9 @@ def test_primary_document_requires_exact_predecision_archive_binding(tmp_path):
     )
     assert result["status"] == "BOUND"
     assert result["capture_at"] == "2020-01-02T03:04:05Z"
+    assert result["provider_origin"] == "ATTESTED_TRUSTED_REMOTE_ACQUISITION"
+    assert result["index_receipt_sha256"] == "a" * 64
+    assert result["warc_receipt_sha256"] == "b" * 64
     assert result["authority"] == "HISTORICAL_AVAILABILITY_EVIDENCE_ONLY_NO_OUTCOME_OR_PREDICTION_AUTHORITY"
 
 
@@ -125,8 +174,37 @@ def test_caller_authored_old_publication_time_without_archive_capture_fails(tmp_
         )
 
 
-def test_postdecision_archive_capture_fails_even_with_old_declared_publication(tmp_path):
+def test_missing_trusted_acquisition_bundle_fails_closed(tmp_path):
+    record, proof_ref = _record(tmp_path)
+    proof = json.loads((tmp_path / proof_ref["artifact_relpath"]).read_text())
+    capture_ref = proof["historical_capture"]
+    capture_path = tmp_path / capture_ref["artifact_relpath"]
+    capture = json.loads(capture_path.read_text())
+    capture.pop("index_acquisition_bundle")
+    raw_capture = json.dumps(capture, sort_keys=True, separators=(",", ":")).encode()
+    capture_path.write_bytes(raw_capture)
+    proof["historical_capture"] = {
+        "artifact_relpath": capture_ref["artifact_relpath"],
+        "sha256": hashlib.sha256(raw_capture).hexdigest(),
+    }
+    raw_proof = json.dumps(proof, sort_keys=True, separators=(",", ":")).encode()
+    proof_path = tmp_path / proof_ref["artifact_relpath"]
+    proof_path.write_bytes(raw_proof)
+    record["source_proof"] = {
+        "artifact_relpath": proof_ref["artifact_relpath"],
+        "sha256": hashlib.sha256(raw_proof).hexdigest(),
+    }
+    with pytest.raises(ValueError, match="trusted acquisition bundle reference missing"):
+        validate_primary_document_historical_availability(
+            record,
+            decision_at="2024-01-01T00:00:00Z",
+            artifact_root=tmp_path,
+        )
+
+
+def test_postdecision_archive_capture_fails_even_with_old_declared_publication(tmp_path, monkeypatch):
     record, _ = _record(tmp_path, capture_timestamp="20250102030405")
+    _install_fake_attested_provider(monkeypatch, tmp_path)
     with pytest.raises(ValueError, match="after decision_at"):
         validate_primary_document_historical_availability(
             record,
