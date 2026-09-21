@@ -7,6 +7,23 @@ create table if not exists public.big_move_forward_formations (
   check (formation_payload ->> 'forecast_fingerprint' = forecast_fingerprint),
   check (formation_payload ->> 'schema' = 'forward_move_forecast.v1'),
   check (formation_payload ->> 'prospective_status' = 'UNTRUSTED_UNTIL_SERVER_RECEIPT'),
+  check (formation_payload ? 'formed_at'),
+  check (formation_payload ? 'evidence_cutoff'),
+  check (formation_payload ? 'reference_price_observed_at'),
+  check (
+    (formation_payload ->> 'formed_at')::timestamptz <= created_at
+    and (formation_payload ->> 'formed_at')::timestamptz >= created_at - interval '5 minutes'
+  ),
+  check (
+    (formation_payload ->> 'reference_price_observed_at')::timestamptz <= created_at
+    and (formation_payload ->> 'reference_price_observed_at')::timestamptz >= created_at - interval '5 minutes'
+  ),
+  check (
+    (formation_payload ->> 'evidence_cutoff')::timestamptz
+      <= (formation_payload ->> 'formed_at')::timestamptz
+    and (formation_payload ->> 'reference_price_observed_at')::timestamptz
+      <= (formation_payload ->> 'evidence_cutoff')::timestamptz
+  ),
   check (octet_length(formation_payload::text) <= 200000)
 );
 
