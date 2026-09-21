@@ -77,7 +77,12 @@ def _verify_returned_reference(
     stored = row.get("reference_observation")
     if not isinstance(stored, dict):
         raise ValueError("formation did not return the bound reference observation")
-    parsed = reference_receipt_from_store_row(stored)
+    # The formation RPC returns the reference row payload plus its authoritative
+    # created_at separately. Reattach it before using the same strict parser used for
+    # the direct reference-observation RPC response.
+    stored_with_created_at = dict(stored)
+    stored_with_created_at["created_at"] = row.get("reference_observation_created_at")
+    parsed = reference_receipt_from_store_row(stored_with_created_at)
     if parsed != expected:
         raise ValueError("formation returned a different durable reference observation")
 
