@@ -1,0 +1,72 @@
+{
+  "schema": "two_x_tradability_data_feasibility.v1",
+  "artifact_id": "2X-TRADABILITY-DATA-FEASIBILITY-001-v1",
+  "as_of": "2026-09-21T07:30:55Z",
+  "issues": [505, 514, 519, 520],
+  "status": "PARTIAL_FREE_DATA_PATH_STRICT_SPOT_DEPTH_UNPROVEN",
+  "frozen_hypothesis_artifact": "money_intelligence/2x_tradability_precommitment_v1.json",
+  "official_source_review": {
+    "provider": "Binance Public Data",
+    "repository": "binance/binance-public-data",
+    "pinned_commit": "5c7f3197591c0d54d85dc43066226bc4c671d47a",
+    "pinned_readme": "https://github.com/binance/binance-public-data/blob/5c7f3197591c0d54d85dc43066226bc4c671d47a/README.md",
+    "facts": [
+      "The pinned official README documents daily/monthly public archives and says daily data become available the next day.",
+      "For SPOT, the pinned official README documents aggTrades, klines and trades. The documented trade rows include price, quantity, quote quantity, time and buyer-maker direction; klines include quote volume and taker-buy volume.",
+      "The pinned official README does not document a SPOT historical bid/ask order-book, bookTicker or depth archive family.",
+      "Each documented archive has a SHA-256 CHECKSUM sidecar and Binance warns archived files may later be corrected, so source version/checksum must be pinned."
+    ],
+    "inference": "Do not claim strict historical spot spread/depth tradability from Binance Data Vision unless a separately verified source family is found. Spot trades/aggTrades can support PIT participation/aggressive-flow proxies, but they cannot be silently substituted for historical spread or executable L2 depth.",
+    "unknown": "A free, survivorship-safe historical SPOT L2/BBO source with enough coverage for Cohort 001 has not yet been proven."
+  },
+  "approved_next_data_actions": [
+    {
+      "priority": 1,
+      "feature_family": "spot_trade_participation",
+      "source": "BINANCE_PUBLIC_DATA_SPOT_RAW",
+      "raw_types": ["trades", "aggTrades"],
+      "purpose": "Test the predeclared spot-led participation component without pretending it is order-book depth.",
+      "candidate_features": [
+        "predecision spot quote notional",
+        "buyer-initiated versus seller-initiated quote notional from maker flag",
+        "aggressive-buy share",
+        "trade-count acceleration",
+        "price-impact per unit aggressive net quote flow"
+      ],
+      "pit_rule": "Use only event timestamps <= frozen decision cutoff; retain raw archive and checksum; gap state is explicit.",
+      "authority": "PRECURSOR_FEATURE_ONLY"
+    },
+    {
+      "priority": 2,
+      "feature_family": "prospective_spot_microstructure_capture",
+      "source": "FREE_PUBLIC_SPOT_REST_OR_WEBSOCKET_AFTER_SEPARATE_IMPLEMENTATION_REVIEW",
+      "purpose": "Accumulate genuine future best-bid/ask and depth snapshots for prospective strict-tradability validation because free historical SPOT depth coverage is currently unproven.",
+      "pit_rule": "Capture server/event time plus local receipt time, raw payload hashes, sequence continuity and outage/gap masks; never backfill missing historical snapshots from current books.",
+      "authority": "FUTURE_DATA_COLLECTION_ONLY"
+    },
+    {
+      "priority": 3,
+      "feature_family": "derivatives_leverage_decomposition",
+      "source": "BINANCE_FUTURES_PUBLIC_ARCHIVE_CONDITIONAL",
+      "purpose": "Study whether a large move is spot-led versus leverage-led using funding/open-interest/basis/depth-like derivatives evidence where exact archive schema and gap coverage are verified.",
+      "pit_rule": "Do not equate futures depth with spot executable depth; every symbol/date must carry a coverage mask.",
+      "authority": "OPTIONAL_PRECURSOR_ONLY"
+    }
+  ],
+  "blocked_shortcuts": [
+    "Treating trailing quote volume or ADV as proof of strict execution quality",
+    "Inferring historical spot spread from candle high-low range",
+    "Using futures book depth as a substitute for spot depth",
+    "Using live/current order books to backfill historical decisions",
+    "Dropping symbols/dates after learning that microstructure data are missing",
+    "Forward-filling order-book gaps across outages without a predeclared rule"
+  ],
+  "research_decision": {
+    "historical_price_2x_lane": "CONTINUE",
+    "historical_strict_spot_tradability": "UNKNOWN_WHERE_PIT_SPREAD_DEPTH_UNAVAILABLE",
+    "spot_trade_precursor_lane": "READY_FOR_BOUNDED_BUILD",
+    "prospective_microstructure_capture": "READY_FOR_SEPARATE_NO_NEW_SPEND_IMPLEMENTATION",
+    "live_2x_candidate_formation": "BLOCKED_BY_TRUSTED_506_FORMATION_AND_EVIDENCE_GATE",
+    "broker_live_trading": false
+  }
+}

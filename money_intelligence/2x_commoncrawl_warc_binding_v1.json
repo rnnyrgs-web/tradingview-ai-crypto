@@ -1,0 +1,33 @@
+{
+  "schema": "two_x_commoncrawl_warc_binding.v1",
+  "artifact_id": "2X-COMMONCRAWL-WARC-BINDING-001-v1",
+  "purpose": "Bind a retained primary-document byte sequence to a Common Crawl historical WARC response captured no later than a cohort decision timestamp.",
+  "provider": "COMMON_CRAWL",
+  "approved_hosts": {
+    "index": "index.commoncrawl.org",
+    "warc": "data.commoncrawl.org"
+  },
+  "accepted_warc_type": "response",
+  "required_http_status": 200,
+  "chronology": {
+    "warc_date_must_equal_index_timestamp": true,
+    "capture_must_be_at_or_before_decision_at": true
+  },
+  "identity_binding": {
+    "warc_target_uri_must_equal_primary_upstream_locator": true,
+    "index_row_url_must_equal_primary_upstream_locator": true,
+    "index_digest_must_equal_warc_payload_digest": true,
+    "warc_range_locator_must_equal_data_host_plus_index_filename": true,
+    "compressed_range_length_must_equal_index_length": true
+  },
+  "byte_binding": {
+    "recompute_warc_block_sha1_base32": true,
+    "document_sha256_must_equal_http_body_sha256": true,
+    "accepted_content_encoding": [
+      "",
+      "identity"
+    ]
+  },
+  "unsupported_policy": "FAIL_CLOSED_COVERAGE_BLOCKED",
+  "authority": "HISTORICAL_AVAILABILITY_EVIDENCE_ONLY_NO_OUTCOME_OR_PREDICTION_AUTHORITY"
+}

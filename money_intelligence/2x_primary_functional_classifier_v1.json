@@ -1,0 +1,101 @@
+{
+  "schema": "two_x_primary_functional_classifier.v1",
+  "artifact_id": "2X-PRIMARY-FUNCTIONAL-CLASSIFIER-001-v1",
+  "frozen_at": "2026-09-21T09:18:00Z",
+  "parent_issue": 514,
+  "consumer_pr": 516,
+  "source_transform_id": "PIT_PRIMARY_FUNCTIONAL_CLASSIFIER_V1",
+  "purpose": "Outcome-blind coarse functional matching strata from PIT primary-document text. Rules are frozen before 2x labels are opened; ambiguity or no match excludes the snapshot rather than using a current taxonomy or analyst judgment.",
+  "normalization": "Use 2X-PRIMARY-DOCUMENT-CLAIM-BINDING-001-v1 visible UTF-8 text normalization over the exact retained PIT primary document.",
+  "match_policy": {
+    "method": "casefolded normalized literal phrase presence over whole visible document",
+    "exactly_one_category_required": true,
+    "zero_categories": "COVERAGE_BLOCKED",
+    "multiple_categories": "COVERAGE_BLOCKED",
+    "asset_name_fallback": false,
+    "current_taxonomy_fallback": false,
+    "analyst_override": false
+  },
+  "categories": {
+    "MONETARY_PAYMENT_NETWORK": [
+      "peer-to-peer electronic cash",
+      "peer to peer electronic cash",
+      "peer-to-peer digital currency",
+      "peer to peer digital currency",
+      "payment network",
+      "payments network",
+      "cross-border payments",
+      "cross border payments",
+      "digital payment network"
+    ],
+    "GENERAL_PURPOSE_BASE_NETWORK": [
+      "smart contract platform",
+      "smart-contract platform",
+      "platform for decentralized applications",
+      "decentralized application platform",
+      "layer 1 blockchain",
+      "layer-1 blockchain",
+      "base layer blockchain",
+      "blockchain platform",
+      "blockchain-based operating system",
+      "blockchain based operating system"
+    ],
+    "SCALING_INTEROP_DATA_INFRASTRUCTURE": [
+      "decentralized oracle network",
+      "oracle network",
+      "interoperability protocol",
+      "cross-chain protocol",
+      "cross chain protocol",
+      "multichain protocol",
+      "multi-chain protocol",
+      "data availability layer",
+      "decentralized storage network",
+      "decentralized compute network",
+      "layer 2 network",
+      "layer-2 network",
+      "rollup network"
+    ],
+    "DEFI_MARKET_PROTOCOL": [
+      "decentralized exchange",
+      "automated market maker",
+      "lending protocol",
+      "liquidity protocol",
+      "decentralized finance protocol",
+      "defi protocol",
+      "decentralized derivatives protocol"
+    ],
+    "EXCHANGE_PLATFORM_ECOSYSTEM": [
+      "exchange token",
+      "trading platform token",
+      "cryptocurrency exchange token"
+    ],
+    "CONSUMER_COMMUNITY_APPLICATION": [
+      "blockchain game",
+      "gaming platform",
+      "decentralized social network",
+      "meme coin",
+      "meme token",
+      "community token"
+    ],
+    "STABLE_VALUE_ASSET": [
+      "stablecoin",
+      "stable value token",
+      "price-stable cryptocurrency"
+    ]
+  },
+  "scientific_limits": {
+    "coarse_matching_stratum_only": true,
+    "not_a_return_predictor": true,
+    "not_a_candidate_score": true,
+    "no_post_outcome_rule_changes": true,
+    "multiple_testing_or_rescue_reclassification": "PROHIBITED"
+  },
+  "authority": {
+    "opens_outcomes": false,
+    "forms_forward_candidate": false,
+    "prediction_authority": false,
+    "trade_authority": false,
+    "broker_connected": false,
+    "live_trading": false
+  }
+}
