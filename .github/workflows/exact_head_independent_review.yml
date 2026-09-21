@@ -198,7 +198,10 @@ jobs:
           BYTES="$(wc -c < /tmp/candidate.diff)"
           echo "Diff bytes: $BYTES"
           test "$BYTES" -gt 0
-          test "$BYTES" -le 80000 || { echo "Diff too large; fail closed."; exit 1; }
+          # One coherent protected scientific repair may legitimately span schema,
+          # durable memory and regressions. Review the full exact diff, bounded at
+          # 256 kB; never truncate it into a superficially reviewable subset.
+          test "$BYTES" -le 256000 || { echo "Diff too large for one coherent exact-head review; fail closed and split the PR."; exit 1; }
 
       - name: Run Security, Lead and Claude adversarial exact-head reviews in parallel
         if: steps.select.outputs.pr_number != ''
