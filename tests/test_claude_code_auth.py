@@ -1,3 +1,4 @@
+import hashlib
 import json
 
 import pytest
@@ -6,17 +7,47 @@ from agents.claude_code_auth import (
     API_METERED,
     MANUAL_ADAPTER_REQUIRED,
     SUBSCRIPTION,
+    SUBSCRIPTION_AUTOMATED,
     AuthDecision,
     AuthPolicyError,
     make_auth_receipt,
     resolve_auth,
     resolve_auth_from_environment,
     validate_auth_receipt,
+    validate_capability_receipt,
 )
 
 
 MAIN = "a" * 40
 PROOF = "github-actions://rnnyrgs-web/tradingview-ai-crypto/runs/123/attempts/1"
+
+
+def capability_receipt(**overrides):
+    receipt = {
+        "version": 3,
+        "provider": "anthropic",
+        "engine": "claude-code",
+        "auth_mode": SUBSCRIPTION_AUTOMATED,
+        "reason": "OFFICIAL_OAUTH_ACTION_STRUCTURED_PROBE_SUCCEEDED",
+        "repository": "rnnyrgs-web/tradingview-ai-crypto",
+        "run_id": "123",
+        "run_attempt": "1",
+        "event_name": "workflow_dispatch",
+        "head_sha": MAIN,
+        "execution_sha": MAIN,
+        "workflow_ref": (
+            "rnnyrgs-web/tradingview-ai-crypto/"
+            ".github/workflows/claude_code_subscription_probe.yml@refs/heads/main"
+        ),
+        "probe_step_outcome": "success",
+        "probe_conclusion": "success",
+        "structured_probe_verified": True,
+        "proof_ref": PROOF,
+    }
+    receipt.update(overrides)
+    raw = json.dumps(receipt, sort_keys=True, separators=(",", ":")).encode()
+    receipt["content_digest"] = hashlib.sha256(raw).hexdigest()
+    return receipt
 
 
 def test_subscription_oauth_without_capability_proof_fails_closed():
@@ -33,8 +64,8 @@ def test_verified_subscription_oauth_is_preferred_and_not_api_budgeted():
     decision = resolve_auth(
         oauth_present=True,
         api_key_present=True,
-        subscription_capability_verified=True,
-        capability_proof_ref=PROOF,
+        capability_receipt=capability_receipt(),
+        trusted_workflow_sha=MAIN,
     )
     assert decision.auth_mode == SUBSCRIPTION
     assert decision.execute is True
@@ -51,28 +82,61 @@ def test_unverified_subscription_never_silently_falls_back_to_paid_api():
     assert decision.reason == "SUBSCRIPTION_OAUTH_PRESENT_CAPABILITY_UNVERIFIED"
 
 
-def test_verified_subscription_requires_oauth_and_durable_proof_ref():
+def test_capability_receipt_cannot_be_used_without_oauth():
     with pytest.raises(AuthPolicyError, match="without OAuth"):
         resolve_auth(
             oauth_present=False,
             api_key_present=False,
-            subscription_capability_verified=True,
-            capability_proof_ref=PROOF,
+            capability_receipt=capability_receipt(),
+            trusted_workflow_sha=MAIN,
         )
-    with pytest.raises(AuthPolicyError, match="proof reference"):
+
+
+def test_capability_receipt_requires_separately_trusted_workflow_sha():
+    with pytest.raises(AuthPolicyError, match="trusted workflow SHA"):
         resolve_auth(
             oauth_present=True,
             api_key_present=False,
-            subscription_capability_verified=True,
-            capability_proof_ref=None,
+            capability_receipt=capability_receipt(),
         )
-    with pytest.raises(AuthPolicyError, match="cannot carry proof"):
+    with pytest.raises(AuthPolicyError, match="cannot authorize"):
         resolve_auth(
             oauth_present=True,
             api_key_present=False,
-            subscription_capability_verified=False,
-            capability_proof_ref=PROOF,
+            trusted_workflow_sha=MAIN,
         )
+
+
+def test_capability_receipt_is_exactly_bound_to_trusted_workflow_sha():
+    with pytest.raises(AuthPolicyError, match="trusted workflow SHA"):
+        validate_capability_receipt(capability_receipt(), trusted_workflow_sha="b" * 40)
+
+
+def test_capability_receipt_rejects_caller_forged_success_fields_even_with_rehashed_digest():
+    for overrides, match in (
+        ({"repository": "attacker/repo"}, "repository mismatch"),
+        ({"auth_mode": "MANUAL_ADAPTER_REQUIRED"}, "does not prove"),
+        ({"structured_probe_verified": False}, "structured model proof"),
+        ({"probe_conclusion": "failure"}, "did not succeed"),
+        ({"proof_ref": "github-actions://rnnyrgs-web/tradingview-ai-crypto/runs/999/attempts/1"}, "proof reference"),
+        ({"workflow_ref": "attacker/repo/.github/workflows/x.yml@refs/heads/main"}, "workflow identity"),
+    ):
+        with pytest.raises(AuthPolicyError, match=match):
+            validate_capability_receipt(capability_receipt(**overrides), trusted_workflow_sha=MAIN)
+
+
+def test_capability_receipt_rejects_digest_tampering():
+    receipt = capability_receipt()
+    receipt["reason"] = "forged"
+    with pytest.raises(AuthPolicyError, match="reason mismatch|digest"):
+        validate_capability_receipt(receipt, trusted_workflow_sha=MAIN)
+
+
+def test_capability_receipt_requires_exact_field_set():
+    receipt = capability_receipt()
+    receipt["caller_asserted"] = True
+    with pytest.raises(AuthPolicyError, match="fields mismatch"):
+        validate_capability_receipt(receipt, trusted_workflow_sha=MAIN)
 
 
 def test_api_fallback_stays_explicitly_metered():
@@ -116,8 +180,8 @@ def test_environment_can_use_verified_external_capability_without_serializing_to
     oauth = "oauth-super-secret-value"
     decision = resolve_auth_from_environment(
         {"CLAUDE_CODE_OAUTH_TOKEN": oauth},
-        subscription_capability_verified=True,
-        capability_proof_ref=PROOF,
+        capability_receipt=capability_receipt(),
+        trusted_workflow_sha=MAIN,
     )
     payload = json.dumps(decision.as_dict(), sort_keys=True)
     assert decision.auth_mode == SUBSCRIPTION
@@ -173,8 +237,8 @@ def test_auth_receipt_is_deterministic_secret_free_and_immutable(monkeypatch):
     decision = resolve_auth(
         oauth_present=True,
         api_key_present=False,
-        subscription_capability_verified=True,
-        capability_proof_ref=PROOF,
+        capability_receipt=capability_receipt(),
+        trusted_workflow_sha=MAIN,
     )
     kwargs = dict(
         task_id="V2-004-PROBE",
@@ -211,8 +275,8 @@ def test_receipt_refuses_direct_main_write_identity(branch):
     decision = resolve_auth(
         oauth_present=True,
         api_key_present=False,
-        subscription_capability_verified=True,
-        capability_proof_ref=PROOF,
+        capability_receipt=capability_receipt(),
+        trusted_workflow_sha=MAIN,
     )
     with pytest.raises(AuthPolicyError, match="main"):
         make_auth_receipt(
@@ -229,8 +293,8 @@ def test_receipt_requires_timezone_aware_observation_time():
     decision = resolve_auth(
         oauth_present=True,
         api_key_present=False,
-        subscription_capability_verified=True,
-        capability_proof_ref=PROOF,
+        capability_receipt=capability_receipt(),
+        trusted_workflow_sha=MAIN,
     )
     with pytest.raises(AuthPolicyError, match="timezone-aware"):
         make_auth_receipt(
@@ -247,8 +311,8 @@ def test_provider_or_engine_mismatch_fails_closed():
     decision = resolve_auth(
         oauth_present=True,
         api_key_present=False,
-        subscription_capability_verified=True,
-        capability_proof_ref=PROOF,
+        capability_receipt=capability_receipt(),
+        trusted_workflow_sha=MAIN,
     )
     receipt = make_auth_receipt(
         task_id="V2-004-PROBE",
@@ -268,8 +332,8 @@ def test_new_request_gets_new_attempt_identity():
     decision = resolve_auth(
         oauth_present=True,
         api_key_present=False,
-        subscription_capability_verified=True,
-        capability_proof_ref=PROOF,
+        capability_receipt=capability_receipt(),
+        trusted_workflow_sha=MAIN,
     )
     common = dict(
         task_id="V2-004-PROBE",
@@ -284,17 +348,21 @@ def test_new_request_gets_new_attempt_identity():
 
 
 def test_proof_reference_changes_attempt_identity():
+    a_receipt = capability_receipt()
+    b_receipt = capability_receipt(run_id="124", proof_ref=(
+        "github-actions://rnnyrgs-web/tradingview-ai-crypto/runs/124/attempts/1"
+    ))
     a_decision = resolve_auth(
         oauth_present=True,
         api_key_present=False,
-        subscription_capability_verified=True,
-        capability_proof_ref=PROOF,
+        capability_receipt=a_receipt,
+        trusted_workflow_sha=MAIN,
     )
     b_decision = resolve_auth(
         oauth_present=True,
         api_key_present=False,
-        subscription_capability_verified=True,
-        capability_proof_ref=PROOF + "/2",
+        capability_receipt=b_receipt,
+        trusted_workflow_sha=MAIN,
     )
     common = dict(
         task_id="V2-004-PROBE",
