@@ -18,10 +18,12 @@ from typing import Any, Iterable
 CONTRACT_SCHEMA = "two_x_prospective_snapshot_contract.v1"
 SNAPSHOT_SCHEMA = "two_x_prospective_snapshot.v1"
 RESULT_SCHEMA = "two_x_prospective_snapshot_result.v1"
+FEATURE_VALUE_SCHEMA = "two_x_feature_values.v1"
 TRADABILITY_ARTIFACT_ID = "2X-TRADABILITY-001-v1"
 TRADABILITY_CONTRACT_GIT_BLOB_SHA = "525b6a794e763569fbc9430f70fc725b10388b85"
 TRADABILITY_PATH = Path(__file__).resolve().parent / "money_intelligence" / "2x_tradability_precommitment_v1.json"
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+SAFE_TOKEN_RE = re.compile(r"^[A-Za-z0-9_.:/+-]{1,128}$")
 ALLOWED_CLASSIFICATIONS = {"FACT", "INFERENCE", "HYPOTHESIS", "UNKNOWN"}
 ALLOWED_RECEIPT_KINDS = {
     "TRUSTED_REMOTE_ACQUISITION_ATTESTATION",
@@ -34,6 +36,40 @@ FORBIDDEN_FUTURE_KEYS = {
     "max_forward_price", "first_target_hit_at", "target_hit_at", "resolved_at",
     "resolution", "realized_pnl", "realized_return", "prediction_probability",
     "calibrated_probability", "rank_score",
+}
+CONTRACT_KEYS = {
+    "schema", "artifact_id", "frozen_at", "parent_issue", "cohort_issue",
+    "intelligence_issue", "data_issue", "purpose", "outcome_access",
+    "historical_selection_status", "target_multiple", "max_horizon_days",
+    "feature_value_schema", "feature_families", "mandatory_for_mechanism_review",
+    "freshness_max_age_seconds", "freshness_rationale", "strict_tradability_binding",
+    "snapshot_semantics", "evidence_argument_policy",
+    "minimum_independent_2x_events_for_inferential_claim", "below_minimum_policy",
+    "primary_future_metrics_when_powered", "explicit_non_authorities",
+    "formation_authority", "prediction_authority", "promotion_authority",
+    "broker_connected", "live_trading",
+}
+SNAPSHOT_KEYS = {"schema", "snapshot_id", "information_cutoff", "created_at", "assets"}
+ASSET_KEYS = {
+    "asset_id", "venue_symbols", "horizon_days", "target_multiple", "invalidation_rule",
+    "features", "evidence_for", "evidence_against",
+}
+KNOWN_RECORD_KEYS = {
+    "status", "source_id", "source_locator", "source_observed_at", "source_available_at",
+    "captured_at", "raw_sha256", "receipt_sha256", "receipt_kind", "transform_id",
+    "transform_version", "value",
+}
+UNKNOWN_RECORD_KEYS = {"status", "reason"}
+ARGUMENT_KEYS = {"statement", "classification", "feature_family", "record_sha256"}
+STRICT_COMMON_KEYS = {
+    "state", "contract_artifact_id", "contract_git_blob_sha", "execution_band_usd",
+    "microstructure_evidence_sha256",
+}
+STRICT_MEASURED_KEYS = STRICT_COMMON_KEYS | {"window_start_at", "window_end_at", "metrics"}
+STRICT_UNKNOWN_KEYS = STRICT_COMMON_KEYS | {"reason"}
+STRICT_METRIC_KEYS = {
+    "independent_snapshots", "missing_fraction", "median_spread_bps",
+    "entry_vwap_slippage_bps", "depth_coverage_ratio",
 }
 
 
@@ -48,6 +84,16 @@ def digest(value: Any) -> str:
 def _git_blob_sha(raw: bytes) -> str:
     header = f"blob {len(raw)}\0".encode()
     return hashlib.sha1(header + raw, usedforsecurity=False).hexdigest()  # nosec B324
+
+
+def _exact_keys(value: Any, expected: set[str], field: str) -> None:
+    if not isinstance(value, dict):
+        raise ValueError(f"{field} must be object")
+    actual = set(value)
+    if actual != expected:
+        unknown = sorted(actual - expected)
+        missing = sorted(expected - actual)
+        raise ValueError(f"{field} schema mismatch; unknown={unknown}, missing={missing}")
 
 
 def _tradability_contract() -> dict[str, Any]:
@@ -84,6 +130,13 @@ def _nonempty(value: Any, field: str) -> str:
     return value.strip()
 
 
+def _safe_token(value: Any, field: str) -> str:
+    text = _nonempty(value, field)
+    if not SAFE_TOKEN_RE.fullmatch(text):
+        raise ValueError(f"{field} must be a bounded safe token")
+    return text
+
+
 def _sha(value: Any, field: str) -> str:
     if not isinstance(value, str) or not SHA256_RE.fullmatch(value):
         raise ValueError(f"{field} must be lowercase SHA-256")
@@ -113,10 +166,98 @@ def _number(value: Any, field: str, *, nonnegative: bool = False) -> float:
     return number
 
 
+def _fraction(value: Any, field: str, *, signed: bool = False) -> float:
+    number = _number(value, field)
+    low = -1.0 if signed else 0.0
+    if not low <= number <= 1.0:
+        raise ValueError(f"{field} must be in [{low},1]")
+    return number
+
+
+def _strict_value_shape(value: Any) -> None:
+    if not isinstance(value, dict):
+        raise ValueError("strict_tradability.value must be structured")
+    state = value.get("state")
+    if state == "UNKNOWN_TRADABILITY":
+        _exact_keys(value, STRICT_UNKNOWN_KEYS, "strict_tradability.value")
+        _nonempty(value.get("reason"), "strict_tradability.reason")
+    elif state in {"STRICT_TRADABLE", "STRICT_NOT_TRADABLE"}:
+        _exact_keys(value, STRICT_MEASURED_KEYS, "strict_tradability.value")
+        _exact_keys(value.get("metrics"), STRICT_METRIC_KEYS, "strict_tradability.metrics")
+    else:
+        raise ValueError("strict_tradability state invalid")
+
+
+def _validate_feature_value(family: str, value: Any) -> None:
+    if family == "stable_identity":
+        _exact_keys(value, {"canonical_asset_id"}, "stable_identity.value")
+        _safe_token(value["canonical_asset_id"], "stable_identity.canonical_asset_id")
+    elif family == "venue_membership":
+        _exact_keys(value, {"active_spot"}, "venue_membership.value")
+        if type(value["active_spot"]) is not bool:
+            raise ValueError("venue_membership.active_spot must be boolean")
+    elif family == "liquidity_proxy":
+        _exact_keys(value, {"trailing_30d_quote_volume_usd"}, "liquidity_proxy.value")
+        _number(value["trailing_30d_quote_volume_usd"], "liquidity_proxy.trailing_30d_quote_volume_usd", nonnegative=True)
+    elif family == "strict_tradability":
+        _strict_value_shape(value)
+    elif family == "spot_participation_flow":
+        expected = {
+            "quote_notional_usd_7d", "aggressive_buy_share_7d", "net_flow_share_7d",
+            "participation_acceleration_7d_vs_prior7d", "trade_count_acceleration_7d_vs_prior7d",
+        }
+        _exact_keys(value, expected, "spot_participation_flow.value")
+        _number(value["quote_notional_usd_7d"], "spot_participation_flow.quote_notional_usd_7d", nonnegative=True)
+        _fraction(value["aggressive_buy_share_7d"], "spot_participation_flow.aggressive_buy_share_7d")
+        _fraction(value["net_flow_share_7d"], "spot_participation_flow.net_flow_share_7d", signed=True)
+        _number(value["participation_acceleration_7d_vs_prior7d"], "spot_participation_flow.participation_acceleration_7d_vs_prior7d")
+        _number(value["trade_count_acceleration_7d_vs_prior7d"], "spot_participation_flow.trade_count_acceleration_7d_vs_prior7d")
+    elif family == "leverage_state":
+        _exact_keys(value, {"funding_rate_8h", "open_interest_usd", "annualized_basis_bps"}, "leverage_state.value")
+        _number(value["funding_rate_8h"], "leverage_state.funding_rate_8h")
+        _number(value["open_interest_usd"], "leverage_state.open_interest_usd", nonnegative=True)
+        _number(value["annualized_basis_bps"], "leverage_state.annualized_basis_bps")
+    elif family == "supply_float":
+        _exact_keys(value, {"circulating_supply", "free_float_supply", "unlock_90d_pct_of_float"}, "supply_float.value")
+        circulating = _number(value["circulating_supply"], "supply_float.circulating_supply", nonnegative=True)
+        free_float = _number(value["free_float_supply"], "supply_float.free_float_supply", nonnegative=True)
+        if free_float > circulating:
+            raise ValueError("supply_float.free_float_supply cannot exceed circulating_supply")
+        _number(value["unlock_90d_pct_of_float"], "supply_float.unlock_90d_pct_of_float", nonnegative=True)
+    elif family == "catalyst_state":
+        _exact_keys(value, {"state", "category"}, "catalyst_state.value")
+        if value["state"] not in {"NONE", "ACTIVE", "PENDING", "INVALIDATED"}:
+            raise ValueError("catalyst_state.state invalid")
+        if value["category"] not in {"NONE", "PRODUCT", "REGULATORY", "TREASURY", "EXCHANGE", "NETWORK", "OTHER"}:
+            raise ValueError("catalyst_state.category invalid")
+        if value["state"] == "NONE" and value["category"] != "NONE":
+            raise ValueError("catalyst_state NONE must use category NONE")
+    elif family == "market_regime":
+        _exact_keys(value, {"regime"}, "market_regime.value")
+        if value["regime"] not in {"BTC_RISK_ON", "BTC_RISK_OFF", "MIXED"}:
+            raise ValueError("market_regime.regime invalid")
+    elif family == "relationship_graph":
+        _exact_keys(value, {"edge_types", "peer_asset_ids"}, "relationship_graph.value")
+        edge_types = value["edge_types"]
+        peers = value["peer_asset_ids"]
+        allowed_edges = {"SECTOR", "ECOSYSTEM", "TREASURY", "FLOW", "VENUE", "OTHER"}
+        if not isinstance(edge_types, list) or not edge_types or len(edge_types) != len(set(edge_types)) or not set(edge_types).issubset(allowed_edges):
+            raise ValueError("relationship_graph.edge_types invalid")
+        if not isinstance(peers, list) or not peers or len(peers) != len(set(peers)) or len(peers) > 64:
+            raise ValueError("relationship_graph.peer_asset_ids invalid")
+        for peer in peers:
+            _safe_token(peer, "relationship_graph.peer_asset_id")
+    else:
+        raise ValueError(f"unsupported feature family: {family}")
+
+
 def validate_contract(contract: dict[str, Any]) -> None:
     _walk_forbidden(contract)
+    _exact_keys(contract, CONTRACT_KEYS, "contract")
     if contract.get("schema") != CONTRACT_SCHEMA or contract.get("artifact_id") != "2X-PROSPECTIVE-SNAPSHOT-001-v1":
         raise ValueError("unexpected prospective snapshot contract")
+    if contract.get("feature_value_schema") != FEATURE_VALUE_SCHEMA:
+        raise ValueError("unexpected feature value schema")
     _utc(contract.get("frozen_at"), "frozen_at")
     if contract.get("outcome_access") != "PROSPECTIVE_ONLY_NO_FUTURE_OUTCOMES":
         raise ValueError("contract must remain prospective-only")
@@ -133,9 +274,14 @@ def validate_contract(contract: dict[str, Any]) -> None:
         raise ValueError("max_horizon_days must be in [1,90]")
 
     families = contract.get("feature_families")
+    expected_families = [
+        "stable_identity", "venue_membership", "liquidity_proxy", "strict_tradability",
+        "spot_participation_flow", "leverage_state", "supply_float", "catalyst_state",
+        "market_regime", "relationship_graph",
+    ]
+    if families != expected_families:
+        raise ValueError("feature_families must equal frozen v1 order")
     mandatory = contract.get("mandatory_for_mechanism_review")
-    if not isinstance(families, list) or not families or len(families) != len(set(families)):
-        raise ValueError("feature_families must be unique")
     if not isinstance(mandatory, list) or not set(mandatory).issubset(families) or "strict_tradability" not in mandatory:
         raise ValueError("mandatory feature families invalid")
     freshness = contract.get("freshness_max_age_seconds")
@@ -143,17 +289,25 @@ def validate_contract(contract: dict[str, Any]) -> None:
         raise ValueError("freshness policy must exactly cover feature families")
     if any(type(v) is not int or v <= 0 for v in freshness.values()):
         raise ValueError("freshness ages must be positive integers")
+    rationale = contract.get("freshness_rationale")
+    if not isinstance(rationale, dict) or set(rationale) != set(families) or any(not isinstance(v, str) or not v.strip() for v in rationale.values()):
+        raise ValueError("freshness rationale must exactly cover feature families")
 
     pinned = _tradability_contract()
     binding = contract.get("strict_tradability_binding")
-    if not isinstance(binding, dict):
-        raise ValueError("strict_tradability_binding missing")
+    _exact_keys(
+        binding,
+        {"artifact_id", "git_blob_sha", "execution_bands_usd", "require_out_of_band_receipt_verification", "required_state_fields", "rule"},
+        "strict_tradability_binding",
+    )
     if binding.get("artifact_id") != TRADABILITY_ARTIFACT_ID or binding.get("git_blob_sha") != TRADABILITY_CONTRACT_GIT_BLOB_SHA:
         raise ValueError("strict tradability binding mismatch")
     if binding.get("execution_bands_usd") != pinned.get("execution_bands_usd"):
         raise ValueError("strict tradability execution bands drifted")
     if binding.get("require_out_of_band_receipt_verification") is not True:
         raise ValueError("strict tradability requires out-of-band receipt verification")
+    if binding.get("required_state_fields") != ["state", "contract_artifact_id", "contract_git_blob_sha", "execution_band_usd", "microstructure_evidence_sha256"]:
+        raise ValueError("strict tradability required fields drifted")
     max_micro_age = int(pinned["strict_microstructure_window"]["maximum_snapshot_age_minutes"]) * 60
     if freshness["strict_tradability"] > max_micro_age:
         raise ValueError("strict_tradability freshness exceeds frozen #519 maximum")
@@ -163,11 +317,11 @@ def _validate_record(record: Any, family: str, cutoff: datetime, created: dateti
     if not isinstance(record, dict) or record.get("status") not in {"KNOWN", "UNKNOWN"}:
         raise ValueError(f"{family} record invalid")
     if record["status"] == "UNKNOWN":
+        _exact_keys(record, UNKNOWN_RECORD_KEYS, f"{family} UNKNOWN record")
         _nonempty(record.get("reason"), f"{family}.reason")
-        if "value" in record or any(k in record for k in ("source_observed_at", "source_available_at", "captured_at")):
-            raise ValueError(f"{family} UNKNOWN record cannot carry value/chronology")
         return
 
+    _exact_keys(record, KNOWN_RECORD_KEYS, f"{family} KNOWN record")
     for key in ("source_id", "source_locator", "transform_id", "transform_version"):
         _nonempty(record.get(key), f"{family}.{key}")
     _sha(record.get("raw_sha256"), f"{family}.raw_sha256")
@@ -181,17 +335,13 @@ def _validate_record(record: Any, family: str, cutoff: datetime, created: dateti
         raise ValueError(f"{family} chronology invalid")
     if (cutoff - observed).total_seconds() > contract["freshness_max_age_seconds"][family]:
         raise ValueError(f"{family} source_observed_at is stale under frozen freshness policy")
-    if "value" not in record:
-        raise ValueError(f"{family}.value missing")
+    _validate_feature_value(family, record["value"])
 
 
 def _strict_state(record: dict[str, Any], cutoff: datetime, contract: dict[str, Any]) -> str:
-    value = record.get("value")
-    if not isinstance(value, dict):
-        raise ValueError("strict_tradability.value must be structured")
-    state = value.get("state")
-    if state not in {"STRICT_TRADABLE", "STRICT_NOT_TRADABLE", "UNKNOWN_TRADABILITY"}:
-        raise ValueError("strict_tradability state invalid")
+    value = record["value"]
+    _strict_value_shape(value)
+    state = value["state"]
     binding = contract["strict_tradability_binding"]
     if value.get("contract_artifact_id") != binding["artifact_id"] or value.get("contract_git_blob_sha") != binding["git_blob_sha"]:
         raise ValueError("strict_tradability contract identity mismatch")
@@ -199,7 +349,6 @@ def _strict_state(record: dict[str, Any], cutoff: datetime, contract: dict[str, 
         raise ValueError("strict_tradability execution band is not frozen")
     _sha(value.get("microstructure_evidence_sha256"), "strict_tradability.microstructure_evidence_sha256")
     if state == "UNKNOWN_TRADABILITY":
-        _nonempty(value.get("reason"), "strict_tradability.reason")
         return state
 
     pinned = _tradability_contract()
@@ -215,16 +364,14 @@ def _strict_state(record: dict[str, Any], cutoff: datetime, contract: dict[str, 
     if (cutoff - end).total_seconds() > float(window["maximum_snapshot_age_minutes"]) * 60:
         raise ValueError("strict_tradability microstructure evidence stale")
 
-    metrics = value.get("metrics")
-    if not isinstance(metrics, dict):
-        raise ValueError("strict_tradability metrics missing")
-    snapshots = metrics.get("independent_snapshots")
+    metrics = value["metrics"]
+    snapshots = metrics["independent_snapshots"]
     if type(snapshots) is not int or snapshots <= 0:
         raise ValueError("strict_tradability independent_snapshots invalid")
-    missing = _number(metrics.get("missing_fraction"), "missing_fraction", nonnegative=True)
-    spread = _number(metrics.get("median_spread_bps"), "median_spread_bps", nonnegative=True)
-    slippage = _number(metrics.get("entry_vwap_slippage_bps"), "entry_vwap_slippage_bps", nonnegative=True)
-    depth = _number(metrics.get("depth_coverage_ratio"), "depth_coverage_ratio", nonnegative=True)
+    missing = _number(metrics["missing_fraction"], "missing_fraction", nonnegative=True)
+    spread = _number(metrics["median_spread_bps"], "median_spread_bps", nonnegative=True)
+    slippage = _number(metrics["entry_vwap_slippage_bps"], "entry_vwap_slippage_bps", nonnegative=True)
+    depth = _number(metrics["depth_coverage_ratio"], "depth_coverage_ratio", nonnegative=True)
     if missing > 1:
         raise ValueError("missing_fraction must be <= 1")
     passes = (
@@ -250,7 +397,8 @@ def _verified(values: Iterable[str] | None) -> set[str]:
 
 
 def _argument(arg: Any, records: dict[str, Any], families: set[str]) -> None:
-    if not isinstance(arg, dict) or arg.get("classification") not in ALLOWED_CLASSIFICATIONS:
+    _exact_keys(arg, ARGUMENT_KEYS, "evidence argument")
+    if arg.get("classification") not in ALLOWED_CLASSIFICATIONS:
         raise ValueError("evidence argument invalid")
     _nonempty(arg.get("statement"), "evidence statement")
     family = _nonempty(arg.get("feature_family"), "feature_family")
@@ -268,6 +416,7 @@ def evaluate_snapshot(
 ) -> dict[str, Any]:
     validate_contract(contract)
     _walk_forbidden(snapshot)
+    _exact_keys(snapshot, SNAPSHOT_KEYS, "snapshot")
     if snapshot.get("schema") != SNAPSHOT_SCHEMA:
         raise ValueError("unexpected prospective snapshot schema")
     _nonempty(snapshot.get("snapshot_id"), "snapshot_id")
@@ -284,14 +433,17 @@ def evaluate_snapshot(
     seen: set[str] = set()
     results = []
     for asset in assets:
-        if not isinstance(asset, dict):
-            raise ValueError("asset must be object")
-        asset_id = _nonempty(asset.get("asset_id"), "asset_id")
+        _exact_keys(asset, ASSET_KEYS, "asset")
+        asset_id = _safe_token(asset.get("asset_id"), "asset_id")
         if asset_id in seen:
             raise ValueError(f"duplicate asset_id: {asset_id}")
         seen.add(asset_id)
-        if not isinstance(asset.get("venue_symbols"), dict) or not asset["venue_symbols"]:
-            raise ValueError("venue_symbols missing")
+        venue_symbols = asset.get("venue_symbols")
+        if not isinstance(venue_symbols, dict) or not venue_symbols or len(venue_symbols) > 32:
+            raise ValueError("venue_symbols missing or invalid")
+        for venue, symbol in venue_symbols.items():
+            _safe_token(venue, "venue_symbols venue")
+            _safe_token(symbol, "venue_symbols symbol")
         horizon = asset.get("horizon_days")
         if type(horizon) is not int or not 1 <= horizon <= contract["max_horizon_days"]:
             raise ValueError("horizon_days outside frozen maximum")
