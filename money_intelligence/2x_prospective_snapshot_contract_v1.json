@@ -1,0 +1,77 @@
+{
+  "schema": "two_x_prospective_snapshot_contract.v1",
+  "artifact_id": "2X-PROSPECTIVE-SNAPSHOT-001-v1",
+  "frozen_at": "2026-09-21T17:05:45Z",
+  "parent_issue": 505,
+  "cohort_issue": 514,
+  "intelligence_issue": 519,
+  "data_issue": 520,
+  "purpose": "Preserve source-referenced current evidence prospectively before future <=90-day price paths are known, without claiming candidate/ranking authority before authentic historical matched-control validation.",
+  "outcome_access": "PROSPECTIVE_ONLY_NO_FUTURE_OUTCOMES",
+  "historical_selection_status": "UNVALIDATED_NO_RANKING_AUTHORITY",
+  "target_multiple": 2.0,
+  "max_horizon_days": 90,
+  "feature_families": ["stable_identity", "venue_membership", "liquidity_proxy", "strict_tradability", "spot_participation_flow", "leverage_state", "supply_float", "catalyst_state", "market_regime", "relationship_graph"],
+  "mandatory_for_mechanism_review": ["stable_identity", "venue_membership", "liquidity_proxy", "strict_tradability", "market_regime"],
+  "freshness_max_age_seconds": {
+    "stable_identity": 2592000,
+    "venue_membership": 3600,
+    "liquidity_proxy": 86400,
+    "strict_tradability": 3600,
+    "spot_participation_flow": 21600,
+    "leverage_state": 3600,
+    "supply_float": 604800,
+    "catalyst_state": 86400,
+    "market_regime": 21600,
+    "relationship_graph": 2592000
+  },
+  "freshness_rationale": {
+    "stable_identity": "Identity changes slowly but must be re-attested at least monthly for a current snapshot.",
+    "venue_membership": "Listing/trading availability is fast-moving and must be observed within one hour of the cutoff.",
+    "liquidity_proxy": "Trailing liquidity statistics must end on data no older than one day at the cutoff.",
+    "strict_tradability": "Matches the frozen #519 maximum microstructure snapshot age of 60 minutes.",
+    "spot_participation_flow": "Intraday participation/flow evidence older than six hours is not treated as current.",
+    "leverage_state": "Funding/OI/basis state is fast-moving and must be observed within one hour.",
+    "supply_float": "Supply/float is slower-moving but must be re-attested within seven days.",
+    "catalyst_state": "Catalyst state must be refreshed within one day because implementation/invalidations can change.",
+    "market_regime": "Market regime must be observed within six hours.",
+    "relationship_graph": "Slow-moving graph edges must still be re-attested within thirty days."
+  },
+  "strict_tradability_binding": {
+    "artifact_id": "2X-TRADABILITY-001-v1",
+    "git_blob_sha": "525b6a794e763569fbc9430f70fc725b10388b85",
+    "execution_bands_usd": [1000, 10000, 50000, 100000],
+    "require_out_of_band_receipt_verification": true,
+    "required_state_fields": ["state", "contract_artifact_id", "contract_git_blob_sha", "execution_band_usd", "microstructure_evidence_sha256"],
+    "rule": "A STRICT_TRADABLE value must be recomputable against the exact pinned #519 contract at one frozen execution band; a caller-authored string, ADV proxy, or unverified receipt cannot establish strict tradability."
+  },
+  "snapshot_semantics": {
+    "information_cutoff": "All KNOWN evidence must have observed_at <= available_at <= captured_at <= information_cutoff and satisfy the frozen family-specific freshness policy. The snapshot is committed only after the cutoff; later evidence is forbidden from the same snapshot identity.",
+    "unknown_policy": "Every frozen feature family must be present. Unavailable evidence is recorded as UNKNOWN with a precise reason; it is never imputed or silently omitted.",
+    "receipt_policy": "Each KNOWN record carries raw_sha256, receipt_sha256 and receipt_kind. MECHANISM_REVIEW_READY additionally requires each mandatory receipt SHA-256 to be supplied out-of-band from an independently verified source-specific trusted boundary; UNVERIFIED_RESEARCH_RECEIPT cannot satisfy readiness.",
+    "tradability_policy": "STRICT_TRADABLE must be a structured result bound to exact 2X-TRADABILITY-001-v1 Git blob 525b6a794e763569fbc9430f70fc725b10388b85, an explicit frozen USD execution band, PIT spread/depth/VWAP metrics and trusted receipt verification. Liquidity/ADV alone cannot substitute.",
+    "snapshot_time_policy": "created_at and information_cutoff are self-reported research fields. The local snapshot digest is not non-backdateable proof that the snapshot existed pre-move. Any prospective outcome study or #506 formation must first bind the snapshot to a trusted append-only/server-time receipt.",
+    "current_survivor_policy": "This contract does not define a universe from today's survivors. Any current retrieval universe must itself be frozen and source-authenticated before asset snapshots are interpreted as a population.",
+    "selection_policy": "MECHANISM_REVIEW_READY means only that fresh mandatory evidence is present, independently verified receipt hashes were supplied out-of-band, and strict tradability passes the exact pinned #519 contract at the declared band. It is not a rank, calibrated probability, 2x forecast, prospective chronology proof, or formation authorization."
+  },
+  "evidence_argument_policy": {
+    "required_sides": ["evidence_for", "evidence_against"],
+    "classifications": ["FACT", "INFERENCE", "HYPOTHESIS", "UNKNOWN"],
+    "binding": "Each argument references the SHA-256 of a frozen feature-family record in the same asset snapshot."
+  },
+  "minimum_independent_2x_events_for_inferential_claim": 20,
+  "below_minimum_policy": "DESCRIPTIVE_ONLY_NO_RANKING_AUTHORITY",
+  "primary_future_metrics_when_powered": ["precision_at_k", "lift_over_matched_base_rate", "pr_auc", "prospective_return_path", "drawdown_path", "tradability"],
+  "explicit_non_authorities": [
+    "No snapshot can be backfilled as a prediction after a move.",
+    "No probability, rank score, profitability, or predictive-lift claim is authorized by this contract.",
+    "A local snapshot digest is not non-backdateable prospective proof; trusted append-only/server-time persistence is required before outcome comparison or #506 formation.",
+    "No forward formation may be persisted until source receipts are independently verified and the selection mechanism clears authentic historical matched-control validation or another separately reviewed evidence gate.",
+    "Zero live candidates is a valid result."
+  ],
+  "formation_authority": false,
+  "prediction_authority": false,
+  "promotion_authority": false,
+  "broker_connected": false,
+  "live_trading": false
+}
