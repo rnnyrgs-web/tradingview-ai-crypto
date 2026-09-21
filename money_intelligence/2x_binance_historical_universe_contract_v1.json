@@ -1,0 +1,44 @@
+{
+  "schema": "two_x_binance_historical_universe_contract.v1",
+  "artifact_id": "2X-BINANCE-HISTORICAL-UNIVERSE-001-v1",
+  "purpose": "Outcome-blind discovery of historical Binance spot/USDT archive membership, including delisted symbols, from retained provider bucket-listing pages rather than today's exchangeInfo survivors.",
+  "source": {
+    "provider": "BINANCE_PUBLIC_DATA",
+    "download_host": "data.binance.vision",
+    "listing_host": "s3-ap-northeast-1.amazonaws.com",
+    "listing_bucket_path": "/data.binance.vision",
+    "listing_bucket_name": "data.binance.vision",
+    "archive_family": "data/spot/monthly/klines/<SYMBOL>/1d/<SYMBOL>-1d-YYYY-MM.zip",
+    "checksum_suffix": ".CHECKSUM",
+    "quote_asset": "USDT"
+  },
+  "pagination": {
+    "require_complete_prefix_walk": true,
+    "require_response_bucket_name_match": true,
+    "require_response_continuation_token_match": true,
+    "reject_duplicate_request_locator": true,
+    "reject_duplicate_page_identity": true,
+    "reject_duplicate_object_keys": true,
+    "reject_missing_continuation_when_truncated": true,
+    "reject_unexpected_prefix": true
+  },
+  "membership_semantics": {
+    "include_delisted_symbols": true,
+    "include_dead_or_failed_narratives": true,
+    "do_not_use_current_exchange_info": true,
+    "zip_and_checksum_required": true,
+    "archive_presence_is_not_listing_age_authority": true,
+    "archive_presence_is_not_tradability_authority": true,
+    "archive_presence_is_not_outcome_authority": true
+  },
+  "forbidden_fields": [
+    "2x",
+    "winner",
+    "label",
+    "outcome",
+    "future_return",
+    "max_forward_return",
+    "selected_after_outcome"
+  ],
+  "output_authority": "HISTORICAL_UNIVERSE_DISCOVERY_ONLY_NO_LABEL_FORECAST_PROMOTION_OR_TRADE_AUTHORITY"
+}
