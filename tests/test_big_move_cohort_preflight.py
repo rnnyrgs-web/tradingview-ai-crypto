@@ -13,6 +13,15 @@ def _contract():
         "frozen_at": "2026-09-21T04:40:00Z",
         "outcome_access": "SEALED_UNTIL_COVERAGE_READY",
         "forward_formation_status": "BLOCKED_UNTIL_TRUSTED_RECEIPT",
+        "historical_universe_rule": {
+            "venue": "BINANCE_SPOT",
+            "quote_asset": "USDT",
+            "decision_grid": "MONDAY_00_UTC_WEEKLY",
+            "grid_start": "2021-01-04T00:00:00Z",
+            "grid_end": "2026-06-29T00:00:00Z",
+            "listing_age_min_days": 180,
+            "trailing_30d_median_quote_volume_usd_min": 10_000_000,
+        },
         "coverage_thresholds": {
             "minimum_assets": 2,
             "minimum_snapshots": 4,
@@ -117,6 +126,7 @@ def test_ready_only_after_predeclared_coverage_thresholds():
     assert result["status"] == "READY_FOR_LABEL_OPEN"
     assert result["eligible_asset_count"] == 2
     assert result["eligible_snapshot_count"] == 4
+    assert result["duplicate_snapshot_key_count"] == 0
     assert result["forward_formation_status"] == "BLOCKED_UNTIL_TRUSTED_RECEIPT"
     assert result["prediction_authority"] is False
     assert result["trade_authority"] is False
@@ -155,6 +165,69 @@ def test_sparse_asset_does_not_count_toward_minimum():
     result = evaluate_coverage(contract, rows)
     assert result["status"] == "COVERAGE_BLOCKED"
     assert result["eligible_assets"] == ["a"]
+
+
+@pytest.mark.parametrize(
+    ("mutation", "expected"),
+    [
+        ("wrong_venue", "venue does not match frozen historical universe"),
+        ("off_grid", "decision_at is not on MONDAY_00_UTC_WEEKLY grid"),
+        ("before_grid", "decision_at lies outside frozen grid range"),
+        ("young_listing", "listing_age_days below frozen minimum"),
+        ("thin_liquidity", "liquidity_usd below frozen minimum"),
+        ("not_tradable", "tradable must be true at decision_at"),
+        ("not_member", "member must be true at decision_at"),
+    ],
+)
+def test_frozen_universe_gates_are_enforced(mutation, expected):
+    contract = _contract()
+    row = _snapshot("a", "2024-01-01T00:00:00Z")
+    if mutation == "wrong_venue":
+        row["venue"] = "OTHER"
+    elif mutation == "off_grid":
+        row = _snapshot("a", "2024-01-02T00:00:00Z")
+    elif mutation == "before_grid":
+        row = _snapshot("a", "2020-12-28T00:00:00Z")
+    elif mutation == "young_listing":
+        row["features"]["listing_age_days"]["value"] = 179
+    elif mutation == "thin_liquidity":
+        row["features"]["liquidity_usd"]["value"] = 9_999_999
+    elif mutation == "not_tradable":
+        row["features"]["tradable"]["value"] = False
+    else:
+        row["features"]["member"]["value"] = False
+
+    result = evaluate_coverage(contract, [row])
+    assert result["status"] == "COVERAGE_BLOCKED"
+    reasons = " ".join(result["exclusions"][0]["reasons"])
+    assert expected in reasons
+
+
+def test_duplicate_decision_rows_cannot_inflate_coverage():
+    contract = _contract()
+    duplicate = _snapshot("a", "2024-01-01T00:00:00Z")
+    rows = [
+        duplicate,
+        json.loads(json.dumps(duplicate)),
+        _snapshot("a", "2024-01-08T00:00:00Z"),
+        _snapshot("b", "2024-01-01T00:00:00Z"),
+        _snapshot("b", "2024-01-08T00:00:00Z"),
+    ]
+    result = evaluate_coverage(contract, rows)
+    assert result["status"] == "COVERAGE_BLOCKED"
+    assert result["duplicate_snapshot_key_count"] == 1
+    assert result["per_asset_snapshot_counts"] == {"a": 1, "b": 2}
+    duplicate_exclusions = [
+        row for row in result["exclusions"] if "duplicate" in " ".join(row["reasons"])
+    ]
+    assert len(duplicate_exclusions) == 2
+
+
+def test_contract_rejects_unfrozen_or_invalid_historical_grid():
+    contract = _contract()
+    contract["historical_universe_rule"]["decision_grid"] = "DAILY"
+    with pytest.raises(ValueError, match="MONDAY_00_UTC_WEEKLY"):
+        validate_contract(contract)
 
 
 def test_actual_frozen_contract_is_fail_closed_without_coverage():
