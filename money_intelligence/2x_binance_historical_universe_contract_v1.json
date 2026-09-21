@@ -1,10 +1,12 @@
 {
   "schema": "two_x_binance_historical_universe_contract.v1",
   "artifact_id": "2X-BINANCE-HISTORICAL-UNIVERSE-001-v1",
-  "purpose": "Outcome-blind discovery of historical Binance spot/USDT archive membership, including delisted symbols, from retained provider listing pages rather than today's exchangeInfo survivors.",
+  "purpose": "Outcome-blind discovery of historical Binance spot/USDT archive membership, including delisted symbols, from retained provider bucket-listing pages rather than today's exchangeInfo survivors.",
   "source": {
     "provider": "BINANCE_PUBLIC_DATA",
-    "host": "data.binance.vision",
+    "download_host": "data.binance.vision",
+    "listing_host": "s3-ap-northeast-1.amazonaws.com",
+    "listing_bucket_path": "/data.binance.vision",
     "archive_family": "data/spot/monthly/klines/<SYMBOL>/1d/<SYMBOL>-1d-YYYY-MM.zip",
     "checksum_suffix": ".CHECKSUM",
     "quote_asset": "USDT"
