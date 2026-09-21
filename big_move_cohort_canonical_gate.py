@@ -9,18 +9,18 @@ recomputes accepted return/volatility/regime values from retained checksum-bound
 Binance spot 1d archives, independently binds each direct Binance decision price to
 the exact retained archive close, mechanically binds any primary-document claim to
 literal retained text, and recomputes the frozen coarse functional sector from the
-whole PIT primary document. Per-snapshot evidence failures remain fail closed.
+whole PIT primary document.
 
-Primary-document *content* binding is now deterministic, but the current primary
-proof still carries caller-authored `published_at`/`effective_at` metadata. A local
-hash and HTTPS locator do not prove that those exact bytes existed by a historical
-decision time. The authoritative gate therefore keeps a systemic chronology blocker
-until an independently timestamped archive/transparency receipt is implemented and
-bound to the exact document bytes.
+Primary-document chronology is also fail-closed: caller-authored `published_at` or
+`effective_at` metadata is not accepted as anti-backdating proof. Every primary
+document that contributes to an accepted snapshot must additionally bind the exact
+document bytes to a Common Crawl WARC response whose independent capture timestamp is
+no later than the historical decision timestamp. Missing/ambiguous/unsupported archive
+evidence excludes the snapshot rather than being silently normalized.
 
-The wrapper itself never opens outcomes: even after all source/value transforms are
-implemented, actual label opening remains a separate handoff after real frozen
-coverage passes and exact-head review clears the integration.
+The wrapper itself never opens outcomes: even after source/value transforms and
+historical-availability proofs pass, actual label opening remains a separate handoff
+after real frozen coverage passes and exact-head review clears the integration.
 
 No outcome data are read here. No forecast/trading authority is granted.
 """
@@ -44,6 +44,9 @@ from big_move_primary_document_binding import (
     validate_primary_document_literal_claim,
 )
 from big_move_primary_functional_classifier import validate_sector_output_binding
+from big_move_primary_historical_availability import (
+    validate_primary_document_historical_availability,
+)
 
 CANONICAL_CONTRACT_PATH = "money_intelligence/2x_cohort_001_preflight_contract.json"
 CANONICAL_CONTRACT_ARTIFACT_ID = "2X-COHORT-001-PREFLIGHT-v1"
@@ -58,13 +61,16 @@ DERIVED_OUTPUT_BINDING_BLOCKERS: tuple[str, ...] = ()
 DERIVED_OUTPUT_BOUND_FIELDS = tuple(COMPLETED_DERIVED_FIELDS) + ("sector",)
 
 # Direct Binance decision price and literal primary-document values are reproducible
-# from retained bytes. Historical availability of the primary bytes is not yet
-# independently attested: caller-authored publication/effective timestamps are not a
-# sufficient anti-backdating proof. Keep this blocker even when every row parses.
-SOURCE_VALUE_BOUND_FIELDS = ("price", "primary_document_literal_claims")
-SOURCE_VALUE_BINDING_BLOCKERS = (
-    "PRIMARY_DOCUMENT_HISTORICAL_AVAILABILITY_NOT_INDEPENDENTLY_ATTESTED",
+# from retained bytes. Primary-document historical availability is additionally bound
+# to an independent pre-decision Common Crawl WARC capture. There is therefore no
+# remaining unconditional source-value blocker in this authoritative wrapper; bad or
+# missing archive evidence is recorded per snapshot and keeps coverage blocked.
+SOURCE_VALUE_BOUND_FIELDS = (
+    "price",
+    "primary_document_literal_claims",
+    "primary_document_historical_availability",
 )
+SOURCE_VALUE_BINDING_BLOCKERS: tuple[str, ...] = ()
 
 
 def _git_blob_sha(raw: bytes) -> str:
@@ -111,6 +117,12 @@ def _validate_primary_record_if_used(
         return
     try:
         validate_primary_document_literal_claim(
+            record,
+            decision_at=decision_at,
+            artifact_root=artifact_root,
+            repo_root=repo_root,
+        )
+        validate_primary_document_historical_availability(
             record,
             decision_at=decision_at,
             artifact_root=artifact_root,
