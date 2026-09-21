@@ -14,6 +14,7 @@ from big_move_binance_historical_universe import (
 
 PREFIX = "data/spot/monthly/klines/"
 HOST = "https://s3-ap-northeast-1.amazonaws.com/data.binance.vision"
+BUCKET = "data.binance.vision"
 
 
 def _write(root: Path, name: str, raw: bytes):
@@ -35,15 +36,30 @@ def _key(symbol: str, month: str, *, checksum=False):
     return f"{PREFIX}{symbol}/1d/{symbol}-1d-{month}.zip{suffix}"
 
 
-def _xml(keys, *, truncated=False, next_token=None, prefix=PREFIX):
-    token_xml = f"<NextContinuationToken>{next_token}</NextContinuationToken>" if next_token else ""
+def _xml(
+    keys,
+    *,
+    truncated=False,
+    next_token=None,
+    continuation_token=None,
+    prefix=PREFIX,
+    bucket=BUCKET,
+):
+    current_xml = (
+        f"<ContinuationToken>{continuation_token}</ContinuationToken>"
+        if continuation_token is not None
+        else ""
+    )
+    next_xml = f"<NextContinuationToken>{next_token}</NextContinuationToken>" if next_token else ""
     contents = "".join(f"<Contents><Key>{key}</Key></Contents>" for key in keys)
     return (
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
         "<ListBucketResult xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"
+        f"<Name>{bucket}</Name>"
         f"<Prefix>{prefix}</Prefix>"
+        f"{current_xml}"
         f"<IsTruncated>{str(truncated).lower()}</IsTruncated>"
-        f"{token_xml}{contents}</ListBucketResult>"
+        f"{next_xml}{contents}</ListBucketResult>"
     ).encode()
 
 
@@ -61,10 +77,11 @@ def _pair(symbol: str, month: str):
 def test_contract_is_exact_git_blob_pinned():
     contract = load_contract()
     assert contract["artifact_id"] == CONTRACT_ARTIFACT_ID
-    assert CONTRACT_GIT_BLOB_SHA == "b49c67cef3d16ba907a58fef2f8c7414ec0e905e"
+    assert CONTRACT_GIT_BLOB_SHA == "582bff3b9f19ad2c21e134b68090d61158fda102"
     assert contract["membership_semantics"]["do_not_use_current_exchange_info"] is True
     assert contract["source"]["listing_host"] == "s3-ap-northeast-1.amazonaws.com"
     assert contract["source"]["listing_bucket_path"] == "/data.binance.vision"
+    assert contract["source"]["listing_bucket_name"] == "data.binance.vision"
 
 
 def test_complete_two_page_walk_includes_delisted_archive_symbol(tmp_path):
@@ -72,7 +89,12 @@ def test_complete_two_page_walk_includes_delisted_archive_symbol(tmp_path):
     page2_keys = _pair("BTCUSDT", "2021-02") + _pair("OLDCOINUSDT", "2021-02")
     pages = [
         _page(tmp_path, 1, _xml(page1_keys, truncated=True, next_token="token-2")),
-        _page(tmp_path, 2, _xml(page2_keys), token="token-2"),
+        _page(
+            tmp_path,
+            2,
+            _xml(page2_keys, continuation_token="token-2"),
+            token="token-2",
+        ),
     ]
 
     result = build_historical_universe(pages, artifact_root=tmp_path)
@@ -88,6 +110,13 @@ def test_complete_two_page_walk_includes_delisted_archive_symbol(tmp_path):
     assert result["label_authority"] is False
     assert result["forecast_authority"] is False
     assert result["trade_authority"] is False
+
+
+def test_unusual_unicode_archived_symbol_is_not_dropped_by_ascii_survivor_grammar(tmp_path):
+    symbol = "龙虾USDT"
+    pages = [_page(tmp_path, 1, _xml(_pair(symbol, "2022-06")))]
+    result = build_historical_universe(pages, artifact_root=tmp_path)
+    assert [row["symbol"] for row in result["symbols"]] == [symbol]
 
 
 def test_result_digest_is_deterministic_for_same_retained_pages(tmp_path):
@@ -115,7 +144,12 @@ def test_duplicate_object_key_across_pages_fails_closed(tmp_path):
     duplicate = _key("BTCUSDT", "2021-01")
     pages = [
         _page(tmp_path, 1, _xml([duplicate], truncated=True, next_token="next")),
-        _page(tmp_path, 2, _xml([duplicate, _key("BTCUSDT", "2021-01", checksum=True)]), token="next"),
+        _page(
+            tmp_path,
+            2,
+            _xml([duplicate, _key("BTCUSDT", "2021-01", checksum=True)], continuation_token="next"),
+            token="next",
+        ),
     ]
     with pytest.raises(ValueError, match="duplicate Binance archive object key"):
         build_historical_universe(pages, artifact_root=tmp_path)
@@ -129,12 +163,55 @@ def test_truncated_final_page_is_rejected(tmp_path):
         build_historical_universe(pages, artifact_root=tmp_path)
 
 
-def test_continuation_token_chain_must_match_provider_page(tmp_path):
+def test_request_continuation_token_must_match_prior_next_token(tmp_path):
     pages = [
         _page(tmp_path, 1, _xml(_pair("BTCUSDT", "2021-01"), truncated=True, next_token="expected")),
-        _page(tmp_path, 2, _xml(_pair("BTCUSDT", "2021-02")), token="wrong"),
+        _page(tmp_path, 2, _xml(_pair("BTCUSDT", "2021-02"), continuation_token="wrong"), token="wrong"),
     ]
     with pytest.raises(ValueError, match="continuation-token"):
+        build_historical_universe(pages, artifact_root=tmp_path)
+
+
+def test_response_continuation_token_must_match_request_locator(tmp_path):
+    pages = [
+        _page(tmp_path, 1, _xml(_pair("BTCUSDT", "2021-01"), truncated=True, next_token="expected")),
+        _page(
+            tmp_path,
+            2,
+            _xml(_pair("BTCUSDT", "2021-02"), continuation_token="other"),
+            token="expected",
+        ),
+    ]
+    with pytest.raises(ValueError, match="response ContinuationToken"):
+        build_historical_universe(pages, artifact_root=tmp_path)
+
+
+def test_response_bucket_name_must_match_provider_bucket(tmp_path):
+    pages = [_page(tmp_path, 1, _xml(_pair("BTCUSDT", "2021-01"), bucket="other-bucket"))]
+    with pytest.raises(ValueError, match="bucket Name"):
+        build_historical_universe(pages, artifact_root=tmp_path)
+
+
+def test_nonadvancing_provider_continuation_token_fails_closed(tmp_path):
+    pages = [
+        _page(
+            tmp_path,
+            1,
+            _xml(_pair("BTCUSDT", "2021-01"), truncated=True, next_token="same"),
+        ),
+        _page(
+            tmp_path,
+            2,
+            _xml(
+                _pair("BTCUSDT", "2021-02"),
+                truncated=True,
+                continuation_token="same",
+                next_token="same",
+            ),
+            token="same",
+        ),
+    ]
+    with pytest.raises(ValueError, match="did not advance"):
         build_historical_universe(pages, artifact_root=tmp_path)
 
 
