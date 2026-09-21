@@ -52,6 +52,7 @@ jobs:
           set -euo pipefail
           git fetch --no-tags origin main
           MAIN_SHA="$(git rev-parse origin/main)"
+          REPO_OWNER="${GITHUB_REPOSITORY%%/*}"
           SELECTED_ISSUE=""
           SELECTED_PR=""
           SELECTED_BRANCH=""
@@ -59,10 +60,17 @@ jobs:
           SELECTED_REF=""
           SECURITY_RUN_ID=""
 
-          REQUESTS="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 100 --json number,title,createdAt)"
-          while IFS=$'\t' read -r ISSUE_NUMBER TITLE CREATED_AT; do
+          REQUESTS="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 100 --json number,title,createdAt,author)"
+          while IFS=$'\t' read -r ISSUE_NUMBER TITLE CREATED_AT REQUEST_AUTHOR; do
             [ -n "$ISSUE_NUMBER" ] || continue
             if [[ ! "$TITLE" =~ ^exact-head-review-request:\ pr=([0-9]+)\ sha=([0-9a-f]{40})$ ]]; then
+              continue
+            fi
+            # Only the repository owner may authorize a paid independent review.
+            # This prevents arbitrary public issues from consuming reviewer budget.
+            if [ "$REQUEST_AUTHOR" != "$REPO_OWNER" ]; then
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Unauthorized exact-head review request: only repository owner $REPO_OWNER may authorize reviewer execution. Closing without invoking any model/API."
+              gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
               continue
             fi
             PR_NUMBER="${BASH_REMATCH[1]}"
@@ -89,7 +97,8 @@ jobs:
             fi
 
             APPROVED_TITLE="exact-head-review-approved: pr=$PR_NUMBER sha=$REQUESTED_SHA"
-            ALREADY_APPROVED="$(gh issue list --repo "$GITHUB_REPOSITORY" --state all --limit 100 --json title --jq --arg title "$APPROVED_TITLE" '[.[] | select(.title == $title)] | length')"
+            APPROVALS="$(gh issue list --repo "$GITHUB_REPOSITORY" --state all --limit 100 --json title)"
+            ALREADY_APPROVED="$(printf '%s' "$APPROVALS" | jq --arg title "$APPROVED_TITLE" '[.[] | select(.title == $title)] | length')"
             if [ "$ALREADY_APPROVED" -gt 0 ]; then
               gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "An approval receipt already exists for PR #$PR_NUMBER exact head $REQUESTED_SHA; closing duplicate request."
               gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
@@ -130,7 +139,7 @@ jobs:
             SELECTED_REF="$REVIEW_REF"
             SECURITY_RUN_ID="$RUN_ID"
             break
-          done < <(printf '%s' "$REQUESTS" | jq -r 'sort_by(.createdAt)[] | [.number, .title, .createdAt] | @tsv')
+          done < <(printf '%s' "$REQUESTS" | jq -r 'sort_by(.createdAt)[] | [.number, .title, .createdAt, (.author.login // "")] | @tsv')
 
           echo "request_issue=$SELECTED_ISSUE" >> "$GITHUB_OUTPUT"
           echo "pr_number=$SELECTED_PR" >> "$GITHUB_OUTPUT"
