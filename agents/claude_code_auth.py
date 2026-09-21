@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -13,7 +14,11 @@ SUBSCRIPTION = "SUBSCRIPTION"
 API_METERED = "API_METERED"
 MANUAL_ADAPTER_REQUIRED = "MANUAL_ADAPTER_REQUIRED"
 UNKNOWN = "UNKNOWN"
+SUBSCRIPTION_AUTOMATED = "SUBSCRIPTION_AUTOMATED"
 
+REPO = "rnnyrgs-web/tradingview-ai-crypto"
+CAPABILITY_WORKFLOW = ".github/workflows/claude_code_subscription_probe.yml"
+SHA = re.compile(r"^[0-9a-f]{40}$")
 SAFE_AUTH_MODES = {SUBSCRIPTION, API_METERED, MANUAL_ADAPTER_REQUIRED, UNKNOWN}
 SECRET_ENV_NAMES = {"CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_API_KEY"}
 
@@ -43,6 +48,10 @@ def _valid_time(value: Any) -> bool:
         return False
 
 
+def _valid_sha(value: Any) -> bool:
+    return isinstance(value, str) and bool(SHA.fullmatch(value))
+
+
 @dataclass(frozen=True)
 class AuthDecision:
     auth_mode: str
@@ -59,31 +68,122 @@ class AuthDecision:
         return result
 
 
+def validate_capability_receipt(
+    receipt: Mapping[str, Any], *, trusted_workflow_sha: str
+) -> str:
+    """Validate the durable GitHub Actions proof used to authorize subscription mode.
+
+    A caller cannot authorize subscription execution with a boolean or arbitrary
+    proof string. It must supply the exact secret-free receipt emitted by the
+    pinned capability workflow, and the orchestrator must bind that receipt to a
+    workflow SHA it independently trusts (normally the current reviewed main
+    SHA after this workflow has been integrated).
+
+    This validation does not itself query GitHub. The orchestration boundary is
+    responsible for obtaining the receipt and trusted SHA from GitHub rather
+    than caller-authored state.
+    """
+    if not isinstance(receipt, Mapping):
+        raise AuthPolicyError("capability receipt must be a mapping")
+    if not _valid_sha(trusted_workflow_sha):
+        raise AuthPolicyError("trusted workflow SHA must be a lowercase 40-character SHA")
+
+    required = {
+        "version",
+        "provider",
+        "engine",
+        "auth_mode",
+        "reason",
+        "repository",
+        "run_id",
+        "run_attempt",
+        "event_name",
+        "head_sha",
+        "execution_sha",
+        "workflow_ref",
+        "probe_step_outcome",
+        "probe_conclusion",
+        "structured_probe_verified",
+        "proof_ref",
+        "content_digest",
+    }
+    if set(receipt) != required:
+        raise AuthPolicyError("capability receipt fields mismatch")
+    if receipt.get("version") != 3:
+        raise AuthPolicyError("unsupported capability receipt version")
+    if receipt.get("provider") != "anthropic" or receipt.get("engine") != "claude-code":
+        raise AuthPolicyError("capability provider/engine mismatch")
+    if receipt.get("auth_mode") != SUBSCRIPTION_AUTOMATED:
+        raise AuthPolicyError("capability receipt does not prove subscription automation")
+    if receipt.get("reason") != "OFFICIAL_OAUTH_ACTION_STRUCTURED_PROBE_SUCCEEDED":
+        raise AuthPolicyError("capability success reason mismatch")
+    if receipt.get("repository") != REPO:
+        raise AuthPolicyError("capability repository mismatch")
+    if receipt.get("event_name") not in {"workflow_dispatch", "pull_request"}:
+        raise AuthPolicyError("unsupported capability event")
+    if receipt.get("head_sha") != trusted_workflow_sha:
+        raise AuthPolicyError("capability proof is not bound to trusted workflow SHA")
+    if not _valid_sha(receipt.get("execution_sha")):
+        raise AuthPolicyError("malformed capability execution SHA")
+    if receipt.get("probe_step_outcome") != "success" or receipt.get("probe_conclusion") != "success":
+        raise AuthPolicyError("capability action did not succeed")
+    if receipt.get("structured_probe_verified") is not True:
+        raise AuthPolicyError("capability structured model proof missing")
+
+    run_id = str(receipt.get("run_id") or "")
+    run_attempt = str(receipt.get("run_attempt") or "")
+    if not run_id.isdigit() or int(run_id) <= 0 or not run_attempt.isdigit() or int(run_attempt) <= 0:
+        raise AuthPolicyError("malformed capability run identity")
+    expected_proof = f"github-actions://{REPO}/runs/{run_id}/attempts/{run_attempt}"
+    if receipt.get("proof_ref") != expected_proof:
+        raise AuthPolicyError("capability proof reference mismatch")
+
+    workflow_ref = receipt.get("workflow_ref")
+    expected_prefix = f"{REPO}/{CAPABILITY_WORKFLOW}@"
+    if not isinstance(workflow_ref, str) or not workflow_ref.startswith(expected_prefix):
+        raise AuthPolicyError("capability workflow identity mismatch")
+
+    unsigned = {k: v for k, v in receipt.items() if k != "content_digest"}
+    if receipt.get("content_digest") != _digest(unsigned):
+        raise AuthPolicyError("capability receipt digest mismatch")
+
+    raw = json.dumps(dict(receipt), sort_keys=True)
+    for secret_name in SECRET_ENV_NAMES:
+        secret_value = os.environ.get(secret_name)
+        if secret_value and secret_value in raw:
+            raise AuthPolicyError("credential value leaked into capability receipt")
+    return expected_proof
+
+
 def resolve_auth(
     *,
     oauth_present: bool,
     api_key_present: bool,
-    subscription_capability_verified: bool = False,
-    capability_proof_ref: str | None = None,
+    capability_receipt: Mapping[str, Any] | None = None,
+    trusted_workflow_sha: str | None = None,
     allow_api_fallback: bool = True,
 ) -> AuthDecision:
     """Select authentication without accepting or returning credential values.
 
     Credential presence is deliberately not proof of a supported autonomous
-    subscription path.  Subscription execution is enabled only after a trusted
-    caller has independently verified a durable capability proof and supplies
-    its non-secret reference.  The CLI in this module intentionally has no flag
-    that can self-assert that proof.
+    subscription path. Subscription execution requires the exact durable
+    capability receipt plus a separately trusted workflow SHA. There is no
+    boolean/self-asserted escape hatch.
     """
-    if subscription_capability_verified and not oauth_present:
-        raise AuthPolicyError("subscription capability cannot be proven without OAuth credential presence")
-    if subscription_capability_verified and not _present(capability_proof_ref):
-        raise AuthPolicyError("verified subscription capability requires durable proof reference")
-    if not subscription_capability_verified and capability_proof_ref is not None:
-        raise AuthPolicyError("unverified subscription capability cannot carry proof reference")
+    capability_proof_ref: str | None = None
+    if capability_receipt is not None:
+        if not oauth_present:
+            raise AuthPolicyError("subscription capability cannot be used without OAuth credential presence")
+        if trusted_workflow_sha is None:
+            raise AuthPolicyError("capability receipt requires trusted workflow SHA")
+        capability_proof_ref = validate_capability_receipt(
+            capability_receipt, trusted_workflow_sha=trusted_workflow_sha
+        )
+    elif trusted_workflow_sha is not None:
+        raise AuthPolicyError("trusted workflow SHA cannot authorize subscription without capability receipt")
 
     if oauth_present:
-        if not subscription_capability_verified:
+        if capability_proof_ref is None:
             # Never silently switch to paid API when the caller is explicitly
             # configured for subscription OAuth but that path is not yet proven.
             return AuthDecision(
@@ -138,16 +238,16 @@ def resolve_auth(
 def resolve_auth_from_environment(
     environ: Mapping[str, str] | None = None,
     *,
-    subscription_capability_verified: bool = False,
-    capability_proof_ref: str | None = None,
+    capability_receipt: Mapping[str, Any] | None = None,
+    trusted_workflow_sha: str | None = None,
     allow_api_fallback: bool = True,
 ) -> AuthDecision:
     env = os.environ if environ is None else environ
     return resolve_auth(
         oauth_present=_present(env.get("CLAUDE_CODE_OAUTH_TOKEN")),
         api_key_present=_present(env.get("ANTHROPIC_API_KEY")),
-        subscription_capability_verified=subscription_capability_verified,
-        capability_proof_ref=capability_proof_ref,
+        capability_receipt=capability_receipt,
+        trusted_workflow_sha=trusted_workflow_sha,
         allow_api_fallback=allow_api_fallback,
     )
 
@@ -219,7 +319,7 @@ def make_auth_receipt(
         raise AuthPolicyError("receipt identity fields must be non-empty")
     if branch in {"main", "master"}:
         raise AuthPolicyError("adapter attempt cannot target main")
-    if len(base_main_sha) != 40 or any(c not in "0123456789abcdef" for c in base_main_sha):
+    if not _valid_sha(base_main_sha):
         raise AuthPolicyError("base_main_sha must be a lowercase 40-character SHA")
     validate_decision(decision.as_dict())
     at = observed_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
@@ -259,8 +359,7 @@ def validate_auth_receipt(receipt: Mapping[str, Any]) -> None:
         raise AuthPolicyError("provider/engine mismatch")
     if receipt.get("branch") in {"main", "master"}:
         raise AuthPolicyError("receipt cannot target main")
-    sha = receipt.get("base_main_sha")
-    if not isinstance(sha, str) or len(sha) != 40 or any(c not in "0123456789abcdef" for c in sha):
+    if not _valid_sha(receipt.get("base_main_sha")):
         raise AuthPolicyError("malformed base main SHA")
     for field in ("task_id", "request_id", "branch", "attempt_id", "reason", "content_digest"):
         if not isinstance(receipt.get(field), str) or not receipt[field].strip():
@@ -316,13 +415,12 @@ def main() -> int:
     receipt.add_argument("--disable-api-fallback", action="store_true")
     args = parser.parse_args()
 
-    # Intentionally fail closed for subscription OAuth from the standalone CLI.
-    # A trusted orchestration path must first verify a durable capability proof
-    # and call resolve_auth[_from_environment](..., subscription_capability_verified=True,
-    # capability_proof_ref=...) directly.  Credential presence alone is never proof.
+    # Standalone CLI intentionally cannot authorize subscription execution.
+    # The trusted orchestration path must fetch a capability receipt from GitHub,
+    # bind it to a separately trusted workflow/main SHA, and call the Python API.
     decision = resolve_auth_from_environment(
-        subscription_capability_verified=False,
-        capability_proof_ref=None,
+        capability_receipt=None,
+        trusted_workflow_sha=None,
         allow_api_fallback=not args.disable_api_fallback,
     )
     if args.command == "resolve":
