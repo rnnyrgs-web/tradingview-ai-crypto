@@ -139,7 +139,7 @@ def test_post_decision_archive_rows_cannot_be_hidden_by_claimed_event_max(tmp_pa
         rows=[
             _row("2024-01-01", "105"),
             _row("2024-01-02", "111"),
-            _row("2024-01-03", "999"),
+            _row("2024-01-03", "115"),
         ],
     )
     with pytest.raises(ValueError, match="post-decision or incomplete bar"):
