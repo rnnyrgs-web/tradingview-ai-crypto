@@ -1,15 +1,11 @@
 """Fail-closed pre-outcome coverage gate for <=90 day 2x+ cohort research.
 
-Structural metadata is not scientific evidence.  A snapshot can count toward label
-opening only when every evidence record is bound to retained immutable bytes whose
-SHA-256 is recomputed here.  Derived fields additionally bind their transformation,
-parameters and input-artifact digests.  Critical cohort gates (30-day median venue
-quote volume, listing age and historical membership/tradability) are recomputed
-from retained inputs rather than trusting caller-supplied values.
+A retained digest proves byte integrity, not historical source authenticity. Cohort 001
+therefore requires both retained-byte verification and source-native/archive proof
+before any snapshot can contribute to label opening. Derived fields inherit the
+source-authenticity requirements of every bound input.
 
-This module does not create forward forecasts, open outcome labels, or grant trading
-authority.  It only determines whether an outcome-blind historical coverage manifest
-is authentic enough to hand to the separately-owned event/matched-control builder.
+This module creates no forecast, opens no outcome, and grants no trading authority.
 """
 
 from __future__ import annotations
@@ -23,6 +19,12 @@ from pathlib import Path
 import re
 from statistics import median
 from typing import Any
+
+from big_move_source_authenticity import (
+    is_derived_source,
+    validate_record_authenticity,
+    verify_source_policy_pin,
+)
 
 SCHEMA = "two_x_cohort_preflight.v1"
 RESULT_SCHEMA = "two_x_cohort_coverage_result.v1"
@@ -47,7 +49,6 @@ EXACT_DERIVED_SOURCE = {
     "tradable": "DERIVED_BINANCE_HISTORICAL_MEMBERSHIP_V1",
     "member": "DERIVED_BINANCE_HISTORICAL_MEMBERSHIP_V1",
 }
-
 LIQUIDITY_PARAMS = {
     "window_days": 30,
     "statistic": "median",
@@ -62,9 +63,7 @@ MEMBERSHIP_PARAMS = {"rule": "verified_market_presence_at_decision"}
 
 
 def _canonical(value: Any) -> bytes:
-    return json.dumps(
-        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-    ).encode("utf-8")
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
 
 
 def digest(value: Any) -> str:
@@ -87,9 +86,7 @@ def _walk_forbidden(value: Any, path: str = "$") -> None:
     if isinstance(value, dict):
         for key, child in value.items():
             if str(key).strip().lower() in FORBIDDEN_OUTCOME_KEYS:
-                raise ValueError(
-                    f"outcome-derived key forbidden before label-open: {path}.{key}"
-                )
+                raise ValueError(f"outcome-derived key forbidden before label-open: {path}.{key}")
             _walk_forbidden(child, f"{path}.{key}")
     elif isinstance(value, list):
         for index, child in enumerate(value):
@@ -142,14 +139,13 @@ def _historical_rule(contract: dict[str, Any]) -> dict[str, Any]:
 
 def validate_contract(contract: dict[str, Any]) -> None:
     _walk_forbidden(contract)
+    verify_source_policy_pin()
     if contract.get("schema") != SCHEMA:
         raise ValueError("unexpected cohort preflight schema")
     if contract.get("outcome_access") != "SEALED_UNTIL_COVERAGE_READY":
         raise ValueError("outcome access must remain sealed during coverage preflight")
     if contract.get("forward_formation_status") != "BLOCKED_UNTIL_TRUSTED_RECEIPT":
-        raise ValueError(
-            "forward formation must remain blocked until trusted receipt integration"
-        )
+        raise ValueError("forward formation must remain blocked until trusted receipt integration")
     _utc(contract.get("frozen_at"), field="frozen_at")
 
     rule = _historical_rule(contract)
@@ -169,11 +165,7 @@ def validate_contract(contract: dict[str, Any]) -> None:
             raise ValueError(f"historical_universe_rule.{key} must be nonnegative")
 
     required = contract.get("required_features")
-    if (
-        not isinstance(required, list)
-        or not required
-        or len(set(required)) != len(required)
-    ):
+    if not isinstance(required, list) or not required or len(set(required)) != len(required):
         raise ValueError("required_features must be a non-empty unique list")
     if any(not isinstance(field, str) or not field.strip() for field in required):
         raise ValueError("required feature names must be non-empty strings")
@@ -192,11 +184,7 @@ def validate_contract(contract: dict[str, Any]) -> None:
 
     for field in required:
         if feature_kinds[field] not in {
-            "bool",
-            "nonempty_string",
-            "positive_number",
-            "nonnegative_number",
-            "finite_number",
+            "bool", "nonempty_string", "positive_number", "nonnegative_number", "finite_number"
         }:
             raise ValueError(f"unsupported feature kind: {field}")
         allowed = source_eligibility[field]
@@ -213,11 +201,7 @@ def validate_contract(contract: dict[str, Any]) -> None:
     thresholds = contract.get("coverage_thresholds")
     if not isinstance(thresholds, dict):
         raise ValueError("coverage_thresholds missing")
-    for key in (
-        "minimum_assets",
-        "minimum_snapshots",
-        "minimum_decisions_per_asset",
-    ):
+    for key in ("minimum_assets", "minimum_snapshots", "minimum_decisions_per_asset"):
         value = thresholds.get(key)
         if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
             raise ValueError(f"{key} must be a positive integer")
@@ -238,25 +222,17 @@ def _artifact_path(root: Path | None, relpath: Any, *, field: str) -> Path:
     return path
 
 
-def _read_verified_json(
-    root: Path | None,
-    relpath: Any,
-    expected_sha256: Any,
-    *,
-    field: str,
-) -> Any:
+def _read_verified_json(root: Path | None, relpath: Any, expected_sha256: Any, *, field: str) -> Any:
     if not isinstance(expected_sha256, str) or not SHA256_RE.fullmatch(expected_sha256):
         raise ValueError(f"{field}.sha256 must be lowercase SHA-256")
     path = _artifact_path(root, relpath, field=field)
     try:
-        size = path.stat().st_size
-        if size > MAX_ARTIFACT_BYTES:
+        if path.stat().st_size > MAX_ARTIFACT_BYTES:
             raise ValueError(f"{field} retained artifact is too large")
         raw = path.read_bytes()
     except OSError as exc:
         raise ValueError(f"{field} retained artifact is unavailable") from exc
-    actual = hashlib.sha256(raw).hexdigest()
-    if actual != expected_sha256:
+    if hashlib.sha256(raw).hexdigest() != expected_sha256:
         raise ValueError(f"{field} retained artifact SHA-256 mismatch")
     try:
         return json.loads(raw.decode("utf-8"))
@@ -267,16 +243,14 @@ def _read_verified_json(
 def _mirror_record_matches_artifact(record: dict[str, Any], artifact: Any, *, field: str) -> None:
     if not isinstance(artifact, dict):
         raise ValueError(f"{field} retained evidence artifact must be an object")
-    for key in ("source_id", "source_version", "observed_at", "available_at", "value"):
+    for key in ("source_id", "source_version", "observed_at", "available_at", "value", "source_proof"):
         if key not in artifact or not _values_equal(record.get(key), artifact.get(key)):
             raise ValueError(f"{field} caller metadata/value does not match retained artifact")
     if record.get("derivation") != artifact.get("derivation"):
         raise ValueError(f"{field} derivation does not match retained artifact")
 
 
-def _verified_inputs(
-    derivation: dict[str, Any], root: Path | None, *, field: str
-) -> list[Any]:
+def _verified_inputs(derivation: dict[str, Any], root: Path | None, *, field: str) -> list[Any]:
     inputs = derivation.get("inputs")
     if not isinstance(inputs, list) or not inputs:
         raise ValueError(f"{field}.derivation.inputs must be non-empty")
@@ -284,24 +258,16 @@ def _verified_inputs(
     for index, item in enumerate(inputs):
         if not isinstance(item, dict):
             raise ValueError(f"{field}.derivation.inputs[{index}] must be an object")
-        verified.append(
-            _read_verified_json(
-                root,
-                item.get("artifact_relpath"),
-                item.get("sha256"),
-                field=f"{field}.derivation.inputs[{index}]",
-            )
-        )
+        verified.append(_read_verified_json(
+            root, item.get("artifact_relpath"), item.get("sha256"),
+            field=f"{field}.derivation.inputs[{index}]"
+        ))
     return verified
 
 
 def _expect_derivation(
-    record: dict[str, Any],
-    root: Path | None,
-    *,
-    field: str,
-    transform_id: str,
-    parameters: dict[str, Any] | None = None,
+    record: dict[str, Any], root: Path | None, *, field: str,
+    transform_id: str, parameters: dict[str, Any] | None = None,
 ) -> tuple[dict[str, Any], list[Any]]:
     derivation = record.get("derivation")
     if not isinstance(derivation, dict):
@@ -319,20 +285,12 @@ def _expect_derivation(
     return derivation, _verified_inputs(derivation, root, field=field)
 
 
-def _validate_liquidity_derivation(
-    record: dict[str, Any], root: Path | None, decision_at: datetime
-) -> None:
+def _validate_liquidity_derivation(record: dict[str, Any], root: Path | None, decision_at: datetime) -> None:
     _, inputs = _expect_derivation(
-        record,
-        root,
-        field="liquidity_usd",
-        transform_id="TRAILING_30D_MEDIAN_QUOTE_VOLUME_USD_V1",
-        parameters=LIQUIDITY_PARAMS,
+        record, root, field="liquidity_usd",
+        transform_id="TRAILING_30D_MEDIAN_QUOTE_VOLUME_USD_V1", parameters=LIQUIDITY_PARAMS,
     )
-    expected_dates = {
-        (decision_at.date() - timedelta(days=days)).isoformat()
-        for days in range(1, 31)
-    }
+    expected_dates = {(decision_at.date() - timedelta(days=days)).isoformat() for days in range(1, 31)}
     by_date: dict[str, float] = {}
     for artifact in inputs:
         if not isinstance(artifact, dict) or artifact.get("schema") != "binance_daily_quote_volume.v1":
@@ -355,26 +313,17 @@ def _validate_liquidity_derivation(
             if not math.isfinite(volume) or volume < 0:
                 raise ValueError("liquidity_usd input quote volume invalid")
             by_date[date] = volume
-
-    missing = sorted(expected_dates - set(by_date))
-    if missing:
-        raise ValueError(
-            "liquidity_usd requires all 30 completed UTC daily quote-volume observations"
-        )
+    if expected_dates - set(by_date):
+        raise ValueError("liquidity_usd requires all 30 completed UTC daily quote-volume observations")
     computed = float(median([by_date[date] for date in sorted(expected_dates)]))
     if not math.isclose(computed, float(record["value"]), rel_tol=1e-12, abs_tol=1e-9):
         raise ValueError("liquidity_usd value does not equal deterministic trailing-30d median")
 
 
-def _validate_listing_age_derivation(
-    record: dict[str, Any], root: Path | None, decision_at: datetime
-) -> None:
+def _validate_listing_age_derivation(record: dict[str, Any], root: Path | None, decision_at: datetime) -> None:
     _, inputs = _expect_derivation(
-        record,
-        root,
-        field="listing_age_days",
-        transform_id="DERIVED_BINANCE_LISTING_AGE_DAYS_V1",
-        parameters=LISTING_AGE_PARAMS,
+        record, root, field="listing_age_days",
+        transform_id="DERIVED_BINANCE_LISTING_AGE_DAYS_V1", parameters=LISTING_AGE_PARAMS,
     )
     if len(inputs) != 1 or not isinstance(inputs[0], dict) or inputs[0].get("schema") != "binance_first_trade.v1":
         raise ValueError("listing_age_days requires one binance_first_trade.v1 input")
@@ -390,11 +339,8 @@ def _validate_membership_derivation(
     record: dict[str, Any], root: Path | None, decision_at: datetime, *, field: str
 ) -> None:
     _, inputs = _expect_derivation(
-        record,
-        root,
-        field=field,
-        transform_id="DERIVED_BINANCE_HISTORICAL_MEMBERSHIP_V1",
-        parameters=MEMBERSHIP_PARAMS,
+        record, root, field=field,
+        transform_id="DERIVED_BINANCE_HISTORICAL_MEMBERSHIP_V1", parameters=MEMBERSHIP_PARAMS,
     )
     if len(inputs) != 1 or not isinstance(inputs[0], dict) or inputs[0].get("schema") != "binance_market_presence.v1":
         raise ValueError(f"{field} requires one binance_market_presence.v1 input")
@@ -406,23 +352,13 @@ def _validate_membership_derivation(
 
 
 def _validate_source(
-    record: dict[str, Any],
-    *,
-    decision_at: datetime,
-    field: str,
-    kind: str,
-    allowed_sources: list[str],
-    artifact_root: Path | None,
+    record: dict[str, Any], *, decision_at: datetime, field: str, kind: str,
+    allowed_sources: list[str], artifact_root: Path | None,
 ) -> None:
     if not isinstance(record, dict):
         raise ValueError(f"{field} evidence must be an object")
     for key in (
-        "source_id",
-        "source_version",
-        "raw_digest_sha256",
-        "artifact_relpath",
-        "observed_at",
-        "available_at",
+        "source_id", "source_version", "raw_digest_sha256", "artifact_relpath", "observed_at", "available_at"
     ):
         if not isinstance(record.get(key), str) or not record[key].strip():
             raise ValueError(f"{field}.{key} missing")
@@ -441,12 +377,12 @@ def _validate_source(
     _validate_value(record["value"], kind, field=field)
 
     artifact = _read_verified_json(
-        artifact_root,
-        record["artifact_relpath"],
-        record["raw_digest_sha256"],
-        field=field,
+        artifact_root, record["artifact_relpath"], record["raw_digest_sha256"], field=field
     )
     _mirror_record_matches_artifact(record, artifact, field=field)
+    validate_record_authenticity(
+        record, artifact_root=artifact_root, decision_at=decision_at, field=field
+    )
 
     exact = EXACT_DERIVED_SOURCE.get(field)
     if exact is not None:
@@ -458,40 +394,26 @@ def _validate_source(
             _validate_listing_age_derivation(record, artifact_root, decision_at)
         else:
             _validate_membership_derivation(record, artifact_root, decision_at, field=field)
-    elif record.get("source_id", "").startswith("DERIVED_"):
-        _expect_derivation(
-            record,
-            artifact_root,
-            field=field,
-            transform_id=record["source_id"],
-        )
+    elif is_derived_source(record["source_id"]):
+        _expect_derivation(record, artifact_root, field=field, transform_id=record["source_id"])
 
 
 def _validate_frozen_universe_gates(
-    snapshot: dict[str, Any],
-    contract: dict[str, Any],
-    *,
-    decision_at: datetime,
+    snapshot: dict[str, Any], contract: dict[str, Any], *, decision_at: datetime
 ) -> list[str]:
     reasons: list[str] = []
     rule = _historical_rule(contract)
-
     if snapshot.get("venue") != rule["venue"]:
         reasons.append("venue does not match frozen historical universe")
-
     grid_start = _utc(rule["grid_start"], field="historical_universe_rule.grid_start")
     grid_end = _utc(rule["grid_end"], field="historical_universe_rule.grid_end")
     if decision_at < grid_start or decision_at > grid_end:
         reasons.append("decision_at lies outside frozen grid range")
     if not (
-        decision_at.weekday() == 0
-        and decision_at.hour == 0
-        and decision_at.minute == 0
-        and decision_at.second == 0
-        and decision_at.microsecond == 0
+        decision_at.weekday() == 0 and decision_at.hour == 0 and decision_at.minute == 0
+        and decision_at.second == 0 and decision_at.microsecond == 0
     ):
         reasons.append("decision_at is not on MONDAY_00_UTC_WEEKLY grid")
-
     features = snapshot.get("features")
     if not isinstance(features, dict):
         return reasons
@@ -517,9 +439,7 @@ def _validate_frozen_universe_gates(
 
 
 def validate_snapshot(
-    snapshot: dict[str, Any],
-    contract: dict[str, Any],
-    artifact_root: Path | None = None,
+    snapshot: dict[str, Any], contract: dict[str, Any], artifact_root: Path | None = None
 ) -> tuple[bool, tuple[str, ...]]:
     _walk_forbidden(snapshot)
     reasons: list[str] = []
@@ -527,12 +447,10 @@ def validate_snapshot(
         decision_at = _utc(snapshot.get("decision_at"), field="decision_at")
     except ValueError as exc:
         return False, (str(exc),)
-
     for key in ("stable_asset_id", "venue", "venue_symbol"):
         value = snapshot.get(key)
         if not isinstance(value, str) or not value.strip():
             reasons.append(f"{key} missing")
-
     reasons.extend(_validate_frozen_universe_gates(snapshot, contract, decision_at=decision_at))
 
     identity = snapshot.get("identity")
@@ -546,11 +464,8 @@ def validate_snapshot(
             if decision_at < valid_from or (valid_to is not None and decision_at >= valid_to):
                 raise ValueError("decision_at lies outside stable identity interval")
             _validate_source(
-                identity.get("evidence"),
-                decision_at=decision_at,
-                field="identity.evidence",
-                kind="nonempty_string",
-                allowed_sources=contract["identity_source_eligibility"],
+                identity.get("evidence"), decision_at=decision_at, field="identity.evidence",
+                kind="nonempty_string", allowed_sources=contract["identity_source_eligibility"],
                 artifact_root=artifact_root,
             )
         except ValueError as exc:
@@ -563,16 +478,12 @@ def validate_snapshot(
         for field in contract["required_features"]:
             try:
                 _validate_source(
-                    features.get(field),
-                    decision_at=decision_at,
-                    field=field,
+                    features.get(field), decision_at=decision_at, field=field,
                     kind=contract["feature_kinds"][field],
-                    allowed_sources=contract["source_eligibility"][field],
-                    artifact_root=artifact_root,
+                    allowed_sources=contract["source_eligibility"][field], artifact_root=artifact_root,
                 )
             except ValueError as exc:
                 reasons.append(str(exc))
-
     return not reasons, tuple(sorted(set(reasons)))
 
 
@@ -586,25 +497,18 @@ def _snapshot_identity_key(snapshot: dict[str, Any]) -> tuple[str, str, str] | N
 
 
 def evaluate_coverage(
-    contract: dict[str, Any],
-    snapshots: list[dict[str, Any]],
-    artifact_root: str | Path | None = None,
+    contract: dict[str, Any], snapshots: list[dict[str, Any]], artifact_root: str | Path | None = None
 ) -> dict[str, Any]:
     validate_contract(contract)
     if not isinstance(snapshots, list):
         raise ValueError("snapshots must be a list")
     _walk_forbidden(snapshots)
     root = Path(artifact_root) if artifact_root is not None else None
-
     key_counts = Counter(
-        key
-        for snapshot in snapshots
-        if isinstance(snapshot, dict)
-        for key in [_snapshot_identity_key(snapshot)]
-        if key is not None
+        key for snapshot in snapshots if isinstance(snapshot, dict)
+        for key in [_snapshot_identity_key(snapshot)] if key is not None
     )
     duplicate_keys = {key for key, count in key_counts.items() if count > 1}
-
     accepted: list[dict[str, Any]] = []
     excluded: list[dict[str, Any]] = []
     per_asset = Counter()
@@ -614,44 +518,30 @@ def evaluate_coverage(
             continue
         key = _snapshot_identity_key(snapshot)
         if key is not None and key in duplicate_keys:
-            excluded.append(
-                {
-                    "index": index,
-                    "stable_asset_id": snapshot.get("stable_asset_id"),
-                    "decision_at": snapshot.get("decision_at"),
-                    "reasons": [
-                        "duplicate stable_asset_id/venue/decision_at snapshot is ambiguous and cannot count toward coverage"
-                    ],
-                }
-            )
+            excluded.append({
+                "index": index, "stable_asset_id": snapshot.get("stable_asset_id"),
+                "decision_at": snapshot.get("decision_at"),
+                "reasons": ["duplicate stable_asset_id/venue/decision_at snapshot is ambiguous and cannot count toward coverage"],
+            })
             continue
-
         ok, reasons = validate_snapshot(snapshot, contract, root)
         if ok:
             accepted.append(snapshot)
             per_asset[snapshot["stable_asset_id"]] += 1
         else:
-            excluded.append(
-                {
-                    "index": index,
-                    "stable_asset_id": snapshot.get("stable_asset_id"),
-                    "decision_at": snapshot.get("decision_at"),
-                    "reasons": list(reasons),
-                }
-            )
+            excluded.append({
+                "index": index, "stable_asset_id": snapshot.get("stable_asset_id"),
+                "decision_at": snapshot.get("decision_at"), "reasons": list(reasons),
+            })
 
     thresholds = contract["coverage_thresholds"]
     eligible_assets = sorted(
-        asset
-        for asset, count in per_asset.items()
+        asset for asset, count in per_asset.items()
         if count >= thresholds["minimum_decisions_per_asset"]
     )
-    eligible_snapshot_count = sum(
-        count for asset, count in per_asset.items() if asset in eligible_assets
-    )
+    eligible_snapshot_count = sum(count for asset, count in per_asset.items() if asset in eligible_assets)
     ready = (
-        root is not None
-        and len(eligible_assets) >= thresholds["minimum_assets"]
+        root is not None and len(eligible_assets) >= thresholds["minimum_assets"]
         and eligible_snapshot_count >= thresholds["minimum_snapshots"]
     )
     status = "READY_FOR_LABEL_OPEN" if ready else "COVERAGE_BLOCKED"
@@ -660,9 +550,8 @@ def evaluate_coverage(
         "contract_digest": digest(contract),
         "snapshot_manifest_digest": digest(snapshots),
         "status": status,
-        "source_verification": (
-            "RETAINED_ARTIFACT_BYTES_VERIFIED" if root is not None else "UNAVAILABLE"
-        ),
+        "source_verification": "SOURCE_NATIVE_AND_RETAINED_BYTES_VERIFIED" if root is not None else "UNAVAILABLE",
+        "source_policy_git_blob_sha": "f0c9048228dac566def31f5872406d3437d114c7",
         "accepted_snapshot_count": len(accepted),
         "eligible_snapshot_count": eligible_snapshot_count,
         "excluded_snapshot_count": len(excluded),
@@ -671,9 +560,7 @@ def evaluate_coverage(
         "per_asset_snapshot_counts": dict(sorted(per_asset.items())),
         "duplicate_snapshot_key_count": len(duplicate_keys),
         "exclusions": excluded,
-        "outcome_access": (
-            "MAY_OPEN_ONLY_IN_SEPARATE_LABEL_STAGE" if ready else "SEALED"
-        ),
+        "outcome_access": "MAY_OPEN_ONLY_IN_SEPARATE_LABEL_STAGE" if ready else "SEALED",
         "forward_formation_status": "BLOCKED_UNTIL_TRUSTED_RECEIPT",
         "prediction_authority": False,
         "trade_authority": False,
