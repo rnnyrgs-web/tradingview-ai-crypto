@@ -5,9 +5,9 @@ structural/scientific evaluator, including in tests. A generic caller-provided
 contract must not, however, become authority to open historical 2x labels.
 
 This wrapper loads and Git-blob-pins the exact Cohort 001 contract itself. Until the
-remaining derived-output transforms are deterministically recomputed from their PIT
-inputs, it also refuses to emit an authoritative READY state even if the generic
-coverage evaluator is otherwise satisfied.
+remaining source/value and derived-output bindings are deterministic, it also refuses
+to emit an authoritative READY state even if the generic coverage evaluator is
+otherwise satisfied.
 
 No outcome data are read here. No forecast/trading authority is granted.
 """
@@ -26,15 +26,23 @@ CANONICAL_CONTRACT_ARTIFACT_ID = "2X-COHORT-001-PREFLIGHT-v1"
 CANONICAL_CONTRACT_GIT_BLOB_SHA = "07eb6d26d760444b711cb277be424063ab39802a"
 AUTHORITATIVE_SCHEMA = "two_x_cohort_authoritative_gate.v1"
 
-# These fields currently authenticate their retained PIT inputs but do not yet
-# deterministically recompute/bind the derived output value. They are therefore an
-# explicit hard blocker for authoritative label opening, not a reason to weaken the
-# cohort or silently trust caller values.
+# These fields currently authenticate retained PIT inputs but do not yet
+# deterministically recompute/bind the derived output value. They are an explicit
+# hard blocker for authoritative label opening.
 DERIVED_OUTPUT_BINDING_BLOCKERS = (
     "return_30d",
     "volatility_30d",
     "sector",
     "regime",
+)
+
+# Source proofs currently authenticate retained support artifacts but do not yet
+# deterministically bind these normalized/claimed values back to the retained source
+# bytes. Until a parser/attestation closes that gap, canonical label opening remains
+# blocked even if structural coverage thresholds are met.
+SOURCE_VALUE_BINDING_BLOCKERS = (
+    "BINANCE_NORMALIZED_VALUE_NOT_PARSED_FROM_RETAINED_ARCHIVE",
+    "PRIMARY_DOCUMENT_CLAIM_VALUE_NOT_PARSED_OR_ATTESTED",
 )
 
 
@@ -85,6 +93,7 @@ def evaluate_authoritative_coverage(
         f"DERIVED_OUTPUT_NOT_DETERMINISTICALLY_BOUND:{field}"
         for field in DERIVED_OUTPUT_BINDING_BLOCKERS
     )
+    blockers.extend(SOURCE_VALUE_BINDING_BLOCKERS)
 
     result: dict[str, Any] = {
         "schema": AUTHORITATIVE_SCHEMA,
@@ -96,6 +105,7 @@ def evaluate_authoritative_coverage(
         "status": "COVERAGE_BLOCKED",
         "blockers": blockers,
         "derived_output_binding_blockers": list(DERIVED_OUTPUT_BINDING_BLOCKERS),
+        "source_value_binding_blockers": list(SOURCE_VALUE_BINDING_BLOCKERS),
         "outcome_access": "SEALED",
         "labels_opened": False,
         "prediction_authority": False,
