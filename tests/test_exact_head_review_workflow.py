@@ -24,6 +24,19 @@ def test_review_queue_is_keyed_by_pr_and_exact_sha_not_branch_namespace() -> Non
     assert "HEAD_SHA\" != \"$REQUESTED_SHA" in text
 
 
+def test_paid_review_requests_are_repository_owner_authorized() -> None:
+    text = _text()
+    assert 'REPO_OWNER="${GITHUB_REPOSITORY%%/*}"' in text
+    assert "--json number,title,createdAt,author" in text
+    assert '[ "$REQUEST_AUTHOR" != "$REPO_OWNER" ]' in text
+    assert "only repository owner $REPO_OWNER may authorize reviewer execution" in text
+    assert "Closing without invoking any model/API" in text
+    # Keep jq argument passing in jq itself rather than forwarding unsupported
+    # `--arg` flags through the GitHub CLI's `--jq` option.
+    assert "--jq --arg" not in text
+    assert "jq --arg title \"$APPROVED_TITLE\"" in text
+
+
 def test_protected_paths_are_reviewed_but_never_auto_integrated() -> None:
     text = _text()
     assert 'contents: read' in text
