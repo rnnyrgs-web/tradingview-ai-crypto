@@ -15,6 +15,7 @@ from orchestration.scientific_design_identity import (
     scientific_design_sha256,
     strategy_behavior_sha256,
 )
+from orchestration.strategy_behavior_schema import resolve_behavior_schema_id
 from orchestration.strategy_predeclaration import freeze_predeclaration, validate_predeclaration
 
 
@@ -69,8 +70,9 @@ def _candidate() -> dict:
 
 def test_behavior_identity_contract_versions_are_explicit():
     assert SCIENTIFIC_IDENTITY_VERSION == 2
-    assert STRATEGY_BEHAVIOR_IDENTITY_VERSION == 1
+    assert STRATEGY_BEHAVIOR_IDENTITY_VERSION == 2
     assert SCIENTIFIC_SCALAR_CANONICALIZATION_VERSION == 1
+    assert resolve_behavior_schema_id(_candidate()) == "TEST_BEHAVIOR_IDENTITY_V1"
 
 
 def test_integral_float_and_negative_zero_are_identity_equivalent():
