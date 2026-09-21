@@ -72,6 +72,8 @@ IDENTITY_FIELDS = {
     "strategy_behavior_sha256",
 }
 
+_BEHAVIOR_SCALAR_LITERAL_WORDS = {"true", "false", "null"}
+
 
 def _require_text(value: Any, field: str) -> str:
     if not isinstance(value, str) or not value.strip():
@@ -109,6 +111,56 @@ def _require_positive_int(value: Any, field: str) -> int:
     if isinstance(value, bool) or not isinstance(value, int) or value < 1:
         raise RuntimeError(f"{field} must be a positive integer")
     return value
+
+
+def _string_is_scalar_literal(value: str) -> bool:
+    """True when a string could masquerade as a native scalar parameter.
+
+    Strategy-behavior identity deliberately keeps strings distinct from native
+    JSON numbers/bools/null. To prevent a rejected executable design from being
+    cosmetically rescued by changing only representation (for example ``1`` to
+    ``"1"`` or ``true`` to ``"true"``), behavior-driving contracts require
+    scalar parameters to use their native JSON type. Descriptive expressions
+    containing digits remain opaque strings.
+    """
+    text = value.strip()
+    if text in _BEHAVIOR_SCALAR_LITERAL_WORDS:
+        return True
+    if not text:
+        return False
+    try:
+        float(text)
+    except ValueError:
+        return False
+    return True
+
+
+def _validate_behavior_scalar_representation(value: Any, path: str) -> None:
+    """Fail closed on ambiguous scalar representations before identity hashing."""
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if not isinstance(key, str) or not key.strip():
+                raise RuntimeError(f"{path} object keys must be non-empty strings")
+            _validate_behavior_scalar_representation(child, f"{path}.{key}")
+        return
+    if isinstance(value, list):
+        for index, child in enumerate(value):
+            _validate_behavior_scalar_representation(child, f"{path}[{index}]")
+        return
+    if isinstance(value, str):
+        if _string_is_scalar_literal(value):
+            raise RuntimeError(
+                f"{path} scalar parameter must use its native JSON type; "
+                "numeric/boolean/null literal strings are forbidden"
+            )
+        return
+    if isinstance(value, bool) or value is None or isinstance(value, int):
+        return
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise RuntimeError(f"{path} numeric scalar must be finite")
+        return
+    raise RuntimeError(f"{path} contains a non-JSON-safe behavior scalar")
 
 
 def _validate_formation_cutoff(value: Any) -> None:
@@ -216,6 +268,7 @@ def validate_predeclaration(
         value = candidate[field]
         if not isinstance(value, dict) or not value:
             raise RuntimeError(f"{field} must be a non-empty object")
+        _validate_behavior_scalar_representation(value, field)
 
     outcome_fields = _find_outcome_fields(candidate)
     if outcome_fields:
@@ -226,6 +279,7 @@ def validate_predeclaration(
     costs = candidate["cost_model"]
     if not isinstance(costs, dict):
         raise RuntimeError("cost_model must be an object")
+    _validate_behavior_scalar_representation(costs, "cost_model")
     missing_costs = sorted(REQUIRED_COST_FIELDS - set(costs))
     if missing_costs:
         raise RuntimeError(f"cost_model missing fields: {missing_costs}")
