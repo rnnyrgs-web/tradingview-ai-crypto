@@ -11,6 +11,13 @@ the exact retained archive close, mechanically binds any primary-document claim 
 literal retained text, and recomputes the frozen coarse functional sector from the
 whole PIT primary document. Per-snapshot evidence failures remain fail closed.
 
+Primary-document *content* binding is now deterministic, but the current primary
+proof still carries caller-authored `published_at`/`effective_at` metadata. A local
+hash and HTTPS locator do not prove that those exact bytes existed by a historical
+decision time. The authoritative gate therefore keeps a systemic chronology blocker
+until an independently timestamped archive/transparency receipt is implemented and
+bound to the exact document bytes.
+
 The wrapper itself never opens outcomes: even after all source/value transforms are
 implemented, actual label opening remains a separate handoff after real frozen
 coverage passes and exact-head review clears the integration.
@@ -50,10 +57,14 @@ AUTHORITATIVE_SCHEMA = "two_x_cohort_authoritative_gate.v1"
 DERIVED_OUTPUT_BINDING_BLOCKERS: tuple[str, ...] = ()
 DERIVED_OUTPUT_BOUND_FIELDS = tuple(COMPLETED_DERIVED_FIELDS) + ("sector",)
 
-# Direct Binance decision price and all primary-document literal claims can be
-# reproduced from retained source bytes. Per-snapshot failures remain fail-closed.
+# Direct Binance decision price and literal primary-document values are reproducible
+# from retained bytes. Historical availability of the primary bytes is not yet
+# independently attested: caller-authored publication/effective timestamps are not a
+# sufficient anti-backdating proof. Keep this blocker even when every row parses.
 SOURCE_VALUE_BOUND_FIELDS = ("price", "primary_document_literal_claims")
-SOURCE_VALUE_BINDING_BLOCKERS: tuple[str, ...] = ()
+SOURCE_VALUE_BINDING_BLOCKERS = (
+    "PRIMARY_DOCUMENT_HISTORICAL_AVAILABILITY_NOT_INDEPENDENTLY_ATTESTED",
+)
 
 
 def _git_blob_sha(raw: bytes) -> str:
