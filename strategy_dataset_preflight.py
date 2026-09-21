@@ -84,8 +84,9 @@ def _contains_forbidden_market_values(value: Any) -> bool:
 
 
 def _git_blob_sha1(payload: bytes) -> str:
+    """Return Git's content-addressed blob identity; not a security primitive."""
     header = f"blob {len(payload)}\0".encode("ascii")
-    return hashlib.sha1(header + payload).hexdigest()  # noqa: S324 - Git object identity is SHA-1 by protocol.
+    return hashlib.sha1(header + payload, usedforsecurity=False).hexdigest()
 
 
 def _skip_ws(data: bytes, index: int) -> int:
@@ -243,14 +244,9 @@ def _timestamp_only_from_row(raw_row: bytes) -> int:
         if timestamp is not None:
             raise ValueError("duplicate timestamp in history row")
         value = _decode_json_slice(raw_row, value_start, value_end, "history timestamp")
-        if isinstance(value, bool):
+        if isinstance(value, bool) or not isinstance(value, int):
             raise ValueError("history timestamp must be an integer")
-        try:
-            timestamp = int(value)
-        except (TypeError, ValueError) as exc:
-            raise ValueError("history timestamp must be an integer") from exc
-        if str(timestamp) != str(value) and not isinstance(value, int):
-            raise ValueError("history timestamp must be an integer")
+        timestamp = value
     if timestamp is None:
         raise ValueError("history row missing timestamp")
     if timestamp <= 0 or timestamp % HOUR_MS:
@@ -293,7 +289,12 @@ def _parse_development_view(
                 if timestamp <= cutoff_ms:
                     if protected_started:
                         raise ValueError("development timestamp appears after protected chronology began")
-                    row_value = _decode_json_slice(row_raw, 0, len(row_raw), "development history row")
+                    row_value = _decode_json_slice(
+                        row_raw,
+                        0,
+                        len(row_raw),
+                        "development history row",
+                    )
                     if not isinstance(row_value, dict):
                         raise ValueError("history row must be an object")
                     clean_development.append(_validate_row(row_value))
@@ -361,7 +362,10 @@ def qualify_cohort001_dataset(
         raise RuntimeError("certified source contract instrument set changed")
     if source_contract.get("normalized_rows_sha256") != FROZEN_DATASET_SHA256:
         raise RuntimeError("certified source contract normalized dataset identity changed")
-    if source_contract.get("frozen_dataset_ref") != "orchestration/evidence/liquidity_meanrev_001_cache/dataset.json.gz":
+    if (
+        source_contract.get("frozen_dataset_ref")
+        != "orchestration/evidence/liquidity_meanrev_001_cache/dataset.json.gz"
+    ):
         raise RuntimeError("certified source contract dataset reference changed")
 
     # Reuse the existing market-value validator only on development rows.
@@ -379,7 +383,9 @@ def qualify_cohort001_dataset(
         if not timestamps:
             raise RuntimeError(f"no source rows for {instrument}")
         if any(b - a != HOUR_MS for a, b in zip(timestamps, timestamps[1:])):
-            raise RuntimeError(f"missing, duplicate, or non-hourly source timestamp for {instrument}")
+            raise RuntimeError(
+                f"missing, duplicate, or non-hourly source timestamp for {instrument}"
+            )
         if common_source_timestamps is None:
             common_source_timestamps = timestamps
         elif timestamps != common_source_timestamps:
@@ -409,7 +415,9 @@ def qualify_cohort001_dataset(
         }
 
     common_source_timestamps = common_source_timestamps or []
-    if len(EXPECTED_INSTRUMENTS) * len(common_source_timestamps) != int(source_contract["normalized_row_count"]):
+    if len(EXPECTED_INSTRUMENTS) * len(common_source_timestamps) != int(
+        source_contract["normalized_row_count"]
+    ):
         raise RuntimeError("frozen dataset row count mismatch")
     if (
         not common_source_timestamps
