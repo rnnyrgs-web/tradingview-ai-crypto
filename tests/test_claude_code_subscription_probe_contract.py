@@ -16,8 +16,8 @@ def test_probe_is_read_only_and_does_not_expose_paid_api_fallback():
     assert "pull-requests: write" not in text
     assert "id-token: write" not in text
     assert "ANTHROPIC_API_KEY" not in text
-    assert "CLAUDE_CODE_SUBPROCESS_ENV_SCRUB: \"1\"" in text
-    assert "--disallowedTools \"Edit,Write,Replace,NotebookEditCell,Bash,WebSearch,WebFetch\"" in text
+    assert 'CLAUDE_CODE_SUBPROCESS_ENV_SCRUB: "1"' in text
+    assert '--disallowedTools "Edit,Write,Replace,NotebookEditCell,Bash,WebSearch,WebFetch"' in text
 
 
 def test_probe_pins_third_party_actions_to_exact_commits():
@@ -28,12 +28,13 @@ def test_probe_pins_third_party_actions_to_exact_commits():
     assert "actions/upload-artifact@v4" not in text
 
 
-def test_probe_receipt_binds_pull_request_run_to_exact_pr_head_not_merge_ref():
+def test_probe_is_trusted_main_manual_only_and_never_runs_on_pull_request_code():
     text = _text()
-    assert (
-        "TARGET_HEAD_SHA: ${{ github.event_name == 'pull_request' && "
-        "github.event.pull_request.head.sha || github.sha }}"
-    ) in text
+    assert "workflow_dispatch:" in text
+    assert "pull_request:" not in text
+    assert "github.event.pull_request" not in text
+    assert "if: github.ref == 'refs/heads/main'" in text
+    assert "TARGET_HEAD_SHA: ${{ github.sha }}" in text
     assert '"head_sha": target_head' in text
     assert '"execution_sha": os.environ["GITHUB_SHA"]' in text
     assert '"event_name": os.environ["GITHUB_EVENT_NAME"]' in text
@@ -55,7 +56,7 @@ def test_missing_or_failed_oauth_never_becomes_subscription_automated():
     text = _text()
     assert "if authenticated:" in text
     assert 'status = "SUBSCRIPTION_AUTOMATED"' in text
-    assert 'elif not configured:' in text
+    assert "elif not configured:" in text
     assert 'status = "MANUAL_ADAPTER_REQUIRED"' in text
     assert 'status = "UNKNOWN"' in text
     assert "steps.preflight.outputs.configured == 'true'" in text
