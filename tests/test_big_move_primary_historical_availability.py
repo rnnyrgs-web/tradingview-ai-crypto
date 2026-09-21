@@ -75,6 +75,7 @@ def _record(root: Path, *, capture_timestamp="20200102030405", document=b"Bitcoi
         "index_collection": collection,
         "index_query_locator": index_request.url,
         "index_response": _write(root, "cc/index.jsonl", json.dumps(row, sort_keys=True).encode() + b"\n"),
+        "selected_index_row": row,
         "index_acquisition_bundle": {"artifact_relpath": "attested/index/trusted-acquisition.tar"},
         "warc_range_locator": warc_request.url,
         "warc_range": _write(root, "cc/range.warc.gz", compressed),
@@ -109,23 +110,26 @@ def _record(root: Path, *, capture_timestamp="20200102030405", document=b"Bitcoi
 def _install_fake_attested_provider(monkeypatch, root: Path):
     def fake_verify(bundle_path, *, expected_source_kind):
         bundle_name = str(bundle_path)
-        row = json.loads((root / "cc/index.jsonl").read_text().strip())
-        collection = row["filename"].split("/")[1]
+        rows = [json.loads(line) for line in (root / "cc/index.jsonl").read_text().splitlines() if line.strip()]
+        capture = json.loads((root / "cc/capture.json").read_text())
+        selected = capture["selected_index_row"]
+        collection = selected["filename"].split("/")[1]
         if expected_source_kind == "COMMONCRAWL_INDEX":
-            request = freeze_commoncrawl_index_request(collection=collection, target_url=row["url"])
+            request = freeze_commoncrawl_index_request(collection=collection, target_url=selected["url"])
             raw = (root / "cc/index.jsonl").read_bytes()
             receipt_sha = "a" * 64
         elif expected_source_kind == "COMMONCRAWL_WARC_RANGE":
             request = freeze_commoncrawl_warc_request(
                 collection=collection,
-                filename=row["filename"],
-                offset=int(row["offset"]),
-                length=int(row["length"]),
+                filename=selected["filename"],
+                offset=int(selected["offset"]),
+                length=int(selected["length"]),
             )
             raw = (root / "cc/range.warc.gz").read_bytes()
             receipt_sha = "b" * 64
         else:
             raise AssertionError(expected_source_kind)
+        assert rows
         assert bundle_name.endswith("trusted-acquisition.tar")
         return {
             "request": {
@@ -149,6 +153,7 @@ def test_primary_document_requires_exact_predecision_archive_binding(tmp_path, m
     )
     assert result["status"] == "BOUND"
     assert result["capture_at"] == "2020-01-02T03:04:05Z"
+    assert len(result["selected_index_row_sha256"]) == 64
     assert result["provider_origin"] == "ATTESTED_TRUSTED_REMOTE_ACQUISITION"
     assert result["index_receipt_sha256"] == "a" * 64
     assert result["warc_receipt_sha256"] == "b" * 64
@@ -205,7 +210,7 @@ def test_missing_trusted_acquisition_bundle_fails_closed(tmp_path):
 def test_postdecision_archive_capture_fails_even_with_old_declared_publication(tmp_path, monkeypatch):
     record, _ = _record(tmp_path, capture_timestamp="20250102030405")
     _install_fake_attested_provider(monkeypatch, tmp_path)
-    with pytest.raises(ValueError, match="after decision_at"):
+    with pytest.raises(ValueError, match="at or before decision_at"):
         validate_primary_document_historical_availability(
             record,
             decision_at="2024-01-01T00:00:00Z",
