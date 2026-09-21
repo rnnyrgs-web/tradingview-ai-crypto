@@ -2,6 +2,7 @@ import hashlib
 import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import urlencode
 
 import pytest
 
@@ -105,18 +106,40 @@ def _binance_proof(root, prefix, decision_at):
 
 def _coinmetrics_proof(root, prefix, source_id, value, observed_at, *, status_time=None):
     metric = "CapMrktCurUSD" if source_id == CM_CAP else "SplyCur"
+    asset = "testasset"
+    frequency = "1d"
+    raw_response = {
+        "data": [
+            {
+                "asset": asset,
+                "time": observed_at,
+                metric: str(value),
+                f"{metric}-status": "reviewed",
+                f"{metric}-status-time": status_time or observed_at,
+            }
+        ]
+    }
+    retained = _write_json(root, f"{prefix}/{metric}_raw_response.json", raw_response)
+    locator = "https://community-api.coinmetrics.io/v4/timeseries/asset-metrics?" + urlencode(
+        {
+            "assets": asset,
+            "metrics": metric,
+            "frequency": frequency,
+            "start_time": observed_at,
+            "end_time": observed_at,
+            "status": "reviewed",
+        }
+    )
     proof = {
-        "schema": "coinmetrics_provider_status_proof.v1",
+        "schema": "coinmetrics_raw_response_proof.v1",
         "source_id": source_id,
-        "upstream_locator": "https://api.coinmetrics.io/v4/timeseries/asset-metrics",
-        "asset": "testasset",
+        "upstream_locator": locator,
+        "asset": asset,
         "metric": metric,
-        "frequency": "1d",
-        "record_id": f"testasset:{metric}:{observed_at}",
-        "status": "reviewed",
-        "status_time": status_time or observed_at,
-        "observed_at": observed_at,
-        "value": value,
+        "frequency": frequency,
+        "record_time": observed_at,
+        "raw_response_relpath": retained["artifact_relpath"],
+        "raw_response_sha256": retained["sha256"],
     }
     return _write_json(root, f"{prefix}/{metric}_source_proof.json", proof)
 
@@ -380,6 +403,29 @@ def test_provider_native_status_time_after_cutoff_blocks_even_when_bytes_match(t
     result = evaluate_coverage(_contract(), [row], tmp_path)
     reasons = " ".join(result["exclusions"][0]["reasons"])
     assert "Coin Metrics status_time is after decision_at" in reasons
+
+
+def test_coinmetrics_normalized_claim_without_retained_raw_response_is_rejected(tmp_path):
+    decision = "2024-01-01T00:00:00Z"
+    row = _snapshot(tmp_path, "a", decision)
+    supply = row["features"]["float_supply"]
+    normalized = {
+        "schema": "coinmetrics_provider_status_proof.v1",
+        "source_id": CM_SUPPLY,
+        "upstream_locator": "https://community-api.coinmetrics.io/v4/timeseries/asset-metrics",
+        "asset": "testasset",
+        "metric": "SplyCur",
+        "frequency": "1d",
+        "status": "reviewed",
+        "status_time": decision,
+        "observed_at": decision,
+        "value": supply["value"],
+    }
+    bad_ref = _write_json(tmp_path, "normalized-only.json", normalized)
+    _rewrite_evidence(tmp_path, supply, lambda artifact: artifact.__setitem__("source_proof", bad_ref))
+    result = evaluate_coverage(_contract(), [row], tmp_path)
+    reasons = " ".join(result["exclusions"][0]["reasons"])
+    assert "requires coinmetrics_raw_response_proof.v1" in reasons
 
 
 def test_structural_metadata_without_retained_bytes_can_never_open_labels(tmp_path):
