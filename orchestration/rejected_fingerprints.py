@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -35,14 +36,100 @@ SEMANTIC_BACKFILL_UNAVAILABLE = "SEMANTIC_BACKFILL_UNAVAILABLE"
 SEMANTIC_STATUSES = {SEMANTIC_BACKFILL_AVAILABLE, SEMANTIC_BACKFILL_UNAVAILABLE}
 
 
+def _git_blob_sha1(raw: bytes) -> str:
+    header = f"blob {len(raw)}\0".encode("ascii")
+    return hashlib.sha1(header + raw).hexdigest()  # nosec B324 - Git object identity, not security
+
+
+def _contract_sha256(payload: dict[str, Any]) -> str:
+    detached = dict(payload)
+    detached.pop("contract_sha256", None)
+    detached.pop("contract_fingerprint_definition", None)
+    encoded = json.dumps(
+        detached,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        allow_nan=False,
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _load_and_verify_source_contract(record: dict[str, Any], fingerprint_id: str) -> dict[str, Any]:
+    """Authenticate one semantic backfill against its packaged frozen contract.
+
+    Stored semantic hashes are not a trust root. For reconstructible rejections,
+    the sidecar must point to one repository-local frozen source artifact whose
+    Git blob identity and canonical contract SHA both match the durable receipt.
+    This makes a projection/hash-only rewrite insufficient to rewrite negative
+    memory silently: source bytes, contract digest and canonical exact rejection
+    must all agree.
+    """
+    relative = record.get("source_artifact")
+    expected_blob = record.get("source_blob_sha")
+    expected_contract = record.get("source_contract_sha256")
+    if not isinstance(relative, str) or not relative.strip():
+        raise RuntimeError(f"rejected semantic-design {fingerprint_id} missing source_artifact")
+    if not isinstance(expected_blob, str) or len(expected_blob) != 40:
+        raise RuntimeError(f"rejected semantic-design {fingerprint_id} invalid source_blob_sha")
+    if not isinstance(expected_contract, str) or len(expected_contract) != 64:
+        raise RuntimeError(
+            f"rejected semantic-design {fingerprint_id} invalid source_contract_sha256"
+        )
+
+    source_path = (ROOT / relative).resolve()
+    try:
+        source_path.relative_to(ROOT.resolve())
+    except ValueError as exc:
+        raise RuntimeError(
+            f"rejected semantic-design {fingerprint_id} source_artifact escapes repository root"
+        ) from exc
+    if not source_path.is_file():
+        raise RuntimeError(
+            f"rejected semantic-design {fingerprint_id} source_artifact does not exist"
+        )
+
+    raw = source_path.read_bytes()
+    actual_blob = _git_blob_sha1(raw)
+    if actual_blob != expected_blob:
+        raise RuntimeError(
+            f"rejected semantic-design {fingerprint_id} source blob identity mismatch"
+        )
+    try:
+        source = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RuntimeError(
+            f"rejected semantic-design {fingerprint_id} source artifact must be canonical JSON"
+        ) from exc
+    if not isinstance(source, dict):
+        raise RuntimeError(
+            f"rejected semantic-design {fingerprint_id} source artifact must be an object"
+        )
+    if source.get("fingerprint_id") != fingerprint_id:
+        raise RuntimeError(
+            f"rejected semantic-design {fingerprint_id} source fingerprint mismatch"
+        )
+    if source.get("contract_sha256") != expected_contract:
+        raise RuntimeError(
+            f"rejected semantic-design {fingerprint_id} source contract receipt mismatch"
+        )
+    if _contract_sha256(source) != expected_contract:
+        raise RuntimeError(
+            f"rejected semantic-design {fingerprint_id} source contract content hash mismatch"
+        )
+    return source
+
+
 def load_rejected_semantic_designs(path: Path = DEFAULT_SEMANTIC_PATH) -> dict[str, dict[str, Any]]:
     """Load deterministic label-invariant rejection identities.
 
     Backfilled identities are never trusted as stored hashes alone: both the
     full scientific-protocol digest and stricter executable-behavior digest are
-    recomputed from the persisted projection and must match. Older rejections
-    that cannot be reconstructed without guessing are explicitly marked
-    unavailable instead of fuzzy-matched.
+    recomputed from the persisted projection and must match. Reconstructible
+    entries are additionally bound to their packaged frozen source contract by
+    Git blob identity and canonical contract SHA. Older rejections that cannot
+    be reconstructed without guessing are explicitly marked unavailable instead
+    of fuzzy-matched.
     """
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
     if payload.get("schema_version") != REJECTED_SEMANTIC_SCHEMA_VERSION:
@@ -98,12 +185,7 @@ def load_rejected_semantic_designs(path: Path = DEFAULT_SEMANTIC_PATH) -> dict[s
                 raise RuntimeError(
                     f"rejected semantic-design {fingerprint_id} strategy behavior identity mismatch"
                 )
-            for field in ("source_artifact", "source_blob_sha", "source_contract_sha256"):
-                value = record.get(field)
-                if not isinstance(value, str) or not value.strip():
-                    raise RuntimeError(
-                        f"rejected semantic-design {fingerprint_id} missing {field}"
-                    )
+            _load_and_verify_source_contract(record, fingerprint_id)
         else:
             reason = record.get("reason")
             if not isinstance(reason, str) or not reason.strip():
@@ -114,6 +196,9 @@ def load_rejected_semantic_designs(path: Path = DEFAULT_SEMANTIC_PATH) -> dict[s
                 "scientific_design_sha256",
                 "strategy_behavior_sha256",
                 "projection",
+                "source_artifact",
+                "source_blob_sha",
+                "source_contract_sha256",
             )
             if any(record.get(field) is not None for field in forbidden):
                 raise RuntimeError(
@@ -175,8 +260,16 @@ def load_rejected_fingerprints(
     augmented: list[dict[str, Any]] = []
     for entry in entries:
         fingerprint_id = str(entry["fingerprint_id"])
+        semantic_record = semantic[fingerprint_id]
+        if semantic_record.get("semantic_identity_status") == SEMANTIC_BACKFILL_AVAILABLE:
+            exact_contract = entry.get("rejection_evidence", {}).get("contract_sha256")
+            semantic_contract = semantic_record.get("source_contract_sha256")
+            if exact_contract != semantic_contract:
+                raise RuntimeError(
+                    f"rejected semantic-design {fingerprint_id} is not bound to canonical rejection contract"
+                )
         merged = dict(entry)
-        for key, value in semantic[fingerprint_id].items():
+        for key, value in semantic_record.items():
             if key != "fingerprint_id":
                 merged[key] = value
         augmented.append(merged)
