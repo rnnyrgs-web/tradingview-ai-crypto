@@ -28,6 +28,11 @@ SCIENTIFIC_LIST_SEMANTICS: dict[tuple[str, ...], str] = {
     ("data_contract", "fixed_instruments"): SET_LIKE,
     ("data_contract", "fixed_follower_instruments"): SET_LIKE,
     ("data_contract", "symbols"): SET_LIKE,
+    # Cohort-001 delta-carry data contract: both are mathematical sets, not
+    # executable sequences. Declaring them now keeps the first real cohort from
+    # blocking after #507 integration while preserving fail-closed semantics.
+    ("data_contract", "spot_hedges"): SET_LIKE,
+    ("data_contract", "required_freeze_before_screen"): SET_LIKE,
     ("cost_model", "stress_multipliers"): SET_LIKE,
     ("validation_plan", "falsifier_compression_quantiles"): SET_LIKE,
     ("validation_plan", "falsifier_sigma_multiples"): SET_LIKE,
