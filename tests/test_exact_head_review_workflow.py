@@ -13,7 +13,9 @@ def _text() -> str:
 
 def test_review_queue_is_keyed_by_pr_and_exact_sha_not_branch_namespace() -> None:
     text = _text()
-    assert "exact-head-review-request: pr=" in text
+    # Bash's [[ =~ ]] regex escapes literal spaces, so the durable request
+    # prefix appears in the workflow source as `request:\ pr=`.
+    assert "exact-head-review-request:\\ pr=" in text
     assert "sha=([0-9a-f]{40})" in text
     assert "refs/pull/$PR_NUMBER/head" in text
     assert "refs/remotes/origin/auto/*" not in text
