@@ -1,0 +1,353 @@
+name: Exact-Head Independent Review Queue
+
+on:
+  issues:
+    types: [opened, reopened]
+  schedule:
+    - cron: "13 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: exact-head-independent-review
+  cancel-in-progress: false
+
+jobs:
+  review-exact-head:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_AGENT_MODEL: gpt-5.6-sol
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      ANTHROPIC_REVIEW_MODEL: claude-haiku-4-5
+      AUTONOMOUS_MERGE_ENABLED: "false"
+      GH_TOKEN: ${{ github.token }}
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 100
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install review runtime
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - id: select
+        name: Select oldest ready explicit exact-head review request
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          MAIN_SHA="$(git rev-parse origin/main)"
+          REPO_OWNER="${GITHUB_REPOSITORY%%/*}"
+          SELECTED_ISSUE=""
+          SELECTED_PR=""
+          SELECTED_BRANCH=""
+          SELECTED_SHA=""
+          SELECTED_REF=""
+          SECURITY_RUN_ID=""
+
+          REQUESTS="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 100 --json number,title,createdAt,author)"
+          while IFS=$'\t' read -r ISSUE_NUMBER TITLE CREATED_AT REQUEST_AUTHOR; do
+            [ -n "$ISSUE_NUMBER" ] || continue
+            if [[ ! "$TITLE" =~ ^exact-head-review-request:\ pr=([0-9]+)\ sha=([0-9a-f]{40})$ ]]; then
+              continue
+            fi
+            # Only the repository owner may authorize a paid independent review.
+            # This prevents arbitrary public issues from consuming reviewer budget.
+            if [ "$REQUEST_AUTHOR" != "$REPO_OWNER" ]; then
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Unauthorized exact-head review request: only repository owner $REPO_OWNER may authorize reviewer execution. Closing without invoking any model/API."
+              gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
+              continue
+            fi
+            PR_NUMBER="${BASH_REMATCH[1]}"
+            REQUESTED_SHA="${BASH_REMATCH[2]}"
+
+            PR_JSON="$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json number,headRefName,headRefOid,baseRefName,isDraft,state 2>/dev/null || true)"
+            if [ -z "$PR_JSON" ]; then
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Review request cannot resolve PR #$PR_NUMBER; closing fail-closed. Create a new request only after the PR is resolvable."
+              gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
+              continue
+            fi
+            PR_STATE="$(printf '%s' "$PR_JSON" | jq -r '.state')"
+            PR_DRAFT="$(printf '%s' "$PR_JSON" | jq -r '.isDraft')"
+            BASE_REF="$(printf '%s' "$PR_JSON" | jq -r '.baseRefName')"
+            HEAD_BRANCH="$(printf '%s' "$PR_JSON" | jq -r '.headRefName')"
+            HEAD_SHA="$(printf '%s' "$PR_JSON" | jq -r '.headRefOid')"
+            if [ "$PR_STATE" != "OPEN" ] || [ "$PR_DRAFT" = "true" ] || [ "$BASE_REF" != "main" ]; then
+              continue
+            fi
+            if [ "$HEAD_SHA" != "$REQUESTED_SHA" ]; then
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Exact head moved: request=$REQUESTED_SHA current=$HEAD_SHA. This request cannot authorize a different head; closing. Create a new request for the new exact SHA after its CI is green."
+              gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
+              continue
+            fi
+
+            APPROVED_TITLE="exact-head-review-approved: pr=$PR_NUMBER sha=$REQUESTED_SHA"
+            APPROVALS="$(gh issue list --repo "$GITHUB_REPOSITORY" --state all --limit 100 --json title)"
+            ALREADY_APPROVED="$(printf '%s' "$APPROVALS" | jq --arg title "$APPROVED_TITLE" '[.[] | select(.title == $title)] | length')"
+            if [ "$ALREADY_APPROVED" -gt 0 ]; then
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "An approval receipt already exists for PR #$PR_NUMBER exact head $REQUESTED_SHA; closing duplicate request."
+              gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
+              continue
+            fi
+
+            REVIEW_REF="refs/remotes/origin/review-pr/$PR_NUMBER"
+            git fetch --no-tags origin "+refs/pull/$PR_NUMBER/head:$REVIEW_REF"
+            FETCHED_SHA="$(git rev-parse "$REVIEW_REF")"
+            if [ "$FETCHED_SHA" != "$REQUESTED_SHA" ]; then
+              echo "PR #$PR_NUMBER fetch mismatch; request stays pending."
+              continue
+            fi
+            MERGE_BASE="$(git merge-base origin/main "$REVIEW_REF" 2>/dev/null || true)"
+            if [ "$MERGE_BASE" != "$MAIN_SHA" ]; then
+              echo "PR #$PR_NUMBER exact head is not based on current main; request stays pending."
+              continue
+            fi
+
+            RUNS="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow 'Security and Reliability' --commit "$REQUESTED_SHA" --limit 20 --json databaseId,status,conclusion,headSha,createdAt)"
+            MATCH="$(printf '%s' "$RUNS" | jq -c --arg sha "$REQUESTED_SHA" '[.[] | select(.headSha == $sha and .status == "completed")] | sort_by(.createdAt) | reverse | .[0] // empty')"
+            if [ -z "$MATCH" ]; then
+              echo "PR #$PR_NUMBER has no completed exact-head Security and Reliability run yet; request stays pending."
+              continue
+            fi
+            CONCLUSION="$(printf '%s' "$MATCH" | jq -r '.conclusion // ""')"
+            RUN_ID="$(printf '%s' "$MATCH" | jq -r '.databaseId')"
+            if [ "$CONCLUSION" != "success" ]; then
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Exact-head Security and Reliability run $RUN_ID concluded $CONCLUSION for $REQUESTED_SHA. Review models were not invoked. Closing as REVISION_REQUIRED; a repaired head needs a new request."
+              gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
+              continue
+            fi
+
+            SELECTED_ISSUE="$ISSUE_NUMBER"
+            SELECTED_PR="$PR_NUMBER"
+            SELECTED_BRANCH="$HEAD_BRANCH"
+            SELECTED_SHA="$REQUESTED_SHA"
+            SELECTED_REF="$REVIEW_REF"
+            SECURITY_RUN_ID="$RUN_ID"
+            break
+          done < <(printf '%s' "$REQUESTS" | jq -r 'sort_by(.createdAt)[] | [.number, .title, .createdAt, (.author.login // "")] | @tsv')
+
+          echo "request_issue=$SELECTED_ISSUE" >> "$GITHUB_OUTPUT"
+          echo "pr_number=$SELECTED_PR" >> "$GITHUB_OUTPUT"
+          echo "branch=$SELECTED_BRANCH" >> "$GITHUB_OUTPUT"
+          echo "sha=$SELECTED_SHA" >> "$GITHUB_OUTPUT"
+          echo "review_ref=$SELECTED_REF" >> "$GITHUB_OUTPUT"
+          echo "security_run_id=$SECURITY_RUN_ID" >> "$GITHUB_OUTPUT"
+          echo "main_sha=$MAIN_SHA" >> "$GITHUB_OUTPUT"
+          if [ -z "$SELECTED_PR" ]; then
+            echo "No explicit exact-head review request is ready."
+          else
+            echo "Selected PR #$SELECTED_PR ($SELECTED_BRANCH) exact head $SELECTED_SHA with Security and Reliability run $SECURITY_RUN_ID."
+          fi
+
+      - name: Stop when no review request is ready
+        if: steps.select.outputs.pr_number == ''
+        run: echo "Queue has no ready explicit exact-head request; no model/API review was invoked."
+
+      - id: attempt
+        name: Record exact-head review attempt
+        if: steps.select.outputs.pr_number != ''
+        env:
+          PR_NUMBER: ${{ steps.select.outputs.pr_number }}
+          HEAD_SHA: ${{ steps.select.outputs.sha }}
+          BRANCH: ${{ steps.select.outputs.branch }}
+          SECURITY_RUN_ID: ${{ steps.select.outputs.security_run_id }}
+          MAIN_SHA: ${{ steps.select.outputs.main_sha }}
+        run: |
+          cat >/tmp/exact-head-review-attempt.md <<EOF
+          PR: #$PR_NUMBER
+          Candidate branch: \`$BRANCH\`
+          Exact reviewed SHA: \`$HEAD_SHA\`
+          Exact-head Security and Reliability run: \`$SECURITY_RUN_ID\`
+          Workflow run: \`$GITHUB_RUN_ID\`
+          Workflow main SHA: \`$MAIN_SHA\`
+          Outcome: \`STARTED\`
+          Integration authority: \`NONE\`
+          EOF
+          URL="$(gh issue create --repo "$GITHUB_REPOSITORY" --title "exact-head-review-attempt: pr=$PR_NUMBER sha=$HEAD_SHA run=$GITHUB_RUN_ID" --body-file /tmp/exact-head-review-attempt.md)"
+          echo "issue=${URL##*/}" >> "$GITHUB_OUTPUT"
+
+      - name: Fail closed unless all independent reviewer credentials are available
+        if: steps.select.outputs.pr_number != ''
+        run: |
+          test -n "$OPENAI_API_KEY" || { echo "OPENAI_API_KEY missing; no reviewer invoked."; exit 1; }
+          test -n "$OPENAI_AGENT_MODEL" || { echo "OPENAI_AGENT_MODEL missing; no reviewer invoked."; exit 1; }
+          test -n "$ANTHROPIC_API_KEY" || { echo "ANTHROPIC_API_KEY missing; no reviewer invoked."; exit 1; }
+          test -n "$ANTHROPIC_REVIEW_MODEL" || { echo "ANTHROPIC_REVIEW_MODEL missing; no reviewer invoked."; exit 1; }
+
+      - name: Fetch and bound exact PR diff without branch-prefix assumptions
+        if: steps.select.outputs.pr_number != ''
+        env:
+          REVIEW_REF: ${{ steps.select.outputs.review_ref }}
+        run: |
+          git diff --binary origin/main..."$REVIEW_REF" > /tmp/candidate.diff
+          BYTES="$(wc -c < /tmp/candidate.diff)"
+          echo "Diff bytes: $BYTES"
+          test "$BYTES" -gt 0
+          # One coherent protected scientific repair may legitimately span schema,
+          # durable memory and regressions. Review the full exact diff, bounded at
+          # 256 kB; never truncate it into a superficially reviewable subset.
+          test "$BYTES" -le 256000 || { echo "Diff too large for one coherent exact-head review; fail closed and split the PR."; exit 1; }
+
+      - name: Run Security, Lead and Claude adversarial exact-head reviews in parallel
+        if: steps.select.outputs.pr_number != ''
+        env:
+          PR_NUMBER: ${{ steps.select.outputs.pr_number }}
+          HEAD_SHA: ${{ steps.select.outputs.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m orchestration.exact_head_review review --reviewer security --diff /tmp/candidate.diff --output /tmp/security-review.json --pr-number "$PR_NUMBER" --head-sha "$HEAD_SHA" &
+          PID_SECURITY=$!
+          python -m orchestration.exact_head_review review --reviewer lead --diff /tmp/candidate.diff --output /tmp/lead-review.json --pr-number "$PR_NUMBER" --head-sha "$HEAD_SHA" &
+          PID_LEAD=$!
+          python -m orchestration.exact_head_review review --reviewer claude-adversarial --diff /tmp/candidate.diff --output /tmp/claude-adversarial-review.json --pr-number "$PR_NUMBER" --head-sha "$HEAD_SHA" &
+          PID_CLAUDE=$!
+          STATUS=0
+          wait "$PID_SECURITY" || STATUS=1
+          wait "$PID_LEAD" || STATUS=1
+          wait "$PID_CLAUDE" || STATUS=1
+          exit "$STATUS"
+
+      - name: Require all three independent reviewers to approve
+        if: steps.select.outputs.pr_number != ''
+        run: |
+          jq -e '.approve == true and .integration_authority == "NONE"' /tmp/security-review.json
+          jq -e '.approve == true and .integration_authority == "NONE"' /tmp/lead-review.json
+          jq -e '.approve == true and .integration_authority == "NONE"' /tmp/claude-adversarial-review.json
+
+      - id: approval_record
+        name: Record review-only approval for exact head
+        if: steps.select.outputs.pr_number != ''
+        env:
+          PR_NUMBER: ${{ steps.select.outputs.pr_number }}
+          HEAD_SHA: ${{ steps.select.outputs.sha }}
+          BRANCH: ${{ steps.select.outputs.branch }}
+          SECURITY_RUN_ID: ${{ steps.select.outputs.security_run_id }}
+          REQUEST_ISSUE: ${{ steps.select.outputs.request_issue }}
+        run: |
+          PROTECTED_COUNT="$(jq '.protected_paths | length' /tmp/security-review.json)"
+          if [ "$PROTECTED_COUNT" -gt 0 ]; then
+            OUTCOME="REVIEW_APPROVED_PROTECTED_LEAD_INTEGRATION_REQUIRED"
+          else
+            OUTCOME="REVIEW_APPROVED_LEAD_INTEGRATION_REQUIRED"
+          fi
+          PROTECTED_PATHS="$(jq -c '.protected_paths' /tmp/security-review.json)"
+          {
+            echo "PR: #$PR_NUMBER"
+            echo "Candidate branch: \`$BRANCH\`"
+            echo "Exact reviewed SHA: \`$HEAD_SHA\`"
+            echo "Exact-head Security and Reliability run: \`$SECURITY_RUN_ID\` — PASS"
+            echo "Outcome: \`$OUTCOME\`"
+            echo "Protected paths: \`$PROTECTED_PATHS\`"
+            echo "Integration authority: \`NONE\`"
+            echo
+            echo "Security reviewer:"
+            echo '```json'
+            cat /tmp/security-review.json
+            echo '```'
+            echo
+            echo "Lead reviewer:"
+            echo '```json'
+            cat /tmp/lead-review.json
+            echo '```'
+            echo
+            echo "Claude adversarial reviewer:"
+            echo '```json'
+            cat /tmp/claude-adversarial-review.json
+            echo '```'
+            echo
+            echo "This is read-only exact-head review evidence. Protected-path approval never grants autonomous merge/integration authority. Any new head SHA invalidates this receipt."
+          } >/tmp/exact-head-review-approved.md
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "exact-head-review-approved: pr=$PR_NUMBER sha=$HEAD_SHA" --body-file /tmp/exact-head-review-approved.md
+          gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Exact-head independent review completed with $OUTCOME. Approval receipt was created for PR #$PR_NUMBER SHA $HEAD_SHA."
+          gh issue close "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY"
+          echo "outcome=$OUTCOME" >> "$GITHUB_OUTPUT"
+
+      - name: Finalize durable attempt receipt and bound retries
+        if: always() && steps.attempt.outputs.issue != ''
+        env:
+          PR_NUMBER: ${{ steps.select.outputs.pr_number }}
+          HEAD_SHA: ${{ steps.select.outputs.sha }}
+          BRANCH: ${{ steps.select.outputs.branch }}
+          SECURITY_RUN_ID: ${{ steps.select.outputs.security_run_id }}
+          MAIN_SHA: ${{ steps.select.outputs.main_sha }}
+          REQUEST_ISSUE: ${{ steps.select.outputs.request_issue }}
+          ATTEMPT_ISSUE: ${{ steps.attempt.outputs.issue }}
+          APPROVAL_OUTCOME: ${{ steps.approval_record.outputs.outcome }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          review_paths = [
+              Path("/tmp/security-review.json"),
+              Path("/tmp/lead-review.json"),
+              Path("/tmp/claude-adversarial-review.json"),
+          ]
+          verdicts = []
+          for path in review_paths:
+              try:
+                  value = json.loads(path.read_text(encoding="utf-8"))
+                  if not isinstance(value.get("approve"), bool):
+                      raise ValueError("invalid approval")
+                  if value.get("integration_authority") != "NONE":
+                      raise ValueError("review unexpectedly claims integration authority")
+              except (OSError, ValueError, AttributeError, json.JSONDecodeError):
+                  value = None
+              verdicts.append(value)
+
+          approved_outcome = os.environ.get("APPROVAL_OUTCOME", "")
+          if approved_outcome.startswith("REVIEW_APPROVED_"):
+              outcome = approved_outcome
+          elif all(value is not None for value in verdicts) and any(not value["approve"] for value in verdicts):
+              outcome = "REJECTED"
+          else:
+              outcome = "FAILED"
+
+          lines = [
+              f"PR: #{os.environ['PR_NUMBER']}",
+              f"Candidate branch: `{os.environ['BRANCH']}`",
+              f"Exact reviewed SHA: `{os.environ['HEAD_SHA']}`",
+              f"Exact-head Security and Reliability run: `{os.environ['SECURITY_RUN_ID']}`",
+              f"Workflow run: `{os.environ['GITHUB_RUN_ID']}`",
+              f"Workflow main SHA: `{os.environ['MAIN_SHA']}`",
+              f"Outcome: `{outcome}`",
+              "Integration authority: `NONE`",
+          ]
+          labels = ["Security reviewer", "Lead reviewer", "Claude adversarial reviewer"]
+          for label, value in zip(labels, verdicts):
+              if value is not None:
+                  lines += ["", f"{label}:", "```json", json.dumps(value, indent=2, sort_keys=True), "```"]
+          Path("/tmp/exact-head-review-attempt.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+          Path("/tmp/exact-head-review-outcome.txt").write_text(outcome + "\n", encoding="utf-8")
+          PY
+          gh issue edit "$ATTEMPT_ISSUE" --repo "$GITHUB_REPOSITORY" --body-file /tmp/exact-head-review-attempt.md
+          OUTCOME="$(cat /tmp/exact-head-review-outcome.txt)"
+          if gh issue view "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --json state --jq '.state' | grep -qx OPEN; then
+            gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as $OUTCOME. This request is closed to prevent unbounded paid retries. FAILED/REJECTED does not permanently blacklist the exact SHA: after the cause is repaired or an explicit bounded retry is justified, create a new request with the same {pr, sha}."
+            gh issue close "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY"
+          fi
+          {
+            echo "### Exact-head independent review"
+            echo "- PR: #$PR_NUMBER"
+            echo "- SHA: $HEAD_SHA"
+            echo "- Security and Reliability: PASS ($SECURITY_RUN_ID)"
+            echo "- Outcome: $OUTCOME"
+            echo "- Integration authority: NONE"
+          } >> "$GITHUB_STEP_SUMMARY"
