@@ -10,6 +10,11 @@ from orchestration.strategy_behavior_schema import (
     BEHAVIOR_SCHEMAS,
     resolve_behavior_schema_id,
 )
+from orchestration.strategy_behavior_value_contract import (
+    BEHAVIOR_VALUE_CONTRACT_VERSION,
+    validate_behavior_value_contract,
+    validate_target_value_contract,
+)
 
 SCIENTIFIC_DESIGN_FIELDS = (
     "target_markets",
@@ -39,9 +44,9 @@ SET_LIKE = "SET_LIKE"
 ORDERED = "ORDERED"
 SCIENTIFIC_LIST_SEMANTICS_VERSION = 1
 SCIENTIFIC_SCALAR_CANONICALIZATION_VERSION = 1
-BEHAVIOR_FIELD_SEMANTICS_VERSION = 2
+BEHAVIOR_FIELD_SEMANTICS_VERSION = 3
 SCIENTIFIC_IDENTITY_VERSION = 2
-STRATEGY_BEHAVIOR_IDENTITY_VERSION = 2
+STRATEGY_BEHAVIOR_IDENTITY_VERSION = 3
 
 # Every list reachable from the identity fields must be declared here.
 # Unknown list paths fail closed instead of inheriting caller-order semantics.
@@ -90,12 +95,14 @@ def _canonical_json(value: Any) -> str:
 
 
 def _validate_behavior_field_semantics(candidate: dict[str, Any]) -> str:
-    """Resolve one exact reviewed behavior schema and reject all other shapes.
+    """Resolve one exact reviewed behavior schema and its value contract.
 
     Recognition across schemas is used only to produce a useful error for truly
     unknown metadata. Admission itself is exact-shape and mechanism-specific:
     a field valid for another schema cannot be added to this strategy to create
-    a new rejected-memory identity.
+    a new rejected-memory identity. The resolved value contract also makes every
+    accepted scalar/list value representation explicit; sentence-shaped legacy
+    values are closed reviewed tokens, not caller-editable prose.
     """
     recognized: dict[str, set[str]] = {
         section: set().union(*(schema[section] for schema in BEHAVIOR_SCHEMAS.values()))
@@ -118,7 +125,10 @@ def _validate_behavior_field_semantics(candidate: dict[str, Any]) -> str:
                     "nested behavior mappings require an explicit reviewed path schema: "
                     f"{section}.{field}"
                 )
-    return resolve_behavior_schema_id(candidate)
+    schema_id = resolve_behavior_schema_id(candidate)
+    validate_behavior_value_contract(candidate, schema_id)
+    validate_target_value_contract(candidate, schema_id)
+    return schema_id
 
 
 def _canonicalize_scalar(value: Any, path: tuple[str, ...]) -> Any:
@@ -205,6 +215,7 @@ def _projection_for_fields(
         projection = {
             "_behavior_schema": {
                 "registry_version": BEHAVIOR_SCHEMA_REGISTRY_VERSION,
+                "value_contract_version": BEHAVIOR_VALUE_CONTRACT_VERSION,
                 "schema_id": behavior_schema_id,
             },
             **projection,
@@ -221,8 +232,8 @@ def scientific_design_projection(candidate: dict[str, Any]) -> dict[str, Any]:
 
     This identity includes the validation plan. It answers whether two frozen
     experiments are the same complete scientific protocol. Behavior-container
-    validity is still resolved through the exact schema registry, but the schema
-    tag is not duplicated into this protocol digest.
+    validity is resolved through the exact schema and value registries, while
+    the executable schema/version domain tag is reserved for behavior identity.
     """
     return _projection_for_fields(
         candidate,
@@ -234,9 +245,10 @@ def scientific_design_projection(candidate: dict[str, Any]) -> dict[str, Any]:
 def strategy_behavior_projection(candidate: dict[str, Any]) -> dict[str, Any]:
     """Return the label- and validation-plan-invariant executable projection.
 
-    The resolved schema id and registry version are domain-bound into this
-    identity. A candidate cannot switch to another mechanism's recognized field
-    or caller-rename a schema without changing/failing the trusted resolver.
+    The resolved schema id, schema-registry version, and executable value-contract
+    version are domain-bound into this identity. A candidate cannot switch to
+    another mechanism's recognized field, caller-rename a schema, paraphrase a
+    closed behavior token, or change scalar representation to escape memory.
     """
     return _projection_for_fields(
         candidate,
