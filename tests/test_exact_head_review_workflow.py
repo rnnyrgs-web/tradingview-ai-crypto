@@ -52,7 +52,7 @@ def test_protected_paths_are_reviewed_but_never_auto_integrated() -> None:
     assert 'contents: write' not in text
     assert 'AUTONOMOUS_MERGE_ENABLED: "false"' in text
     assert "REVIEW_APPROVED_PROTECTED_LEAD_INTEGRATION_REQUIRED" in text
-    assert "Run Security, Lead and Claude adversarial exact-head reviews in parallel" in text
+    assert "Run independent exact-head reviewers with bounded transient WAIT" in text
     assert "gh pr merge" not in text
     assert "merge_pull_request" not in text
     assert "integration_authority == \"NONE\"" in text
@@ -71,7 +71,26 @@ def test_failed_attempts_are_bounded_but_not_permanent_blacklist() -> None:
 def test_model_review_cannot_run_before_exact_head_green_ci() -> None:
     text = _text()
     selection = text.index("Exact-head Security and Reliability run")
-    review = text.index("Run Security, Lead and Claude adversarial exact-head reviews in parallel")
+    review = text.index("Run independent exact-head reviewers with bounded transient WAIT")
     assert selection < review
     assert 'CONCLUSION\" != \"success\"' in text
     assert "Review models were not invoked" in text
+
+
+def test_transient_reviewer_capacity_is_controlled_wait_not_approval() -> None:
+    text = _text()
+    assert "id: review_models" in text
+    assert "WAIT_RETRYABLE" in text
+    assert "maximum three attempts" in text
+    assert "Bounded reviewer retry limit reached" in text
+    assert "Candidate remains **unapproved** and **unmerged**" in text
+    assert "steps.review_models.outputs.wait != 'true'" in text
+
+
+def test_openai_reviewers_are_serial_while_claude_can_run_in_parallel() -> None:
+    text = _text()
+    claude = text.index("PID_CLAUDE=$!")
+    security = text.index("SECURITY_STATUS=")
+    lead = text.index("LEAD_STATUS=")
+    assert claude < security < lead
+    assert "same rate-limit bucket" in text
