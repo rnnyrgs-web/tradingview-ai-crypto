@@ -19,10 +19,13 @@ CONTRACT_SCHEMA = "two_x_prospective_snapshot_contract.v1"
 SNAPSHOT_SCHEMA = "two_x_prospective_snapshot.v1"
 RESULT_SCHEMA = "two_x_prospective_snapshot_result.v1"
 FEATURE_VALUE_SCHEMA = "two_x_feature_values.v1"
+STRICT_DERIVATION_SCHEMA = "two_x_strict_tradability_derivation.v1"
+STRICT_TRANSFORM_ID = "PIT_MICROSTRUCTURE_TRADABILITY_V1"
+STRICT_TRANSFORM_VERSION = "1"
 
 PROSPECTIVE_CONTRACT_ARTIFACT_ID = "2X-PROSPECTIVE-SNAPSHOT-001-v1"
-PROSPECTIVE_CONTRACT_GIT_BLOB_SHA = "e193dbdd2c01f3fe64e25a726aac45ec71ad51e7"
-PROSPECTIVE_CONTRACT_CANONICAL_SHA256 = "4c8288bef95dc50c0a5ed0e95a699b013ebd5274c4c8d921781c59aaf9777a7e"
+PROSPECTIVE_CONTRACT_GIT_BLOB_SHA = "90a25a9635f6dd133a95e30d4f9b34f99d3999b3"
+PROSPECTIVE_CONTRACT_CANONICAL_SHA256 = "4f93645c3256fcef9566cf18c3667f8e350772b64d97c7234d8f749a526589ce"
 PROSPECTIVE_CONTRACT_PATH = (
     Path(__file__).resolve().parent
     / "money_intelligence"
@@ -532,6 +535,10 @@ def validate_contract(contract: dict[str, Any]) -> None:
             "require_out_of_band_receipt_verification",
             "required_state_fields",
             "rule",
+            "derivation_schema",
+            "transform_id",
+            "transform_version",
+            "require_out_of_band_derivation_verification",
         },
         "strict_tradability_binding",
     )
@@ -544,6 +551,16 @@ def validate_contract(contract: dict[str, Any]) -> None:
         raise ValueError("strict tradability execution bands drifted")
     if binding.get("require_out_of_band_receipt_verification") is not True:
         raise ValueError("strict tradability requires out-of-band receipt verification")
+    if binding.get("derivation_schema") != STRICT_DERIVATION_SCHEMA:
+        raise ValueError("strict tradability derivation schema drifted")
+    if binding.get("transform_id") != STRICT_TRANSFORM_ID:
+        raise ValueError("strict tradability transform_id drifted")
+    if binding.get("transform_version") != STRICT_TRANSFORM_VERSION:
+        raise ValueError("strict tradability transform_version drifted")
+    if binding.get("require_out_of_band_derivation_verification") is not True:
+        raise ValueError(
+            "strict tradability requires out-of-band derivation verification"
+        )
     if binding.get("required_state_fields") != [
         "state",
         "contract_artifact_id",
@@ -598,11 +615,54 @@ def _validate_record(
     _validate_feature_value(family, record["value"])
 
 
+def strict_tradability_derivation_payload(
+    record: dict[str, Any],
+    contract: dict[str, Any],
+) -> dict[str, Any]:
+    """Return the exact canonical payload that a trusted derivation attestation must cover.
+
+    This does not itself verify an external signature. The consumer must independently
+    verify the derivation artifact/attestation and pass the resulting payload SHA-256 to
+    ``evaluate_snapshot``. The payload binds authenticated acquisition identity and raw
+    bytes to the frozen transform, #519 execution contract, PIT window, band, and metrics.
+    """
+    value = record.get("value")
+    _strict_value_shape(value)
+    if value.get("state") == "UNKNOWN_TRADABILITY":
+        raise ValueError("UNKNOWN_TRADABILITY has no measured derivation payload")
+    binding = contract["strict_tradability_binding"]
+    return {
+        "schema": binding["derivation_schema"],
+        "source_id": record["source_id"],
+        "source_locator": record["source_locator"],
+        "source_observed_at": record["source_observed_at"],
+        "source_available_at": record["source_available_at"],
+        "captured_at": record["captured_at"],
+        "raw_sha256": record["raw_sha256"],
+        "acquisition_receipt_sha256": record["receipt_sha256"],
+        "transform_id": record["transform_id"],
+        "transform_version": record["transform_version"],
+        "contract_artifact_id": value["contract_artifact_id"],
+        "contract_git_blob_sha": value["contract_git_blob_sha"],
+        "execution_band_usd": value["execution_band_usd"],
+        "window_start_at": value["window_start_at"],
+        "window_end_at": value["window_end_at"],
+        "metrics": value["metrics"],
+    }
+
+
+def strict_tradability_derivation_sha256(
+    record: dict[str, Any],
+    contract: dict[str, Any],
+) -> str:
+    return digest(strict_tradability_derivation_payload(record, contract))
+
+
 def _strict_state(
     record: dict[str, Any],
     cutoff: datetime,
     contract: dict[str, Any],
-) -> str:
+) -> tuple[str, str | None]:
     value = record["value"]
     _strict_value_shape(value)
     state = value["state"]
@@ -620,7 +680,13 @@ def _strict_state(
         "strict_tradability.microstructure_evidence_sha256",
     )
     if state == "UNKNOWN_TRADABILITY":
-        return state
+        return state, None
+
+    if (
+        record.get("transform_id") != binding["transform_id"]
+        or record.get("transform_version") != binding["transform_version"]
+    ):
+        raise ValueError("strict_tradability transform identity mismatch")
 
     pinned = _tradability_contract()
     window = pinned["strict_microstructure_window"]
@@ -686,7 +752,14 @@ def _strict_state(
         raise ValueError(
             "STRICT_NOT_TRADABLE contradicts frozen #519 thresholds"
         )
-    return state
+
+    derivation_sha256 = strict_tradability_derivation_sha256(record, contract)
+    if value["microstructure_evidence_sha256"] != derivation_sha256:
+        raise ValueError(
+            "strict_tradability microstructure_evidence_sha256 does not bind "
+            "authenticated raw evidence, frozen transform/band/window, and metrics"
+        )
+    return state, derivation_sha256
 
 
 def _verified(values: Iterable[str] | None) -> set[str]:
@@ -695,6 +768,17 @@ def _verified(values: Iterable[str] | None) -> set[str]:
     if isinstance(values, (str, bytes)):
         raise ValueError("verified_receipt_sha256s must be an iterable")
     return {_sha(v, "verified_receipt_sha256") for v in values}
+
+
+def _verified_derivations(values: Iterable[str] | None) -> set[str]:
+    if values is None:
+        return set()
+    if isinstance(values, (str, bytes)):
+        raise ValueError("verified_strict_derivation_sha256s must be an iterable")
+    return {
+        _sha(v, "verified_strict_derivation_sha256")
+        for v in values
+    }
 
 
 def _argument(
@@ -723,6 +807,7 @@ def evaluate_snapshot(
     snapshot: dict[str, Any],
     *,
     verified_receipt_sha256s: Iterable[str] | None = None,
+    verified_strict_derivation_sha256s: Iterable[str] | None = None,
 ) -> dict[str, Any]:
     validate_contract(contract)
 
@@ -740,6 +825,9 @@ def evaluate_snapshot(
     if cutoff > created:
         raise ValueError("information_cutoff must be <= created_at")
     verified = _verified(verified_receipt_sha256s)
+    verified_derivations = _verified_derivations(
+        verified_strict_derivation_sha256s
+    )
 
     assets = snapshot.get("assets")
     if not isinstance(assets, list) or not assets:
@@ -821,7 +909,7 @@ def evaluate_snapshot(
         if strict["status"] != "KNOWN":
             blockers.append("STRICT_TRADABILITY_UNKNOWN")
         else:
-            state = _strict_state(strict, cutoff, contract)
+            state, derivation_sha256 = _strict_state(strict, cutoff, contract)
             if state != "STRICT_TRADABLE":
                 blockers.append(f"STRICT_TRADABILITY_NOT_CLEAR:{state}")
             if strict.get("receipt_kind") == "UNVERIFIED_RESEARCH_RECEIPT":
@@ -830,6 +918,11 @@ def evaluate_snapshot(
                 )
             elif strict.get("receipt_sha256") not in verified:
                 blockers.append("STRICT_TRADABILITY_RECEIPT_UNVERIFIED")
+            if (
+                derivation_sha256 is not None
+                and derivation_sha256 not in verified_derivations
+            ):
+                blockers.append("STRICT_TRADABILITY_DERIVATION_UNVERIFIED")
 
         if not evidence_for:
             blockers.append("NO_FROZEN_EVIDENCE_FOR")
@@ -858,6 +951,7 @@ def evaluate_snapshot(
         "asset_count": len(results),
         "assets": results,
         "verified_receipt_count": len(verified),
+        "verified_strict_derivation_count": len(verified_derivations),
         "snapshot_time_authority": "SELF_REPORTED_NOT_NON_BACKDATEABLE",
         "prospective_chronology_authority": False,
         "formation_authority": False,
