@@ -2,7 +2,7 @@
   "schema_version": 1,
   "artifact_type": "external_edge_replication_predeclaration",
   "replication_id": "EXT-ABNORMAL-DAY-MOMENTUM-001-v1",
-  "status": "PREDECLARED_WAIT_CANONICAL_507_ADMISSION",
+  "status": "PREDECLARED_RUNNER_REPAIRED_WAIT_INDEPENDENT_REVIEW",
   "formed_at": "2026-09-21T16:29:15Z",
   "related_issues": [
     504,
@@ -41,6 +41,7 @@
     "timezone": "UTC",
     "point_in_time": true,
     "missing_bar_interpolation_allowed": false,
+    "scheduled_execution_missingness_policy": "Any frozen scheduled event missing a required entry or exit bar makes that scoring arm DATA/PIT_INCONCLUSIVE; required bars may not be silently dropped after schedule formation.",
     "complete_utc_day_required_for_reference_distribution": true,
     "selection_train_start_utc": "2025-05-07T05:00:00Z",
     "selection_train_end_utc": "2026-04-30T23:00:00Z",
@@ -74,7 +75,8 @@
     "target": null,
     "same_instrument_retrigger": "forbidden until next UTC day",
     "cross_instrument_concurrency": "allowed",
-    "event_independence": "at most one event per instrument per UTC day; pooled inference must additionally report UTC-day clustered results",
+    "event_independence": "at most one event per instrument per UTC day",
+    "pooled_independent_unit": "unique UTC signal day across all BTC/ETH/SOL instruments; raw asset-event count must be reported separately and must not satisfy the 40/20 sample gate",
     "protected_oos_access": false
   },
   "cost_model": {
@@ -99,6 +101,7 @@
   "cheap_stage_gates": {
     "minimum_independent_trades_train": 40,
     "minimum_independent_trades_validation": 20,
+    "independent_sample_unit": "unique UTC signal day across pooled instruments",
     "require_positive_after_cost_train": true,
     "require_positive_after_cost_validation": true,
     "require_validation_halves_positive": true,
@@ -112,7 +115,7 @@
     "formation_before_outcomes": true,
     "primary_mechanism_baseline": "On the exact candidate event windows, trade the sign of the immediately preceding completed 1h close-to-close return instead of the abnormal current-day cumulative-return direction; same next-open entry, same midnight exit, same costs.",
     "sign_flip_falsifier": "Trade opposite the candidate direction on the exact candidate event windows; same entry/exit/costs.",
-    "one_bar_delay": "Delay candidate entry by exactly one completed 1h bar while preserving original signal direction and midnight exit; events with no remaining valid holding interval are omitted under a predeclared symmetric rule and counted.",
+    "one_bar_delay": "Delay candidate entry by exactly one completed 1h bar while preserving original signal direction and midnight exit; a structurally empty hold interval is omitted by the frozen price-independent rule and counted, while a missing required delayed entry/exit bar makes that arm DATA/PIT_INCONCLUSIVE rather than silently dropping the event.",
     "randomized_timing_placebo": "Use #517/#523 deterministic frequency- and direction-matched eligible-window randomization separately in training and validation, without reading forward returns during schedule formation.",
     "ablation": "Candidate event schedule and direction without the 1.5-sigma abnormality requirement is not permitted post hoc; the mechanism gate is instead tested by the frozen randomized eligible-window placebo and the simple one-hour-momentum baseline.",
     "complexity_rule": "Reject/deprioritize if the candidate does not beat the primary simple baseline after costs in both training and validation or if placebo/delayed controls explain the result."
@@ -141,6 +144,6 @@
     "trade_authority": false,
     "promotion_authority": false
   },
-  "exact_next_action": "After #507 production admission is repaired, independently reviewed and integrated, regenerate this contract under the canonical identity implementation, reject any exact/semantic collision, verify the certified dataset boundary without reading protected OOS, then run one deterministic Stage-1 screen. If it fails or is underpowered, persist #510 learning and do not tune this v1.",
-  "artifact_sha256": "772f91355a0365f61ba552802b52f1e82163d47a8d2cbb55fed4206a0d1918cc"
+  "exact_next_action": "After this missingness/independence repair receives fresh exact-head CI and independent review, reconcile onto current canonical main, regenerate/admit this contract through the integrated production identity gate, verify the certified development boundary without reading protected OOS, then run exactly one deterministic Stage-1 screen. Any failed or underpowered result must be persisted through #510 without tuning this v1.",
+  "artifact_sha256": "45a1b336db757259781e47530e2940f50025011da8631c1ab3338e1bd3261e8b"
 }
