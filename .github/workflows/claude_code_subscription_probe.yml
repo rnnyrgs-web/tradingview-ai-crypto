@@ -2,25 +2,21 @@ name: Claude Code Subscription Capability Probe
 
 on:
   workflow_dispatch:
-  pull_request:
-    branches: [main]
-    paths:
-      - agents/claude_code_auth.py
-      - tests/test_claude_code_auth.py
-      - tests/test_claude_code_subscription_probe_contract.py
-      - .github/workflows/claude_code_subscription_probe.yml
 
 permissions:
   contents: read
 
 jobs:
   subscription-capability-probe:
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    # The OAuth secret must never be exposed to pull-request code. This workflow
+    # is a trusted-main capability proof only; ordinary PR CI validates its
+    # contract statically through Security & Reliability.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
       CLAUDE_CODE_SUBPROCESS_ENV_SCRUB: "1"
-      TARGET_HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+      TARGET_HEAD_SHA: ${{ github.sha }}
     steps:
       - id: preflight
         name: Detect subscription credential without exposing it
