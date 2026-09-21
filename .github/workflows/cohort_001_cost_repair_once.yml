@@ -1,0 +1,358 @@
+name: One-shot Cohort 001 funding-cost repair
+
+on:
+  push:
+    branches:
+      - agent/strategy-cohort-001-seed-20260921
+    paths:
+      - .github/workflows/cohort_001_cost_repair_once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/strategy-cohort-001-seed-20260921
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Apply outcome-blind cost-semantics repair
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              p = Path(path)
+              text = p.read_text(encoding="utf-8")
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{path}: expected exactly one replacement target, found {count}")
+              p.write_text(text.replace(old, new, 1), encoding="utf-8")
+
+          # 1) Generic predeclaration validation accepts exactly one reviewed funding-cost
+          # representation. Exact mechanism schemas below still decide which one is legal.
+          replace_once(
+              "orchestration/strategy_predeclaration.py",
+              '''REQUIRED_COST_FIELDS = {
+              "fees_bps",
+              "spread_bps",
+              "slippage_bps",
+              "funding_bps_per_day",
+              "stress_multipliers",
+          }
+          ''',
+              '''REQUIRED_COST_FIELDS = {
+              "fees_bps",
+              "spread_bps",
+              "slippage_bps",
+              "stress_multipliers",
+          }
+          ALTERNATIVE_FUNDING_COST_FIELDS = (
+              "funding_bps_per_day",
+              "adverse_funding_allowance_bps_per_trade",
+          )
+          ''',
+          )
+          replace_once(
+              "orchestration/strategy_predeclaration.py",
+              '''    missing_costs = sorted(REQUIRED_COST_FIELDS - set(costs))
+              if missing_costs:
+                  raise RuntimeError(f"cost_model missing fields: {missing_costs}")
+              for field in ("fees_bps", "spread_bps", "slippage_bps", "funding_bps_per_day"):
+                  _require_nonnegative_number(costs[field], f"cost_model.{field}")
+          ''',
+              '''    missing_costs = sorted(REQUIRED_COST_FIELDS - set(costs))
+              if missing_costs:
+                  raise RuntimeError(f"cost_model missing fields: {missing_costs}")
+              funding_cost_fields = [
+                  field for field in ALTERNATIVE_FUNDING_COST_FIELDS if field in costs
+              ]
+              if len(funding_cost_fields) != 1:
+                  raise RuntimeError(
+                      "cost_model must contain exactly one reviewed funding-cost field: "
+                      + ", ".join(ALTERNATIVE_FUNDING_COST_FIELDS)
+                  )
+              for field in ("fees_bps", "spread_bps", "slippage_bps", *funding_cost_fields):
+                  _require_nonnegative_number(costs[field], f"cost_model.{field}")
+          ''',
+          )
+
+          # 2) Split Cohort-001 directional OHLCV cost semantics from the blocked
+          # funding-carry candidate. The carry lane keeps PIT funding-data semantics.
+          schema_path = Path("orchestration/strategy_behavior_schema.py")
+          schema = schema_path.read_text(encoding="utf-8")
+          schema = schema.replace("BEHAVIOR_SCHEMA_REGISTRY_VERSION = 1", "BEHAVIOR_SCHEMA_REGISTRY_VERSION = 2", 1)
+          anchor = '''COMMON_PREDECLARATION_COST = _fields(
+              "fees_bps",
+              "spread_bps",
+              "slippage_bps",
+              "funding_bps_per_day",
+              "stress_multipliers",
+          )
+          '''
+          if schema.count(anchor) != 1:
+              raise SystemExit("strategy_behavior_schema.py: common cost anchor drifted")
+          schema = schema.replace(
+              anchor,
+              anchor + '''
+          COMMON_COHORT_OHLCV_COST = _fields(
+              "fees_bps",
+              "spread_bps",
+              "slippage_bps",
+              "adverse_funding_allowance_bps_per_trade",
+              "stress_multipliers",
+          )
+          ''',
+              1,
+          )
+          marker = '    "C101_DELTA_CARRY_V1": _schema('
+          if schema.count(marker) != 1:
+              raise SystemExit("strategy_behavior_schema.py: delta-carry marker drifted")
+          before, after = schema.split(marker, 1)
+          count = before.count("cost_model=COMMON_PREDECLARATION_COST,")
+          if count != 7:
+              raise SystemExit(f"strategy_behavior_schema.py: expected 7 non-carry Cohort cost schemas, found {count}")
+          before = before.replace(
+              "cost_model=COMMON_PREDECLARATION_COST,",
+              "cost_model=COMMON_COHORT_OHLCV_COST,",
+          )
+          schema_path.write_text(before + marker + after, encoding="utf-8")
+
+          value_path = Path("orchestration/strategy_behavior_value_contract.py")
+          values = value_path.read_text(encoding="utf-8")
+          values = values.replace("BEHAVIOR_VALUE_CONTRACT_VERSION = 1", "BEHAVIOR_VALUE_CONTRACT_VERSION = 2", 1)
+          anchor = '''COMMON_COST = _section(
+              fees_bps=number(),
+              spread_bps=number(),
+              slippage_bps=number(),
+              funding_bps_per_day=number(),
+              stress_multipliers=number_list(),
+          )
+          '''
+          if values.count(anchor) != 1:
+              raise SystemExit("strategy_behavior_value_contract.py: common cost anchor drifted")
+          values = values.replace(
+              anchor,
+              anchor + '''
+          COMMON_COHORT_OHLCV_COST = _section(
+              fees_bps=number(),
+              spread_bps=number(),
+              slippage_bps=number(),
+              adverse_funding_allowance_bps_per_trade=number(),
+              stress_multipliers=number_list(),
+          )
+          ''',
+              1,
+          )
+          marker = '    "C101_DELTA_CARRY_V1": {'
+          if values.count(marker) != 1:
+              raise SystemExit("strategy_behavior_value_contract.py: delta-carry marker drifted")
+          before, after = values.split(marker, 1)
+          count = before.count('"cost_model": COMMON_COST,')
+          if count != 7:
+              raise SystemExit(f"strategy_behavior_value_contract.py: expected 7 non-carry Cohort value contracts, found {count}")
+          before = before.replace('"cost_model": COMMON_COST,', '"cost_model": COMMON_COHORT_OHLCV_COST,')
+          value_path.write_text(before + marker + after, encoding="utf-8")
+
+          # 3) Freeze the already-predeclared 4 bps/trade adverse allowance in the
+          # shared directional OHLCV seed. Delta carry already has its own explicit
+          # funding-data cost model and remains DATA_BLOCKED.
+          seed_path = Path("orchestration/cohorts/strategy_factory_cohort_001_seed.json")
+          seed = seed_path.read_text(encoding="utf-8")
+          old = '      "funding_bps_per_day": 0.0,\n'
+          new = '      "adverse_funding_allowance_bps_per_trade": 4.0,\n'
+          if seed.count(old) != 2:
+              raise SystemExit(f"seed: expected common + delta funding placeholders, found {seed.count(old)}")
+          seed = seed.replace(old, new, 1)
+          if seed.count('"adverse_funding_allowance_bps_per_trade": 4.0') != 1:
+              raise SystemExit("seed: adverse per-trade funding allowance was not frozen exactly once")
+          seed_path.write_text(seed, encoding="utf-8")
+
+          # 4) Publish a deterministic, outcome-blind Stage-1 cost contract derived
+          # only from the frozen cost model so the future runner cannot omit funding.
+          admission_path = Path("orchestration/strategy_factory_cohort_001_admission.py")
+          admission = admission_path.read_text(encoding="utf-8")
+          insert_before = '\n\ndef _qualify_common_selection_dataset(seed: dict[str, Any]) -> dict[str, Any]:\n'
+          if admission.count(insert_before) != 1:
+              raise SystemExit("admission.py: helper insertion anchor drifted")
+          helper = '''
+
+          def stage1_total_cost_bps(cost_model: dict[str, Any], stress_multiplier: float) -> float:
+              """Return deterministic per-trade Stage-1 drag for non-carry Cohort-001.
+
+              This cheap-screen allowance is intentionally adverse and outcome-blind.
+              It is not authenticated realized funding evidence and must not be used by
+              the DATA_BLOCKED delta-carry strategy.
+              """
+              if not isinstance(cost_model, dict):
+                  raise RuntimeError("Stage-1 cost_model must be an object")
+              required = (
+                  "fees_bps",
+                  "spread_bps",
+                  "slippage_bps",
+                  "adverse_funding_allowance_bps_per_trade",
+                  "stress_multipliers",
+              )
+              missing = [field for field in required if field not in cost_model]
+              if missing:
+                  raise RuntimeError(f"Stage-1 cost_model missing fields: {missing}")
+              if "funding_bps_per_day" in cost_model:
+                  raise RuntimeError("non-carry Stage-1 cost must not use daily funding semantics")
+              multiplier = float(stress_multiplier)
+              allowed = [float(value) for value in cost_model["stress_multipliers"]]
+              if multiplier not in allowed:
+                  raise RuntimeError("Stage-1 stress multiplier is not frozen in the cost contract")
+              components = (
+                  "fees_bps",
+                  "spread_bps",
+                  "slippage_bps",
+                  "adverse_funding_allowance_bps_per_trade",
+              )
+              base = 0.0
+              for field in components:
+                  value = cost_model[field]
+                  if isinstance(value, bool) or not isinstance(value, (int, float)):
+                      raise RuntimeError(f"Stage-1 {field} must be numeric")
+                  value = float(value)
+                  if value < 0:
+                      raise RuntimeError(f"Stage-1 {field} must be non-negative")
+                  base += value
+              return base * multiplier
+          '''
+          admission = admission.replace(insert_before, helper + insert_before, 1)
+          admission = admission.replace('        "schema_version": 2,', '        "schema_version": 3,', 1)
+          payload_anchor = '''        "selection_dataset_qualification": selection_dataset,
+              "outcomes_read": False,
+          '''
+          if admission.count(payload_anchor) != 1:
+              raise SystemExit("admission.py: payload anchor drifted")
+          payload_replacement = '''        "selection_dataset_qualification": selection_dataset,
+              "stage1_cost_contract": {
+                  "semantics": "adverse_per_completed_trade_allowance",
+                  "applies_to": "non_carry_cohort_001_ohlcv_candidates",
+                  "fees_bps": seed["common_ohlcv_contract"]["cost_model"]["fees_bps"],
+                  "spread_bps": seed["common_ohlcv_contract"]["cost_model"]["spread_bps"],
+                  "slippage_bps": seed["common_ohlcv_contract"]["cost_model"]["slippage_bps"],
+                  "adverse_funding_allowance_bps_per_trade": seed["common_ohlcv_contract"]["cost_model"]["adverse_funding_allowance_bps_per_trade"],
+                  "stress_totals_bps": {
+                      f"{float(multiplier):g}x": stage1_total_cost_bps(
+                          seed["common_ohlcv_contract"]["cost_model"], multiplier
+                      )
+                      for multiplier in seed["common_ohlcv_contract"]["cost_model"]["stress_multipliers"]
+                  },
+                  "authenticated_realized_funding_evidence": False,
+                  "deeper_validation_requires_pit_funding": True,
+              },
+              "outcomes_read": False,
+          '''
+          admission = admission.replace(payload_anchor, payload_replacement, 1)
+          admission_path.write_text(admission, encoding="utf-8")
+
+          # 5) Lock the cost semantics and totals in focused regressions.
+          test_path = Path("tests/test_strategy_factory_cohort_001_admission.py")
+          tests = test_path.read_text(encoding="utf-8")
+          tests = tests.replace('    assert receipt["schema_version"] == 2\n', '    assert receipt["schema_version"] == 3\n', 1)
+          append = '''
+
+          def test_cohort_001_noncarry_perpetual_cost_contract_is_adverse_and_deterministic() -> None:
+              seed = _seed()
+              common_cost = seed["common_ohlcv_contract"]["cost_model"]
+              assert common_cost["adverse_funding_allowance_bps_per_trade"] == 4.0
+              assert "funding_bps_per_day" not in common_cost
+
+              receipt = build_canonical_admission_receipt()
+              cost = receipt["stage1_cost_contract"]
+              assert cost["semantics"] == "adverse_per_completed_trade_allowance"
+              assert cost["fees_bps"] == 12.0
+              assert cost["spread_bps"] == 2.0
+              assert cost["slippage_bps"] == 6.0
+              assert cost["adverse_funding_allowance_bps_per_trade"] == 4.0
+              assert cost["stress_totals_bps"] == {"1x": 24.0, "2x": 48.0, "3x": 72.0}
+              assert cost["authenticated_realized_funding_evidence"] is False
+              assert cost["deeper_validation_requires_pit_funding"] is True
+
+              delta = next(
+                  candidate
+                  for candidate in seed["candidates"]
+                  if candidate["fingerprint_id"] == "DISC-DELTA-CARRY-001-v1"
+              )
+              assert delta["cost_model"]["funding_bps_per_day"] == 0.0
+              assert "adverse_funding_allowance_bps_per_trade" not in delta["cost_model"]
+
+
+          def test_cohort_001_zero_or_omitted_adverse_funding_cannot_pass_as_after_cost() -> None:
+              seed = _seed()
+              candidate = next(
+                  candidate
+                  for candidate in seed["candidates"]
+                  if candidate["fingerprint_id"] == "DISC-SIGNED-VOLUME-DRIFT-001-v1"
+              )
+              resolved = resolve_candidate_predeclaration(seed, candidate)
+
+              omitted = json.loads(json.dumps(resolved))
+              omitted["cost_model"].pop("adverse_funding_allowance_bps_per_trade")
+              try:
+                  freeze_predeclaration(omitted)
+              except RuntimeError:
+                  pass
+              else:
+                  raise AssertionError("omitted adverse funding allowance must fail closed")
+
+              zero = json.loads(json.dumps(resolved))
+              zero["cost_model"]["adverse_funding_allowance_bps_per_trade"] = 0.0
+              # Zero is syntactically valid but is not the frozen Cohort-001 after-cost
+              # contract; the deterministic total exposes the weakened economics and
+              # changes executable identity rather than silently qualifying as 24 bps.
+              frozen_zero = freeze_predeclaration(zero)
+              frozen_real = freeze_predeclaration(resolved)
+              assert frozen_zero["strategy_behavior_sha256"] != frozen_real["strategy_behavior_sha256"]
+              assert sum(
+                  zero["cost_model"][field]
+                  for field in ("fees_bps", "spread_bps", "slippage_bps", "adverse_funding_allowance_bps_per_trade")
+              ) == 20.0
+          '''
+          if "test_cohort_001_noncarry_perpetual_cost_contract_is_adverse_and_deterministic" in tests:
+              raise SystemExit("focused cost tests already present; one-shot repair must not run twice")
+          test_path.write_text(tests.rstrip() + append + "\n", encoding="utf-8")
+
+          # CI workflow's receipt schema assertion follows the explicit schema bump.
+          replace_once(
+              ".github/workflows/strategy_factory_cohort_001_admission.yml",
+              '          assert payload["schema_version"] == 2\n',
+              '          assert payload["schema_version"] == 3\n',
+          )
+          PY
+      - name: Install focused test dependency
+        run: python -m pip install pytest
+      - name: Run focused admission and identity tests before receipt rewrite
+        run: |
+          python -m pytest -q \
+            tests/test_strategy_factory_cohort_001_admission.py \
+            tests/test_strategy_predeclaration.py \
+            tests/test_scientific_design_identity.py
+      - name: Regenerate canonical outcome-blind admission receipt
+        run: python -m orchestration.strategy_factory_cohort_001_admission > orchestration/cohorts/strategy_factory_cohort_001_canonical_admission.json
+      - name: Verify committed receipt lock after regeneration
+        run: python -m pytest -q tests/test_strategy_factory_cohort_001_receipt_lock.py
+      - name: Commit final bounded repair and remove one-shot helper
+        shell: bash
+        run: |
+          git config user.name "strategy-factory-bot"
+          git config user.email "strategy-factory-bot@users.noreply.github.com"
+          git rm .github/workflows/cohort_001_cost_repair_once.yml
+          git add orchestration/strategy_predeclaration.py \
+                  orchestration/strategy_behavior_schema.py \
+                  orchestration/strategy_behavior_value_contract.py \
+                  orchestration/cohorts/strategy_factory_cohort_001_seed.json \
+                  orchestration/cohorts/strategy_factory_cohort_001_canonical_admission.json \
+                  orchestration/strategy_factory_cohort_001_admission.py \
+                  tests/test_strategy_factory_cohort_001_admission.py \
+                  .github/workflows/strategy_factory_cohort_001_admission.yml
+          git commit -m "Fix Cohort-001 perpetual funding cost semantics"
+          git push origin HEAD:agent/strategy-cohort-001-seed-20260921
