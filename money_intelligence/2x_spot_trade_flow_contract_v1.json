@@ -1,0 +1,66 @@
+{
+  "schema": "two_x_spot_trade_flow_contract.v1",
+  "artifact_id": "2X-SPOT-FLOW-001-v1",
+  "frozen_at": "2026-09-21T07:48:00Z",
+  "issues": [505, 514, 519, 520],
+  "parent_hypothesis": "2X-H-SPOT-LIQUIDITY-TRADABILITY-001",
+  "status": "PREDECLARED_UNTESTED",
+  "outcome_access_for_feature_design": "SEALED",
+  "source": {
+    "provider": "Binance Public Data",
+    "market": "spot",
+    "archive_family": "daily/trades",
+    "official_repository_commit": "5c7f3197591c0d54d85dc43066226bc4c671d47a",
+    "required_archive_pattern": "<SYMBOL>-trades-YYYY-MM-DD.zip",
+    "required_checksum_sidecar": true,
+    "raw_columns": ["trade_id", "price", "quantity", "quote_quantity", "timestamp", "is_buyer_maker", "is_best_match"],
+    "aggressor_rule": "is_buyer_maker=false => aggressive buy; is_buyer_maker=true => aggressive sell"
+  },
+  "decision_clock": {
+    "timezone": "UTC",
+    "required_time": "00:00:00Z",
+    "reason": "Use complete UTC daily trade archives and avoid partial-day/post-cutoff ambiguity."
+  },
+  "windows": {
+    "current": "the 7 complete UTC calendar days immediately preceding decision_at",
+    "previous": "the 7 complete UTC calendar days immediately preceding the current window",
+    "total_required_days": 14,
+    "coverage_rule": "all 14 expected dates must have checksum-verified non-empty raw trade archives; missing/duplicate days fail closed rather than becoming zero flow"
+  },
+  "features": {
+    "quote_notional_usd_proxy": "sum raw quote_quantity within each 7d window; USDT quote notional is treated as USD-like venue quote notional, not a universal dollar-volume measure",
+    "trade_count": "count unique raw trades within each 7d window",
+    "aggressive_buy_quote": "sum quote_quantity where is_buyer_maker=false",
+    "aggressive_sell_quote": "sum quote_quantity where is_buyer_maker=true",
+    "aggressive_buy_share": "aggressive_buy_quote / total_quote_notional",
+    "net_aggressive_quote": "aggressive_buy_quote - aggressive_sell_quote",
+    "net_aggressive_share": "net_aggressive_quote / total_quote_notional",
+    "quote_notional_acceleration": "current_quote_notional / previous_quote_notional - 1",
+    "trade_count_acceleration": "current_trade_count / previous_trade_count - 1",
+    "aggressive_buy_share_change": "current_aggressive_buy_share - previous_aggressive_buy_share",
+    "net_aggressive_share_change": "current_net_aggressive_share - previous_net_aggressive_share",
+    "current_window_return": "last current-window raw trade price / first current-window raw trade price - 1"
+  },
+  "scientific_boundaries": [
+    "These features measure venue spot participation/aggressor imbalance, not order-book depth, spread or guaranteed execution quality.",
+    "Do not use futures flow as a substitute for spot flow.",
+    "Do not infer missing archives as zero activity.",
+    "Do not choose windows, fields or thresholds after seeing 2x outcomes.",
+    "Do not use current symbol membership to reconstruct historical eligibility.",
+    "Do not allow this feature family to alter Cohort 001 baseline membership after outcomes are opened; it is an optional frozen precursor family with its own coverage mask.",
+    "A large aggressive-buy share may be coincident/lagging rather than leading; incremental lift versus simple momentum/liquidity baselines must be tested before any predictive claim."
+  ],
+  "planned_evaluation": {
+    "primary": ["precision_at_k", "lift_over_matched_base_rate", "pr_auc", "tradable_precision_at_k_by_notional_band"],
+    "baselines": ["predecision_return", "predecision_volatility", "trailing_quote_volume"],
+    "minimum_independent_2x_events_for_inference": 20,
+    "below_minimum": "DESCRIPTIVE_ONLY",
+    "multiple_testing_family": "2X-COHORT-001-SPOT-FLOW"
+  },
+  "authority": {
+    "prediction": false,
+    "promotion": false,
+    "broker": false,
+    "live_trading": false
+  }
+}
