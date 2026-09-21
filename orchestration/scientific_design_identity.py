@@ -5,6 +5,10 @@ import json
 import math
 from typing import Any, Iterable
 
+from orchestration.strategy_behavior_data_projection import (
+    BEHAVIOR_DATA_PROJECTION_VERSION,
+    project_behavior_data_contract,
+)
 from orchestration.strategy_behavior_schema import (
     BEHAVIOR_SCHEMA_REGISTRY_VERSION,
     BEHAVIOR_SCHEMAS,
@@ -30,7 +34,9 @@ SCIENTIFIC_DESIGN_FIELDS = (
 # scientific protocol identity above. A failed executable design must not be
 # resurrected merely by changing validation thresholds, baselines, fresh-window
 # flags, or other evaluation-plan metadata while leaving the actual strategy
-# behavior unchanged.
+# behavior unchanged. Dataset-instance/provenance fields are separately removed
+# from data_contract by a reviewed per-schema projection before this identity is
+# hashed; the full scientific identity above still binds them.
 STRATEGY_BEHAVIOR_FIELDS = (
     "target_markets",
     "target_timeframes",
@@ -46,7 +52,7 @@ SCIENTIFIC_LIST_SEMANTICS_VERSION = 1
 SCIENTIFIC_SCALAR_CANONICALIZATION_VERSION = 1
 BEHAVIOR_FIELD_SEMANTICS_VERSION = 3
 SCIENTIFIC_IDENTITY_VERSION = 2
-STRATEGY_BEHAVIOR_IDENTITY_VERSION = 3
+STRATEGY_BEHAVIOR_IDENTITY_VERSION = 4
 
 # Every list reachable from the identity fields must be declared here.
 # Unknown list paths fail closed instead of inheriting caller-order semantics.
@@ -100,9 +106,10 @@ def _validate_behavior_field_semantics(candidate: dict[str, Any]) -> str:
     Recognition across schemas is used only to produce a useful error for truly
     unknown metadata. Admission itself is exact-shape and mechanism-specific:
     a field valid for another schema cannot be added to this strategy to create
-    a new rejected-memory identity. The resolved value contract also makes every
-    accepted scalar/list value representation explicit; sentence-shaped legacy
-    values are closed reviewed tokens, not caller-editable prose.
+    a new rejected-memory identity. Production schema resolution excludes every
+    regression-only TEST_* contract by construction; tests must explicitly opt
+    into their process-local registry context. The resolved value contract also
+    makes every accepted scalar/list representation explicit.
     """
     recognized: dict[str, set[str]] = {
         section: set().union(*(schema[section] for schema in BEHAVIOR_SCHEMAS.values()))
@@ -212,10 +219,19 @@ def _projection_for_fields(
     behavior_schema_id = _validate_behavior_field_semantics(candidate)
     projection = {field: candidate[field] for field in fields}
     if bind_behavior_schema:
+        # Rejected-memory identity tracks executable data semantics, not the
+        # particular evidence snapshot used to evaluate them. The full
+        # scientific identity above keeps the complete data_contract.
+        projection = dict(projection)
+        projection["data_contract"] = project_behavior_data_contract(
+            behavior_schema_id,
+            candidate["data_contract"],
+        )
         projection = {
             "_behavior_schema": {
                 "registry_version": BEHAVIOR_SCHEMA_REGISTRY_VERSION,
                 "value_contract_version": BEHAVIOR_VALUE_CONTRACT_VERSION,
+                "data_projection_version": BEHAVIOR_DATA_PROJECTION_VERSION,
                 "schema_id": behavior_schema_id,
             },
             **projection,
@@ -230,10 +246,9 @@ def _projection_for_fields(
 def scientific_design_projection(candidate: dict[str, Any]) -> dict[str, Any]:
     """Return the label-invariant full scientific-protocol projection.
 
-    This identity includes the validation plan. It answers whether two frozen
-    experiments are the same complete scientific protocol. Behavior-container
-    validity is resolved through the exact schema and value registries, while
-    the executable schema/version domain tag is reserved for behavior identity.
+    This identity includes the complete data contract and validation plan. It
+    answers whether two frozen experiments are the same complete scientific
+    protocol, including their dataset/provenance instance.
     """
     return _projection_for_fields(
         candidate,
@@ -243,12 +258,13 @@ def scientific_design_projection(candidate: dict[str, Any]) -> dict[str, Any]:
 
 
 def strategy_behavior_projection(candidate: dict[str, Any]) -> dict[str, Any]:
-    """Return the label- and validation-plan-invariant executable projection.
+    """Return the label- and evidence-instance-invariant executable projection.
 
-    The resolved schema id, schema-registry version, and executable value-contract
-    version are domain-bound into this identity. A candidate cannot switch to
-    another mechanism's recognized field, caller-rename a schema, paraphrase a
-    closed behavior token, or change scalar representation to escape memory.
+    The resolved production schema id, schema-registry version, executable
+    value-contract version, and data-projection version are domain-bound into
+    this identity. Dataset hashes/counts/coverage/selection windows cannot
+    resurrect a rejected executable design; genuine market/data semantics,
+    signal/execution rules, and cost behavior remain identity-driving.
     """
     return _projection_for_fields(
         candidate,
