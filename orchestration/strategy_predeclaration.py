@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from datetime import datetime
 from typing import Any
 
@@ -90,12 +91,15 @@ def _require_string_list(value: Any, field: str) -> list[str]:
 
 
 def _require_nonnegative_number(value: Any, field: str) -> float:
-    if isinstance(value, bool):
-        raise RuntimeError(f"{field} must be numeric")
-    try:
-        number = float(value)
-    except (TypeError, ValueError) as exc:
-        raise RuntimeError(f"{field} must be numeric") from exc
+    # Fail closed on numeric-looking strings. Identity canonicalization treats
+    # JSON strings as strings, so accepting "10" here while execution treats it
+    # as 10 would let an economically identical rejected design receive a fresh
+    # strategy_behavior_sha256. Only native JSON numbers are admissible.
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise RuntimeError(f"{field} must be a finite JSON number")
+    number = float(value)
+    if not math.isfinite(number):
+        raise RuntimeError(f"{field} must be a finite JSON number")
     if number < 0:
         raise RuntimeError(f"{field} must be non-negative")
     return number
