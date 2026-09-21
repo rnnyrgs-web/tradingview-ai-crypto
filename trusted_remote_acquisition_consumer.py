@@ -17,7 +17,7 @@ import json
 from pathlib import Path, PurePosixPath
 import re
 import shutil
-import subprocess
+import subprocess  # nosec B404 -- fixed gh executable + fixed argv; shell is never used
 import tarfile
 from typing import Any
 
@@ -60,7 +60,10 @@ def _verify_github_attestation(bundle: Path) -> None:
         EXPECTED_REF,
     ]
     try:
-        completed = subprocess.run(
+        # Security boundary: executable is resolved by shutil.which, every option is
+        # a frozen constant except the already-resolved bundle path, argv is passed
+        # as a sequence, and shell execution is never enabled.
+        completed = subprocess.run(  # nosec B603
             command,
             check=False,
             capture_output=True,
