@@ -1,5 +1,4 @@
 import hashlib
-import json
 from pathlib import Path
 from urllib.parse import urlencode
 
@@ -14,7 +13,7 @@ from big_move_binance_historical_universe import (
 
 
 PREFIX = "data/spot/monthly/klines/"
-HOST = "https://data.binance.vision/"
+HOST = "https://s3-ap-northeast-1.amazonaws.com/data.binance.vision"
 
 
 def _write(root: Path, name: str, raw: bytes):
@@ -62,8 +61,10 @@ def _pair(symbol: str, month: str):
 def test_contract_is_exact_git_blob_pinned():
     contract = load_contract()
     assert contract["artifact_id"] == CONTRACT_ARTIFACT_ID
-    assert CONTRACT_GIT_BLOB_SHA == "7e55fd09a4af2aca5faa5bfc020e72cc8f2f8042"
+    assert CONTRACT_GIT_BLOB_SHA == "b49c67cef3d16ba907a58fef2f8c7414ec0e905e"
     assert contract["membership_semantics"]["do_not_use_current_exchange_info"] is True
+    assert contract["source"]["listing_host"] == "s3-ap-northeast-1.amazonaws.com"
+    assert contract["source"]["listing_bucket_path"] == "/data.binance.vision"
 
 
 def test_complete_two_page_walk_includes_delisted_archive_symbol(tmp_path):
@@ -149,12 +150,14 @@ def test_pages_after_terminal_page_are_rejected(tmp_path):
 @pytest.mark.parametrize(
     "locator",
     [
-        _locator(host="https://evil.example/"),
+        _locator(host="https://evil.example/data.binance.vision"),
+        _locator(host="https://s3-ap-northeast-1.amazonaws.com/wrong-bucket"),
         _locator(prefix="data/futures/monthly/klines/"),
         _locator(list_type="1"),
+        _locator() + "&max-keys=1",
     ],
 )
-def test_request_host_prefix_and_list_type_are_frozen(tmp_path, locator):
+def test_request_host_bucket_prefix_query_and_list_type_are_frozen(tmp_path, locator):
     pages = [_page(tmp_path, 1, _xml(_pair("BTCUSDT", "2021-01")), locator=locator)]
     with pytest.raises(ValueError):
         build_historical_universe(pages, artifact_root=tmp_path)
