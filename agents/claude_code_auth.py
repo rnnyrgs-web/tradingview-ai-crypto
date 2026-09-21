@@ -49,6 +49,8 @@ class AuthDecision:
     execute: bool
     credential_ref: str | None
     budget_gate_required: bool
+    capability_proven: bool
+    capability_proof_ref: str | None
     reason: str
 
     def as_dict(self) -> dict[str, Any]:
@@ -61,16 +63,46 @@ def resolve_auth(
     *,
     oauth_present: bool,
     api_key_present: bool,
+    subscription_capability_verified: bool = False,
+    capability_proof_ref: str | None = None,
     allow_api_fallback: bool = True,
 ) -> AuthDecision:
-    """Select authentication without accepting or returning any credential value."""
+    """Select authentication without accepting or returning credential values.
+
+    Credential presence is deliberately not proof of a supported autonomous
+    subscription path.  Subscription execution is enabled only after a trusted
+    caller has independently verified a durable capability proof and supplies
+    its non-secret reference.  The CLI in this module intentionally has no flag
+    that can self-assert that proof.
+    """
+    if subscription_capability_verified and not oauth_present:
+        raise AuthPolicyError("subscription capability cannot be proven without OAuth credential presence")
+    if subscription_capability_verified and not _present(capability_proof_ref):
+        raise AuthPolicyError("verified subscription capability requires durable proof reference")
+    if not subscription_capability_verified and capability_proof_ref is not None:
+        raise AuthPolicyError("unverified subscription capability cannot carry proof reference")
+
     if oauth_present:
+        if not subscription_capability_verified:
+            # Never silently switch to paid API when the caller is explicitly
+            # configured for subscription OAuth but that path is not yet proven.
+            return AuthDecision(
+                auth_mode=MANUAL_ADAPTER_REQUIRED,
+                execute=False,
+                credential_ref=None,
+                budget_gate_required=False,
+                capability_proven=False,
+                capability_proof_ref=None,
+                reason="SUBSCRIPTION_OAUTH_PRESENT_CAPABILITY_UNVERIFIED",
+            )
         return AuthDecision(
             auth_mode=SUBSCRIPTION,
             execute=True,
             credential_ref="CLAUDE_CODE_OAUTH_TOKEN",
             budget_gate_required=False,
-            reason="SUBSCRIPTION_OAUTH_PREFERRED",
+            capability_proven=True,
+            capability_proof_ref=capability_proof_ref,
+            reason="SUBSCRIPTION_OAUTH_CAPABILITY_VERIFIED",
         )
     if api_key_present and allow_api_fallback:
         return AuthDecision(
@@ -78,6 +110,8 @@ def resolve_auth(
             execute=True,
             credential_ref="ANTHROPIC_API_KEY",
             budget_gate_required=True,
+            capability_proven=False,
+            capability_proof_ref=None,
             reason="SUBSCRIPTION_UNAVAILABLE_API_FALLBACK",
         )
     if api_key_present:
@@ -86,6 +120,8 @@ def resolve_auth(
             execute=False,
             credential_ref=None,
             budget_gate_required=False,
+            capability_proven=False,
+            capability_proof_ref=None,
             reason="SUBSCRIPTION_REQUIRED_API_FALLBACK_DISABLED",
         )
     return AuthDecision(
@@ -93,6 +129,8 @@ def resolve_auth(
         execute=False,
         credential_ref=None,
         budget_gate_required=False,
+        capability_proven=False,
+        capability_proof_ref=None,
         reason="NO_SUPPORTED_CREDENTIAL_CONFIGURED",
     )
 
@@ -100,12 +138,16 @@ def resolve_auth(
 def resolve_auth_from_environment(
     environ: Mapping[str, str] | None = None,
     *,
+    subscription_capability_verified: bool = False,
+    capability_proof_ref: str | None = None,
     allow_api_fallback: bool = True,
 ) -> AuthDecision:
     env = os.environ if environ is None else environ
     return resolve_auth(
         oauth_present=_present(env.get("CLAUDE_CODE_OAUTH_TOKEN")),
         api_key_present=_present(env.get("ANTHROPIC_API_KEY")),
+        subscription_capability_verified=subscription_capability_verified,
+        capability_proof_ref=capability_proof_ref,
         allow_api_fallback=allow_api_fallback,
     )
 
@@ -118,20 +160,49 @@ def validate_decision(payload: Mapping[str, Any]) -> None:
         raise AuthPolicyError("execute must be boolean")
     if not isinstance(payload.get("budget_gate_required"), bool):
         raise AuthPolicyError("budget_gate_required must be boolean")
+    if not isinstance(payload.get("capability_proven"), bool):
+        raise AuthPolicyError("capability_proven must be boolean")
     if not isinstance(payload.get("reason"), str) or not payload["reason"].strip():
         raise AuthPolicyError("auth decision reason is required")
+
     ref = payload.get("credential_ref")
     if ref is not None and ref not in SECRET_ENV_NAMES:
         raise AuthPolicyError("credential reference is not an approved secret name")
+    proof_ref = payload.get("capability_proof_ref")
+    if proof_ref is not None and not _present(proof_ref):
+        raise AuthPolicyError("capability proof reference must be non-empty")
+
     if mode == SUBSCRIPTION:
-        if payload.get("execute") is not True or ref != "CLAUDE_CODE_OAUTH_TOKEN" or payload.get("budget_gate_required"):
-            raise AuthPolicyError("subscription auth must be executable non-metered OAuth")
+        if (
+            payload.get("execute") is not True
+            or ref != "CLAUDE_CODE_OAUTH_TOKEN"
+            or payload.get("budget_gate_required")
+            or payload.get("capability_proven") is not True
+            or not _present(proof_ref)
+        ):
+            raise AuthPolicyError(
+                "subscription auth must be proven, executable, non-metered OAuth with durable proof"
+            )
     elif mode == API_METERED:
-        if payload.get("execute") is not True or ref != "ANTHROPIC_API_KEY" or not payload.get("budget_gate_required"):
-            raise AuthPolicyError("API auth must be executable and retain the budget gate")
+        if (
+            payload.get("execute") is not True
+            or ref != "ANTHROPIC_API_KEY"
+            or not payload.get("budget_gate_required")
+            or payload.get("capability_proven")
+            or proof_ref is not None
+        ):
+            raise AuthPolicyError("API auth must be metered, budget-gated, and carry no subscription proof")
     else:
-        if payload.get("execute") is not False or ref is not None or payload.get("budget_gate_required"):
-            raise AuthPolicyError("non-executable auth modes cannot carry credentials or budget authority")
+        if (
+            payload.get("execute") is not False
+            or ref is not None
+            or payload.get("budget_gate_required")
+            or payload.get("capability_proven")
+            or proof_ref is not None
+        ):
+            raise AuthPolicyError(
+                "non-executable auth modes cannot carry credentials, proof, or budget authority"
+            )
 
 
 def make_auth_receipt(
@@ -162,6 +233,8 @@ def make_auth_receipt(
         "provider": "anthropic",
         "engine": "claude-code",
         "auth_mode": decision.auth_mode,
+        "capability_proven": decision.capability_proven,
+        "capability_proof_ref": decision.capability_proof_ref,
     }
     attempt_id = _digest(identity)
     body = {
@@ -199,6 +272,8 @@ def validate_auth_receipt(receipt: Mapping[str, Any]) -> None:
         "execute": receipt.get("execute"),
         "credential_ref": receipt.get("credential_ref"),
         "budget_gate_required": receipt.get("budget_gate_required"),
+        "capability_proven": receipt.get("capability_proven"),
+        "capability_proof_ref": receipt.get("capability_proof_ref"),
         "reason": receipt.get("reason"),
     }
     validate_decision(decision)
@@ -210,6 +285,8 @@ def validate_auth_receipt(receipt: Mapping[str, Any]) -> None:
         "provider": receipt["provider"],
         "engine": receipt["engine"],
         "auth_mode": receipt["auth_mode"],
+        "capability_proven": receipt["capability_proven"],
+        "capability_proof_ref": receipt["capability_proof_ref"],
     }
     if receipt["attempt_id"] != _digest(identity):
         raise AuthPolicyError("attempt identity mismatch")
@@ -239,8 +316,14 @@ def main() -> int:
     receipt.add_argument("--disable-api-fallback", action="store_true")
     args = parser.parse_args()
 
+    # Intentionally fail closed for subscription OAuth from the standalone CLI.
+    # A trusted orchestration path must first verify a durable capability proof
+    # and call resolve_auth[_from_environment](..., subscription_capability_verified=True,
+    # capability_proof_ref=...) directly.  Credential presence alone is never proof.
     decision = resolve_auth_from_environment(
-        allow_api_fallback=not args.disable_api_fallback
+        subscription_capability_verified=False,
+        capability_proof_ref=None,
+        allow_api_fallback=not args.disable_api_fallback,
     )
     if args.command == "resolve":
         payload = decision.as_dict()
