@@ -110,7 +110,7 @@ def _breadth_design() -> dict:
             "fees_bps": 12,
             "spread_bps": 2,
             "slippage_bps": 6,
-            "funding_bps_per_day": 0,
+            "adverse_funding_allowance_bps_per_trade": 4,
             "stress_multipliers": [1, 2, 3],
         },
         "validation_plan": {
