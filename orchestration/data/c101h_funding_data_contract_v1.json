@@ -6,7 +6,7 @@
     "use": "DATA_PREFLIGHT_ONLY_UNTIL_QUALIFIED"
   },
   "contract_id": "C101-H-BINANCE-PIT-DATA-v1",
-  "contract_sha256": "e08b2f6d2dde09a66838e69c4ca34356139bee2397b4f72c0f181bbeaa42c8b1",
+  "contract_sha256": "4428cb58ed64a2f43350d2b6831e0d38d76f3784be083c7f183fe5ea66eaa741",
   "exact_next_action": "Verify every required Binance-hosted archive/checksum and source schema for the frozen common interval, then build the retained raw manifest and deterministic normalized dataset. If any frozen source cannot satisfy this contract, persist DATA_BLOCKED; do not substitute venue/symbols or shorten coverage after outcomes.",
   "fail_closed_conditions": [
     "missing Binance-hosted archive or checksum for any frozen symbol/source/month",
@@ -18,7 +18,8 @@
     "missing spot/perpetual bar at a required exact join timestamp",
     "funding interval inferred by assumption instead of adjacent source events",
     "contract, unit, venue, symbol or timestamp-unit mismatch",
-    "normalized hash changes on deterministic rerun"
+    "normalized hash changes on deterministic rerun",
+    "trusted acquisition attestation missing, unverifiable, or signer/ref policy mismatch"
   ],
   "frozen_source": {
     "coverage_shortening_after_outcomes_allowed": false,
@@ -73,7 +74,13 @@
       "gap_count",
       "stale_count",
       "funding_interval_distribution_seconds",
-      "parse_rerun_hash_equal"
+      "parse_rerun_hash_equal",
+      "trusted_acquisition_attestation_id",
+      "trusted_acquisition_manifest_sha256",
+      "trusted_requested_url",
+      "trusted_final_url",
+      "trusted_workflow_run_id",
+      "trusted_workflow_sha"
     ]
   },
   "schema_version": 1,
@@ -97,7 +104,13 @@
     "silent_archive_mutation_allowed": false,
     "spot_kline_path_template": "data/spot/monthly/klines/{symbol}/1h/{symbol}-1h-{yyyy_mm}.zip",
     "usdm_funding_path_template": "data/futures/um/monthly/fundingRate/{symbol}/{symbol}-fundingRate-{yyyy_mm}.zip",
-    "usdm_perp_kline_path_template": "data/futures/um/monthly/klines/{symbol}/1h/{symbol}-1h-{yyyy_mm}.zip"
+    "usdm_perp_kline_path_template": "data/futures/um/monthly/klines/{symbol}/1h/{symbol}-1h-{yyyy_mm}.zip",
+    "trusted_acquisition_required": true,
+    "local_archive_checksum_pair_sufficient_for_data_ready": false,
+    "trusted_acquisition_workflow": ".github/workflows/c101h_binance_pit_acquisition.yml",
+    "trusted_acquisition_signer_workflow": "rnnyrgs-web/tradingview-ai-crypto/.github/workflows/c101h_binance_pit_acquisition.yml",
+    "trusted_acquisition_source_ref": "refs/heads/main",
+    "trusted_attestation_predicate_type": "https://slsa.dev/provenance/v1"
   },
   "status": "PREDECLARED_SOURCE_CONTRACT",
   "timestamp_and_funding_semantics": {
