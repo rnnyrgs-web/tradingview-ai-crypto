@@ -4,7 +4,12 @@ from pathlib import Path
 
 import pytest
 
-from big_move_prospective_snapshot import digest, evaluate_snapshot, validate_contract
+from big_move_prospective_snapshot import (
+    digest,
+    evaluate_snapshot,
+    strict_tradability_derivation_sha256,
+    validate_contract,
+)
 
 CONTRACT_PATH = Path("money_intelligence/2x_prospective_snapshot_contract_v1.json")
 TRAD_BLOB = "525b6a794e763569fbc9430f70fc725b10388b85"
@@ -15,7 +20,14 @@ def _contract():
     return json.loads(CONTRACT_PATH.read_text())
 
 
-def _known(value, *, observed="2026-09-21T15:00:00Z", kind="TRUSTED_REMOTE_ACQUISITION_ATTESTATION"):
+def _known(
+    value,
+    *,
+    observed="2026-09-21T15:00:00Z",
+    kind="TRUSTED_REMOTE_ACQUISITION_ATTESTATION",
+    transform_id="TEST_TRANSFORM",
+    transform_version="1",
+):
     return {
         "status": "KNOWN",
         "source_id": "TEST_PROVIDER",
@@ -26,8 +38,8 @@ def _known(value, *, observed="2026-09-21T15:00:00Z", kind="TRUSTED_REMOTE_ACQUI
         "raw_sha256": "a" * 64,
         "receipt_sha256": "b" * 64,
         "receipt_kind": kind,
-        "transform_id": "TEST_TRANSFORM",
-        "transform_version": "1",
+        "transform_id": transform_id,
+        "transform_version": transform_version,
         "value": value,
     }
 
@@ -61,7 +73,16 @@ def _snapshot(*, receipt_kind="TRUSTED_REMOTE_ACQUISITION_ATTESTATION"):
     features["stable_identity"] = _known({"canonical_asset_id": "asset:test"}, kind=receipt_kind)
     features["venue_membership"] = _known({"active_spot": True}, kind=receipt_kind)
     features["liquidity_proxy"] = _known({"trailing_30d_quote_volume_usd": 25_000_000}, kind=receipt_kind)
-    features["strict_tradability"] = _known(_strict(), kind=receipt_kind)
+    features["strict_tradability"] = _known(
+        _strict(),
+        kind=receipt_kind,
+        transform_id="PIT_MICROSTRUCTURE_TRADABILITY_V1",
+        transform_version="1",
+    )
+    strict = features["strict_tradability"]
+    strict["value"]["microstructure_evidence_sha256"] = (
+        strict_tradability_derivation_sha256(strict, contract)
+    )
     features["market_regime"] = _known({"regime": "BTC_RISK_ON"}, kind=receipt_kind)
     return {
         "schema": "two_x_prospective_snapshot.v1",
@@ -91,6 +112,21 @@ def _snapshot(*, receipt_kind="TRUSTED_REMOTE_ACQUISITION_ATTESTATION"):
     }
 
 
+def _derivation_sha(snapshot):
+    strict = snapshot["assets"][0]["features"]["strict_tradability"]
+    return strict["value"]["microstructure_evidence_sha256"]
+
+
+def _evaluate_ready(snapshot=None):
+    snap = _snapshot() if snapshot is None else snapshot
+    return evaluate_snapshot(
+        _contract(),
+        snap,
+        verified_receipt_sha256s=VERIFIED,
+        verified_strict_derivation_sha256s={_derivation_sha(snap)},
+    )
+
+
 def test_contract_pins_freshness_tradability_and_feature_schema():
     contract = _contract()
     validate_contract(contract)
@@ -101,11 +137,12 @@ def test_contract_pins_freshness_tradability_and_feature_schema():
 
 
 def test_ready_requires_out_of_band_verified_receipts():
-    result = evaluate_snapshot(_contract(), _snapshot(), verified_receipt_sha256s=VERIFIED)
+    result = _evaluate_ready()
     assert result["assets"][0]["status"] == "MECHANISM_REVIEW_READY"
     assert result["formation_authority"] is False
     assert result["prospective_chronology_authority"] is False
     assert result["snapshot_time_authority"] == "SELF_REPORTED_NOT_NON_BACKDATEABLE"
+    assert result["verified_strict_derivation_count"] == 1
 
 
 def test_default_unverified_receipts_fail_closed():
@@ -115,10 +152,12 @@ def test_default_unverified_receipts_fail_closed():
 
 
 def test_unverified_research_receipt_cannot_be_whitelisted():
+    snap = _snapshot(receipt_kind="UNVERIFIED_RESEARCH_RECEIPT")
     result = evaluate_snapshot(
         _contract(),
-        _snapshot(receipt_kind="UNVERIFIED_RESEARCH_RECEIPT"),
+        snap,
         verified_receipt_sha256s=VERIFIED,
+        verified_strict_derivation_sha256s={_derivation_sha(snap)},
     )
     assert result["assets"][0]["status"] == "INSUFFICIENT_EVIDENCE"
     assert "STRICT_TRADABILITY_RECEIPT_KIND_UNTRUSTED" in result["assets"][0]["blockers"]
@@ -168,6 +207,126 @@ def test_liquidity_proxy_cannot_substitute_for_unknown_strict_tradability():
     }
     result = evaluate_snapshot(_contract(), snap, verified_receipt_sha256s=VERIFIED)
     assert "STRICT_TRADABILITY_NOT_CLEAR:UNKNOWN_TRADABILITY" in result["assets"][0]["blockers"]
+
+
+def test_valid_acquisition_receipt_without_verified_derivation_fails_closed():
+    snap = _snapshot()
+    result = evaluate_snapshot(
+        _contract(),
+        snap,
+        verified_receipt_sha256s=VERIFIED,
+    )
+    assert result["assets"][0]["status"] == "INSUFFICIENT_EVIDENCE"
+    assert (
+        "STRICT_TRADABILITY_DERIVATION_UNVERIFIED"
+        in result["assets"][0]["blockers"]
+    )
+
+
+def test_fabricated_favorable_metrics_cannot_reuse_verified_derivation():
+    snap = _snapshot()
+    trusted_derivation = _derivation_sha(snap)
+    strict = snap["assets"][0]["features"]["strict_tradability"]
+    strict["value"]["metrics"]["median_spread_bps"] = 1.0
+    strict["value"]["microstructure_evidence_sha256"] = (
+        strict_tradability_derivation_sha256(strict, _contract())
+    )
+
+    result = evaluate_snapshot(
+        _contract(),
+        snap,
+        verified_receipt_sha256s=VERIFIED,
+        verified_strict_derivation_sha256s={trusted_derivation},
+    )
+    assert result["assets"][0]["status"] == "INSUFFICIENT_EVIDENCE"
+    assert (
+        "STRICT_TRADABILITY_DERIVATION_UNVERIFIED"
+        in result["assets"][0]["blockers"]
+    )
+
+
+def test_strict_derivation_cannot_be_replayed_across_raw_digest():
+    snap = _snapshot()
+    trusted_derivation = _derivation_sha(snap)
+    strict = snap["assets"][0]["features"]["strict_tradability"]
+    strict["raw_sha256"] = "d" * 64
+    strict["value"]["microstructure_evidence_sha256"] = (
+        strict_tradability_derivation_sha256(strict, _contract())
+    )
+
+    result = evaluate_snapshot(
+        _contract(),
+        snap,
+        verified_receipt_sha256s=VERIFIED,
+        verified_strict_derivation_sha256s={trusted_derivation},
+    )
+    assert result["assets"][0]["status"] == "INSUFFICIENT_EVIDENCE"
+    assert (
+        "STRICT_TRADABILITY_DERIVATION_UNVERIFIED"
+        in result["assets"][0]["blockers"]
+    )
+
+
+@pytest.mark.parametrize(
+    "mutator",
+    [
+        lambda rec: rec["value"].__setitem__("execution_band_usd", 50000),
+        lambda rec: rec["value"].__setitem__(
+            "window_start_at", "2026-09-21T10:00:00Z"
+        ),
+    ],
+)
+def test_strict_derivation_cannot_be_replayed_across_band_or_window(mutator):
+    snap = _snapshot()
+    trusted_derivation = _derivation_sha(snap)
+    strict = snap["assets"][0]["features"]["strict_tradability"]
+    mutator(strict)
+    strict["value"]["microstructure_evidence_sha256"] = (
+        strict_tradability_derivation_sha256(strict, _contract())
+    )
+
+    result = evaluate_snapshot(
+        _contract(),
+        snap,
+        verified_receipt_sha256s=VERIFIED,
+        verified_strict_derivation_sha256s={trusted_derivation},
+    )
+    assert result["assets"][0]["status"] == "INSUFFICIENT_EVIDENCE"
+    assert (
+        "STRICT_TRADABILITY_DERIVATION_UNVERIFIED"
+        in result["assets"][0]["blockers"]
+    )
+
+
+def test_strict_transform_version_is_frozen():
+    snap = _snapshot()
+    strict = snap["assets"][0]["features"]["strict_tradability"]
+    strict["transform_version"] = "2"
+    strict["value"]["microstructure_evidence_sha256"] = (
+        strict_tradability_derivation_sha256(strict, _contract())
+    )
+    with pytest.raises(ValueError, match="transform identity mismatch"):
+        evaluate_snapshot(
+            _contract(),
+            snap,
+            verified_receipt_sha256s=VERIFIED,
+            verified_strict_derivation_sha256s={
+                strict["value"]["microstructure_evidence_sha256"]
+            },
+        )
+
+
+def test_microstructure_evidence_hash_must_bind_exact_metrics():
+    snap = _snapshot()
+    strict = snap["assets"][0]["features"]["strict_tradability"]
+    strict["value"]["metrics"]["median_spread_bps"] = 1.0
+    with pytest.raises(ValueError, match="does not bind"):
+        evaluate_snapshot(
+            _contract(),
+            snap,
+            verified_receipt_sha256s=VERIFIED,
+            verified_strict_derivation_sha256s={_derivation_sha(snap)},
+        )
 
 
 def test_future_outcome_key_and_near_2x_target_are_rejected():
