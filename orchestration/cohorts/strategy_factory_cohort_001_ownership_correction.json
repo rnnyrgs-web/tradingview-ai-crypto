@@ -22,11 +22,13 @@
     "action": "Do not screen, rename, or tune this seed while COORD-DATA-005/DATA-BREADTH-001 remains actively owned. After that task reaches durable DONE/REJECTED/BLOCKED state, re-run semantic and ownership admission from scratch; if overlap remains material, discard this seed rather than rescue it."
   },
   "cohort_effect": {
-    "currently_screenable_after_507_and_schema_preflight": 6,
-    "screenable_with_power_risk_after_507_and_schema_preflight": 1,
-    "blocked_active_ownership": 1,
+    "ohlcv_candidates_total": 7,
+    "ohlcv_candidates_held_for_active_ownership": 1,
+    "ohlcv_candidates_remaining_after_ownership_hold": 6,
+    "remaining_normal_readiness": 5,
+    "remaining_power_risk": 1,
     "blocked_data_preflight": 1,
-    "note": "Counts overlap categories only at candidate level: seven OHLCV seeds remain non-owned candidates including the weekend power-risk seed; the breadth seed is held, and delta-carry remains data-preflight blocked. The factory may run fewer than eight rather than duplicate owned work."
+    "note": "After holding the breadth seed, six OHLCV candidates remain: five ordinary schema-preflight candidates plus the weekend candidate with an explicit underpowered-sample risk. Delta-carry is the eighth original seed and remains blocked on a separate spot/perp/funding dataset freeze. The factory may run fewer than eight rather than duplicate owned work."
   },
   "no_outcomes_inspected": true,
   "protected_oos_opened": false,
