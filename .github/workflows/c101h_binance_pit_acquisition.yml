@@ -1,0 +1,162 @@
+name: C101-H Trusted Binance PIT Acquisition
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_kind:
+        description: Frozen C101-H source family
+        required: true
+        type: choice
+        options:
+          - spot_kline
+          - usdm_perp_kline
+          - usdm_funding_rate
+      symbol:
+        description: Frozen C101-H symbol
+        required: true
+        type: choice
+        options:
+          - BTCUSDT
+          - ETHUSDT
+          - SOLUSDT
+      month:
+        description: Development month YYYY-MM (2023-07 through 2026-08 only)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: c101h-binance-pit-${{ inputs.source_kind }}-${{ inputs.symbol }}-${{ inputs.month }}
+  cancel-in-progress: false
+
+jobs:
+  acquire:
+    # Attestations from a feature branch must never become trusted PIT provenance.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - id: resolve
+        name: Resolve frozen source object without network I/O
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p acquisition
+          python binance_pit_acquisition.py resolve \
+            --source-kind '${{ inputs.source_kind }}' \
+            --symbol '${{ inputs.symbol }}' \
+            --month '${{ inputs.month }}' \
+            --output acquisition/request.json
+          ARCHIVE_NAME="$(python - <<'PY'
+          import json
+          print(json.load(open('acquisition/request.json'))['archive_filename'])
+          PY
+          )"
+          echo "archive_name=$ARCHIVE_NAME" >> "$GITHUB_OUTPUT"
+
+      - id: fetch_archive
+        name: Fetch exact frozen Binance archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          ARCHIVE_NAME='${{ steps.resolve.outputs.archive_name }}'
+          ARCHIVE_URL="$(python - <<'PY'
+          import json
+          print(json.load(open('acquisition/request.json'))['archive_url'])
+          PY
+          )"
+          META="$(curl \
+            --fail --silent --show-error --location \
+            --proto '=https' --tlsv1.2 --max-redirs 5 \
+            --connect-timeout 20 --max-time 300 \
+            --output "acquisition/$ARCHIVE_NAME" \
+            --write-out $'%{http_code}\n%{url_effective}' \
+            "$ARCHIVE_URL")"
+          STATUS="$(printf '%s\n' "$META" | sed -n '1p')"
+          FINAL_URL="$(printf '%s\n' "$META" | sed -n '2p')"
+          test "$STATUS" = "200"
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+          echo "final_url=$FINAL_URL" >> "$GITHUB_OUTPUT"
+
+      - id: fetch_checksum
+        name: Fetch colocated Binance checksum sidecar
+        shell: bash
+        run: |
+          set -euo pipefail
+          ARCHIVE_NAME='${{ steps.resolve.outputs.archive_name }}'
+          CHECKSUM_URL="$(python - <<'PY'
+          import json
+          print(json.load(open('acquisition/request.json'))['checksum_url'])
+          PY
+          )"
+          META="$(curl \
+            --fail --silent --show-error --location \
+            --proto '=https' --tlsv1.2 --max-redirs 5 \
+            --connect-timeout 20 --max-time 120 \
+            --output "acquisition/$ARCHIVE_NAME.CHECKSUM" \
+            --write-out $'%{http_code}\n%{url_effective}' \
+            "$CHECKSUM_URL")"
+          STATUS="$(printf '%s\n' "$META" | sed -n '1p')"
+          FINAL_URL="$(printf '%s\n' "$META" | sed -n '2p')"
+          test "$STATUS" = "200"
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+          echo "final_url=$FINAL_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Verify local bytes and build pre-attestation receipt
+        shell: bash
+        env:
+          ARCHIVE_STATUS: ${{ steps.fetch_archive.outputs.status }}
+          ARCHIVE_FINAL_URL: ${{ steps.fetch_archive.outputs.final_url }}
+          CHECKSUM_STATUS: ${{ steps.fetch_checksum.outputs.status }}
+          CHECKSUM_FINAL_URL: ${{ steps.fetch_checksum.outputs.final_url }}
+        run: |
+          set -euo pipefail
+          ARCHIVE_NAME='${{ steps.resolve.outputs.archive_name }}'
+          CAPTURED_AT="$(date -u +'%Y-%m-%dT%H:%M:%S+00:00')"
+          python binance_pit_acquisition.py receipt \
+            --request acquisition/request.json \
+            --archive "acquisition/$ARCHIVE_NAME" \
+            --checksum "acquisition/$ARCHIVE_NAME.CHECKSUM" \
+            --archive-http-status "$ARCHIVE_STATUS" \
+            --archive-final-url "$ARCHIVE_FINAL_URL" \
+            --checksum-http-status "$CHECKSUM_STATUS" \
+            --checksum-final-url "$CHECKSUM_FINAL_URL" \
+            --captured-at-utc "$CAPTURED_AT" \
+            --workflow-repository "$GITHUB_REPOSITORY" \
+            --workflow-ref "$GITHUB_REF" \
+            --workflow-sha "$GITHUB_SHA" \
+            --workflow-run-id "$GITHUB_RUN_ID" \
+            --workflow-run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --output acquisition/receipt.json
+
+      - name: Attest request, receipt and exact retained source bytes
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            acquisition/request.json
+            acquisition/receipt.json
+            acquisition/${{ steps.resolve.outputs.archive_name }}
+            acquisition/${{ steps.resolve.outputs.archive_name }}.CHECKSUM
+
+      - name: Retain attested acquisition bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: c101h-${{ inputs.source_kind }}-${{ inputs.symbol }}-${{ inputs.month }}
+          path: acquisition/
+          if-no-files-found: error
+          retention-days: 90
