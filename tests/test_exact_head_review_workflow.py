@@ -5,6 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "exact_head_independent_review.yml"
+REVIEWER = ROOT / "orchestration" / "exact_head_review.py"
 
 
 def _text() -> str:
@@ -35,6 +36,14 @@ def test_paid_review_requests_are_repository_owner_authorized() -> None:
     # `--arg` flags through the GitHub CLI's `--jq` option.
     assert "--jq --arg" not in text
     assert "jq --arg title \"$APPROVED_TITLE\"" in text
+
+
+def test_full_scientific_diff_has_one_consistent_hard_context_bound() -> None:
+    workflow = _text()
+    reviewer = REVIEWER.read_text(encoding="utf-8")
+    assert 'test "$BYTES" -le 256000' in workflow
+    assert "MAX_DIFF_BYTES = 256_000" in reviewer
+    assert "never truncate it" in workflow
 
 
 def test_protected_paths_are_reviewed_but_never_auto_integrated() -> None:
