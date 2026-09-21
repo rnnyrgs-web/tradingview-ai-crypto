@@ -8,7 +8,10 @@ from orchestration.rejected_fingerprints import (
     load_rejected_fingerprints,
     semantic_rejection_record,
 )
-from orchestration.scientific_design_identity import scientific_design_sha256
+from orchestration.scientific_design_identity import (
+    SCIENTIFIC_LIST_SEMANTICS_VERSION,
+    scientific_design_sha256,
+)
 from orchestration.strategy_predeclaration import validate_predeclaration
 
 
@@ -62,6 +65,10 @@ def _candidate() -> dict:
     }
 
 
+def test_scientific_list_semantics_contract_is_versioned():
+    assert SCIENTIFIC_LIST_SEMANTICS_VERSION == 1
+
+
 def test_unordered_market_timeframe_and_fixed_instrument_permutations_share_identity():
     original = _candidate()
     permuted = copy.deepcopy(original)
@@ -81,6 +88,27 @@ def test_unordered_market_timeframe_and_fixed_instrument_permutations_share_iden
     permuted["fingerprint_id"] = "COSMETIC-PERMUTATION-RESCUE-v1"
     with pytest.raises(RuntimeError, match="rejected scientific design"):
         validate_predeclaration(permuted, rejected_entries=rejected)
+
+
+def test_nonhardcoded_symbols_set_permutation_cannot_create_fresh_identity():
+    original = _candidate()
+    original["data_contract"]["symbols"] = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
+
+    permuted = copy.deepcopy(original)
+    permuted["data_contract"]["symbols"] = ["SOLUSDT", "BTCUSDT", "ETHUSDT"]
+    assert scientific_design_sha256(original) == scientific_design_sha256(permuted)
+
+    membership_change = copy.deepcopy(original)
+    membership_change["data_contract"]["symbols"] = ["BTCUSDT", "ETHUSDT"]
+    assert scientific_design_sha256(original) != scientific_design_sha256(membership_change)
+
+
+def test_undeclared_behavior_list_path_fails_closed():
+    candidate = _candidate()
+    candidate["data_contract"]["mystery_assets"] = ["BTCUSDT", "ETHUSDT"]
+
+    with pytest.raises(RuntimeError, match="scientific list semantics are undeclared.*mystery_assets"):
+        scientific_design_sha256(candidate)
 
 
 def test_real_market_or_timeframe_membership_change_changes_identity():
