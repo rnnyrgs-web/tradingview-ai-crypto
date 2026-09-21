@@ -4,7 +4,12 @@ import json
 from pathlib import Path
 from typing import Any
 
-from orchestration.scientific_design_identity import scientific_design_sha256
+from orchestration.scientific_design_identity import (
+    SCIENTIFIC_IDENTITY_VERSION,
+    STRATEGY_BEHAVIOR_IDENTITY_VERSION,
+    scientific_design_sha256,
+    strategy_behavior_sha256,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PATH = ROOT / "orchestration" / "rejected_fingerprints.json"
@@ -24,6 +29,7 @@ REQUIRED_FIELDS = (
     "reconsideration_conditions",
 )
 
+REJECTED_SEMANTIC_SCHEMA_VERSION = 2
 SEMANTIC_BACKFILL_AVAILABLE = "BACKFILLED_STRUCTURED_CONTRACT"
 SEMANTIC_BACKFILL_UNAVAILABLE = "SEMANTIC_BACKFILL_UNAVAILABLE"
 SEMANTIC_STATUSES = {SEMANTIC_BACKFILL_AVAILABLE, SEMANTIC_BACKFILL_UNAVAILABLE}
@@ -32,14 +38,23 @@ SEMANTIC_STATUSES = {SEMANTIC_BACKFILL_AVAILABLE, SEMANTIC_BACKFILL_UNAVAILABLE}
 def load_rejected_semantic_designs(path: Path = DEFAULT_SEMANTIC_PATH) -> dict[str, dict[str, Any]]:
     """Load deterministic label-invariant rejection identities.
 
-    Backfilled identities are never trusted as stored hashes alone: the digest
-    is recomputed from the persisted behavior-driving projection and must
-    match. Older rejections that cannot be reconstructed without guessing are
-    explicitly marked unavailable instead of fuzzy-matched.
+    Backfilled identities are never trusted as stored hashes alone: both the
+    full scientific-protocol digest and stricter executable-behavior digest are
+    recomputed from the persisted projection and must match. Older rejections
+    that cannot be reconstructed without guessing are explicitly marked
+    unavailable instead of fuzzy-matched.
     """
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
-    if payload.get("schema_version") != 1:
-        raise RuntimeError("rejected semantic-design registry schema_version must equal 1")
+    if payload.get("schema_version") != REJECTED_SEMANTIC_SCHEMA_VERSION:
+        raise RuntimeError(
+            "rejected semantic-design registry schema_version must equal "
+            f"{REJECTED_SEMANTIC_SCHEMA_VERSION}"
+        )
+    if payload.get("scientific_identity_version") != SCIENTIFIC_IDENTITY_VERSION:
+        raise RuntimeError("rejected semantic-design scientific identity version mismatch")
+    if payload.get("strategy_behavior_identity_version") != STRATEGY_BEHAVIOR_IDENTITY_VERSION:
+        raise RuntimeError("rejected semantic-design strategy behavior identity version mismatch")
+
     records = payload.get("records")
     if not isinstance(records, list):
         raise RuntimeError("rejected semantic-design registry must contain a list of records")
@@ -65,11 +80,23 @@ def load_rejected_semantic_designs(path: Path = DEFAULT_SEMANTIC_PATH) -> dict[s
                 raise RuntimeError(
                     f"rejected semantic-design {fingerprint_id} must contain a behavior projection"
                 )
-            supplied_digest = record.get("scientific_design_sha256")
-            computed_digest = scientific_design_sha256(projection)
-            if not isinstance(supplied_digest, str) or supplied_digest != computed_digest:
+            supplied_scientific_digest = record.get("scientific_design_sha256")
+            computed_scientific_digest = scientific_design_sha256(projection)
+            if (
+                not isinstance(supplied_scientific_digest, str)
+                or supplied_scientific_digest != computed_scientific_digest
+            ):
                 raise RuntimeError(
                     f"rejected semantic-design {fingerprint_id} scientific identity mismatch"
+                )
+            supplied_behavior_digest = record.get("strategy_behavior_sha256")
+            computed_behavior_digest = strategy_behavior_sha256(projection)
+            if (
+                not isinstance(supplied_behavior_digest, str)
+                or supplied_behavior_digest != computed_behavior_digest
+            ):
+                raise RuntimeError(
+                    f"rejected semantic-design {fingerprint_id} strategy behavior identity mismatch"
                 )
             for field in ("source_artifact", "source_blob_sha", "source_contract_sha256"):
                 value = record.get(field)
@@ -83,7 +110,12 @@ def load_rejected_semantic_designs(path: Path = DEFAULT_SEMANTIC_PATH) -> dict[s
                 raise RuntimeError(
                     f"rejected semantic-design {fingerprint_id} unavailable backfill needs reason"
                 )
-            if record.get("scientific_design_sha256") is not None or record.get("projection") is not None:
+            forbidden = (
+                "scientific_design_sha256",
+                "strategy_behavior_sha256",
+                "projection",
+            )
+            if any(record.get(field) is not None for field in forbidden):
                 raise RuntimeError(
                     f"rejected semantic-design {fingerprint_id} unavailable backfill cannot invent identity"
                 )
@@ -172,24 +204,62 @@ def rejection_record(
 
 
 def semantic_rejection_record(
-    design_sha256: str,
+    behavior_sha256: str,
     entries: list[dict[str, Any]] | None = None,
+    *,
+    scientific_design_digest: str | None = None,
 ) -> dict[str, Any] | None:
+    """Return a terminal rejection matching executable behavior.
+
+    Canonical durable memory must carry ``strategy_behavior_sha256`` and is
+    matched only on that stricter no-rescue identity. The optional scientific
+    fallback exists only for isolated injected legacy/test records that predate
+    the behavior field; canonical registry loading never produces such records.
+    """
     active = entries if entries is not None else load_rejected_fingerprints()
-    return next(
-        (
-            entry
-            for entry in active
-            if entry.get("do_not_resubmit_same_fingerprint")
-            and entry.get("semantic_identity_status") == SEMANTIC_BACKFILL_AVAILABLE
-            and entry.get("scientific_design_sha256") == design_sha256
-        ),
-        None,
-    )
+    for entry in active:
+        if not entry.get("do_not_resubmit_same_fingerprint"):
+            continue
+        if entry.get("semantic_identity_status") != SEMANTIC_BACKFILL_AVAILABLE:
+            continue
+        stored_behavior = entry.get("strategy_behavior_sha256")
+        if isinstance(stored_behavior, str):
+            if stored_behavior == behavior_sha256:
+                return entry
+            continue
+        if (
+            scientific_design_digest is not None
+            and entry.get("scientific_design_sha256") == scientific_design_digest
+        ):
+            return entry
+    return None
+
+
+def is_rejected_strategy_behavior(
+    behavior_sha256: str,
+    entries: list[dict[str, Any]] | None = None,
+    *,
+    scientific_design_digest: str | None = None,
+) -> bool:
+    return semantic_rejection_record(
+        behavior_sha256,
+        entries,
+        scientific_design_digest=scientific_design_digest,
+    ) is not None
 
 
 def is_rejected_scientific_design(
     design_sha256: str,
     entries: list[dict[str, Any]] | None = None,
 ) -> bool:
-    return semantic_rejection_record(design_sha256, entries) is not None
+    """Compatibility helper for injected legacy records only.
+
+    Canonical no-rescue admission uses ``is_rejected_strategy_behavior``.
+    """
+    active = entries if entries is not None else load_rejected_fingerprints()
+    return any(
+        entry.get("do_not_resubmit_same_fingerprint")
+        and entry.get("semantic_identity_status") == SEMANTIC_BACKFILL_AVAILABLE
+        and entry.get("scientific_design_sha256") == design_sha256
+        for entry in active
+    )
