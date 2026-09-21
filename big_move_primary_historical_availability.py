@@ -7,6 +7,10 @@ of the same primary-document bytes at or before the historical decision timestam
 and by requiring the retained index/WARC bytes to come from GitHub-attested trusted
 remote acquisitions from canonical main.
 
+When an exact URL query contains multiple authentic Common Crawl captures, the
+outcome-blind v2 selector deterministically chooses the latest pre-decision capture and
+requires that exact selected row identity to be frozen in the capture proof.
+
 It grants historical-evidence authority only; never label, forecast, promotion, broker
 or trading authority.
 """
@@ -18,8 +22,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-from big_move_commoncrawl_trusted_origin import (
-    validate_trusted_commoncrawl_historical_capture,
+from big_move_commoncrawl_trusted_origin_v2 import (
+    validate_trusted_commoncrawl_historical_capture_v2,
 )
 
 ELIGIBLE_SOURCE_IDS = {
@@ -107,7 +111,7 @@ def validate_primary_document_historical_availability(
         proof.get("historical_capture"),
         field="primary.historical_capture",
     )
-    result = validate_trusted_commoncrawl_historical_capture(
+    result = validate_trusted_commoncrawl_historical_capture_v2(
         capture,
         upstream_locator=locator,
         decision_at=decision_at,
@@ -117,12 +121,13 @@ def validate_primary_document_historical_availability(
         repo_root=repo_root,
     )
     return {
-        "schema": "two_x_primary_document_historical_availability_result.v1",
+        "schema": "two_x_primary_document_historical_availability_result.v2",
         "status": "BOUND",
         "source_id": record.get("source_id"),
         "upstream_locator": locator,
         "document_sha256": document_sha256,
         "capture_at": result["capture_at"],
+        "selected_index_row_sha256": result["selected_index_row_sha256"],
         "warc_record_id": result["warc_record_id"],
         "warc_payload_digest": result["warc_payload_digest"],
         "provider_origin": result["provider_origin"],
