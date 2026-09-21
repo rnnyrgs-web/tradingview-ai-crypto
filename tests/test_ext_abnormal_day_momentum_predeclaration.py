@@ -2,8 +2,19 @@ from __future__ import annotations
 
 import copy
 import json
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import pytest
+
+from orchestration.external_replication.abnormal_day_momentum_runner import (
+    DataPitInconclusiveError,
+    ScoredEvent,
+    SignalEvent,
+    independent_utc_signal_days,
+    score_schedule,
+    summarize,
+)
 from research_artifact import sha256_hex
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -13,10 +24,38 @@ ARTIFACT = (
     / "external_replication"
     / "ext_abnormal_day_momentum_001_v1.json"
 )
+UTC = timezone.utc
 
 
 def _load() -> dict:
     return json.loads(ARTIFACT.read_text(encoding="utf-8"))
+
+
+def _signal(instrument: str, *, hour: int = 12) -> SignalEvent:
+    signal_ts = datetime(2026, 8, 30, hour, tzinfo=UTC)
+    return SignalEvent(
+        instrument=instrument,
+        period="validation",
+        signal_timestamp=signal_ts,
+        entry_timestamp=signal_ts + timedelta(hours=1),
+        exit_timestamp=datetime(2026, 8, 31, 0, tzinfo=UTC),
+        direction=1,
+        baseline_direction=1,
+        intraday_return=0.03,
+        reference_mean=0.0,
+        reference_std=0.01,
+    )
+
+
+def _scored(signal: SignalEvent, net_return: float = 0.01) -> ScoredEvent:
+    return ScoredEvent(
+        signal=signal,
+        entry_price=100.0,
+        exit_price=101.0,
+        gross_return=0.0124,
+        net_return=net_return,
+        stress_3x_net_return=0.0052,
+    )
 
 
 def test_replication_artifact_digest_is_deterministic() -> None:
@@ -102,3 +141,62 @@ def test_external_published_results_are_mechanism_motivation_only() -> None:
     assert source["mechanism_only"] is True
     assert source["published_results_are_internal_evidence"] is False
     assert "our own chronological selection evidence" in source["adaptation_note"]
+
+
+def test_missing_required_future_execution_bar_fails_closed_not_silently_drops_event() -> None:
+    signal = _signal("BTC-USDT-SWAP")
+    rows = [
+        {
+            "instrument": signal.instrument,
+            "timestamp": signal.entry_timestamp,
+            "open": 100.0,
+            "close": 100.5,
+        }
+        # Deliberately omit the frozen midnight exit bar.
+    ]
+    with pytest.raises(DataPitInconclusiveError) as excinfo:
+        score_schedule(
+            rows,
+            [signal],
+            protected_oos_start="2026-09-01T00:00:00Z",
+        )
+    assert len(excinfo.value.issues) == 1
+    issue = excinfo.value.issues[0]
+    assert issue.reason == "MISSING_REQUIRED_EXIT_BAR"
+    assert issue.required_timestamp == signal.exit_timestamp
+    assert "DATA/PIT_INCONCLUSIVE" in str(excinfo.value)
+
+
+def test_missing_bar_is_checked_before_direction_specific_baseline_attrition() -> None:
+    signal = _signal("ETH-USDT-SWAP")
+    signal = SignalEvent(**{**signal.__dict__, "baseline_direction": 0})
+    with pytest.raises(DataPitInconclusiveError):
+        score_schedule(
+            [],
+            [signal],
+            protected_oos_start="2026-09-01T00:00:00Z",
+            direction_source="baseline",
+        )
+
+
+def test_structural_delay_with_no_holding_interval_is_price_independent_exclusion() -> None:
+    signal = _signal("SOL-USDT-SWAP", hour=22)
+    # Original entry is 23:00 and +1 delayed bar would equal the 00:00 exit.
+    scored = score_schedule(
+        [],
+        [signal],
+        protected_oos_start="2026-09-01T00:00:00Z",
+        entry_delay_bars=1,
+    )
+    assert scored == ()
+
+
+def test_pooled_independence_counts_unique_utc_signal_days_not_raw_asset_events() -> None:
+    same_day = tuple(
+        _scored(_signal(instrument))
+        for instrument in ("BTC-USDT-SWAP", "ETH-USDT-SWAP", "SOL-USDT-SWAP")
+    )
+    assert independent_utc_signal_days(same_day) == 1
+    summary = summarize(same_day)
+    assert summary["n"] == 3
+    assert summary["independent_utc_signal_days"] == 1
