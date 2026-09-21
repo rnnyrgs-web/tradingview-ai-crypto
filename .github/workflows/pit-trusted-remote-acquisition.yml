@@ -61,11 +61,13 @@ jobs:
       - name: Refuse non-canonical execution
         env:
           EXPECTED_REPOSITORY: rnnyrgs-web/tradingview-ai-crypto
+          EXPECTED_WORKFLOW_REF: rnnyrgs-web/tradingview-ai-crypto/.github/workflows/pit-trusted-remote-acquisition.yml@refs/heads/main
         run: |
           set -euo pipefail
           test "$GITHUB_REPOSITORY" = "$EXPECTED_REPOSITORY"
           test "$GITHUB_REF" = "refs/heads/main"
           test "$GITHUB_EVENT_NAME" = "workflow_dispatch"
+          test "$GITHUB_WORKFLOW_REF" = "$EXPECTED_WORKFLOW_REF"
 
       - name: Checkout exact trusted main workflow source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
