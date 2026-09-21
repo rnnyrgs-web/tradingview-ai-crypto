@@ -8,11 +8,22 @@ Historical 2x research currently has two useful but scientifically incomplete so
 
 ## Trusted acquisition model
 
-The workflow is `workflow_dispatch` only and the implementation refuses execution unless GitHub identifies the canonical repository, `refs/heads/main`, and the canonical-main workflow ref. Request URLs are built from frozen source-specific inputs rather than accepting arbitrary fetch URLs. HTTPS uses the Python default verified TLS context and redirects are not followed.
+The workflow is `workflow_dispatch` only and the implementation refuses execution unless GitHub identifies the canonical repository, `refs/heads/main`, and the exact signer workflow `rnnyrgs-web/tradingview-ai-crypto/.github/workflows/pit-trusted-remote-acquisition.yml@refs/heads/main`. A sibling workflow in the same repository is not trusted merely because it runs on `main`. Request URLs are built from frozen source-specific inputs rather than accepting arbitrary fetch URLs. HTTPS uses the Python default verified TLS context and redirects are not followed.
 
-Every successful fetch emits `response.bin`, `receipt.json`, and a deterministic `trusted-acquisition.tar`. The receipt binds the frozen source-contract identity, exact request URL/method/range, response status/hash/byte count, acquisition timestamps, canonical repository/ref/SHA/workflow/run identity, and pagination predecessor receipt when applicable.
+Every successful fetch emits `response.bin`, `receipt.json`, and a deterministic `trusted-acquisition.tar`. The receipt binds the frozen source-contract identity, exact request URL/method/range, response status/hash/byte count, acquisition timestamps, canonical repository/ref/SHA/exact-workflow/run identity, and pagination predecessor receipt when applicable.
 
 The tar subject is then signed through GitHub Artifact Attestations. Provider bytes are not authoritative merely because the local receipt exists; downstream research must verify the GitHub attestation for the exact tar subject and then verify the receipt against the extracted response bytes. GitHub's artifact-attestation provenance is the independent execution/signing boundary that a caller-authored local file cannot reproduce.
+
+Downstream verification must bind the repository, exact signer workflow, and source ref. The canonical CLI form is:
+
+```bash
+gh attestation verify trusted-acquisition.tar \
+  --repo rnnyrgs-web/tradingview-ai-crypto \
+  --signer-workflow rnnyrgs-web/tradingview-ai-crypto/.github/workflows/pit-trusted-remote-acquisition.yml \
+  --source-ref refs/heads/main
+```
+
+Repo/ref-only attestation verification is insufficient for this contract because it would grant sibling workflows signing authority.
 
 ## Frozen source shapes
 
@@ -29,7 +40,7 @@ Common Crawl CDXJ `digest` values and WARC `WARC-Payload-Digest` values represen
 1. Exact-head Security & Reliability and independent provenance/security review of this PR.
 2. Integrate through the trusted Lead path; do not run the new workflow from an untrusted branch.
 3. On canonical main, acquire one positive-control Binance listing page and one Common Crawl index/range pair through the workflow.
-4. Verify each `trusted-acquisition.tar` with GitHub attestation verification and preserve the exact bundle/receipt identities.
+4. Verify each `trusted-acquisition.tar` using the exact repository + signer-workflow + source-ref identity above, then preserve the exact bundle/receipt identities.
 5. Rebase/repair #536 so every ListObjectsV2 page must have a valid attested receipt and the continuation chain is complete.
 6. Rebase/repair #516 so both the CDXJ response and WARC range must have valid attested receipts, the real-provider digest forms are normalized, and the existing WARC chronology/content binding remains fail-closed.
 7. Only after those gates pass may #514 count this evidence toward PIT coverage. Historical outcomes remain sealed until the full cohort coverage/tradability gate clears.
