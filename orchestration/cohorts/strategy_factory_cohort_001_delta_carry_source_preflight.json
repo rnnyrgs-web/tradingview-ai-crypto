@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "artifact_type": "strategy_factory_data_source_preflight",
+  "candidate_fingerprint_id": "DISC-DELTA-CARRY-001-v1",
+  "formed_at": "2026-09-21T05:18:00+00:00",
+  "main_sha_observed": "5e720e8adbd3e0bcf539d97fdaa5a0c71428dbca",
+  "status": "SOURCE_PATH_AVAILABLE_DATASET_NOT_FROZEN",
+  "purpose": "Verify a zero-new-paid-service, timestamp-defensible source path for the delta-neutral funding-carry seed without downloading or inspecting strategy outcomes.",
+  "verified_public_sources": [
+    {
+      "publisher": "OKX",
+      "url": "https://www.okx.com/en-sg/historical-data",
+      "observed_claim": "OKX publishes downloadable OHLC candlestick history from July 2023 onward and historical perpetual funding rates from March 2022 onward.",
+      "candidate_use": "Potential bulk source for synchronized historical spot/perpetual prices and realized perpetual funding observations."
+    },
+    {
+      "publisher": "OKX",
+      "url": "https://www.okx.com/docs-v5/",
+      "observed_claim": "Public market API documents GET /api/v5/market/history-candles with instrument ID, pagination and bar size; returned candles include a completion/confirm flag.",
+      "candidate_use": "Independent API cross-check and/or deterministic collection of completed spot/perpetual candles."
+    },
+    {
+      "publisher": "OKX",
+      "url": "https://www.okx.com/docs-v5/log_en/",
+      "observed_claim": "Funding-rate history remains an API-supported data family; OKX documents that funding collection frequency can vary for some perpetuals rather than remaining fixed at eight hours.",
+      "candidate_use": "Requires using actual realized funding timestamps and values; fixed-interval reconstruction is forbidden."
+    }
+  ],
+  "source_window_intersection": {
+    "funding_history_public_start": "2022-03",
+    "downloadable_ohlc_public_start": "2023-07",
+    "earliest_candidate_bulk_overlap": "2023-07",
+    "interpretation": "The documented public archives appear capable of supporting a multi-year development sample from July 2023 onward if all six fixed instruments and required funding rows are present. Coverage is not assumed until manifests are downloaded, normalized and hashed."
+  },
+  "fixed_instruments_to_verify": {
+    "spot": ["BTC-USDT", "ETH-USDT", "SOL-USDT"],
+    "perpetual": ["BTC-USDT-SWAP", "ETH-USDT-SWAP", "SOL-USDT-SWAP"]
+  },
+  "mandatory_dataset_freeze_before_screen": [
+    "Download or collect the exact spot and perpetual completed-candle files/rows for the fixed instruments without filtering on future strategy performance.",
+    "Download or collect realized perpetual funding rows with their actual funding timestamps; never infer a constant 8h schedule.",
+    "Persist source URL/path, retrieval timestamp, upstream file/object identity where available, byte SHA256 and normalized-row SHA256 for every input.",
+    "Align spot/perpetual prices by exact completed hourly timestamps and record all missingness; no nearest-neighbor, forward-fill or future interpolation.",
+    "Verify funding observations were public/realized by each decision timestamp and bind the funding source rows used by each signal.",
+    "Freeze coverage start/end and a selection train/validation boundary before any PnL calculation.",
+    "Freeze a dataset manifest digest and candidate contract identity under the integrated label-invariant #507 implementation before screening."
+  ],
+  "predeclared_fail_closed_conditions": [
+    "Any fixed spot/perpetual instrument lacks sufficient overlapping history.",
+    "Funding timestamps or values cannot be tied to actual realized/public observations.",
+    "Source files/rows cannot be hashed or deterministically reconstructed.",
+    "Missingness would require imputation across a funding event or decision timestamp.",
+    "Historical price/funding coverage is selected after seeing candidate PnL.",
+    "The repaired #507 semantic gate classifies the design as a rejected-design collision."
+  ],
+  "scientific_distinctness_note": "This source path does not revive DATA-FUNDING-001. DATA-FUNDING-001 used realized funding as a directional 24h/7d return predictor. DISC-DELTA-CARRY-001-v1 targets delta-neutral cash transfer from positive funding via long spot/short perpetual with explicit two-leg costs and basis risk. Canonical semantic admission is still authoritative.",
+  "outcome_data_downloaded_or_inspected_in_this_preflight": false,
+  "screening_authority": false,
+  "protected_oos_opened": false,
+  "genuine_forward_opened": false,
+  "deep_candidate_promoted": false,
+  "broker_connected": false,
+  "trade_authority": false,
+  "next_action": "After #507 is repaired/integrated, run semantic admission first. If admitted, acquire only the frozen fixed-instrument public source set, produce a complete source/missingness/hash manifest, freeze chronology, then authorize a cheap screen."
+}
