@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from orchestration.strategy_predeclaration import freeze_predeclaration
+from strategy_dataset_preflight import qualify_cohort001_dataset
 
 _ROOT = Path(__file__).resolve().parent
 _SEED_PATH = _ROOT / "cohorts" / "strategy_factory_cohort_001_seed.json"
@@ -71,8 +72,62 @@ def resolve_candidate_predeclaration(
     }
 
 
+def _qualify_common_selection_dataset(seed: dict[str, Any]) -> dict[str, Any]:
+    """Bind #528's protected-safe source qualification before screen authority.
+
+    The qualifier authenticates immutable compressed bytes, decodes market values
+    only through 2026-08-31 23:00 UTC, and inspects protected rows by timestamp only.
+    It computes no strategy signals, labels, returns, P&L, or other economic outcomes.
+    """
+    common = seed.get("common_ohlcv_contract")
+    if not isinstance(common, dict):
+        raise RuntimeError("Cohort-001 seed is missing common_ohlcv_contract")
+    data_contract = common.get("data_contract")
+    if not isinstance(data_contract, dict):
+        raise RuntimeError("Cohort-001 common data contract is missing")
+
+    receipt = qualify_cohort001_dataset()
+    if receipt.get("status") != "QUALIFIED_DEVELOPMENT_ONLY":
+        raise RuntimeError("Cohort-001 dataset did not qualify development-only")
+    if receipt.get("economic_outcomes_computed") is not False:
+        raise RuntimeError("dataset qualification must remain outcome-blind")
+    if receipt.get("strategy_signals_computed") is not False:
+        raise RuntimeError("dataset qualification must not compute strategy signals")
+    if receipt.get("untouched_oos_opened") is not False:
+        raise RuntimeError("dataset qualification opened protected OOS")
+    checks = receipt.get("checks")
+    if not isinstance(checks, dict) or checks.get("protected_ohlcv_json_decoded") is not False:
+        raise RuntimeError("dataset qualification must leave protected OHLCV opaque")
+
+    expected_dataset = data_contract.get("normalized_rows_sha256")
+    if receipt.get("source_dataset_sha256") != expected_dataset:
+        raise RuntimeError("Cohort-001 seed and #528 qualifier bind different dataset identities")
+    if receipt.get("development_end_utc") != data_contract.get("selection_validation_end_utc"):
+        raise RuntimeError("Cohort-001 development cutoff differs from #528 qualifier")
+    if receipt.get("protected_start_utc") != data_contract.get("protected_oos_start_utc"):
+        raise RuntimeError("Cohort-001 protected boundary differs from #528 qualifier")
+
+    return {
+        "qualification_id": receipt["qualification_id"],
+        "status": receipt["status"],
+        "source_git_blob_sha1": receipt["source_git_blob_sha1"],
+        "source_dataset_sha256": receipt["source_dataset_sha256"],
+        "development_end_utc": receipt["development_end_utc"],
+        "protected_start_utc": receipt["protected_start_utc"],
+        "development_timestamp_identity_sha256": receipt[
+            "development_timestamp_identity_sha256"
+        ],
+        "development_rows_total": receipt["development_rows_total"],
+        "protected_rows_excluded_total": receipt["protected_rows_excluded_total"],
+        "protected_ohlcv_json_decoded": False,
+        "economic_outcomes_computed": False,
+        "strategy_signals_computed": False,
+        "receipt_sha256": receipt["receipt_sha256"],
+    }
+
+
 def build_canonical_admission_receipt() -> dict[str, Any]:
-    """Canonically admit Cohort-001 without touching strategy outcomes.
+    """Canonically admit Cohort-001 and bind protected-safe data readiness.
 
     Result status is an execution/readiness decision only. Passing admission is
     not profitability evidence and grants no OOS, forward, broker or trade authority.
@@ -80,6 +135,7 @@ def build_canonical_admission_receipt() -> dict[str, Any]:
     seed = _load_json(_SEED_PATH)
     readiness = _load_json(_READINESS_PATH)
     ownership = _load_json(_OWNERSHIP_PATH)
+    selection_dataset = _qualify_common_selection_dataset(seed)
 
     readiness_by_id = {
         row["fingerprint_id"]: row["readiness"]
@@ -140,10 +196,10 @@ def build_canonical_admission_receipt() -> dict[str, Any]:
             status = "DATA_BLOCKED"
             screening_authority = False
         elif readiness_state and "POWER_RISK" in readiness_state:
-            status = "ADMITTED_READY_POWER_RISK"
+            status = "ADMITTED_DATA_QUALIFIED_POWER_RISK"
             screening_authority = True
         elif readiness_state == "READY_FOR_SCHEMA_PREFLIGHT_AFTER_507":
-            status = "ADMITTED_READY"
+            status = "ADMITTED_DATA_QUALIFIED"
             screening_authority = True
         else:
             raise RuntimeError(
@@ -158,6 +214,9 @@ def build_canonical_admission_receipt() -> dict[str, Any]:
                 "strategy_behavior_sha256": frozen["strategy_behavior_sha256"],
                 "contract_sha256": frozen["contract_sha256"],
                 "screening_authority": screening_authority,
+                "selection_dataset_receipt_sha256": selection_dataset["receipt_sha256"]
+                if screening_authority
+                else None,
                 "untouched_oos_opened": False,
                 "genuine_forward_opened": False,
                 "broker_connected": False,
@@ -166,7 +225,7 @@ def build_canonical_admission_receipt() -> dict[str, Any]:
         )
 
     payload: dict[str, Any] = {
-        "schema_version": 1,
+        "schema_version": 2,
         "artifact_type": "strategy_factory_cohort_001_canonical_admission_receipt",
         "cohort_id": seed.get("cohort_id"),
         "multiple_testing_family_id": seed.get("multiple_testing", {}).get("family_id"),
@@ -174,6 +233,7 @@ def build_canonical_admission_receipt() -> dict[str, Any]:
             "planned_hypothesis_count"
         ),
         "canonical_identity_source": "orchestration.strategy_predeclaration.freeze_predeclaration",
+        "selection_dataset_qualification": selection_dataset,
         "outcomes_read": False,
         "protected_oos_opened": False,
         "genuine_forward_opened": False,

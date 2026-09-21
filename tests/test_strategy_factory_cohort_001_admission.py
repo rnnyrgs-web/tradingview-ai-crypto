@@ -32,20 +32,37 @@ def test_cohort_001_all_eight_resolve_through_canonical_production_admission() -
     assert len({row["contract_sha256"] for row in frozen}) == 8
 
 
+def test_cohort_001_admission_receipt_binds_protected_safe_dataset_qualification() -> None:
+    receipt = build_canonical_admission_receipt()
+    dataset = receipt["selection_dataset_qualification"]
+
+    assert receipt["schema_version"] == 2
+    assert dataset["status"] == "QUALIFIED_DEVELOPMENT_ONLY"
+    assert dataset["source_dataset_sha256"] == (
+        "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f"
+    )
+    assert dataset["development_end_utc"] == "2026-08-31T23:00:00+00:00"
+    assert dataset["protected_start_utc"] == "2026-09-01T00:00:00+00:00"
+    assert dataset["protected_ohlcv_json_decoded"] is False
+    assert dataset["economic_outcomes_computed"] is False
+    assert dataset["strategy_signals_computed"] is False
+    assert len(dataset["receipt_sha256"]) == 64
+
+
 def test_cohort_001_admission_receipt_preserves_fail_closed_execution_holds() -> None:
     receipt = build_canonical_admission_receipt()
     by_status: dict[str, list[str]] = {}
     for row in receipt["candidates"]:
         by_status.setdefault(row["status"], []).append(row["fingerprint_id"])
 
-    assert set(by_status.get("ADMITTED_READY", [])) == {
+    assert set(by_status.get("ADMITTED_DATA_QUALIFIED", [])) == {
         "DISC-RESIDUAL-REV-001-v1",
         "DISC-SIGNED-VOLUME-DRIFT-001-v1",
         "DISC-LOWVOL-DRIFT-REV-001-v1",
         "DISC-MODERATEVOL-AUTOCORR-001-v1",
         "DISC-RANGE-AUCTION-REV-001-v1",
     }
-    assert by_status.get("ADMITTED_READY_POWER_RISK") == [
+    assert by_status.get("ADMITTED_DATA_QUALIFIED_POWER_RISK") == [
         "DISC-WEEKEND-NORMALIZE-001-v1"
     ]
     assert by_status.get("HOLD_ACTIVE_OWNERSHIP_COLLISION") == [
@@ -53,6 +70,17 @@ def test_cohort_001_admission_receipt_preserves_fail_closed_execution_holds() ->
     ]
     assert by_status.get("DATA_BLOCKED") == ["DISC-DELTA-CARRY-001-v1"]
     assert "REJECTED_CANONICAL_ADMISSION" not in by_status
+
+    authorized = [row for row in receipt["candidates"] if row["screening_authority"]]
+    assert len(authorized) == 6
+    for row in authorized:
+        assert row["selection_dataset_receipt_sha256"] == receipt[
+            "selection_dataset_qualification"
+        ]["receipt_sha256"]
+
+    held = [row for row in receipt["candidates"] if not row["screening_authority"]]
+    assert len(held) == 2
+    assert all(row["selection_dataset_receipt_sha256"] is None for row in held)
 
     assert receipt["planned_hypothesis_count"] == 8
     assert receipt["outcomes_read"] is False
