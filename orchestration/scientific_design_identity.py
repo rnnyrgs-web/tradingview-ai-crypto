@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Any
+from typing import Any, Iterable
 
 SCIENTIFIC_DESIGN_FIELDS = (
     "target_markets",
@@ -14,11 +14,25 @@ SCIENTIFIC_DESIGN_FIELDS = (
     "validation_plan",
 )
 
+# Rejected-memory needs a stricter behavior identity in addition to the full
+# scientific protocol identity above.  A failed executable design must not be
+# resurrected merely by changing validation thresholds, baselines, fresh-window
+# flags, or other evaluation-plan metadata while leaving the actual strategy
+# behavior unchanged.
+STRATEGY_BEHAVIOR_FIELDS = (
+    "target_markets",
+    "target_timeframes",
+    "data_contract",
+    "signal_rules",
+    "execution_rules",
+    "cost_model",
+)
+
 SET_LIKE = "SET_LIKE"
 ORDERED = "ORDERED"
 SCIENTIFIC_LIST_SEMANTICS_VERSION = 1
 
-# Every list reachable from SCIENTIFIC_DESIGN_FIELDS must be declared here.
+# Every list reachable from the identity fields must be declared here.
 # Unknown list paths fail closed instead of inheriting caller-order semantics.
 # Use "*" for a list item when a supported ordered/set-like list contains
 # structured children with additional declared list fields.
@@ -112,35 +126,65 @@ def _canonicalize(value: Any, path: tuple[str, ...]) -> Any:
     return value
 
 
-def scientific_design_projection(candidate: dict[str, Any]) -> dict[str, Any]:
-    """Return the label-invariant behavior-driving projection for rejection memory.
-
-    Dict key order is canonicalized during serialization. Every behavior-driving
-    list must have explicit versioned semantics: SET_LIKE lists are canonicalized
-    deterministically, ORDERED lists preserve order, and unseen list paths fail
-    closed. This prevents a rejected design from acquiring a fresh scientific
-    identity merely by permuting a set-like list while preserving genuinely
-    ordered signal/execution sequences.
-    """
+def _projection_for_fields(
+    candidate: dict[str, Any],
+    fields: Iterable[str],
+    *,
+    identity_name: str,
+) -> dict[str, Any]:
     if not isinstance(candidate, dict):
-        raise RuntimeError("scientific design must be an object")
-    missing = [field for field in SCIENTIFIC_DESIGN_FIELDS if field not in candidate]
+        raise RuntimeError(f"{identity_name} must be an object")
+    fields = tuple(fields)
+    missing = [field for field in fields if field not in candidate]
     if missing:
-        raise RuntimeError(f"scientific design missing fields: {missing}")
+        raise RuntimeError(f"{identity_name} missing fields: {missing}")
 
-    projection = {field: candidate[field] for field in SCIENTIFIC_DESIGN_FIELDS}
+    projection = {field: candidate[field] for field in fields}
     try:
         detached = json.loads(json.dumps(projection, ensure_ascii=False, allow_nan=False))
     except (TypeError, ValueError) as exc:
-        raise RuntimeError("scientific design must contain JSON-safe finite values") from exc
-
+        raise RuntimeError(f"{identity_name} must contain JSON-safe finite values") from exc
     return _canonicalize(detached, ())
 
 
+def scientific_design_projection(candidate: dict[str, Any]) -> dict[str, Any]:
+    """Return the label-invariant full scientific-protocol projection.
+
+    This identity includes the validation plan.  It answers whether two frozen
+    experiments are the same complete scientific protocol.
+    """
+    return _projection_for_fields(
+        candidate,
+        SCIENTIFIC_DESIGN_FIELDS,
+        identity_name="scientific design",
+    )
+
+
+def strategy_behavior_projection(candidate: dict[str, Any]) -> dict[str, Any]:
+    """Return the label- and validation-plan-invariant executable projection.
+
+    This identity is intentionally stricter for rejected-memory/no-rescue use:
+    changing only an evaluation plan cannot resurrect a failed strategy whose
+    markets, data, signal, execution and cost behavior are unchanged.
+    """
+    return _projection_for_fields(
+        candidate,
+        STRATEGY_BEHAVIOR_FIELDS,
+        identity_name="strategy behavior",
+    )
+
+
 def canonical_scientific_design_bytes(candidate: dict[str, Any]) -> bytes:
-    projection = scientific_design_projection(candidate)
-    return _canonical_json(projection).encode("utf-8")
+    return _canonical_json(scientific_design_projection(candidate)).encode("utf-8")
+
+
+def canonical_strategy_behavior_bytes(candidate: dict[str, Any]) -> bytes:
+    return _canonical_json(strategy_behavior_projection(candidate)).encode("utf-8")
 
 
 def scientific_design_sha256(candidate: dict[str, Any]) -> str:
     return hashlib.sha256(canonical_scientific_design_bytes(candidate)).hexdigest()
+
+
+def strategy_behavior_sha256(candidate: dict[str, Any]) -> str:
+    return hashlib.sha256(canonical_strategy_behavior_bytes(candidate)).hexdigest()
