@@ -1,17 +1,28 @@
 from dataclasses import FrozenInstanceError
 from datetime import datetime, timedelta, timezone
+import hashlib
+from pathlib import Path
 
 import pytest
 
 from money_intelligence.forward_move_ledger import (
     ForecastOutcome,
     ForwardMoveForecast,
+    TrustedFormationReceipt,
+    receipt_from_store_row,
     resolve_forecast,
+    trusted_expires_at,
+    verify_formation_receipt,
 )
 
 
 UTC = timezone.utc
 FORMED = datetime(2026, 9, 20, 12, 0, tzinfo=UTC)
+RECEIPT_TIME = FORMED + timedelta(seconds=2)
+
+
+def _sha(text):
+    return hashlib.sha256(text.encode()).hexdigest()
 
 
 def _forecast(**overrides):
@@ -20,6 +31,11 @@ def _forecast(**overrides):
         "formed_at": FORMED,
         "evidence_cutoff": FORMED - timedelta(minutes=5),
         "reference_price": "10.00",
+        "reference_price_observed_at": FORMED - timedelta(minutes=6),
+        "reference_price_source_id": "snapshot:abc",
+        "reference_price_observation_id": "binance:ASSETUSDT:1m:20260920T115400Z",
+        "reference_price_observation_sha256": _sha("reference-price-row"),
+        "evidence_manifest_sha256": _sha("full-pit-evidence-manifest"),
         "horizon_days": 90,
         "evidence_for": ("spot accumulation", "supply contraction"),
         "evidence_against": ("weak macro regime",),
@@ -29,6 +45,16 @@ def _forecast(**overrides):
     }
     values.update(overrides)
     return ForwardMoveForecast(**values)
+
+
+def _receipt(forecast=None, *, created_at=RECEIPT_TIME, sequence=7):
+    forecast = forecast or _forecast()
+    return TrustedFormationReceipt(
+        sequence=sequence,
+        forecast_fingerprint=forecast.fingerprint,
+        server_created_at=created_at,
+        formation_payload=forecast.to_record(),
+    )
 
 
 def test_formation_fingerprint_is_deterministic_and_order_invariant():
@@ -41,16 +67,23 @@ def test_formation_fingerprint_is_deterministic_and_order_invariant():
 
     assert first.fingerprint == second.fingerprint
     assert first.to_record()["reference_price"] == "10"
-    assert first.to_record()["expires_at"] == "2026-12-19T12:00:00Z"
+    assert first.to_record()["declared_expires_at"] == "2026-12-19T12:00:00Z"
+    assert first.to_record()["prospective_status"] == "UNTRUSTED_UNTIL_SERVER_RECEIPT"
 
 
-def test_formation_is_frozen_and_rejects_future_evidence():
+def test_formation_is_frozen_and_rejects_future_or_unbound_evidence():
     forecast = _forecast()
     with pytest.raises(FrozenInstanceError):
         forecast.asset_id = "REWRITTEN"  # type: ignore[misc]
 
     with pytest.raises(ValueError, match="evidence_cutoff"):
         _forecast(evidence_cutoff=FORMED + timedelta(seconds=1))
+    with pytest.raises(ValueError, match="reference_price_observed_at"):
+        _forecast(reference_price_observed_at=FORMED)
+    with pytest.raises(ValueError, match="reference_price_source_id"):
+        _forecast(reference_price_source_id="other:source")
+    with pytest.raises(ValueError, match="SHA-256"):
+        _forecast(evidence_manifest_sha256="caller narrative")
 
 
 def test_formation_enforces_2x_and_90_day_contract():
@@ -64,26 +97,88 @@ def test_formation_enforces_2x_and_90_day_contract():
         _forecast(invalidation_rules=())
 
 
-def test_retroactive_target_hit_can_never_be_counted_as_prediction():
+def test_trusted_receipt_binds_full_payload_and_server_time():
     forecast = _forecast()
-    with pytest.raises(ValueError, match="retroactive"):
-        resolve_forecast(
+    receipt = _receipt(forecast)
+    verify_formation_receipt(forecast, receipt)
+    assert trusted_expires_at(forecast, receipt) == RECEIPT_TIME + timedelta(days=90)
+
+    tampered = dict(forecast.to_record())
+    tampered["reference_price"] = "9"
+    with pytest.raises(ValueError, match="full frozen formation"):
+        verify_formation_receipt(
             forecast,
-            resolved_at=FORMED + timedelta(days=1),
-            observation_start_at=FORMED,
-            observation_end_at=FORMED + timedelta(days=1),
-            observed_max_price="21",
-            first_target_hit_at=FORMED,
+            TrustedFormationReceipt(
+                sequence=7,
+                forecast_fingerprint=forecast.fingerprint,
+                server_created_at=RECEIPT_TIME,
+                formation_payload=tampered,
+            ),
+        )
+
+    with pytest.raises(ValueError, match="cannot predate declared formation"):
+        verify_formation_receipt(
+            forecast,
+            TrustedFormationReceipt(
+                sequence=7,
+                forecast_fingerprint=forecast.fingerprint,
+                server_created_at=FORMED - timedelta(seconds=1),
+                formation_payload=forecast.to_record(),
+            ),
         )
 
 
-def test_hit_requires_point_in_time_hit_timestamp_after_formation():
+def test_store_row_parser_has_no_caller_created_at_fallback():
     forecast = _forecast()
-    hit_at = FORMED + timedelta(days=12)
+    row = {
+        "sequence": 7,
+        "forecast_fingerprint": forecast.fingerprint,
+        "created_at": "2026-09-20T12:00:02Z",
+        "formation_payload": forecast.to_record(),
+    }
+    receipt = receipt_from_store_row(row)
+    verify_formation_receipt(forecast, receipt)
+    assert receipt.server_created_at == RECEIPT_TIME
+
+    bad = dict(row)
+    bad.pop("created_at")
+    with pytest.raises(ValueError, match="created_at"):
+        receipt_from_store_row(bad)
+
+
+def test_backdated_forecast_after_move_cannot_count_as_early_prediction():
+    attacker_formed = FORMED - timedelta(days=1)
+    forecast = _forecast(
+        formed_at=attacker_formed,
+        evidence_cutoff=attacker_formed - timedelta(minutes=1),
+        reference_price_observed_at=attacker_formed - timedelta(minutes=2),
+    )
+    # The append-only store receives the object only now. Its server timestamp is
+    # authoritative even though the caller supplied a plausible backdated formed_at.
+    receipt = _receipt(forecast, created_at=RECEIPT_TIME)
+    move_happened_before_receipt = FORMED - timedelta(hours=1)
+
+    with pytest.raises(ValueError, match="retroactive"):
+        resolve_forecast(
+            forecast,
+            receipt,
+            resolved_at=RECEIPT_TIME + timedelta(minutes=1),
+            observation_start_at=RECEIPT_TIME,
+            observation_end_at=RECEIPT_TIME + timedelta(minutes=1),
+            observed_max_price="21",
+            first_target_hit_at=move_happened_before_receipt,
+        )
+
+
+def test_hit_requires_point_in_time_hit_timestamp_after_trusted_formation():
+    forecast = _forecast()
+    receipt = _receipt(forecast)
+    hit_at = RECEIPT_TIME + timedelta(days=12)
     resolution = resolve_forecast(
         forecast,
+        receipt,
         resolved_at=hit_at + timedelta(minutes=1),
-        observation_start_at=FORMED,
+        observation_start_at=RECEIPT_TIME,
         observation_end_at=hit_at,
         observed_max_price="20.5",
         first_target_hit_at=hit_at,
@@ -91,14 +186,17 @@ def test_hit_requires_point_in_time_hit_timestamp_after_formation():
 
     assert resolution.outcome is ForecastOutcome.HIT
     assert resolution.forecast_fingerprint == forecast.fingerprint
-    assert resolution.to_record()["first_target_hit_at"] == "2026-10-02T12:00:00Z"
+    assert resolution.formation_receipt_fingerprint == receipt.fingerprint
+    assert resolution.formation_receipt_sequence == 7
+    assert resolution.to_record()["first_target_hit_at"] == "2026-10-02T12:00:02Z"
     assert "evidence_for" not in resolution.to_record()
 
     with pytest.raises(ValueError, match="point-in-time"):
         resolve_forecast(
             forecast,
+            receipt,
             resolved_at=hit_at,
-            observation_start_at=FORMED,
+            observation_start_at=RECEIPT_TIME,
             observation_end_at=hit_at,
             observed_max_price="20.5",
         )
@@ -106,12 +204,14 @@ def test_hit_requires_point_in_time_hit_timestamp_after_formation():
 
 def test_invalidation_before_hit_wins_and_does_not_rewrite_formation():
     forecast = _forecast()
-    invalidated_at = FORMED + timedelta(days=8)
-    later_hit = FORMED + timedelta(days=10)
+    receipt = _receipt(forecast)
+    invalidated_at = RECEIPT_TIME + timedelta(days=8)
+    later_hit = RECEIPT_TIME + timedelta(days=10)
     resolution = resolve_forecast(
         forecast,
+        receipt,
         resolved_at=later_hit,
-        observation_start_at=FORMED,
+        observation_start_at=RECEIPT_TIME,
         observation_end_at=later_hit,
         observed_max_price="22",
         first_target_hit_at=later_hit,
@@ -122,46 +222,62 @@ def test_invalidation_before_hit_wins_and_does_not_rewrite_formation():
     assert resolution.forecast_fingerprint == forecast.fingerprint
 
 
-def test_expiry_requires_complete_frozen_horizon():
+def test_expiry_requires_complete_trusted_horizon():
     forecast = _forecast(horizon_days=30)
-    expiry = FORMED + timedelta(days=30)
+    receipt = _receipt(forecast)
+    expiry = RECEIPT_TIME + timedelta(days=30)
 
     with pytest.raises(ValueError, match="still open"):
         resolve_forecast(
             forecast,
-            resolved_at=FORMED + timedelta(days=10),
-            observation_start_at=FORMED,
-            observation_end_at=FORMED + timedelta(days=10),
+            receipt,
+            resolved_at=RECEIPT_TIME + timedelta(days=10),
+            observation_start_at=RECEIPT_TIME,
+            observation_end_at=RECEIPT_TIME + timedelta(days=10),
             observed_max_price="17",
         )
 
     resolution = resolve_forecast(
         forecast,
+        receipt,
         resolved_at=expiry + timedelta(minutes=1),
-        observation_start_at=FORMED,
+        observation_start_at=RECEIPT_TIME,
         observation_end_at=expiry,
         observed_max_price="19.99",
     )
     assert resolution.outcome is ForecastOutcome.EXPIRED
 
 
-def test_resolution_window_cannot_include_preformation_or_posthorizon_prices():
+def test_resolution_window_cannot_include_pre_receipt_or_posthorizon_prices():
     forecast = _forecast(horizon_days=30)
+    receipt = _receipt(forecast)
 
-    with pytest.raises(ValueError, match="must equal"):
+    with pytest.raises(ValueError, match="trusted server receipt time"):
         resolve_forecast(
             forecast,
-            resolved_at=FORMED + timedelta(days=1),
-            observation_start_at=FORMED - timedelta(seconds=1),
-            observation_end_at=FORMED + timedelta(days=1),
+            receipt,
+            resolved_at=RECEIPT_TIME + timedelta(days=1),
+            observation_start_at=FORMED,
+            observation_end_at=RECEIPT_TIME + timedelta(days=1),
             observed_max_price="15",
         )
 
     with pytest.raises(ValueError, match="cannot exceed"):
         resolve_forecast(
             forecast,
-            resolved_at=FORMED + timedelta(days=31),
-            observation_start_at=FORMED,
-            observation_end_at=FORMED + timedelta(days=31),
+            receipt,
+            resolved_at=RECEIPT_TIME + timedelta(days=31),
+            observation_start_at=RECEIPT_TIME,
+            observation_end_at=RECEIPT_TIME + timedelta(days=31),
             observed_max_price="15",
         )
+
+
+def test_sql_store_withholds_server_created_at_from_insert_privilege():
+    root = Path(__file__).parents[1]
+    sql = (root / "supabase/migrations/20260921051500_big_move_forward_formations.sql").read_text()
+    assert "default clock_timestamp()" in sql
+    assert "grant insert (forecast_fingerprint, formation_payload)" in sql
+    assert "grant insert (forecast_fingerprint, formation_payload, created_at)" not in sql
+    assert "revoke all on table public.big_move_forward_formations" in sql
+    assert "append_big_move_forward_formation_v1" in sql
