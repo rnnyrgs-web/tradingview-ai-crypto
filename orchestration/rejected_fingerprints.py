@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from orchestration.scientific_design_identity import scientific_design_sha256
+
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PATH = ROOT / "orchestration" / "rejected_fingerprints.json"
 DEFAULT_SEMANTIC_PATH = ROOT / "orchestration" / "rejected_semantic_designs.json"
@@ -30,8 +32,9 @@ SEMANTIC_STATUSES = {SEMANTIC_BACKFILL_AVAILABLE, SEMANTIC_BACKFILL_UNAVAILABLE}
 def load_rejected_semantic_designs(path: Path = DEFAULT_SEMANTIC_PATH) -> dict[str, dict[str, Any]]:
     """Load deterministic label-invariant rejection identities.
 
-    Backfilled identities come only from reviewed packaged frozen contracts.
-    Older rejections that cannot be reconstructed without guessing are
+    Backfilled identities are never trusted as stored hashes alone: the digest
+    is recomputed from the persisted behavior-driving projection and must
+    match. Older rejections that cannot be reconstructed without guessing are
     explicitly marked unavailable instead of fuzzy-matched.
     """
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -57,14 +60,16 @@ def load_rejected_semantic_designs(path: Path = DEFAULT_SEMANTIC_PATH) -> dict[s
             )
 
         if status == SEMANTIC_BACKFILL_AVAILABLE:
-            supplied_digest = record.get("scientific_design_sha256")
-            if (
-                not isinstance(supplied_digest, str)
-                or len(supplied_digest) != 64
-                or any(ch not in "0123456789abcdef" for ch in supplied_digest)
-            ):
+            projection = record.get("projection")
+            if not isinstance(projection, dict) or not projection:
                 raise RuntimeError(
-                    f"rejected semantic-design {fingerprint_id} scientific identity must be sha256"
+                    f"rejected semantic-design {fingerprint_id} must contain a behavior projection"
+                )
+            supplied_digest = record.get("scientific_design_sha256")
+            computed_digest = scientific_design_sha256(projection)
+            if not isinstance(supplied_digest, str) or supplied_digest != computed_digest:
+                raise RuntimeError(
+                    f"rejected semantic-design {fingerprint_id} scientific identity mismatch"
                 )
             for field in ("source_artifact", "source_blob_sha", "source_contract_sha256"):
                 value = record.get(field)
@@ -78,7 +83,7 @@ def load_rejected_semantic_designs(path: Path = DEFAULT_SEMANTIC_PATH) -> dict[s
                 raise RuntimeError(
                     f"rejected semantic-design {fingerprint_id} unavailable backfill needs reason"
                 )
-            if record.get("scientific_design_sha256") is not None:
+            if record.get("scientific_design_sha256") is not None or record.get("projection") is not None:
                 raise RuntimeError(
                     f"rejected semantic-design {fingerprint_id} unavailable backfill cannot invent identity"
                 )
