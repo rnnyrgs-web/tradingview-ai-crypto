@@ -141,3 +141,13 @@ def test_development_and_protected_boundary_must_be_contiguous_hourly():
             development_end_utc="2026-08-31T22:00:00+00:00",
             protected_start_utc="2026-09-01T00:00:00+00:00",
         )
+
+
+def test_authoritative_boundary_cannot_move_into_protected_tail_before_source_read(tmp_path):
+    unreadable = tmp_path / "must-not-be-read.json.gz"
+    with pytest.raises(ValueError, match="authoritative chronology is frozen"):
+        qualify_cohort001_dataset(
+            unreadable,
+            development_end_utc="2026-09-01T00:00:00+00:00",
+            protected_start_utc="2026-09-01T01:00:00+00:00",
+        )
