@@ -41,6 +41,10 @@ def _parse_time(value: Any, *, field: str) -> datetime:
     return parsed.astimezone(timezone.utc)
 
 
+def _zulu(value: Any, *, field: str) -> str:
+    return _parse_time(value, field=field).isoformat().replace("+00:00", "Z")
+
+
 def verify_forecast_reference_receipt(
     forecast: ForwardMoveForecast,
     reference_receipt: TrustedReferenceReceipt,
@@ -100,7 +104,11 @@ def formation_receipt_from_bound_store_row(
         raise ValueError("formation persistence row must be an object")
     verify_forecast_reference_receipt(forecast, reference_receipt)
     _verify_returned_reference(row, reference_receipt)
-    receipt = receipt_from_store_row(row)
+    # PostgREST may serialize timestamptz with `+00:00`; the core ledger parser uses
+    # canonical Zulu timestamps. Normalize only the DB-owned receipt time here.
+    formation_row = dict(row)
+    formation_row["created_at"] = _zulu(row.get("created_at"), field="created_at")
+    receipt = receipt_from_store_row(formation_row)
     verify_formation_receipt(forecast, receipt)
     return receipt
 
