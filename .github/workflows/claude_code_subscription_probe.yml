@@ -1,0 +1,102 @@
+name: Claude Code Subscription Capability Probe
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - agents/claude_code_auth.py
+      - tests/test_claude_code_auth.py
+      - .github/workflows/claude_code_subscription_probe.yml
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+jobs:
+  subscription-capability-probe:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - id: preflight
+        name: Detect subscription credential without exposing it
+        shell: bash
+        run: |
+          if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - id: oauth_probe
+        name: Prove official subscription-backed automation
+        if: steps.preflight.outputs.configured == 'true'
+        continue-on-error: true
+        uses: anthropics/claude-code-action@v1
+        with:
+          github_token: ${{ github.token }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: >-
+            Authentication capability probe only. Do not modify files, open pull requests,
+            run shell commands, or use GitHub write operations. Reply with exactly
+            SUBSCRIPTION_PROBE_OK and nothing else.
+          claude_args: "--max-turns 1"
+
+      - id: receipt
+        name: Emit secret-free capability receipt
+        if: always()
+        env:
+          CONFIGURED: ${{ steps.preflight.outputs.configured }}
+          PROBE_OUTCOME: ${{ steps.oauth_probe.outcome }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib, json, os
+          configured = os.environ.get("CONFIGURED") == "true"
+          outcome = os.environ.get("PROBE_OUTCOME") or "skipped"
+          if configured and outcome == "success":
+              status = "SUBSCRIPTION_AUTOMATED"
+              reason = "OFFICIAL_OAUTH_ACTION_PROBE_SUCCEEDED"
+          elif not configured:
+              status = "MANUAL_ADAPTER_REQUIRED"
+              reason = "CLAUDE_CODE_OAUTH_TOKEN_NOT_CONFIGURED"
+          else:
+              status = "UNKNOWN"
+              reason = "SUBSCRIPTION_OAUTH_PROBE_FAILED"
+          receipt = {
+              "version": 1,
+              "provider": "anthropic",
+              "engine": "claude-code",
+              "auth_mode": status,
+              "reason": reason,
+              "repository": os.environ["GITHUB_REPOSITORY"],
+              "run_id": os.environ["GITHUB_RUN_ID"],
+              "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
+              "head_sha": os.environ["GITHUB_SHA"],
+          }
+          raw = json.dumps(receipt, sort_keys=True, separators=(",", ":")).encode()
+          receipt["content_digest"] = hashlib.sha256(raw).hexdigest()
+          with open("/tmp/claude-subscription-capability.json", "w", encoding="utf-8") as f:
+              json.dump(receipt, f, indent=2, sort_keys=True)
+              f.write("\n")
+          print(json.dumps(receipt, separators=(",", ":")))
+          PY
+
+      - name: Upload capability receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-subscription-capability-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /tmp/claude-subscription-capability.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Fail closed on configured-but-invalid subscription credential
+        if: steps.preflight.outputs.configured == 'true' && steps.oauth_probe.outcome != 'success'
+        run: |
+          echo "Claude subscription OAuth was configured but the official action probe did not succeed."
+          exit 1
