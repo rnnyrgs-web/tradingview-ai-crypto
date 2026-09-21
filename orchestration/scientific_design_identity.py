@@ -15,7 +15,10 @@ SCIENTIFIC_DESIGN_FIELDS = (
 )
 
 _UNORDERED_TOP_LEVEL_STRING_LISTS = {"target_markets", "target_timeframes"}
-_UNORDERED_DATA_CONTRACT_STRING_LISTS = {"fixed_instruments"}
+_UNORDERED_DATA_CONTRACT_STRING_LISTS = {
+    "fixed_instruments",
+    "fixed_follower_instruments",
+}
 
 
 def _canonical_unordered_string_list(value: Any, field: str) -> list[str]:
