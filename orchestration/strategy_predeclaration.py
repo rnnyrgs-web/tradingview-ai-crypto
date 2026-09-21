@@ -5,7 +5,14 @@ import json
 from datetime import datetime
 from typing import Any
 
-from orchestration.rejected_fingerprints import is_rejected_fingerprint, load_rejected_fingerprints
+from orchestration.rejected_fingerprints import (
+    SEMANTIC_BACKFILL_UNAVAILABLE,
+    is_rejected_fingerprint,
+    load_rejected_fingerprints,
+    rejection_record,
+    semantic_rejection_record,
+)
+from orchestration.scientific_design_identity import scientific_design_sha256
 
 SCHEMA_VERSION = 1
 
@@ -28,9 +35,6 @@ REQUIRED_FIELDS = {
     "protected_evidence",
 }
 
-# These fields describe observed outcomes rather than a plan.  A candidate
-# containing them is no longer an outcome-blind predeclaration and must not be
-# admitted to the cheap-screen queue under the same fingerprint.
 OUTCOME_DERIVED_FIELDS = {
     "pnl",
     "net_pnl",
@@ -121,13 +125,17 @@ def _find_outcome_fields(value: Any, path: str = "candidate") -> list[str]:
 
 
 def canonical_predeclaration_bytes(candidate: dict[str, Any]) -> bytes:
-    """Return deterministic bytes for the immutable pre-outcome contract.
+    """Return deterministic bytes for the full immutable pre-outcome contract.
 
-    ``contract_sha256`` is excluded because it is the digest of the remaining
-    contract.  All other fields participate in identity so a behavior-changing
-    edit necessarily creates a different digest.
+    Both digests are excluded: ``scientific_design_sha256`` is the
+    label-invariant behavior identity, while ``contract_sha256`` is the digest
+    of every other frozen field, including labels/prose/search ancestry.
     """
-    payload = {key: value for key, value in candidate.items() if key != "contract_sha256"}
+    payload = {
+        key: value
+        for key, value in candidate.items()
+        if key not in {"contract_sha256", "scientific_design_sha256"}
+    }
     try:
         encoded = json.dumps(
             payload,
@@ -145,6 +153,27 @@ def predeclaration_sha256(candidate: dict[str, Any]) -> str:
     return hashlib.sha256(canonical_predeclaration_bytes(candidate)).hexdigest()
 
 
+def _validate_predecessor_claims(
+    candidate: dict[str, Any],
+    active_rejections: list[dict[str, Any]],
+) -> None:
+    predecessors = candidate.get("predecessor_fingerprints")
+    if predecessors is None:
+        return
+    predecessor_ids = _require_string_list(predecessors, "predecessor_fingerprints")
+    for predecessor_id in predecessor_ids:
+        record = rejection_record(predecessor_id, active_rejections)
+        if (
+            record is not None
+            and record.get("do_not_resubmit_same_fingerprint")
+            and record.get("semantic_identity_status") == SEMANTIC_BACKFILL_UNAVAILABLE
+        ):
+            raise RuntimeError(
+                "predecessor has SEMANTIC_BACKFILL_UNAVAILABLE; material distinctness "
+                f"cannot be auto-certified: {predecessor_id}"
+            )
+
+
 def validate_predeclaration(
     candidate: dict[str, Any],
     *,
@@ -152,7 +181,7 @@ def validate_predeclaration(
 ) -> str:
     """Validate an outcome-blind strategy cheap-screen predeclaration.
 
-    This is a research admission contract only.  Passing it grants no OOS,
+    This is a research admission contract only. Passing it grants no OOS,
     forward, promotion, broker or trade authority.
     """
     if not isinstance(candidate, dict):
@@ -183,10 +212,6 @@ def validate_predeclaration(
         raise RuntimeError(
             "predeclaration contains outcome-derived fields: " + ", ".join(sorted(outcome_fields))
         )
-
-    active_rejections = rejected_entries if rejected_entries is not None else load_rejected_fingerprints()
-    if is_rejected_fingerprint(fingerprint_id, active_rejections):
-        raise RuntimeError(f"rejected fingerprint cannot be predeclared again: {fingerprint_id}")
 
     costs = candidate["cost_model"]
     if not isinstance(costs, dict):
@@ -237,14 +262,42 @@ def validate_predeclaration(
     if protected.get("genuine_forward_opened") is not False:
         raise RuntimeError("genuine-forward evidence must remain locked at predeclaration")
 
+    active_rejections = (
+        rejected_entries if rejected_entries is not None else load_rejected_fingerprints()
+    )
+    if is_rejected_fingerprint(fingerprint_id, active_rejections):
+        raise RuntimeError(f"rejected fingerprint cannot be predeclared again: {fingerprint_id}")
+
+    design_digest = scientific_design_sha256(candidate)
+    semantic_rejection = semantic_rejection_record(design_digest, active_rejections)
+    if semantic_rejection is not None:
+        raise RuntimeError(
+            "rejected scientific design cannot be predeclared under a renamed/cosmetic identity: "
+            f"{semantic_rejection['fingerprint_id']}"
+        )
+    _validate_predecessor_claims(candidate, active_rejections)
+
+    supplied_design_digest = candidate.get("scientific_design_sha256")
+    if supplied_design_digest is not None:
+        if not isinstance(supplied_design_digest, str) or supplied_design_digest != design_digest:
+            raise RuntimeError(
+                "scientific_design_sha256 does not match the computed behavior-driving design"
+            )
+
     digest = predeclaration_sha256(candidate)
     supplied_digest = candidate.get("contract_sha256")
     if supplied_digest is not None:
+        if supplied_design_digest is None:
+            raise RuntimeError(
+                "frozen predeclaration with contract_sha256 must persist scientific_design_sha256"
+            )
         if not isinstance(supplied_digest, str) or supplied_digest != digest:
             raise RuntimeError("contract_sha256 does not match the frozen predeclaration")
 
     if hypothesis_id == fingerprint_id:
-        raise RuntimeError("fingerprint_id must version the hypothesis rather than duplicate hypothesis_id")
+        raise RuntimeError(
+            "fingerprint_id must version the hypothesis rather than duplicate hypothesis_id"
+        )
     return digest
 
 
@@ -253,10 +306,13 @@ def freeze_predeclaration(
     *,
     rejected_entries: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    """Validate and return a detached contract carrying its immutable digest."""
+    """Validate and return a detached contract carrying both immutable digests."""
     detached = json.loads(json.dumps(candidate, allow_nan=False))
     detached.pop("contract_sha256", None)
-    digest = validate_predeclaration(detached, rejected_entries=rejected_entries)
-    detached["contract_sha256"] = digest
+    detached.pop("scientific_design_sha256", None)
+
+    validate_predeclaration(detached, rejected_entries=rejected_entries)
+    detached["scientific_design_sha256"] = scientific_design_sha256(detached)
+    detached["contract_sha256"] = predeclaration_sha256(detached)
     validate_predeclaration(detached, rejected_entries=rejected_entries)
     return detached
