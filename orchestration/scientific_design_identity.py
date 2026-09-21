@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 from typing import Any, Iterable
 
 SCIENTIFIC_DESIGN_FIELDS = (
@@ -15,7 +16,7 @@ SCIENTIFIC_DESIGN_FIELDS = (
 )
 
 # Rejected-memory needs a stricter behavior identity in addition to the full
-# scientific protocol identity above.  A failed executable design must not be
+# scientific protocol identity above. A failed executable design must not be
 # resurrected merely by changing validation thresholds, baselines, fresh-window
 # flags, or other evaluation-plan metadata while leaving the actual strategy
 # behavior unchanged.
@@ -31,6 +32,9 @@ STRATEGY_BEHAVIOR_FIELDS = (
 SET_LIKE = "SET_LIKE"
 ORDERED = "ORDERED"
 SCIENTIFIC_LIST_SEMANTICS_VERSION = 1
+SCIENTIFIC_SCALAR_CANONICALIZATION_VERSION = 1
+SCIENTIFIC_IDENTITY_VERSION = 2
+STRATEGY_BEHAVIOR_IDENTITY_VERSION = 1
 
 # Every list reachable from the identity fields must be declared here.
 # Unknown list paths fail closed instead of inheriting caller-order semantics.
@@ -82,6 +86,29 @@ def _canonical_json(value: Any) -> str:
     )
 
 
+def _canonicalize_scalar(value: Any, path: tuple[str, ...]) -> Any:
+    """Canonicalize JSON scalar representations for scientific identity only.
+
+    JSON/Python numeric representations that execute equivalently must not create
+    a fresh rejected-design identity. Booleans remain distinct from integers;
+    integral finite floats collapse to their integer equivalent; negative zero
+    collapses to zero; genuinely distinct non-integral values are not rounded.
+    """
+    if value is None or isinstance(value, (str, bool, int)):
+        return value
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise RuntimeError(f"{_path_text(path)} must contain finite numeric values")
+        if value == 0.0:
+            return 0
+        if value.is_integer():
+            return int(value)
+        return value
+    raise RuntimeError(
+        f"unsupported scientific scalar type at {_path_text(path)}: {type(value).__name__}"
+    )
+
+
 def _canonicalize(value: Any, path: tuple[str, ...]) -> Any:
     if isinstance(value, dict):
         return {
@@ -123,7 +150,7 @@ def _canonicalize(value: Any, path: tuple[str, ...]) -> Any:
         encoded.sort(key=lambda pair: pair[0])
         return [item for _, item in encoded]
 
-    return value
+    return _canonicalize_scalar(value, path)
 
 
 def _projection_for_fields(
@@ -150,7 +177,7 @@ def _projection_for_fields(
 def scientific_design_projection(candidate: dict[str, Any]) -> dict[str, Any]:
     """Return the label-invariant full scientific-protocol projection.
 
-    This identity includes the validation plan.  It answers whether two frozen
+    This identity includes the validation plan. It answers whether two frozen
     experiments are the same complete scientific protocol.
     """
     return _projection_for_fields(
