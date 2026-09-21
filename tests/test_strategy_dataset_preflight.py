@@ -38,7 +38,7 @@ def _row(ts: int, *, poisoned: bool = False) -> dict:
 
 
 def _synthetic_dataset(*, poison_development: bool = False, poison_protected: bool = False) -> bytes:
-    development_ts = 1_780_358_400_000  # 2026-08-31T23:00:00Z
+    development_ts = 1_788_217_200_000  # 2026-08-31T23:00:00Z
     protected_ts = development_ts + 3_600_000
     instruments = ["BTC-USDT-SWAP", "ETH-USDT-SWAP", "SOL-USDT-SWAP"]
     payload = {
@@ -106,7 +106,7 @@ def test_altered_compressed_source_cannot_redefine_authoritative_identity(tmp_pa
 
 
 def test_protected_ohlcv_poison_is_never_decoded_but_development_poison_fails():
-    development_ts = 1_780_358_400_000
+    development_ts = 1_788_217_200_000
     protected_ts = development_ts + 3_600_000
 
     metadata, development, timestamps = _parse_development_view(
