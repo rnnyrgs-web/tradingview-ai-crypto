@@ -4,6 +4,7 @@ import copy
 
 import pytest
 
+from orchestration.scientific_design_identity import scientific_design_sha256
 from orchestration.strategy_predeclaration import (
     freeze_predeclaration,
     predeclaration_sha256,
@@ -68,19 +69,78 @@ def test_freeze_is_deterministic_and_detached():
     second = freeze_predeclaration(reordered, rejected_entries=[])
 
     assert frozen["contract_sha256"] == second["contract_sha256"]
+    assert frozen["scientific_design_sha256"] == second["scientific_design_sha256"]
     assert frozen["contract_sha256"] == predeclaration_sha256(frozen)
+    assert frozen["scientific_design_sha256"] == scientific_design_sha256(frozen)
     assert "contract_sha256" not in original
+    assert "scientific_design_sha256" not in original
 
     original["signal_rules"]["entry_condition"] = "mutated after freeze"
     assert frozen["signal_rules"]["entry_condition"] == "frozen before outcomes"
 
 
-def test_behavior_change_requires_new_digest():
+def test_behavior_change_requires_new_digests():
     first = freeze_predeclaration(_candidate(), rejected_entries=[])
     changed = _candidate()
     changed["execution_rules"]["entry_delay_bars"] = 2
     second = freeze_predeclaration(changed, rejected_entries=[])
+    assert first["scientific_design_sha256"] != second["scientific_design_sha256"]
     assert first["contract_sha256"] != second["contract_sha256"]
+
+
+def test_labels_and_display_prose_do_not_change_scientific_design_identity():
+    first = _candidate()
+    renamed = copy.deepcopy(first)
+    renamed["hypothesis_id"] = "RENAMED-HYPOTHESIS"
+    renamed["fingerprint_id"] = "RENAMED-HYPOTHESIS-v9"
+    renamed["family"] = "cosmetic_new_family_label"
+    renamed["economic_mechanism"] = "Rewritten explanatory prose with the exact same executable design."
+    renamed["hypothesis"] = "Different display wording only."
+
+    assert scientific_design_sha256(first) == scientific_design_sha256(renamed)
+
+    first_frozen = freeze_predeclaration(first, rejected_entries=[])
+    renamed_frozen = freeze_predeclaration(renamed, rejected_entries=[])
+    assert first_frozen["scientific_design_sha256"] == renamed_frozen["scientific_design_sha256"]
+    assert first_frozen["contract_sha256"] != renamed_frozen["contract_sha256"]
+
+
+def test_renamed_clone_of_rejected_scientific_design_is_rejected():
+    original = _candidate()
+    rejected = [{
+        "fingerprint_id": "OLD-REJECTED-v1",
+        "do_not_resubmit_same_fingerprint": True,
+        "semantic_identity_status": "BACKFILLED_STRUCTURED_CONTRACT",
+        "scientific_design_sha256": scientific_design_sha256(original),
+    }]
+    clone = copy.deepcopy(original)
+    clone["hypothesis_id"] = "COSMETIC-RESCUE"
+    clone["fingerprint_id"] = "COSMETIC-RESCUE-v1"
+    clone["family"] = "renamed_family"
+    clone["economic_mechanism"] = "New prose cannot reset a rejected executable design."
+    clone["hypothesis"] = "Renamed display hypothesis."
+
+    with pytest.raises(RuntimeError, match="rejected scientific design"):
+        validate_predeclaration(clone, rejected_entries=rejected)
+
+
+def test_material_behavior_change_gets_fresh_design_identity_but_keeps_search_ancestry():
+    original = _candidate()
+    original_digest = scientific_design_sha256(original)
+    rejected = [{
+        "fingerprint_id": "OLD-REJECTED-v1",
+        "do_not_resubmit_same_fingerprint": True,
+        "semantic_identity_status": "BACKFILLED_STRUCTURED_CONTRACT",
+        "scientific_design_sha256": original_digest,
+    }]
+
+    successor = copy.deepcopy(original)
+    successor["hypothesis_id"] = "MATERIAL-SUCCESSOR"
+    successor["fingerprint_id"] = "MATERIAL-SUCCESSOR-v1"
+    successor["signal_rules"]["entry_condition"] = "independent materially different frozen rule"
+    assert successor["search_plan"]["multiple_testing_family_id"] == original["search_plan"]["multiple_testing_family_id"]
+    assert scientific_design_sha256(successor) != original_digest
+    validate_predeclaration(successor, rejected_entries=rejected)
 
 
 def test_exact_rejected_fingerprint_cannot_be_resubmitted():
@@ -92,6 +152,18 @@ def test_exact_rejected_fingerprint_cannot_be_resubmitted():
     ]
     with pytest.raises(RuntimeError, match="rejected fingerprint"):
         validate_predeclaration(_candidate(), rejected_entries=rejected)
+
+
+def test_explicit_unreconstructible_rejected_predecessor_fails_closed():
+    rejected = [{
+        "fingerprint_id": "LEGACY-REJECTED-v1",
+        "do_not_resubmit_same_fingerprint": True,
+        "semantic_identity_status": "SEMANTIC_BACKFILL_UNAVAILABLE",
+    }]
+    candidate = _candidate()
+    candidate["predecessor_fingerprints"] = ["LEGACY-REJECTED-v1"]
+    with pytest.raises(RuntimeError, match="SEMANTIC_BACKFILL_UNAVAILABLE"):
+        validate_predeclaration(candidate, rejected_entries=rejected)
 
 
 def test_outcome_derived_fields_are_forbidden_anywhere_in_contract():
@@ -141,8 +213,22 @@ def test_frozen_digest_detects_post_freeze_tampering():
     frozen = freeze_predeclaration(_candidate(), rejected_entries=[])
     tampered = copy.deepcopy(frozen)
     tampered["signal_rules"]["entry_condition"] = "post-outcome rescue rule"
-    with pytest.raises(RuntimeError, match="contract_sha256 does not match"):
+    with pytest.raises(RuntimeError, match="scientific_design_sha256"):
         validate_predeclaration(tampered, rejected_entries=[])
+
+
+def test_caller_supplied_semantic_digest_is_verified_not_trusted():
+    candidate = _candidate()
+    candidate["scientific_design_sha256"] = "0" * 64
+    with pytest.raises(RuntimeError, match="scientific_design_sha256"):
+        validate_predeclaration(candidate, rejected_entries=[])
+
+
+def test_frozen_contract_must_persist_scientific_design_identity():
+    frozen = freeze_predeclaration(_candidate(), rejected_entries=[])
+    del frozen["scientific_design_sha256"]
+    with pytest.raises(RuntimeError, match="must persist scientific_design_sha256"):
+        validate_predeclaration(frozen, rejected_entries=[])
 
 
 def test_validation_contract_is_fail_closed():
