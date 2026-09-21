@@ -114,6 +114,21 @@ def test_extract_json_accepts_plain_and_fenced_json():
     assert extract_json('```json\n{"approve": false}\n```') == {"approve": False}
 
 
+def test_extract_json_accepts_single_object_with_harmless_surrounding_prose():
+    text = 'Review result:\n{"approve": true, "reason": "bounded", "risk": "low"}\nDone.'
+    assert extract_json(text)["approve"] is True
+
+
+def test_extract_json_rejects_multiple_verdict_objects():
+    text = '{"approve": true} trailing {"approve": false}'
+    try:
+        extract_json(text)
+    except RuntimeError as exc:
+        assert "multiple JSON objects" in str(exc)
+    else:
+        raise AssertionError("ambiguous multiple reviewer verdicts were accepted")
+
+
 def test_worker_completion_marker_is_required():
     payload = {"output_text": "done"}
     try:
