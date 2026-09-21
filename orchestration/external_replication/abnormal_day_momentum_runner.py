@@ -43,6 +43,32 @@ class ScoredEvent:
     stress_3x_net_return: float
 
 
+@dataclass(frozen=True)
+class ScheduleExecutionIssue:
+    instrument: str
+    period: str
+    signal_timestamp: datetime
+    required_timestamp: datetime
+    reason: str
+    entry_delay_bars: int
+
+
+class DataPitInconclusiveError(RuntimeError):
+    """Fail closed when a frozen event cannot be scored from required PIT bars."""
+
+    def __init__(self, issues: Sequence[ScheduleExecutionIssue]):
+        self.issues = tuple(issues)
+        details = "; ".join(
+            f"{issue.instrument} {issue.signal_timestamp.isoformat()} "
+            f"{issue.reason}@{issue.required_timestamp.isoformat()}"
+            for issue in self.issues
+        )
+        super().__init__(
+            "DATA/PIT_INCONCLUSIVE: frozen schedule is missing required execution bars: "
+            + details
+        )
+
+
 def _parse_utc_hour(value: str | datetime) -> datetime:
     if isinstance(value, datetime):
         dt = value
@@ -270,6 +296,60 @@ def build_signal_schedule(
     return tuple(sorted(events, key=lambda e: (e.signal_timestamp, e.instrument)))
 
 
+def _execution_issues_from_index(
+    by_ts: Mapping[str, Mapping[datetime, Bar]],
+    schedule: Sequence[SignalEvent],
+    *,
+    entry_delay_bars: int,
+) -> tuple[ScheduleExecutionIssue, ...]:
+    issues: list[ScheduleExecutionIssue] = []
+    for signal in schedule:
+        entry_ts = signal.entry_timestamp + entry_delay_bars * HOUR
+        if entry_ts >= signal.exit_timestamp:
+            # Structural no-hold interval is a frozen, price-independent exclusion for
+            # the delay arm. It is distinct from missing market data.
+            continue
+        instrument_index = by_ts.get(signal.instrument, {})
+        if instrument_index.get(entry_ts) is None:
+            issues.append(
+                ScheduleExecutionIssue(
+                    instrument=signal.instrument,
+                    period=signal.period,
+                    signal_timestamp=signal.signal_timestamp,
+                    required_timestamp=entry_ts,
+                    reason="MISSING_REQUIRED_ENTRY_BAR",
+                    entry_delay_bars=entry_delay_bars,
+                )
+            )
+        if instrument_index.get(signal.exit_timestamp) is None:
+            issues.append(
+                ScheduleExecutionIssue(
+                    instrument=signal.instrument,
+                    period=signal.period,
+                    signal_timestamp=signal.signal_timestamp,
+                    required_timestamp=signal.exit_timestamp,
+                    reason="MISSING_REQUIRED_EXIT_BAR",
+                    entry_delay_bars=entry_delay_bars,
+                )
+            )
+    return tuple(issues)
+
+
+def schedule_execution_issues(
+    rows: Iterable[Mapping[str, object] | Bar],
+    schedule: Sequence[SignalEvent],
+    *,
+    protected_oos_start: str | datetime,
+    entry_delay_bars: int = 0,
+) -> tuple[ScheduleExecutionIssue, ...]:
+    """Return deterministic future-bar availability defects without reading returns."""
+    if entry_delay_bars < 0:
+        raise ValueError("entry_delay_bars must be non-negative")
+    bars = normalize_development_rows(rows, protected_oos_start=protected_oos_start)
+    by_ts, _ = _index_by_instrument(bars)
+    return _execution_issues_from_index(by_ts, schedule, entry_delay_bars=entry_delay_bars)
+
+
 def score_schedule(
     rows: Iterable[Mapping[str, object] | Bar],
     schedule: Sequence[SignalEvent],
@@ -280,7 +360,11 @@ def score_schedule(
     direction_source: str = "candidate",
     entry_delay_bars: int = 0,
 ) -> tuple[ScoredEvent, ...]:
-    """Score a preformed schedule without altering event membership from outcomes."""
+    """Score a preformed schedule without altering event membership from outcomes.
+
+    Any frozen event missing a required entry/exit bar is a DATA/PIT_INCONCLUSIVE
+    screen, never an event that may be silently removed to improve evidence.
+    """
     if not isfinite(base_cost_bps) or base_cost_bps < 0:
         raise ValueError("base_cost_bps must be finite and non-negative")
     if not isfinite(stress_multiplier) or stress_multiplier < 1:
@@ -292,6 +376,10 @@ def score_schedule(
 
     bars = normalize_development_rows(rows, protected_oos_start=protected_oos_start)
     by_ts, _ = _index_by_instrument(bars)
+    issues = _execution_issues_from_index(by_ts, schedule, entry_delay_bars=entry_delay_bars)
+    if issues:
+        raise DataPitInconclusiveError(issues)
+
     cost = base_cost_bps / 10_000.0
     stress_cost = base_cost_bps * stress_multiplier / 10_000.0
     scored: list[ScoredEvent] = []
@@ -310,10 +398,9 @@ def score_schedule(
         if entry_ts >= signal.exit_timestamp:
             continue
         instrument_index = by_ts.get(signal.instrument, {})
-        entry = instrument_index.get(entry_ts)
-        exit_bar = instrument_index.get(signal.exit_timestamp)
-        if entry is None or exit_bar is None:
-            continue
+        # Required bars were validated above for the complete frozen schedule.
+        entry = instrument_index[entry_ts]
+        exit_bar = instrument_index[signal.exit_timestamp]
         raw_price_return = exit_bar.open / entry.open - 1.0
         gross = direction * raw_price_return
         scored.append(
@@ -327,6 +414,11 @@ def score_schedule(
             )
         )
     return tuple(scored)
+
+
+def independent_utc_signal_days(scored: Sequence[ScoredEvent]) -> int:
+    """Pooled BTC/ETH/SOL independence unit: unique UTC signal day."""
+    return len({event.signal.signal_timestamp.astimezone(UTC).date() for event in scored})
 
 
 def summarize(scored: Sequence[ScoredEvent]) -> dict[str, float | int | None]:
@@ -344,6 +436,7 @@ def summarize(scored: Sequence[ScoredEvent]) -> dict[str, float | int | None]:
     worst = min(net, default=0.0)
     return {
         "n": len(net),
+        "independent_utc_signal_days": independent_utc_signal_days(scored),
         "mean_net_return": mean(net) if net else None,
         "total_net_return": total,
         "profit_factor": profit_factor,
