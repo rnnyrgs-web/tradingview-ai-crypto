@@ -5,6 +5,12 @@ import json
 import math
 from typing import Any, Iterable
 
+from orchestration.strategy_behavior_schema import (
+    BEHAVIOR_SCHEMA_REGISTRY_VERSION,
+    BEHAVIOR_SCHEMAS,
+    resolve_behavior_schema_id,
+)
+
 SCIENTIFIC_DESIGN_FIELDS = (
     "target_markets",
     "target_timeframes",
@@ -33,9 +39,9 @@ SET_LIKE = "SET_LIKE"
 ORDERED = "ORDERED"
 SCIENTIFIC_LIST_SEMANTICS_VERSION = 1
 SCIENTIFIC_SCALAR_CANONICALIZATION_VERSION = 1
-BEHAVIOR_FIELD_SEMANTICS_VERSION = 1
+BEHAVIOR_FIELD_SEMANTICS_VERSION = 2
 SCIENTIFIC_IDENTITY_VERSION = 2
-STRATEGY_BEHAVIOR_IDENTITY_VERSION = 1
+STRATEGY_BEHAVIOR_IDENTITY_VERSION = 2
 
 # Every list reachable from the identity fields must be declared here.
 # Unknown list paths fail closed instead of inheriting caller-order semantics.
@@ -47,182 +53,13 @@ SCIENTIFIC_LIST_SEMANTICS: dict[tuple[str, ...], str] = {
     ("data_contract", "fixed_instruments"): SET_LIKE,
     ("data_contract", "fixed_follower_instruments"): SET_LIKE,
     ("data_contract", "symbols"): SET_LIKE,
-    # Cohort-001 delta-carry data contract: both are mathematical sets, not
-    # executable sequences. Declaring them now keeps the first real cohort from
-    # blocking after #507 integration while preserving fail-closed semantics.
     ("data_contract", "spot_hedges"): SET_LIKE,
     ("data_contract", "required_freeze_before_screen"): SET_LIKE,
     ("cost_model", "stress_multipliers"): SET_LIKE,
     ("validation_plan", "falsifier_compression_quantiles"): SET_LIKE,
     ("validation_plan", "falsifier_sigma_multiples"): SET_LIKE,
     ("validation_plan", "falsifier_underreaction_gap_values"): SET_LIKE,
-    # Regression fixture and explicit example of a scientifically ordered list.
     ("signal_rules", "ordered_sequence"): ORDERED,
-}
-
-# A rejected executable strategy must not receive a fresh behavior identity by
-# adding caller-authored metadata inside a behavior container. Every admitted
-# field below is explicitly treated as behavior-driving by this versioned
-# contract. Unknown keys fail closed before either scientific or behavior
-# hashing. Nested mappings are also rejected until their own path semantics are
-# explicitly versioned here; current supported contracts are intentionally flat
-# inside these four behavior containers.
-BEHAVIOR_DRIVING_FIELDS: dict[str, frozenset[str]] = {
-    "data_contract": frozenset(
-        {
-            "source",
-            "point_in_time",
-            "historical_universe",
-            "venue",
-            "instrument_type",
-            "bar_interval",
-            "completed_bars_only",
-            "fixed_instruments",
-            "asset_substitution_allowed",
-            "leader_instrument",
-            "fixed_follower_instruments",
-            "normalized_rows_sha256",
-            "bar",
-            "normalized_row_count",
-            "coverage_start_utc",
-            "coverage_end_utc",
-            "selection_train_start_utc",
-            "selection_train_end_utc",
-            "selection_validation_start_utc",
-            "selection_validation_end_utc",
-            "protected_oos_start_utc",
-            "protected_oos_end_utc",
-            "screen_may_read_protected_oos",
-            "spot_hedges",
-            "required_freeze_before_screen",
-            "symbols",
-        }
-    ),
-    "signal_rules": frozenset(
-        {
-            "shock_definition",
-            "entry_condition",
-            "threshold",
-            "ordered_sequence",
-            "compression_metric",
-            "compression_reference_window_bars",
-            "compression_quantile",
-            "compression_recency_bars",
-            "breakout_window_bars",
-            "atr_window_bars",
-            "long_rule",
-            "short_rule",
-            "return_definition",
-            "volatility_window_bars",
-            "volatility_estimator",
-            "absolute_return_floor",
-            "sigma_multiple",
-            "quote_volume_window_bars",
-            "quote_volume_ratio_min",
-            "range_window_bars",
-            "range_ratio_min",
-            "normalized_range",
-            "direction",
-            "trailing_window_bars",
-            "leader_impulse_absolute_return_floor",
-            "leader_impulse_sigma_multiple",
-            "follower_beta_type",
-            "follower_beta_window_bars",
-            "follower_beta_min",
-            "follower_beta_max",
-            "underreaction_gap_min",
-            "opposite_move_guard",
-            "lookback_hours",
-            "per_asset_return",
-            "direction_gate",
-            "strength_gate",
-            "dispersion_gate",
-            "decision_time",
-            "warmup_hours",
-            "beta_estimation_hours",
-            "beta_input",
-            "residual_horizon_hours",
-            "residual",
-            "zscore_window_hours",
-            "entry_gate",
-            "signed_volume_per_bar",
-            "aggregation_hours",
-            "direction_consistency",
-            "pressure_gate",
-            "close_location_gate",
-            "range_guard",
-            "move_horizon_hours",
-            "move_gate",
-            "participation_gate",
-            "shock_exclusion",
-            "measurement_window",
-            "signal_clock",
-            "minimum_history_days",
-            "realized_vol_window_hours",
-            "vol_reference_window_hours",
-            "vol_regime",
-            "participation_guard",
-            "range_lookback_hours",
-            "efficiency_ratio",
-            "regime_gate",
-            "range_position",
-            "volume_guard",
-            "atr_window_hours",
-            "funding_history",
-            "carry_gate",
-            "basis_guard",
-            "future_funding_rate_usage",
-        }
-    ),
-    "execution_rules": frozenset(
-        {
-            "entry_delay_bars",
-            "exit_rule",
-            "position_overlap",
-            "decision_timestamp",
-            "entry_price",
-            "stop_atr_multiple",
-            "target_atr_multiple",
-            "maximum_hold_bars",
-            "one_position_per_instrument",
-            "same_bar_stop_target_collision",
-            "stop_gap_policy",
-            "target_gap_policy",
-            "holding_period_bars",
-            "exit_price",
-            "stop",
-            "target",
-            "one_position_per_follower",
-            "cross_follower_positions_allowed",
-            "per_position_nav_fraction",
-            "max_concurrent_positions",
-            "max_gross_exposure_nav_fraction",
-            "entry",
-            "direction",
-            "portfolio",
-            "hold_hours",
-            "overlap",
-            "exit",
-            "gross_notional",
-            "take_profit",
-            "max_hold_hours",
-            "legs",
-            "hold",
-            "borrow_assumption",
-        }
-    ),
-    "cost_model": frozenset(
-        {
-            "fees_bps",
-            "spread_bps",
-            "slippage_bps",
-            "funding_bps_per_day",
-            "stress_multipliers",
-            "base_round_trip_bps",
-            "selection_uses_max_stress",
-            "funding_carry_bps",
-        }
-    ),
 }
 
 
@@ -252,18 +89,23 @@ def _canonical_json(value: Any) -> str:
     )
 
 
-def _validate_behavior_field_semantics(candidate: dict[str, Any]) -> None:
-    """Reject caller-defined behavior metadata before identity hashing.
+def _validate_behavior_field_semantics(candidate: dict[str, Any]) -> str:
+    """Resolve one exact reviewed behavior schema and reject all other shapes.
 
-    The admitted behavior schema is deliberately explicit. A new executable
-    field requires a reviewed update to this versioned registry instead of being
-    silently accepted as identity-changing caller metadata.
+    Recognition across schemas is used only to produce a useful error for truly
+    unknown metadata. Admission itself is exact-shape and mechanism-specific:
+    a field valid for another schema cannot be added to this strategy to create
+    a new rejected-memory identity.
     """
-    for section, allowed_fields in BEHAVIOR_DRIVING_FIELDS.items():
+    recognized: dict[str, set[str]] = {
+        section: set().union(*(schema[section] for schema in BEHAVIOR_SCHEMAS.values()))
+        for section in ("data_contract", "signal_rules", "execution_rules", "cost_model")
+    }
+    for section, allowed_anywhere in recognized.items():
         value = candidate.get(section)
         if not isinstance(value, dict):
             raise RuntimeError(f"{section} must be an object for behavior identity")
-        undeclared = sorted(set(value) - set(allowed_fields))
+        undeclared = sorted(set(value) - allowed_anywhere)
         if undeclared:
             raise RuntimeError(
                 f"undeclared behavior field(s) under semantics version "
@@ -276,6 +118,7 @@ def _validate_behavior_field_semantics(candidate: dict[str, Any]) -> None:
                     "nested behavior mappings require an explicit reviewed path schema: "
                     f"{section}.{field}"
                 )
+    return resolve_behavior_schema_id(candidate)
 
 
 def _canonicalize_scalar(value: Any, path: tuple[str, ...]) -> Any:
@@ -303,10 +146,7 @@ def _canonicalize_scalar(value: Any, path: tuple[str, ...]) -> Any:
 
 def _canonicalize(value: Any, path: tuple[str, ...]) -> Any:
     if isinstance(value, dict):
-        return {
-            key: _canonicalize(child, path + (key,))
-            for key, child in value.items()
-        }
+        return {key: _canonicalize(child, path + (key,)) for key, child in value.items()}
 
     if isinstance(value, list):
         semantics = _list_semantics(path)
@@ -350,6 +190,7 @@ def _projection_for_fields(
     fields: Iterable[str],
     *,
     identity_name: str,
+    bind_behavior_schema: bool = False,
 ) -> dict[str, Any]:
     if not isinstance(candidate, dict):
         raise RuntimeError(f"{identity_name} must be an object")
@@ -358,8 +199,16 @@ def _projection_for_fields(
     if missing:
         raise RuntimeError(f"{identity_name} missing fields: {missing}")
 
-    _validate_behavior_field_semantics(candidate)
+    behavior_schema_id = _validate_behavior_field_semantics(candidate)
     projection = {field: candidate[field] for field in fields}
+    if bind_behavior_schema:
+        projection = {
+            "_behavior_schema": {
+                "registry_version": BEHAVIOR_SCHEMA_REGISTRY_VERSION,
+                "schema_id": behavior_schema_id,
+            },
+            **projection,
+        }
     try:
         detached = json.loads(json.dumps(projection, ensure_ascii=False, allow_nan=False))
     except (TypeError, ValueError) as exc:
@@ -371,7 +220,9 @@ def scientific_design_projection(candidate: dict[str, Any]) -> dict[str, Any]:
     """Return the label-invariant full scientific-protocol projection.
 
     This identity includes the validation plan. It answers whether two frozen
-    experiments are the same complete scientific protocol.
+    experiments are the same complete scientific protocol. Behavior-container
+    validity is still resolved through the exact schema registry, but the schema
+    tag is not duplicated into this protocol digest.
     """
     return _projection_for_fields(
         candidate,
@@ -383,14 +234,15 @@ def scientific_design_projection(candidate: dict[str, Any]) -> dict[str, Any]:
 def strategy_behavior_projection(candidate: dict[str, Any]) -> dict[str, Any]:
     """Return the label- and validation-plan-invariant executable projection.
 
-    This identity is intentionally stricter for rejected-memory/no-rescue use:
-    changing only an evaluation plan cannot resurrect a failed strategy whose
-    markets, data, signal, execution and cost behavior are unchanged.
+    The resolved schema id and registry version are domain-bound into this
+    identity. A candidate cannot switch to another mechanism's recognized field
+    or caller-rename a schema without changing/failing the trusted resolver.
     """
     return _projection_for_fields(
         candidate,
         STRATEGY_BEHAVIOR_FIELDS,
         identity_name="strategy behavior",
+        bind_behavior_schema=True,
     )
 
 
