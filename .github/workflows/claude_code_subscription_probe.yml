@@ -1,0 +1,137 @@
+name: Claude Code Subscription Capability Probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  subscription-capability-probe:
+    # The OAuth secret must never be exposed to pull-request code. This workflow
+    # is a trusted-main capability proof only; ordinary PR CI validates its
+    # contract statically through Security & Reliability.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLAUDE_CODE_SUBPROCESS_ENV_SCRUB: "1"
+      TARGET_HEAD_SHA: ${{ github.sha }}
+    steps:
+      - id: preflight
+        name: Detect subscription credential without exposing it
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        shell: bash
+        run: |
+          if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - id: oauth_probe
+        name: Prove official subscription-backed automation
+        if: steps.preflight.outputs.configured == 'true'
+        continue-on-error: true
+        uses: anthropics/claude-code-action@cfc3eb22bfed5c26ef66e3223c982af27e4524de
+        with:
+          github_token: ${{ github.token }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: >-
+            Authentication capability probe only. Do not modify files, open pull requests,
+            run shell commands, use GitHub write operations, or use network/search tools.
+            Return structured output with subscription_probe_ok=true only after this Claude Code
+            invocation successfully reaches the model under the supplied subscription OAuth credential.
+          claude_args: >-
+            --max-turns 1
+            --disallowedTools "Edit,Write,Replace,NotebookEditCell,Bash,WebSearch,WebFetch"
+            --json-schema '{"type":"object","properties":{"subscription_probe_ok":{"type":"boolean"}},"required":["subscription_probe_ok"],"additionalProperties":false}'
+
+      - id: receipt
+        name: Emit secret-free capability receipt
+        if: always()
+        env:
+          CONFIGURED: ${{ steps.preflight.outputs.configured }}
+          PROBE_OUTCOME: ${{ steps.oauth_probe.outcome }}
+          PROBE_CONCLUSION: ${{ steps.oauth_probe.outputs.conclusion }}
+          PROBE_STRUCTURED_OUTPUT: ${{ steps.oauth_probe.outputs.structured_output }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib, json, os
+
+          configured = os.environ.get("CONFIGURED") == "true"
+          outcome = os.environ.get("PROBE_OUTCOME") or "skipped"
+          conclusion = os.environ.get("PROBE_CONCLUSION") or ""
+          structured_raw = os.environ.get("PROBE_STRUCTURED_OUTPUT") or ""
+          structured_ok = False
+          if structured_raw:
+              try:
+                  structured = json.loads(structured_raw)
+              except json.JSONDecodeError:
+                  structured = None
+              structured_ok = structured == {"subscription_probe_ok": True}
+
+          authenticated = configured and outcome == "success" and conclusion == "success" and structured_ok
+          if authenticated:
+              status = "SUBSCRIPTION_AUTOMATED"
+              reason = "OFFICIAL_OAUTH_ACTION_STRUCTURED_PROBE_SUCCEEDED"
+              proof_ref = (
+                  f"github-actions://{os.environ['GITHUB_REPOSITORY']}/runs/"
+                  f"{os.environ['GITHUB_RUN_ID']}/attempts/{os.environ['GITHUB_RUN_ATTEMPT']}"
+              )
+          elif not configured:
+              status = "MANUAL_ADAPTER_REQUIRED"
+              reason = "CLAUDE_CODE_OAUTH_TOKEN_NOT_CONFIGURED"
+              proof_ref = None
+          else:
+              status = "UNKNOWN"
+              reason = "SUBSCRIPTION_OAUTH_PROBE_NOT_AUTHENTICATED"
+              proof_ref = None
+
+          target_head = os.environ["TARGET_HEAD_SHA"]
+          if len(target_head) != 40 or any(c not in "0123456789abcdef" for c in target_head):
+              raise SystemExit("invalid target head SHA")
+
+          receipt = {
+              "version": 3,
+              "provider": "anthropic",
+              "engine": "claude-code",
+              "auth_mode": status,
+              "reason": reason,
+              "repository": os.environ["GITHUB_REPOSITORY"],
+              "run_id": os.environ["GITHUB_RUN_ID"],
+              "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"],
+              "event_name": os.environ["GITHUB_EVENT_NAME"],
+              "head_sha": target_head,
+              "execution_sha": os.environ["GITHUB_SHA"],
+              "workflow_ref": os.environ.get("GITHUB_WORKFLOW_REF"),
+              "probe_step_outcome": outcome,
+              "probe_conclusion": conclusion or None,
+              "structured_probe_verified": structured_ok,
+              "proof_ref": proof_ref,
+          }
+          raw = json.dumps(receipt, sort_keys=True, separators=(",", ":")).encode()
+          receipt["content_digest"] = hashlib.sha256(raw).hexdigest()
+          with open("/tmp/claude-subscription-capability.json", "w", encoding="utf-8") as f:
+              json.dump(receipt, f, indent=2, sort_keys=True)
+              f.write("\n")
+          print(json.dumps(receipt, separators=(",", ":")))
+          PY
+
+      - name: Upload capability receipt
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: claude-subscription-capability-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /tmp/claude-subscription-capability.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Fail closed unless configured OAuth produced verified structured success
+        if: steps.preflight.outputs.configured == 'true' && (steps.oauth_probe.outcome != 'success' || steps.oauth_probe.outputs.conclusion != 'success' || fromJSON(steps.oauth_probe.outputs.structured_output || '{}').subscription_probe_ok != true)
+        shell: bash
+        run: |
+          echo "Claude subscription OAuth was configured but the exact structured capability proof did not succeed."
+          exit 1
