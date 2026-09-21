@@ -1,7 +1,7 @@
 {
   "schema": "two_x_prospective_snapshot_contract.v1",
   "artifact_id": "2X-PROSPECTIVE-SNAPSHOT-001-v1",
-  "frozen_at": "2026-09-21T17:05:45Z",
+  "frozen_at": "2026-09-21T17:28:07Z",
   "parent_issue": 505,
   "cohort_issue": 514,
   "intelligence_issue": 519,
@@ -11,6 +11,7 @@
   "historical_selection_status": "UNVALIDATED_NO_RANKING_AUTHORITY",
   "target_multiple": 2.0,
   "max_horizon_days": 90,
+  "feature_value_schema": "two_x_feature_values.v1",
   "feature_families": ["stable_identity", "venue_membership", "liquidity_proxy", "strict_tradability", "spot_participation_flow", "leverage_state", "supply_float", "catalyst_state", "market_regime", "relationship_graph"],
   "mandatory_for_mechanism_review": ["stable_identity", "venue_membership", "liquidity_proxy", "strict_tradability", "market_regime"],
   "freshness_max_age_seconds": {
