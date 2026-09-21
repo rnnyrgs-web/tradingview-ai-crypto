@@ -3,7 +3,9 @@
 The existing primary-document binder proves content/value linkage but deliberately does
 not treat caller-authored publication timestamps as anti-backdating evidence. This
 module closes that specific boundary by requiring an exact Common Crawl WARC capture
-of the same primary-document bytes at or before the historical decision timestamp.
+of the same primary-document bytes at or before the historical decision timestamp,
+and by requiring the retained index/WARC bytes to come from GitHub-attested trusted
+remote acquisitions from canonical main.
 
 It grants historical-evidence authority only; never label, forecast, promotion, broker
 or trading authority.
@@ -16,7 +18,9 @@ import json
 from pathlib import Path
 from typing import Any
 
-from big_move_commoncrawl_warc_binding import validate_commoncrawl_historical_capture
+from big_move_commoncrawl_trusted_origin import (
+    validate_trusted_commoncrawl_historical_capture,
+)
 
 ELIGIBLE_SOURCE_IDS = {
     "PRIMARY_CONTRACT_OR_GENESIS_DOC",
@@ -77,7 +81,7 @@ def validate_primary_document_historical_availability(
     artifact_root: str | Path,
     repo_root: str | Path | None = None,
 ) -> dict[str, Any]:
-    """Require an exact pre-decision Common Crawl capture for a primary document."""
+    """Require an attested exact pre-decision Common Crawl capture for a primary document."""
 
     if not isinstance(record, dict) or record.get("source_id") not in ELIGIBLE_SOURCE_IDS:
         raise ValueError("record is not an eligible primary-document source")
@@ -103,7 +107,7 @@ def validate_primary_document_historical_availability(
         proof.get("historical_capture"),
         field="primary.historical_capture",
     )
-    result = validate_commoncrawl_historical_capture(
+    result = validate_trusted_commoncrawl_historical_capture(
         capture,
         upstream_locator=locator,
         decision_at=decision_at,
@@ -121,5 +125,8 @@ def validate_primary_document_historical_availability(
         "capture_at": result["capture_at"],
         "warc_record_id": result["warc_record_id"],
         "warc_payload_digest": result["warc_payload_digest"],
+        "provider_origin": result["provider_origin"],
+        "index_receipt_sha256": result["index_receipt_sha256"],
+        "warc_receipt_sha256": result["warc_receipt_sha256"],
         "authority": "HISTORICAL_AVAILABILITY_EVIDENCE_ONLY_NO_OUTCOME_OR_PREDICTION_AUTHORITY",
     }
