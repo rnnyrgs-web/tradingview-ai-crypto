@@ -24,14 +24,18 @@ import xml.etree.ElementTree as ET
 
 CONTRACT_PATH = "money_intelligence/2x_binance_historical_universe_contract_v1.json"
 CONTRACT_ARTIFACT_ID = "2X-BINANCE-HISTORICAL-UNIVERSE-001-v1"
-CONTRACT_GIT_BLOB_SHA = "b49c67cef3d16ba907a58fef2f8c7414ec0e905e"
+CONTRACT_GIT_BLOB_SHA = "582bff3b9f19ad2c21e134b68090d61158fda102"
 EXPECTED_PREFIX = "data/spot/monthly/klines/"
 EXPECTED_HOST = "s3-ap-northeast-1.amazonaws.com"
 EXPECTED_BUCKET_PATH = "/data.binance.vision"
+EXPECTED_BUCKET_NAME = "data.binance.vision"
 MAX_PAGE_BYTES = 16 * 1024 * 1024
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+# Do not impose a present-day ASCII symbol grammar on the historical archive. The
+# path segment itself is authoritative; only path/control separators and quote suffix
+# are constrained. This preserves unusual/delisted historical symbols if they exist.
 OBJECT_RE = re.compile(
-    r"^data/spot/monthly/klines/([A-Z0-9]{2,24}USDT)/1d/"
+    r"^data/spot/monthly/klines/([^/\r\n]{1,64}USDT)/1d/"
     r"\1-1d-(\d{4})-(\d{2})\.zip(?P<checksum>\.CHECKSUM)?$"
 )
 FORBIDDEN_KEYS = {
@@ -69,12 +73,13 @@ def load_contract(repo_root: str | Path | None = None) -> dict[str, Any]:
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise ValueError("historical-universe contract is malformed") from exc
     if not isinstance(contract, dict) or contract.get("artifact_id") != CONTRACT_ARTIFACT_ID:
-        raise ValueError("unexpected historical-universe contract identity")
+        raise ValueError("unexpected canonical historical-universe contract identity")
     if contract.get("source") != {
         "provider": "BINANCE_PUBLIC_DATA",
         "download_host": "data.binance.vision",
         "listing_host": EXPECTED_HOST,
         "listing_bucket_path": EXPECTED_BUCKET_PATH,
+        "listing_bucket_name": EXPECTED_BUCKET_NAME,
         "archive_family": "data/spot/monthly/klines/<SYMBOL>/1d/<SYMBOL>-1d-YYYY-MM.zip",
         "checksum_suffix": ".CHECKSUM",
         "quote_asset": "USDT",
@@ -177,28 +182,42 @@ def _contents_keys(root: ET.Element) -> list[str]:
     return keys
 
 
-def _parse_listing(raw: bytes, *, field: str) -> dict[str, Any]:
+def _parse_listing(
+    raw: bytes,
+    *,
+    field: str,
+    request_token: str | None,
+) -> dict[str, Any]:
     try:
         xml_root = ET.fromstring(raw)
     except ET.ParseError as exc:
         raise ValueError(f"{field} is not valid XML") from exc
     if _local_name(xml_root.tag) != "ListBucketResult":
         raise ValueError(f"{field} must be an S3 ListBucketResult")
+    if _child_text(xml_root, "Name") != EXPECTED_BUCKET_NAME:
+        raise ValueError(f"{field} bucket Name does not match frozen provider bucket")
     prefix = _child_text(xml_root, "Prefix")
     if prefix != EXPECTED_PREFIX:
         raise ValueError(f"{field} Prefix does not match frozen archive prefix")
+    response_token = _child_text(xml_root, "ContinuationToken")
+    response_token = response_token or None
+    if response_token != request_token:
+        raise ValueError(f"{field} response ContinuationToken does not match request locator")
     truncated_text = (_child_text(xml_root, "IsTruncated") or "").strip().lower()
     if truncated_text not in {"true", "false"}:
         raise ValueError(f"{field} IsTruncated must be true or false")
     truncated = truncated_text == "true"
     next_token = _child_text(xml_root, "NextContinuationToken")
+    next_token = next_token or None
     if truncated and not next_token:
         raise ValueError(f"{field} truncated page missing NextContinuationToken")
     if not truncated and next_token:
         raise ValueError(f"{field} terminal page must not advertise a continuation token")
+    if next_token is not None and next_token == request_token:
+        raise ValueError(f"{field} provider continuation token did not advance")
     return {
         "is_truncated": truncated,
-        "next_token": next_token or None,
+        "next_token": next_token,
         "keys": _contents_keys(xml_root),
     }
 
@@ -228,7 +247,8 @@ def build_historical_universe(
     root = Path(artifact_root)
 
     expected_token: str | None = None
-    page_identities: set[tuple[str, str]] = set()
+    request_locators: set[str] = set()
+    page_shas: set[str] = set()
     object_keys: set[str] = set()
     archive_parts: dict[tuple[str, str], set[str]] = defaultdict(set)
     page_receipts: list[dict[str, Any]] = []
@@ -241,15 +261,18 @@ def build_historical_universe(
         extra = set(ref) - allowed
         if extra:
             raise ValueError(f"{field} contains unsupported fields: {sorted(extra)}")
-        request_token = _request_token(ref.get("request_locator"), field=field)
+        request_locator = ref.get("request_locator")
+        request_token = _request_token(request_locator, field=field)
         if request_token != expected_token:
             raise ValueError(f"{field} continuation-token does not match prior provider page")
+        if request_locator in request_locators:
+            raise ValueError("duplicate Binance listing request locator")
+        request_locators.add(request_locator)
         raw = _verified_page_bytes(root, ref, field=field)
-        identity = (ref["request_locator"], ref["sha256"])
-        if identity in page_identities:
-            raise ValueError("duplicate retained Binance listing page identity")
-        page_identities.add(identity)
-        parsed = _parse_listing(raw, field=field)
+        if ref["sha256"] in page_shas:
+            raise ValueError("duplicate retained Binance listing page bytes")
+        page_shas.add(ref["sha256"])
+        parsed = _parse_listing(raw, field=field, request_token=request_token)
 
         for key in parsed["keys"]:
             if key in object_keys:
@@ -265,7 +288,7 @@ def build_historical_universe(
 
         page_receipts.append({
             "page_index": index,
-            "request_locator": ref["request_locator"],
+            "request_locator": request_locator,
             "sha256": ref["sha256"],
             "object_key_count": len(parsed["keys"]),
             "is_truncated": parsed["is_truncated"],
