@@ -36,7 +36,7 @@ def test_cohort_001_admission_receipt_binds_protected_safe_dataset_qualification
     receipt = build_canonical_admission_receipt()
     dataset = receipt["selection_dataset_qualification"]
 
-    assert receipt["schema_version"] == 2
+    assert receipt["schema_version"] == 3
     assert dataset["status"] == "QUALIFIED_DEVELOPMENT_ONLY"
     assert dataset["source_dataset_sha256"] == (
         "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f"
@@ -127,3 +127,49 @@ def test_cohort_001_common_selection_boundary_stays_development_only() -> None:
         assert row.get("genuine_forward_opened", False) is False
         assert row.get("broker_connected", False) is False
         assert row.get("trade_authority", False) is False
+
+
+def test_cohort_001_noncarry_perpetual_cost_contract_is_adverse_and_deterministic() -> None:
+    seed = _seed()
+    common_cost = seed["common_ohlcv_contract"]["cost_model"]
+    assert common_cost["adverse_funding_allowance_bps_per_trade"] == 4.0
+    assert "funding_bps_per_day" not in common_cost
+
+    receipt = build_canonical_admission_receipt()
+    cost = receipt["stage1_cost_contract"]
+    assert cost["semantics"] == "adverse_per_completed_trade_allowance"
+    assert cost["fees_bps"] == 12.0
+    assert cost["spread_bps"] == 2.0
+    assert cost["slippage_bps"] == 6.0
+    assert cost["adverse_funding_allowance_bps_per_trade"] == 4.0
+    assert cost["stress_totals_bps"] == {"1x": 24.0, "2x": 48.0, "3x": 72.0}
+    assert cost["authenticated_realized_funding_evidence"] is False
+    assert cost["deeper_validation_requires_pit_funding"] is True
+
+    delta = next(candidate for candidate in seed["candidates"] if candidate["fingerprint_id"] == "DISC-DELTA-CARRY-001-v1")
+    assert delta["cost_model"]["funding_bps_per_day"] == 0.0
+    assert "adverse_funding_allowance_bps_per_trade" not in delta["cost_model"]
+
+
+def test_cohort_001_zero_or_omitted_adverse_funding_fails_closed() -> None:
+    seed = _seed()
+    candidate = next(candidate for candidate in seed["candidates"] if candidate["fingerprint_id"] == "DISC-SIGNED-VOLUME-DRIFT-001-v1")
+    resolved = resolve_candidate_predeclaration(seed, candidate)
+
+    omitted = json.loads(json.dumps(resolved))
+    omitted["cost_model"].pop("adverse_funding_allowance_bps_per_trade")
+    try:
+        freeze_predeclaration(omitted)
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError("omitted adverse funding allowance must fail closed")
+
+    zero = json.loads(json.dumps(resolved))
+    zero["cost_model"]["adverse_funding_allowance_bps_per_trade"] = 0.0
+    try:
+        freeze_predeclaration(zero)
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError("zero adverse funding allowance must fail closed")

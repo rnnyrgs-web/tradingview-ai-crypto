@@ -72,6 +72,46 @@ def resolve_candidate_predeclaration(
     }
 
 
+def stage1_total_cost_bps(cost_model: dict[str, Any], stress_multiplier: float) -> float:
+    """Return deterministic per-trade Stage-1 drag for non-carry Cohort-001."""
+    if not isinstance(cost_model, dict):
+        raise RuntimeError("Stage-1 cost_model must be an object")
+    required = (
+        "fees_bps",
+        "spread_bps",
+        "slippage_bps",
+        "adverse_funding_allowance_bps_per_trade",
+        "stress_multipliers",
+    )
+    missing = [field for field in required if field not in cost_model]
+    if missing:
+        raise RuntimeError(f"Stage-1 cost_model missing fields: {missing}")
+    if "funding_bps_per_day" in cost_model:
+        raise RuntimeError("non-carry Stage-1 cost must not use daily funding semantics")
+    multiplier = float(stress_multiplier)
+    allowed = [float(value) for value in cost_model["stress_multipliers"]]
+    if multiplier not in allowed:
+        raise RuntimeError("Stage-1 stress multiplier is not frozen in the cost contract")
+    components = (
+        "fees_bps",
+        "spread_bps",
+        "slippage_bps",
+        "adverse_funding_allowance_bps_per_trade",
+    )
+    base = 0.0
+    for field in components:
+        value = cost_model[field]
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise RuntimeError(f"Stage-1 {field} must be numeric")
+        value = float(value)
+        if value < 0:
+            raise RuntimeError(f"Stage-1 {field} must be non-negative")
+        if field == "adverse_funding_allowance_bps_per_trade" and value <= 0:
+            raise RuntimeError("Stage-1 adverse funding allowance must be strictly positive")
+        base += value
+    return base * multiplier
+
+
 def _qualify_common_selection_dataset(seed: dict[str, Any]) -> dict[str, Any]:
     """Bind #528's protected-safe source qualification before screen authority.
 
@@ -225,7 +265,7 @@ def build_canonical_admission_receipt() -> dict[str, Any]:
         )
 
     payload: dict[str, Any] = {
-        "schema_version": 2,
+        "schema_version": 3,
         "artifact_type": "strategy_factory_cohort_001_canonical_admission_receipt",
         "cohort_id": seed.get("cohort_id"),
         "multiple_testing_family_id": seed.get("multiple_testing", {}).get("family_id"),
@@ -234,6 +274,22 @@ def build_canonical_admission_receipt() -> dict[str, Any]:
         ),
         "canonical_identity_source": "orchestration.strategy_predeclaration.freeze_predeclaration",
         "selection_dataset_qualification": selection_dataset,
+        "stage1_cost_contract": {
+            "semantics": "adverse_per_completed_trade_allowance",
+            "applies_to": "non_carry_cohort_001_ohlcv_candidates",
+            "fees_bps": seed["common_ohlcv_contract"]["cost_model"]["fees_bps"],
+            "spread_bps": seed["common_ohlcv_contract"]["cost_model"]["spread_bps"],
+            "slippage_bps": seed["common_ohlcv_contract"]["cost_model"]["slippage_bps"],
+            "adverse_funding_allowance_bps_per_trade": seed["common_ohlcv_contract"]["cost_model"]["adverse_funding_allowance_bps_per_trade"],
+            "stress_totals_bps": {
+                f"{float(multiplier):g}x": stage1_total_cost_bps(
+                    seed["common_ohlcv_contract"]["cost_model"], multiplier
+                )
+                for multiplier in seed["common_ohlcv_contract"]["cost_model"]["stress_multipliers"]
+            },
+            "authenticated_realized_funding_evidence": False,
+            "deeper_validation_requires_pit_funding": True,
+        },
         "outcomes_read": False,
         "protected_oos_opened": False,
         "genuine_forward_opened": False,

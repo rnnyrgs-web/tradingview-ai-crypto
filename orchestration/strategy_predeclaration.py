@@ -62,9 +62,13 @@ REQUIRED_COST_FIELDS = {
     "fees_bps",
     "spread_bps",
     "slippage_bps",
-    "funding_bps_per_day",
     "stress_multipliers",
 }
+
+ALTERNATIVE_FUNDING_COST_FIELDS = (
+    "funding_bps_per_day",
+    "adverse_funding_allowance_bps_per_trade",
+)
 
 IDENTITY_FIELDS = {
     "contract_sha256",
@@ -316,8 +320,20 @@ def validate_predeclaration(
     missing_costs = sorted(REQUIRED_COST_FIELDS - set(costs))
     if missing_costs:
         raise RuntimeError(f"cost_model missing fields: {missing_costs}")
-    for field in ("fees_bps", "spread_bps", "slippage_bps", "funding_bps_per_day"):
+    for field in ("fees_bps", "spread_bps", "slippage_bps"):
         _require_nonnegative_number(costs[field], f"cost_model.{field}")
+    funding_cost_fields = [field for field in ALTERNATIVE_FUNDING_COST_FIELDS if field in costs]
+    if len(funding_cost_fields) != 1:
+        raise RuntimeError(
+            "cost_model must contain exactly one reviewed funding-cost field: "
+            + ", ".join(ALTERNATIVE_FUNDING_COST_FIELDS)
+        )
+    funding_field = funding_cost_fields[0]
+    funding_value = _require_nonnegative_number(costs[funding_field], f"cost_model.{funding_field}")
+    if funding_field == "adverse_funding_allowance_bps_per_trade" and funding_value <= 0.0:
+        raise RuntimeError(
+            "cost_model.adverse_funding_allowance_bps_per_trade must be strictly positive"
+        )
     multipliers = costs["stress_multipliers"]
     if not isinstance(multipliers, list) or not multipliers:
         raise RuntimeError("cost_model.stress_multipliers must be a non-empty list")

@@ -44,7 +44,7 @@
       "fees_bps": 12.0,
       "spread_bps": 2.0,
       "slippage_bps": 6.0,
-      "funding_bps_per_day": 0.0,
+      "adverse_funding_allowance_bps_per_trade": 4.0,
       "stress_multipliers": [1.0, 2.0, 3.0]
     },
     "search_plan": {
