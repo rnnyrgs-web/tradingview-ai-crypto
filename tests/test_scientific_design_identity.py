@@ -136,9 +136,9 @@ def test_undeclared_behavior_list_path_fails_closed():
     candidate = _candidate()
     candidate["data_contract"]["mystery_assets"] = ["BTCUSDT", "ETHUSDT"]
 
-    with pytest.raises(RuntimeError, match="scientific list semantics are undeclared.*mystery_assets"):
+    with pytest.raises(RuntimeError, match="undeclared behavior field.*mystery_assets"):
         scientific_design_sha256(candidate)
-    with pytest.raises(RuntimeError, match="scientific list semantics are undeclared.*mystery_assets"):
+    with pytest.raises(RuntimeError, match="undeclared behavior field.*mystery_assets"):
         strategy_behavior_sha256(candidate)
 
 
