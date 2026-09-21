@@ -1,13 +1,13 @@
 """Mechanical primary-document claim binding for 2x Cohort 001.
 
 The generic source-authenticity layer verifies retained bytes, locator and PIT
-publication/effective timestamps.  It must not, however, trust a caller-authored
+publication/effective timestamps. It must not, however, trust a caller-authored
 `claim_value` field as proof that the retained document actually contains the claim.
 This module binds the normalized evidence value to literal text derived from the exact
 retained document bytes under a frozen, Git-blob-pinned normalization contract.
 
-This deliberately performs no semantic inference. Sector classification remains a
-separate frozen transform and stays blocked until implemented. Unsupported media or
+The same normalized visible text can be consumed by separately frozen deterministic
+transforms (for example the PIT functional classifier). Unsupported media or
 non-literal claims fail closed rather than being hand-waved into coverage.
 """
 
@@ -166,14 +166,13 @@ def _claim_string(value: Any) -> str:
     return claim
 
 
-def validate_primary_document_literal_claim(
+def _load_primary_document_context(
     record: dict[str, Any],
     *,
     decision_at: str,
     artifact_root: str | Path,
-    repo_root: str | Path | None = None,
+    repo_root: str | Path | None,
 ) -> dict[str, Any]:
-    """Prove the evidence value occurs literally in the exact retained document text."""
     load_primary_claim_contract(repo_root)
     if not isinstance(record, dict) or record.get("source_id") not in ELIGIBLE_SOURCE_IDS:
         raise ValueError("record is not an eligible primary-document source")
@@ -205,12 +204,53 @@ def validate_primary_document_literal_claim(
         field="primary.document",
     )
     normalized_document = _normalize_text(_visible_text(document, proof.get("media_type")))
+    if not normalized_document:
+        raise ValueError("primary document contains no visible normalized text")
+    return {
+        "normalized_text": normalized_document,
+        "proof": proof,
+        "document_sha256": proof.get("document_sha256"),
+        "published_at": proof.get("published_at"),
+        "effective_at": proof.get("effective_at"),
+    }
+
+
+def normalized_primary_document_text(
+    record: dict[str, Any],
+    *,
+    decision_at: str,
+    artifact_root: str | Path,
+    repo_root: str | Path | None = None,
+) -> str:
+    """Return exact-contract normalized visible PIT document text for frozen transforms."""
+    return _load_primary_document_context(
+        record,
+        decision_at=decision_at,
+        artifact_root=artifact_root,
+        repo_root=repo_root,
+    )["normalized_text"]
+
+
+def validate_primary_document_literal_claim(
+    record: dict[str, Any],
+    *,
+    decision_at: str,
+    artifact_root: str | Path,
+    repo_root: str | Path | None = None,
+) -> dict[str, Any]:
+    """Prove the evidence value occurs literally in the exact retained document text."""
+    context = _load_primary_document_context(
+        record,
+        decision_at=decision_at,
+        artifact_root=artifact_root,
+        repo_root=repo_root,
+    )
     claim = _claim_string(record.get("value"))
     # Token boundaries stop short identifiers such as L1 or SOL from matching inside
     # unrelated longer words. Multiple literal occurrences are acceptable because no
     # semantic inference is made from count or location.
     pattern = re.compile(r"(?<!\w)" + re.escape(claim) + r"(?!\w)")
-    occurrences = len(pattern.findall(normalized_document))
+    occurrences = len(pattern.findall(context["normalized_text"]))
     if occurrences < 1:
         raise ValueError("primary-document claim is not present in retained document bytes")
 
@@ -221,9 +261,9 @@ def validate_primary_document_literal_claim(
         "source_id": record.get("source_id"),
         "claim": claim,
         "literal_occurrences": occurrences,
-        "document_sha256": proof.get("document_sha256"),
-        "published_at": proof.get("published_at"),
-        "effective_at": proof.get("effective_at"),
+        "document_sha256": context["document_sha256"],
+        "published_at": context["published_at"],
+        "effective_at": context["effective_at"],
         "authority": "EVIDENCE_ONLY_NO_SEMANTIC_OR_OUTCOME_AUTHORITY",
     }
 
