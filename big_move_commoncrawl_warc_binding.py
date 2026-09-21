@@ -31,6 +31,8 @@ MAX_RETAINED_BYTES = 32 * 1024 * 1024
 COLLECTION_RE = re.compile(r"^CC-MAIN-\d{4}-\d{2}$")
 TIMESTAMP_RE = re.compile(r"^\d{14}$")
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+SHA1_BASE32_RE = re.compile(r"^[A-Z2-7]{32}$")
+WARC_SHA1_BASE32_RE = re.compile(r"^sha1:([A-Z2-7]{32})$")
 
 
 def _git_blob_sha(raw: bytes) -> str:
@@ -319,9 +321,12 @@ def validate_commoncrawl_historical_capture(
 
     payload_digest = warc_headers.get("warc-payload-digest")
     row_digest = row.get("digest")
-    if not isinstance(payload_digest, str) or not payload_digest.startswith("sha1:"):
+    payload_match = WARC_SHA1_BASE32_RE.fullmatch(payload_digest) if isinstance(payload_digest, str) else None
+    if payload_match is None:
         raise ValueError("WARC-Payload-Digest missing or unsupported")
-    if row_digest != payload_digest:
+    if not isinstance(row_digest, str) or not SHA1_BASE32_RE.fullmatch(row_digest):
+        raise ValueError("Common Crawl index digest missing or unsupported")
+    if row_digest != payload_match.group(1):
         raise ValueError("Common Crawl index digest does not match WARC-Payload-Digest")
 
     if not isinstance(document_sha256, str) or not SHA256_RE.fullmatch(document_sha256):
