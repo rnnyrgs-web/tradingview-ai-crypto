@@ -153,8 +153,6 @@ def test_backdated_forecast_after_move_cannot_count_as_early_prediction():
         evidence_cutoff=attacker_formed - timedelta(minutes=1),
         reference_price_observed_at=attacker_formed - timedelta(minutes=2),
     )
-    # The append-only store receives the object only now. Its server timestamp is
-    # authoritative even though the caller supplied a plausible backdated formed_at.
     receipt = _receipt(forecast, created_at=RECEIPT_TIME)
     move_happened_before_receipt = FORMED - timedelta(hours=1)
 
@@ -273,11 +271,13 @@ def test_resolution_window_cannot_include_pre_receipt_or_posthorizon_prices():
         )
 
 
-def test_sql_store_withholds_server_created_at_from_insert_privilege():
+def test_sql_store_withholds_direct_insert_and_requires_bound_reference_receipt():
     root = Path(__file__).parents[1]
     sql = (root / "supabase/migrations/20260921051500_big_move_forward_formations.sql").read_text()
     assert "default clock_timestamp()" in sql
-    assert "grant insert (forecast_fingerprint, formation_payload)" in sql
-    assert "grant insert (forecast_fingerprint, formation_payload, created_at)" not in sql
+    assert "grant insert (forecast_fingerprint, formation_payload)" not in sql
     assert "revoke all on table public.big_move_forward_formations" in sql
+    assert "append_big_move_reference_observation_v1" in sql
     assert "append_big_move_forward_formation_v1" in sql
+    assert "p_reference_observation_sequence bigint" in sql
+    assert "references public.big_move_reference_observations(sequence)" in sql
