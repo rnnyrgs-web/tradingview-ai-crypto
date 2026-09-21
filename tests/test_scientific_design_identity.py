@@ -4,6 +4,10 @@ import copy
 
 import pytest
 
+from orchestration.rejected_fingerprints import (
+    load_rejected_fingerprints,
+    semantic_rejection_record,
+)
 from orchestration.scientific_design_identity import scientific_design_sha256
 from orchestration.strategy_predeclaration import validate_predeclaration
 
@@ -98,3 +102,31 @@ def test_genuinely_ordered_rule_sequence_remains_order_sensitive():
     reordered_rules["signal_rules"]["ordered_sequence"] = ["second", "first"]
 
     assert scientific_design_sha256(original) != scientific_design_sha256(reordered_rules)
+
+
+def test_actual_rejected_btc_leadlag_follower_permutation_stays_rejected():
+    """The real structured BTC lead-lag reject cannot be rescued by follower ordering."""
+    entries = load_rejected_fingerprints()
+    rejected = next(
+        entry for entry in entries if entry["fingerprint_id"] == "DISC-BTC-LEADLAG-001-v1"
+    )
+    original_projection = copy.deepcopy(rejected["projection"])
+    original_digest = scientific_design_sha256(original_projection)
+    assert original_digest == rejected["scientific_design_sha256"]
+
+    permuted_projection = copy.deepcopy(original_projection)
+    permuted_projection["data_contract"]["fixed_follower_instruments"] = [
+        "SOL-USDT-SWAP",
+        "ETH-USDT-SWAP",
+    ]
+    permuted_digest = scientific_design_sha256(permuted_projection)
+    assert permuted_digest == original_digest
+    matched = semantic_rejection_record(permuted_digest, entries)
+    assert matched is not None
+    assert matched["fingerprint_id"] == "DISC-BTC-LEADLAG-001-v1"
+
+    membership_change = copy.deepcopy(original_projection)
+    membership_change["data_contract"]["fixed_follower_instruments"] = ["ETH-USDT-SWAP"]
+    changed_digest = scientific_design_sha256(membership_change)
+    assert changed_digest != original_digest
+    assert semantic_rejection_record(changed_digest, entries) is None
