@@ -20,7 +20,8 @@ from pathlib import Path
 import re
 from typing import Any
 from urllib.parse import parse_qs, urlsplit
-import xml.etree.ElementTree as ET
+
+from defusedxml import ElementTree as ET
 
 CONTRACT_PATH = "money_intelligence/2x_binance_historical_universe_contract_v1.json"
 CONTRACT_ARTIFACT_ID = "2X-BINANCE-HISTORICAL-UNIVERSE-001-v1"
