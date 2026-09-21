@@ -17,6 +17,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: agent/ext-abnormal-day-momentum-stage1-adapter-20260921
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Bind second development parse to authenticated bytes and receipt
         shell: bash
         run: |
@@ -46,6 +49,8 @@ jobs:
           text = text.replace(old, new, 1)
           p.write_text(text, encoding='utf-8')
           PY
+      - name: Install focused test dependency
+        run: python -m pip install pytest
       - name: Run focused synthetic tests
         run: python -m pytest -q tests/test_ext_abnormal_day_momentum_stage1_adapter.py tests/test_ext_abnormal_day_momentum_predeclaration.py
       - name: Commit only the scientific adapter hardening
