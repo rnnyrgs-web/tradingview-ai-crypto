@@ -7,10 +7,13 @@ contract must not, however, become authority to open historical 2x labels.
 This wrapper loads and Git-blob-pins the exact Cohort 001 contract itself. It
 recomputes accepted return/volatility/regime values from retained checksum-bound
 Binance spot 1d archives, independently binds each direct Binance decision price to
-the exact retained archive close, and mechanically binds any primary-document claim
-used by an accepted snapshot to literal text in the exact retained document bytes.
-The remaining sector-classifier transform stays an explicit hard blocker, so this
-module still cannot open outcome labels.
+the exact retained archive close, mechanically binds any primary-document claim to
+literal retained text, and recomputes the frozen coarse functional sector from the
+whole PIT primary document. Per-snapshot evidence failures remain fail closed.
+
+The wrapper itself never opens outcomes: even after all source/value transforms are
+implemented, actual label opening remains a separate handoff after real frozen
+coverage passes and exact-head review clears the integration.
 
 No outcome data are read here. No forecast/trading authority is granted.
 """
@@ -33,23 +36,22 @@ from big_move_primary_document_binding import (
     load_retained_record,
     validate_primary_document_literal_claim,
 )
+from big_move_primary_functional_classifier import validate_sector_output_binding
 
 CANONICAL_CONTRACT_PATH = "money_intelligence/2x_cohort_001_preflight_contract.json"
 CANONICAL_CONTRACT_ARTIFACT_ID = "2X-COHORT-001-PREFLIGHT-v1"
 CANONICAL_CONTRACT_GIT_BLOB_SHA = "07eb6d26d760444b711cb277be424063ab39802a"
 AUTHORITATIVE_SCHEMA = "two_x_cohort_authoritative_gate.v1"
 
-# Market-derived return/volatility/regime are recomputed from retained
-# checksum-bound Binance archives in `big_move_derived_output_binding`. Sector remains
-# blocked until the mechanical primary-document functional classifier is itself
-# frozen/value-bound; literal source claims alone do not justify a semantic category.
-DERIVED_OUTPUT_BINDING_BLOCKERS = ("sector",)
-DERIVED_OUTPUT_BOUND_FIELDS = COMPLETED_DERIVED_FIELDS
+# All previously explicit derived outputs now have deterministic pre-outcome binders:
+# return/volatility/regime from retained Binance archives, and sector from the frozen
+# primary-document functional classifier. Bad/missing evidence becomes a per-snapshot
+# binding failure; no generic semantic fallback exists.
+DERIVED_OUTPUT_BINDING_BLOCKERS: tuple[str, ...] = ()
+DERIVED_OUTPUT_BOUND_FIELDS = tuple(COMPLETED_DERIVED_FIELDS) + ("sector",)
 
-# Direct Binance decision price and all primary-document literal claims can now be
+# Direct Binance decision price and all primary-document literal claims can be
 # reproduced from retained source bytes. Per-snapshot failures remain fail-closed.
-# There is no longer a known systemic source/value parser gap; semantic sector mapping
-# is tracked separately above.
 SOURCE_VALUE_BOUND_FIELDS = ("price", "primary_document_literal_claims")
 SOURCE_VALUE_BINDING_BLOCKERS: tuple[str, ...] = ()
 
@@ -193,6 +195,15 @@ def evaluate_authoritative_coverage(
             decision_at = snapshot.get("decision_at") if isinstance(snapshot, dict) else None
             try:
                 validate_snapshot_derived_output_bindings(snapshot, artifact_root)
+                features = snapshot.get("features") if isinstance(snapshot, dict) else None
+                if not isinstance(features, dict):
+                    raise ValueError("snapshot features missing")
+                validate_sector_output_binding(
+                    features.get("sector"),
+                    decision_at=decision_at,
+                    artifact_root=artifact_root,
+                    repo_root=repo_root,
+                )
             except (TypeError, ValueError, OSError) as exc:
                 derived_binding_failures.append({
                     "index": index,
