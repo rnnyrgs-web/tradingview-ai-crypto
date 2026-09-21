@@ -705,8 +705,12 @@ def _strict_state(
     )
     if end != observed or start > end or end > cutoff:
         raise ValueError("strict_tradability microstructure window invalid")
-    if (end - start).total_seconds() > float(window["lookback_hours"]) * 3600:
+    frozen_lookback_seconds = float(window["lookback_hours"]) * 3600
+    actual_window_seconds = (end - start).total_seconds()
+    if actual_window_seconds > frozen_lookback_seconds:
         raise ValueError("strict_tradability window exceeds frozen lookback")
+    if actual_window_seconds < frozen_lookback_seconds:
+        raise ValueError("strict_tradability window shorter than frozen lookback")
     if (
         cutoff - end
     ).total_seconds() > float(window["maximum_snapshot_age_minutes"]) * 60:
