@@ -30,7 +30,8 @@ def _sha1_base32(raw: bytes) -> str:
 def _record(root: Path, *, capture_timestamp="20200102030405", document=b"Bitcoin primary document"):
     locator = "https://example.org/original-document"
     http_block = b"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n" + document
-    payload_digest = "sha1:" + _sha1_base32(document)
+    payload_sha1_base32 = _sha1_base32(document)
+    payload_digest = "sha1:" + payload_sha1_base32
     block_digest = "sha1:" + _sha1_base32(http_block)
     warc_date = datetime.strptime(capture_timestamp, "%Y%m%d%H%M%S").replace(tzinfo=timezone.utc)
     warc_date_text = warc_date.isoformat().replace("+00:00", "Z")
@@ -52,7 +53,9 @@ def _record(root: Path, *, capture_timestamp="20200102030405", document=b"Bitcoi
         "url": locator,
         "timestamp": capture_timestamp,
         "status": "200",
-        "digest": payload_digest,
+        # Common Crawl CDX JSON carries bare Base32 SHA-1 while the WARC
+        # payload header carries the same digest as sha1:<Base32>.
+        "digest": payload_sha1_base32,
         "filename": filename,
         "offset": "42",
         "length": str(len(compressed)),
