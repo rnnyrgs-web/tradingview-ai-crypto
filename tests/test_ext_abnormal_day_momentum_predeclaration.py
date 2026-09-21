@@ -64,7 +64,7 @@ def test_replication_artifact_digest_is_deterministic() -> None:
     expected = unsigned.pop("artifact_sha256")
     assert sha256_hex(unsigned) == expected
     assert artifact["replication_id"] == "EXT-ABNORMAL-DAY-MOMENTUM-001-v1"
-    assert artifact["status"] == "PREDECLARED_WAIT_CANONICAL_507_ADMISSION"
+    assert artifact["status"] == "PREDECLARED_RUNNER_REPAIRED_WAIT_INDEPENDENT_REVIEW"
 
 
 def test_replication_is_one_frozen_hypothesis_not_a_parameter_sweep() -> None:
@@ -97,6 +97,7 @@ def test_data_boundary_is_point_in_time_and_protected_oos_is_closed() -> None:
     assert data["selection_validation_end_utc"] == "2026-08-31T23:00:00Z"
     assert data["protected_oos_start_utc"] == "2026-09-01T00:00:00Z"
     assert data["screen_may_read_protected_oos"] is False
+    assert "DATA/PIT_INCONCLUSIVE" in data["scheduled_execution_missingness_policy"]
     assert authority["screen_started"] is False
     assert authority["protected_oos_opened"] is False
     assert authority["genuine_forward_opened"] is False
@@ -114,6 +115,7 @@ def test_costs_and_stage_one_gates_match_frozen_factory_quality_bar() -> None:
     assert costs["three_x_total_bps"] == 72.0
     assert gates["minimum_independent_trades_train"] == 40
     assert gates["minimum_independent_trades_validation"] == 20
+    assert gates["independent_sample_unit"] == "unique UTC signal day across pooled instruments"
     assert gates["require_positive_after_cost_train"] is True
     assert gates["require_positive_after_cost_validation"] is True
     assert gates["require_validation_halves_positive"] is True
