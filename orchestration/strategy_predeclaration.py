@@ -74,6 +74,21 @@ IDENTITY_FIELDS = {
 
 _BEHAVIOR_SCALAR_LITERAL_WORDS = {"true", "false", "null"}
 
+# These nested behavior flags are not ordinary tunable strategy choices.  When
+# a reviewed schema contains one of them it is a scientific-integrity lock: an
+# opposite value would allow non-PIT data, protected evidence, incomplete bars,
+# post-hoc asset substitution, or weaker-than-frozen cost selection while still
+# presenting the object as an admissible predeclaration.  Exact behavior schemas
+# separately require the fields that belong to each mechanism; this map pins the
+# only safe value whenever a field is present.
+_SCIENTIFIC_SAFETY_FLAGS: tuple[tuple[str, str, bool], ...] = (
+    ("data_contract", "point_in_time", True),
+    ("data_contract", "screen_may_read_protected_oos", False),
+    ("data_contract", "completed_bars_only", True),
+    ("data_contract", "asset_substitution_allowed", False),
+    ("cost_model", "selection_uses_max_stress", True),
+)
+
 
 def _require_text(value: Any, field: str) -> str:
     if not isinstance(value, str) or not value.strip():
@@ -161,6 +176,23 @@ def _validate_behavior_scalar_representation(value: Any, path: str) -> None:
             raise RuntimeError(f"{path} numeric scalar must be finite")
         return
     raise RuntimeError(f"{path} contains a non-JSON-safe behavior scalar")
+
+
+def _validate_scientific_safety_flags(candidate: dict[str, Any]) -> None:
+    """Pin nested PIT/OOS/cost-integrity flags to their reviewed safe values.
+
+    Presence is schema-specific and is enforced later by the exact behavior
+    shape registry.  This guard only prevents a field that *is* present from
+    being flipped into an unsafe but type-correct boolean before identity and
+    rejected-memory admission are computed.
+    """
+    for section, field, expected in _SCIENTIFIC_SAFETY_FLAGS:
+        values = candidate.get(section)
+        if not isinstance(values, dict) or field not in values:
+            continue
+        if values[field] is not expected:
+            literal = "true" if expected else "false"
+            raise RuntimeError(f"{section}.{field} must be {literal} for scientific admission")
 
 
 def _validate_formation_cutoff(value: Any) -> None:
@@ -280,6 +312,7 @@ def validate_predeclaration(
     if not isinstance(costs, dict):
         raise RuntimeError("cost_model must be an object")
     _validate_behavior_scalar_representation(costs, "cost_model")
+    _validate_scientific_safety_flags(candidate)
     missing_costs = sorted(REQUIRED_COST_FIELDS - set(costs))
     if missing_costs:
         raise RuntimeError(f"cost_model missing fields: {missing_costs}")
