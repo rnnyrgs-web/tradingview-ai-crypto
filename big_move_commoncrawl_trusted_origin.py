@@ -156,6 +156,8 @@ def validate_trusted_commoncrawl_historical_capture(
         collection=collection,
         target_url=upstream_locator,
     )
+    if capture.get("index_query_locator") != expected_index.url:
+        raise ValueError("Common Crawl retained index locator does not equal trusted canonical request")
     _assert_request_exact(
         index_receipt,
         expected_url=expected_index.url,
@@ -183,6 +185,8 @@ def validate_trusted_commoncrawl_historical_capture(
         offset=offset,
         length=length,
     )
+    if capture.get("warc_range_locator") != expected_warc.url:
+        raise ValueError("Common Crawl retained WARC locator does not equal trusted canonical request")
 
     warc_bundle = _safe_bundle_path(
         root,
