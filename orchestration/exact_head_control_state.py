@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any, Iterable
@@ -113,9 +114,30 @@ def _unique_issue_list(issues: Iterable[dict[str, Any]]) -> list[dict[str, Any]]
     return output
 
 
-def _repository_match(body: str, repository: str) -> bool:
-    match = _single_match(body, re.compile(r"Repository: `(?P<value>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)`"))
-    return match is not None and match.group("value") == repository
+def _repository_match(issue: dict[str, Any], body: str, repository: str) -> bool:
+    """Bind evidence to the repository without breaking pre-binding receipts.
+
+    Real GitHub issue snapshots carry an authoritative ``repository_url``. Use
+    that transport identity first so receipts created before the explicit body
+    ``Repository:`` line existed remain auditable rather than silently
+    disappearing from terminal memory. Synthetic/unit fixtures without an API
+    repository URL must still provide the explicit body binding. If a real issue
+    also carries the body binding, it must agree exactly; duplicate/tampered
+    body bindings fail closed.
+    """
+
+    pattern = re.compile(r"Repository: `(?P<value>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)`")
+    body_matches = [match for line in body.splitlines() if (match := pattern.fullmatch(line.strip()))]
+    if len(body_matches) > 1:
+        return False
+    if body_matches and body_matches[0].group("value") != repository:
+        return False
+
+    repository_url = issue.get("repository_url")
+    if isinstance(repository_url, str) and repository_url:
+        return repository_url == f"https://api.github.com/repos/{repository}"
+
+    return len(body_matches) == 1
 
 
 def _attempt_record(
@@ -138,7 +160,7 @@ def _attempt_record(
         return None
 
     body = _body(issue)
-    if not _repository_match(body, repository):
+    if not _repository_match(issue, body, repository):
         return None
     pr_match = _single_match(body, re.compile(r"PR: #(?P<value>[0-9]+)"))
     sha_match = _single_match(body, re.compile(r"Exact reviewed SHA: `(?P<value>[0-9a-f]{40})`"))
@@ -196,7 +218,7 @@ def _receipt_source(
         return None
 
     body = _body(issue)
-    if not _repository_match(body, repository):
+    if not _repository_match(issue, body, repository):
         return None
     pr_match = _single_match(body, re.compile(r"PR: #(?P<value>[0-9]+)"))
     sha_match = _single_match(body, re.compile(rf"{re.escape(sha_label)}: `(?P<value>[0-9a-f]{{40}})`"))
@@ -335,8 +357,15 @@ def main() -> int:
     parser.add_argument("--pr-number", required=True, type=int)
     parser.add_argument("--head-sha", required=True)
     parser.add_argument("--workflow-main-sha", required=True)
-    parser.add_argument("--repository", required=True)
+    parser.add_argument("--repository")
     args = parser.parse_args()
+
+    environment_repository = os.environ.get("GITHUB_REPOSITORY")
+    if args.repository and environment_repository and args.repository != environment_repository:
+        raise ControlStateError("--repository must match GITHUB_REPOSITORY when both are present")
+    repository = args.repository or environment_repository
+    if not repository:
+        raise ControlStateError("repository identity is required via --repository or GITHUB_REPOSITORY")
 
     data = json.loads(Path(args.issues).read_text(encoding="utf-8"))
     if not isinstance(data, list):
@@ -346,7 +375,7 @@ def main() -> int:
         pr_number=args.pr_number,
         head_sha=args.head_sha,
         workflow_main_sha=args.workflow_main_sha,
-        repository=args.repository,
+        repository=repository,
     )
     print(json.dumps(state, sort_keys=True))
     return 0
