@@ -21,7 +21,7 @@
   "authoritative_path_evidence": {
     "required_origin": "Append-only DB/provider-authenticated evidence bound to the exact trusted formation, canonical asset, exact venue/instrument, provider/source identity, raw/provider-native evidence digest, observed interval/event time, availability/capture time, and server-created durable membership.",
     "allowed_path_evidence": [
-      "provider-native trade/event sequence with immutable event identity and event timestamp",
+      "provider-native trade/event sequence with immutable event identity, event timestamp, and provider-native ordering identity where the provider contract defines ordering semantics",
       "provider-native interval aggregates whose high/low semantics cover the complete stated interval and whose retained bytes/receipt are independently verifiable"
     ],
     "not_sufficient": [
@@ -39,10 +39,11 @@
       "captured_at_utc",
       "durable_sequence"
     ],
+    "ordering_scope": "This ordering exists only to canonicalize the complete evidence-set serialization and fingerprint. durable_sequence is persistence identity, not market chronology, and grants zero authority to decide which mutually exclusive economic event occurred first.",
     "requirements": [
       "Every authoritative path record for the resolution window is included exactly once.",
       "The final resolution fingerprint commits formation receipt identity plus the complete ordered evidence-set digest.",
-      "The final resolution fingerprint also commits every derived event censoring bound and any ambiguity state used to determine final outcome authority.",
+      "The final resolution fingerprint also commits every derived event censoring bound, any ambiguity state used to determine final outcome authority, and any provider-native ordering evidence/identifier relied on for exact precedence.",
       "Removing, replacing, reordering, cross-asset transplanting, or cross-venue/instrument transplanting any member invalidates the final receipt.",
       "Caller-selected subsets never receive authoritative final-resolution status."
     ]
@@ -69,11 +70,11 @@
       "ILLIQUIDITY_OR_DELISTING",
       "DRAWDOWN_30"
     ],
-    "exact_order_rule": "When authenticated provider event/trade ordering proves non-overlapping exact event times, choose the earliest event according to provider event time; deterministic durable-sequence tie-breaking is allowed only for truly equal authenticated event timestamps and must not manufacture economic precedence.",
+    "exact_order_rule": "When authenticated provider event/trade evidence proves exact event chronology, choose the genuinely earliest event using provider event time plus provider-native ordering semantics only when that ordering identity is itself retained, authenticated, and fingerprint-bound. If competing events have equal provider timestamps and no authenticated provider-native ordering proves precedence, emit CENSORED_COMPETING_EVENT_ORDER. Durable DB sequence, insertion order, array order, venue order, or implementation order must never break an economic tie.",
     "interval_order_rule": "When candidate event intervals overlap such that either event could have occurred first, emit CENSORED_COMPETING_EVENT_ORDER. Do not choose HIT, INVALIDATED, ILLIQUID_OR_DELISTED, or a drawdown-first competing-risk state by policy preference, array order, durable insertion order, venue order, or post-outcome convenience.",
     "same_interval_extremes": "If one authenticated aggregate interval contains both high >= PLUS_100 and low <= DRAWDOWN_30 and no authenticated constituent ordering resolves which crossing came first, final event order is CENSORED_COMPETING_EVENT_ORDER.",
     "overlap_with_nonprice_event": "If a target-crossing censoring interval overlaps a structured invalidation, illiquidity, or delisting event interval and trusted ordering cannot establish which occurred first, final event order is CENSORED_COMPETING_EVENT_ORDER.",
-    "fingerprint_binding": "The final receipt must commit each candidate event type, exact timestamp or censoring lower/upper bounds, the ordering relation used, and the ambiguity-state identifier. Any later change invalidates the receipt.",
+    "fingerprint_binding": "The final receipt must commit each candidate event type, exact timestamp or censoring lower/upper bounds, the ordering relation used, the ambiguity-state identifier, and the authenticated provider-native ordering evidence/identifier whenever exact precedence depends on it. Any later change invalidates the receipt.",
     "metrics_rule": "CENSORED_COMPETING_EVENT_ORDER is excluded from ordinary HIT/EXPIRED classification and must enter time-to-event analysis only under a method that explicitly supports the retained interval/order ambiguity."
   },
   "final_states": {
@@ -109,9 +110,9 @@
       "fail_closed_if_order_ambiguous": "CENSORED_COMPETING_EVENT_ORDER"
     },
     "CENSORED_COMPETING_EVENT_ORDER": {
-      "required": "Two or more mutually exclusive threshold/final/competing-risk event intervals overlap so exact event ordering is not authenticated.",
+      "required": "Two or more mutually exclusive threshold/final/competing-risk event intervals overlap, or have equal authenticated timestamps without authenticated provider-native ordering evidence, so exact event precedence is not established.",
       "model_role": "Interval/order-ambiguous competing-event observation. Excluded from ordinary HIT/EXPIRED/INVALIDATED labels and from point-timestamp competing-risk fitting unless the model explicitly represents the retained ambiguity.",
-      "authority_rule": "No implementation-level precedence, durable insertion order, provider list order, or post-outcome choice may collapse this state into a definitive ordered event."
+      "authority_rule": "No implementation-level precedence, durable insertion order, provider list order, venue order, or post-outcome choice may collapse this state into a definitive ordered event."
     },
     "CENSORED_GAP_NOT_EXPIRED": {
       "required": "Any material path-coverage gap, unverified boundary interval, provider disagreement that the frozen contract requires to resolve, or missing authoritative evidence.",
@@ -153,8 +154,10 @@
     "one authenticated aggregate interval containing both PLUS_100 high and DRAWDOWN_30 low resolves to CENSORED_COMPETING_EVENT_ORDER when constituent event order is unavailable",
     "a target-crossing interval overlapping a structured invalidation interval remains CENSORED_COMPETING_EVENT_ORDER without authenticated ordering",
     "a target-crossing interval overlapping a delisting/illiquidity interval remains CENSORED_COMPETING_EVENT_ORDER without authenticated ordering",
+    "equal provider timestamps for mutually exclusive events with no authenticated provider-native ordering remain CENSORED_COMPETING_EVENT_ORDER and cannot be resolved by durable DB sequence",
+    "equal provider timestamps with authenticated provider-native ordering evidence resolve only according to that retained and fingerprint-bound provider ordering",
     "authenticated trade/event ordering resolves an otherwise ambiguous competing-event interval to the genuinely earliest event",
-    "ambiguity state plus every candidate event lower/upper censoring bound is committed into and independently verified from the final-resolution fingerprint",
+    "ambiguity state plus every candidate event lower/upper censoring bound and every relied-on provider-native ordering identifier is committed into and independently verified from the final-resolution fingerprint",
     "one omitted/reordered/replaced durable evidence member invalidates the final resolution fingerprint",
     "cross-asset and cross-venue/instrument evidence transplantation is rejected",
     "free-text invalidation cannot produce authoritative INVALIDATED",
@@ -164,8 +167,8 @@
   ],
   "implementation_sequence": [
     "1. Add a trusted interval/event evidence acquisition contract; do not reuse point snapshots as no-hit proof.",
-    "2. Persist append-only authoritative path members with exact formation/asset/venue/provider binding.",
-    "3. Add DB-owned complete-path enumeration and deterministic evidence-set fingerprinting, including derived event censoring bounds and ambiguity-state commitment.",
+    "2. Persist append-only authoritative path members with exact formation/asset/venue/provider binding and retain any provider-native ordering identity required to prove event precedence.",
+    "3. Add DB-owned complete-path enumeration and deterministic evidence-set fingerprinting, including derived event censoring bounds, ambiguity-state commitment, and any relied-on provider-native ordering evidence.",
     "4. Add a final-resolution RPC/store that derives states and threshold timing from the complete authoritative path only and emits CENSORED_COMPETING_EVENT_ORDER whenever exact competing-event precedence is not identifiable.",
     "5. Add Python independent receipt verification and adversarial tests.",
     "6. Run exact-head Security & Reliability plus independent adversarial review; then runtime-test the migration against a safe non-prediction fixture before granting metrics authority."
