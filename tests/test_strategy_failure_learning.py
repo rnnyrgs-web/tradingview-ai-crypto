@@ -285,6 +285,9 @@ def test_failure_artifact_ranks_materially_distinct_successors_deterministically
 
     low = _successor(parent, "DISC-TEST-REPLENISH-001-v2", (0.6, 0.7, 0.6, 0.4))
     high = _successor(parent, "DISC-TEST-REPLENISH-002-v2", (0.9, 0.9, 0.9, 0.2))
+    # Ranking must compare genuinely distinct executable hypotheses. Merely
+    # changing IDs/scores would now be correctly rejected as a duplicate sibling.
+    high["predeclaration"]["execution_rules"]["entry_delay_bars"] = 2
     a = build_failure_learning_artifact(parent, screen, [low, high], rejected_entries=[])
     b = build_failure_learning_artifact(parent, screen, [low, high], rejected_entries=[])
 
