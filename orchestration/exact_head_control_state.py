@@ -402,7 +402,7 @@ def exact_head_control_state(
         "claimed_control_issue_kinds": {
             str(number): claimed_control_issues[number] for number in sorted(claimed_control_issues)
         },
-        "terminal_precedence": "REJECTION_DOMINATES_APPROVAL;INTERRUPTED_BLOCKS_RETRY",
+        "terminal_precedence": "REJECTION_DOMINATES_APPROVAL",
         "legacy_unvalidated_control_is_blocking": True,
         "workflow_main_sha": workflow_main_sha,
         "repository": repository,
