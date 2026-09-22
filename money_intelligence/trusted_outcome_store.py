@@ -1,17 +1,18 @@
 """Trusted post-formation price-path evidence for <=90-day 2x research.
 
-A prospective forecast is not enough: its outcome must also be derived from evidence
-that a caller cannot backfill.  The authoritative append path in this module calls a
-Postgres RPC that derives the market instruments from the already-persisted formation,
-fetches both fixed spot providers inside Postgres, and binds the resulting provider
-receipt to that exact formation.
+The durable database owns provider acquisition and membership.  Public deterministic
+hashes are useful for integrity checking, but they are not proof that a caller-created
+row ever existed in the append-only store.  Accordingly this module has two distinct
+layers:
 
-This first slice intentionally grants only trusted *HIT evidence*.  It does not create
-an authoritative final HIT/EXPIRED/INVALIDATED resolution and must not be used as a
-factory performance record until a final append-only resolution receipt is added.
-Legacy ``resolve_forecast`` values remain UNTRUSTED_RESOLUTION.
+* ``ParsedOutcomeObservation`` validates bytes, identities, chronology, and hashes but
+  is always ``PARSED_UNTRUSTED``;
+* ``derive_trusted_hit_evidence`` can mint non-final trusted HIT evidence only by
+  invoking a DB-owned RPC that derives the breach from durable stored rows.
 
-Research only.  No ranking, candidate, promotion, broker, or trading authority.
+This slice still does not create an authoritative final HIT/EXPIRED/INVALIDATED
+resolution.  It grants no candidate ranking, factory metrics, promotion, broker, or
+trading authority.  Legacy ``resolve_forecast`` values remain UNTRUSTED_RESOLUTION.
 """
 
 from __future__ import annotations
@@ -21,7 +22,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 import hashlib
 import re
-from typing import Any, Iterable
+from typing import Any
 
 from money_intelligence.forward_move_ledger import (
     ForwardMoveForecast,
@@ -35,9 +36,13 @@ from money_intelligence.trusted_reference_store import (
 )
 
 
-OUTCOME_BINDING_DOMAIN = "trusted_forward_outcome_observation.v1"
-HIT_EVIDENCE_DOMAIN = "trusted_forward_hit_evidence_set.v1"
+FORMATION_RECEIPT_BINDING_DOMAIN = "trusted_forward_formation_receipt_binding.v1"
+OUTCOME_BINDING_DOMAIN = "trusted_forward_outcome_observation.v2"
+HIT_EVIDENCE_DOMAIN = "trusted_forward_hit_evidence_set.v2"
+PARSED_OUTCOME_STATUS = "PARSED_UNTRUSTED"
 OUTCOME_TRUST_STATUS = "TRUSTED_PROVIDER_EVIDENCE_NOT_FINAL_RESOLUTION"
+BINANCE_VENUE = "BINANCE_SPOT"
+OKX_VENUE = "OKX_SPOT"
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
@@ -92,12 +97,33 @@ def _sha256(raw: bytes) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
+def _formation_receipt_fingerprint(receipt: TrustedFormationReceipt) -> str:
+    """Cross-language identity of the already-persisted trusted formation receipt.
+
+    The forecast fingerprint commits the complete frozen formation payload.  Sequence
+    plus server-created time distinguish the durable receipt row.  Postgres derives
+    the same value from its stored formation; no caller supplies it to the DB RPC.
+    """
+
+    return _sha256(
+        (
+            f"{FORMATION_RECEIPT_BINDING_DOMAIN}\n"
+            f"{receipt.sequence}\n"
+            f"{receipt.forecast_fingerprint}\n"
+            f"{_db_iso(receipt.server_created_at)}"
+        ).encode("utf-8")
+    )
+
+
 def _binding_preimage(
     *,
     formation_sequence: int,
-    formation_fingerprint: str,
-    source_reference_sequence: int,
+    forecast_fingerprint: str,
+    formation_receipt_fingerprint: str,
     asset_id: str,
+    binance_symbol: str,
+    okx_inst_id: str,
+    source_reference_sequence: int,
     source_evidence_sha256: str,
     observed_price: str,
     observed_at: datetime,
@@ -106,9 +132,14 @@ def _binding_preimage(
     return (
         f"{OUTCOME_BINDING_DOMAIN}\n"
         f"{formation_sequence}\n"
-        f"{formation_fingerprint}\n"
-        f"{source_reference_sequence}\n"
+        f"{forecast_fingerprint}\n"
+        f"{formation_receipt_fingerprint}\n"
         f"{asset_id}\n"
+        f"{BINANCE_VENUE}\n"
+        f"{binance_symbol}\n"
+        f"{OKX_VENUE}\n"
+        f"{okx_inst_id}\n"
+        f"{source_reference_sequence}\n"
         f"{source_evidence_sha256}\n"
         f"{observed_price}\n"
         f"{_db_iso(observed_at)}\n"
@@ -117,14 +148,17 @@ def _binding_preimage(
 
 
 @dataclass(frozen=True)
-class TrustedOutcomeObservationReceipt:
-    """DB-owned binding of a trusted two-venue spot observation to one formation."""
+class ParsedOutcomeObservation:
+    """Integrity-checked transport object with no durable-origin authority."""
 
     sequence: int
     formation_sequence: int
-    formation_fingerprint: str
+    forecast_fingerprint: str
+    formation_receipt_fingerprint: str
     source_reference_observation_sequence: int
     asset_id: str
+    binance_symbol: str
+    okx_inst_id: str
     observed_price: str
     observed_at: datetime
     captured_at: datetime
@@ -132,54 +166,64 @@ class TrustedOutcomeObservationReceipt:
     binding_sha256: str
     server_created_at: datetime
     source_reference_observation: dict[str, Any]
+    trust_status: str = PARSED_OUTCOME_STATUS
 
     @property
     def source_reference_receipt(self) -> TrustedReferenceReceipt:
-        """Re-parse retained provider bytes whenever the receipt is consumed."""
+        """Re-parse retained provider bytes whenever the parsed row is consumed."""
         return reference_receipt_from_store_row(dict(self.source_reference_observation))
 
 
 @dataclass(frozen=True)
 class TrustedHitEvidence:
-    """Provider-authenticated evidence that a target was observed after formation.
+    """DB-derived provider evidence that at least one stored sample breached target.
 
-    This is deliberately not a final resolution receipt.  It proves that an ordered
-    prefix of trusted outcome observations contains a target breach; a later DB-owned
-    final-resolution boundary must bind the complete stored prefix before metrics use.
+    ``breach_observed_at`` is the event time of the DB-selected stored breach sample;
+    it is not a claim about the true first market crossing.  Final time-to-event and
+    HIT/EXPIRED/INVALIDATED resolution require the later complete-path contract.
     """
 
     formation_sequence: int
-    formation_fingerprint: str
+    forecast_fingerprint: str
+    formation_receipt_fingerprint: str
     target_price: str
-    observed_max_price: str
-    first_trusted_hit_observed_at: datetime
-    observation_sequences: tuple[int, ...]
-    observation_binding_sha256s: tuple[str, ...]
+    observed_price: str
+    breach_observed_at: datetime
+    observation_sequence: int
+    observation_binding_sha256: str
     evidence_set_sha256: str
     trust_status: str = OUTCOME_TRUST_STATUS
 
 
 def outcome_observation_receipt_from_store_row(
     row: dict[str, Any],
-) -> TrustedOutcomeObservationReceipt:
-    """Parse and independently reproduce a DB outcome-observation binding."""
+) -> ParsedOutcomeObservation:
+    """Parse/reproduce one row, deliberately without granting DB-origin authority."""
 
     if not isinstance(row, dict):
-        raise ValueError("trusted outcome observation row must be an object")
+        raise ValueError("outcome observation row must be an object")
     sequence = _positive_int(row.get("sequence"), field="sequence")
     formation_sequence = _positive_int(
         row.get("formation_sequence"), field="formation_sequence"
     )
-    formation_fingerprint = _sha256_text(
-        row.get("formation_fingerprint"), field="formation_fingerprint"
+    forecast_fingerprint = _sha256_text(
+        row.get("forecast_fingerprint"), field="forecast_fingerprint"
+    )
+    formation_receipt_fingerprint = _sha256_text(
+        row.get("formation_receipt_fingerprint"),
+        field="formation_receipt_fingerprint",
     )
     source_sequence = _positive_int(
         row.get("source_reference_observation_sequence"),
         field="source_reference_observation_sequence",
     )
     asset_id = str(row.get("asset_id") or "").strip().upper()
+    binance_symbol = str(row.get("binance_symbol") or "").strip().upper()
+    okx_inst_id = str(row.get("okx_inst_id") or "").strip().upper()
     if not asset_id:
-        raise ValueError("trusted outcome observation asset_id missing")
+        raise ValueError("outcome observation asset_id missing")
+    if not binance_symbol or not okx_inst_id:
+        raise ValueError("outcome observation venue instruments missing")
     observed_price = _positive_price(row.get("observed_price"), field="observed_price")
     observed_at = _parse_time(row.get("observed_at"), field="observed_at")
     captured_at = _parse_time(row.get("captured_at"), field="captured_at")
@@ -190,30 +234,53 @@ def outcome_observation_receipt_from_store_row(
     binding_sha256 = _sha256_text(row.get("binding_sha256"), field="binding_sha256")
     source_row = row.get("source_reference_observation")
     if not isinstance(source_row, dict):
-        raise ValueError("trusted outcome source reference observation missing")
+        raise ValueError("outcome source reference observation missing")
     source = reference_receipt_from_store_row(dict(source_row))
 
     if source.sequence != source_sequence:
-        raise ValueError("outcome receipt references unexpected source observation")
+        raise ValueError("outcome row references unexpected source observation")
     if source.asset_id != asset_id:
         raise ValueError("outcome source asset does not match bound asset")
     if source.evidence_sha256 != source_evidence_sha256:
         raise ValueError("outcome source evidence SHA does not match bound digest")
     if Decimal(source.reference_price) != Decimal(observed_price):
-        raise ValueError("outcome observed price does not match trusted provider receipt")
+        raise ValueError("outcome observed price does not match provider receipt")
     if source.observed_at != observed_at or source.captured_at != captured_at:
-        raise ValueError("outcome chronology does not match trusted provider receipt")
+        raise ValueError("outcome chronology does not match provider receipt")
     if observed_at > captured_at:
-        raise ValueError("outcome provider observation cannot follow trusted capture")
+        raise ValueError("outcome provider observation cannot follow capture")
     if server_created_at < source.server_created_at or server_created_at < captured_at:
-        raise ValueError("outcome binding cannot predate its trusted source observation")
+        raise ValueError("outcome binding cannot predate its source observation")
+
+    providers = source.evidence.get("providers")
+    if not isinstance(providers, list) or len(providers) != 2:
+        raise ValueError("outcome source provider evidence missing")
+    by_venue = {
+        provider.get("venue"): provider
+        for provider in providers
+        if isinstance(provider, dict)
+    }
+    binance = by_venue.get(BINANCE_VENUE)
+    okx = by_venue.get(OKX_VENUE)
+    if not isinstance(binance, dict) or not isinstance(okx, dict):
+        raise ValueError("outcome source venue evidence missing")
+    if binance.get("symbol") != binance_symbol or okx.get("symbol") != okx_inst_id:
+        raise ValueError("outcome source venue/instrument identity mismatch")
+    if binance_symbol != asset_id:
+        raise ValueError("outcome Binance symbol does not match canonical asset")
+    expected_okx = f"{asset_id[:-4]}-USDT" if asset_id.endswith("USDT") else ""
+    if okx_inst_id != expected_okx:
+        raise ValueError("outcome OKX instrument does not match canonical asset")
 
     expected_binding = _sha256(
         _binding_preimage(
             formation_sequence=formation_sequence,
-            formation_fingerprint=formation_fingerprint,
-            source_reference_sequence=source_sequence,
+            forecast_fingerprint=forecast_fingerprint,
+            formation_receipt_fingerprint=formation_receipt_fingerprint,
             asset_id=asset_id,
+            binance_symbol=binance_symbol,
+            okx_inst_id=okx_inst_id,
+            source_reference_sequence=source_sequence,
             source_evidence_sha256=source_evidence_sha256,
             observed_price=observed_price,
             observed_at=observed_at,
@@ -221,14 +288,17 @@ def outcome_observation_receipt_from_store_row(
         )
     )
     if binding_sha256 != expected_binding:
-        raise ValueError("trusted outcome binding SHA-256 does not reproduce")
+        raise ValueError("outcome binding SHA-256 does not reproduce")
 
-    return TrustedOutcomeObservationReceipt(
+    return ParsedOutcomeObservation(
         sequence=sequence,
         formation_sequence=formation_sequence,
-        formation_fingerprint=formation_fingerprint,
+        forecast_fingerprint=forecast_fingerprint,
+        formation_receipt_fingerprint=formation_receipt_fingerprint,
         source_reference_observation_sequence=source_sequence,
         asset_id=asset_id,
+        binance_symbol=binance_symbol,
+        okx_inst_id=okx_inst_id,
         observed_price=observed_price,
         observed_at=observed_at,
         captured_at=captured_at,
@@ -242,19 +312,21 @@ def outcome_observation_receipt_from_store_row(
 def verify_outcome_observation_receipt(
     forecast: ForwardMoveForecast,
     formation_receipt: TrustedFormationReceipt,
-    observation: TrustedOutcomeObservationReceipt,
+    observation: ParsedOutcomeObservation,
 ) -> None:
-    """Require exact formation/asset binding and strictly post-formation chronology."""
+    """Verify identity/chronology only; this does not upgrade origin authority."""
 
     verify_formation_receipt(forecast, formation_receipt)
     if observation.formation_sequence != formation_receipt.sequence:
         raise ValueError("outcome observation is bound to a different formation sequence")
-    if observation.formation_fingerprint != forecast.fingerprint:
+    if observation.forecast_fingerprint != forecast.fingerprint:
         raise ValueError("outcome observation is bound to a different forecast")
+    expected_receipt_fingerprint = _formation_receipt_fingerprint(formation_receipt)
+    if observation.formation_receipt_fingerprint != expected_receipt_fingerprint:
+        raise ValueError("outcome observation is bound to a different formation receipt fingerprint")
     if observation.asset_id != forecast.asset_id:
         raise ValueError("outcome observation is bound to a different asset")
 
-    # Re-parse provider bytes instead of trusting a previously constructed object.
     source = observation.source_reference_receipt
     if source.asset_id != forecast.asset_id:
         raise ValueError("outcome provider evidence is bound to a different asset")
@@ -263,73 +335,100 @@ def verify_outcome_observation_receipt(
     if observation.captured_at <= formation_receipt.server_created_at:
         raise ValueError("pre-formation capture cannot count as outcome evidence")
     if observation.server_created_at < observation.captured_at:
-        raise ValueError("outcome receipt cannot predate its trusted capture")
+        raise ValueError("outcome row cannot predate its capture")
 
     expiry = trusted_expires_at(forecast, formation_receipt)
     if observation.observed_at > expiry or observation.captured_at > expiry:
         raise ValueError("outcome observation falls outside the trusted forecast horizon")
 
 
+def _post_rpc(path: str, payload: dict[str, Any]) -> Any:
+    from config import SUPABASE_URL
+    from db import configured, headers, http
+
+    if not configured():
+        raise RuntimeError("Supabase is not configured for trusted outcome persistence")
+    response = http.post(
+        f"{SUPABASE_URL}/rest/v1/rpc/{path}",
+        headers=headers(),
+        json=payload,
+    )
+    if response.status_code >= 300:
+        raise RuntimeError(
+            f"trusted outcome database RPC failed: {response.status_code} {response.text}"
+        )
+    return response.json()
+
+
+def _db_derived_hit_row(formation_sequence: int) -> dict[str, Any] | None:
+    rows = _post_rpc(
+        "derive_big_move_forward_hit_evidence_v1",
+        {"p_formation_sequence": formation_sequence},
+    )
+    if not isinstance(rows, list):
+        raise RuntimeError("trusted HIT derivation returned an invalid response")
+    if not rows:
+        return None
+    if len(rows) != 1 or not isinstance(rows[0], dict):
+        raise RuntimeError("trusted HIT derivation returned an ambiguous response")
+    return rows[0]
+
+
 def derive_trusted_hit_evidence(
     forecast: ForwardMoveForecast,
     formation_receipt: TrustedFormationReceipt,
-    observations: Iterable[TrustedOutcomeObservationReceipt],
 ) -> TrustedHitEvidence:
-    """Derive a target breach only from verified post-formation provider receipts.
+    """Derive non-final HIT evidence only through the DB-owned stored-row query.
 
-    The evidence set ends at the first *trusted stored observation* at or above target.
-    It is sufficient to prove a target breach, but not to claim that the supplied list
-    is the complete database prefix.  Therefore the result is explicitly not a final
-    factory resolution and cannot enter prospective performance metrics yet.
+    There is intentionally no caller-supplied observations argument.  Locally parsed
+    rows, even with perfectly reproduced public hashes, can never mint this object.
     """
 
     verify_formation_receipt(forecast, formation_receipt)
-    ordered = sorted(observations, key=lambda item: item.sequence)
-    if not ordered:
-        raise ValueError("trusted HIT evidence requires at least one outcome observation")
+    row = _db_derived_hit_row(formation_receipt.sequence)
+    if row is None:
+        raise ValueError("authoritative stored observations do not prove a target hit")
 
-    seen_sequences: set[int] = set()
-    seen_bindings: set[str] = set()
-    target = forecast.target_price
-    hit_index: int | None = None
-    for index, observation in enumerate(ordered):
-        if observation.sequence in seen_sequences:
-            raise ValueError("duplicate trusted outcome observation sequence")
-        if observation.binding_sha256 in seen_bindings:
-            raise ValueError("duplicate trusted outcome observation binding")
-        seen_sequences.add(observation.sequence)
-        seen_bindings.add(observation.binding_sha256)
-        verify_outcome_observation_receipt(forecast, formation_receipt, observation)
-        if hit_index is None and Decimal(observation.observed_price) >= target:
-            hit_index = index
+    target_price = _positive_price(row.get("target_price"), field="target_price")
+    expected_target = _positive_price(forecast.target_price, field="target_price")
+    if Decimal(target_price) != Decimal(expected_target):
+        raise ValueError("DB-derived target price does not match frozen forecast")
 
-    if hit_index is None:
-        raise ValueError("trusted observations do not prove a target hit")
+    observation_row = row.get("breach_observation")
+    if not isinstance(observation_row, dict):
+        raise ValueError("DB-derived HIT evidence is missing its durable breach observation")
+    observation = outcome_observation_receipt_from_store_row(observation_row)
+    verify_outcome_observation_receipt(forecast, formation_receipt, observation)
+    if Decimal(observation.observed_price) < Decimal(target_price):
+        raise ValueError("DB-derived observation does not actually breach the frozen target")
 
-    prefix = ordered[: hit_index + 1]
-    max_price = max(Decimal(item.observed_price) for item in prefix)
-    first_hit = prefix[-1]
-    evidence_lines = "\n".join(
-        f"{item.sequence}:{item.binding_sha256}" for item in prefix
-    )
+    expected_receipt_fingerprint = _formation_receipt_fingerprint(formation_receipt)
+    if row.get("forecast_fingerprint") != forecast.fingerprint:
+        raise ValueError("DB-derived HIT is bound to a different forecast")
+    if row.get("formation_receipt_fingerprint") != expected_receipt_fingerprint:
+        raise ValueError("DB-derived HIT is bound to a different formation receipt")
+
     evidence_set_sha256 = _sha256(
         (
             f"{HIT_EVIDENCE_DOMAIN}\n"
             f"{formation_receipt.sequence}\n"
             f"{forecast.fingerprint}\n"
-            f"{formation_receipt.fingerprint}\n"
-            f"{evidence_lines}"
+            f"{expected_receipt_fingerprint}\n"
+            f"{target_price}\n"
+            f"{observation.sequence}\n"
+            f"{observation.binding_sha256}"
         ).encode("utf-8")
     )
 
     return TrustedHitEvidence(
         formation_sequence=formation_receipt.sequence,
-        formation_fingerprint=forecast.fingerprint,
-        target_price=_positive_price(target, field="target_price"),
-        observed_max_price=_positive_price(max_price, field="observed_max_price"),
-        first_trusted_hit_observed_at=first_hit.observed_at,
-        observation_sequences=tuple(item.sequence for item in prefix),
-        observation_binding_sha256s=tuple(item.binding_sha256 for item in prefix),
+        forecast_fingerprint=forecast.fingerprint,
+        formation_receipt_fingerprint=expected_receipt_fingerprint,
+        target_price=target_price,
+        observed_price=observation.observed_price,
+        breach_observed_at=observation.observed_at,
+        observation_sequence=observation.sequence,
+        observation_binding_sha256=observation.binding_sha256,
         evidence_set_sha256=evidence_set_sha256,
     )
 
@@ -337,28 +436,21 @@ def derive_trusted_hit_evidence(
 def capture_and_persist_trusted_outcome_observation(
     forecast: ForwardMoveForecast,
     formation_receipt: TrustedFormationReceipt,
-) -> TrustedOutcomeObservationReceipt:
-    """Ask Postgres to derive instruments, fetch both venues, and bind the observation."""
+) -> ParsedOutcomeObservation:
+    """Append through Postgres, then return an integrity-checked *parsed* row.
+
+    The append itself is DB-authoritative.  The returned Python object deliberately
+    remains ``PARSED_UNTRUSTED`` so it cannot be confused with durable-membership
+    authority.  ``derive_trusted_hit_evidence`` must re-enter the DB-owned boundary.
+    """
 
     verify_formation_receipt(forecast, formation_receipt)
-
-    from config import SUPABASE_URL
-    from db import configured, headers, http
-
-    if not configured():
-        raise RuntimeError("Supabase is not configured for trusted outcome persistence")
-    response = http.post(
-        f"{SUPABASE_URL}/rest/v1/rpc/append_big_move_forward_outcome_observation_v1",
-        headers=headers(),
-        json={"p_formation_sequence": formation_receipt.sequence},
+    rows = _post_rpc(
+        "append_big_move_forward_outcome_observation_v1",
+        {"p_formation_sequence": formation_receipt.sequence},
     )
-    if response.status_code >= 300:
-        raise RuntimeError(
-            f"trusted outcome persistence failed: {response.status_code} {response.text}"
-        )
-    rows = response.json()
     if not isinstance(rows, list) or len(rows) != 1 or not isinstance(rows[0], dict):
         raise RuntimeError("trusted outcome persistence returned an invalid receipt")
-    receipt = outcome_observation_receipt_from_store_row(rows[0])
-    verify_outcome_observation_receipt(forecast, formation_receipt, receipt)
-    return receipt
+    parsed = outcome_observation_receipt_from_store_row(rows[0])
+    verify_outcome_observation_receipt(forecast, formation_receipt, parsed)
+    return parsed
