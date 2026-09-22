@@ -23,11 +23,8 @@ from orchestration.protected_paths import find_protected_matches
 # review of a >80 kB scientific gate change.
 MAX_DIFF_BYTES = 256_000
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
-CLAUDE_FORMAT_ATTEMPTS = 2
-CLAUDE_OUTPUT_BUDGET_GUIDANCE = (
-    "REVIEW_OUTPUT_BUDGET: Return exactly one complete JSON object. "
-    "Keep reason <= 60 words and each required falsification finding <= 24 words. "
-    "Do not omit any required finding. Do not add markdown or prose outside the JSON."
+CLAUDE_OUTPUT_FORMAT_GUIDANCE = (
+    "FORMAT_REQUIREMENT: Return exactly one complete JSON object and no markdown or prose outside it."
 )
 
 
@@ -85,34 +82,30 @@ def _enrich_verdict(
 
 
 def _claude_exact_head_verdict(review_input: str, temporary: Path) -> dict[str, Any]:
-    """Run Claude with one bounded format-only retry.
+    """Run exactly one Claude scientific review and fail closed on format/schema failure.
 
-    Scientific rejection is a normal valid JSON verdict and is never retried.
-    The retry exists only for provider-format failures (truncated/malformed JSON or
-    an invalid verdict schema). If both attempts fail formatting, raise a message
-    the workflow already classifies as transient so the exact head remains
-    unapproved and may use the existing bounded retry policy instead of being
-    misclassified as a scientific failure.
+    A malformed/truncated response or invalid verdict schema is *not* a scientific
+    verdict. It is classified as transient reviewer unavailability so the existing
+    workflow-level bounded retry policy may retry the exact same head later. We do
+    not invoke Claude a second time inside one review attempt: this preserves one
+    scientific vote per provider/run and cannot select among multiple judgments.
+    A valid ``approve=false`` verdict is returned unchanged and is never retried or
+    softened.
     """
 
-    last_error: Exception | None = None
-    bounded_input = f"{review_input}\n\n{CLAUDE_OUTPUT_BUDGET_GUIDANCE}"
-    for _attempt in range(CLAUDE_FORMAT_ATTEMPTS):
-        temporary.unlink(missing_ok=True)
-        try:
-            _review_diff_claude_adversarial(bounded_input, temporary)
-            verdict = json.loads(temporary.read_text(encoding="utf-8"))
-            if not isinstance(verdict, dict):
-                raise RuntimeError("claude reviewer returned non-object JSON")
-            _validate_verdict_schema(verdict)
-            return verdict
-        except (json.JSONDecodeError, RuntimeError) as exc:
-            last_error = exc
-
-    raise RuntimeError(
-        "temporarily unavailable: Claude reviewer returned malformed or incomplete JSON "
-        f"for {CLAUDE_FORMAT_ATTEMPTS} bounded attempts"
-    ) from last_error
+    temporary.unlink(missing_ok=True)
+    bounded_input = f"{review_input}\n\n{CLAUDE_OUTPUT_FORMAT_GUIDANCE}"
+    try:
+        _review_diff_claude_adversarial(bounded_input, temporary)
+        verdict = json.loads(temporary.read_text(encoding="utf-8"))
+        if not isinstance(verdict, dict):
+            raise RuntimeError("claude reviewer returned non-object JSON")
+        _validate_verdict_schema(verdict)
+        return verdict
+    except (json.JSONDecodeError, RuntimeError) as exc:
+        raise RuntimeError(
+            "temporarily unavailable: Claude reviewer returned malformed, incomplete, or invalid-schema JSON"
+        ) from exc
 
 
 def review_exact_head(
