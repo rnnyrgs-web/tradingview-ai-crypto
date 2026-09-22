@@ -72,10 +72,10 @@ jobs:
 
           # Complete pagination is a security property: a terminal old receipt
           # may not disappear merely because >500 unrelated issues now exist.
-          gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=open&per_page=100" \
+          gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=open&per_page=100&sort=created&direction=asc" \
             | jq -s 'add | map(select(.pull_request == null))' \
             > /tmp/exact-head-open-requests.json
-          gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100" \
+          gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100&sort=created&direction=asc" \
             | jq -s 'add | map(select(.pull_request == null))' \
             > /tmp/exact-head-control-issues.json
 
@@ -470,7 +470,7 @@ jobs:
           # Persisted source attempt is the primary crash-safe terminal evidence.
           # Secondary rejection receipts are audit/index artifacts only; they
           # can strengthen auditability but never create or erase rejection.
-          gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100" \
+          gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100&sort=created&direction=asc" \
             | jq -s 'add | map(select(.pull_request == null))' \
             > /tmp/exact-head-control-issues-after-attempt.json
           SOURCE_STATE="$(python -m orchestration.exact_head_control_state \
@@ -507,7 +507,7 @@ jobs:
               fi
             fi
 
-            gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100" \
+            gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100&sort=created&direction=asc" \
               | jq -s 'add | map(select(.pull_request == null))' \
               > /tmp/exact-head-control-issues-after-receipt.json
             VERIFIED_STATE="$(python -m orchestration.exact_head_control_state \
@@ -528,7 +528,7 @@ jobs:
             test "$SOURCE_MATCH" -eq 1
             test -n "$APPROVAL_RECEIPT_ISSUE"
 
-            gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100" \
+            gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100&sort=created&direction=asc" \
               | jq -s 'add | map(select(.pull_request == null))' \
               > /tmp/exact-head-control-issues-after-approval.json
             VERIFIED_STATE="$(python -m orchestration.exact_head_control_state \
