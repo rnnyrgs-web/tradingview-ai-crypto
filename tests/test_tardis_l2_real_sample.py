@@ -9,7 +9,7 @@ import pytest
 
 from tardis_l2_qualification import EXPECTED_COLUMNS, parse_incremental_l2_csv, reconstruct_books
 from tardis_l2_real_sample import (
-    PASS_STATUS,
+    PROVIDER_SAMPLE_RESULT,
     qualify_gzip_sample,
     summarize_real_sample_stream,
 )
@@ -99,7 +99,7 @@ def test_gzip_receipt_is_provider_adapter_only(tmp_path: Path):
         commit_sha="a" * 40,
     )
 
-    assert receipt["status"] == PASS_STATUS
+    assert receipt["status"] == PROVIDER_SAMPLE_RESULT
     assert receipt["authority"] == "PROVIDER_ADAPTER_ONLY"
     assert receipt["outcomes_opened"] is False
     assert receipt["strict_tradability_established"] is False
