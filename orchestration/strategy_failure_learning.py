@@ -54,6 +54,33 @@ def _num(value: Any, field: str) -> float:
     return number
 
 
+def _optional_num(
+    value: Any,
+    field: str,
+    *,
+    allow_positive_infinity: bool = False,
+) -> float | None:
+    """Parse an observed statistic without fabricating sparse-sample values.
+
+    ``None`` means the statistic is mathematically undefined/unobserved for the
+    available sample. Positive infinity is accepted only where the statistic
+    has a well-defined no-loss interpretation (profit factor).
+    """
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        raise RuntimeError(f"{field} must be numeric or null")
+    try:
+        number = float(value)
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError(f"{field} must be numeric or null") from exc
+    if number != number or number == float("-inf"):
+        raise RuntimeError(f"{field} must not be NaN or negative infinity")
+    if number == float("inf") and not allow_positive_infinity:
+        raise RuntimeError(f"{field} must be finite when defined")
+    return number
+
+
 def _positive_int(value: Any, field: str) -> int:
     if isinstance(value, bool) or not isinstance(value, int) or value < 1:
         raise RuntimeError(f"{field} must be a positive integer")
@@ -146,9 +173,11 @@ def _cell_failures(screen: dict[str, Any], plan: dict[str, Any]) -> set[str]:
             if not isinstance(cell, dict):
                 raise RuntimeError(f"screen.asset_timeframe_cells[{idx}] must be an object")
             trades = _nonnegative_int(cell.get("trades"), f"screen.asset_timeframe_cells[{idx}].trades")
-            net = _num(cell.get("net_mean_bps"), f"screen.asset_timeframe_cells[{idx}].net_mean_bps")
             if trades >= min_trades:
+                net = _num(cell.get("net_mean_bps"), f"screen.asset_timeframe_cells[{idx}].net_mean_bps")
                 eligible.append(net)
+            elif cell.get("net_mean_bps") is not None:
+                _num(cell.get("net_mean_bps"), f"screen.asset_timeframe_cells[{idx}].net_mean_bps")
         if len(eligible) >= 2:
             positive_fraction = sum(value > 0 for value in eligible) / len(eligible)
             if positive_fraction < threshold:
@@ -163,10 +192,16 @@ def _cell_failures(screen: dict[str, Any], plan: dict[str, Any]) -> set[str]:
             if not isinstance(cell, dict):
                 raise RuntimeError(f"screen.regime_cells[{idx}] must be an object")
             trades = _nonnegative_int(cell.get("trades"), f"screen.regime_cells[{idx}].trades")
-            net = _num(cell.get("net_mean_bps"), f"screen.regime_cells[{idx}].net_mean_bps")
             if trades >= min_trades:
+                net = _num(cell.get("net_mean_bps"), f"screen.regime_cells[{idx}].net_mean_bps")
                 eligible_regimes.append(net)
-        if len(eligible_regimes) >= 2 and any(v > 0 for v in eligible_regimes) and any(v <= 0 for v in eligible_regimes):
+            elif cell.get("net_mean_bps") is not None:
+                _num(cell.get("net_mean_bps"), f"screen.regime_cells[{idx}].net_mean_bps")
+        if (
+            len(eligible_regimes) >= 2
+            and any(v > 0 for v in eligible_regimes)
+            and any(v <= 0 for v in eligible_regimes)
+        ):
             failures.add(FAILURE_REGIME_INSTABILITY)
     return failures
 
@@ -180,7 +215,9 @@ def classify_failure(
     """Classify a cheap-screen outcome without opening protected evidence.
 
     The classifier only uses thresholds that were embedded in the hashed
-    predeclaration before this screen was evaluated.
+    predeclaration before this screen was evaluated. Sparse samples are allowed
+    to preserve mathematically undefined statistics as ``None``; they are never
+    converted to fake zeros/ones merely to satisfy this schema.
     """
     validate_predeclaration(predeclaration, rejected_entries=rejected_entries)
     _validate_screen_identity(predeclaration, screen)
@@ -214,34 +251,70 @@ def classify_failure(
     if not isinstance(validation, dict):
         raise RuntimeError("screen.validation must be an object")
     trades = _nonnegative_int(validation.get("trades"), "screen.validation.trades")
-    gross = _num(validation.get("gross_mean_bps"), "screen.validation.gross_mean_bps")
-    net = _num(validation.get("net_mean_bps"), "screen.validation.net_mean_bps")
-    _num(validation.get("profit_factor"), "screen.validation.profit_factor")
+    gross = _optional_num(validation.get("gross_mean_bps"), "screen.validation.gross_mean_bps")
+    net = _optional_num(validation.get("net_mean_bps"), "screen.validation.net_mean_bps")
+    profit_factor = _optional_num(
+        validation.get("profit_factor"),
+        "screen.validation.profit_factor",
+        allow_positive_infinity=True,
+    )
+    if profit_factor is not None and profit_factor < 0:
+        raise RuntimeError("screen.validation.profit_factor must be non-negative when defined")
+
     halves = validation.get("half_net_bps")
     if not isinstance(halves, list) or len(halves) != 2:
         raise RuntimeError("screen.validation.half_net_bps must contain exactly two chronological halves")
-    half_values = [_num(v, "screen.validation.half_net_bps") for v in halves]
+    half_values = [
+        _optional_num(v, f"screen.validation.half_net_bps[{idx}]")
+        for idx, v in enumerate(halves)
+    ]
 
     risk = screen.get("risk")
     if not isinstance(risk, dict):
         raise RuntimeError("screen.risk must be an object")
-    worst_event = _num(risk.get("worst_event_net_bps"), "screen.risk.worst_event_net_bps")
-    winner_share = _num(risk.get("winner_concentration_share"), "screen.risk.winner_concentration_share")
-    without_best = _num(risk.get("without_best_net_mean_bps"), "screen.risk.without_best_net_mean_bps")
-    if not 0 <= winner_share <= 1:
+    worst_event = _optional_num(risk.get("worst_event_net_bps"), "screen.risk.worst_event_net_bps")
+    winner_share = _optional_num(
+        risk.get("winner_concentration_share"),
+        "screen.risk.winner_concentration_share",
+    )
+    without_best = _optional_num(
+        risk.get("without_best_net_mean_bps"),
+        "screen.risk.without_best_net_mean_bps",
+    )
+    if winner_share is not None and not 0 <= winner_share <= 1:
         raise RuntimeError("screen.risk.winner_concentration_share must be in [0, 1]")
 
     failures: set[str] = set()
-    if worst_event <= -float(plan["catastrophic_event_loss_bps"]):
+    if worst_event is not None and worst_event <= -float(plan["catastrophic_event_loss_bps"]):
         failures.add(FAILURE_TAIL)
-    if winner_share >= float(plan["max_winner_concentration_share"]) and without_best <= 0:
+    if (
+        winner_share is not None
+        and without_best is not None
+        and winner_share >= float(plan["max_winner_concentration_share"])
+        and without_best <= 0
+    ):
         failures.add(FAILURE_TAIL)
 
+    # Power is checked before metrics that are mathematically undefined for
+    # sparse samples. Observed catastrophic risk remains an immediate veto;
+    # ordinary sparsity remains inconclusive rather than being fabricated into
+    # a rejection or a passing result.
     if trades < int(plan["minimum_validation_trades"]):
         return {
             "status": "REJECTED" if FAILURE_TAIL in failures else "INCONCLUSIVE",
             "failure_categories": sorted(failures or {FAILURE_UNDERPOWERED}),
             "rejection_eligible": bool(failures),
+            "protected_evidence_opened": False,
+        }
+
+    # A nominally powered total sample can still leave one chronological half
+    # or an economic summary undefined. Treat that as insufficient evidence,
+    # never as zero or as a pass.
+    if gross is None or net is None or profit_factor is None or any(v is None for v in half_values):
+        return {
+            "status": "INCONCLUSIVE",
+            "failure_categories": [FAILURE_UNDERPOWERED],
+            "rejection_eligible": False,
             "protected_evidence_opened": False,
         }
 
@@ -268,7 +341,9 @@ def classify_failure(
     if net > 0 and any(observed[m] <= 0 for m in frozen_multipliers if m > 1.0):
         failures.add(FAILURE_COST_ERASED_EDGE)
 
-    if plan["require_positive_validation_halves"] and any(value <= 0 for value in half_values):
+    if plan["require_positive_validation_halves"] and any(
+        value is not None and value <= 0 for value in half_values
+    ):
         failures.add(FAILURE_REGIME_INSTABILITY)
 
     failures.update(_cell_failures(screen, plan))
