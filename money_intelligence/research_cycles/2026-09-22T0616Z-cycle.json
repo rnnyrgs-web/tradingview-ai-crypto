@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-22T0616Z",
+  "information_cutoff": "2026-09-22T06:16:18Z",
+  "status": "OWNER_REPORT_MATERIAL_UPDATE",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_observed_before_write": "6b87092e18c736616944aebdd4c26e475caaa3f4",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles": true,
+    "searched_prediction_artifacts": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "last_owner_report_cycle": "2026-09-20T1630Z",
+    "run_start_utc": "2026-09-22T05:57:44Z",
+    "artifact_cutoff_utc": "2026-09-22T06:16:18Z",
+    "seconds_this_run_minimum": 1114,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 2519,
+    "minimum_cumulative_seconds_since_last_owner_report": 3633,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": true,
+    "method": "Only directly measured active research/execution time is counted. Schedule gaps, idle time, publication timestamps and background time are excluded."
+  },
+  "daily_big_move_scan": {
+    "selected_moves": [
+      "U.S. AI/semiconductor equities surged on September 21: Nasdaq +2.26%, SOX about +4.3%, Intel +12.2%, Arm +17%, AMD about +9.6% and Meta +11.4%, while the U.S. 10-year yield eased below 5% and Brent fell.",
+      "BTC's prior breakout above $84k-$86k remained a high-information cross-asset case because the initial leg preceded the U.S. ETF session and was short-squeeze amplified, while later completed ETF demand was unusually broad and large.",
+      "India absorbed an exceptionally large $143.6B of FX inflows through a subsidized RBI swap program while USD/INR remained near 95.8 rather than appreciating mechanically, creating a high-information capital-flow/FX negative control.",
+      "Novo Nordisk fell as much as roughly 9% at its Capital Markets Day despite same-day positive obesity-drug trial headlines, making it a useful expectations-versus-fundamental-news case.",
+      "Brent remained pressured as effective Saudi export supply recovered through Gulf/Hormuz and ship-to-ship substitution despite continuing geopolitical disruption."
+    ],
+    "selection_logic": "Selected for abnormality and causal information value using asset-specific significance rather than one fixed percentage threshold."
+  },
+  "highest_information_question": "When a central bank changes private hedge economics enough to manufacture a very large gross cross-border inflow, how should Money Intelligence separate genuine unlevered foreign demand, financed gross flow, reserve accumulation, forward liabilities, domestic liquidity effects and spot-FX price impact?",
+  "fresh_research": [
+    {
+      "topic": "India 2026 FCNR/FX swap program: $143.6B gross inflow is not equivalent to unlevered foreign confidence, usable reserve wealth or automatic INR appreciation",
+      "label": "CAPITAL FLOWS / FX / CENTRAL BANK SWAPS / RESERVES / LEVERAGE / STERILIZATION",
+      "observed_facts": [
+        "RBI data released September 21 showed $143.6B of inflows under its concessional FX swap facilities as of September 18, led overwhelmingly by FCNR(B) deposits.",
+        "The 2026 FCNR(B) structure materially changed private economics: banks could sell eligible deposit dollars to the RBI and receive them back at the same exchange rate at maturity, removing the usual FX hedge cost on principal; separate ECB/OFCB facilities used a concessional fixed swap charge rather than the FCNR at-par structure.",
+        "RBI also permitted banks and overseas branches to lend against FCNR(B) deposits or issue standby letters of credit against such lending. ICICI Bank disclosed $17.88B gross FCNR mobilization, about $9.0B of loans against the deposits and $3.63B of standby letters of credit linked to loans against them, demonstrating that at least part of gross deposit mobilization was financed/leverage-enabled rather than purely unlevered household saving.",
+        "The scale of demand was large enough for the RBI to end the FCNR swap window early at August 31. Reported 3-5 year FCNR deposit rates subsequently fell sharply after the subsidy window closed, supporting the inference that the policy terms were a major marginal-flow driver.",
+        "India's FX reserves reached a record $785.7B in the week ended September 4, up about $45B week/week; contemporaneous reporting explicitly noted that the swap inflows also create future RBI FX liabilities in the forward book, so headline reserves overstate freely unencumbered external liquidity relative to a forward-adjusted view.",
+        "The IMF reserve-data framework separately treats forwards, futures and swaps as predetermined foreign-currency drains/positions, supporting the general accounting distinction between gross reserve assets and future derivative obligations.",
+        "Domestic rupee liquidity surged after the FX swaps: Indian banking-system surplus liquidity peaked around INR 11.6T in early September, prompting the RBI to conduct its first auction-based outright bond sale in nine years and announce further sales to sterilize the excess; surplus liquidity subsequently fell materially.",
+        "USD/INR closed near 95.815 on September 21. That is essentially flat to slightly weaker for the rupee versus roughly 95.7075 on June 8, the facility-launch session, despite the extraordinary gross inflow.",
+        "In the 2013 matched control, RBI swap windows attracted about $34.3B and were explicitly credited by the RBI with rebuilding reserves and stabilizing the FX market; the rupee appreciated materially from the late-2013 crisis trough over the following months. The 2026 program is roughly 4.2 times larger in gross dollars, yet has not produced comparable spot appreciation, showing that gross flow size alone is not a stable FX-return mapping."
+      ],
+      "inference": "The correct chain is policy subsidy / free or concessional hedge -> banks raise eligible foreign-currency liabilities, sometimes with client leverage -> dollars are sold to RBI -> RBI spot reserves rise while a future FX delivery obligation is created -> rupees enter banking liquidity -> RBI can sterilize that liquidity through bond sales/taxes/intervention -> spot INR still clears against oil-import demand, broader balance of payments, global dollar/rate conditions, importer hedging and RBI's own intervention path. Therefore gross inflow, net external capital, gross reserves, forward-adjusted reserve capacity, domestic liquidity and spot-currency price are separate state variables.",
+      "source_destination_chain": "NRI/borrower equity plus bank/client credit where used -> FCNR/overseas borrowing -> Indian bank foreign-currency liability -> USD sold to RBI under subsidized swap -> RBI reserve asset plus future FX obligation; rupee liquidity -> bank balance sheets / money market -> RBI sterilization and/or domestic credit allocation. Spot INR price is set only after competing importer, portfolio, intervention and global-dollar flows clear.",
+      "catalyst": "RBI's June 2026 swap/hedge subsidy and temporary relaxation of eligible FCNR pricing/financing constraints.",
+      "transmission_mechanism": "Policy changed hedge economics and permitted leverage, massively increasing the private incentive and capacity to manufacture eligible foreign-currency deposits/borrowings; the central bank absorbed the dollars and injected rupees, then sterilized part of the domestic liquidity consequence.",
+      "amplifiers": [
+        "Leverage/SBLC-backed client financing against FCNR deposits",
+        "Temporarily elevated FCNR deposit pricing",
+        "Bank competition for foreign-currency funding",
+        "Free/concessional hedge economics",
+        "Central-bank willingness to absorb spot USD"
+      ],
+      "alternative_explanations": [
+        "Some inflows represent genuine unlevered NRI savings and diversification, not financed arbitrage.",
+        "INR non-appreciation was also shaped by elevated oil prices, a strong/high-yielding dollar environment, importer demand and RBI intervention; the swap flow did not occur in isolation.",
+        "The RBI's final post-program forward book is not yet fully available, so precise forward-adjusted reserve capacity remains uncertain."
+      ],
+      "historical_control": "RBI's 2013 FCNR/bank-borrowing swap windows attracted $34.3B and were associated with reserve rebuilding and later rupee stabilization/appreciation. The contrast with 2026 rejects any fixed elasticity from gross swap inflow to spot-FX appreciation and elevates regime variables such as oil, external balance, global yields, intervention and leverage structure.",
+      "negative_findings": [
+        "Do not label the full $143.6B as pure unlevered foreign confidence or fresh portfolio risk-taking.",
+        "Do not equate gross FX reserves created by swaps with the same amount of freely usable net reserve wealth; forward liabilities and maturity structure matter.",
+        "Do not infer spot-currency appreciation mechanically from the headline capital-inflow amount.",
+        "Do not infer a durable domestic-liquidity easing when the central bank is actively sterilizing the injected rupees.",
+        "Do not turn the funding windfall into a blanket Indian-bank BUY without measuring funding cost, loan pricing, NIM effects, credit growth, capital consumption and sterilization."
+      ],
+      "learning_candidate": {
+        "id": "MI-H-20260922-SUBSIDIZED-FX-SWAP-GROSS-VS-NET",
+        "status": "SUPPORTED_REGIME_SPECIFIC",
+        "claim": "A subsidized central-bank FX swap can manufacture very large gross cross-border inflows by changing hedge economics and enabling leverage, but gross flow, net external capital, gross reserves, forward-adjusted reserve capacity, domestic liquidity and spot FX are distinct. Forecasts must model balance-sheet structure and sterilization rather than treating the headline inflow as direct currency demand."
+      },
+      "decision_support": {
+        "instrument": "INR / Indian rates / Indian banks",
+        "action": "WAIT / NO EDGE from swap headline alone",
+        "horizon": "weeks to months",
+        "confidence": "MODERATE-HIGH on mechanism; LOW on standalone asset direction",
+        "confirmations": [
+          "Updated RBI forward-position/maturity data after the program closes",
+          "Persistent change in net banking capital / NRI deposits after offsetting banking flows",
+          "Sterilization pace and overnight money-market alignment",
+          "Importer USD demand, oil price and current-account trajectory",
+          "Bank NIM/funding-cost disclosures showing retained economics from FCNR funding"
+        ],
+        "invalidation": "The mechanism would be weakened if subsequent bank-level and RBI data showed the inflows were overwhelmingly unlevered, created no material future FX obligation, were not sterilized, and mapped persistently to spot INR appreciation after external controls.",
+        "cost_capacity": "INR and sovereign rates are highly liquid, but policy intervention materially changes execution and path risk; individual bank trades require valuation and balance-sheet work."
+      },
+      "sources": [
+        "Reuters 2026-09-21: India draws $143.6B in forex inflows under concessional swap facility",
+        "Reuters 2026-09-11: India FX reserves surge $45B to $785.7B and forward-liability caveat",
+        "Reuters 2026-09-17: RBI debt sales to drain liquidity after first such auction in nine years",
+        "Reuters 2026-09-21: rupee closes 95.8150 with importer demand limiting gains",
+        "RBI 2026 FCNR/ECB/OFCB swap facility FAQs and reporting circulars",
+        "ICICI Bank Form 6-K filed 2026-09-02 describing $17.88B mobilization, $9B loans and $3.63B SBLCs",
+        "RBI historical publication: 2013 swap windows attracted $34.3B and helped rebuild reserves",
+        "IMF Reserves Data Template / reserve-adequacy guidance on forwards and swaps as reserve-liquidity drains"
+      ]
+    },
+    {
+      "topic": "AI capital abundance is segmented by creditor seniority, collateral/recourse and residual-risk bearer",
+      "label": "AI / CREDIT / CAPITAL STRUCTURE / SOURCE OF FUNDS",
+      "observed_facts": [
+        "SoftBank launched roughly $11B of senior unsecured dollar/euro bonds on September 21 primarily to fund the next $10B OpenAI investment tranche and replace bridge financing; proposed notes were rated BB+ by Fitch.",
+        "SoftBank's own disclosures show the 2026 OpenAI commitment is a major capital priority while it manages a stated loan-to-value policy, making its financing cost and asset-value volatility part of OpenAI-equity transmission.",
+        "By contrast, roughly $18B of Oracle-leased Project Jupiter data-center loans have traded around 89-91 cents as syndication has struggled amid permitting, power/water and Oracle leverage concerns.",
+        "ByteDance separately secured a very large three-year unsecured bank loan that was upsized after strong demand, illustrating that abundant AI-related capital can coexist with very different pricing and risk allocation across borrowers."
+      ],
+      "inference": "AI financing volume is not evidence that capital is cheap or that equity holders capture all AI value. The capital stack distributes AI economics among bondholders, banks, project lenders, infrastructure owners, customers and residual equity. Expected shareholder return must clear the financing cost and construction/customer concentration risk actually borne by the residual claimant.",
+      "negative_findings": ["Do not use gross AI financing volume as a bullish equity signal.", "Do not treat a funded project as low-risk without identifying who bears construction, power, customer, refinancing and residual-value risk."],
+      "decision_support": "AI infrastructure remains SELECTIVE HOLD / research for BUY candidates; require contract/collateral quality, financing cost, valuation and cash-flow capture before promotion."
+    },
+    {
+      "topic": "Novo Nordisk September 21 selloff: positive clinical news was dominated by expectations/terminal-value repricing",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / EQUITY / EXPECTATIONS / FUNDAMENTALS",
+      "observed_facts": [
+        "Novo Nordisk shares fell as much as roughly 9% during its Capital Markets Day even as the company released positive CagriSema clinical results and reiterated ambitious pipeline/blockbuster targets.",
+        "Investor/analyst focus instead centered on pricing power, M&A strategy, growth normalization and the ability to replace semaglutide economics before early-2030s patent expiries.",
+        "The company's CMD targets included more than five multi-blockbusters by 2030 and more than DKK150B of pipeline sales by 2035, but the market response indicated that those targets did not exceed the expectations embedded in valuation."
+      ],
+      "inference": "Company-specific scientific good news is not directionally sufficient when the higher-weight valuation variables are future pricing, terminal cash-flow replacement and competitive economics. Price reacts to the change in expected discounted cash flows relative to what was already priced, not to the sign of a headline.",
+      "negative_findings": ["Do not treat positive trial data as a same-day stock predictor without comparator quality, expected label/economic value and prior expectations.", "Do not infer the share decline proves the drug data were poor; the causal weight appears to have been expectation/terminal-value repricing."],
+      "decision_support": "Novo Nordisk WAIT / NO EDGE pending valuation, patent-replacement economics and pricing analysis."
+    }
+  ],
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No new immutable directional asset forecast clears the evidence bar after accounting for policy intervention, financing structure and already-realized price moves."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle as the smallest safe change. The subsidized-FX-swap gross-versus-net mechanism is materially supported and is a candidate for promotion into the canonical learning ledger/dashboard after the post-program RBI forward book and reserve-liquidity data provide one more direct validation. Avoid a noisy dashboard rewrite while another current research cycle already exists on main.",
+  "lane_integrity": {
+    "signal_tables_changed": false,
+    "signal_confidence_changed": false,
+    "paper_trades_changed": false,
+    "promotion_gates_changed": false,
+    "broker_state_changed": false,
+    "real_money_trades_authorized_or_executed": false
+  }
+}
