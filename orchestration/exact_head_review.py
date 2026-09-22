@@ -4,7 +4,7 @@ import argparse
 import json
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 from agents.autonomous_orchestrator import (
     REVIEWERS,
@@ -81,7 +81,7 @@ def _enrich_verdict(
     return enriched
 
 
-def _valid_attempt_verdicts(verdicts: list[dict[str, Any] | None]) -> list[dict[str, Any]]:
+def _valid_attempt_verdicts(verdicts: Iterable[dict[str, Any] | None]) -> list[dict[str, Any]]:
     valid_verdicts: list[dict[str, Any]] = []
     for verdict in verdicts:
         if verdict is None:
@@ -96,14 +96,51 @@ def _valid_attempt_verdicts(verdicts: list[dict[str, Any] | None]) -> list[dict[
     return valid_verdicts
 
 
-def has_terminal_rejection(verdicts: list[dict[str, Any] | None]) -> bool:
+def load_attempt_verdicts(paths: Iterable[Path]) -> list[dict[str, Any] | None]:
+    """Load reviewer files once under one canonical fail-closed interpretation.
+
+    Live rejection detection and durable attempt finalization both use this exact
+    loader so malformed/missing files cannot be filtered differently by two shell
+    snippets. A non-object or invalid/integration-authority-bearing document is a
+    non-verdict, never an approval and never a scientific rejection.
+    """
+
+    verdicts: list[dict[str, Any] | None] = []
+    for path in paths:
+        try:
+            value = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError, json.JSONDecodeError):
+            verdicts.append(None)
+            continue
+        if not isinstance(value, dict):
+            verdicts.append(None)
+            continue
+        try:
+            _validate_verdict_schema(value)
+        except RuntimeError:
+            verdicts.append(None)
+            continue
+        if value.get("integration_authority") != "NONE":
+            verdicts.append(None)
+            continue
+        verdicts.append(value)
+    return verdicts
+
+
+def has_terminal_rejection(verdicts: Iterable[dict[str, Any] | None]) -> bool:
     """Return one deterministic rejection predicate shared by live and receipt paths."""
 
     return any(verdict["approve"] is False for verdict in _valid_attempt_verdicts(verdicts))
 
 
+def has_terminal_rejection_files(paths: Iterable[Path]) -> bool:
+    """Canonical file-backed terminal-rejection predicate used by the live workflow."""
+
+    return has_terminal_rejection(load_attempt_verdicts(paths))
+
+
 def classify_review_attempt_outcome(
-    verdicts: list[dict[str, Any] | None],
+    verdicts: Iterable[dict[str, Any] | None],
     *,
     controlled_wait: bool,
     approved_outcome: str,
@@ -116,8 +153,9 @@ def classify_review_attempt_outcome(
     reviewer evidence only because of bounded transient capacity/runtime failure.
     """
 
-    valid_verdicts = _valid_attempt_verdicts(verdicts)
-    if has_terminal_rejection(verdicts):
+    verdict_list = list(verdicts)
+    valid_verdicts = _valid_attempt_verdicts(verdict_list)
+    if has_terminal_rejection(verdict_list):
         return "REJECTED"
     if controlled_wait:
         return "WAIT_RETRYABLE"
@@ -126,6 +164,21 @@ def classify_review_attempt_outcome(
             return approved_outcome
         return "FAILED"
     return "FAILED"
+
+
+def classify_review_attempt_files(
+    paths: Iterable[Path],
+    *,
+    controlled_wait: bool,
+    approved_outcome: str,
+) -> str:
+    """Canonical file-backed attempt classifier used by durable finalization."""
+
+    return classify_review_attempt_outcome(
+        load_attempt_verdicts(paths),
+        controlled_wait=controlled_wait,
+        approved_outcome=approved_outcome,
+    )
 
 
 def _claude_exact_head_verdict(review_input: str, temporary: Path) -> dict[str, Any]:
