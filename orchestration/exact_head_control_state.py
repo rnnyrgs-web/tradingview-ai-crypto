@@ -8,6 +8,7 @@ from typing import Any, Iterable
 
 TRUSTED_CONTROL_AUTHOR = "github-actions[bot]"
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+_REPOSITORY_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 _ATTEMPT_TITLE_RE = re.compile(
     r"^exact-head-review-attempt: pr=(?P<pr>[0-9]+) sha=(?P<sha>[0-9a-f]{40}) run=(?P<run>[0-9]+)$"
 )
@@ -65,13 +66,56 @@ def _trusted(issue: dict[str, Any]) -> bool:
     return _author(issue) == TRUSTED_CONTROL_AUTHOR and "pull_request" not in issue
 
 
-def _validate_identity_inputs(pr_number: int, head_sha: str, workflow_main_sha: str) -> None:
+def _validate_identity_inputs(
+    pr_number: int,
+    head_sha: str,
+    workflow_main_sha: str,
+    repository: str,
+) -> None:
     if isinstance(pr_number, bool) or not isinstance(pr_number, int) or pr_number <= 0:
         raise ControlStateError("pr_number must be a positive integer")
     if not isinstance(head_sha, str) or _SHA_RE.fullmatch(head_sha) is None:
         raise ControlStateError("head_sha must be an exact lowercase 40-character SHA")
     if not isinstance(workflow_main_sha, str) or _SHA_RE.fullmatch(workflow_main_sha) is None:
         raise ControlStateError("workflow_main_sha must be an exact lowercase 40-character SHA")
+    if not isinstance(repository, str) or _REPOSITORY_RE.fullmatch(repository) is None:
+        raise ControlStateError("repository must be an exact owner/name identity")
+
+
+def _issue_number(issue: dict[str, Any]) -> int | None:
+    try:
+        number = int(issue["number"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    return number if number > 0 else None
+
+
+def _unique_issue_list(issues: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Fail closed on pagination/race artifacts that duplicate an issue identity.
+
+    GitHub issue numbers are unique repository identities. Seeing the same positive
+    issue number twice in one purported authoritative snapshot means the snapshot
+    is not safe to reason from, even if the duplicate bytes happen to agree.
+    """
+
+    output: list[dict[str, Any]] = []
+    seen: set[int] = set()
+    for issue in issues:
+        if not isinstance(issue, dict):
+            continue
+        number = _issue_number(issue)
+        if number is None:
+            continue
+        if number in seen:
+            raise ControlStateError(f"duplicate issue number in control snapshot: {number}")
+        seen.add(number)
+        output.append(issue)
+    return output
+
+
+def _repository_match(body: str, repository: str) -> bool:
+    match = _single_match(body, re.compile(r"Repository: `(?P<value>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)`"))
+    return match is not None and match.group("value") == repository
 
 
 def _attempt_record(
@@ -80,6 +124,7 @@ def _attempt_record(
     pr_number: int,
     head_sha: str,
     workflow_main_sha: str,
+    repository: str,
 ) -> dict[str, Any] | None:
     if not _trusted(issue):
         return None
@@ -93,6 +138,8 @@ def _attempt_record(
         return None
 
     body = _body(issue)
+    if not _repository_match(body, repository):
+        return None
     pr_match = _single_match(body, re.compile(r"PR: #(?P<value>[0-9]+)"))
     sha_match = _single_match(body, re.compile(r"Exact reviewed SHA: `(?P<value>[0-9a-f]{40})`"))
     run_match = _single_match(body, re.compile(r"Workflow run: `(?P<value>[0-9]+)`"))
@@ -116,16 +163,14 @@ def _attempt_record(
         return None
     if authority_match.group("value") != "NONE":
         return None
-    try:
-        number = int(issue["number"])
-    except (KeyError, TypeError, ValueError):
-        return None
-    if number <= 0:
+    number = _issue_number(issue)
+    if number is None:
         return None
     return {
         "number": number,
         "run": int(title_match.group("run")),
         "workflow_main_sha": workflow_main_sha,
+        "repository": repository,
         "outcome": outcome,
     }
 
@@ -139,6 +184,7 @@ def _receipt_source(
     pr_number: int,
     head_sha: str,
     workflow_main_sha: str,
+    repository: str,
 ) -> tuple[int, int, str] | None:
     if not _trusted(issue):
         return None
@@ -150,6 +196,8 @@ def _receipt_source(
         return None
 
     body = _body(issue)
+    if not _repository_match(body, repository):
+        return None
     pr_match = _single_match(body, re.compile(r"PR: #(?P<value>[0-9]+)"))
     sha_match = _single_match(body, re.compile(rf"{re.escape(sha_label)}: `(?P<value>[0-9a-f]{{40}})`"))
     source_match = _single_match(body, re.compile(r"Source attempt issue: #(?P<value>[0-9]+)"))
@@ -186,9 +234,10 @@ def exact_head_control_state(
     pr_number: int,
     head_sha: str,
     workflow_main_sha: str,
+    repository: str,
 ) -> dict[str, Any]:
-    _validate_identity_inputs(pr_number, head_sha, workflow_main_sha)
-    issue_list = [issue for issue in issues if isinstance(issue, dict)]
+    _validate_identity_inputs(pr_number, head_sha, workflow_main_sha, repository)
+    issue_list = _unique_issue_list(issues)
 
     attempts: dict[int, dict[str, Any]] = {}
     for issue in issue_list:
@@ -197,6 +246,7 @@ def exact_head_control_state(
             pr_number=pr_number,
             head_sha=head_sha,
             workflow_main_sha=workflow_main_sha,
+            repository=repository,
         )
         if record is not None:
             attempts[record["number"]] = record
@@ -211,11 +261,8 @@ def exact_head_control_state(
     approval_receipts: list[int] = []
     rejection_receipts: list[int] = []
     for issue in issue_list:
-        try:
-            issue_number = int(issue["number"])
-        except (KeyError, TypeError, ValueError):
-            continue
-        if issue_number <= 0:
+        issue_number = _issue_number(issue)
+        if issue_number is None:
             continue
 
         approval_source = _receipt_source(
@@ -226,13 +273,13 @@ def exact_head_control_state(
             pr_number=pr_number,
             head_sha=head_sha,
             workflow_main_sha=workflow_main_sha,
+            repository=repository,
         )
         if approval_source is not None:
             source_issue, source_run, outcome = approval_source
             source = attempts.get(source_issue)
             if (
                 source is not None
-                and issue_number > source_issue
                 and source["run"] == source_run
                 and source["outcome"] == outcome
                 and source["outcome"] in APPROVED_OUTCOMES
@@ -247,13 +294,13 @@ def exact_head_control_state(
             pr_number=pr_number,
             head_sha=head_sha,
             workflow_main_sha=workflow_main_sha,
+            repository=repository,
         )
         if rejection_source is not None:
             source_issue, source_run, outcome = rejection_source
             source = attempts.get(source_issue)
             if (
                 source is not None
-                and issue_number > source_issue
                 and source["run"] == source_run
                 and source["outcome"] == outcome == "REJECTED"
             ):
@@ -276,6 +323,7 @@ def exact_head_control_state(
         "validated_approval_receipts": approval_receipts,
         "validated_rejection_receipts": rejection_receipts,
         "workflow_main_sha": workflow_main_sha,
+        "repository": repository,
         "trusted_control_author": TRUSTED_CONTROL_AUTHOR,
         "admin_mutation_is_trusted_boundary": True,
     }
@@ -287,6 +335,7 @@ def main() -> int:
     parser.add_argument("--pr-number", required=True, type=int)
     parser.add_argument("--head-sha", required=True)
     parser.add_argument("--workflow-main-sha", required=True)
+    parser.add_argument("--repository", required=True)
     args = parser.parse_args()
 
     data = json.loads(Path(args.issues).read_text(encoding="utf-8"))
@@ -297,6 +346,7 @@ def main() -> int:
         pr_number=args.pr_number,
         head_sha=args.head_sha,
         workflow_main_sha=args.workflow_main_sha,
+        repository=args.repository,
     )
     print(json.dumps(state, sort_keys=True))
     return 0
