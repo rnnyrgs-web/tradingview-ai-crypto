@@ -120,6 +120,47 @@ def test_claude_format_failure_gets_one_bounded_retry(
     assert verdict["risk"] == "high"
 
 
+def test_claude_invalid_verdict_schema_gets_one_bounded_retry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "review.json"
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
+    calls = 0
+
+    def invalid_then_valid(_review_input: str, raw_output: Path) -> int:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raw_output.write_text(
+                json.dumps({"approve": "yes", "reason": "bad schema", "risk": "low"}),
+                encoding="utf-8",
+            )
+        else:
+            raw_output.write_text(
+                json.dumps(
+                    {
+                        "approve": True,
+                        "reason": "bounded repair is sound",
+                        "risk": "low",
+                        "falsification_findings": {},
+                    }
+                ),
+                encoding="utf-8",
+            )
+        return 0
+
+    monkeypatch.setattr(review, "_review_diff_claude_adversarial", invalid_then_valid)
+    assert review.review_exact_head(
+        "claude-adversarial", diff_path, output, pr_number=579, head_sha=HEAD_SHA
+    ) == 0
+    assert calls == review.CLAUDE_FORMAT_ATTEMPTS == 2
+    verdict = json.loads(output.read_text(encoding="utf-8"))
+    assert verdict["approve"] is True
+    assert verdict["risk"] == "low"
+
+
 def test_repeated_claude_format_failure_becomes_transient_fail_closed(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
