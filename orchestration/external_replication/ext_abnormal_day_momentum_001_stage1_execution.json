@@ -16,8 +16,23 @@
     "sigma_multiple": 1.5,
     "latest_signal_hour_utc": 22,
     "base_total_cost_bps": 24.0,
+    "middle_cost_multiplier": 2.0,
     "stress_multiplier": 3.0,
     "independent_sample_unit": "unique_utc_signal_day_pooled_across_fixed_instruments"
+  },
+  "portfolio_sizing": {
+    "fixed_instruments": [
+      "BTC-USDT-SWAP",
+      "ETH-USDT-SWAP",
+      "SOL-USDT-SWAP"
+    ],
+    "nav_fraction_per_eligible_instrument": 0.3333333333333333,
+    "max_simultaneous_positions": 3,
+    "max_gross_nav_fraction": 1.0,
+    "sizing_decision": "fixed_per_instrument_before_later_same_day_signals",
+    "final_same_day_signal_count_normalization_allowed": false,
+    "authoritative_economic_unit": "nav_weighted_unique_utc_signal_day_portfolio_block",
+    "controls_use_same_sizing_and_aggregation": true
   },
   "validation_halves": {
     "definition": "fixed_wall_clock_split_frozen_before_outcomes",
@@ -39,6 +54,12 @@
     "validation_total_3x_cost_return_gt": 0.0,
     "single_winner_dependence_veto": "leave_largest_positive_independent_utc_signal_day_block_out_total_must_be_positive_in_train_and_validation",
     "catastrophic_tail_veto": "repeat_worst_independent_utc_signal_day_block_once_more_total_must_be_positive_in_train_and_validation"
+  },
+  "failure_learning_diagnostics": {
+    "persist_intermediate_2x_cost_economics": true,
+    "intermediate_total_cost_bps": 48.0,
+    "persist_winner_concentration_share": true,
+    "raw_asset_event_statistics_authoritative": false
   },
   "classification": {
     "insufficient_independent_days": "UNDERPOWERED",
