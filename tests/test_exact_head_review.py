@@ -182,6 +182,64 @@ def test_claude_malformed_output_becomes_transient_without_second_vote(
     assert not output.with_suffix(output.suffix + ".raw").exists()
 
 
+def test_claude_missing_raw_output_becomes_transient_without_second_vote(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "review.json"
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
+    calls = 0
+
+    def no_raw_output(_review_input: str, _raw_output: Path) -> int:
+        nonlocal calls
+        calls += 1
+        return 0
+
+    monkeypatch.setattr(review, "_review_diff_claude_adversarial", no_raw_output)
+    with pytest.raises(RuntimeError, match="temporarily unavailable"):
+        review.review_exact_head(
+            "claude-adversarial", diff_path, output, pr_number=579, head_sha=HEAD_SHA
+        )
+    assert calls == 1
+    assert not output.exists()
+    assert not output.with_suffix(output.suffix + ".raw").exists()
+
+
+def test_claude_unreadable_raw_output_becomes_transient_without_second_vote(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "review.json"
+    raw_output = output.with_suffix(output.suffix + ".raw")
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
+    calls = 0
+
+    def writes_raw(_review_input: str, reviewer_raw_output: Path) -> int:
+        nonlocal calls
+        calls += 1
+        reviewer_raw_output.write_text('{"approve": true, "risk": "low"}', encoding="utf-8")
+        return 0
+
+    original_read_text = Path.read_text
+
+    def unreadable_raw(path: Path, *args: object, **kwargs: object) -> str:
+        if path == raw_output:
+            raise OSError("simulated unreadable reviewer output")
+        return original_read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(review, "_review_diff_claude_adversarial", writes_raw)
+    monkeypatch.setattr(Path, "read_text", unreadable_raw)
+    with pytest.raises(RuntimeError, match="temporarily unavailable"):
+        review.review_exact_head(
+            "claude-adversarial", diff_path, output, pr_number=579, head_sha=HEAD_SHA
+        )
+    assert calls == 1
+    assert not output.exists()
+    assert not raw_output.exists()
+
+
 def test_claude_invalid_verdict_schema_becomes_transient_without_second_vote(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
