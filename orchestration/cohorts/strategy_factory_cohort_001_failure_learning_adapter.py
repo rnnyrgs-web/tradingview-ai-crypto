@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import math
 from typing import Any
 
 from orchestration.cohorts.strategy_factory_cohort_001_failure_diagnostics import (
@@ -30,8 +31,30 @@ def _finite_number(value: Any, field: str) -> float:
         number = float(value)
     except (TypeError, ValueError) as exc:
         raise RuntimeError(f"{field} must be numeric") from exc
-    if number != number or number in (float("inf"), float("-inf")):
+    if not math.isfinite(number):
         raise RuntimeError(f"{field} must be finite")
+    return number
+
+
+def _optional_number(
+    value: Any,
+    field: str,
+    *,
+    allow_positive_infinity: bool = False,
+) -> float | None:
+    """Preserve mathematically undefined sparse diagnostics without fabrication."""
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        raise RuntimeError(f"{field} must be numeric or null")
+    try:
+        number = float(value)
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError(f"{field} must be numeric or null") from exc
+    if math.isnan(number) or number == float("-inf"):
+        raise RuntimeError(f"{field} must not be NaN or negative infinity")
+    if number == float("inf") and not allow_positive_infinity:
+        raise RuntimeError(f"{field} must be finite when defined")
     return number
 
 
@@ -89,6 +112,10 @@ def _map_certified_failure_learning_screen(
     This function does not establish dataset authority. The public canonical mint
     remains disabled until a dedicated adapter authenticates exact protected-safe
     dataset bytes/receipt, chronology/PIT and a pre-frozen capacity rule.
+
+    Sparse Stage-1 statistics remain ``None`` when mathematically undefined.
+    A no-loss profit factor may remain positive infinity, matching the truthful
+    downstream #510/#511 schema. No zero/one/finite placeholder is fabricated.
     """
     fingerprint_id = _nonempty_text(
         predeclaration.get("fingerprint_id"),
@@ -120,35 +147,38 @@ def _map_certified_failure_learning_screen(
     if diagnostics.validation_independent_events != independent_events:
         raise RuntimeError("failure diagnostics independent-event count does not match Stage-1 result")
 
-    mean_24 = _finite_number(_attribute(validation, "mean_24bps"), "validation.mean_24bps")
-    mean_48 = _finite_number(diagnostics.mean_48bps, "failure_diagnostics.mean_48bps")
-    mean_72 = _finite_number(_attribute(validation, "mean_72bps"), "validation.mean_72bps")
-    profit_factor = _finite_number(
+    mean_24 = _optional_number(_attribute(validation, "mean_24bps"), "validation.mean_24bps")
+    mean_48 = _optional_number(diagnostics.mean_48bps, "failure_diagnostics.mean_48bps")
+    mean_72 = _optional_number(_attribute(validation, "mean_72bps"), "validation.mean_72bps")
+    profit_factor = _optional_number(
         _attribute(validation, "profit_factor_24bps"),
         "validation.profit_factor_24bps",
+        allow_positive_infinity=True,
     )
-    leave_best = _finite_number(
+    leave_best = _optional_number(
         _attribute(validation, "leave_best_mean_24bps"),
         "validation.leave_best_mean_24bps",
     )
-    worst_loss_abs = _finite_number(
+    worst_loss_abs = _optional_number(
         _attribute(validation, "worst_loss_abs_24bps"),
         "validation.worst_loss_abs_24bps",
     )
-    winner_share = _finite_number(
+    winner_share = _optional_number(
         diagnostics.winner_concentration_share_24bps,
         "failure_diagnostics.winner_concentration_share_24bps",
     )
-    if worst_loss_abs < 0:
-        raise RuntimeError("validation.worst_loss_abs_24bps must be non-negative")
-    if not 0.0 <= winner_share <= 1.0:
+    if profit_factor is not None and profit_factor < 0:
+        raise RuntimeError("validation.profit_factor_24bps must be non-negative when defined")
+    if worst_loss_abs is not None and worst_loss_abs < 0:
+        raise RuntimeError("validation.worst_loss_abs_24bps must be non-negative when defined")
+    if winner_share is not None and not 0.0 <= winner_share <= 1.0:
         raise RuntimeError("failure_diagnostics.winner_concentration_share_24bps must be in [0,1]")
 
     half_means = _attribute(result, "validation_half_means_24bps")
     if not isinstance(half_means, tuple) or len(half_means) != 2:
         raise RuntimeError("validation_half_means_24bps must contain exactly two frozen halves")
     half_bps = [
-        _finite_number(value, f"validation_half_means_24bps[{idx}]") * 10_000.0
+        None if value is None else _finite_number(value, f"validation_half_means_24bps[{idx}]") * 10_000.0
         for idx, value in enumerate(half_means)
     ]
 
@@ -168,20 +198,20 @@ def _map_certified_failure_learning_screen(
         },
         "validation": {
             "trades": independent_events,
-            "gross_mean_bps": mean_24 * 10_000.0 + 24.0,
-            "net_mean_bps": mean_24 * 10_000.0,
+            "gross_mean_bps": None if mean_24 is None else mean_24 * 10_000.0 + 24.0,
+            "net_mean_bps": None if mean_24 is None else mean_24 * 10_000.0,
             "profit_factor": profit_factor,
             "half_net_bps": half_bps,
         },
         "cost_stress": [
-            {"multiplier": 1.0, "net_mean_bps": mean_24 * 10_000.0},
-            {"multiplier": 2.0, "net_mean_bps": mean_48 * 10_000.0},
-            {"multiplier": 3.0, "net_mean_bps": mean_72 * 10_000.0},
+            {"multiplier": 1.0, "net_mean_bps": None if mean_24 is None else mean_24 * 10_000.0},
+            {"multiplier": 2.0, "net_mean_bps": None if mean_48 is None else mean_48 * 10_000.0},
+            {"multiplier": 3.0, "net_mean_bps": None if mean_72 is None else mean_72 * 10_000.0},
         ],
         "risk": {
-            "worst_event_net_bps": -worst_loss_abs * 10_000.0,
+            "worst_event_net_bps": None if worst_loss_abs is None else -worst_loss_abs * 10_000.0,
             "winner_concentration_share": winner_share,
-            "without_best_net_mean_bps": leave_best * 10_000.0,
+            "without_best_net_mean_bps": None if leave_best is None else leave_best * 10_000.0,
         },
         "asset_timeframe_cells": [],
         "regime_cells": [],
