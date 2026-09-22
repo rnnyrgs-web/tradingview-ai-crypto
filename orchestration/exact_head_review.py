@@ -83,9 +83,10 @@ def _claude_exact_head_verdict(review_input: str, temporary: Path) -> dict[str, 
 
     The same ``review_input`` is passed directly to the same adversarial reviewer function
     exactly once. Valid approvals and valid scientific rejections are returned unchanged.
-    Malformed/truncated JSON or an invalid verdict schema is not a scientific verdict, so it
-    becomes ``temporarily unavailable`` and the already-bounded *outer workflow* may retry
-    the exact head later. This helper never selects among multiple model judgments.
+    Missing/unreadable raw output, malformed/truncated JSON, or an invalid verdict schema is
+    not a scientific verdict, so it becomes ``temporarily unavailable`` and the already-bounded
+    *outer workflow* may retry the exact head later. This helper never selects among multiple
+    model judgments.
     """
 
     temporary.unlink(missing_ok=True)
@@ -96,9 +97,9 @@ def _claude_exact_head_verdict(review_input: str, temporary: Path) -> dict[str, 
             raise RuntimeError("claude reviewer returned non-object JSON")
         _validate_verdict_schema(verdict)
         return verdict
-    except (json.JSONDecodeError, RuntimeError) as exc:
+    except (json.JSONDecodeError, RuntimeError, OSError) as exc:
         raise RuntimeError(
-            "temporarily unavailable: Claude reviewer returned malformed, incomplete, or invalid-schema JSON"
+            "temporarily unavailable: Claude reviewer returned missing, unreadable, malformed, incomplete, or invalid-schema JSON"
         ) from exc
 
 
