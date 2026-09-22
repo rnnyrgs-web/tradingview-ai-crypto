@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import http.client
 import json
 import os
@@ -18,6 +19,7 @@ TITLE_PREFIX = "pit-trusted-acquisition-request: "
 COLLECTION_RE = re.compile(r"^CC-MAIN-[0-9]{4}-[0-9]{2}$")
 WARC_RE = re.compile(r"^crawl-data/(CC-MAIN-[0-9]{4}-[0-9]{2})/.+\.warc\.gz$")
 MAX_RANGE_BYTES = 16 * 1024 * 1024
+CLAIM_MARKER = "PIT_TRUSTED_ACQUISITION_CLAIMED"
 DISPATCH_MARKER = "PIT_TRUSTED_ACQUISITION_DISPATCHED"
 TRUSTED_MARKER_AUTHORS = {"github-actions", "github-actions[bot]"}
 GITHUB_API_HOST = "api.github.com"
@@ -158,6 +160,20 @@ def build_dispatch_payload(fields: dict[str, str]) -> dict[str, Any]:
     return {"ref": TARGET_REF, "inputs": dict(fields)}
 
 
+def request_digest(issue_number: int, fields: dict[str, str]) -> str:
+    if not isinstance(issue_number, int) or issue_number <= 0:
+        raise BridgeRequestError("invalid issue number for request digest")
+    dispatch_payload = build_dispatch_payload(fields)
+    canonical = {
+        "repository": EXPECTED_REPOSITORY,
+        "issue_number": issue_number,
+        "target_workflow": TARGET_WORKFLOW,
+        "dispatch_payload": dispatch_payload,
+    }
+    raw = json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()
+
+
 def _github_json_request(
     method: str,
     path: str,
@@ -210,7 +226,7 @@ def _github_json_request(
         raise BridgeRequestError("GitHub API returned malformed JSON") from exc
 
 
-def _issue_is_already_dispatched(issue_number: int, token: str) -> bool:
+def _issue_dispatch_state(issue_number: int, token: str, digest: str) -> str:
     issue_path = f"/repos/{EXPECTED_REPOSITORY}/issues/{issue_number}"
     issue = _require_dict(
         _github_json_request(
@@ -219,8 +235,9 @@ def _issue_is_already_dispatched(issue_number: int, token: str) -> bool:
         name="GitHub issue",
     )
     if issue.get("state") != "open":
-        return True
+        return "closed"
 
+    claimed = False
     for page in range(1, MAX_COMMENT_PAGES + 1):
         comments = _github_json_request(
             "GET",
@@ -235,10 +252,23 @@ def _issue_is_already_dispatched(issue_number: int, token: str) -> bool:
                 raise BridgeRequestError("GitHub issue comment must be an object")
             author = (comment.get("user") or {}).get("login")
             body = comment.get("body") or ""
-            if author in TRUSTED_MARKER_AUTHORS and DISPATCH_MARKER in body:
-                return True
+            if author not in TRUSTED_MARKER_AUTHORS:
+                continue
+            if DISPATCH_MARKER in body:
+                if f"{DISPATCH_MARKER} issue={issue_number}" not in body:
+                    raise BridgeRequestError("trusted dispatch marker is malformed")
+                return "dispatched"
+            if CLAIM_MARKER in body:
+                expected_claim = (
+                    f"{CLAIM_MARKER} issue={issue_number} request_sha256={digest}"
+                )
+                if expected_claim not in body:
+                    raise BridgeRequestError(
+                        "trusted claim marker does not match canonical request digest"
+                    )
+                claimed = True
         if len(comments) < 100:
-            return False
+            return "claimed" if claimed else "open"
     raise BridgeRequestError("too many issue comments to prove bridge idempotency")
 
 
@@ -249,8 +279,26 @@ def dispatch(
     runtime_token = token if token is not None else os.environ.get("GH_TOKEN")
     if not runtime_token:
         raise BridgeRequestError("GH_TOKEN is required for trusted bridge dispatch")
-    if _issue_is_already_dispatched(issue_number, runtime_token):
+
+    digest = request_digest(issue_number, fields)
+    if _issue_dispatch_state(issue_number, runtime_token, digest) != "open":
         return None
+
+    issue_path = f"/repos/{EXPECTED_REPOSITORY}/issues/{issue_number}"
+    claim = (
+        f"{CLAIM_MARKER} issue={issue_number} request_sha256={digest} "
+        f"kind={source_kind} target_workflow={TARGET_WORKFLOW} ref={TARGET_REF}. "
+        "This trusted claim is written before workflow dispatch. If execution becomes "
+        "ambiguous after this claim, the bridge must fail closed and must not automatically "
+        "redeliver; recovery requires a fresh explicit owner request."
+    )
+    _github_json_request(
+        "POST",
+        f"{issue_path}/comments",
+        token=runtime_token,
+        payload={"body": claim},
+        expected_status={201},
+    )
 
     dispatch_payload = build_dispatch_payload(fields)
     _github_json_request(
@@ -262,12 +310,11 @@ def dispatch(
     )
 
     marker = (
-        f"{DISPATCH_MARKER} issue={issue_number} kind={source_kind} "
+        f"{DISPATCH_MARKER} issue={issue_number} request_sha256={digest} kind={source_kind} "
         f"target_workflow={TARGET_WORKFLOW} ref={TARGET_REF}. "
         "The bridge grants no data/label/prediction authority; trust still comes from the "
         "canonical workflow_dispatch acquisition receipt + GitHub attestation."
     )
-    issue_path = f"/repos/{EXPECTED_REPOSITORY}/issues/{issue_number}"
     _github_json_request(
         "POST",
         f"{issue_path}/comments",
@@ -299,6 +346,7 @@ def main() -> None:
                 {
                     "issue_number": issue_number,
                     "source_kind": source_kind,
+                    "request_sha256": request_digest(issue_number, fields),
                     "dispatch_payload": build_dispatch_payload(fields),
                 },
                 sort_keys=True,
