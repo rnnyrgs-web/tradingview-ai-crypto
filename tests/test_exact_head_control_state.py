@@ -93,6 +93,41 @@ def _state(issues: list[dict[str, object]]) -> dict[str, object]:
     )
 
 
+def _as_real_api_issue(issue: dict[str, object]) -> dict[str, object]:
+    """Mirror the relevant shape returned by GET /repos/{owner}/{repo}/issues."""
+    number = int(issue["number"])
+    return {
+        "url": f"https://api.github.com/repos/example/repo/issues/{number}",
+        "repository_url": "https://api.github.com/repos/example/repo",
+        "labels_url": f"https://api.github.com/repos/example/repo/issues/{number}/labels{{/name}}",
+        "comments_url": f"https://api.github.com/repos/example/repo/issues/{number}/comments",
+        "events_url": f"https://api.github.com/repos/example/repo/issues/{number}/events",
+        "html_url": f"https://github.com/example/repo/issues/{number}",
+        "id": 100000 + number,
+        "node_id": f"I_kw_TEST_{number}",
+        "number": number,
+        "title": issue["title"],
+        "user": {"login": BOT, "id": 41898282, "type": "Bot", "site_admin": False},
+        "labels": [],
+        "state": "open",
+        "locked": False,
+        "assignee": None,
+        "assignees": [],
+        "milestone": None,
+        "comments": 0,
+        "created_at": "2026-09-22T05:00:00Z",
+        "updated_at": "2026-09-22T05:00:00Z",
+        "closed_at": None,
+        "author_association": "NONE",
+        "active_lock_reason": None,
+        "body": issue["body"],
+        "reactions": {"total_count": 0},
+        "timeline_url": f"https://api.github.com/repos/example/repo/issues/{number}/timeline",
+        "performed_via_github_app": {"id": 15368, "slug": "github-actions"},
+        "state_reason": None,
+    }
+
+
 def test_rejected_source_attempt_is_terminal_without_separate_receipt() -> None:
     state = _state([_attempt(11)])
     assert state["rejected"] is True
@@ -164,6 +199,17 @@ def test_wrong_workflow_main_sha_is_not_valid_control_state() -> None:
     assert state["approved"] is False
 
 
+def test_legacy_title_only_approval_is_deliberately_not_grandfathered() -> None:
+    legacy = _issue(
+        21,
+        f"exact-head-review-approved: pr={PR} sha={SHA}",
+        f"PR: #{PR}\nExact reviewed SHA: `{SHA}`\nOutcome: `{APPROVED}`\nIntegration authority: `NONE`",
+    )
+    state = _state([legacy])
+    assert state["approved"] is False
+    assert state["validated_approval_receipts"] == []
+
+
 def test_valid_approval_requires_exact_source_attempt_and_body_binding() -> None:
     source = _attempt(20, outcome=APPROVED)
     approval = _approval_receipt(21, 20)
@@ -182,6 +228,39 @@ def test_valid_approval_requires_exact_source_attempt_and_body_binding() -> None
     )
     state = _state([source, tampered])
     assert state["approved"] is False
+
+
+def test_receipt_must_be_created_after_its_source_attempt() -> None:
+    source = _attempt(20, outcome=APPROVED)
+    stale_or_impossible_receipt = _approval_receipt(19, 20)
+    state = _state([source, stale_or_impossible_receipt])
+    assert state["validated_approval_receipts"] == []
+    assert state["approved"] is False
+
+
+def test_receipt_source_workflow_run_must_match_source_attempt() -> None:
+    source = _attempt(20, outcome=APPROVED)
+    receipt = _approval_receipt(21, 20)
+    receipt["body"] = str(receipt["body"]).replace("Source workflow run: `9020`", "Source workflow run: `9999`")
+    state = _state([source, receipt])
+    assert state["validated_approval_receipts"] == []
+    assert state["approved"] is False
+
+
+def test_duplicate_valid_receipts_are_ambiguous_and_fail_closed() -> None:
+    source = _attempt(20, outcome=APPROVED)
+    state = _state([source, _approval_receipt(21, 20), _approval_receipt(22, 20)])
+    assert state["ambiguous_control_state"] is True
+    assert state["approved"] is False
+
+
+def test_real_github_api_issue_shape_is_accepted_only_when_bindings_are_valid() -> None:
+    source = _as_real_api_issue(_attempt(20, outcome=APPROVED))
+    receipt = _as_real_api_issue(_approval_receipt(21, 20))
+    state = _state([source, receipt])
+    assert state["approved"] is True
+    assert state["validated_attempts"] == [20]
+    assert state["validated_approval_receipts"] == [21]
 
 
 def test_rejection_dominates_even_a_valid_approval_receipt() -> None:
