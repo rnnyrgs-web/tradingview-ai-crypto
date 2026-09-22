@@ -128,6 +128,40 @@ def test_terminal_rejection_predicate_is_invariant_across_live_and_receipt_class
                 ) == "REJECTED"
 
 
+def test_all_three_reviewer_state_combinations_follow_one_predeclared_truth_table() -> None:
+    """Exhaust all 27 approve/reject/non-verdict combinations and both WAIT states.
+
+    The decision surface is intentionally simple and monotone: any valid reject is
+    terminal; otherwise a controlled provider/runtime gap is WAIT; otherwise only
+    three approvals can approve. Everything else fails closed.
+    """
+
+    approval_outcome = "REVIEW_APPROVED_LEAD_INTEGRATION_REQUIRED"
+    choices: list[dict[str, object] | None] = [None, _verdict(True), _verdict(False)]
+    for verdict_tuple in product(choices, repeat=3):
+        verdicts = list(verdict_tuple)
+        contains_rejection = any(
+            verdict is not None and verdict["approve"] is False for verdict in verdicts
+        )
+        all_approved = all(
+            verdict is not None and verdict["approve"] is True for verdict in verdicts
+        )
+        for controlled_wait in (False, True):
+            if contains_rejection:
+                expected = "REJECTED"
+            elif controlled_wait:
+                expected = "WAIT_RETRYABLE"
+            elif all_approved:
+                expected = approval_outcome
+            else:
+                expected = "FAILED"
+            assert classify_review_attempt_outcome(
+                verdicts,
+                controlled_wait=controlled_wait,
+                approved_outcome=approval_outcome,
+            ) == expected
+
+
 def test_receipt_classifier_calls_the_same_terminal_rejection_function(monkeypatch) -> None:
     calls: list[list[dict[str, object] | None]] = []
 
