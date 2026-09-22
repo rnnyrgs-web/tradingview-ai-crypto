@@ -9,6 +9,7 @@ from orchestration import exact_head_review as review
 
 
 HEAD_SHA = "a" * 40
+WORKFLOW_PATH = Path(".github/workflows/exact_head_independent_review.yml")
 
 
 def _diff() -> str:
@@ -50,7 +51,7 @@ def test_protected_diff_is_reviewed_not_rejected(tmp_path: Path, monkeypatch: py
     assert "Protected scientific paths are NOT a reason to" in prompt
 
 
-def test_claude_receives_same_protected_context(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_claude_receives_exact_unmodified_review_context(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     diff_path = tmp_path / "candidate.diff"
     output = tmp_path / "review.json"
     diff_path.write_text(_diff(), encoding="utf-8")
@@ -76,9 +77,12 @@ def test_claude_receives_same_protected_context(tmp_path: Path, monkeypatch: pyt
     assert review.review_exact_head(
         "claude-adversarial", diff_path, output, pr_number=507, head_sha=HEAD_SHA
     ) == 0
-    assert "PROTECTED_PATH_CONTEXT: protected/file.py" in captured["input"]
-    assert "INTEGRATION_AUTHORITY: NONE" in captured["input"]
-    assert "FORMAT_REQUIREMENT" in captured["input"]
+    expected_header = review._context_header(
+        pr_number=507,
+        head_sha=HEAD_SHA,
+        protected_hits=["protected/file.py"],
+    )
+    assert captured["input"] == f"{expected_header}\nPROPOSED DIFF:\n{_diff()}"
     verdict = json.loads(output.read_text(encoding="utf-8"))
     assert verdict["integration_authority"] == "NONE"
     assert verdict["protected_paths"] == ["protected/file.py"]
@@ -117,6 +121,41 @@ def test_valid_claude_scientific_rejection_is_final_single_vote(
     verdict = json.loads(output.read_text(encoding="utf-8"))
     assert verdict["approve"] is False
     assert verdict["risk"] == "high"
+
+
+def test_valid_claude_approval_is_final_single_vote(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "review.json"
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
+    calls = 0
+
+    def approving_claude(_review_input: str, raw_output: Path) -> int:
+        nonlocal calls
+        calls += 1
+        raw_output.write_text(
+            json.dumps(
+                {
+                    "approve": True,
+                    "reason": "bounded repair passes",
+                    "risk": "low",
+                    "falsification_findings": {},
+                }
+            ),
+            encoding="utf-8",
+        )
+        return 0
+
+    monkeypatch.setattr(review, "_review_diff_claude_adversarial", approving_claude)
+    assert review.review_exact_head(
+        "claude-adversarial", diff_path, output, pr_number=579, head_sha=HEAD_SHA
+    ) == 0
+    assert calls == 1
+    verdict = json.loads(output.read_text(encoding="utf-8"))
+    assert verdict["approve"] is True
+    assert verdict["risk"] == "low"
 
 
 def test_claude_malformed_output_becomes_transient_without_second_vote(
@@ -169,6 +208,15 @@ def test_claude_invalid_verdict_schema_becomes_transient_without_second_vote(
     assert calls == 1
     assert not output.exists()
     assert not output.with_suffix(output.suffix + ".raw").exists()
+
+
+def test_outer_workflow_retry_is_explicitly_bounded_and_transient_only() -> None:
+    workflow = WORKFLOW_PATH.read_text(encoding="utf-8")
+    assert 'ATTEMPT_COUNT" -ge 3' in workflow
+    assert "temporarily unavailable" in workflow
+    assert "WAIT_RETRYABLE" in workflow
+    assert "Require all three independent reviewers to approve" in workflow
+    assert "jq -e '.approve == true" in workflow
 
 
 def test_invalid_exact_head_fails_before_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
