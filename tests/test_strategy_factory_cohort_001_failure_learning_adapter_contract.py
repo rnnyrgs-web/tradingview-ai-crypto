@@ -42,10 +42,12 @@ def test_failure_learning_adapter_preserves_frozen_cost_and_independence_semanti
     assert rules["cost_stress_must_exactly_cover_frozen_multipliers"] == [1.0, 2.0, 3.0]
     rows = mapping["cost_stress"]
     assert [row["multiplier"] for row in rows] == [1.0, 2.0, 3.0]
-    assert rows[0]["net_mean_bps"] == "validation.mean_24bps * 10000"
-    assert rows[1]["net_mean_bps"] == "failure_diagnostics.mean_48bps * 10000"
-    assert rows[2]["net_mean_bps"] == "validation.mean_72bps * 10000"
+    assert rows[0]["net_mean_bps"] == "validation.mean_24bps * 10000 when defined"
+    assert rows[1]["net_mean_bps"] == "failure_diagnostics.mean_48bps * 10000 when defined"
+    assert rows[2]["net_mean_bps"] == "validation.mean_72bps * 10000 when defined"
     assert rules["supplemental_48bps_and_winner_share_must_be_recomputed_from_the_same_validation_trade_stream_and_cross_asset_independent_event_clustering"] is True
+    assert rules["undefined_sparse_metrics_must_not_be_fabricated_zero_filled_or_finite_capped"] is True
+    assert rules["profit_factor_no_losses_must_preserve_mathematical_positive_infinity_semantics_without_nonstandard_JSON_numbers"] is True
     assert rules["no_new_48bps_promotion_gate_is_created"] is True
 
 
@@ -77,9 +79,11 @@ def test_failure_learning_adapter_fails_closed_on_authority_and_preserves_stage1
     }
     assert implementation == {
         "supplemental_failure_diagnostics_implemented": True,
-        "private_schema_mapper_implemented": True,
+        "private_schema_mapper_implemented_for_fully_defined_metrics": True,
+        "sparse_result_schema_compatible_with_511": False,
         "canonical_certified_dataset_adapter_implemented": False,
     }
+    assert payload["target_failure_learning_contract"]["sparse_metric_schema_repair_required_before_canonical_consumption"] is True
     assert authority["protected_oos_opened"] is False
     assert authority["genuine_forward_opened"] is False
     assert authority["broker_connected"] is False
