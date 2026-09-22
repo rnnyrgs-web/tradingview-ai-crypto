@@ -73,16 +73,21 @@ def test_durable_review_receipts_require_bot_author_and_exact_body_binding() -> 
     assert "Source workflow run:" in text
 
 
-def test_terminal_rejection_uses_source_attempt_fallback_and_verified_receipt() -> None:
+def test_terminal_rejection_uses_source_attempt_as_authority_and_receipt_as_audit_index() -> None:
     text = _text()
     assert "validated_rejected_attempts" in text
     assert "validated_rejection_receipts" in text
     assert "SOURCE_STATE" in text
     assert "VERIFIED_STATE" in text
     assert 'test "$SOURCE_MATCH" -eq 1' in text
-    assert 'test "$VERIFIED_RECEIPTS" -eq 1' in text
+    assert "VERIFIED_SOURCE_MATCH=" in text
+    assert 'test "$VERIFIED_SOURCE_MATCH" -eq 1' in text
+    assert 'test "$VERIFIED_RECEIPTS" -eq 1' not in text
     assert "REJECTION_URL=" in text
     assert "CREATED_REJECTION" in text
+    assert "CREATED_MATCH=" in text
+    assert 'test "$CREATED_MATCH" -eq 1' in text
+    assert "Secondary rejection receipt creation failed; persisted rejected source attempt remains terminal." in text
     assert "set -euo pipefail" in text
 
 
