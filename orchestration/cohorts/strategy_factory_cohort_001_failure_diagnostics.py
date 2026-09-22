@@ -20,7 +20,7 @@ class Stage1FailureDiagnostics:
     candidate_id: str
     validation_independent_events: int
     mean_48bps: float | None
-    winner_concentration_share_24bps: float
+    winner_concentration_share_24bps: float | None
 
 
 def _validation_trades(candidate_id: str, trades: Iterable[Trade]) -> list[Trade]:
@@ -41,11 +41,13 @@ def build_stage1_failure_diagnostics(
     trades: Iterable[Trade],
     result: Stage1Result,
 ) -> Stage1FailureDiagnostics:
-    """Compute only pre-frozen supplemental diagnostics missing from Stage1Result.
+    """Compute pre-frozen supplemental diagnostics without changing Stage-1 status.
 
-    Stage-1 status/classification is deliberately left untouched. Failure learning
-    may independently classify preserved tail evidence under #511, but this helper
-    cannot change the frozen Stage-1 status precedence.
+    Undefined sparse-sample statistics remain ``None``. They are never fabricated
+    as zero, one, or another finite placeholder merely to satisfy a downstream
+    schema. Failure learning may independently classify actually observed tail
+    evidence under #511, but this helper cannot change the frozen Stage-1 status
+    precedence.
     """
     if candidate_id not in CANDIDATE_IDS:
         raise RuntimeError("candidate is not Stage-1 authorized")
@@ -59,7 +61,7 @@ def build_stage1_failure_diagnostics(
     if not validation_events:
         if result.validation.mean_24bps is not None or result.validation.mean_72bps is not None:
             raise RuntimeError("empty validation events disagree with Stage-1 summary")
-        return Stage1FailureDiagnostics(candidate_id, 0, None, 1.0)
+        return Stage1FailureDiagnostics(candidate_id, 0, None, None)
 
     mean_24 = fmean(event.return_at_cost(24.0) for event in validation_events)
     mean_48 = fmean(event.return_at_cost(48.0) for event in validation_events)
@@ -82,8 +84,8 @@ def build_stage1_failure_diagnostics(
     base_returns = [event.return_at_cost(24.0) for event in validation_events]
     positive_returns = [value for value in base_returns if value > 0.0]
     positive_pool = sum(positive_returns)
-    winner_share = max(positive_returns) / positive_pool if positive_pool > 0.0 else 1.0
-    if not 0.0 <= winner_share <= 1.0:
+    winner_share = max(positive_returns) / positive_pool if positive_pool > 0.0 else None
+    if winner_share is not None and not 0.0 <= winner_share <= 1.0:
         raise RuntimeError("winner concentration share escaped [0,1]")
 
     return Stage1FailureDiagnostics(
