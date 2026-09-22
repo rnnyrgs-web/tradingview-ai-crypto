@@ -97,16 +97,23 @@ jobs:
             fi
 
             APPROVED_TITLE="exact-head-review-approved: pr=$PR_NUMBER sha=$REQUESTED_SHA"
-            APPROVALS="$(gh issue list --repo "$GITHUB_REPOSITORY" --state all --limit 100 --json title)"
-            ALREADY_APPROVED="$(printf '%s' "$APPROVALS" | jq --arg title "$APPROVED_TITLE" '[.[] | select(.title == $title)] | length')"
+            REJECTED_TITLE="exact-head-review-rejected: pr=$PR_NUMBER sha=$REQUESTED_SHA"
+            RECEIPTS="$(gh issue list --repo "$GITHUB_REPOSITORY" --state all --limit 500 --json title)"
+            ALREADY_APPROVED="$(printf '%s' "$RECEIPTS" | jq --arg title "$APPROVED_TITLE" '[.[] | select(.title == $title)] | length')"
             if [ "$ALREADY_APPROVED" -gt 0 ]; then
               gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "An approval receipt already exists for PR #$PR_NUMBER exact head $REQUESTED_SHA; closing duplicate request."
               gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
               continue
             fi
+            ALREADY_REJECTED="$(printf '%s' "$RECEIPTS" | jq --arg title "$REJECTED_TITLE" '[.[] | select(.title == $title)] | length')"
+            if [ "$ALREADY_REJECTED" -gt 0 ]; then
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "A valid independent rejection receipt already exists for PR #$PR_NUMBER exact head $REQUESTED_SHA. This exact SHA is terminal and cannot be reviewer-shopped; revise the candidate to a new head and pass fresh exact-head CI before requesting another scientific review."
+              gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
+              continue
+            fi
 
             ATTEMPT_PREFIX="exact-head-review-attempt: pr=$PR_NUMBER sha=$REQUESTED_SHA run="
-            ATTEMPT_COUNT="$(printf '%s' "$APPROVALS" | jq --arg prefix "$ATTEMPT_PREFIX" '[.[] | select(.title | startswith($prefix))] | length')"
+            ATTEMPT_COUNT="$(printf '%s' "$RECEIPTS" | jq --arg prefix "$ATTEMPT_PREFIX" '[.[] | select(.title | startswith($prefix))] | length')"
             if [ "$ATTEMPT_COUNT" -ge 3 ]; then
               gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Bounded reviewer retry limit reached for PR #$PR_NUMBER exact head $REQUESTED_SHA after $ATTEMPT_COUNT attempts. Closing without approval; create a new request only after the provider/runtime blocker is materially resolved."
               gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
@@ -284,13 +291,27 @@ jobs:
             fi
           fi
 
+          REJECTED=0
+          for REVIEW_FILE in /tmp/security-review.json /tmp/lead-review.json /tmp/claude-adversarial-review.json; do
+            if [ -f "$REVIEW_FILE" ] && jq -e '.approve == false and .integration_authority == "NONE"' "$REVIEW_FILE" >/dev/null 2>&1; then
+              REJECTED=1
+            fi
+          done
+          if [ "$REJECTED" -eq 1 ]; then
+            echo "rejected=true" >> "$GITHUB_OUTPUT"
+            echo "wait=false" >> "$GITHUB_OUTPUT"
+            echo "A valid independent scientific rejection is terminal for this exact SHA and takes precedence over any transient provider absence."
+            exit 0
+          fi
+
+          echo "rejected=false" >> "$GITHUB_OUTPUT"
           if [ "$STATUS" -ne 0 ]; then
             echo "wait=false" >> "$GITHUB_OUTPUT"
             exit "$STATUS"
           fi
           if [ "$WAIT" -eq 1 ]; then
             echo "wait=true" >> "$GITHUB_OUTPUT"
-            echo "Transient reviewer throttling/overload detected; exact head remains unapproved and may retry only within the bounded attempt limit."
+            echo "Transient reviewer throttling/overload detected with no valid rejection; exact head remains unapproved and may retry only within the bounded attempt limit."
             exit 0
           fi
           echo "wait=false" >> "$GITHUB_OUTPUT"
@@ -301,12 +322,19 @@ jobs:
           {
             echo "### Controlled WAIT — independent reviewer capacity"
             echo "- Candidate remains **unapproved** and **unmerged**."
+            echo "- No valid scientific rejection was produced in this attempt."
             echo "- No scientific, security, or exact-head gate was weakened."
             echo "- The same explicit request may retry on a later queue cycle, bounded to three attempts."
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Stop terminally on any valid independent rejection
+        if: steps.select.outputs.pr_number != '' && steps.review_models.outputs.rejected == 'true'
+        run: |
+          echo "At least one independent reviewer produced a valid rejection. This exact SHA is terminal and cannot be reviewer-shopped."
+          exit 1
+
       - name: Require all three independent reviewers to approve
-        if: steps.select.outputs.pr_number != '' && steps.review_models.outputs.wait != 'true'
+        if: steps.select.outputs.pr_number != '' && steps.review_models.outputs.wait != 'true' && steps.review_models.outputs.rejected != 'true'
         run: |
           jq -e '.approve == true and .integration_authority == "NONE"' /tmp/security-review.json
           jq -e '.approve == true and .integration_authority == "NONE"' /tmp/lead-review.json
@@ -314,7 +342,7 @@ jobs:
 
       - id: approval_record
         name: Record review-only approval for exact head
-        if: steps.select.outputs.pr_number != '' && steps.review_models.outputs.wait != 'true'
+        if: steps.select.outputs.pr_number != '' && steps.review_models.outputs.wait != 'true' && steps.review_models.outputs.rejected != 'true'
         env:
           PR_NUMBER: ${{ steps.select.outputs.pr_number }}
           HEAD_SHA: ${{ steps.select.outputs.sha }}
@@ -378,6 +406,8 @@ jobs:
           import os
           from pathlib import Path
 
+          from orchestration.exact_head_review import classify_review_attempt_outcome
+
           review_paths = [
               Path("/tmp/security-review.json"),
               Path("/tmp/lead-review.json"),
@@ -397,14 +427,11 @@ jobs:
 
           approved_outcome = os.environ.get("APPROVAL_OUTCOME", "")
           controlled_wait = os.environ.get("CONTROLLED_WAIT", "").lower() == "true"
-          if controlled_wait:
-              outcome = "WAIT_RETRYABLE"
-          elif approved_outcome.startswith("REVIEW_APPROVED_"):
-              outcome = approved_outcome
-          elif all(value is not None for value in verdicts) and any(not value["approve"] for value in verdicts):
-              outcome = "REJECTED"
-          else:
-              outcome = "FAILED"
+          outcome = classify_review_attempt_outcome(
+              verdicts,
+              controlled_wait=controlled_wait,
+              approved_outcome=approved_outcome,
+          )
 
           lines = [
               f"PR: #{os.environ['PR_NUMBER']}",
@@ -425,11 +452,33 @@ jobs:
           PY
           gh issue edit "$ATTEMPT_ISSUE" --repo "$GITHUB_REPOSITORY" --body-file /tmp/exact-head-review-attempt.md
           OUTCOME="$(cat /tmp/exact-head-review-outcome.txt)"
+
+          if [ "$OUTCOME" = "REJECTED" ]; then
+            REJECTED_TITLE="exact-head-review-rejected: pr=$PR_NUMBER sha=$HEAD_SHA"
+            EXISTING_REJECTION="$(gh issue list --repo "$GITHUB_REPOSITORY" --state all --limit 500 --json title | jq --arg title "$REJECTED_TITLE" '[.[] | select(.title == $title)] | length')"
+            if [ "$EXISTING_REJECTION" -eq 0 ]; then
+              cat >/tmp/exact-head-review-rejected.md <<EOF
+          PR: #$PR_NUMBER
+          Candidate branch: \`$BRANCH\`
+          Exact rejected SHA: \`$HEAD_SHA\`
+          Source attempt issue: #$ATTEMPT_ISSUE
+          Outcome: \`REJECTED\`
+          Integration authority: \`NONE\`
+
+          At least one independent reviewer produced a valid scientific rejection. This exact SHA is terminal for review and cannot be retried to seek a different model judgment. A revised candidate head with fresh exact-head CI is required before another scientific review request.
+          EOF
+              gh issue create --repo "$GITHUB_REPOSITORY" --title "$REJECTED_TITLE" --body-file /tmp/exact-head-review-rejected.md
+            fi
+          fi
+
           if gh issue view "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --json state --jq '.state' | grep -qx OPEN; then
             if [ "$OUTCOME" = "WAIT_RETRYABLE" ]; then
-              gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as WAIT_RETRYABLE because an independent reviewer provider was throttled/unavailable. Candidate remains unapproved. Request stays open for a later bounded retry (maximum three attempts)."
+              gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as WAIT_RETRYABLE because an independent reviewer provider was throttled/unavailable and no valid rejection was produced. Candidate remains unapproved. Request stays open for a later bounded retry (maximum three attempts)."
+            elif [ "$OUTCOME" = "REJECTED" ]; then
+              gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as REJECTED. A valid independent rejection is terminal for this exact SHA; revise the candidate to a new head and pass fresh exact-head CI before requesting another scientific review."
+              gh issue close "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY"
             else
-              gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as $OUTCOME. This request is closed to prevent unbounded paid retries. FAILED/REJECTED does not permanently blacklist the exact SHA: after the cause is repaired or an explicit bounded retry is justified, create a new request with the same {pr, sha}."
+              gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as $OUTCOME. This request is closed to prevent unbounded paid retries. FAILED indicates missing/invalid infrastructure evidence rather than a scientific rejection; retry the same SHA only after the objective runtime cause is materially repaired and under the bounded attempt limit."
               gh issue close "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY"
             fi
           fi
