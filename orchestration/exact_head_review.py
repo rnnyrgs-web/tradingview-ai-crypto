@@ -55,6 +55,9 @@ def _validate_verdict_schema(verdict: dict[str, Any]) -> None:
         raise RuntimeError("reviewer returned invalid approval")
     if verdict.get("risk") not in {"low", "medium", "high"}:
         raise RuntimeError("reviewer returned invalid risk")
+    reason = verdict.get("reason")
+    if not isinstance(reason, str) or not reason.strip():
+        raise RuntimeError("reviewer returned invalid reason")
 
 
 def _enrich_verdict(
@@ -78,6 +81,27 @@ def _enrich_verdict(
     return enriched
 
 
+def _valid_attempt_verdicts(verdicts: list[dict[str, Any] | None]) -> list[dict[str, Any]]:
+    valid_verdicts: list[dict[str, Any]] = []
+    for verdict in verdicts:
+        if verdict is None:
+            continue
+        try:
+            _validate_verdict_schema(verdict)
+        except RuntimeError:
+            continue
+        if verdict.get("integration_authority") != "NONE":
+            continue
+        valid_verdicts.append(verdict)
+    return valid_verdicts
+
+
+def has_terminal_rejection(verdicts: list[dict[str, Any] | None]) -> bool:
+    """Return one deterministic rejection predicate shared by live and receipt paths."""
+
+    return any(verdict["approve"] is False for verdict in _valid_attempt_verdicts(verdicts))
+
+
 def classify_review_attempt_outcome(
     verdicts: list[dict[str, Any] | None],
     *,
@@ -92,19 +116,8 @@ def classify_review_attempt_outcome(
     reviewer evidence only because of bounded transient capacity/runtime failure.
     """
 
-    valid_verdicts: list[dict[str, Any]] = []
-    for verdict in verdicts:
-        if verdict is None:
-            continue
-        try:
-            _validate_verdict_schema(verdict)
-        except RuntimeError:
-            continue
-        if verdict.get("integration_authority") != "NONE":
-            continue
-        valid_verdicts.append(verdict)
-
-    if any(verdict["approve"] is False for verdict in valid_verdicts):
+    valid_verdicts = _valid_attempt_verdicts(verdicts)
+    if has_terminal_rejection(verdicts):
         return "REJECTED"
     if controlled_wait:
         return "WAIT_RETRYABLE"
