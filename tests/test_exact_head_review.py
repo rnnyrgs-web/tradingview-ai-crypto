@@ -268,6 +268,95 @@ def test_claude_invalid_verdict_schema_becomes_transient_without_second_vote(
     assert not output.with_suffix(output.suffix + ".raw").exists()
 
 
+@pytest.mark.parametrize("reviewer_name", ["security", "lead"])
+def test_openai_malformed_output_becomes_transient_nonverdict(
+    reviewer_name: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "review.json"
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
+    monkeypatch.setattr(review, "model_name", lambda: "test-model")
+    calls = 0
+
+    def fake_post(_payload: dict[str, object]) -> dict[str, object]:
+        nonlocal calls
+        calls += 1
+        return {"output_text": "not-json"}
+
+    monkeypatch.setattr(review, "post_response", fake_post)
+    with pytest.raises(RuntimeError, match="temporarily unavailable"):
+        review.review_exact_head(reviewer_name, diff_path, output, pr_number=606, head_sha=HEAD_SHA)
+    assert calls == 1
+    assert not output.exists()
+
+
+@pytest.mark.parametrize("reviewer_name", ["security", "lead"])
+def test_openai_invalid_schema_becomes_transient_nonverdict(
+    reviewer_name: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "review.json"
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
+    monkeypatch.setattr(review, "model_name", lambda: "test-model")
+    calls = 0
+
+    def fake_post(_payload: dict[str, object]) -> dict[str, object]:
+        nonlocal calls
+        calls += 1
+        return {"output_text": '{"approve": "yes", "reason": "bad schema", "risk": "low"}'}
+
+    monkeypatch.setattr(review, "post_response", fake_post)
+    with pytest.raises(RuntimeError, match="temporarily unavailable"):
+        review.review_exact_head(reviewer_name, diff_path, output, pr_number=606, head_sha=HEAD_SHA)
+    assert calls == 1
+    assert not output.exists()
+
+
+@pytest.mark.parametrize("reviewer_name", ["security", "lead"])
+def test_valid_openai_scientific_rejection_remains_final(
+    reviewer_name: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "review.json"
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
+    monkeypatch.setattr(review, "model_name", lambda: "test-model")
+    calls = 0
+
+    def fake_post(_payload: dict[str, object]) -> dict[str, object]:
+        nonlocal calls
+        calls += 1
+        return {"output_text": '{"approve": false, "reason": "real blocker", "risk": "high"}'}
+
+    monkeypatch.setattr(review, "post_response", fake_post)
+    assert review.review_exact_head(reviewer_name, diff_path, output, pr_number=606, head_sha=HEAD_SHA) == 0
+    assert calls == 1
+    verdict = json.loads(output.read_text(encoding="utf-8"))
+    assert verdict["approve"] is False
+    assert verdict["risk"] == "high"
+    assert verdict["integration_authority"] == "NONE"
+
+
+def test_openai_provider_json_failure_becomes_transient_nonverdict(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "review.json"
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
+    monkeypatch.setattr(review, "model_name", lambda: "test-model")
+
+    def malformed_provider(_payload: dict[str, object]) -> dict[str, object]:
+        raise json.JSONDecodeError("invalid provider JSON", "{", 1)
+
+    monkeypatch.setattr(review, "post_response", malformed_provider)
+    with pytest.raises(RuntimeError, match="temporarily unavailable"):
+        review.review_exact_head("security", diff_path, output, pr_number=606, head_sha=HEAD_SHA)
+    assert not output.exists()
+
+
 def test_outer_workflow_retry_is_explicitly_bounded_and_transient_only() -> None:
     workflow = WORKFLOW_PATH.read_text(encoding="utf-8")
     assert 'ATTEMPT_COUNT" -ge 3' in workflow
@@ -305,14 +394,18 @@ def test_oversized_diff_fails_before_model(tmp_path: Path, monkeypatch: pytest.M
         )
 
 
-def test_invalid_reviewer_verdict_fails_closed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_invalid_reviewer_verdict_is_fail_closed_transient_nonverdict(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "out.json"
     diff_path.write_text(_diff(), encoding="utf-8")
     monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
     monkeypatch.setattr(review, "model_name", lambda: "test-model")
     monkeypatch.setattr(review, "post_response", lambda _payload: {"output_text": '{"approve": "yes", "risk": "low"}'})
     monkeypatch.setattr(review, "response_text", lambda payload: str(payload["output_text"]))
-    with pytest.raises(RuntimeError, match="invalid approval"):
+    with pytest.raises(RuntimeError, match="temporarily unavailable"):
         review.review_exact_head(
-            "security", diff_path, tmp_path / "out.json", pr_number=507, head_sha=HEAD_SHA
+            "security", diff_path, output, pr_number=507, head_sha=HEAD_SHA
         )
+    assert not output.exists()
