@@ -61,7 +61,7 @@ def test_parser_enforces_exact_schema_and_provider_identity():
     rows = parse_incremental_l2_csv(
         _fixture(), expected_exchange="binance", expected_symbol="BTCUSDT"
     )
-    assert len(rows) == 10
+    assert len(rows) == 11
     assert rows[0].row_index == 2
     assert rows[0].local_timestamp_us == 100
 
