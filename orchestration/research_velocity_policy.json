@@ -72,7 +72,11 @@
     "data_blocked_hours",
     "cost_per_completed_experiment_usd",
     "validated_feature_reuse_count",
-    "repeated_rejected_mechanism_count"
+    "repeated_rejected_mechanism_count",
+    "2x_historical_events_with_pit_reconstruction_per_7d",
+    "2x_candidate_precision_and_lift",
+    "2x_false_positive_rate",
+    "2x_forward_candidates_resolved_per_30d"
   ],
   "lead_actions": {
     "always_identify_single_top_bottleneck": true,
@@ -91,5 +95,22 @@
       "validated_strategy_or_material_2x_lift"
     ],
     "quiet_for_routine_rejections_and_normal_worker_churn": true
+  },
+  "master_objectives": {
+    "co_primary": true,
+    "lanes": [
+      {
+        "id": "validated_strategy",
+        "objective": "Discover and rigorously validate at least one sustainable positive-after-cost algorithmic strategy.",
+        "priority": "SUPER_IMPORTANT"
+      },
+      {
+        "id": "potential_2x_assets",
+        "objective": "Study historical 2x+ moves and identify current liquid tradable assets with unusually strong, timestamp-defensible evidence for 2x+ upside within 90 days.",
+        "priority": "SUPER_IMPORTANT"
+      }
+    ],
+    "arbitration": "Treat both lanes as co-primary. Do not let strategy development starve the 2x lane or vice versa. When one lane is blocked or waiting on future evidence, immediately advance the highest-information independent task in the other lane.",
+    "scientific_rule": "Never promise a 2x move. Measure base rate, precision, lift, calibration, false positives, remaining upside at detection, liquidity/tradability and genuine forward outcomes."
   }
 }
