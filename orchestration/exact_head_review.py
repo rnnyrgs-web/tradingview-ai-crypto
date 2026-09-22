@@ -78,6 +78,43 @@ def _enrich_verdict(
     return enriched
 
 
+def classify_review_attempt_outcome(
+    verdicts: list[dict[str, Any] | None],
+    *,
+    controlled_wait: bool,
+    approved_outcome: str,
+) -> str:
+    """Classify one multi-reviewer attempt without ever retrying past a valid rejection.
+
+    A valid scientific rejection is terminal for the exact candidate SHA even if a
+    different provider was transient or unavailable in the same attempt. WAIT is
+    reserved for attempts that contain no valid rejection and are missing required
+    reviewer evidence only because of bounded transient capacity/runtime failure.
+    """
+
+    valid_verdicts: list[dict[str, Any]] = []
+    for verdict in verdicts:
+        if verdict is None:
+            continue
+        try:
+            _validate_verdict_schema(verdict)
+        except RuntimeError:
+            continue
+        if verdict.get("integration_authority") != "NONE":
+            continue
+        valid_verdicts.append(verdict)
+
+    if any(verdict["approve"] is False for verdict in valid_verdicts):
+        return "REJECTED"
+    if controlled_wait:
+        return "WAIT_RETRYABLE"
+    if approved_outcome.startswith("REVIEW_APPROVED_"):
+        if len(valid_verdicts) == 3 and all(verdict["approve"] is True for verdict in valid_verdicts):
+            return approved_outcome
+        return "FAILED"
+    return "FAILED"
+
+
 def _claude_exact_head_verdict(review_input: str, temporary: Path) -> dict[str, Any]:
     """Preserve the existing Claude scientific invocation exactly; reclassify format failure only.
 
