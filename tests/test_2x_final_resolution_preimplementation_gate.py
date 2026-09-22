@@ -176,6 +176,7 @@ def test_formation_identity_and_execution_policy_are_bound_before_future_authori
         "evaluated_notional_bands_usd",
         "primary_success_band_usd_or_explicit_none",
         "frozen_execution_venue_policy",
+        "crossing_side_persistence_policy_id",
     }
 
     registry = gate["trusted_contract_registry"]
@@ -217,6 +218,7 @@ def test_tradability_companion_keeps_price_crossing_out_of_primary_success() -> 
     assert crossing["limits"]["maximum_exit_vwap_slippage_bps"] == 100
     assert "one-lot/isolated target trade" in crossing["flash_wick_rule"]
     assert "PRICE_HIT_TRADABILITY_UNKNOWN" in crossing["unknown_rule"]
+    assert crossing["persistence_policy_id"] == "EVENT_TIME_FULL_NOTIONAL_EXECUTABILITY_V1"
 
 
 def test_tradability_policy_is_ex_ante_and_fingerprint_bound() -> None:
@@ -232,12 +234,14 @@ def test_tradability_policy_is_ex_ante_and_fingerprint_bound() -> None:
         "primary_success_band_usd_or_explicit_none",
         "exact_execution_venue_and_instrument_identity_or_frozen_venue_set",
         "execution_policy_fingerprint",
+        "crossing_side_persistence_policy_id",
     }
 
     required_fingerprint_members = set(tradability["final_resolution_fingerprint_must_bind"])
     assert {
         "execution_policy_fingerprint",
         "crossing_side_microstructure_evidence_identities",
+        "crossing_side_persistence_policy_id",
         "tradable_hit_exact_time_or_censoring_bounds_per_band",
         "tradability_state_per_band",
         "tradability_evidence_revision_and_supersession_lineage",
@@ -247,6 +251,7 @@ def test_tradability_policy_is_ex_ante_and_fingerprint_bound() -> None:
     assert "flash-wick" in attacks
     assert "excluded thin off-venue" in attacks
     assert "selected after outcome" in attacks
+    assert "minimum persistence duration/window is chosen after outcome" in attacks
     assert "late authoritative microstructure revision" in attacks
 
 
