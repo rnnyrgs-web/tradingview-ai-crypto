@@ -23,9 +23,6 @@ from orchestration.protected_paths import find_protected_matches
 # review of a >80 kB scientific gate change.
 MAX_DIFF_BYTES = 256_000
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
-CLAUDE_OUTPUT_FORMAT_GUIDANCE = (
-    "FORMAT_REQUIREMENT: Return exactly one complete JSON object and no markdown or prose outside it."
-)
 
 
 def _validate_exact_head(pr_number: int, head_sha: str) -> None:
@@ -82,21 +79,18 @@ def _enrich_verdict(
 
 
 def _claude_exact_head_verdict(review_input: str, temporary: Path) -> dict[str, Any]:
-    """Run exactly one Claude scientific review and fail closed on format/schema failure.
+    """Preserve the existing Claude scientific invocation exactly; reclassify format failure only.
 
-    A malformed/truncated response or invalid verdict schema is *not* a scientific
-    verdict. It is classified as transient reviewer unavailability so the existing
-    workflow-level bounded retry policy may retry the exact same head later. We do
-    not invoke Claude a second time inside one review attempt: this preserves one
-    scientific vote per provider/run and cannot select among multiple judgments.
-    A valid ``approve=false`` verdict is returned unchanged and is never retried or
-    softened.
+    The same ``review_input`` is passed directly to the same adversarial reviewer function
+    exactly once. Valid approvals and valid scientific rejections are returned unchanged.
+    Malformed/truncated JSON or an invalid verdict schema is not a scientific verdict, so it
+    becomes ``temporarily unavailable`` and the already-bounded *outer workflow* may retry
+    the exact head later. This helper never selects among multiple model judgments.
     """
 
     temporary.unlink(missing_ok=True)
-    bounded_input = f"{review_input}\n\n{CLAUDE_OUTPUT_FORMAT_GUIDANCE}"
     try:
-        _review_diff_claude_adversarial(bounded_input, temporary)
+        _review_diff_claude_adversarial(review_input, temporary)
         verdict = json.loads(temporary.read_text(encoding="utf-8"))
         if not isinstance(verdict, dict):
             raise RuntimeError("claude reviewer returned non-object JSON")
