@@ -5,7 +5,7 @@
     "planning_contract_sha256": "4cf46291af242a350d065bf24418b8fdf5c6d36e4fea1b923a9cb1a51046c392"
   },
   "binding_id": "STRATEGY-FACTORY-COHORT-001-STAGE1-BINDING-v1",
-  "binding_receipt_sha256": "3a715c8373e3847dba2f0922bc99dbdd69b3864729be8c40d6d79db444fa43db",
+  "binding_receipt_sha256": "53777547473c4d0857f6a1fd73949fe8371e8bfcc7b9893701ea7dbddc4ae7ab",
   "canonical_admission": {
     "outcomes_read": false,
     "protected_start_utc": "2026-09-01T00:00:00+00:00",
@@ -98,7 +98,7 @@
   "formed_at": "2026-09-22T01:00:34Z",
   "next_transition": "After PR #515 integrates and this binding is reconciled to that canonical main with exact-head CI/review, launch all six eligible development-only Stage-1 screens deterministically in parallel; route rejects/inconclusive results to #510 and only real survivors to #517.",
   "schema_version": 1,
-  "source_cohort_head_sha": "e4c3cb0ed11c1c3ba4c3e30d3f320ca788f17e94",
+  "source_cohort_head_sha": "64aef8e5ec904694010c8c541182aa079bb6dd23",
   "source_cohort_pr": 515,
   "stage1_cost_contract": {
     "adverse_funding_allowance_bps_per_trade": 4.0,
