@@ -67,6 +67,35 @@ def _trusted(issue: dict[str, Any]) -> bool:
     return _author(issue) == TRUSTED_CONTROL_AUTHOR and "pull_request" not in issue
 
 
+def _matching_control_kind(
+    issue: dict[str, Any], *, pr_number: int, head_sha: str
+) -> str | None:
+    """Return the trusted exact-head control title kind, independent of body validity.
+
+    This is deliberately broader than validation. A trusted bot issue whose title
+    claims authority for the target PR/SHA but whose body cannot satisfy the new
+    structured contract must be surfaced as an explicit migration/integrity
+    blocker rather than silently disappearing from history.
+    """
+
+    if not _trusted(issue):
+        return None
+    title = issue.get("title")
+    if not isinstance(title, str):
+        return None
+    for kind, pattern in (
+        ("attempt", _ATTEMPT_TITLE_RE),
+        ("approval", _APPROVAL_TITLE_RE),
+        ("rejection", _REJECTION_TITLE_RE),
+    ):
+        match = pattern.fullmatch(title)
+        if match is None:
+            continue
+        if int(match.group("pr")) == pr_number and match.group("sha") == head_sha:
+            return kind
+    return None
+
+
 def _validate_identity_inputs(
     pr_number: int,
     head_sha: str,
@@ -261,6 +290,13 @@ def exact_head_control_state(
     _validate_identity_inputs(pr_number, head_sha, workflow_main_sha, repository)
     issue_list = _unique_issue_list(issues)
 
+    claimed_control_issues: dict[int, str] = {}
+    for issue in issue_list:
+        kind = _matching_control_kind(issue, pr_number=pr_number, head_sha=head_sha)
+        number = _issue_number(issue)
+        if kind is not None and number is not None:
+            claimed_control_issues[number] = kind
+
     attempts: dict[int, dict[str, Any]] = {}
     for issue in issue_list:
         record = _attempt_record(
@@ -330,11 +366,21 @@ def exact_head_control_state(
 
     approval_receipts.sort()
     rejection_receipts.sort()
+    validated_control_issue_numbers = set(attempts) | set(approval_receipts) | set(rejection_receipts)
+    invalid_trusted_control_issues = sorted(
+        number for number in claimed_control_issues if number not in validated_control_issue_numbers
+    )
+
     rejected = bool(rejected_attempts or rejection_receipts)
-    ambiguous = len(approval_receipts) > 1 or len(rejection_receipts) > 1
+    ambiguous = (
+        len(approval_receipts) > 1
+        or len(rejection_receipts) > 1
+        or bool(invalid_trusted_control_issues)
+    )
     approved = len(approval_receipts) == 1 and not rejected and not ambiguous
 
     return {
+        "control_state_schema_version": 2,
         "approved": approved,
         "rejected": rejected,
         "ambiguous_control_state": ambiguous,
@@ -344,6 +390,12 @@ def exact_head_control_state(
         "validated_rejected_attempts": rejected_attempts,
         "validated_approval_receipts": approval_receipts,
         "validated_rejection_receipts": rejection_receipts,
+        "invalid_trusted_control_issues": invalid_trusted_control_issues,
+        "claimed_control_issue_kinds": {
+            str(number): claimed_control_issues[number] for number in sorted(claimed_control_issues)
+        },
+        "terminal_precedence": "REJECTION_DOMINATES_APPROVAL",
+        "legacy_unvalidated_control_is_blocking": True,
         "workflow_main_sha": workflow_main_sha,
         "repository": repository,
         "trusted_control_author": TRUSTED_CONTROL_AUTHOR,
