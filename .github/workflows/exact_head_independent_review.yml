@@ -60,14 +60,24 @@ jobs:
           SELECTED_REF=""
           SECURITY_RUN_ID=""
 
-          REQUESTS="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 100 --json number,title,createdAt,author)"
+          # Never let a fixed list limit hide an older request or terminal review
+          # receipt. GitHub's REST pagination is consumed completely, then PR
+          # objects are removed because only issue-backed control records count.
+          gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=open&per_page=100" \
+            | jq -s 'add | map(select(.pull_request == null))' \
+            > /tmp/exact-head-open-requests.json
+          gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100" \
+            | jq -s 'add | map(select(.pull_request == null))' \
+            > /tmp/exact-head-control-issues.json
+
           while IFS=$'\t' read -r ISSUE_NUMBER TITLE CREATED_AT REQUEST_AUTHOR; do
             [ -n "$ISSUE_NUMBER" ] || continue
             if [[ ! "$TITLE" =~ ^exact-head-review-request:\ pr=([0-9]+)\ sha=([0-9a-f]{40})$ ]]; then
               continue
             fi
             # Only the repository owner may authorize a paid independent review.
-            # This prevents arbitrary public issues from consuming reviewer budget.
+            # Durable control receipts themselves are separately restricted to
+            # github-actions[bot] and exact body bindings by the validator.
             if [ "$REQUEST_AUTHOR" != "$REPO_OWNER" ]; then
               gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Unauthorized exact-head review request: only repository owner $REPO_OWNER may authorize reviewer execution. Closing without invoking any model/API."
               gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
@@ -96,29 +106,32 @@ jobs:
               continue
             fi
 
+            # Keep the literal receipt titles visible in the workflow contract,
+            # but never trust a title by itself. The deterministic validator
+            # requires the expected bot author and exact body PR/SHA/outcome/
+            # authority bindings, and rejection receipts bind a source attempt.
             APPROVED_TITLE="exact-head-review-approved: pr=$PR_NUMBER sha=$REQUESTED_SHA"
             REJECTED_TITLE="exact-head-review-rejected: pr=$PR_NUMBER sha=$REQUESTED_SHA"
-            # Receipt titles are control-plane state, so only repository-owner or
-            # GitHub Actions-authored receipts may affect approval, rejection, or
-            # retry accounting. Arbitrary public issues with lookalike titles are ignored.
-            RECEIPTS="$(gh issue list --repo "$GITHUB_REPOSITORY" --state all --limit 500 --json title,author)"
-            ALREADY_APPROVED="$(printf '%s' "$RECEIPTS" | jq --arg title "$APPROVED_TITLE" --arg owner "$REPO_OWNER" '[.[] | select(.title == $title and (((.author.login // "") == $owner) or ((.author.login // "") == "github-actions[bot]")))] | length')"
-            if [ "$ALREADY_APPROVED" -gt 0 ]; then
-              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "An authenticated approval receipt already exists for PR #$PR_NUMBER exact head $REQUESTED_SHA; closing duplicate request."
-              gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
-              continue
-            fi
-            ALREADY_REJECTED="$(printf '%s' "$RECEIPTS" | jq --arg title "$REJECTED_TITLE" --arg owner "$REPO_OWNER" '[.[] | select(.title == $title and (((.author.login // "") == $owner) or ((.author.login // "") == "github-actions[bot]")))] | length')"
-            if [ "$ALREADY_REJECTED" -gt 0 ]; then
-              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "An authenticated independent rejection receipt already exists for PR #$PR_NUMBER exact head $REQUESTED_SHA. This exact SHA is terminal and cannot be reviewer-shopped; revise the candidate to a new head and pass fresh exact-head CI before requesting another scientific review."
-              gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
-              continue
-            fi
+            CONTROL_STATE="$(python -m orchestration.exact_head_control_state \
+              --issues /tmp/exact-head-control-issues.json \
+              --pr-number "$PR_NUMBER" \
+              --head-sha "$REQUESTED_SHA")"
+            ALREADY_APPROVED="$(printf '%s' "$CONTROL_STATE" | jq -r '.approved')"
+            ALREADY_REJECTED="$(printf '%s' "$CONTROL_STATE" | jq -r '.rejected')"
+            ATTEMPT_COUNT="$(printf '%s' "$CONTROL_STATE" | jq -r '.attempt_count')"
 
-            ATTEMPT_PREFIX="exact-head-review-attempt: pr=$PR_NUMBER sha=$REQUESTED_SHA run="
-            ATTEMPT_COUNT="$(printf '%s' "$RECEIPTS" | jq --arg prefix "$ATTEMPT_PREFIX" --arg owner "$REPO_OWNER" '[.[] | select((.title | startswith($prefix)) and (((.author.login // "") == $owner) or ((.author.login // "") == "github-actions[bot]")))] | length')"
+            if [ "$ALREADY_APPROVED" = "true" ]; then
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "A validated approval receipt already exists for PR #$PR_NUMBER exact head $REQUESTED_SHA; closing duplicate request."
+              gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
+              continue
+            fi
+            if [ "$ALREADY_REJECTED" = "true" ]; then
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Validated terminal rejection state already exists for PR #$PR_NUMBER exact head $REQUESTED_SHA. This exact SHA is terminal and cannot be reviewer-shopped; revise the candidate to a new head and pass fresh exact-head CI before requesting another scientific review."
+              gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
+              continue
+            fi
             if [ "$ATTEMPT_COUNT" -ge 3 ]; then
-              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Bounded reviewer retry limit reached for PR #$PR_NUMBER exact head $REQUESTED_SHA after $ATTEMPT_COUNT authenticated attempts. Closing without approval; create a new request only after the provider/runtime blocker is materially resolved."
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Bounded reviewer retry limit reached for PR #$PR_NUMBER exact head $REQUESTED_SHA after $ATTEMPT_COUNT validated attempts. Closing without approval; create a new request only after the provider/runtime blocker is materially resolved."
               gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
               continue
             fi
@@ -157,7 +170,7 @@ jobs:
             SELECTED_REF="$REVIEW_REF"
             SECURITY_RUN_ID="$RUN_ID"
             break
-          done < <(printf '%s' "$REQUESTS" | jq -r 'sort_by(.createdAt)[] | [.number, .title, .createdAt, (.author.login // "")] | @tsv')
+          done < <(jq -r 'sort_by(.created_at)[] | [.number, .title, .created_at, (.user.login // "")] | @tsv' /tmp/exact-head-open-requests.json)
 
           echo "request_issue=$SELECTED_ISSUE" >> "$GITHUB_OUTPUT"
           echo "pr_number=$SELECTED_PR" >> "$GITHUB_OUTPUT"
@@ -186,6 +199,7 @@ jobs:
           SECURITY_RUN_ID: ${{ steps.select.outputs.security_run_id }}
           MAIN_SHA: ${{ steps.select.outputs.main_sha }}
         run: |
+          set -euo pipefail
           cat >/tmp/exact-head-review-attempt.md <<EOF
           PR: #$PR_NUMBER
           Candidate branch: \`$BRANCH\`
@@ -281,6 +295,9 @@ jobs:
             fi
           fi
 
+          # Every reviewer that was actually launched is joined before terminal
+          # rejection is classified. A transient provider can never hide a valid
+          # approve=false returned by another reviewer in the same attempt.
           set +e
           wait "$PID_CLAUDE"
           CLAUDE_STATUS=$?
@@ -294,12 +311,30 @@ jobs:
             fi
           fi
 
-          REJECTED=0
-          for REVIEW_FILE in /tmp/security-review.json /tmp/lead-review.json /tmp/claude-adversarial-review.json; do
-            if [ -f "$REVIEW_FILE" ] && jq -e '.approve == false and .integration_authority == "NONE"' "$REVIEW_FILE" >/dev/null 2>&1; then
-              REJECTED=1
-            fi
-          done
+          REJECTED="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          from orchestration.exact_head_review import classify_review_attempt_outcome
+
+          verdicts = []
+          for path in (
+              Path('/tmp/security-review.json'),
+              Path('/tmp/lead-review.json'),
+              Path('/tmp/claude-adversarial-review.json'),
+          ):
+              try:
+                  value = json.loads(path.read_text(encoding='utf-8'))
+              except (OSError, ValueError, json.JSONDecodeError):
+                  value = None
+              verdicts.append(value if isinstance(value, dict) else None)
+          outcome = classify_review_attempt_outcome(
+              verdicts,
+              controlled_wait=False,
+              approved_outcome='',
+          )
+          print('1' if outcome == 'REJECTED' else '0')
+          PY
+          )"
           if [ "$REJECTED" -eq 1 ]; then
             echo "rejected=true" >> "$GITHUB_OUTPUT"
             echo "wait=false" >> "$GITHUB_OUTPUT"
@@ -353,6 +388,7 @@ jobs:
           SECURITY_RUN_ID: ${{ steps.select.outputs.security_run_id }}
           REQUEST_ISSUE: ${{ steps.select.outputs.request_issue }}
         run: |
+          set -euo pipefail
           PROTECTED_COUNT="$(jq '.protected_paths | length' /tmp/security-review.json)"
           if [ "$PROTECTED_COUNT" -gt 0 ]; then
             OUTCOME="REVIEW_APPROVED_PROTECTED_LEAD_INTEGRATION_REQUIRED"
@@ -404,6 +440,7 @@ jobs:
           APPROVAL_OUTCOME: ${{ steps.approval_record.outputs.outcome }}
           CONTROLLED_WAIT: ${{ steps.review_models.outputs.wait }}
         run: |
+          set -euo pipefail
           python - <<'PY'
           import json
           import os
@@ -458,9 +495,24 @@ jobs:
 
           if [ "$OUTCOME" = "REJECTED" ]; then
             REJECTED_TITLE="exact-head-review-rejected: pr=$PR_NUMBER sha=$HEAD_SHA"
-            REPO_OWNER="${GITHUB_REPOSITORY%%/*}"
-            EXISTING_REJECTION="$(gh issue list --repo "$GITHUB_REPOSITORY" --state all --limit 500 --json title,author | jq --arg title "$REJECTED_TITLE" --arg owner "$REPO_OWNER" '[.[] | select(.title == $title and (((.author.login // "") == $owner) or ((.author.login // "") == "github-actions[bot]")))] | length')"
-            if [ "$EXISTING_REJECTION" -eq 0 ]; then
+
+            # First prove the newly-updated source attempt itself is durable terminal
+            # state. This closes the crash window even before the separate receipt is
+            # created, while still requiring the receipt before the request is closed.
+            gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100" \
+              | jq -s 'add | map(select(.pull_request == null))' \
+              > /tmp/exact-head-control-issues-after-attempt.json
+            SOURCE_STATE="$(python -m orchestration.exact_head_control_state \
+              --issues /tmp/exact-head-control-issues-after-attempt.json \
+              --pr-number "$PR_NUMBER" \
+              --head-sha "$HEAD_SHA")"
+            test "$(printf '%s' "$SOURCE_STATE" | jq -r '.rejected')" = "true"
+            SOURCE_MATCH="$(printf '%s' "$SOURCE_STATE" | jq --argjson issue "$ATTEMPT_ISSUE" '[.validated_rejected_attempts[] | select(. == $issue)] | length')"
+            test "$SOURCE_MATCH" -eq 1
+
+            EXISTING_RECEIPTS="$(printf '%s' "$SOURCE_STATE" | jq '.validated_rejection_receipts | length')"
+            CREATED_REJECTION=""
+            if [ "$EXISTING_RECEIPTS" -eq 0 ]; then
               cat >/tmp/exact-head-review-rejected.md <<EOF
           PR: #$PR_NUMBER
           Candidate branch: \`$BRANCH\`
@@ -471,7 +523,27 @@ jobs:
 
           At least one independent reviewer produced a valid scientific rejection. This exact SHA is terminal for review and cannot be retried to seek a different model judgment. A revised candidate head with fresh exact-head CI is required before another scientific review request.
           EOF
-              gh issue create --repo "$GITHUB_REPOSITORY" --title "$REJECTED_TITLE" --body-file /tmp/exact-head-review-rejected.md
+              REJECTION_URL="$(gh issue create --repo "$GITHUB_REPOSITORY" --title "$REJECTED_TITLE" --body-file /tmp/exact-head-review-rejected.md)"
+              CREATED_REJECTION="${REJECTION_URL##*/}"
+              test -n "$CREATED_REJECTION"
+            fi
+
+            # Re-read provider state and validate exact PR/SHA/source-attempt/outcome/
+            # authority binding before the request can be closed. Receipt creation
+            # or verification failure is a hard workflow failure under pipefail.
+            gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100" \
+              | jq -s 'add | map(select(.pull_request == null))' \
+              > /tmp/exact-head-control-issues-after-receipt.json
+            VERIFIED_STATE="$(python -m orchestration.exact_head_control_state \
+              --issues /tmp/exact-head-control-issues-after-receipt.json \
+              --pr-number "$PR_NUMBER" \
+              --head-sha "$HEAD_SHA")"
+            test "$(printf '%s' "$VERIFIED_STATE" | jq -r '.rejected')" = "true"
+            VERIFIED_RECEIPTS="$(printf '%s' "$VERIFIED_STATE" | jq '.validated_rejection_receipts | length')"
+            test "$VERIFIED_RECEIPTS" -gt 0
+            if [ -n "$CREATED_REJECTION" ]; then
+              CREATED_MATCH="$(printf '%s' "$VERIFIED_STATE" | jq --argjson issue "$CREATED_REJECTION" '[.validated_rejection_receipts[] | select(. == $issue)] | length')"
+              test "$CREATED_MATCH" -eq 1
             fi
           fi
 
@@ -479,7 +551,7 @@ jobs:
             if [ "$OUTCOME" = "WAIT_RETRYABLE" ]; then
               gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as WAIT_RETRYABLE because an independent reviewer provider was throttled/unavailable and no valid rejection was produced. Candidate remains unapproved. Request stays open for a later bounded retry (maximum three attempts)."
             elif [ "$OUTCOME" = "REJECTED" ]; then
-              gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as REJECTED. A valid independent rejection is terminal for this exact SHA; revise the candidate to a new head and pass fresh exact-head CI before requesting another scientific review."
+              gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as REJECTED. A validated independent rejection is durably bound to this exact SHA; revise the candidate to a new head and pass fresh exact-head CI before requesting another scientific review."
               gh issue close "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY"
             else
               gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as $OUTCOME. This request is closed to prevent unbounded paid retries. FAILED indicates missing/invalid infrastructure evidence rather than a scientific rejection; retry the same SHA only after the objective runtime cause is materially repaired and under the bounded attempt limit."
