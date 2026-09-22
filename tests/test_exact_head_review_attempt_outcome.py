@@ -1,6 +1,8 @@
+from itertools import product
 from pathlib import Path
 
-from orchestration.exact_head_review import classify_review_attempt_outcome
+from orchestration import exact_head_review as review
+from orchestration.exact_head_review import classify_review_attempt_outcome, has_terminal_rejection
 
 
 WORKFLOW_PATH = Path(".github/workflows/exact_head_independent_review.yml")
@@ -110,6 +112,39 @@ def test_invalid_risk_schema_cannot_create_rejection() -> None:
     ) == "FAILED"
 
 
+def test_terminal_rejection_predicate_is_invariant_across_live_and_receipt_classification() -> None:
+    """Any valid rejection seen by the live path must force receipt classification to REJECTED."""
+    choices: list[dict[str, object] | None] = [None, _verdict(True), _verdict(False)]
+    for verdict_tuple in product(choices, repeat=3):
+        verdicts = list(verdict_tuple)
+        if not has_terminal_rejection(verdicts):
+            continue
+        for controlled_wait in (False, True):
+            for approved_outcome in ("", "REVIEW_APPROVED_LEAD_INTEGRATION_REQUIRED"):
+                assert classify_review_attempt_outcome(
+                    verdicts,
+                    controlled_wait=controlled_wait,
+                    approved_outcome=approved_outcome,
+                ) == "REJECTED"
+
+
+def test_receipt_classifier_calls_the_same_terminal_rejection_function(monkeypatch) -> None:
+    calls: list[list[dict[str, object] | None]] = []
+
+    def sentinel(verdicts: list[dict[str, object] | None]) -> bool:
+        calls.append(verdicts)
+        return True
+
+    monkeypatch.setattr(review, "has_terminal_rejection", sentinel)
+    verdicts = [_verdict(True), None, None]
+    assert review.classify_review_attempt_outcome(
+        verdicts,
+        controlled_wait=True,
+        approved_outcome="",
+    ) == "REJECTED"
+    assert calls == [verdicts]
+
+
 def test_workflow_persists_and_blocks_terminal_exact_sha_rejections() -> None:
     workflow = WORKFLOW_PATH.read_text(encoding="utf-8")
     assert "exact-head-review-rejected: pr=$PR_NUMBER sha=$REQUESTED_SHA" in workflow
@@ -117,3 +152,7 @@ def test_workflow_persists_and_blocks_terminal_exact_sha_rejections() -> None:
     assert "steps.review_models.outputs.rejected == 'true'" in workflow
     assert "A valid independent scientific rejection is terminal for this exact SHA" in workflow
     assert "revise the candidate to a new head" in workflow
+    # The live workflow and durable receipt finalizer both import the canonical
+    # exact_head_review module rather than carrying two independent predicates.
+    assert "from orchestration.exact_head_review import has_terminal_rejection" in workflow
+    assert "from orchestration.exact_head_review import classify_review_attempt_outcome" in workflow
