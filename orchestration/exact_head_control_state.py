@@ -326,8 +326,7 @@ def exact_head_control_state(
         number for number, record in attempts.items() if record["outcome"] == "STARTED"
     )
 
-    approval_receipts: list[int] = []
-    approval_receipt_sources: list[int] = []
+    approval_receipt_pairs: list[tuple[int, int]] = []
     rejection_receipts: list[int] = []
     for issue in issue_list:
         issue_number = _issue_number(issue)
@@ -354,8 +353,7 @@ def exact_head_control_state(
                 and source["outcome"] in APPROVED_OUTCOMES
                 and source["workflow_main_sha"] == receipt_main_sha
             ):
-                approval_receipts.append(issue_number)
-                approval_receipt_sources.append(source_issue)
+                approval_receipt_pairs.append((issue_number, source_issue))
 
         rejection_source = _receipt_source(
             issue,
@@ -378,44 +376,64 @@ def exact_head_control_state(
             ):
                 rejection_receipts.append(issue_number)
 
-    approval_receipts.sort()
-    approval_receipt_sources.sort()
+    approval_receipt_pairs.sort()
+    approval_receipts = [receipt for receipt, _ in approval_receipt_pairs]
+    approval_receipt_sources = [source for _, source in approval_receipt_pairs]
     rejection_receipts.sort()
     validated_control_issue_numbers = set(attempts) | set(approval_receipts) | set(rejection_receipts)
     invalid_trusted_control_issues = sorted(
         number for number in claimed_control_issues if number not in validated_control_issue_numbers
     )
 
+    # Negative scientific memory is exact-candidate authority and survives
+    # unrelated reviewer-runtime/main movement. Positive integration authority
+    # is contextual: historical approvals remain authenticated/auditable, but
+    # only an approval pair produced under the currently pinned reviewer-main
+    # context may authorize integration or suppress re-review.
     rejected = bool(rejected_attempts or rejection_receipts)
     interrupted = bool(interrupted_attempts)
     receipted_approved_attempts = sorted(set(approval_receipt_sources))
-    unreceipted_approved_attempts = sorted(
-        set(approved_attempts) - set(receipted_approved_attempts)
+    current_approved_attempts = sorted(
+        number
+        for number in approved_attempts
+        if attempts[number]["workflow_main_sha"] == workflow_main_sha
     )
-    multiple_approved_attempts = len(approved_attempts) > 1
+    current_approval_receipt_pairs = [
+        (receipt, source)
+        for receipt, source in approval_receipt_pairs
+        if attempts[source]["workflow_main_sha"] == workflow_main_sha
+    ]
+    current_approval_receipts = [receipt for receipt, _ in current_approval_receipt_pairs]
+    current_receipted_approved_attempts = sorted(
+        {source for _, source in current_approval_receipt_pairs}
+    )
+    unreceipted_approved_attempts = sorted(
+        set(current_approved_attempts) - set(current_receipted_approved_attempts)
+    )
+    multiple_approved_attempts = len(current_approved_attempts) > 1
     approval_persistence_incomplete = bool(unreceipted_approved_attempts)
     ambiguous = (
         interrupted
         or approval_persistence_incomplete
         or multiple_approved_attempts
-        or len(approval_receipts) > 1
+        or len(current_approval_receipts) > 1
         or len(rejection_receipts) > 1
         or bool(invalid_trusted_control_issues)
     )
     approved = (
-        len(approved_attempts) == 1
-        and len(approval_receipts) == 1
-        and receipted_approved_attempts == approved_attempts
+        len(current_approved_attempts) == 1
+        and len(current_approval_receipts) == 1
+        and current_receipted_approved_attempts == current_approved_attempts
         and not rejected
         and not interrupted
         and not ambiguous
     )
-    # Any completed scientific approval attempt is non-retryable even if its
-    # secondary approval receipt is temporarily invisible or failed to persist.
-    # That state can become approved later if the exact bound receipt appears,
-    # but the expensive scientific reviewers must never be invoked again merely
-    # to repair control-plane persistence.
-    terminal_nonretryable = bool(rejected or interrupted or approved_attempts)
+    # Rejection or an interrupted reviewer judgment remains permanently
+    # non-retryable for this candidate SHA. A completed positive review is
+    # non-retryable only while its reviewer-main context is still current;
+    # after unrelated main movement it remains durable history but must be
+    # positively revalidated before it can authorize integration again.
+    terminal_nonretryable = bool(rejected or interrupted or current_approved_attempts)
 
     return {
         "control_state_schema_version": 4,
