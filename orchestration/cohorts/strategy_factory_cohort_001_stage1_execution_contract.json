@@ -2,12 +2,12 @@
   "schema_version": 1,
   "artifact_type": "strategy_factory_cohort_001_stage1_execution_contract",
   "contract_id": "STRATEGY-FACTORY-COHORT-001-STAGE1-EXECUTION-v1",
-  "execution_contract_sha256": "04b4fd2373649061ca8349e7dbff127cc7b0bc852a9f4ff541b080094da187ef",
+  "execution_contract_sha256": "cb7c19bf40b65cb366bd2db2b908759a4d945d23d4008566c23511f55101ed7a",
   "formed_at": "2026-09-22T08:13:55Z",
   "status": "OUTCOME_BLIND_FROZEN_WAIT_PARENT_INTEGRATION_AND_EXACT_HEAD_REVIEW",
   "source_stage1_binding": {
     "binding_id": "STRATEGY-FACTORY-COHORT-001-STAGE1-BINDING-v1",
-    "binding_receipt_sha256": "3a715c8373e3847dba2f0922bc99dbdd69b3864729be8c40d6d79db444fa43db"
+    "binding_receipt_sha256": "53777547473c4d0857f6a1fd73949fe8371e8bfcc7b9893701ea7dbddc4ae7ab"
   },
   "evidence_locks": {
     "strategy_outcomes_read_to_form_contract": false,
