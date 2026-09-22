@@ -105,8 +105,7 @@ class IndependentEvent:
     trades: tuple[Trade, ...]
 
     def return_at_cost(self, cost_bps: float) -> float:
-        total_weight = sum(t.gross_notional for t in self.trades)
-        return sum(t.gross_notional * t.net_return(cost_bps) for t in self.trades) / total_weight
+        return sum((1.0 / 3.0) * trade.net_return(cost_bps) for trade in self.trades)
 
 
 @dataclass(frozen=True)

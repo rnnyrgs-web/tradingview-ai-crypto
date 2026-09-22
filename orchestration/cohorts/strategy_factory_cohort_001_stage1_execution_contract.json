@@ -2,7 +2,7 @@
   "schema_version": 1,
   "artifact_type": "strategy_factory_cohort_001_stage1_execution_contract",
   "contract_id": "STRATEGY-FACTORY-COHORT-001-STAGE1-EXECUTION-v1",
-  "execution_contract_sha256": "cb7c19bf40b65cb366bd2db2b908759a4d945d23d4008566c23511f55101ed7a",
+  "execution_contract_sha256": "dc14285eb36d0519547b0bfc5cb2ff9a3e3fe94d7c6254f9c3a9a6d60342e91e",
   "formed_at": "2026-09-22T08:13:55Z",
   "status": "OUTCOME_BLIND_FROZEN_WAIT_PARENT_INTEGRATION_AND_EXACT_HEAD_REVIEW",
   "source_stage1_binding": {
@@ -39,9 +39,9 @@
         "latest_exit_row_utc": "2026-08-31T23:00:00Z"
       }
     ],
-    "cost_semantics": "The frozen 24/48/72 bps totals are round-trip drag per unit of gross committed notional. Apply after gross return normalization. Multi-leg trades use total absolute leg notional as committed gross notional, so identical per-notional cost rates do not receive a hidden leg-count discount or surcharge.",
-    "independence_accounting": "Execution follows each candidate's frozen per-asset overlap rule. For statistical independence, completed trades whose [entry,exit) exposure intervals overlap across any assets/legs of the same candidate are one connected independent-event cluster. Raw trade count is diagnostic only and never satisfies minimum-independent-trade gates.",
-    "independent_event_return": "For each connected exposure cluster, aggregate constituent trade net returns by frozen gross-committed-notional weights and divide by total such weights. Chronological cluster return is the unit for economic gates, winner/tail tests and profit factor.",
+    "cost_semantics": "The frozen 24/48/72 bps totals are round-trip drag per trade, applied after each trade's internally gross-notional-normalized gross return and before the fixed 1/3-NAV portfolio slot. Multi-leg trades use total absolute leg notional only inside Trade.gross_return normalization; gross_notional never becomes a cross-trade or future-cluster portfolio weight.",
+    "independence_accounting": "Execution follows each candidate's frozen per-asset overlap rule. For statistical independence only, completed trades whose [entry,exit) exposure intervals overlap across any assets/legs of the same candidate are one connected independent-event cluster. Clustering never changes entry-time portfolio sizing. Raw trade count is diagnostic only and never satisfies minimum-independent-trade gates.",
+    "independent_event_return": "Each admitted trade receives a fixed 1/3 NAV gross portfolio slot at its own entry; unused slots remain cash and later overlapping signals cannot resize earlier trades. A trade's net return is its already internally gross-notional-normalized gross return minus the frozen round-trip cost. Connected-cluster economic return is sum((1/3) * trade_net_return) across constituent trades, with no normalization by final cluster size or gross_notional. This chronological cluster return is the unit for economic gates, winner/tail tests and profit factor.",
     "profit_factor_definition": "sum(positive independent-event net returns)/abs(sum(negative independent-event net returns)); if there are gains and no losses PF=+infinity; if there are no gains PF=0.",
     "three_x_gate": "Mean 72-bps after-cost independent-event return must be strictly positive in both training and validation.",
     "validation_half_gate": "Mean 24-bps after-cost independent-event return must be strictly positive in each frozen validation half. A cluster spanning a half boundary is excluded from half-specific means but remains eligible for overall validation only if it stays inside validation.",
