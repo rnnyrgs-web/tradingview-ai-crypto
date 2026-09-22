@@ -6,6 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "exact_head_independent_review.yml"
 REVIEWER = ROOT / "orchestration" / "exact_head_review.py"
+CONTROL_STATE = ROOT / "orchestration" / "exact_head_control_state.py"
 
 
 def _text() -> str:
@@ -28,26 +29,46 @@ def test_review_queue_is_keyed_by_pr_and_exact_sha_not_branch_namespace() -> Non
 def test_paid_review_requests_are_repository_owner_authorized() -> None:
     text = _text()
     assert 'REPO_OWNER="${GITHUB_REPOSITORY%%/*}"' in text
-    assert "--json number,title,createdAt,author" in text
     assert '[ "$REQUEST_AUTHOR" != "$REPO_OWNER" ]' in text
     assert "only repository owner $REPO_OWNER may authorize reviewer execution" in text
     assert "Closing without invoking any model/API" in text
-    # Keep jq argument passing in jq itself rather than forwarding unsupported
-    # `--arg` flags through the GitHub CLI's `--jq` option.
     assert "--jq --arg" not in text
-    assert "jq --arg title \"$APPROVED_TITLE\"" in text
 
 
-def test_durable_review_receipts_are_authenticated_before_they_control_the_queue() -> None:
+def test_control_plane_enumeration_is_complete_not_fixed_limit() -> None:
     text = _text()
-    assert '--json title,author' in text
-    assert '(.author.login // "") == $owner' in text
-    assert '(.author.login // "") == "github-actions[bot]"' in text
-    assert "authenticated approval receipt" in text
-    assert "authenticated independent rejection receipt" in text
-    assert "authenticated attempts" in text
-    # Lookalike public issue titles must not count as approval/rejection/retry receipts.
-    assert "Arbitrary public issues with lookalike titles are ignored" in text
+    assert 'gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=open&per_page=100"' in text
+    assert 'gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100"' in text
+    assert "--limit 500" not in text
+    assert "map(select(.pull_request == null))" in text
+    assert "python -m orchestration.exact_head_control_state" in text
+
+
+def test_durable_review_receipts_require_bot_author_and_exact_body_binding() -> None:
+    text = _text()
+    control = CONTROL_STATE.read_text(encoding="utf-8")
+    assert "github-actions[bot]" in control
+    assert "Exact reviewed SHA:" in control
+    assert "Exact rejected SHA:" in control
+    assert "Source attempt issue:" in control
+    assert "Outcome:" in control
+    assert "Integration authority:" in control
+    assert "admin_mutation_is_trusted_boundary" in control
+    assert "title by itself" in text
+    assert "exact body PR/SHA/outcome" in text
+
+
+def test_terminal_rejection_uses_source_attempt_fallback_and_verified_receipt() -> None:
+    text = _text()
+    assert "validated_rejected_attempts" in text
+    assert "validated_rejection_receipts" in text
+    assert "SOURCE_STATE" in text
+    assert "VERIFIED_STATE" in text
+    assert 'test "$SOURCE_MATCH" -eq 1' in text
+    assert 'test "$VERIFIED_RECEIPTS" -gt 0' in text
+    assert "REJECTION_URL=" in text
+    assert "CREATED_REJECTION" in text
+    assert "set -euo pipefail" in text
 
 
 def test_full_scientific_diff_has_one_consistent_hard_context_bound() -> None:
@@ -73,13 +94,10 @@ def test_protected_paths_are_reviewed_but_never_auto_integrated() -> None:
 def test_failed_attempts_are_bounded_while_valid_rejections_are_terminal_for_exact_sha() -> None:
     text = _text()
     assert "closed to prevent unbounded paid retries" in text
-    # Infrastructure/runtime FAILED is distinct from a scientific rejection and may
-    # retry only after the objective cause is repaired, still under the bounded cap.
     assert "FAILED indicates missing/invalid infrastructure evidence rather than a scientific rejection" in text
     assert "retry the same SHA only after the objective runtime cause is materially repaired" in text
-    # A valid approve=false is durable no-review-shopping memory for the exact SHA.
     assert "exact-head-review-rejected: pr=$PR_NUMBER sha=$REQUESTED_SHA" in text
-    assert "independent rejection receipt already exists" in text
+    assert "Validated terminal rejection state already exists" in text
     assert "This exact SHA is terminal and cannot be reviewer-shopped" in text
     assert "revise the candidate to a new head" in text
     assert "exact-head-review-approved: pr=$PR_NUMBER sha=$REQUESTED_SHA" in text
@@ -108,11 +126,20 @@ def test_transient_reviewer_capacity_is_controlled_wait_not_approval() -> None:
 
 def test_valid_rejection_precedes_wait_and_blocks_approval_path() -> None:
     text = _text()
-    assert "REJECTED=0" in text
-    assert ".approve == false and .integration_authority == \"NONE\"" in text
+    assert "classify_review_attempt_outcome" in text
+    assert "outcome == 'REJECTED'" in text
     assert 'echo "rejected=true" >> "$GITHUB_OUTPUT"' in text
     assert "valid independent scientific rejection is terminal" in text
     assert "steps.review_models.outputs.rejected != 'true'" in text
+
+
+def test_every_launched_parallel_reviewer_is_joined_before_rejection_scan() -> None:
+    text = _text()
+    launched = text.index("PID_CLAUDE=$!")
+    joined = text.index('wait "$PID_CLAUDE"')
+    scan = text.index('REJECTED="$(python - <<\'PY\'')
+    assert launched < joined < scan
+    assert "Every reviewer that was actually launched is joined before terminal" in text
 
 
 def test_openai_reviewers_are_serial_while_claude_can_run_in_parallel() -> None:
