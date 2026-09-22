@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-22T0505Z",
+  "information_cutoff": "2026-09-22T05:05:26Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_observed_before_write": "29fee2f3d9c86b3ce1356b4ba1125c6c455bd9d0",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles": true,
+    "searched_prediction_artifacts": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "last_owner_report_cycle": "2026-09-20T1630Z",
+    "run_start_utc": "2026-09-22T04:55:13Z",
+    "artifact_cutoff_utc": "2026-09-22T05:05:26Z",
+    "seconds_this_run_minimum": 613,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 1906,
+    "minimum_cumulative_seconds_since_last_owner_report": 2519,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active research/execution time is counted. Schedule gaps, idle time, publication timestamps and background time are excluded."
+  },
+  "daily_big_move_scan": {
+    "selected_moves": [
+      "BTC broke above $84k before the U.S. ETF secondary-market open and later traded above $86k, roughly 6%-7% above Friday, with very large short liquidations.",
+      "ETH rallied roughly 6%; completed U.S. spot ETH ETF flow later printed +$270M.",
+      "Nasdaq rose 1.49% to a record; semiconductors rose about 4.3%; AMD rose about 9.6%, Intel and Arm more than 12%, and Meta about 11.4%.",
+      "Brent moved toward/below $100 as Saudi effective export supply recovered through Gulf/Hormuz and ship-to-ship substitution despite continuing geopolitical disruption.",
+      "Gold fell about 0.6% as the dollar firmed and Fed-hike odds rose.",
+      "The onshore yuan reached a fresh multi-year high while the broad dollar was roughly flat, extending the managed-FX constraint case."
+    ],
+    "selection_logic": "Selected for cross-asset abnormality and causal information value rather than a fixed percentage threshold."
+  },
+  "highest_information_question": "When a continuously traded crypto asset breaks out before the U.S. ETF session but later prints unusually large ETF creations, how much of the move is voluntary institutional spot demand versus broad risk beta, forced short-covering, pre-positioning/hedging and reflexive follow-through?",
+  "fresh_research": [
+    {
+      "topic": "Bitcoin September 21 breakout: pre-U.S.-open squeeze first, then unusually large and broad ETF confirmation",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / BTC / ETF / DERIVATIVES / TIMING",
+      "observed_facts": [
+        "BTC was already above roughly $84k around 05:22 U.S. Eastern time, before U.S.-listed spot BTC ETFs opened for secondary-market trading.",
+        "Contemporaneous derivatives reporting showed roughly $262M of crypto shorts liquidated in one hour, with BTC the largest contributor, while long liquidations were small; forced short-covering was therefore a clear early amplifier.",
+        "BTC later traded above $86k and completed the U.S. day roughly 6%-7% above Friday.",
+        "Farside's completed September 21 U.S. spot BTC ETF table recorded +$999.0M net flow. Breadth was broad: IBIT +$381.4M, FBTC +$238.8M, ARKB +$289.1M, MSBT +$61.7M, BITB +$21.6M, with smaller positive flows elsewhere.",
+        "Completed September 21 spot ETH ETF net flow was +$270.0M and was also broad across several products.",
+        "The same session was strongly risk-on outside crypto: Nasdaq rose 1.49% to a record and semiconductors about 4.3%, while oil and long yields softened.",
+        "BTC open interest subsequently rebuilt rather than disappearing after the squeeze, so leverage remains an important post-breakout state variable."
+      ],
+      "inference": "The first BTC leg cannot truthfully be attributed to the finalized ETF print because price had already broken out before the U.S. ETF session and short covering was enormous. A more defensible chain is improving broad risk conditions and prior crypto demand -> break of the prior resistance region -> short-cover reflexivity -> large later U.S. ETF creation demand confirming substantial voluntary regulated-product absorption and helping sustain/extend the move. Final ETF flow is demand confirmation, not a timestamp-safe explanation for the first leg.",
+      "capital_source_destination": "U.S. brokerage/advisory/institutional cash -> spot BTC ETF secondary demand/AP creation process -> underlying BTC acquisition or inventory transfer/hedging -> marginal BTC sellers; simultaneously leveraged short collateral was forcibly converted into buy-to-close demand.",
+      "catalyst": "Breakout through prior resistance amid easier cross-asset conditions and improving regulated-product demand.",
+      "transmission_mechanism": "Voluntary spot/ETF demand tightened marginal supply while forced short covering increased buy urgency; positive price performance then attracted reflexive/momentum participation.",
+      "amplifiers": ["Short-liquidation cascade", "Momentum/systematic breakout demand", "Dealer/AP hedging and creation mechanics", "High crypto beta to the risk/semiconductor rally"],
+      "alternative_explanations": [
+        "Broad technology/risk-on beta was a major concurrent driver.",
+        "Public ETF-flow totals are finalized after much of the session and cannot be treated as public pre-move information.",
+        "Some creations may be in-kind or sourced from AP inventory rather than contemporaneous exchange spot purchases."
+      ],
+      "negative_findings": [
+        "Do not call +$999M ETF flow the cause of the first breakout leg; the timing falsifies that simple story.",
+        "Do not label the rally durable institutional accumulation from one day alone; persistence and execution mode remain unresolved.",
+        "Do not treat a large short squeeze as durable demand after the forced buyers disappear."
+      ],
+      "pre_move_predictors_to_test": ["ETF premium/discount and secondary-market volume before final flow publication", "AP order cutoffs/creation mode where public", "Spot breadth and exchange net taker flow", "BTC basis, funding, OI and liquidation clusters", "Relative strength versus Nasdaq and other high-beta assets", "Breakout-zone depth and prior holder cost basis"],
+      "decision_support": {
+        "instrument": "BTC",
+        "action": "HOLD / WAIT FOR POST-BREAKOUT CONFIRMATION",
+        "horizon": "days to weeks",
+        "confidence": "MODERATE / LEARNING",
+        "thesis": "Demand quality improved materially, but the realized move is already large and the initial leg was squeeze-amplified. The next edge is whether voluntary spot/ETF absorption persists without excessive leverage.",
+        "confirmations": ["Several more completed broad positive ETF sessions", "Former roughly $82k-$83k breakout region holds on pullbacks", "Funding/basis/OI remain controlled relative to spot appreciation", "Spot/on-chain/exchange evidence shows continued absorption"],
+        "invalidation": "Breakout region fails while ETF redemptions resume and leverage remains elevated.",
+        "cost_capacity": "Highly liquid, but chasing after a squeeze worsens entry asymmetry."
+      }
+    },
+    {
+      "topic": "Tokenized-securities value capture depends on settlement architecture, not tokenization volume alone",
+      "label": "TOKENIZATION / MARKET INFRASTRUCTURE / SETTLEMENT / STABLECOINS / CENTRAL-BANK MONEY",
+      "observed_facts": [
+        "The SEC's September 17 temporary Innovation Exemption permits qualifying Tokenized Securities Venues to trade tokenized NMS stocks using permissioned participants and auditable smart contracts on public permissionless DLT, subject to conditions and volume/symbol limits.",
+        "SEC materials allow eligible tokenized securities to be paired with permitted payment stablecoins or tokenized money-market-fund instruments, but the framework does not require a generic native crypto token to be used for settlement or fees.",
+        "On September 21 the ECB launched Pontes, its first production step for settling DLT-based financial-market transactions in central-bank money through TARGET infrastructure, with banks, public institutions and multiple DLT operators participating.",
+        "The ECB also disclosed preparations to invest a small portion of its own non-monetary-policy funds in tokenized euro-area public/supranational securities settled through Pontes."
+      ],
+      "inference": "Tokenization adoption is becoming institutionally real, but economic value capture is architecture-dependent. Public ledgers, permissioned access, central-bank money, stablecoins/tokenized MMFs, custody, interoperability and trading venues can be complements or substitutes. Growth in tokenized-security notional therefore does not mechanically imply growth in stablecoin demand or native-L1-token value.",
+      "source_destination_chain": "Traditional securities owners/cash investors -> compliant venue/custody/settlement stack -> tokenized security plus permitted settlement asset -> market makers/custodians/interoperability providers/ledger operators -> fee and balance-sheet economics accrue only to layers actually used.",
+      "learning_candidate": {
+        "id": "MI-H-20260922-TOKENIZATION-SETTLEMENT-ARCHITECTURE",
+        "status": "SUPPORTED_PROVISIONAL_CROSS_JURISDICTION",
+        "claim": "Tokenization value capture depends on settlement asset, legal rights, permissioning, custody/interoperability roles and fee architecture; tokenized notional alone is not sufficient evidence for stablecoin or native-token value capture."
+      },
+      "negative_findings": ["Do not infer tokenization growth means all RWA tokens/L1s rise.", "Do not treat public-permissionless deployment as proof a native token captures fees or collateral demand.", "Do not assume U.S. stablecoin settlement and euro-area central-bank-money settlement create the same beneficiary set."],
+      "decision_support": {
+        "theme": "Tokenized financial-market infrastructure",
+        "action": "HOLD / RESEARCH FOR BUY CANDIDATES",
+        "horizon": "1-5 years",
+        "confidence": "MODERATE structural; LOW asset-level",
+        "confirmations": ["Production volumes and balances migrate onto named rails", "Fee/custody/settlement revenue becomes material", "Persistent settlement balances where relevant", "Clear legal rights and institutional participation"],
+        "invalidation": "Low production adoption, economics accrue elsewhere, or regulation/technical design changes materially."
+      }
+    },
+    {
+      "topic": "Oil route substitution can lower benchmark crude while transferring scarcity rent to tanker/logistics capacity",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / OIL / TANKERS / SHIPPING / VALUE CAPTURE",
+      "observed_facts": [
+        "Saudi Arabia increased Gulf/Hormuz exports and uses ship-to-ship logistics around Sohar/Gulf of Oman to offset impaired Red Sea/Yanbu logistics; effective exported barrels recovered enough for Brent to move toward/below $100 despite continuing geopolitical disruption.",
+        "Reuters reported Hormuz crude/product flows around 6.5 mb/d in September and roughly 2.5 mb/d of Saudi Gulf-of-Oman ship-to-ship flow expected in September versus about 1.4 mb/d in August.",
+        "Benchmark VLCC freight from the Gulf to China exceeded roughly $30 per barrel, more than a quarter of crude value versus only a few percent before the war.",
+        "The substitution system consumes additional tanker days and producers have had to offer deeper crude discounts or absorb transport costs.",
+        "Trafigura launched Volare Shipping with an initial 14 supertankers and plans an approximately $500M private placement/Oslo listing, an observable capital-allocation response to the freight-scarcity regime."
+      ],
+      "inference": "When route substitution preserves physical supply but consumes scarce logistics capacity, the scarcity rent can migrate away from the benchmark crude price and toward tanker, insurance and logistics providers. Falling Brent is therefore not equivalent to a fully normalized energy system.",
+      "causal_chain": "Chokepoint/pipeline disruption -> alternative route/STS demand -> more tanker-days, insurance and freight per delivered barrel -> effective barrels recover -> crude scarcity premium falls -> logistics/freight scarcity premium rises -> cash flow transfers from producers/refiners/buyers toward transport/logistics capacity.",
+      "capital_source_destination": "Producer/refiner/commodity-buyer cash and crude discounts -> freight/insurance/STS costs -> tanker/logistics operators -> new equity/debt/private capital attracted toward vessel ownership and capacity.",
+      "learning_candidate": {
+        "id": "MI-H-20260922-LOGISTICS-SCARCITY-RENT",
+        "status": "SUPPORTED_PROVISIONAL",
+        "claim": "Route substitution can preserve delivered commodity supply while shifting scarcity rent into logistics capacity; asset selection should track retained cash-flow capture rather than benchmark commodity price alone."
+      },
+      "negative_findings": ["Do not infer falling Brent means the disruption is economically resolved.", "Do not assume oil producers capture the full scarcity rent when they absorb freight or discount crude.", "Do not chase tanker equities solely from spot freight because charter coverage, fleet age, debt, war-risk costs and mean reversion determine shareholder capture."],
+      "decision_support": {
+        "theme": "VLCC/tanker/logistics value capture",
+        "action": "WAIT / RESEARCH FOR BUY CANDIDATES",
+        "horizon": "weeks to years depending charter structure",
+        "confidence": "MODERATE on mechanism; LOW on asset-level valuation",
+        "next_test": "Compare DHT, FRO, INSW, ECO and new/private capacity on spot exposure, time-charter coverage, fleet age, debt, newbuild commitments, insurance/war-risk costs and valuation."
+      }
+    },
+    {
+      "topic": "Leveraged AI concentration can transmit a sector selloff into forced deleveraging and tighter prime-broker constraints",
+      "label": "HISTORICAL EXTREME-MOVE LAB / AI / LEVERAGE / PRIME BROKERAGE / COLLATERAL",
+      "observed_facts": [
+        "Reuters reported the Situational Awareness portfolio lost about 67% in July and subsequently sold most public equities and removed leverage after the AI/chip selloff.",
+        "Reporting around the same episode put Jane Street's July loss near $15B, partly tied to the same technology/AI dislocation.",
+        "The Fed and Bank of England have since asked banks for information about exposures to large trading firms, and prior SEC inquiries examined leverage and margin-call mechanics at major prime brokers.",
+        "At this cutoff no official new cross-market margin or bank-capital rule was identified as implemented."
+      ],
+      "inference": "Crowded high-beta narratives become a system-level liquidity variable when financed through concentrated leveraged books. The relevant chain is not merely valuation compression; collateral loss can trigger forced selling, transfer risk to market makers/prime brokers and eventually tighten financing terms for surviving funds.",
+      "causal_chain": "Crowded AI concentration -> correlated drawdown -> collateral/VaR deterioration -> margin calls/deleveraging -> forced sale into weak depth -> stronger counterparties absorb inventory -> broker/market-maker losses and risk reassessment -> potentially tighter haircuts/leverage -> lower future balance-sheet capacity.",
+      "alternative_explanations": ["Idiosyncratic portfolio construction and basis/relative-value exposures may explain part of losses.", "Regulatory inquiries need not produce binding rules or material financing changes."],
+      "pre_move_predictors_to_test": ["Prime-broker gross/net exposure and concentration where disclosed", "Options skew/gamma and single-name/index correlation", "Hedge-fund beta/crowding measures", "Haircut/margin changes", "Dealer balance-sheet capacity and financing spreads"],
+      "decision_support": "No asset-level trade. Treat financing terms and concentration as a risk-state variable for AI/semiconductor exposure; require evidence of actual tightening before forecasting a durable liquidity shock."
+    }
+  ],
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No new immutable directional forecast clears the evidence bar after accounting for timing, leverage and already-realized price moves."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. The BTC timing decomposition, tokenization settlement-architecture distinction and logistics-scarcity-rent mechanism are materially useful but require additional out-of-sample/matched-control testing before promotion to the canonical learning ledger or dashboard. No code, signal-engine, paper-trading, promotion-gate, broker or real-money-trading state changed.",
+  "next_research": [
+    "Resolve the next completed BTC/ETH ETF sessions and reconcile them with spot breadth, venue-grade OI/funding/basis/liquidations and exchange/on-chain absorption; test whether voluntary demand persists after the September 21 squeeze.",
+    "Build a tokenization value-capture matrix across U.S. SEC TSV architecture and ECB Pontes: settlement asset, custody, interoperability, fees, legal rights, production volumes and investable beneficiaries.",
+    "Build a tanker value-capture matrix across DHT/FRO/INSW/ECO/Volare: spot exposure, charter duration, fleet age, debt, capex/newbuilds, insurance/war-risk cost and valuation.",
+    "Add historical controls where route substitution preserved commodity delivery but moved rents into shipping/logistics.",
+    "Test whether prime-broker financing terms and crowded-AI leverage measurably tightened after the July deleveraging episode rather than merely attracting regulatory inquiry.",
+    "After Avalanche Helicon activates, compare price-normalized activity, fees, bridge/stablecoin flows and leverage with the pre-event baseline before any AVAX upgrade.",
+    "Continue CNY managed-FX panel and Vietnam benchmark-flow constituent forced-flow/free-float analysis from the prior cycle."
+  ]
+}
