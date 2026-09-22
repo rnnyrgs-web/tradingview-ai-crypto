@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import os
 from pathlib import Path
 import re
-import subprocess
+import ssl
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -19,6 +20,10 @@ WARC_RE = re.compile(r"^crawl-data/(CC-MAIN-[0-9]{4}-[0-9]{2})/.+\.warc\.gz$")
 MAX_RANGE_BYTES = 16 * 1024 * 1024
 DISPATCH_MARKER = "PIT_TRUSTED_ACQUISITION_DISPATCHED"
 TRUSTED_MARKER_AUTHORS = {"github-actions", "github-actions[bot]"}
+GITHUB_API_HOST = "api.github.com"
+GITHUB_API_VERSION = "2022-11-28"
+MAX_API_RESPONSE_BYTES = 8 * 1024 * 1024
+MAX_COMMENT_PAGES = 100
 
 
 class BridgeRequestError(ValueError):
@@ -146,62 +151,115 @@ def validate_event(event: dict[str, Any]) -> tuple[int, str, dict[str, str]]:
     return issue_number, source_kind, fields
 
 
-def build_dispatch_argv(fields: dict[str, str]) -> list[str]:
-    argv = [
-        "gh",
-        "workflow",
-        "run",
-        TARGET_WORKFLOW,
-        "--repo",
-        EXPECTED_REPOSITORY,
-        "--ref",
-        TARGET_REF,
-    ]
-    for name in ("source_kind", "collection", "target_url", "filename", "offset", "length"):
-        value = fields.get(name)
-        if value is not None:
-            argv.extend(["-f", f"{name}={value}"])
-    return argv
+def build_dispatch_payload(fields: dict[str, str]) -> dict[str, Any]:
+    allowed = {"source_kind", "collection", "target_url", "filename", "offset", "length"}
+    if not fields or set(fields) - allowed:
+        raise BridgeRequestError("dispatch fields escaped the frozen bridge allowlist")
+    return {"ref": TARGET_REF, "inputs": dict(fields)}
 
 
-def _issue_has_dispatch_marker(issue_number: int, env: dict[str, str]) -> bool:
-    result = subprocess.run(
-        [
-            "gh",
-            "issue",
-            "view",
-            str(issue_number),
-            "--repo",
-            EXPECTED_REPOSITORY,
-            "--json",
-            "state,comments",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-        env=env,
+def _github_json_request(
+    method: str,
+    path: str,
+    *,
+    token: str,
+    payload: dict[str, Any] | None = None,
+    expected_status: set[int],
+) -> Any:
+    repo_prefix = f"/repos/{EXPECTED_REPOSITORY}/"
+    if method not in {"GET", "POST", "PATCH"} or not path.startswith(repo_prefix):
+        raise BridgeRequestError("GitHub API request escaped frozen repository boundary")
+    if "\r" in path or "\n" in path or "\x00" in path:
+        raise BridgeRequestError("invalid GitHub API path")
+
+    body = None
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {token}",
+        "X-GitHub-Api-Version": GITHUB_API_VERSION,
+        "User-Agent": "rnnyrgs-pit-acquisition-issue-bridge/1",
+        "Connection": "close",
+    }
+    if payload is not None:
+        body = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        headers["Content-Type"] = "application/json"
+
+    connection = http.client.HTTPSConnection(
+        GITHUB_API_HOST,
+        443,
+        timeout=20,
+        context=ssl.create_default_context(),
     )
-    data = json.loads(result.stdout)
-    if data.get("state") != "OPEN":
+    try:
+        connection.request(method, path, body=body, headers=headers)
+        response = connection.getresponse()
+        raw = response.read(MAX_API_RESPONSE_BYTES + 1)
+        status = int(response.status)
+    finally:
+        connection.close()
+
+    if len(raw) > MAX_API_RESPONSE_BYTES:
+        raise BridgeRequestError("GitHub API response exceeded frozen bridge bound")
+    if status not in expected_status:
+        raise BridgeRequestError(f"GitHub API request failed with HTTP {status}")
+    if not raw:
+        return None
+    try:
+        return json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise BridgeRequestError("GitHub API returned malformed JSON") from exc
+
+
+def _issue_is_already_dispatched(issue_number: int, token: str) -> bool:
+    issue_path = f"/repos/{EXPECTED_REPOSITORY}/issues/{issue_number}"
+    issue = _require_dict(
+        _github_json_request(
+            "GET", issue_path, token=token, expected_status={200}
+        ),
+        name="GitHub issue",
+    )
+    if issue.get("state") != "open":
         return True
-    for comment in data.get("comments", []):
-        author = (comment.get("author") or {}).get("login")
-        body = comment.get("body") or ""
-        if author in TRUSTED_MARKER_AUTHORS and DISPATCH_MARKER in body:
-            return True
-    return False
+
+    for page in range(1, MAX_COMMENT_PAGES + 1):
+        comments = _github_json_request(
+            "GET",
+            f"{issue_path}/comments?per_page=100&page={page}",
+            token=token,
+            expected_status={200},
+        )
+        if not isinstance(comments, list):
+            raise BridgeRequestError("GitHub issue comments response must be a list")
+        for comment in comments:
+            if not isinstance(comment, dict):
+                raise BridgeRequestError("GitHub issue comment must be an object")
+            author = (comment.get("user") or {}).get("login")
+            body = comment.get("body") or ""
+            if author in TRUSTED_MARKER_AUTHORS and DISPATCH_MARKER in body:
+                return True
+        if len(comments) < 100:
+            return False
+    raise BridgeRequestError("too many issue comments to prove bridge idempotency")
 
 
-def dispatch(event: dict[str, Any], *, env: dict[str, str] | None = None) -> list[str]:
+def dispatch(
+    event: dict[str, Any], *, token: str | None = None
+) -> dict[str, Any] | None:
     issue_number, source_kind, fields = validate_event(event)
-    runtime_env = dict(os.environ if env is None else env)
-    if not runtime_env.get("GH_TOKEN"):
+    runtime_token = token if token is not None else os.environ.get("GH_TOKEN")
+    if not runtime_token:
         raise BridgeRequestError("GH_TOKEN is required for trusted bridge dispatch")
-    if _issue_has_dispatch_marker(issue_number, runtime_env):
-        return []
+    if _issue_is_already_dispatched(issue_number, runtime_token):
+        return None
 
-    argv = build_dispatch_argv(fields)
-    subprocess.run(argv, check=True, env=runtime_env)
+    dispatch_payload = build_dispatch_payload(fields)
+    _github_json_request(
+        "POST",
+        f"/repos/{EXPECTED_REPOSITORY}/actions/workflows/{TARGET_WORKFLOW}/dispatches",
+        token=runtime_token,
+        payload=dispatch_payload,
+        expected_status={204},
+    )
 
     marker = (
         f"{DISPATCH_MARKER} issue={issue_number} kind={source_kind} "
@@ -209,35 +267,22 @@ def dispatch(event: dict[str, Any], *, env: dict[str, str] | None = None) -> lis
         "The bridge grants no data/label/prediction authority; trust still comes from the "
         "canonical workflow_dispatch acquisition receipt + GitHub attestation."
     )
-    subprocess.run(
-        [
-            "gh",
-            "issue",
-            "comment",
-            str(issue_number),
-            "--repo",
-            EXPECTED_REPOSITORY,
-            "--body",
-            marker,
-        ],
-        check=True,
-        env=runtime_env,
+    issue_path = f"/repos/{EXPECTED_REPOSITORY}/issues/{issue_number}"
+    _github_json_request(
+        "POST",
+        f"{issue_path}/comments",
+        token=runtime_token,
+        payload={"body": marker},
+        expected_status={201},
     )
-    subprocess.run(
-        [
-            "gh",
-            "issue",
-            "close",
-            str(issue_number),
-            "--repo",
-            EXPECTED_REPOSITORY,
-            "--reason",
-            "completed",
-        ],
-        check=True,
-        env=runtime_env,
+    _github_json_request(
+        "PATCH",
+        issue_path,
+        token=runtime_token,
+        payload={"state": "closed", "state_reason": "completed"},
+        expected_status={200},
     )
-    return argv
+    return dispatch_payload
 
 
 def main() -> None:
@@ -254,7 +299,7 @@ def main() -> None:
                 {
                     "issue_number": issue_number,
                     "source_kind": source_kind,
-                    "dispatch_argv": build_dispatch_argv(fields),
+                    "dispatch_payload": build_dispatch_payload(fields),
                 },
                 sort_keys=True,
             )
