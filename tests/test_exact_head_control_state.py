@@ -1,11 +1,14 @@
 from __future__ import annotations
 
-from orchestration.exact_head_control_state import exact_head_control_state
+import pytest
+
+from orchestration.exact_head_control_state import ControlStateError, exact_head_control_state
 
 
 SHA = "a" * 40
 MAIN = "b" * 40
 PR = 606
+REPO = "rnnyrgs-web/tradingview-ai-crypto"
 BOT = "github-actions[bot]"
 APPROVED = "REVIEW_APPROVED_LEAD_INTEGRATION_REQUIRED"
 
@@ -19,13 +22,14 @@ def _issue(number: int, title: str, body: str, *, author: str = BOT) -> dict[str
     }
 
 
-def _attempt(number: int, *, outcome: str = "REJECTED", author: str = BOT, sha: str = SHA) -> dict[str, object]:
+def _attempt(number: int, *, outcome: str = "REJECTED", author: str = BOT, sha: str = SHA, repo: str = REPO) -> dict[str, object]:
     run = 9000 + number
     return _issue(
         number,
         f"exact-head-review-attempt: pr={PR} sha={sha} run={run}",
         "\n".join(
             [
+                f"Repository: `{repo}`",
                 f"PR: #{PR}",
                 "Candidate branch: `agent/test`",
                 f"Exact reviewed SHA: `{sha}`",
@@ -40,13 +44,14 @@ def _attempt(number: int, *, outcome: str = "REJECTED", author: str = BOT, sha: 
     )
 
 
-def _rejection_receipt(number: int, source_attempt: int, *, author: str = BOT, sha: str = SHA) -> dict[str, object]:
+def _rejection_receipt(number: int, source_attempt: int, *, author: str = BOT, sha: str = SHA, repo: str = REPO) -> dict[str, object]:
     source_run = 9000 + source_attempt
     return _issue(
         number,
         f"exact-head-review-rejected: pr={PR} sha={sha}",
         "\n".join(
             [
+                f"Repository: `{repo}`",
                 f"PR: #{PR}",
                 "Candidate branch: `agent/test`",
                 f"Exact rejected SHA: `{sha}`",
@@ -61,13 +66,14 @@ def _rejection_receipt(number: int, source_attempt: int, *, author: str = BOT, s
     )
 
 
-def _approval_receipt(number: int, source_attempt: int, *, author: str = BOT, sha: str = SHA) -> dict[str, object]:
+def _approval_receipt(number: int, source_attempt: int, *, author: str = BOT, sha: str = SHA, repo: str = REPO) -> dict[str, object]:
     source_run = 9000 + source_attempt
     return _issue(
         number,
         f"exact-head-review-approved: pr={PR} sha={sha}",
         "\n".join(
             [
+                f"Repository: `{repo}`",
                 f"PR: #{PR}",
                 "Candidate branch: `agent/test`",
                 f"Exact reviewed SHA: `{sha}`",
@@ -90,6 +96,7 @@ def _state(issues: list[dict[str, object]]) -> dict[str, object]:
         pr_number=PR,
         head_sha=SHA,
         workflow_main_sha=MAIN,
+        repository=REPO,
     )
 
 
@@ -97,12 +104,12 @@ def _as_real_api_issue(issue: dict[str, object]) -> dict[str, object]:
     """Mirror the relevant shape returned by GET /repos/{owner}/{repo}/issues."""
     number = int(issue["number"])
     return {
-        "url": f"https://api.github.com/repos/example/repo/issues/{number}",
-        "repository_url": "https://api.github.com/repos/example/repo",
-        "labels_url": f"https://api.github.com/repos/example/repo/issues/{number}/labels{{/name}}",
-        "comments_url": f"https://api.github.com/repos/example/repo/issues/{number}/comments",
-        "events_url": f"https://api.github.com/repos/example/repo/issues/{number}/events",
-        "html_url": f"https://github.com/example/repo/issues/{number}",
+        "url": f"https://api.github.com/repos/{REPO}/issues/{number}",
+        "repository_url": f"https://api.github.com/repos/{REPO}",
+        "labels_url": f"https://api.github.com/repos/{REPO}/issues/{number}/labels{{/name}}",
+        "comments_url": f"https://api.github.com/repos/{REPO}/issues/{number}/comments",
+        "events_url": f"https://api.github.com/repos/{REPO}/issues/{number}/events",
+        "html_url": f"https://github.com/{REPO}/issues/{number}",
         "id": 100000 + number,
         "node_id": f"I_kw_TEST_{number}",
         "number": number,
@@ -122,7 +129,7 @@ def _as_real_api_issue(issue: dict[str, object]) -> dict[str, object]:
         "active_lock_reason": None,
         "body": issue["body"],
         "reactions": {"total_count": 0},
-        "timeline_url": f"https://api.github.com/repos/example/repo/issues/{number}/timeline",
+        "timeline_url": f"https://api.github.com/repos/{REPO}/issues/{number}/timeline",
         "performed_via_github_app": {"id": 15368, "slug": "github-actions"},
         "state_reason": None,
     }
@@ -134,6 +141,7 @@ def test_rejected_source_attempt_is_terminal_without_separate_receipt() -> None:
     assert state["validated_rejected_attempts"] == [11]
     assert state["validated_rejection_receipts"] == []
     assert state["attempt_count"] == 1
+    assert state["repository"] == REPO
 
 
 def test_rejection_receipt_must_bind_a_valid_rejected_source_attempt() -> None:
@@ -176,6 +184,19 @@ def test_duplicate_conflicting_binding_line_fails_closed() -> None:
     assert state["attempt_count"] == 0
 
 
+def test_duplicate_repository_binding_line_fails_closed() -> None:
+    issue = _attempt(11)
+    issue["body"] = str(issue["body"]) + "\nRepository: `other/repo`\n"
+    state = _state([issue])
+    assert state["attempt_count"] == 0
+
+
+def test_wrong_repository_binding_cannot_create_control_state() -> None:
+    state = _state([_attempt(11, repo="other/repo")])
+    assert state["attempt_count"] == 0
+    assert state["rejected"] is False
+
+
 def test_wrong_sha_or_nonterminal_outcome_does_not_create_rejection() -> None:
     other_sha = "d" * 40
     issues = [
@@ -193,6 +214,7 @@ def test_wrong_workflow_main_sha_is_not_valid_control_state() -> None:
         pr_number=PR,
         head_sha=SHA,
         workflow_main_sha="c" * 40,
+        repository=REPO,
     )
     assert state["attempt_count"] == 0
     assert state["rejected"] is False
@@ -203,7 +225,7 @@ def test_legacy_title_only_approval_is_deliberately_not_grandfathered() -> None:
     legacy = _issue(
         21,
         f"exact-head-review-approved: pr={PR} sha={SHA}",
-        f"PR: #{PR}\nExact reviewed SHA: `{SHA}`\nOutcome: `{APPROVED}`\nIntegration authority: `NONE`",
+        f"Repository: `{REPO}`\nPR: #{PR}\nExact reviewed SHA: `{SHA}`\nOutcome: `{APPROVED}`\nIntegration authority: `NONE`",
     )
     state = _state([legacy])
     assert state["approved"] is False
@@ -230,12 +252,13 @@ def test_valid_approval_requires_exact_source_attempt_and_body_binding() -> None
     assert state["approved"] is False
 
 
-def test_receipt_must_be_created_after_its_source_attempt() -> None:
+def test_receipt_identity_does_not_depend_on_issue_number_ordering() -> None:
+    """Causality is exact source/run/body binding, not a GitHub-number assumption."""
     source = _attempt(20, outcome=APPROVED)
-    stale_or_impossible_receipt = _approval_receipt(19, 20)
-    state = _state([source, stale_or_impossible_receipt])
-    assert state["validated_approval_receipts"] == []
-    assert state["approved"] is False
+    receipt = _approval_receipt(19, 20)
+    state = _state([source, receipt])
+    assert state["validated_approval_receipts"] == [19]
+    assert state["approved"] is True
 
 
 def test_receipt_source_workflow_run_must_match_source_attempt() -> None:
@@ -247,11 +270,26 @@ def test_receipt_source_workflow_run_must_match_source_attempt() -> None:
     assert state["approved"] is False
 
 
+def test_cross_repository_run_id_reuse_does_not_validate() -> None:
+    source = _attempt(20, outcome=APPROVED)
+    receipt = _approval_receipt(21, 20, repo="other/repo")
+    state = _state([source, receipt])
+    assert state["validated_approval_receipts"] == []
+    assert state["approved"] is False
+
+
 def test_duplicate_valid_receipts_are_ambiguous_and_fail_closed() -> None:
     source = _attempt(20, outcome=APPROVED)
     state = _state([source, _approval_receipt(21, 20), _approval_receipt(22, 20)])
     assert state["ambiguous_control_state"] is True
     assert state["approved"] is False
+
+
+def test_duplicate_issue_identity_in_snapshot_fails_closed() -> None:
+    source = _attempt(20, outcome=APPROVED)
+    duplicate = dict(source)
+    with pytest.raises(ControlStateError, match="duplicate issue number"):
+        _state([source, duplicate])
 
 
 def test_real_github_api_issue_shape_is_accepted_only_when_bindings_are_valid() -> None:
