@@ -171,8 +171,39 @@
       "exact blocker it resolves",
       "why cheaper/free alternatives are insufficient",
       "expected benefit",
-      "renewal/kill criterion"
+      "renewal/kill criterion",
+      "proactively flag the user when a deeply reviewed spend opportunity crosses the VERY_HIGH/EXTREME benefit threshold"
     ],
     "language": "Use evidence-gated wording. Do not claim a purchase will make the system profitable."
+  },
+  "proactive_spend_flagging": {
+    "enabled": true,
+    "lead_duty": "Continuously look for high-ROI opportunities where additional spending would materially accelerate or strengthen the master objective. Do not wait for the user to ask.",
+    "trigger": "Flag the user when evidence indicates a purchase is VERY_HIGH or EXTREME expected benefit relative to cost, or when a paid resource is the binding bottleneck to a high-value experiment/validation step.",
+    "deep_review_required": true,
+    "review_scope": [
+      "historical and point-in-time market data",
+      "derivatives/funding/OI/liquidation/basis data",
+      "L2/L3/order-book and cross-exchange microstructure data",
+      "on-chain/tokenomics/fundamental/catalyst datasets for 2x research",
+      "CPU/RAM/GPU/cloud compute",
+      "storage/egress/database capacity",
+      "independent backtest/execution engines and realistic execution/simulation infrastructure",
+      "AI/API capacity only if proven binding"
+    ],
+    "recommendation_must_include": [
+      "exact product/resource and capability needed",
+      "one-time versus recurring cost and estimated monthly total",
+      "exact blocker/opportunity it addresses",
+      "why existing/free alternatives are insufficient",
+      "expected scientific/economic benefit",
+      "what experiment or validation becomes possible",
+      "cheaper viable alternative if one exists",
+      "confidence in recommendation",
+      "measurable success criterion",
+      "cancel/downgrade/kill criterion"
+    ],
+    "notification_threshold": "Do not bother the user for marginal convenience. Notify proactively for purchases judged likely to create a material improvement in research speed, evidence quality, validation realism, or probability of discovering genuine alpha/2x lift.",
+    "authority": "Recommendation only. Never purchase, subscribe, upgrade, or incur a new charge without explicit user approval."
   }
 }
