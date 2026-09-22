@@ -120,6 +120,8 @@ def _attempt_record(
         number = int(issue["number"])
     except (KeyError, TypeError, ValueError):
         return None
+    if number <= 0:
+        return None
     return {
         "number": number,
         "run": int(title_match.group("run")),
@@ -213,6 +215,8 @@ def exact_head_control_state(
             issue_number = int(issue["number"])
         except (KeyError, TypeError, ValueError):
             continue
+        if issue_number <= 0:
+            continue
 
         approval_source = _receipt_source(
             issue,
@@ -228,6 +232,7 @@ def exact_head_control_state(
             source = attempts.get(source_issue)
             if (
                 source is not None
+                and issue_number > source_issue
                 and source["run"] == source_run
                 and source["outcome"] == outcome
                 and source["outcome"] in APPROVED_OUTCOMES
@@ -248,6 +253,7 @@ def exact_head_control_state(
             source = attempts.get(source_issue)
             if (
                 source is not None
+                and issue_number > source_issue
                 and source["run"] == source_run
                 and source["outcome"] == outcome == "REJECTED"
             ):
