@@ -461,7 +461,8 @@ jobs:
           OUTCOME="$(cat /tmp/exact-head-review-outcome.txt)"
 
           # Persisted source attempt is the primary crash-safe terminal evidence.
-          # Every terminal receipt is then separately created/re-read/validated.
+          # Secondary rejection receipts are audit/index artifacts only; they
+          # can strengthen auditability but never create or erase rejection.
           gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100" \
             | jq -s 'add | map(select(.pull_request == null))' \
             > /tmp/exact-head-control-issues-after-attempt.json
@@ -490,9 +491,13 @@ jobs:
 
           At least one independent reviewer produced a valid scientific rejection. This exact SHA is terminal for review and cannot be retried to seek a different model judgment.
           EOF
-              REJECTION_URL="$(gh issue create --repo "$GITHUB_REPOSITORY" --title "exact-head-review-rejected: pr=$PR_NUMBER sha=$HEAD_SHA" --body-file /tmp/exact-head-review-rejected.md)"
-              CREATED_REJECTION="${REJECTION_URL##*/}"
-              test -n "$CREATED_REJECTION"
+              if REJECTION_URL="$(gh issue create --repo "$GITHUB_REPOSITORY" --title "exact-head-review-rejected: pr=$PR_NUMBER sha=$HEAD_SHA" --body-file /tmp/exact-head-review-rejected.md 2>/tmp/exact-head-rejection-receipt-error.log)"; then
+                CREATED_REJECTION="${REJECTION_URL##*/}"
+                test -n "$CREATED_REJECTION"
+              else
+                echo "Secondary rejection receipt creation failed; persisted rejected source attempt remains terminal." >&2
+                cat /tmp/exact-head-rejection-receipt-error.log >&2 || true
+              fi
             fi
 
             gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100" \
@@ -504,9 +509,8 @@ jobs:
               --head-sha "$HEAD_SHA" \
               --workflow-main-sha "$MAIN_SHA")"
             test "$(printf '%s' "$VERIFIED_STATE" | jq -r '.rejected')" = "true"
-            test "$(printf '%s' "$VERIFIED_STATE" | jq -r '.ambiguous_control_state')" = "false"
-            VERIFIED_RECEIPTS="$(printf '%s' "$VERIFIED_STATE" | jq '.validated_rejection_receipts | length')"
-            test "$VERIFIED_RECEIPTS" -eq 1
+            VERIFIED_SOURCE_MATCH="$(printf '%s' "$VERIFIED_STATE" | jq --argjson issue "$ATTEMPT_ISSUE" '[.validated_rejected_attempts[] | select(. == $issue)] | length')"
+            test "$VERIFIED_SOURCE_MATCH" -eq 1
             if [ -n "$CREATED_REJECTION" ]; then
               CREATED_MATCH="$(printf '%s' "$VERIFIED_STATE" | jq --argjson issue "$CREATED_REJECTION" '[.validated_rejection_receipts[] | select(. == $issue)] | length')"
               test "$CREATED_MATCH" -eq 1
