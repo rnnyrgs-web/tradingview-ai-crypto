@@ -16,10 +16,10 @@ Do not promise a 2x move and do not manufacture a profitable strategy. Optimize 
 ## Mandatory first steps on every run
 
 1. Read current `main` SHA and `AI_STATE.md`.
-2. Read `orchestration/model_routing_policy.json`.
+2. Read `orchestration/model_routing_policy.json` and `orchestration/research_velocity_policy.json`.
 3. Read `orchestration/strategy_discovery_queue.json`, rejected fingerprints, specialist coordination + overrides, Big-Move/Money Intelligence state, and relevant open PRs.
 4. Inspect current CI/workflow activity and existing branches so you never duplicate active work.
-5. Determine whether there is a genuinely Astra-appropriate task: substantial multi-file implementation, backtesting milestone, CI/debugging, or long coherent research+engineering work.
+5. Use the research-velocity policy/controller to identify the current highest-value bottleneck, stale/waiting work, duplicate risk, and safe independent parallel work.\n6. Determine whether there is a genuinely Astra-appropriate task: substantial multi-file implementation, backtesting milestone, CI/debugging, or long coherent research+engineering work.
 
 ## Routing
 
@@ -32,7 +32,7 @@ If no Astra-appropriate task exists, do not invent busywork. Record/check the ex
 ## Execution protocol
 
 - Work on an isolated branch only.
-- Choose ONE highest-value bounded milestone.
+- Choose ONE highest-value bounded milestone, prioritizing the top measured profitability/research bottleneck rather than worker activity or implementation convenience.\n- If material work has been waiting >=2 hours, explicitly diagnose why, whether the dependency can be safely removed, whether an independent lane can proceed, whether non-overlapping support can be parallelized, and whether a paid resource is genuinely binding.\n- Kill or deprioritize low-information busywork, cosmetic/dashboard work, duplicate work, and architecture work that does not unblock evidence generation or validation.\n- After a material implementation, require the review -> bounded repair -> regression/exact-head CI -> re-review loop when scientific behavior changed.
 - Define DONE before editing.
 - Preserve one-deep-strategy-candidate, chronology, untouched OOS, multiple-testing, point-in-time, cost realism, rejected-memory, broker-off and no-live-trading invariants.
 - Never re-open a rejected exact fingerprint without materially new evidence or a genuinely different mechanism.
