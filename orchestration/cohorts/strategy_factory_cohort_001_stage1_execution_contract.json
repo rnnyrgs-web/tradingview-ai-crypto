@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "artifact_type": "strategy_factory_cohort_001_stage1_execution_contract",
+  "contract_id": "STRATEGY-FACTORY-COHORT-001-STAGE1-EXECUTION-v1",
+  "execution_contract_sha256": "04b4fd2373649061ca8349e7dbff127cc7b0bc852a9f4ff541b080094da187ef",
+  "formed_at": "2026-09-22T08:13:55Z",
+  "status": "OUTCOME_BLIND_FROZEN_WAIT_PARENT_INTEGRATION_AND_EXACT_HEAD_REVIEW",
+  "source_stage1_binding": {
+    "binding_id": "STRATEGY-FACTORY-COHORT-001-STAGE1-BINDING-v1",
+    "binding_receipt_sha256": "3a715c8373e3847dba2f0922bc99dbdd69b3864729be8c40d6d79db444fa43db"
+  },
+  "evidence_locks": {
+    "strategy_outcomes_read_to_form_contract": false,
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false,
+    "post_outcome_semantics_changes_allowed": false,
+    "broker_connected": false,
+    "trade_authority": false
+  },
+  "global_numerical_semantics": {
+    "bar_index_semantics": "For a signal evaluated after completed row i, next-bar entry is row i+1 open. A fixed H-hour hold exits at row i+1+H open. No same-row-close fill is allowed.",
+    "reference_windows": "All rolling threshold/reference distributions exclude the current candidate observation and use only fully formed prior observations. Feature values at decision row i may use row i because that bar is completed. Partial rolling windows are forbidden.",
+    "quantile_definition": "Deterministic linear type-7 empirical quantile: sort n finite values, h=(n-1)*p, interpolate linearly between floor(h) and ceil(h).",
+    "standard_deviation_definition": "Population standard deviation (ddof=0).",
+    "median_definition": "The p=0.5 instance of the frozen type-7 quantile.",
+    "true_range_definition": "max(high-low, abs(high-prev_close), abs(low-prev_close)) on a completed bar.",
+    "return_definition": "Simple arithmetic return, price_exit/price_entry-1; no log-return substitution.",
+    "finite_data_rule": "Non-finite price/volume/derived values are never coerced. A globally invalid certified dataset fails closed; a mathematically undefined timestamp such as zero variance or zero range cannot signal.",
+    "partition_rule": "Training and validation may use earlier PIT rows for lookback state, but a scored trade must have signal, entry and exit market values entirely inside its scored development partition. Protected rows dated 2026-09-01T00:00:00Z or later are never decoded/read.",
+    "validation_halves": [
+      {
+        "id": "VAL-H1",
+        "entry_start_utc": "2026-05-01T00:00:00Z",
+        "latest_exit_row_utc": "2026-06-30T23:00:00Z"
+      },
+      {
+        "id": "VAL-H2",
+        "entry_start_utc": "2026-07-01T00:00:00Z",
+        "latest_exit_row_utc": "2026-08-31T23:00:00Z"
+      }
+    ],
+    "cost_semantics": "The frozen 24/48/72 bps totals are round-trip drag per unit of gross committed notional. Apply after gross return normalization. Multi-leg trades use total absolute leg notional as committed gross notional, so identical per-notional cost rates do not receive a hidden leg-count discount or surcharge.",
+    "independence_accounting": "Execution follows each candidate's frozen per-asset overlap rule. For statistical independence, completed trades whose [entry,exit) exposure intervals overlap across any assets/legs of the same candidate are one connected independent-event cluster. Raw trade count is diagnostic only and never satisfies minimum-independent-trade gates.",
+    "independent_event_return": "For each connected exposure cluster, aggregate constituent trade net returns by frozen gross-committed-notional weights and divide by total such weights. Chronological cluster return is the unit for economic gates, winner/tail tests and profit factor.",
+    "profit_factor_definition": "sum(positive independent-event net returns)/abs(sum(negative independent-event net returns)); if there are gains and no losses PF=+infinity; if there are no gains PF=0.",
+    "three_x_gate": "Mean 72-bps after-cost independent-event return must be strictly positive in both training and validation.",
+    "validation_half_gate": "Mean 24-bps after-cost independent-event return must be strictly positive in each frozen validation half. A cluster spanning a half boundary is excluded from half-specific means but remains eligible for overall validation only if it stays inside validation.",
+    "single_winner_dependence_veto": "At 24-bps cost, remove the single best independent event separately in training and validation; the remaining mean must stay strictly positive in each partition.",
+    "catastrophic_tail_veto": "At 24-bps cost, the absolute worst independent-event loss must be <= 50% of the sum of all positive independent-event returns, separately in training and validation. No positive-return pool means automatic failure.",
+    "minimum_sample_gate": {
+      "training_independent_events": 40,
+      "validation_independent_events": 20
+    },
+    "base_economic_gate": "At 24-bps cost, mean independent-event return must be >0 and profit factor >1 separately in training and validation.",
+    "status_precedence": [
+      "DATA_INCONCLUSIVE",
+      "INCONCLUSIVE_POWER",
+      "FAIL_ECONOMIC_OR_ROBUSTNESS_GATE",
+      "PASS_STAGE1_DEVELOPMENT_ONLY"
+    ],
+    "status_rule": "A data-contract failure is DATA_INCONCLUSIVE. Otherwise insufficient independent-event counts are INCONCLUSIVE_POWER without threshold rescue. Otherwise any failed frozen economic/robustness gate is FAIL. PASS requires every frozen Stage-1 gate. No status grants OOS, forward, promotion or trading authority."
+  },
+  "candidate_specific_semantics": {
+    "DISC-RESIDUAL-REV-001-v1": {
+      "beta": "OLS slope with intercept-equivalent demeaning: covariance(follower,BTC)/variance(BTC) over exactly 336 completed hourly close-to-close returns ending at decision row i.",
+      "correlation": "Pearson correlation over the same 336 return pairs; gate is correlation >=0.60, not absolute correlation.",
+      "residual": "follower 6h simple return ending at i minus beta_i * BTC 6h simple return ending at i.",
+      "zscore_reference": "Current residual is standardized against exactly 720 prior PIT residual observations. Each historical residual must use its own contemporaneous 336h beta; never recompute history with beta_i. Reference excludes current residual.",
+      "zscore": "(current_residual - mean(prior_720_residuals))/population_std(prior_720_residuals); zero std means no signal.",
+      "execution": "Let s=-sign(current_residual). Follower leg notional/sign is s*1.0; BTC leg signed notional is -s*beta_i. Freeze beta_i through exit. Gross committed notional is 1+abs(beta_i). Portfolio gross return is signed leg P&L divided by that gross notional.",
+      "simultaneous_followers": "ETH and SOL may both execute per the frozen per-follower overlap rule; overlapping exposure is clustered for independent-event accounting."
+    },
+    "DISC-SIGNED-VOLUME-DRIFT-001-v1": {
+      "signed_volume": "For each completed bar j, sign(close_j-open_j) * quote_volume_j / median(prior 720 completed quote_volume bars before j). Zero candle body contributes zero.",
+      "aggregate": "Sum the four PIT-normalized signed-volume values ending at decision row i. Zero aggregate means no signal.",
+      "direction_consistency": "At least 3 of the 4 candle-body signs must equal sign(aggregate). Zero-body candles do not count as matching either direction.",
+      "pressure_reference": "Compare abs(current four-bar aggregate) with the type-7 90th percentile of exactly 720 prior completed four-bar absolute aggregates, each formed PIT.",
+      "close_location": "(close-low)/(high-low) on decision bar; zero range means no signal. Positive aggregate requires >=0.80; negative aggregate requires <=0.20.",
+      "range_guard": "Current true range <= type-7 90th percentile of exactly 720 prior completed true ranges."
+    },
+    "DISC-LOWVOL-DRIFT-REV-001-v1": {
+      "move": "close_i/close_(i-8)-1.",
+      "move_reference": "abs(current 8h move) >= type-7 80th percentile of exactly 720 prior completed absolute 8h moves.",
+      "participation": "Arithmetic mean quote volume of the 8 completed bars ending at i <=0.60 * median of exactly 720 prior completed hourly quote volumes before i.",
+      "shock_exclusion": "Maximum true range across the 8 completed bars ending at i < type-7 70th percentile of exactly 720 prior completed hourly true ranges before i.",
+      "direction": "Opposite sign of the frozen 8h move; zero move cannot signal."
+    },
+    "DISC-WEEKEND-NORMALIZE-001-v1": {
+      "weekend_return": "Sunday 23:00 UTC completed-row close / Friday 22:00 UTC completed-row close - 1.",
+      "weekend_volume_window": "Hourly quote-volume bars strictly after the Friday 22:00 close through and including the Sunday 23:00 completed bar.",
+      "prior_20_weekdays": "The 20 distinct UTC Monday-Friday calendar dates immediately preceding that Friday date; use all 24 completed hourly bars on each such date, with no weekend hours.",
+      "participation": "Median weekend-window hourly quote volume <=0.80 * median hourly quote volume across the frozen prior-20-weekday pool.",
+      "entry_exit": "If abs(weekend_return)>=1.25% and participation passes, enter at Monday 00:00 UTC row open in the opposite direction and exit at Monday 12:00 UTC row open.",
+      "power": "If minimum independent-event counts are not met, status is INCONCLUSIVE_POWER. Never widen the calendar window, lower the move threshold or add post-hoc weeks."
+    },
+    "DISC-MODERATEVOL-AUTOCORR-001-v1": {
+      "direction_gate": "The three hourly close-to-close simple returns ending at i are all strictly >0 or all strictly <0.",
+      "realized_volatility": "Population standard deviation of exactly 24 hourly close-to-close returns ending at i; no annualization.",
+      "vol_reference": "Current 24h realized volatility must lie inclusively between type-7 35th and 70th percentiles of exactly 2160 prior PIT 24h realized-volatility observations.",
+      "participation": "Current quote_volume must lie inclusively between type-7 40th and 90th percentiles of exactly 720 prior completed quote-volume bars.",
+      "direction": "Same sign as the three hourly returns."
+    },
+    "DISC-RANGE-AUCTION-REV-001-v1": {
+      "prior_range": "Use highs/lows from exactly rows i-48 through i-1; current row i is excluded. Zero prior-range width means no signal.",
+      "range_position": "(close_i-prior_low)/(prior_high-prior_low), allowed outside [0,1]. Short if >=0.90; long if <=0.10.",
+      "efficiency_ratio": "abs(close_i-close_(i-24)) / sum(abs(close_k-close_(k-1)) for k=i-23..i). Zero denominator means no signal.",
+      "volume_guard": "Current quote_volume <= type-7 60th percentile of exactly 720 prior completed quote-volume bars.",
+      "atr14": "Simple arithmetic mean of true range over exactly 14 completed bars ending at decision row i; freeze this ATR through the trade.",
+      "midpoint": "(prior_high+prior_low)/2 frozen at decision time.",
+      "stop_anchor": "Actual next-bar entry open. Long stop threshold=entry_open-ATR14_i; short stop threshold=entry_open+ATR14_i.",
+      "exit_precedence": "After entry, inspect each completed bar causally. A close reaching/crossing the frozen midpoint triggers next-bar-open exit. An intrabar high/low breaching the frozen stop threshold also triggers next-bar-open exit. If both trigger on one bar, the next-bar-open fill is identical; record BOTH reason flags. Otherwise exit at the row-open exactly 6 hours after entry."
+    }
+  },
+  "execution_authority": {
+    "may_implement_runner_before_parent_integration": true,
+    "may_execute_real_stage1_before_parent_515_integrates": false,
+    "may_execute_real_stage1_before_this_contract_is_reconciled_and_independently_reviewed": false,
+    "may_read_protected_oos": false,
+    "may_promote_strategy": false,
+    "may_trade": false
+  },
+  "next_transition": "Implement deterministic runner and synthetic regressions against this contract without reading real strategy outcomes. After #515 integrates, reconcile #602 and this contract onto canonical main, pass exact-head CI plus independent review, then execute the six bound development-only Stage-1 screens exactly once."
+}
