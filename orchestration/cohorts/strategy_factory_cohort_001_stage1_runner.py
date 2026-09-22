@@ -8,7 +8,7 @@ after the parent admission/binding gates clear.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 import math
 from statistics import fmean
@@ -113,6 +113,7 @@ class IndependentEvent:
 class PartitionSummary:
     independent_events: int
     mean_24bps: float | None
+    mean_48bps: float | None
     mean_72bps: float | None
     profit_factor_24bps: float | None
     leave_best_mean_24bps: float | None
@@ -130,6 +131,8 @@ class Stage1Result:
     validation: PartitionSummary
     validation_half_means_24bps: tuple[float | None, float | None]
     gate_results: Mapping[str, bool]
+    evidence_authority: str = field(default="TEST_ONLY_UNTRUSTED", init=False)
+    canonical_stage1_evidence: bool = field(default=False, init=False)
     protected_oos_opened: bool = False
     genuine_forward_opened: bool = False
     broker_connected: bool = False
@@ -631,8 +634,9 @@ def _profit_factor(values: Sequence[float]) -> float:
 
 def summarize_events(events: Sequence[IndependentEvent]) -> PartitionSummary:
     if not events:
-        return PartitionSummary(0, None, None, None, None, None, 0.0, False)
+        return PartitionSummary(0, None, None, None, None, None, None, 0.0, False)
     base = [event.return_at_cost(24.0) for event in events]
+    medium = [event.return_at_cost(48.0) for event in events]
     stress = [event.return_at_cost(72.0) for event in events]
     positive_pool = sum(value for value in base if value > 0.0)
     worst_loss_abs = max(((-value) for value in base if value < 0.0), default=0.0)
@@ -644,6 +648,7 @@ def summarize_events(events: Sequence[IndependentEvent]) -> PartitionSummary:
     return PartitionSummary(
         independent_events=len(events),
         mean_24bps=fmean(base),
+        mean_48bps=fmean(medium),
         mean_72bps=fmean(stress),
         profit_factor_24bps=_profit_factor(base),
         leave_best_mean_24bps=leave_best,
@@ -713,6 +718,7 @@ def run_synthetic_or_caller_supplied_stage1(
 
     This function deliberately does not know a repository dataset path.  That keeps
     the pre-integration implementation phase physically unable to open protected or
-    real Cohort evidence on its own.
+    real Cohort evidence on its own.  Every result from this runner is explicitly
+    TEST_ONLY_UNTRUSTED and cannot become canonical Stage-1 evidence.
     """
     return evaluate_stage1(candidate_id, build_trades(candidate_id, histories))
