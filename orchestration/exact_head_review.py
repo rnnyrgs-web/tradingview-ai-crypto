@@ -153,6 +153,36 @@ def _claude_exact_head_verdict(review_input: str, temporary: Path) -> dict[str, 
         ) from exc
 
 
+def _openai_exact_head_verdict(prompt: str) -> dict[str, Any]:
+    """Treat malformed OpenAI reviewer output as a bounded non-verdict, never as approval.
+
+    Transport/authentication/configuration failures remain owned by ``post_response`` and the
+    outer workflow. This helper only normalizes provider output-shape failures so Security/Lead
+    have the same fail-closed non-verdict semantics as Claude. A valid approval or rejection is
+    returned unchanged after schema validation; there is no second scientific invocation.
+    """
+
+    model = model_name()
+    try:
+        response = post_response({"model": model, "input": prompt})
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(
+            "temporarily unavailable: OpenAI reviewer returned a malformed provider response"
+        ) from exc
+
+    try:
+        text = response_text(response)
+        if not isinstance(text, str) or not text.strip():
+            raise RuntimeError("OpenAI reviewer returned empty output")
+        verdict = extract_json(text)
+        _validate_verdict_schema(verdict)
+        return verdict
+    except (json.JSONDecodeError, RuntimeError, TypeError, KeyError, AttributeError) as exc:
+        raise RuntimeError(
+            "temporarily unavailable: OpenAI reviewer returned missing, unreadable, malformed, incomplete, or invalid-schema JSON"
+        ) from exc
+
+
 def review_exact_head(
     reviewer: str,
     diff_path: Path,
@@ -211,8 +241,7 @@ and has no unsupported live-trading or promotion claim. Protected scientific pat
 skip review: scrutinize them more heavily. Approval never grants merge/integration authority. When
 evidence is insufficient, reject.
 """
-        response = post_response({"model": model_name(), "input": prompt})
-        verdict = extract_json(response_text(response))
+        verdict = _openai_exact_head_verdict(prompt)
 
     enriched = _enrich_verdict(
         verdict,
