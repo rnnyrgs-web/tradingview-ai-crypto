@@ -9,7 +9,8 @@
     "automatic_merge_by_specialists": false,
     "preserve_untouched_oos": true,
     "preserve_rejected_fingerprints": true,
-    "supabase_bulk_polling_forbidden": true
+    "supabase_bulk_polling_forbidden": true,
+    "adaptive_spending_policy_required": true
   },
   "routes": {
     "deterministic": {
@@ -120,7 +121,7 @@
   "task_selection": {
     "strategy_lane": "Follow current strategy_discovery_queue and specialist coordination. Reject->learn->record->pivot. Exactly one expensive deep candidate.",
     "big_move_lane": "Study historical 2x+ events reached within 90 days and matched controls; convert recurring pre-move precursors into predeclared tests. Rank current liquid assets only from timestamp-defensible evidence, reporting base rates, lift and uncertainty.",
-    "arbitration": "Choose the single action with highest expected information gain/economic value that does not duplicate active work. If one lane is waiting on future evidence, advance the other lane."
+    "arbitration": "Choose the single action with highest expected information gain/economic value that does not duplicate active work. If one lane is waiting on future evidence, advance the other lane. Before recommending paid resources, apply the adaptive spending policy and prefer the lowest-cost option that resolves the measured bottleneck."
   },
   "reporting": {
     "quiet_by_default": true,
@@ -131,5 +132,6 @@
       "user-only blocker",
       "justified paid-data recommendation"
     ]
-  }
+  },
+  "spending_policy": "orchestration/adaptive_research_spending_policy.json"
 }
