@@ -78,9 +78,70 @@ def test_claude_receives_same_protected_context(tmp_path: Path, monkeypatch: pyt
     ) == 0
     assert "PROTECTED_PATH_CONTEXT: protected/file.py" in captured["input"]
     assert "INTEGRATION_AUTHORITY: NONE" in captured["input"]
+    assert "REVIEW_OUTPUT_BUDGET" in captured["input"]
     verdict = json.loads(output.read_text(encoding="utf-8"))
     assert verdict["integration_authority"] == "NONE"
     assert verdict["protected_paths"] == ["protected/file.py"]
+
+
+def test_claude_format_failure_gets_one_bounded_retry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "review.json"
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
+    calls: list[str] = []
+
+    def flaky_claude(review_input: str, raw_output: Path) -> int:
+        calls.append(review_input)
+        if len(calls) == 1:
+            raise json.JSONDecodeError("truncated", "{", 1)
+        raw_output.write_text(
+            json.dumps(
+                {
+                    "approve": False,
+                    "reason": "scientific rejection remains authoritative",
+                    "risk": "high",
+                    "falsification_findings": {},
+                }
+            ),
+            encoding="utf-8",
+        )
+        return 0
+
+    monkeypatch.setattr(review, "_review_diff_claude_adversarial", flaky_claude)
+    assert review.review_exact_head(
+        "claude-adversarial", diff_path, output, pr_number=579, head_sha=HEAD_SHA
+    ) == 0
+    assert len(calls) == review.CLAUDE_FORMAT_ATTEMPTS == 2
+    verdict = json.loads(output.read_text(encoding="utf-8"))
+    assert verdict["approve"] is False
+    assert verdict["risk"] == "high"
+
+
+def test_repeated_claude_format_failure_becomes_transient_fail_closed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "review.json"
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
+    calls = 0
+
+    def always_malformed(_review_input: str, _raw_output: Path) -> int:
+        nonlocal calls
+        calls += 1
+        raise RuntimeError("reviewer returned invalid approval")
+
+    monkeypatch.setattr(review, "_review_diff_claude_adversarial", always_malformed)
+    with pytest.raises(RuntimeError, match="temporarily unavailable"):
+        review.review_exact_head(
+            "claude-adversarial", diff_path, output, pr_number=579, head_sha=HEAD_SHA
+        )
+    assert calls == review.CLAUDE_FORMAT_ATTEMPTS == 2
+    assert not output.exists()
+    assert not output.with_suffix(output.suffix + ".raw").exists()
 
 
 def test_invalid_exact_head_fails_before_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
