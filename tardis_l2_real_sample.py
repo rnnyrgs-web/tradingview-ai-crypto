@@ -1,8 +1,8 @@
 """Streaming qualification runner for the frozen free Tardis L2 sample.
 
-This module is deliberately provider-adapter-only.  It exists to prove that the exact
+This module is deliberately provider-adapter-only. It exists to prove that the exact
 frozen provider sample can be consumed end-to-end without loading a full day of L2 data
-into memory.  It does not open 2x outcomes, establish historical tradability, rank a
+into memory. It does not open 2x outcomes, establish historical tradability, rank a
 candidate, fit a model, or grant broker/trading authority.
 
 The full gzip is streamed and reconstruction semantics are checked message by message.
@@ -22,9 +22,8 @@ import gzip
 import hashlib
 import heapq
 import json
-import os
 from pathlib import Path
-from typing import Iterator, TextIO
+from typing import TextIO
 
 from tardis_l2_qualification import (
     EXPECTED_COLUMNS,
@@ -36,7 +35,7 @@ from tardis_l2_qualification import (
 
 RECEIPT_SCHEMA = "two_x_tardis_l2_real_sample_receipt.v1"
 RUNNER_VERSION = "1"
-PASS_STATUS = "QUALIFICATION_PROVIDER_SAMPLE_PASS"
+PROVIDER_SAMPLE_RESULT = "QUALIFICATION_PROVIDER_SAMPLE_PASS"
 
 
 @dataclass(frozen=True)
@@ -143,7 +142,7 @@ def summarize_real_sample_stream(
     """Validate and reconstruct a complete normalized incremental-L2 CSV as a stream.
 
     The algorithm preserves provider row order and groups one message by identical
-    ``local_timestamp`` just like the bounded adapter.  It keeps only the live book plus
+    ``local_timestamp`` just like the bounded adapter. It keeps only the live book plus
     small heaps, so a full-day provider sample does not require retaining every historic
     book state in memory.
     """
@@ -260,8 +259,6 @@ def summarize_real_sample_stream(
         max_ask_levels = max(max_ask_levels, len(asks))
 
         if not canary_done and reconstructed_states >= canary_min_reconstructed_states:
-            # The line that completed this message is already captured.  Stop retaining
-            # additional rows; the complete provider stream still continues below.
             source.capture = False
             canary_done = True
 
@@ -329,8 +326,6 @@ def summarize_real_sample_stream(
         raise ValueError("Tardis CSV contains no data rows")
     if reconstructed_states == 0:
         raise ValueError("no reconstructable state after an initial snapshot")
-    # The final reconstructed state has no next observed message and therefore cannot
-    # claim an interval beyond its own exact instant.
     exact_only_states += 1
 
     canary_text = "".join(source.lines)
@@ -388,7 +383,7 @@ def qualify_gzip_sample(
 
     return {
         "schema": RECEIPT_SCHEMA,
-        "status": PASS_STATUS,
+        "status": PROVIDER_SAMPLE_RESULT,
         "authority": QUALIFICATION_AUTHORITY,
         "runner_version": RUNNER_VERSION,
         "source_url": source_url,
