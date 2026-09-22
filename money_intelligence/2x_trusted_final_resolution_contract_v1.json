@@ -1,0 +1,146 @@
+{
+  "schema": "trusted_forward_final_resolution_contract.v1",
+  "contract_id": "2X-TRUSTED-FINAL-RESOLUTION-001-v1",
+  "status": "PREDECLARED_NOT_IMPLEMENTED",
+  "source_main_sha": "b986b0e10fd120fa009f5b58e7052b739e287238",
+  "parents": [505, 514, 519, 603],
+  "purpose": "Freeze the scientific and provenance semantics required before any prospective <=90-day 2x formation can receive an authoritative final outcome or enter factory metrics.",
+  "authority": {
+    "final_resolution_authority": false,
+    "factory_metrics_authority": false,
+    "candidate_ranking_authority": false,
+    "model_fitting_authority": false,
+    "broker_or_trading_authority": false,
+    "intermediate_sampled_hit_evidence_status": "TRUSTED_PROVIDER_EVIDENCE_NOT_FINAL_RESOLUTION"
+  },
+  "core_observation_limit": {
+    "fact": "The integrated trusted outcome substrate stores authenticated point-in-time spot samples. A point sample at or above target can prove that the sampled market was at or above target at that observation, but point samples cannot prove that no between-sample target crossing occurred and cannot by themselves identify the true first crossing time.",
+    "consequence": "Point-sample coverage alone may support non-final positive breach evidence, but it must never produce authoritative EXPIRED/no-hit, exact first-hit time, complete max/min path, or competing-risk timing claims.",
+    "forbidden_shortcut": "Do not convert dense snapshots into gapless path coverage merely by choosing a small sampling cadence."
+  },
+  "authoritative_path_evidence": {
+    "required_origin": "Append-only DB/provider-authenticated evidence bound to the exact trusted formation, canonical asset, exact venue/instrument, provider/source identity, raw/provider-native evidence digest, observed interval/event time, availability/capture time, and server-created durable membership.",
+    "allowed_path_evidence": [
+      "provider-native trade/event sequence with immutable event identity and event timestamp",
+      "provider-native interval aggregates whose high/low semantics cover the complete stated interval and whose retained bytes/receipt are independently verifiable"
+    ],
+    "not_sufficient": [
+      "caller-authored OHLCV",
+      "locally recomputed hashes without durable DB membership",
+      "point snapshots used to infer absence of an intrainterval crossing",
+      "present-day reconstructed history without PIT/source-authentic provenance"
+    ],
+    "boundary_rule": "No aggregate interval may straddle formation or expiry and be treated as complete post-formation/pre-expiry evidence unless trusted constituent events or an authenticated provider representation proves the exact in-scope sub-interval. Otherwise the affected boundary is censored."
+  },
+  "ordered_evidence_set": {
+    "ordering": [
+      "provider_event_or_interval_start_utc",
+      "provider_event_or_interval_end_utc",
+      "captured_at_utc",
+      "durable_sequence"
+    ],
+    "requirements": [
+      "Every authoritative path record for the resolution window is included exactly once.",
+      "The final resolution fingerprint commits formation receipt identity plus the complete ordered evidence-set digest.",
+      "Removing, replacing, reordering, cross-asset transplanting, or cross-venue/instrument transplanting any member invalidates the final receipt.",
+      "Caller-selected subsets never receive authoritative final-resolution status."
+    ]
+  },
+  "threshold_events": {
+    "reference_price": "Exact trusted frozen formation reference price.",
+    "thresholds": {
+      "PLUS_25": "reference_price * 1.25",
+      "PLUS_50": "reference_price * 1.50",
+      "PLUS_100": "frozen formation target price; minimum 2.00x reference price",
+      "DRAWDOWN_30": "reference_price * 0.70"
+    },
+    "first_crossing_semantics": {
+      "trade_level": "An exact event timestamp may be recorded only when authenticated ordered provider events establish the first crossing after formation within the authoritative covered path.",
+      "interval_level": "If only interval high/low evidence exists, crossing time is interval-censored. Record crossing_lower_bound and crossing_upper_bound; never fabricate an exact timestamp.",
+      "no_crossing": "Absence of a crossing is authoritative only across complete trusted interval/event coverage."
+    }
+  },
+  "final_states": {
+    "HIT": {
+      "required": [
+        "authoritative trusted path evidence contains a +100%/frozen-target crossing after formation and on/before expiry",
+        "crossing identity/time or censoring interval is derived deterministically from the complete ordered evidence set",
+        "formation and complete evidence-set fingerprints verify"
+      ]
+    },
+    "EXPIRED": {
+      "required": [
+        "trusted path coverage is complete from strictly after formation through the trusted expiry boundary",
+        "no covered provider event/interval high reaches the frozen target",
+        "no unresolved coverage gap, provider outage, identity ambiguity, or boundary-straddling ambiguity exists"
+      ],
+      "fail_closed_state_if_missing": "CENSORED_GAP_NOT_EXPIRED"
+    },
+    "INVALIDATED": {
+      "required": [
+        "formation froze a structured machine-verifiable invalidation rule identifier and parameters before outcome observation",
+        "trusted evidence satisfying that exact rule contract exists",
+        "invalidation event ordering versus threshold events is deterministically resolved"
+      ],
+      "forbidden": "Free-text invalidation prose alone has zero authoritative invalidation power."
+    },
+    "ILLIQUID_OR_DELISTED": {
+      "required": "Explicit timestamp-safe provider/venue/listing or microstructure evidence proving the predeclared competing-risk event. Missing prices/quotes alone are insufficient.",
+      "model_role": "Competing risk / censoring state; never silently recoded as an ordinary non-winner."
+    },
+    "CENSORED_GAP_NOT_EXPIRED": {
+      "required": "Any material path-coverage gap, unverified boundary interval, provider disagreement that the frozen contract requires to resolve, or missing authoritative evidence.",
+      "model_role": "Censored/incomplete observation. Excluded from ordinary EXPIRED negatives."
+    }
+  },
+  "path_statistics": {
+    "observed_max": "Derived only from complete trusted path aggregates/events; point-sample maximum is labeled sampled_max and is not promoted to authoritative path maximum.",
+    "observed_min": "Derived only from complete trusted path aggregates/events; point-sample minimum is labeled sampled_min and is not promoted to authoritative path minimum.",
+    "drawdown": "When complete high/low/event coverage exists, derive deterministically under a separately versioned rule. Otherwise drawdown is UNKNOWN/CENSORED rather than inferred from sparse snapshots."
+  },
+  "competing_risk_model_handoff": {
+    "allowed_only_when": [
+      "historical/prospective sample-power gate is met",
+      "all included outcomes use authoritative final receipts under this or a later reviewed contract",
+      "interval-censored crossing times remain interval-censored in the model rather than collapsed to fabricated point times",
+      "right-censoring and illiquidity/delisting competing risks are retained explicitly",
+      "PIT/tradability/matched-control and multiple-testing gates remain satisfied"
+    ],
+    "primary_metrics": [
+      "precision@K",
+      "lift over matched/base rate",
+      "PR-AUC",
+      "prospective return path",
+      "tradability",
+      "calibrated competing-risk/time-to-event diagnostics only when adequately powered"
+    ],
+    "not_primary": "raw accuracy"
+  },
+  "mandatory_red_green_tests_for_implementation": [
+    "point samples below target throughout horizon cannot produce EXPIRED without complete interval/event coverage",
+    "a target crossing that occurs between sparse point samples is not falsely classified as no-hit",
+    "a bar/aggregate that straddles formation cannot backfill a pre-formation high as a post-formation HIT",
+    "a bar/aggregate that straddles expiry cannot extend the trusted horizon without exact sub-interval proof",
+    "trade-level first crossing can produce an exact event time only when event ordering is authenticated",
+    "bar-level first crossing produces an interval-censored time rather than an invented exact timestamp",
+    "one omitted/reordered/replaced durable evidence member invalidates the final resolution fingerprint",
+    "cross-asset and cross-venue/instrument evidence transplantation is rejected",
+    "free-text invalidation cannot produce authoritative INVALIDATED",
+    "missing/outage intervals produce CENSORED_GAP_NOT_EXPIRED",
+    "explicit delisting/illiquidity evidence is preserved as a competing risk rather than ordinary expiry",
+    "exact replay of the complete authoritative evidence set is idempotent"
+  ],
+  "implementation_sequence": [
+    "1. Add a trusted interval/event evidence acquisition contract; do not reuse point snapshots as no-hit proof.",
+    "2. Persist append-only authoritative path members with exact formation/asset/venue/provider binding.",
+    "3. Add DB-owned complete-path enumeration and deterministic evidence-set fingerprinting.",
+    "4. Add a final-resolution RPC/store that derives states and threshold timing from the complete authoritative path only.",
+    "5. Add Python independent receipt verification and adversarial tests.",
+    "6. Run exact-head Security & Reliability plus independent adversarial review; then runtime-test the migration against a safe non-prediction fixture before granting metrics authority."
+  ],
+  "prospective_policy": {
+    "candidate_counting": "No candidate or outcome count is implied by this contract.",
+    "existing_formations": "Existing trusted formations may accumulate non-final provider evidence, but no final performance result is admitted until this contract is implemented, reviewed, deployed and independently verified.",
+    "broker_live_trading": "OFF"
+  }
+}
