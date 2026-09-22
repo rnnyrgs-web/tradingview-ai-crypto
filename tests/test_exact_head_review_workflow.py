@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from orchestration.protected_paths import is_protected
+
 
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "exact_head_independent_review.yml"
@@ -44,6 +46,19 @@ def test_control_plane_enumeration_is_complete_not_fixed_limit() -> None:
     assert "python -m orchestration.exact_head_control_state" in text
 
 
+def test_control_plane_writer_is_globally_serialized() -> None:
+    text = _text()
+    assert "concurrency:" in text
+    assert "group: exact-head-independent-review" in text
+    assert "cancel-in-progress: false" in text
+
+
+def test_review_validator_and_rejection_predicate_are_canonical_protected_paths() -> None:
+    assert is_protected(".github/workflows/exact_head_independent_review.yml")
+    assert is_protected("orchestration/exact_head_control_state.py")
+    assert is_protected("orchestration/exact_head_review.py")
+
+
 def test_durable_review_receipts_require_bot_author_and_exact_body_binding() -> None:
     text = _text()
     control = CONTROL_STATE.read_text(encoding="utf-8")
@@ -69,6 +84,14 @@ def test_terminal_rejection_uses_source_attempt_fallback_and_verified_receipt() 
     assert "REJECTION_URL=" in text
     assert "CREATED_REJECTION" in text
     assert "set -euo pipefail" in text
+
+
+def test_partial_approval_persistence_cannot_trigger_reviewer_shopping() -> None:
+    text = _text()
+    assert "APPROVED_ATTEMPT_COUNT=" in text
+    assert 'if [ "$APPROVED_ATTEMPT_COUNT" -gt 0 ]; then' in text
+    assert "no unique verified approval receipt exists" in text
+    assert "Closing fail-closed without rerunning reviewers" in text
 
 
 def test_full_scientific_diff_has_one_consistent_hard_context_bound() -> None:
