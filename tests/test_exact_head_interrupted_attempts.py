@@ -120,14 +120,18 @@ def test_approval_receipt_cannot_rescue_started_source_attempt() -> None:
     assert state["ambiguous_control_state"] is True
 
 
-def test_approved_source_without_receipt_never_grants_approval() -> None:
+def test_approved_source_without_receipt_never_grants_approval_or_retry() -> None:
     state = _state([_attempt(20, APPROVED)])
 
     assert state["interrupted"] is False
     assert state["rejected"] is False
     assert state["approved"] is False
+    assert state["terminal_nonretryable"] is True
+    assert state["approval_persistence_incomplete"] is True
+    assert state["ambiguous_control_state"] is True
     assert state["validated_approved_attempts"] == [20]
     assert state["validated_approval_receipts"] == []
+    assert state["unreceipted_approved_attempts"] == [20]
 
 
 def test_provisional_approval_receipt_has_zero_authority_until_source_finalizes() -> None:
@@ -150,6 +154,8 @@ def test_provisional_approval_receipt_has_zero_authority_until_source_finalizes(
     assert before_finalization["validated_approval_receipts"] == []
     assert after_finalization["approved"] is True
     assert after_finalization["interrupted"] is False
+    assert after_finalization["terminal_nonretryable"] is True
+    assert after_finalization["approval_persistence_incomplete"] is False
     assert after_finalization["validated_approval_receipts"] == [21]
 
 
@@ -171,7 +177,7 @@ def test_interrupted_old_sha_does_not_poison_materially_new_sha() -> None:
     assert state["attempt_count"] == 1
 
 
-def test_clean_finalized_approval_still_validates() -> None:
+def test_clean_finalized_approval_still_validates_and_is_nonretryable() -> None:
     state = _state(
         [
             _attempt(20, APPROVED),
@@ -180,8 +186,9 @@ def test_clean_finalized_approval_still_validates() -> None:
     )
 
     assert state["interrupted"] is False
-    assert state["terminal_nonretryable"] is False
+    assert state["terminal_nonretryable"] is True
     assert state["ambiguous_control_state"] is False
     assert state["approved"] is True
+    assert state["approval_persistence_incomplete"] is False
     assert state["validated_approved_attempts"] == [20]
     assert state["validated_approval_receipts"] == [21]
