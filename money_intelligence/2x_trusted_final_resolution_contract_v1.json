@@ -42,6 +42,7 @@
     "requirements": [
       "Every authoritative path record for the resolution window is included exactly once.",
       "The final resolution fingerprint commits formation receipt identity plus the complete ordered evidence-set digest.",
+      "The final resolution fingerprint also commits every derived event censoring bound and any ambiguity state used to determine final outcome authority.",
       "Removing, replacing, reordering, cross-asset transplanting, or cross-venue/instrument transplanting any member invalidates the final receipt.",
       "Caller-selected subsets never receive authoritative final-resolution status."
     ]
@@ -60,19 +61,36 @@
       "no_crossing": "Absence of a crossing is authoritative only across complete trusted interval/event coverage."
     }
   },
+  "competing_event_ordering": {
+    "principle": "Final-state precedence is scientific data, not an implementation convenience. No arbitrary precedence is permitted when two or more mutually exclusive threshold/final/competing-risk events have overlapping event-time censoring intervals and exact order is not authenticated.",
+    "events_subject_to_rule": [
+      "PLUS_100_HIT",
+      "STRUCTURED_INVALIDATION",
+      "ILLIQUIDITY_OR_DELISTING",
+      "DRAWDOWN_30"
+    ],
+    "exact_order_rule": "When authenticated provider event/trade ordering proves non-overlapping exact event times, choose the earliest event according to provider event time; deterministic durable-sequence tie-breaking is allowed only for truly equal authenticated event timestamps and must not manufacture economic precedence.",
+    "interval_order_rule": "When candidate event intervals overlap such that either event could have occurred first, emit CENSORED_COMPETING_EVENT_ORDER. Do not choose HIT, INVALIDATED, ILLIQUID_OR_DELISTED, or a drawdown-first competing-risk state by policy preference, array order, durable insertion order, venue order, or post-outcome convenience.",
+    "same_interval_extremes": "If one authenticated aggregate interval contains both high >= PLUS_100 and low <= DRAWDOWN_30 and no authenticated constituent ordering resolves which crossing came first, final event order is CENSORED_COMPETING_EVENT_ORDER.",
+    "overlap_with_nonprice_event": "If a target-crossing censoring interval overlaps a structured invalidation, illiquidity, or delisting event interval and trusted ordering cannot establish which occurred first, final event order is CENSORED_COMPETING_EVENT_ORDER.",
+    "fingerprint_binding": "The final receipt must commit each candidate event type, exact timestamp or censoring lower/upper bounds, the ordering relation used, and the ambiguity-state identifier. Any later change invalidates the receipt.",
+    "metrics_rule": "CENSORED_COMPETING_EVENT_ORDER is excluded from ordinary HIT/EXPIRED classification and must enter time-to-event analysis only under a method that explicitly supports the retained interval/order ambiguity."
+  },
   "final_states": {
     "HIT": {
       "required": [
         "authoritative trusted path evidence contains a +100%/frozen-target crossing after formation and on/before expiry",
         "crossing identity/time or censoring interval is derived deterministically from the complete ordered evidence set",
+        "no mutually exclusive earlier competing event is proven, and no unresolved overlapping competing-event censoring interval can precede the HIT",
         "formation and complete evidence-set fingerprints verify"
-      ]
+      ],
+      "fail_closed_if_order_ambiguous": "CENSORED_COMPETING_EVENT_ORDER"
     },
     "EXPIRED": {
       "required": [
         "trusted path coverage is complete from strictly after formation through the trusted expiry boundary",
         "no covered provider event/interval high reaches the frozen target",
-        "no unresolved coverage gap, provider outage, identity ambiguity, or boundary-straddling ambiguity exists"
+        "no unresolved coverage gap, provider outage, identity ambiguity, boundary-straddling ambiguity, or competing-event-order ambiguity exists"
       ],
       "fail_closed_state_if_missing": "CENSORED_GAP_NOT_EXPIRED"
     },
@@ -80,13 +98,20 @@
       "required": [
         "formation froze a structured machine-verifiable invalidation rule identifier and parameters before outcome observation",
         "trusted evidence satisfying that exact rule contract exists",
-        "invalidation event ordering versus threshold events is deterministically resolved"
+        "invalidation event ordering versus threshold and other competing events is deterministically resolved"
       ],
-      "forbidden": "Free-text invalidation prose alone has zero authoritative invalidation power."
+      "forbidden": "Free-text invalidation prose alone has zero authoritative invalidation power.",
+      "fail_closed_if_order_ambiguous": "CENSORED_COMPETING_EVENT_ORDER"
     },
     "ILLIQUID_OR_DELISTED": {
       "required": "Explicit timestamp-safe provider/venue/listing or microstructure evidence proving the predeclared competing-risk event. Missing prices/quotes alone are insufficient.",
-      "model_role": "Competing risk / censoring state; never silently recoded as an ordinary non-winner."
+      "model_role": "Competing risk / censoring state; never silently recoded as an ordinary non-winner.",
+      "fail_closed_if_order_ambiguous": "CENSORED_COMPETING_EVENT_ORDER"
+    },
+    "CENSORED_COMPETING_EVENT_ORDER": {
+      "required": "Two or more mutually exclusive threshold/final/competing-risk event intervals overlap so exact event ordering is not authenticated.",
+      "model_role": "Interval/order-ambiguous competing-event observation. Excluded from ordinary HIT/EXPIRED/INVALIDATED labels and from point-timestamp competing-risk fitting unless the model explicitly represents the retained ambiguity.",
+      "authority_rule": "No implementation-level precedence, durable insertion order, provider list order, or post-outcome choice may collapse this state into a definitive ordered event."
     },
     "CENSORED_GAP_NOT_EXPIRED": {
       "required": "Any material path-coverage gap, unverified boundary interval, provider disagreement that the frozen contract requires to resolve, or missing authoritative evidence.",
@@ -96,13 +121,15 @@
   "path_statistics": {
     "observed_max": "Derived only from complete trusted path aggregates/events; point-sample maximum is labeled sampled_max and is not promoted to authoritative path maximum.",
     "observed_min": "Derived only from complete trusted path aggregates/events; point-sample minimum is labeled sampled_min and is not promoted to authoritative path minimum.",
-    "drawdown": "When complete high/low/event coverage exists, derive deterministically under a separately versioned rule. Otherwise drawdown is UNKNOWN/CENSORED rather than inferred from sparse snapshots."
+    "drawdown": "When complete high/low/event coverage exists, derive deterministically under a separately versioned rule. Otherwise drawdown is UNKNOWN/CENSORED rather than inferred from sparse snapshots.",
+    "drawdown_ordering": "A drawdown threshold that overlaps a mutually exclusive target/invalidation/delisting event interval without authenticated ordering must preserve CENSORED_COMPETING_EVENT_ORDER rather than being assigned a fabricated first-event time."
   },
   "competing_risk_model_handoff": {
     "allowed_only_when": [
       "historical/prospective sample-power gate is met",
       "all included outcomes use authoritative final receipts under this or a later reviewed contract",
       "interval-censored crossing times remain interval-censored in the model rather than collapsed to fabricated point times",
+      "event-order ambiguity remains explicit and is modeled with a method capable of representing it or is excluded under a predeclared rule rather than resolved after outcomes",
       "right-censoring and illiquidity/delisting competing risks are retained explicitly",
       "PIT/tradability/matched-control and multiple-testing gates remain satisfied"
     ],
@@ -123,6 +150,11 @@
     "a bar/aggregate that straddles expiry cannot extend the trusted horizon without exact sub-interval proof",
     "trade-level first crossing can produce an exact event time only when event ordering is authenticated",
     "bar-level first crossing produces an interval-censored time rather than an invented exact timestamp",
+    "one authenticated aggregate interval containing both PLUS_100 high and DRAWDOWN_30 low resolves to CENSORED_COMPETING_EVENT_ORDER when constituent event order is unavailable",
+    "a target-crossing interval overlapping a structured invalidation interval remains CENSORED_COMPETING_EVENT_ORDER without authenticated ordering",
+    "a target-crossing interval overlapping a delisting/illiquidity interval remains CENSORED_COMPETING_EVENT_ORDER without authenticated ordering",
+    "authenticated trade/event ordering resolves an otherwise ambiguous competing-event interval to the genuinely earliest event",
+    "ambiguity state plus every candidate event lower/upper censoring bound is committed into and independently verified from the final-resolution fingerprint",
     "one omitted/reordered/replaced durable evidence member invalidates the final resolution fingerprint",
     "cross-asset and cross-venue/instrument evidence transplantation is rejected",
     "free-text invalidation cannot produce authoritative INVALIDATED",
@@ -133,8 +165,8 @@
   "implementation_sequence": [
     "1. Add a trusted interval/event evidence acquisition contract; do not reuse point snapshots as no-hit proof.",
     "2. Persist append-only authoritative path members with exact formation/asset/venue/provider binding.",
-    "3. Add DB-owned complete-path enumeration and deterministic evidence-set fingerprinting.",
-    "4. Add a final-resolution RPC/store that derives states and threshold timing from the complete authoritative path only.",
+    "3. Add DB-owned complete-path enumeration and deterministic evidence-set fingerprinting, including derived event censoring bounds and ambiguity-state commitment.",
+    "4. Add a final-resolution RPC/store that derives states and threshold timing from the complete authoritative path only and emits CENSORED_COMPETING_EVENT_ORDER whenever exact competing-event precedence is not identifiable.",
     "5. Add Python independent receipt verification and adversarial tests.",
     "6. Run exact-head Security & Reliability plus independent adversarial review; then runtime-test the migration against a safe non-prediction fixture before granting metrics authority."
   ],
