@@ -31,6 +31,14 @@ def test_transient_claude_plus_valid_security_rejection_is_terminal() -> None:
     ) == "REJECTED"
 
 
+def test_middle_reviewer_rejection_is_terminal_even_when_others_are_missing() -> None:
+    assert classify_review_attempt_outcome(
+        [None, _verdict(False), None],
+        controlled_wait=True,
+        approved_outcome="",
+    ) == "REJECTED"
+
+
 def test_partial_approval_plus_transient_without_rejection_remains_wait() -> None:
     assert classify_review_attempt_outcome(
         [_verdict(True), None, None],
@@ -54,6 +62,52 @@ def test_approval_receipt_cannot_override_a_valid_rejection() -> None:
         controlled_wait=False,
         approved_outcome="REVIEW_APPROVED_LEAD_INTEGRATION_REQUIRED",
     ) == "REJECTED"
+
+
+def test_non_boolean_approval_cannot_create_rejection_or_approval() -> None:
+    invalid = {
+        "approve": 0,
+        "reason": "not actually boolean",
+        "risk": "high",
+        "integration_authority": "NONE",
+    }
+    assert classify_review_attempt_outcome(
+        [invalid, None, None],
+        controlled_wait=False,
+        approved_outcome="",
+    ) == "FAILED"
+    assert classify_review_attempt_outcome(
+        [invalid, _verdict(True), _verdict(True)],
+        controlled_wait=False,
+        approved_outcome="REVIEW_APPROVED_LEAD_INTEGRATION_REQUIRED",
+    ) == "FAILED"
+
+
+def test_invalid_authority_cannot_create_rejection_or_approval() -> None:
+    rejected = _verdict(False)
+    rejected["integration_authority"] = "MERGE"
+    approved = _verdict(True)
+    approved["integration_authority"] = "MERGE"
+    assert classify_review_attempt_outcome(
+        [rejected, None, None],
+        controlled_wait=False,
+        approved_outcome="",
+    ) == "FAILED"
+    assert classify_review_attempt_outcome(
+        [approved, _verdict(True), _verdict(True)],
+        controlled_wait=False,
+        approved_outcome="REVIEW_APPROVED_LEAD_INTEGRATION_REQUIRED",
+    ) == "FAILED"
+
+
+def test_invalid_risk_schema_cannot_create_rejection() -> None:
+    invalid = _verdict(False)
+    invalid["risk"] = "unknown"
+    assert classify_review_attempt_outcome(
+        [None, invalid, None],
+        controlled_wait=False,
+        approved_outcome="",
+    ) == "FAILED"
 
 
 def test_workflow_persists_and_blocks_terminal_exact_sha_rejections() -> None:
