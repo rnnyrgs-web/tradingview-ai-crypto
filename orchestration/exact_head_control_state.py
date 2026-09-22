@@ -207,8 +207,11 @@ def _attempt_record(
         return None
     if run_match.group("value") != title_match.group("run"):
         return None
-    if main_match.group("value") != workflow_main_sha:
-        return None
+    # The source attempt's reviewer-main SHA is durable audit provenance. It is
+    # intentionally not required to equal the *current* reviewer-main SHA: an
+    # unrelated canonical-main advance must never erase rejection/interruption/
+    # approval history for an unchanged candidate PR/SHA.
+    recorded_main_sha = main_match.group("value")
     outcome = outcome_match.group("value")
     if outcome not in ATTEMPT_OUTCOMES:
         return None
@@ -220,7 +223,7 @@ def _attempt_record(
     return {
         "number": number,
         "run": int(title_match.group("run")),
-        "workflow_main_sha": workflow_main_sha,
+        "workflow_main_sha": recorded_main_sha,
         "repository": repository,
         "outcome": outcome,
     }
@@ -236,7 +239,7 @@ def _receipt_source(
     head_sha: str,
     workflow_main_sha: str,
     repository: str,
-) -> tuple[int, int, str] | None:
+) -> tuple[int, int, str, str] | None:
     if not _trusted(issue):
         return None
     title = issue.get("title")
@@ -271,12 +274,16 @@ def _receipt_source(
     assert outcome_match and authority_match
     if int(pr_match.group("value")) != pr_number or sha_match.group("value") != head_sha:
         return None
-    if main_match.group("value") != workflow_main_sha:
-        return None
+    recorded_main_sha = main_match.group("value")
     outcome = outcome_match.group("value")
     if outcome not in allowed_outcomes or authority_match.group("value") != "NONE":
         return None
-    return int(source_match.group("value")), int(source_run_match.group("value")), outcome
+    return (
+        int(source_match.group("value")),
+        int(source_run_match.group("value")),
+        outcome,
+        recorded_main_sha,
+    )
 
 
 def exact_head_control_state(
@@ -338,13 +345,14 @@ def exact_head_control_state(
             repository=repository,
         )
         if approval_source is not None:
-            source_issue, source_run, outcome = approval_source
+            source_issue, source_run, outcome, receipt_main_sha = approval_source
             source = attempts.get(source_issue)
             if (
                 source is not None
                 and source["run"] == source_run
                 and source["outcome"] == outcome
                 and source["outcome"] in APPROVED_OUTCOMES
+                and source["workflow_main_sha"] == receipt_main_sha
             ):
                 approval_receipts.append(issue_number)
                 approval_receipt_sources.append(source_issue)
@@ -360,12 +368,13 @@ def exact_head_control_state(
             repository=repository,
         )
         if rejection_source is not None:
-            source_issue, source_run, outcome = rejection_source
+            source_issue, source_run, outcome, receipt_main_sha = rejection_source
             source = attempts.get(source_issue)
             if (
                 source is not None
                 and source["run"] == source_run
                 and source["outcome"] == outcome == "REJECTED"
+                and source["workflow_main_sha"] == receipt_main_sha
             ):
                 rejection_receipts.append(issue_number)
 
