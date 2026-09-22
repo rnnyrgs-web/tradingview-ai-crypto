@@ -140,6 +140,7 @@ def test_rejected_source_attempt_is_terminal_without_separate_receipt() -> None:
     assert state["rejected"] is True
     assert state["validated_rejected_attempts"] == [11]
     assert state["validated_rejection_receipts"] == []
+    assert state["invalid_trusted_control_issues"] == []
     assert state["attempt_count"] == 1
     assert state["repository"] == REPO
 
@@ -154,6 +155,8 @@ def test_rejection_receipt_must_bind_a_valid_rejected_source_attempt() -> None:
     missing_source = _state([receipt])
     assert missing_source["validated_rejection_receipts"] == []
     assert missing_source["rejected"] is False
+    assert missing_source["ambiguous_control_state"] is True
+    assert missing_source["invalid_trusted_control_issues"] == [12]
 
 
 def test_public_or_owner_lookalikes_cannot_create_control_state() -> None:
@@ -167,6 +170,7 @@ def test_public_or_owner_lookalikes_cannot_create_control_state() -> None:
     assert state["attempt_count"] == 0
     assert state["rejected"] is False
     assert state["approved"] is False
+    assert state["invalid_trusted_control_issues"] == []
 
 
 def test_tampered_body_cannot_be_rescued_by_exact_title() -> None:
@@ -175,6 +179,8 @@ def test_tampered_body_cannot_be_rescued_by_exact_title() -> None:
     state = _state([issue])
     assert state["attempt_count"] == 0
     assert state["rejected"] is False
+    assert state["ambiguous_control_state"] is True
+    assert state["invalid_trusted_control_issues"] == [11]
 
 
 def test_duplicate_conflicting_binding_line_fails_closed() -> None:
@@ -182,6 +188,7 @@ def test_duplicate_conflicting_binding_line_fails_closed() -> None:
     issue["body"] = str(issue["body"]) + f"\nExact reviewed SHA: `{'c' * 40}`\n"
     state = _state([issue])
     assert state["attempt_count"] == 0
+    assert state["ambiguous_control_state"] is True
 
 
 def test_duplicate_repository_binding_line_fails_closed() -> None:
@@ -189,12 +196,14 @@ def test_duplicate_repository_binding_line_fails_closed() -> None:
     issue["body"] = str(issue["body"]) + "\nRepository: `other/repo`\n"
     state = _state([issue])
     assert state["attempt_count"] == 0
+    assert state["ambiguous_control_state"] is True
 
 
 def test_wrong_repository_binding_cannot_create_control_state() -> None:
     state = _state([_attempt(11, repo="other/repo")])
     assert state["attempt_count"] == 0
     assert state["rejected"] is False
+    assert state["ambiguous_control_state"] is True
 
 
 def test_wrong_sha_or_nonterminal_outcome_does_not_create_rejection() -> None:
@@ -206,9 +215,10 @@ def test_wrong_sha_or_nonterminal_outcome_does_not_create_rejection() -> None:
     state = _state(issues)
     assert state["attempt_count"] == 1
     assert state["rejected"] is False
+    assert state["invalid_trusted_control_issues"] == []
 
 
-def test_wrong_workflow_main_sha_is_not_valid_control_state() -> None:
+def test_wrong_workflow_main_sha_is_explicitly_blocking_control_evidence() -> None:
     state = exact_head_control_state(
         [_attempt(11)],
         pr_number=PR,
@@ -219,9 +229,11 @@ def test_wrong_workflow_main_sha_is_not_valid_control_state() -> None:
     assert state["attempt_count"] == 0
     assert state["rejected"] is False
     assert state["approved"] is False
+    assert state["ambiguous_control_state"] is True
+    assert state["invalid_trusted_control_issues"] == [11]
 
 
-def test_legacy_title_only_approval_is_deliberately_not_grandfathered() -> None:
+def test_legacy_title_only_approval_is_explicit_migration_blocker() -> None:
     legacy = _issue(
         21,
         f"exact-head-review-approved: pr={PR} sha={SHA}",
@@ -230,6 +242,10 @@ def test_legacy_title_only_approval_is_deliberately_not_grandfathered() -> None:
     state = _state([legacy])
     assert state["approved"] is False
     assert state["validated_approval_receipts"] == []
+    assert state["ambiguous_control_state"] is True
+    assert state["invalid_trusted_control_issues"] == [21]
+    assert state["claimed_control_issue_kinds"] == {"21": "approval"}
+    assert state["legacy_unvalidated_control_is_blocking"] is True
 
 
 def test_valid_approval_requires_exact_source_attempt_and_body_binding() -> None:
@@ -239,9 +255,12 @@ def test_valid_approval_requires_exact_source_attempt_and_body_binding() -> None
     assert state["approved"] is True
     assert state["validated_approved_attempts"] == [20]
     assert state["validated_approval_receipts"] == [21]
+    assert state["invalid_trusted_control_issues"] == []
 
     missing_source = _state([approval])
     assert missing_source["approved"] is False
+    assert missing_source["ambiguous_control_state"] is True
+    assert missing_source["invalid_trusted_control_issues"] == [21]
 
     tampered = _approval_receipt(22, 20)
     tampered["body"] = str(tampered["body"]).replace(
@@ -250,6 +269,8 @@ def test_valid_approval_requires_exact_source_attempt_and_body_binding() -> None
     )
     state = _state([source, tampered])
     assert state["approved"] is False
+    assert state["ambiguous_control_state"] is True
+    assert state["invalid_trusted_control_issues"] == [22]
 
 
 def test_receipt_identity_does_not_depend_on_issue_number_ordering() -> None:
@@ -268,6 +289,7 @@ def test_receipt_source_workflow_run_must_match_source_attempt() -> None:
     state = _state([source, receipt])
     assert state["validated_approval_receipts"] == []
     assert state["approved"] is False
+    assert state["ambiguous_control_state"] is True
 
 
 def test_cross_repository_run_id_reuse_does_not_validate() -> None:
@@ -276,6 +298,7 @@ def test_cross_repository_run_id_reuse_does_not_validate() -> None:
     state = _state([source, receipt])
     assert state["validated_approval_receipts"] == []
     assert state["approved"] is False
+    assert state["ambiguous_control_state"] is True
 
 
 def test_duplicate_valid_receipts_are_ambiguous_and_fail_closed() -> None:
@@ -283,6 +306,7 @@ def test_duplicate_valid_receipts_are_ambiguous_and_fail_closed() -> None:
     state = _state([source, _approval_receipt(21, 20), _approval_receipt(22, 20)])
     assert state["ambiguous_control_state"] is True
     assert state["approved"] is False
+    assert state["invalid_trusted_control_issues"] == []
 
 
 def test_duplicate_issue_identity_in_snapshot_fails_closed() -> None:
@@ -299,18 +323,32 @@ def test_real_github_api_issue_shape_is_accepted_only_when_bindings_are_valid() 
     assert state["approved"] is True
     assert state["validated_attempts"] == [20]
     assert state["validated_approval_receipts"] == [21]
+    assert state["invalid_trusted_control_issues"] == []
 
 
-def test_rejection_dominates_even_a_valid_approval_receipt() -> None:
-    state = _state(
+def test_rejection_dominates_even_a_valid_approval_receipt_and_remains_auditable() -> None:
+    approved_state = _state(
+        [
+            _attempt(20, outcome=APPROVED),
+            _approval_receipt(21, 20),
+        ]
+    )
+    assert approved_state["approved"] is True
+    assert approved_state["rejected"] is False
+
+    rejected_state = _state(
         [
             _attempt(20, outcome=APPROVED),
             _approval_receipt(21, 20),
             _attempt(22),
         ]
     )
-    assert state["rejected"] is True
-    assert state["approved"] is False
+    assert rejected_state["rejected"] is True
+    assert rejected_state["approved"] is False
+    assert rejected_state["validated_approval_receipts"] == [21]
+    assert rejected_state["validated_rejected_attempts"] == [22]
+    assert rejected_state["terminal_precedence"] == "REJECTION_DOMINATES_APPROVAL"
+    assert rejected_state["invalid_trusted_control_issues"] == []
 
 
 def test_old_rejection_is_not_hidden_by_more_than_500_unrelated_issues() -> None:
@@ -331,3 +369,4 @@ def test_pull_request_objects_never_count_as_control_issues() -> None:
     state = _state([issue])
     assert state["attempt_count"] == 0
     assert state["rejected"] is False
+    assert state["invalid_trusted_control_issues"] == []
