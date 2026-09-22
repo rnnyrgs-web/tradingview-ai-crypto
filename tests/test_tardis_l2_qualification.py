@@ -45,7 +45,7 @@ def _fixture() -> str:
 
 def test_committed_contract_is_zero_spend_and_adapter_only():
     contract = json.loads(ARTIFACT.read_text(encoding="utf-8"))
-    assert contract["status"] == "READY_FOR_FREE_SAMPLE_EXECUTION"
+    assert contract["status"] == "FREE_SAMPLE_QUALIFICATION_PASS"
     assert contract["authority"] == "PROVIDER_ADAPTER_ONLY"
     assert contract["spend_authorized_usd"] == 0
     assert contract["outcomes_opened"] is False
@@ -54,7 +54,13 @@ def test_committed_contract_is_zero_spend_and_adapter_only():
     assert contract["strict_tradability_established"] is False
     assert contract["broker_connected"] is False
     assert contract["live_trading"] is False
-    assert contract["current_blocker"] == "REAL_FREE_SAMPLE_BYTES_NOT_YET_EXECUTED_THROUGH_THIS_ADAPTER"
+    assert contract["current_blocker"] == "EVENT_DATE_HISTORICAL_L2_BYTES_NOT_ACQUIRED_OR_AUTHORIZED"
+    receipt = contract["provider_pass_receipt"]
+    assert receipt["compressed_sha256"] == "f7daa040dc33fc7328ff8468b198731fd5add90bc8cef434aab86726268e8a34"
+    assert receipt["row_count"] == 6486542
+    assert receipt["message_count"] == 815980
+    assert receipt["reconstructed_state_count"] == 815980
+    assert receipt["crossed_state_count"] == 0
 
 
 def test_parser_enforces_exact_schema_and_provider_identity():
