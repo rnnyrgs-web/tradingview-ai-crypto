@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "artifact_type": "strategy_factory_cohort_001_failure_learning_adapter_contract",
+  "contract_id": "STRATEGY-FACTORY-COHORT-001-FAILURE-LEARNING-ADAPTER-v1",
+  "contract_sha256": "1797959ae18f1dae0691d88f819e6a31ae625d3046555d92bd9d8087de973761",
+  "contract_hash_definition": "SHA-256 of canonical JSON with sorted keys and compact separators, excluding contract_sha256 and contract_hash_definition.",
+  "formed_at": "2026-09-22T12:58:57Z",
+  "status": "OUTCOME_BLIND_FROZEN_IMPLEMENTATION_BLOCKED",
+  "source_stage1_execution_contract": {
+    "contract_id": "STRATEGY-FACTORY-COHORT-001-STAGE1-EXECUTION-v1",
+    "execution_contract_sha256": "04b4fd2373649061ca8349e7dbff127cc7b0bc852a9f4ff541b080094da187ef",
+    "source_pr": 602,
+    "source_head_sha_observed": "5c797d14e2d16f863ff39ba2d8f715a5d057ad9a"
+  },
+  "target_failure_learning_contract": {
+    "schema_version": 1,
+    "source_pr": 511,
+    "source_head_sha_observed": "b3289b9254b2890af15a29bd3621c65abd25b707",
+    "integration_required_before_canonical_consumption": true
+  },
+  "authority": {
+    "test_only_or_caller_supplied_results_may_mint_canonical_screen": false,
+    "required_source_evidence_status": "CERTIFIED_COHORT_DEVELOPMENT_ONLY",
+    "required_bindings": [
+      "canonical_admission_receipt_sha256",
+      "selection_dataset_receipt_sha256",
+      "stage1_binding_receipt_sha256",
+      "stage1_execution_contract_sha256"
+    ],
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false,
+    "broker_connected": false,
+    "trade_authority": false,
+    "promotion_authority": false
+  },
+  "mapping": {
+    "validation.trades": "validation.independent_events",
+    "validation.gross_mean_bps": "(validation.mean_24bps * 10000) + 24.0",
+    "validation.net_mean_bps": "validation.mean_24bps * 10000",
+    "validation.profit_factor": "validation.profit_factor_24bps",
+    "validation.half_net_bps": "validation_half_means_24bps * 10000",
+    "cost_stress": [
+      {
+        "multiplier": 1.0,
+        "net_mean_bps": "validation.mean_24bps * 10000"
+      },
+      {
+        "multiplier": 2.0,
+        "net_mean_bps": "validation.mean_48bps * 10000"
+      },
+      {
+        "multiplier": 3.0,
+        "net_mean_bps": "validation.mean_72bps * 10000"
+      }
+    ],
+    "risk.worst_event_net_bps": "-validation.worst_loss_abs_24bps * 10000",
+    "risk.winner_concentration_share": "validation.winner_concentration_share_24bps",
+    "risk.without_best_net_mean_bps": "validation.leave_best_mean_24bps * 10000",
+    "data_quality.chronology_pass": "certified_adapter.chronology_pass",
+    "data_quality.point_in_time_pass": "certified_adapter.point_in_time_pass",
+    "data_quality.data_contract_pass": "certified_adapter.data_contract_pass"
+  },
+  "scientific_rules": {
+    "raw_trade_count_may_substitute_for_independent_validation_events": false,
+    "cost_stress_must_exactly_cover_frozen_multipliers": [
+      1.0,
+      2.0,
+      3.0
+    ],
+    "underpowered_catastrophic_tail_remains_rejection_eligible": true,
+    "ordinary_underpower_without_sufficient_tail_evidence_is_inconclusive": true,
+    "no_new_48bps_promotion_gate_is_created": true
+  },
+  "implementation_blockers_on_observed_source_head": [
+    "PartitionSummary does not persist mean_48bps.",
+    "PartitionSummary does not persist winner_concentration_share_24bps required by the #511 risk schema.",
+    "Stage1Result does not distinguish TEST_ONLY_UNTRUSTED caller/synthetic output from certified canonical Cohort evidence.",
+    "evaluate_stage1 currently returns INCONCLUSIVE_POWER before preserving catastrophic-tail rejection semantics required by #511."
+  ],
+  "evidence_locks": {
+    "strategy_outcomes_read_to_form_contract": false,
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false,
+    "post_outcome_mapping_changes_allowed": false
+  },
+  "next_transition": "Repair the existing #602 runner before any real Cohort outcome: add 48-bps and winner-concentration evidence, explicit TEST_ONLY_UNTRUSTED authority, and #511-consistent tail-underpower precedence; add deterministic RED->GREEN adapter regressions; then create a new exact head for CI/review."
+}
