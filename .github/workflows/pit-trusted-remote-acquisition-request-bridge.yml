@@ -33,11 +33,16 @@ jobs:
           test "$GITHUB_EVENT_NAME" = "issues"
           test "$GITHUB_WORKFLOW_REF" = "$EXPECTED_WORKFLOW_REF"
 
-      - name: Checkout exact trusted-main bridge source
+      - name: Checkout exact trusted issue-event source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          ref: main
+          ref: ${{ github.sha }}
           persist-credentials: false
+
+      - name: Verify exact issue-event source
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
 
       - name: Validate owner request and dispatch canonical acquisition workflow
         env:
