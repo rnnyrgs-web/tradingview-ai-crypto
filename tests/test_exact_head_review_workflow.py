@@ -49,7 +49,7 @@ def test_durable_review_receipts_require_bot_author_and_exact_body_binding() -> 
     control = CONTROL_STATE.read_text(encoding="utf-8")
     assert "github-actions[bot]" in control
     assert "Exact reviewed SHA:" in control
-    assert "Exact rejected SHA:" in control
+    assert 'sha_label="Exact rejected SHA"' in control
     assert "Source attempt issue:" in control
     assert "Outcome:" in control
     assert "Integration authority:" in control
