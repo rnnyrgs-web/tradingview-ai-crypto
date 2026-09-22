@@ -35,7 +35,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          # Pin the executable reviewer/runtime snapshot to the exact workflow
+          # event SHA. Never fetch a newer main and then claim its SHA while
+          # continuing to execute validator code from an older checkout.
+          ref: ${{ github.sha }}
           fetch-depth: 100
 
       - uses: actions/setup-python@v5
@@ -53,8 +56,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git fetch --no-tags origin main
-          MAIN_SHA="$(git rev-parse origin/main)"
+          MAIN_SHA="$(git rev-parse HEAD)"
+          # All merge-base/diff/control-state operations below use this one
+          # pinned local main snapshot. Updating origin/main to a later network
+          # tip inside the run would break PIT binding between receipt SHA and
+          # the reviewer code that actually executed.
+          git update-ref refs/remotes/origin/main "$MAIN_SHA"
           REPO_OWNER="${GITHUB_REPOSITORY%%/*}"
           SELECTED_ISSUE=""
           SELECTED_PR=""
@@ -156,7 +163,7 @@ jobs:
             fi
             MERGE_BASE="$(git merge-base origin/main "$REVIEW_REF" 2>/dev/null || true)"
             if [ "$MERGE_BASE" != "$MAIN_SHA" ]; then
-              echo "PR #$PR_NUMBER exact head is not based on current main; request stays pending."
+              echo "PR #$PR_NUMBER exact head is not based on pinned reviewer main; request stays pending."
               continue
             fi
 
@@ -193,7 +200,7 @@ jobs:
           if [ -z "$SELECTED_PR" ]; then
             echo "No explicit exact-head review request is ready."
           else
-            echo "Selected PR #$SELECTED_PR ($SELECTED_BRANCH) exact head $SELECTED_SHA with Security and Reliability run $SECURITY_RUN_ID."
+            echo "Selected PR #$SELECTED_PR ($SELECTED_BRANCH) exact head $SELECTED_SHA with Security and Reliability run $SECURITY_RUN_ID on pinned reviewer main $MAIN_SHA."
           fi
 
       - name: Stop when no review request is ready
