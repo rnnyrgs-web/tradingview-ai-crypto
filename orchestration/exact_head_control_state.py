@@ -320,6 +320,7 @@ def exact_head_control_state(
     )
 
     approval_receipts: list[int] = []
+    approval_receipt_sources: list[int] = []
     rejection_receipts: list[int] = []
     for issue in issue_list:
         issue_number = _issue_number(issue)
@@ -346,6 +347,7 @@ def exact_head_control_state(
                 and source["outcome"] in APPROVED_OUTCOMES
             ):
                 approval_receipts.append(issue_number)
+                approval_receipt_sources.append(source_issue)
 
         rejection_source = _receipt_source(
             issue,
@@ -368,6 +370,7 @@ def exact_head_control_state(
                 rejection_receipts.append(issue_number)
 
     approval_receipts.sort()
+    approval_receipt_sources.sort()
     rejection_receipts.sort()
     validated_control_issue_numbers = set(attempts) | set(approval_receipts) | set(rejection_receipts)
     invalid_trusted_control_issues = sorted(
@@ -376,20 +379,42 @@ def exact_head_control_state(
 
     rejected = bool(rejected_attempts or rejection_receipts)
     interrupted = bool(interrupted_attempts)
+    receipted_approved_attempts = sorted(set(approval_receipt_sources))
+    unreceipted_approved_attempts = sorted(
+        set(approved_attempts) - set(receipted_approved_attempts)
+    )
+    multiple_approved_attempts = len(approved_attempts) > 1
+    approval_persistence_incomplete = bool(unreceipted_approved_attempts)
     ambiguous = (
         interrupted
+        or approval_persistence_incomplete
+        or multiple_approved_attempts
         or len(approval_receipts) > 1
         or len(rejection_receipts) > 1
         or bool(invalid_trusted_control_issues)
     )
-    approved = len(approval_receipts) == 1 and not rejected and not interrupted and not ambiguous
+    approved = (
+        len(approved_attempts) == 1
+        and len(approval_receipts) == 1
+        and receipted_approved_attempts == approved_attempts
+        and not rejected
+        and not interrupted
+        and not ambiguous
+    )
+    # Any completed scientific approval attempt is non-retryable even if its
+    # secondary approval receipt is temporarily invisible or failed to persist.
+    # That state can become approved later if the exact bound receipt appears,
+    # but the expensive scientific reviewers must never be invoked again merely
+    # to repair control-plane persistence.
+    terminal_nonretryable = bool(rejected or interrupted or approved_attempts)
 
     return {
-        "control_state_schema_version": 3,
+        "control_state_schema_version": 4,
         "approved": approved,
         "rejected": rejected,
         "interrupted": interrupted,
-        "terminal_nonretryable": bool(rejected or interrupted),
+        "approval_persistence_incomplete": approval_persistence_incomplete,
+        "terminal_nonretryable": terminal_nonretryable,
         "ambiguous_control_state": ambiguous,
         "attempt_count": len(attempts),
         "validated_attempts": sorted(attempts),
@@ -397,6 +422,8 @@ def exact_head_control_state(
         "validated_rejected_attempts": rejected_attempts,
         "validated_interrupted_attempts": interrupted_attempts,
         "validated_approval_receipts": approval_receipts,
+        "validated_approval_receipt_sources": receipted_approved_attempts,
+        "unreceipted_approved_attempts": unreceipted_approved_attempts,
         "validated_rejection_receipts": rejection_receipts,
         "invalid_trusted_control_issues": invalid_trusted_control_issues,
         "claimed_control_issue_kinds": {
