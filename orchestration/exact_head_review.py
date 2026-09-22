@@ -56,6 +56,13 @@ def _context_header(*, pr_number: int, head_sha: str, protected_hits: list[str])
     )
 
 
+def _validate_verdict_schema(verdict: dict[str, Any]) -> None:
+    if not isinstance(verdict.get("approve"), bool):
+        raise RuntimeError("reviewer returned invalid approval")
+    if verdict.get("risk") not in {"low", "medium", "high"}:
+        raise RuntimeError("reviewer returned invalid risk")
+
+
 def _enrich_verdict(
     verdict: dict[str, Any],
     *,
@@ -63,10 +70,7 @@ def _enrich_verdict(
     head_sha: str,
     protected_hits: list[str],
 ) -> dict[str, Any]:
-    if not isinstance(verdict.get("approve"), bool):
-        raise RuntimeError("reviewer returned invalid approval")
-    if verdict.get("risk") not in {"low", "medium", "high"}:
-        raise RuntimeError("reviewer returned invalid risk")
+    _validate_verdict_schema(verdict)
     enriched = dict(verdict)
     enriched.update(
         {
@@ -100,6 +104,7 @@ def _claude_exact_head_verdict(review_input: str, temporary: Path) -> dict[str, 
             verdict = json.loads(temporary.read_text(encoding="utf-8"))
             if not isinstance(verdict, dict):
                 raise RuntimeError("claude reviewer returned non-object JSON")
+            _validate_verdict_schema(verdict)
             return verdict
         except (json.JSONDecodeError, RuntimeError) as exc:
             last_error = exc
