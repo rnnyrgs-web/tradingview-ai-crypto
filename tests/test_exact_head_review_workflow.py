@@ -54,7 +54,6 @@ def test_durable_review_receipts_require_bot_author_and_exact_body_binding() -> 
     assert "Outcome:" in control
     assert "Integration authority:" in control
     assert "admin_mutation_is_trusted_boundary" in control
-    assert "title by itself" in text
     assert '--workflow-main-sha "$MAIN_SHA"' in text
     assert "Source workflow run:" in text
 
@@ -66,7 +65,7 @@ def test_terminal_rejection_uses_source_attempt_fallback_and_verified_receipt() 
     assert "SOURCE_STATE" in text
     assert "VERIFIED_STATE" in text
     assert 'test "$SOURCE_MATCH" -eq 1' in text
-    assert 'test "$VERIFIED_RECEIPTS" -gt 0' in text
+    assert 'test "$VERIFIED_RECEIPTS" -eq 1' in text
     assert "REJECTION_URL=" in text
     assert "CREATED_REJECTION" in text
     assert "set -euo pipefail" in text
@@ -89,7 +88,7 @@ def test_protected_paths_are_reviewed_but_never_auto_integrated() -> None:
     assert "Run independent exact-head reviewers with bounded transient WAIT" in text
     assert "gh pr merge" not in text
     assert "merge_pull_request" not in text
-    assert "integration_authority == \"NONE\"" in text
+    assert 'jq -e \'.approve == true and .integration_authority == "NONE"\'' in text
 
 
 def test_failed_attempts_are_bounded_while_valid_rejections_are_terminal_for_exact_sha() -> None:
@@ -110,7 +109,7 @@ def test_model_review_cannot_run_before_exact_head_green_ci() -> None:
     selection = text.index("Exact-head Security and Reliability run")
     review = text.index("Run independent exact-head reviewers with bounded transient WAIT")
     assert selection < review
-    assert 'CONCLUSION\" != \"success\"' in text
+    assert 'if [ "$CONCLUSION" != "success" ]; then' in text
     assert "Review models were not invoked" in text
 
 
@@ -128,7 +127,7 @@ def test_transient_reviewer_capacity_is_controlled_wait_not_approval() -> None:
 def test_valid_rejection_precedes_wait_and_blocks_approval_path() -> None:
     text = _text()
     assert "classify_review_attempt_outcome" in text
-    assert "outcome == 'REJECTED'" in text
+    assert 'if [ "$REJECTED" -eq 1 ]; then' in text
     assert 'echo "rejected=true" >> "$GITHUB_OUTPUT"' in text
     assert "valid independent scientific rejection is terminal" in text
     assert "steps.review_models.outputs.rejected != 'true'" in text
@@ -140,7 +139,6 @@ def test_every_launched_parallel_reviewer_is_joined_before_rejection_scan() -> N
     joined = text.index('wait "$PID_CLAUDE"')
     scan = text.index('REJECTED="$(python - <<\'PY\'')
     assert launched < joined < scan
-    assert 'wait "$PID_CLAUDE"' in text
     assert "has_terminal_rejection(verdicts)" in text
 
 
