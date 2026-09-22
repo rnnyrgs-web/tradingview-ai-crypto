@@ -1,0 +1,47 @@
+name: PIT Trusted Acquisition Request Bridge
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  actions: write
+  issues: write
+
+concurrency:
+  group: pit-trusted-acquisition-request-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  dispatch-owner-request:
+    if: >-
+      github.actor == github.repository_owner &&
+      github.event.issue.user.login == github.repository_owner &&
+      startsWith(github.event.issue.title, 'pit-trusted-acquisition-request: ')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Refuse non-canonical bridge execution
+        env:
+          EXPECTED_REPOSITORY: rnnyrgs-web/tradingview-ai-crypto
+          EXPECTED_WORKFLOW_REF: rnnyrgs-web/tradingview-ai-crypto/.github/workflows/pit-trusted-remote-acquisition-request-bridge.yml@refs/heads/main
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "$EXPECTED_REPOSITORY"
+          test "$GITHUB_REF" = "refs/heads/main"
+          test "$GITHUB_EVENT_NAME" = "issues"
+          test "$GITHUB_WORKFLOW_REF" = "$EXPECTED_WORKFLOW_REF"
+
+      - name: Checkout exact trusted-main bridge source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Validate owner request and dispatch canonical acquisition workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 pit_trusted_acquisition_issue_bridge.py --event "$GITHUB_EVENT_PATH"
