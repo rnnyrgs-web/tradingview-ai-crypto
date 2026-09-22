@@ -98,24 +98,27 @@ jobs:
 
             APPROVED_TITLE="exact-head-review-approved: pr=$PR_NUMBER sha=$REQUESTED_SHA"
             REJECTED_TITLE="exact-head-review-rejected: pr=$PR_NUMBER sha=$REQUESTED_SHA"
-            RECEIPTS="$(gh issue list --repo "$GITHUB_REPOSITORY" --state all --limit 500 --json title)"
-            ALREADY_APPROVED="$(printf '%s' "$RECEIPTS" | jq --arg title "$APPROVED_TITLE" '[.[] | select(.title == $title)] | length')"
+            # Receipt titles are control-plane state, so only repository-owner or
+            # GitHub Actions-authored receipts may affect approval, rejection, or
+            # retry accounting. Arbitrary public issues with lookalike titles are ignored.
+            RECEIPTS="$(gh issue list --repo "$GITHUB_REPOSITORY" --state all --limit 500 --json title,author)"
+            ALREADY_APPROVED="$(printf '%s' "$RECEIPTS" | jq --arg title "$APPROVED_TITLE" --arg owner "$REPO_OWNER" '[.[] | select(.title == $title and (((.author.login // "") == $owner) or ((.author.login // "") == "github-actions[bot]")))] | length')"
             if [ "$ALREADY_APPROVED" -gt 0 ]; then
-              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "An approval receipt already exists for PR #$PR_NUMBER exact head $REQUESTED_SHA; closing duplicate request."
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "An authenticated approval receipt already exists for PR #$PR_NUMBER exact head $REQUESTED_SHA; closing duplicate request."
               gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
               continue
             fi
-            ALREADY_REJECTED="$(printf '%s' "$RECEIPTS" | jq --arg title "$REJECTED_TITLE" '[.[] | select(.title == $title)] | length')"
+            ALREADY_REJECTED="$(printf '%s' "$RECEIPTS" | jq --arg title "$REJECTED_TITLE" --arg owner "$REPO_OWNER" '[.[] | select(.title == $title and (((.author.login // "") == $owner) or ((.author.login // "") == "github-actions[bot]")))] | length')"
             if [ "$ALREADY_REJECTED" -gt 0 ]; then
-              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "A valid independent rejection receipt already exists for PR #$PR_NUMBER exact head $REQUESTED_SHA. This exact SHA is terminal and cannot be reviewer-shopped; revise the candidate to a new head and pass fresh exact-head CI before requesting another scientific review."
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "An authenticated independent rejection receipt already exists for PR #$PR_NUMBER exact head $REQUESTED_SHA. This exact SHA is terminal and cannot be reviewer-shopped; revise the candidate to a new head and pass fresh exact-head CI before requesting another scientific review."
               gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
               continue
             fi
 
             ATTEMPT_PREFIX="exact-head-review-attempt: pr=$PR_NUMBER sha=$REQUESTED_SHA run="
-            ATTEMPT_COUNT="$(printf '%s' "$RECEIPTS" | jq --arg prefix "$ATTEMPT_PREFIX" '[.[] | select(.title | startswith($prefix))] | length')"
+            ATTEMPT_COUNT="$(printf '%s' "$RECEIPTS" | jq --arg prefix "$ATTEMPT_PREFIX" --arg owner "$REPO_OWNER" '[.[] | select((.title | startswith($prefix)) and (((.author.login // "") == $owner) or ((.author.login // "") == "github-actions[bot]")))] | length')"
             if [ "$ATTEMPT_COUNT" -ge 3 ]; then
-              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Bounded reviewer retry limit reached for PR #$PR_NUMBER exact head $REQUESTED_SHA after $ATTEMPT_COUNT attempts. Closing without approval; create a new request only after the provider/runtime blocker is materially resolved."
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Bounded reviewer retry limit reached for PR #$PR_NUMBER exact head $REQUESTED_SHA after $ATTEMPT_COUNT authenticated attempts. Closing without approval; create a new request only after the provider/runtime blocker is materially resolved."
               gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
               continue
             fi
@@ -455,7 +458,8 @@ jobs:
 
           if [ "$OUTCOME" = "REJECTED" ]; then
             REJECTED_TITLE="exact-head-review-rejected: pr=$PR_NUMBER sha=$HEAD_SHA"
-            EXISTING_REJECTION="$(gh issue list --repo "$GITHUB_REPOSITORY" --state all --limit 500 --json title | jq --arg title "$REJECTED_TITLE" '[.[] | select(.title == $title)] | length')"
+            REPO_OWNER="${GITHUB_REPOSITORY%%/*}"
+            EXISTING_REJECTION="$(gh issue list --repo "$GITHUB_REPOSITORY" --state all --limit 500 --json title,author | jq --arg title "$REJECTED_TITLE" --arg owner "$REPO_OWNER" '[.[] | select(.title == $title and (((.author.login // "") == $owner) or ((.author.login // "") == "github-actions[bot]")))] | length')"
             if [ "$EXISTING_REJECTION" -eq 0 ]; then
               cat >/tmp/exact-head-review-rejected.md <<EOF
           PR: #$PR_NUMBER
