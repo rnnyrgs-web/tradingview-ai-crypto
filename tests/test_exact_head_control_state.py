@@ -218,7 +218,7 @@ def test_wrong_sha_or_nonterminal_outcome_does_not_create_rejection() -> None:
     assert state["invalid_trusted_control_issues"] == []
 
 
-def test_wrong_workflow_main_sha_is_explicitly_blocking_control_evidence() -> None:
+def test_prior_workflow_main_sha_remains_durable_control_evidence_after_rotation() -> None:
     state = exact_head_control_state(
         [_attempt(11)],
         pr_number=PR,
@@ -226,11 +226,12 @@ def test_wrong_workflow_main_sha_is_explicitly_blocking_control_evidence() -> No
         workflow_main_sha="c" * 40,
         repository=REPO,
     )
-    assert state["attempt_count"] == 0
-    assert state["rejected"] is False
+    assert state["attempt_count"] == 1
+    assert state["rejected"] is True
     assert state["approved"] is False
-    assert state["ambiguous_control_state"] is True
-    assert state["invalid_trusted_control_issues"] == [11]
+    assert state["terminal_nonretryable"] is True
+    assert state["ambiguous_control_state"] is False
+    assert state["invalid_trusted_control_issues"] == []
 
 
 def test_legacy_title_only_approval_is_explicit_migration_blocker() -> None:
