@@ -39,8 +39,8 @@ def test_paid_review_requests_are_repository_owner_authorized() -> None:
 
 def test_control_plane_enumeration_is_complete_not_fixed_limit() -> None:
     text = _text()
-    assert 'gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=open&per_page=100"' in text
-    assert 'gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100"' in text
+    assert 'gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=open&per_page=100&sort=created&direction=asc"' in text
+    assert 'gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100&sort=created&direction=asc"' in text
     assert "--limit 500" not in text
     assert "map(select(.pull_request == null))" in text
     assert "python -m orchestration.exact_head_control_state" in text
