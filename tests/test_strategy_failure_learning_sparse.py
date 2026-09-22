@@ -201,3 +201,26 @@ def test_powered_missing_chronological_half_is_inconclusive_not_fabricated() -> 
     assert result["status"] == "INCONCLUSIVE"
     assert result["failure_categories"] == [FAILURE_UNDERPOWERED]
     assert result["rejection_eligible"] is False
+
+
+def test_powered_missing_half_does_not_mask_observed_catastrophic_tail() -> None:
+    parent = _frozen()
+    screen = _screen(parent, trades=20)
+    screen["validation"] = {
+        "trades": 20,
+        "gross_mean_bps": -500,
+        "net_mean_bps": -524,
+        "profit_factor": 0.2,
+        "half_net_bps": [-524, None],
+    }
+    screen["risk"] = {
+        "worst_event_net_bps": -700,
+        "winner_concentration_share": 0.10,
+        "without_best_net_mean_bps": None,
+    }
+
+    result = classify_failure(parent, screen, rejected_entries=[])
+
+    assert result["status"] == "REJECTED"
+    assert result["failure_categories"] == [FAILURE_TAIL]
+    assert result["rejection_eligible"] is True
