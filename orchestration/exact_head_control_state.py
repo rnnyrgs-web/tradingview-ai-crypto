@@ -315,6 +315,9 @@ def exact_head_control_state(
     rejected_attempts = sorted(
         number for number, record in attempts.items() if record["outcome"] == "REJECTED"
     )
+    interrupted_attempts = sorted(
+        number for number, record in attempts.items() if record["outcome"] == "STARTED"
+    )
 
     approval_receipts: list[int] = []
     rejection_receipts: list[int] = []
@@ -372,29 +375,34 @@ def exact_head_control_state(
     )
 
     rejected = bool(rejected_attempts or rejection_receipts)
+    interrupted = bool(interrupted_attempts)
     ambiguous = (
-        len(approval_receipts) > 1
+        interrupted
+        or len(approval_receipts) > 1
         or len(rejection_receipts) > 1
         or bool(invalid_trusted_control_issues)
     )
-    approved = len(approval_receipts) == 1 and not rejected and not ambiguous
+    approved = len(approval_receipts) == 1 and not rejected and not interrupted and not ambiguous
 
     return {
-        "control_state_schema_version": 2,
+        "control_state_schema_version": 3,
         "approved": approved,
         "rejected": rejected,
+        "interrupted": interrupted,
+        "terminal_nonretryable": bool(rejected or interrupted),
         "ambiguous_control_state": ambiguous,
         "attempt_count": len(attempts),
         "validated_attempts": sorted(attempts),
         "validated_approved_attempts": approved_attempts,
         "validated_rejected_attempts": rejected_attempts,
+        "validated_interrupted_attempts": interrupted_attempts,
         "validated_approval_receipts": approval_receipts,
         "validated_rejection_receipts": rejection_receipts,
         "invalid_trusted_control_issues": invalid_trusted_control_issues,
         "claimed_control_issue_kinds": {
             str(number): claimed_control_issues[number] for number in sorted(claimed_control_issues)
         },
-        "terminal_precedence": "REJECTION_DOMINATES_APPROVAL",
+        "terminal_precedence": "REJECTION_DOMINATES_APPROVAL;INTERRUPTED_BLOCKS_RETRY",
         "legacy_unvalidated_control_is_blocking": True,
         "workflow_main_sha": workflow_main_sha,
         "repository": repository,
