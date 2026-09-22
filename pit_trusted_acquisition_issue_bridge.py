@@ -18,6 +18,7 @@ COLLECTION_RE = re.compile(r"^CC-MAIN-[0-9]{4}-[0-9]{2}$")
 WARC_RE = re.compile(r"^crawl-data/(CC-MAIN-[0-9]{4}-[0-9]{2})/.+\.warc\.gz$")
 MAX_RANGE_BYTES = 16 * 1024 * 1024
 DISPATCH_MARKER = "PIT_TRUSTED_ACQUISITION_DISPATCHED"
+TRUSTED_MARKER_AUTHORS = {"github-actions", "github-actions[bot]"}
 
 
 class BridgeRequestError(ValueError):
@@ -186,7 +187,7 @@ def _issue_has_dispatch_marker(issue_number: int, env: dict[str, str]) -> bool:
     for comment in data.get("comments", []):
         author = (comment.get("author") or {}).get("login")
         body = comment.get("body") or ""
-        if author == "github-actions" and DISPATCH_MARKER in body:
+        if author in TRUSTED_MARKER_AUTHORS and DISPATCH_MARKER in body:
             return True
     return False
 
