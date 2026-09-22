@@ -309,12 +309,13 @@ def classify_failure(
 
     # A nominally powered total sample can still leave one chronological half
     # or an economic summary undefined. Treat that as insufficient evidence,
-    # never as zero or as a pass.
+    # never as zero or as a pass. Any actually observed catastrophic-tail veto
+    # still has rejection precedence over missing secondary summaries.
     if gross is None or net is None or profit_factor is None or any(v is None for v in half_values):
         return {
-            "status": "INCONCLUSIVE",
-            "failure_categories": [FAILURE_UNDERPOWERED],
-            "rejection_eligible": False,
+            "status": "REJECTED" if FAILURE_TAIL in failures else "INCONCLUSIVE",
+            "failure_categories": sorted(failures or {FAILURE_UNDERPOWERED}),
+            "rejection_eligible": bool(failures),
             "protected_evidence_opened": False,
         }
 
