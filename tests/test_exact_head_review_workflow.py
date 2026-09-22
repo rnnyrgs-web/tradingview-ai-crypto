@@ -55,7 +55,8 @@ def test_durable_review_receipts_require_bot_author_and_exact_body_binding() -> 
     assert "Integration authority:" in control
     assert "admin_mutation_is_trusted_boundary" in control
     assert "title by itself" in text
-    assert "exact body PR/SHA/outcome" in text
+    assert '--workflow-main-sha "$MAIN_SHA"' in text
+    assert "Source workflow run:" in text
 
 
 def test_terminal_rejection_uses_source_attempt_fallback_and_verified_receipt() -> None:
@@ -76,7 +77,7 @@ def test_full_scientific_diff_has_one_consistent_hard_context_bound() -> None:
     reviewer = REVIEWER.read_text(encoding="utf-8")
     assert 'test "$BYTES" -le 256000' in workflow
     assert "MAX_DIFF_BYTES = 256_000" in reviewer
-    assert "never truncate it" in workflow
+    assert "Diff too large for one coherent exact-head review; fail closed and split the PR." in workflow
 
 
 def test_protected_paths_are_reviewed_but_never_auto_integrated() -> None:
@@ -139,7 +140,8 @@ def test_every_launched_parallel_reviewer_is_joined_before_rejection_scan() -> N
     joined = text.index('wait "$PID_CLAUDE"')
     scan = text.index('REJECTED="$(python - <<\'PY\'')
     assert launched < joined < scan
-    assert "Every reviewer that was actually launched is joined before terminal" in text
+    assert 'wait "$PID_CLAUDE"' in text
+    assert "has_terminal_rejection(verdicts)" in text
 
 
 def test_openai_reviewers_are_serial_while_claude_can_run_in_parallel() -> None:
@@ -148,4 +150,4 @@ def test_openai_reviewers_are_serial_while_claude_can_run_in_parallel() -> None:
     security = text.index("SECURITY_STATUS=")
     lead = text.index("LEAD_STATUS=")
     assert claude < security < lead
-    assert "same rate-limit bucket" in text
+    assert 'if [ "$STATUS" -eq 0 ] && [ "$WAIT" -eq 0 ]; then' in text
