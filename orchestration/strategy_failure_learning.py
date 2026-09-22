@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any
 
 from orchestration.rejected_fingerprints import is_rejected_fingerprint
+from orchestration.scientific_design_identity import strategy_behavior_sha256
 from orchestration.strategy_predeclaration import freeze_predeclaration, validate_predeclaration
 
 SCHEMA_VERSION = 1
@@ -324,6 +325,8 @@ def _rank_successors(
     ranked: list[dict[str, Any]] = []
     parent_family = parent["search_plan"]["multiple_testing_family_id"]
     parent_planned = int(parent["search_plan"]["planned_hypothesis_count"])
+    parent_behavior_digest = strategy_behavior_sha256(parent)
+    seen_child_behavior_digests: set[str] = set()
 
     for idx, proposal in enumerate(successors):
         if not isinstance(proposal, dict):
@@ -335,12 +338,21 @@ def _rank_successors(
         if child["fingerprint_id"] == parent["fingerprint_id"]:
             raise RuntimeError("successor cannot reuse the failed parent fingerprint")
 
+        child_behavior_digest = strategy_behavior_sha256(child)
+        if child_behavior_digest == parent_behavior_digest:
+            raise RuntimeError("successor executable behavior must differ from the failed parent")
+        if child_behavior_digest in seen_child_behavior_digests:
+            raise RuntimeError("successor proposals must have unique executable behavior")
+        seen_child_behavior_digests.add(child_behavior_digest)
+
         dims = proposal.get("change_dimensions")
         if not isinstance(dims, list) or not dims:
             raise RuntimeError("successor change_dimensions must be a non-empty list")
         dims = [_text(value, "successor.change_dimensions") for value in dims]
         if any(value not in ALLOWED_CHANGE_DIMENSIONS for value in dims):
             raise RuntimeError("successor contains an unsupported change dimension")
+        # Declared dimensions remain explanatory/audit metadata. Canonical
+        # executable behavior identity above is the fail-closed novelty authority.
         if not any(_dimension_changed(parent, child, value) for value in dims):
             raise RuntimeError("successor does not materially change its declared scientific design")
 
