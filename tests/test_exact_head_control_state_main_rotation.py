@@ -58,12 +58,12 @@ def _approval_receipt(number: int, source_attempt: int, *, workflow_main_sha: st
     }
 
 
-def _state(issues: list[dict[str, object]]) -> dict[str, object]:
+def _state(issues: list[dict[str, object]], *, current_main: str = NEW_MAIN) -> dict[str, object]:
     return exact_head_control_state(
         issues,
         pr_number=PR,
         head_sha=HEAD,
-        workflow_main_sha=NEW_MAIN,
+        workflow_main_sha=current_main,
         repository=REPO,
     )
 
@@ -82,11 +82,32 @@ def test_interrupted_attempt_survives_canonical_main_rotation() -> None:
     assert state["terminal_nonretryable"] is True
 
 
-def test_completed_approval_and_receipt_survive_canonical_main_rotation() -> None:
-    """Exact-head clearance is invalidated by a new candidate head, not unrelated main drift."""
+def test_completed_approval_is_history_but_not_current_authority_after_main_rotation() -> None:
+    """Approval is contextual; negative memory is global, but integration authority is not."""
     source = _attempt(13, outcome=APPROVED)
     receipt = _approval_receipt(14, 13)
     state = _state([source, receipt])
+
+    # Preserve the authenticated historical approval pair for audit.
+    assert state["validated_approved_attempts"] == [13]
+    assert state["validated_approval_receipts"] == [14]
+    assert state["validated_approval_receipt_sources"] == [13]
+
+    # But an approval created under OLD_MAIN cannot authorize integration after
+    # canonical main has moved. Revalidation is allowed because there is no
+    # rejection/interrupted attempt; this avoids both stale approval reuse and
+    # turning a prior positive review into permanent no-review-shopping state.
+    assert state["approved"] is False
+    assert state["rejected"] is False
+    assert state["interrupted"] is False
+    assert state["terminal_nonretryable"] is False
+    assert state["ambiguous_control_state"] is False
+
+
+def test_completed_approval_remains_authoritative_while_reviewer_main_is_unchanged() -> None:
+    source = _attempt(16, outcome=APPROVED)
+    receipt = _approval_receipt(17, 16)
+    state = _state([source, receipt], current_main=OLD_MAIN)
     assert state["approved"] is True
     assert state["terminal_nonretryable"] is True
 
