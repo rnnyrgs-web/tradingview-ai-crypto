@@ -42,6 +42,7 @@
       "cross_venue_aggregation_policy_id_or_explicit_none",
       "entry_tradability_rule_identity",
       "crossing_side_execution_rule_identity",
+      "crossing_side_persistence_policy_id",
       "spread_and_vwap_slippage_thresholds",
       "snapshot_staleness_and_gap_rules",
       "execution_policy_fingerprint",
@@ -49,7 +50,8 @@
     ],
     "band_rule": "Evaluated bands must be a frozen subset of [1000,10000,50000,100000]. A single primary tradable-success metric/ranker requires primary_success_band_usd to be frozen before outcomes. If primary_success_band_usd is NONE, only per-band research labels may be reported; the system may not select the best-looking band after outcome.",
     "venue_rule": "The exact execution venue/instrument or deterministic multi-venue aggregation policy must be frozen before outcome. A later thin-venue target print cannot be paired with post-hoc liquidity from another venue, and a favorable venue may not be substituted after the move.",
-    "threshold_rule": "Do not tune spread, depth, VWAP slippage, staleness, persistence or venue thresholds after observing the path. Reuse the frozen 2X-TRADABILITY-001-v1 limits unless a separately versioned successor was itself trusted and frozen before the governed formation."
+    "threshold_rule": "Do not tune spread, depth, VWAP slippage, staleness, persistence or venue thresholds after observing the path. Reuse the frozen 2X-TRADABILITY-001-v1 limits unless a separately versioned successor was itself trusted and frozen before the governed formation.",
+    "persistence_rule": "The crossing-side persistence policy is frozen as EVENT_TIME_FULL_NOTIONAL_EXECUTABILITY_V1: no post-outcome minimum-duration/window may be selected. A tradable hit is the earliest trusted microstructure event/interval that proves full-band target-or-better execution under the frozen venue policy. This labels an executable opportunity, not sustained liquidity. Any future sustained-duration definition requires a separately versioned contract frozen prospectively and cannot relabel exposed formations."
   },
   "entry_tradability": {
     "required": true,
@@ -78,7 +80,8 @@
     "timing": "The tradable-hit event time is the earliest authenticated microstructure observation/interval proving the full frozen-band target execution opportunity. Exact timestamps require authenticated point/event timing; aggregate evidence remains interval-censored under the parent contract.",
     "flash_wick_rule": "A one-lot/isolated target trade or interval high with no qualifying bid-side executable depth does not establish TRADABLE_2X_HIT_AT_BAND.",
     "unknown_rule": "If required crossing-side spread/depth/slippage evidence is unavailable, stale, gapped, identity-mismatched, or not source-authenticated, preserve PRICE_2X_CROSSING and emit PRICE_HIT_TRADABILITY_UNKNOWN for tradable-success evaluation.",
-    "illiquid_rule": "If authenticated evidence affirmatively shows the frozen band cannot satisfy the frozen spread/depth/VWAP rule, preserve PRICE_2X_CROSSING but classify the tradability result as ILLIQUID_2X_RESEARCH_ONLY rather than an ordinary positive."
+    "illiquid_rule": "If authenticated evidence affirmatively shows the frozen band cannot satisfy the frozen spread/depth/VWAP rule, preserve PRICE_2X_CROSSING but classify the tradability result as ILLIQUID_2X_RESEARCH_ONLY rather than an ordinary positive.",
+    "persistence_policy_id": "EVENT_TIME_FULL_NOTIONAL_EXECUTABILITY_V1"
   },
   "cross_venue_fragmentation": {
     "rule": "Price and execution evidence must obey the same ex-ante venue policy. A target reached only on an excluded thin/off-venue market cannot establish a tradable hit. Cross-venue liquidity may count only when a deterministic aggregation policy and exact venue set were frozen before outcome and every contributing record is identity/provenance bound.",
@@ -121,6 +124,7 @@
     "primary_success_band_usd_or_explicit_none",
     "frozen_execution_venue_and_instrument_or_venue_set",
     "cross_venue_aggregation_policy_id_or_explicit_none",
+    "crossing_side_persistence_policy_id",
     "entry_tradability_evidence_set_identity_and_state",
     "crossing_side_microstructure_evidence_identities",
     "reference_quantity_per_band",
@@ -137,6 +141,7 @@
     "authenticated target-or-better bid-side depth that sells the full frozen reference-quantity within the frozen spread/slippage limits can establish TRADABLE_2X_HIT_AT_BAND when every independent parent gate also verifies",
     "ADV or quote volume alone can never upgrade PRICE_HIT_TRADABILITY_UNKNOWN to a tradable hit",
     "the same raw price path cannot change authoritative tradability because a notional band or venue is selected after outcome",
+    "the same executable target-side path cannot change classification because a minimum persistence duration/window is chosen after outcome; EVENT_TIME_FULL_NOTIONAL_EXECUTABILITY_V1 is frozen ex ante",
     "changing the frozen notional, venue policy, execution-policy fingerprint or contributing microstructure member changes the final fingerprint",
     "a late authoritative microstructure revision that changes tradability cannot leave a contradicted prior result current",
     "cross-asset, cross-venue and cross-instrument microstructure transplantation is rejected even when raw hashes otherwise verify",
