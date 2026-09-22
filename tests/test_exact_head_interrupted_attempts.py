@@ -120,6 +120,39 @@ def test_approval_receipt_cannot_rescue_started_source_attempt() -> None:
     assert state["ambiguous_control_state"] is True
 
 
+def test_approved_source_without_receipt_never_grants_approval() -> None:
+    state = _state([_attempt(20, APPROVED)])
+
+    assert state["interrupted"] is False
+    assert state["rejected"] is False
+    assert state["approved"] is False
+    assert state["validated_approved_attempts"] == [20]
+    assert state["validated_approval_receipts"] == []
+
+
+def test_provisional_approval_receipt_has_zero_authority_until_source_finalizes() -> None:
+    before_finalization = _state(
+        [
+            _attempt(20, "STARTED"),
+            _approval_receipt(21, 20),
+        ]
+    )
+    after_finalization = _state(
+        [
+            _attempt(20, APPROVED),
+            _approval_receipt(21, 20),
+        ]
+    )
+
+    assert before_finalization["approved"] is False
+    assert before_finalization["interrupted"] is True
+    assert before_finalization["terminal_nonretryable"] is True
+    assert before_finalization["validated_approval_receipts"] == []
+    assert after_finalization["approved"] is True
+    assert after_finalization["interrupted"] is False
+    assert after_finalization["validated_approval_receipts"] == [21]
+
+
 def test_interrupted_old_sha_does_not_poison_materially_new_sha() -> None:
     state = _state(
         [
