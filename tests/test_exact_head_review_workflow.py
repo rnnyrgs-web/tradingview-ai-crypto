@@ -58,12 +58,18 @@ def test_protected_paths_are_reviewed_but_never_auto_integrated() -> None:
     assert "integration_authority == \"NONE\"" in text
 
 
-def test_failed_attempts_are_bounded_but_not_permanent_blacklist() -> None:
+def test_failed_attempts_are_bounded_while_valid_rejections_are_terminal_for_exact_sha() -> None:
     text = _text()
     assert "closed to prevent unbounded paid retries" in text
-    assert "FAILED/REJECTED does not permanently blacklist the exact SHA" in text
-    # Only durable approval blocks a duplicate request; failed attempts are not searched
-    # as an exclusion condition by the selector.
+    # Infrastructure/runtime FAILED is distinct from a scientific rejection and may
+    # retry only after the objective cause is repaired, still under the bounded cap.
+    assert "FAILED indicates missing/invalid infrastructure evidence rather than a scientific rejection" in text
+    assert "retry the same SHA only after the objective runtime cause is materially repaired" in text
+    # A valid approve=false is durable no-review-shopping memory for the exact SHA.
+    assert "exact-head-review-rejected: pr=$PR_NUMBER sha=$REQUESTED_SHA" in text
+    assert "A valid independent rejection receipt already exists" in text
+    assert "This exact SHA is terminal and cannot be reviewer-shopped" in text
+    assert "revise the candidate to a new head" in text
     assert "exact-head-review-approved: pr=$PR_NUMBER sha=$REQUESTED_SHA" in text
     assert "autonomous-review-attempt" not in text
 
@@ -85,6 +91,16 @@ def test_transient_reviewer_capacity_is_controlled_wait_not_approval() -> None:
     assert "Bounded reviewer retry limit reached" in text
     assert "Candidate remains **unapproved** and **unmerged**" in text
     assert "steps.review_models.outputs.wait != 'true'" in text
+    assert "no valid rejection" in text
+
+
+def test_valid_rejection_precedes_wait_and_blocks_approval_path() -> None:
+    text = _text()
+    assert "REJECTED=0" in text
+    assert ".approve == false and .integration_authority == \"NONE\"" in text
+    assert 'echo "rejected=true" >> "$GITHUB_OUTPUT"' in text
+    assert "valid independent scientific rejection is terminal" in text
+    assert "steps.review_models.outputs.rejected != 'true'" in text
 
 
 def test_openai_reviewers_are_serial_while_claude_can_run_in_parallel() -> None:
