@@ -2,13 +2,13 @@
   "schema_version": 1,
   "artifact_type": "strategy_factory_cohort_001_failure_learning_adapter_contract",
   "contract_id": "STRATEGY-FACTORY-COHORT-001-FAILURE-LEARNING-ADAPTER-v1",
-  "contract_sha256": "2cdd5292ebffebe5bdc578087f997478a89aacd3bd6daccdccd0c969056f67f9",
+  "contract_sha256": "f0079775f5040e67f41ebe3f6f210e227db59f1af98c245dfc181d507270ac05",
   "contract_hash_definition": "SHA-256 of canonical JSON with sorted keys and compact separators, excluding contract_sha256 and contract_hash_definition.",
   "formed_at": "2026-09-22T12:58:57Z",
   "status": "OUTCOME_BLIND_FROZEN_CANONICAL_MINT_BLOCKED",
   "source_stage1_execution_contract": {
     "contract_id": "STRATEGY-FACTORY-COHORT-001-STAGE1-EXECUTION-v1",
-    "execution_contract_sha256": "04b4fd2373649061ca8349e7dbff127cc7b0bc852a9f4ff541b080094da187ef",
+    "execution_contract_sha256": "cb7c19bf40b65cb366bd2db2b908759a4d945d23d4008566c23511f55101ed7a",
     "source_pr": 602,
     "source_head_sha_observed": "5c797d14e2d16f863ff39ba2d8f715a5d057ad9a"
   },
@@ -27,8 +27,8 @@
     "required_bindings": {
       "canonical_admission_receipt_sha256": "fc7c237e67600390cca369965161ccfc555dd2bc9bebbabc83d774fafd57182a",
       "selection_dataset_receipt_sha256": "910759b7448baec737f5a884b9531cf29726a842e09aa54abbd5cc6d9f4cab22",
-      "stage1_binding_receipt_sha256": "3a715c8373e3847dba2f0922bc99dbdd69b3864729be8c40d6d79db444fa43db",
-      "stage1_execution_contract_sha256": "04b4fd2373649061ca8349e7dbff127cc7b0bc852a9f4ff541b080094da187ef"
+      "stage1_binding_receipt_sha256": "53777547473c4d0857f6a1fd73949fe8371e8bfcc7b9893701ea7dbddc4ae7ab",
+      "stage1_execution_contract_sha256": "cb7c19bf40b65cb366bd2db2b908759a4d945d23d4008566c23511f55101ed7a"
     },
     "protected_oos_opened": false,
     "genuine_forward_opened": false,
