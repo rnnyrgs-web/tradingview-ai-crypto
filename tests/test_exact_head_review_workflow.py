@@ -38,6 +38,18 @@ def test_paid_review_requests_are_repository_owner_authorized() -> None:
     assert "jq --arg title \"$APPROVED_TITLE\"" in text
 
 
+def test_durable_review_receipts_are_authenticated_before_they_control_the_queue() -> None:
+    text = _text()
+    assert '--json title,author' in text
+    assert '(.author.login // "") == $owner' in text
+    assert '(.author.login // "") == "github-actions[bot]"' in text
+    assert "authenticated approval receipt" in text
+    assert "authenticated independent rejection receipt" in text
+    assert "authenticated attempts" in text
+    # Lookalike public issue titles must not count as approval/rejection/retry receipts.
+    assert "Arbitrary public issues with lookalike titles are ignored" in text
+
+
 def test_full_scientific_diff_has_one_consistent_hard_context_bound() -> None:
     workflow = _text()
     reviewer = REVIEWER.read_text(encoding="utf-8")
@@ -67,7 +79,7 @@ def test_failed_attempts_are_bounded_while_valid_rejections_are_terminal_for_exa
     assert "retry the same SHA only after the objective runtime cause is materially repaired" in text
     # A valid approve=false is durable no-review-shopping memory for the exact SHA.
     assert "exact-head-review-rejected: pr=$PR_NUMBER sha=$REQUESTED_SHA" in text
-    assert "A valid independent rejection receipt already exists" in text
+    assert "independent rejection receipt already exists" in text
     assert "This exact SHA is terminal and cannot be reviewer-shopped" in text
     assert "revise the candidate to a new head" in text
     assert "exact-head-review-approved: pr=$PR_NUMBER sha=$REQUESTED_SHA" in text
