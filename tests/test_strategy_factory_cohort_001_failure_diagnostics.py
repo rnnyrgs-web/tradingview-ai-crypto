@@ -61,7 +61,7 @@ def test_failure_diagnostics_fail_closed_on_result_divergence() -> None:
         build_stage1_failure_diagnostics(candidate, trades, tampered_result)
 
 
-def test_failure_diagnostics_use_fail_closed_winner_share_when_no_positive_pool() -> None:
+def test_failure_diagnostics_preserve_undefined_winner_share_when_no_positive_pool() -> None:
     candidate = CANDIDATE_IDS[2]
     trades = [
         _trade(candidate, datetime(2026, 5, 5, tzinfo=UTC), -0.0100, "BTC-USDT-SWAP"),
@@ -70,8 +70,19 @@ def test_failure_diagnostics_use_fail_closed_winner_share_when_no_positive_pool(
     result = evaluate_stage1(candidate, trades)
     diagnostics = build_stage1_failure_diagnostics(candidate, trades, result)
 
-    assert diagnostics.winner_concentration_share_24bps == 1.0
+    assert diagnostics.winner_concentration_share_24bps is None
     assert diagnostics.mean_48bps is not None
+
+
+def test_failure_diagnostics_preserve_all_undefined_metrics_with_zero_validation_events() -> None:
+    candidate = CANDIDATE_IDS[3]
+    result = evaluate_stage1(candidate, [])
+    diagnostics = build_stage1_failure_diagnostics(candidate, [], result)
+
+    assert diagnostics.validation_independent_events == 0
+    assert diagnostics.mean_48bps is None
+    assert diagnostics.winner_concentration_share_24bps is None
+    assert result.classification == "INCONCLUSIVE_POWER"
 
 
 def test_failure_diagnostics_reject_mixed_candidate_trades() -> None:
