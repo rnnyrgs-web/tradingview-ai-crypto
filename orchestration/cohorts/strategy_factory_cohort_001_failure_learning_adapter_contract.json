@@ -2,7 +2,7 @@
   "schema_version": 1,
   "artifact_type": "strategy_factory_cohort_001_failure_learning_adapter_contract",
   "contract_id": "STRATEGY-FACTORY-COHORT-001-FAILURE-LEARNING-ADAPTER-v1",
-  "contract_sha256": "1797959ae18f1dae0691d88f819e6a31ae625d3046555d92bd9d8087de973761",
+  "contract_sha256": "f9461edcadf207a6f5253260f572a8fad92f53e637dea21f99acdfc4595b910d",
   "contract_hash_definition": "SHA-256 of canonical JSON with sorted keys and compact separators, excluding contract_sha256 and contract_hash_definition.",
   "formed_at": "2026-09-22T12:58:57Z",
   "status": "OUTCOME_BLIND_FROZEN_IMPLEMENTATION_BLOCKED",
@@ -69,13 +69,15 @@
     ],
     "underpowered_catastrophic_tail_remains_rejection_eligible": true,
     "ordinary_underpower_without_sufficient_tail_evidence_is_inconclusive": true,
+    "stage1_status_precedence_must_remain_unchanged": true,
+    "failure_learning_may_reject_tail_risk_from_preserved_diagnostics_even_when_stage1_status_is_INCONCLUSIVE_POWER": true,
+    "winner_concentration_share_definition": "At 24-bps cost, maximum positive independent-event return divided by the sum of all positive independent-event returns; no positive-return pool yields 1.0 for fail-closed risk classification.",
     "no_new_48bps_promotion_gate_is_created": true
   },
   "implementation_blockers_on_observed_source_head": [
     "PartitionSummary does not persist mean_48bps.",
     "PartitionSummary does not persist winner_concentration_share_24bps required by the #511 risk schema.",
-    "Stage1Result does not distinguish TEST_ONLY_UNTRUSTED caller/synthetic output from certified canonical Cohort evidence.",
-    "evaluate_stage1 currently returns INCONCLUSIVE_POWER before preserving catastrophic-tail rejection semantics required by #511."
+    "Stage1Result does not distinguish TEST_ONLY_UNTRUSTED caller/synthetic output from certified canonical Cohort evidence."
   ],
   "evidence_locks": {
     "strategy_outcomes_read_to_form_contract": false,
@@ -83,5 +85,5 @@
     "genuine_forward_opened": false,
     "post_outcome_mapping_changes_allowed": false
   },
-  "next_transition": "Repair the existing #602 runner before any real Cohort outcome: add 48-bps and winner-concentration evidence, explicit TEST_ONLY_UNTRUSTED authority, and #511-consistent tail-underpower precedence; add deterministic RED->GREEN adapter regressions; then create a new exact head for CI/review."
+  "next_transition": "Repair the existing #602 runner before any real Cohort outcome: add 48-bps and winner-concentration diagnostics plus explicit TEST_ONLY_UNTRUSTED authority without changing the frozen Stage-1 status precedence; add deterministic RED->GREEN adapter regressions; then create a new exact head for CI/review."
 }
