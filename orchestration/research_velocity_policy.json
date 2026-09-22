@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "objective": "Maximize scientifically useful information produced per hour and per dollar while preserving all chronology, OOS, multiple-testing, execution-realism, rejected-memory and broker-off gates.",
+  "operating_rules": {
+    "profitability_first": true,
+    "max_primary_actions_per_cycle": 1,
+    "parallel_independent_support_work_allowed": true,
+    "duplicate_active_work_forbidden": true,
+    "architecture_or_dashboard_work_requires_direct_blocker_rationale": true,
+    "never_accelerate_by_weakening_validation": true,
+    "never_reopen_rejected_exact_fingerprint_without_materially_new_mechanism_or_evidence": true
+  },
+  "bottleneck_priority": [
+    "scientific_integrity_or_data_leakage",
+    "missing_or_untrusted_data_contract",
+    "broken_ci_or_runtime",
+    "stale_waiting_pr_or_review",
+    "compute_queue",
+    "implementation_capacity",
+    "research_design",
+    "observability",
+    "cosmetic_or_dashboard"
+  ],
+  "stale_work": {
+    "warning_hours": 2,
+    "critical_hours": 6,
+    "questions": [
+      "Why are we waiting?",
+      "Can the dependency be removed?",
+      "Can an independent lane proceed now?",
+      "Can the work be safely parallelized?",
+      "Would additional data, compute or tooling materially accelerate this without weakening scientific quality?"
+    ]
+  },
+  "experiment_factory": {
+    "sequence": [
+      "mechanism_hypothesis",
+      "freeze_contract",
+      "cheap_screen",
+      "train_validation",
+      "robustness_and_cost_stress",
+      "walk_forward",
+      "independent_engine_reproduction",
+      "untouched_oos",
+      "forward_shadow"
+    ],
+    "cheap_rejection_preferred": true,
+    "deep_validation_candidate_limit": 1,
+    "record_every_rejection_reason": true,
+    "reuse_validated_features_not_rejected_strategy_fingerprints": true
+  },
+  "review_repair_loop": {
+    "required_for_material_changes": true,
+    "sequence": [
+      "implementation_complete",
+      "independent_adversarial_review",
+      "convert_findings_to_bounded_repairs",
+      "run_regressions_and_exact_head_ci",
+      "repeat_review_if_scientific_behavior_changed",
+      "merge_only_after_clean_gate"
+    ]
+  },
+  "velocity_metrics": [
+    "experiments_completed_per_7d",
+    "median_hypothesis_to_result_hours",
+    "cheap_rejection_rate",
+    "major_evidence_gate_pass_rate",
+    "duplicate_work_count",
+    "blocked_hours",
+    "pr_wait_hours",
+    "compute_queue_hours",
+    "data_blocked_hours",
+    "cost_per_completed_experiment_usd",
+    "validated_feature_reuse_count",
+    "repeated_rejected_mechanism_count"
+  ],
+  "lead_actions": {
+    "always_identify_single_top_bottleneck": true,
+    "always_name_next_best_independent_action": true,
+    "auto_redirect_idle_workers": true,
+    "auto_kill_low_information_busywork": true,
+    "auto_escalate_stale_work": true,
+    "consult_adaptive_spending_policy_when_paid_resource_may_be_binding": true
+  },
+  "reporting": {
+    "user_notify_only_when": [
+      "major evidence gate passes",
+      "critical blocker requires user action",
+      "high_value_spend_recommendation",
+      "serious scientific_or_runtime_incident",
+      "validated_strategy_or_material_2x_lift"
+    ],
+    "quiet_for_routine_rejections_and_normal_worker_churn": true
+  }
+}
