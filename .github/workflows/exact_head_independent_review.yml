@@ -87,7 +87,12 @@ jobs:
             BASE_REF="$(printf '%s' "$PR_JSON" | jq -r '.baseRefName')"
             HEAD_BRANCH="$(printf '%s' "$PR_JSON" | jq -r '.headRefName')"
             HEAD_SHA="$(printf '%s' "$PR_JSON" | jq -r '.headRefOid')"
-            if [ "$PR_STATE" != "OPEN" ] || [ "$PR_DRAFT" = "true" ] || [ "$BASE_REF" != "main" ]; then
+            # Explicit owner-authored exact-head requests are read-only review authority,
+            # not merge readiness. A DRAFT candidate is therefore reviewable without
+            # creating a transient ready-for-review/merge window. Open-state, main-base,
+            # exact-head, exact-fetch, current-main and green-Security gates still apply,
+            # and every downstream receipt retains Integration authority: NONE.
+            if [ "$PR_STATE" != "OPEN" ] || [ "$BASE_REF" != "main" ]; then
               continue
             fi
             if [ "$HEAD_SHA" != "$REQUESTED_SHA" ]; then
