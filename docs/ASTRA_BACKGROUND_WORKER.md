@@ -1,6 +1,12 @@
-# Scheduled Astra Background Worker
+# Scheduled ChatGPT Background Worker
 
-Create this task from **ChatGPT Work** with **GPT-6 Astra** selected and **Medium** reasoning for recurring background execution. Run it hourly (or use a supported GitHub event trigger in addition to the hourly schedule).
+> Legacy filename: `ASTRA_BACKGROUND_WORKER.md`. The file remains at this path so existing automation/handoff references do not break. The routing contract is now model-capability based rather than pinned to a legacy Work model name.
+
+For substantive scheduled reasoning, **prefer subscription-backed GPT-5.6 Sol with High reasoning whenever the automation runtime actually exposes that model and effort**. Do not intentionally downgrade substantive reasoning merely for speed or to consume metered API capacity.
+
+When a task becomes a substantial multi-step research/engineering milestone, repository implementation/debugging effort, browser/computer workflow, or other job that materially benefits from a persistent cloud workspace, **route or hand off to ChatGPT Work** and continue there when available and appropriate.
+
+Mechanical/reproducible work remains deterministic. If the runtime cannot actually select Sol High or invoke Work, use the strongest appropriate available path, checkpoint the limitation honestly in GitHub, and never claim a model/effort/Work execution that did not occur.
 
 ## Mission
 
@@ -16,18 +22,31 @@ Do not promise a 2x move and do not manufacture a profitable strategy. Optimize 
 ## Mandatory first steps on every run
 
 1. Read current `main` SHA and `AI_STATE.md`.
-2. Read `orchestration/model_routing_policy.json`.
+2. Read `orchestration/model_routing_policy.json` and `orchestration/adaptive_research_spending_policy.json`.
 3. Read `orchestration/strategy_discovery_queue.json`, rejected fingerprints, specialist coordination + overrides, Big-Move/Money Intelligence state, and relevant open PRs.
 4. Inspect current CI/workflow activity and existing branches so you never duplicate active work.
-5. Determine whether there is a genuinely Astra-appropriate task: substantial multi-file implementation, backtesting milestone, CI/debugging, or long coherent research+engineering work.
+5. Classify the highest-value non-duplicative task before execution:
+   - deterministic/mechanical;
+   - substantive model judgment suitable for subscription Sol High;
+   - substantial persistent multi-step milestone suitable for ChatGPT Work;
+   - pure heavy coding/testing where Codex is materially better;
+   - justified fallback/overflow only when the preferred subscription path is unavailable or the task explicitly requires API execution.
 
 ## Routing
 
-Use this Work task only for work routed to `work_astra`.
+Follow `orchestration/model_routing_policy.json` exactly.
 
-Routine/deterministic work belongs to GitHub Actions/Python. Small routine model work belongs to API Luna/Terra. Deep scientific review may be done by Sol/API/Lead. Pure heavy coding may be routed to Codex Astra when available.
+- **Deterministic/Python/GitHub Actions:** data transforms, backtests, artifact validation, queue/state checks, mechanical reproducible calculations.
+- **Subscription GPT-5.6 Sol High:** default preference for substantive scheduled model judgment when selectable, including scientific review, synthesis, experiment design, falsification, architecture decisions and debugging judgment.
+- **ChatGPT Work:** substantial coherent multi-step research/engineering, repository exploration/implementation, CI-debugging, browser/computer workflows, or work that benefits materially from persistent workspace execution.
+- **Codex:** pure heavy coding/refactor/test loops when materially better for the bounded milestone and not duplicating an active Work/branch owner.
+- **OpenAI API Luna/Terra/Sol:** fallback/overflow or explicitly API-required paths only. Do not make metered API models the silent default when the already-paid ChatGPT subscription can do the substantive work.
 
-If no Astra-appropriate task exists, do not invent busywork. Record/check the exact next handoff if needed, then stop quietly.
+Use the strongest appropriate route, not the most expensive route. Fully utilize already-paid subscription capability before recommending additional recurring AI spend. Preserve the approved API budget and adaptive spending policy.
+
+If the preferred route is unavailable or capacity-limited, do not stall and do not fake execution. Continue independent deterministic or justified fallback work, record the exact limitation and next handoff in GitHub, and resume the strongest appropriate route when available.
+
+If no high-value task exists, do not invent busywork. Record/check the exact next handoff if needed, then stop quietly.
 
 ## Execution protocol
 
@@ -71,7 +90,7 @@ Separate FACT / INFERENCE / HYPOTHESIS / FORECAST / UNKNOWN. Optimize top-ranked
 
 Stop only when:
 - the bounded milestone is completed and durably checkpointed;
-- Work capacity requires checkpointing;
+- preferred execution capacity requires checkpointing;
 - a genuine user-only blocker exists; or
 - further scientifically valid progress requires future evidence.
 
