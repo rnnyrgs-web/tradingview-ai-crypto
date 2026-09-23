@@ -658,7 +658,16 @@ def summarize_events(events: Sequence[IndependentEvent]) -> PartitionSummary:
 
 
 def _event_half_mean(events: Sequence[IndependentEvent], start: datetime, end: datetime) -> float | None:
-    eligible = [event for event in events if start <= event.entry_time and event.exit_time <= end]
+    eligible = [
+        event
+        for event in events
+        if all(
+            start <= trade.signal_time <= end
+            and start <= trade.entry_time <= end
+            and start <= trade.exit_time <= end
+            for trade in event.trades
+        )
+    ]
     if not eligible:
         return None
     return fmean(event.return_at_cost(24.0) for event in eligible)
