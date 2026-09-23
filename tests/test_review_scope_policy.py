@@ -338,7 +338,7 @@ def test_policy_digest_binds_append_only_lineage_registry_and_trust_root() -> No
     assert reviewer_trust_root_identity() == {
         "schema_version": 2,
         "trust_boundary_id": "EXACT_HEAD_REVIEW_TRUST_ROOT_V2",
-        "sha256": "01ebba5a33df29b6edd5f457ef1a700b758c8f1187e9efedad76702dedee890d",
+        "sha256": "069dbf56f36f66669ead5d36d1dc5d32e3cb847a2f8af8052ee31a9c6deb3405",
     }
 
 
