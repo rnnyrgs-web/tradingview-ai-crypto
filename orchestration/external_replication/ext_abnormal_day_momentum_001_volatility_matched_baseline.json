@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "artifact_type": "external_replication_volatility_matched_baseline_contract",
+  "contract_id": "EXT-ABNORMAL-DAY-MOMENTUM-001-v1-VOLATILITY-MATCHED-BASELINE-v1",
+  "replication_id": "EXT-ABNORMAL-DAY-MOMENTUM-001-v1",
+  "formed_before_replication_outcomes": true,
+  "source_stage1_head_sha": "31150ede8bc52e051380c04fcab3b496f4750de4",
+  "regenerate_if_source_stage1_head_changes": true,
+  "source_bindings": [
+    {
+      "path": "orchestration/external_replication/ext_abnormal_day_momentum_001_v1.json",
+      "git_blob_sha1": "6862e5a44e0c5581c5f62580ec75b487b0d6cb3a"
+    },
+    {
+      "path": "orchestration/external_replication/ext_abnormal_day_momentum_001_stage1_execution.json",
+      "git_blob_sha1": "834e77ee37823c7b0890ea5dedc962cdbaa92a74"
+    },
+    {
+      "path": "orchestration/external_replication/abnormal_day_momentum_runner.py",
+      "git_blob_sha1": "e5a6b3aded7577cc29d61ba7f2b8e30ce67aa57a"
+    },
+    {
+      "path": "orchestration/cohorts/strategy_factory_cohort_001_baseline_halving_plan.json",
+      "git_blob_sha1": "5c066f714b170645379d6182262e0cd8513131b0"
+    }
+  ],
+  "planning_contract_sha256": "4cf46291af242a350d065bf24418b8fdf5c6d36e4fea1b923a9cb1a51046c392",
+  "purpose": "Freeze the #517 volatility-matched Stage-2 baseline before any abnormal-day replication P&L is opened, so a future Stage-1 survivor must demonstrate incremental value beyond ex-ante volatility regime, time-of-day, instrument mix and direction-pattern exposure rather than receiving a post-result comparator.",
+  "scientific_question": "Conditional on the same ex-ante trailing-volatility state, period/validation half, instrument set, signal hour and source direction pattern, does the abnormal-day candidate outperform deterministic non-candidate control days after identical costs and fixed portfolio sizing?",
+  "formation": {
+    "authoritative_source_unit": "unique_utc_signal_day_portfolio_block",
+    "control_day_unit": "unique_utc_day_portfolio_block",
+    "source_schedule": "exact_stage1_candidate_schedule_regenerated_from_bound_runner_and_execution_contract",
+    "source_candidate_days_excluded": true,
+    "source_candidate_day_definition": "any UTC day containing at least one event in the exact regenerated abnormal-day candidate schedule across the fixed BTC/ETH/SOL instruments",
+    "control_days_without_replacement": true,
+    "preserve_per_block": [
+      "period",
+      "validation_half_when_applicable",
+      "instrument_set",
+      "signal_hour_per_instrument",
+      "source_direction_per_instrument",
+      "fixed_one_third_nav_sizing_geometry"
+    ],
+    "volatility_state": {
+      "feature": "sample_standard_deviation_of_immediately_preceding_90_fully_observed_completed_utc_day_returns_per_instrument",
+      "must_match_candidate_reference_std_definition": true,
+      "current_day_excluded": true,
+      "finite_and_gt_zero_required": true,
+      "per_leg_symmetric_sigma_ratio_max": 1.25,
+      "equivalent_log_distance_max": 0.22314355131420976,
+      "caliper_widening_after_results_allowed": false,
+      "alternative_calipers_or_buckets_allowed": false
+    },
+    "eligible_pool": "For every leg in the source block, the candidate control day must preserve the source period/validation half and signal hour; have at least 90 fully observed prior completed UTC days; have finite positive trailing reference standard deviation within the frozen 1.25 symmetric ratio caliper of that source leg; have continuous bars from 00:00 through the decision hour; have the required next-hour entry and next-UTC-midnight exit bars; keep the signal, entry and exit wholly inside the same frozen period/validation half; remain before protected OOS; and not be any regenerated abnormal-day candidate signal day.",
+    "matching_order": "deterministic scarcity-first: compute eligible control-day sets outcome-blind; process source blocks by ascending eligible-pool size, then source UTC day, then canonical block signature",
+    "ranking_rule": "Within each source block's currently unused eligible pool, minimize lexicographically (maximum per-leg abs(log(control_reference_std/source_reference_std)), mean per-leg abs(log(control_reference_std/source_reference_std)), SHA256(contract_id + '|' + source_block_signature + '|' + control_utc_day)).",
+    "source_block_signature": "period|validation_half_or_train|sorted(instrument@signal_hour@source_direction)",
+    "insufficient_pool_action": "DATA/PIT_INCONCLUSIVE_VOLATILITY_MATCH_POOL",
+    "sample_shrinking_allowed": false,
+    "post_outcome_redraw_or_rematch_allowed": false,
+    "selection_features_allowed": [
+      "instrument",
+      "timestamp/date/hour",
+      "source direction labels needed only for matching",
+      "past completed bars needed for the frozen 90-day reference standard deviation",
+      "bar-presence and chronology metadata"
+    ],
+    "selection_features_forbidden": [
+      "control-day forward return",
+      "control-day entry-to-exit P&L",
+      "candidate forward return or P&L",
+      "protected OOS values",
+      "genuine-forward outcomes"
+    ]
+  },
+  "frozen_windows": {
+    "train_start_utc": "2025-05-07T05:00:00Z",
+    "train_end_utc": "2026-04-30T23:00:00Z",
+    "validation_start_utc": "2026-05-01T00:00:00Z",
+    "validation_end_utc": "2026-08-31T23:00:00Z",
+    "validation_first_start_utc": "2026-05-01T00:00:00Z",
+    "validation_first_end_utc": "2026-06-30T23:00:00Z",
+    "validation_second_start_utc": "2026-07-01T00:00:00Z",
+    "validation_second_end_utc": "2026-08-31T23:00:00Z",
+    "protected_oos_start_utc": "2026-09-01T00:00:00Z"
+  },
+  "scoring": {
+    "direction": "preserve_source_candidate_direction_per_instrument",
+    "same_candidate_cost_semantics": true,
+    "base_total_cost_bps": 24.0,
+    "middle_total_cost_bps": 48.0,
+    "stress_total_cost_bps": 72.0,
+    "same_portfolio_sizing_and_utc_day_aggregation": true,
+    "nav_fraction_per_eligible_instrument": 0.3333333333333333,
+    "max_gross_nav_fraction": 1.0,
+    "final_same_day_signal_count_normalization_allowed": false,
+    "raw_asset_event_statistics_authoritative": false,
+    "protected_oos_may_be_read": false
+  },
+  "stage2_use": {
+    "run_only_if_stage1_survives": true,
+    "run_once_without_post_outcome_rematching": true,
+    "candidate_must_add_incremental_economic_value": true,
+    "required_comparison": "candidate must beat this volatility-matched baseline after identical costs in both training and validation; otherwise reject or deprioritize complexity",
+    "failed_or_inconclusive_result_routes_to_issue_510": true,
+    "control_result_may_not_redefine_candidate": true
+  },
+  "authority": {
+    "research_only": true,
+    "stage1_execution_authority": false,
+    "stage2_execution_authority_before_stage1_survival": false,
+    "promotion_authority": false,
+    "broker_connected": false,
+    "trade_authority": false,
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false
+  },
+  "contract_digest_rule": "SHA256(canonical JSON with sorted keys and compact separators, excluding contract_sha256)",
+  "contract_sha256": "bff0247f066bcda200569c9aea788e6ad1defbaf520dec7f97ed7ee0833e12d2"
+}
