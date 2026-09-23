@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import pytest
 
@@ -14,6 +16,10 @@ from orchestration.external_replication.abnormal_day_momentum_runner import (
 UTC = timezone.utc
 INSTRUMENT = "BTC-USDT-SWAP"
 PROTECTED_START = "2025-08-01T00:00:00Z"
+EXECUTION_CONTRACT_PATH = (
+    Path(__file__).resolve().parents[1]
+    / "orchestration/external_replication/ext_abnormal_day_momentum_001_stage1_execution.json"
+)
 
 
 def _signal_rows(
@@ -94,6 +100,18 @@ def _schedule(rows: list[dict[str, object]]):
         sigma_multiple=1.5,
         latest_signal_hour_utc=22,
     )
+
+
+def test_execution_contract_freezes_exact_baseline_pit_semantics() -> None:
+    execution = json.loads(EXECUTION_CONTRACT_PATH.read_text(encoding="utf-8"))
+    assert execution["baseline_control"] == {
+        "definition": "sign_of_immediately_preceding_completed_1h_close_to_close_return_on_exact_candidate_window",
+        "prior_bar_lookup": "exact_t_minus_1h_across_utc_day_boundaries",
+        "missing_required_prior_bar": "DATA/PIT_INCONCLUSIVE",
+        "exact_zero_prior_hour_return": "preserve_candidate_window_as_zero_position_zero_economics",
+        "candidate_window_membership_may_change": False,
+    }
+    assert execution["classification"]["missing_required_baseline_bar"] == "DATA/PIT_INCONCLUSIVE"
 
 
 def test_midnight_candidate_baseline_uses_previous_utc_day_23_close() -> None:
