@@ -62,7 +62,7 @@ def test_quote_native_liquidity_recomputes_exact_30d_median_in_usdt():
     assert validate_derived_record(
         _record(expected), artifact, decision_at=DECISION_AT, expected_symbol=SYMBOL
     ) == expected
-    assert passes_coarse_liquidity_gate(computed)
+    assert passes_coarse_liquidity_gate(computed, unit="USDT")
     assert THRESHOLD_QUOTE_ASSET == 10_000_000.0
 
 
@@ -185,8 +185,10 @@ def test_rejects_wrong_transform_unit_parameters_and_claimed_value():
         )
 
 
-def test_coarse_gate_is_usdt_not_strict_tradability_or_usd_equivalence():
-    assert not passes_coarse_liquidity_gate(9_999_999.99)
-    assert passes_coarse_liquidity_gate(10_000_000)
+def test_coarse_gate_requires_explicit_usdt_and_is_not_usd_equivalence():
+    assert not passes_coarse_liquidity_gate(9_999_999.99, unit="USDT")
+    assert passes_coarse_liquidity_gate(10_000_000, unit="USDT")
+    with pytest.raises(ValueError, match="explicit USDT"):
+        passes_coarse_liquidity_gate(10_000_000, unit="USD")
     with pytest.raises(ValueError):
-        passes_coarse_liquidity_gate(float("nan"))
+        passes_coarse_liquidity_gate(float("nan"), unit="USDT")
