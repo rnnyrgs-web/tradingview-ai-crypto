@@ -6,16 +6,16 @@ import re
 from typing import Any, Iterable
 
 from orchestration.protected_paths import DEFAULT_PATH, find_protected_matches, load_protected_paths
+from orchestration.reviewer_trust_root import reviewer_trust_root_identity
 
-REVIEW_SCOPE_POLICY_VERSION = 6
-REVIEW_RECEIPT_SCHEMA_VERSION = 5
+REVIEW_SCOPE_POLICY_VERSION = 7
+REVIEW_RECEIPT_SCHEMA_VERSION = 6
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 _REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 
-# Fail closed: one changed strategy/research/runtime path is enough to leave the
-# special review-infrastructure scope. Tests belong here only because they verify
-# this exact meta-control and cannot grant runtime/research authority themselves.
-REVIEW_INFRASTRUCTURE_PATHS = frozenset(
+# Policy v6's exact allowlist is historical lineage. Do not mutate it when the
+# current reviewer grows new trust-root code/tests.
+_V6_REVIEW_INFRASTRUCTURE_PATHS = frozenset(
     {
         "orchestration/exact_head_review.py",
         "orchestration/review_scope_policy.py",
@@ -23,9 +23,33 @@ REVIEW_INFRASTRUCTURE_PATHS = frozenset(
         "tests/test_review_scope_policy.py",
     }
 )
+_V5_REVIEW_INFRASTRUCTURE_PATHS = _V6_REVIEW_INFRASTRUCTURE_PATHS
+
+# Current review-infrastructure scope includes the machine-readable trust root,
+# its verifier, the canonical review workflow and durable regression/threat-model
+# ledger. A ledger-only/docs-only change is never REVIEW_INFRASTRUCTURE because
+# classify_diff_scope() also requires one CORE path to change.
+REVIEW_INFRASTRUCTURE_CORE_PATHS = frozenset(
+    {
+        "orchestration/exact_head_review.py",
+        "orchestration/review_scope_policy.py",
+        "orchestration/reviewer_trust_root.py",
+        "orchestration/reviewer_trust_root.json",
+        ".github/workflows/exact_head_independent_review.yml",
+    }
+)
+REVIEW_INFRASTRUCTURE_PATHS = frozenset(
+    set(REVIEW_INFRASTRUCTURE_CORE_PATHS)
+    | {
+        "tests/test_exact_head_review.py",
+        "tests/test_review_scope_policy.py",
+        "tests/test_reviewer_trust_root.py",
+        "BUG_REGRESSION_LEDGER.md",
+    }
+)
 
 # Version 5 is retained byte-for-byte as historical lineage. New policy versions
-# must be additive registrations rather than reinterpretations of old receipts.
+# are additive registrations rather than reinterpretations of old receipts.
 _REVIEW_SCOPE_DISCIPLINE_V5 = (
     "REVIEW_SCOPE_DISCIPLINE: Judge this exact diff against the claims and authority it actually grants. "
     "DIFF_SCOPE_CLASS is produced by executable changed-path classification against both the strict review-"
@@ -55,7 +79,7 @@ _REVIEW_SCOPE_DISCIPLINE_V5 = (
     "finding."
 )
 
-REVIEW_SCOPE_DISCIPLINE = (
+_REVIEW_SCOPE_DISCIPLINE_V6 = (
     _REVIEW_SCOPE_DISCIPLINE_V5
     + " REVIEW_PROVENANCE_V6: bind every production receipt to the exact reviewer-runtime Git SHA and the explicit "
       "version+digest identity of the canonical protected-path registry. A workflow run id/ref without the runtime SHA "
@@ -67,8 +91,23 @@ REVIEW_SCOPE_DISCIPLINE = (
       "reviewer-runtime SHA, and protected-registry identity."
 )
 
+REVIEW_SCOPE_DISCIPLINE = (
+    _REVIEW_SCOPE_DISCIPLINE_V6
+    + " REVIEW_TRUST_ROOT_V7: the reviewer trust root is machine-readable and policy-bound. Production review execution "
+      "must independently reconcile GitHub-hosted runner identity, exact workflow path/ref/SHA, run id+attempt+event, "
+      "checked-out runtime SHA, server-observed Actions run metadata, and server-observed canonical-main SHA before any "
+      "reviewer provider is invoked. Environment variables alone are insufficient. GitHub.com control-plane or hosted-"
+      "runner compromise and intentional repository-admin rewrites remain explicitly out of scope rather than falsely "
+      "claimed as cryptographically solved. Receipt integrity is not approval: approve=false remains a valid terminal "
+      "review record but can never be consumed through the approval verifier, and every receipt still carries integration "
+      "authority NONE. Receipt-schema/policy lineage is historical-only across versions; an older approval cannot be "
+      "silently reinterpreted under the current trust policy. Active protected-registry drift must fail before model "
+      "execution."
+)
+
 REVIEW_SCOPE_POLICIES: dict[int, str] = {
     5: _REVIEW_SCOPE_DISCIPLINE_V5,
+    6: _REVIEW_SCOPE_DISCIPLINE_V6,
     REVIEW_SCOPE_POLICY_VERSION: REVIEW_SCOPE_DISCIPLINE,
 }
 
@@ -92,12 +131,17 @@ _V5_PROTECTED_PATH_PATTERNS = (
     "**/.env*",
 )
 
-# Policy v6 is authorized only against this exact registry identity. If the
-# canonical registry changes, review fails closed until a new policy version is
-# created and independently reviewed.
+# v6 and v7 are authorized only against this exact registry identity. A registry
+# change requires a new policy version and fresh independent review.
 _V6_PROTECTED_REGISTRY = {
     "version": 1,
     "sha256": "00e9f1a404d1f5b92210f0c172295cd0067ff1078c33e4dcb284a4e3be4c7f25",
+}
+_V7_PROTECTED_REGISTRY = dict(_V6_PROTECTED_REGISTRY)
+_V7_REVIEWER_TRUST_ROOT = {
+    "schema_version": 1,
+    "trust_boundary_id": "EXACT_HEAD_REVIEW_TRUST_ROOT_V1",
+    "sha256": "53c96f8eca58aba2f5242c858c766b5b4ca65d93839aa9734338ee3de0aebe3f",
 }
 
 
@@ -153,8 +197,10 @@ def _expected_registry_identity(version: int) -> dict[str, Any]:
             "version": 1,
             "sha256": hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
         }
-    if version == REVIEW_SCOPE_POLICY_VERSION:
+    if version == 6:
         return dict(_V6_PROTECTED_REGISTRY)
+    if version == REVIEW_SCOPE_POLICY_VERSION:
+        return dict(_V7_PROTECTED_REGISTRY)
     raise RuntimeError("unknown review-scope policy version")
 
 
@@ -164,6 +210,18 @@ def _assert_active_registry_matches_policy(version: int = REVIEW_SCOPE_POLICY_VE
     if actual != expected:
         raise RuntimeError(
             "protected-path registry identity drifted from the active review policy; "
+            "a new policy version and independent review are required"
+        )
+    return actual
+
+
+def _assert_active_trust_root_matches_policy(version: int = REVIEW_SCOPE_POLICY_VERSION) -> dict[str, Any]:
+    if version < 7:
+        raise RuntimeError("reviewer trust root is unavailable for historical policy")
+    actual = reviewer_trust_root_identity()
+    if actual != _V7_REVIEWER_TRUST_ROOT:
+        raise RuntimeError(
+            "reviewer trust-root identity drifted from the active review policy; "
             "a new policy version and independent review are required"
         )
     return actual
@@ -199,19 +257,33 @@ def review_scope_policy_sha256(version: int = REVIEW_SCOPE_POLICY_VERSION) -> st
         payload = {
             "version": version,
             "discipline": discipline,
-            "review_infrastructure_paths": sorted(REVIEW_INFRASTRUCTURE_PATHS),
+            "review_infrastructure_paths": sorted(_V5_REVIEW_INFRASTRUCTURE_PATHS),
             "protected_path_patterns": list(_V5_PROTECTED_PATH_PATTERNS),
         }
-    else:
-        _assert_active_registry_matches_policy(version)
+    elif version == 6:
         payload = {
             "version": version,
             "discipline": discipline,
-            "review_infrastructure_paths": sorted(REVIEW_INFRASTRUCTURE_PATHS),
+            "review_infrastructure_paths": sorted(_V6_REVIEW_INFRASTRUCTURE_PATHS),
             "protected_path_registry": _expected_registry_identity(version),
             "parent_policy": {
                 "version": 5,
                 "sha256": review_scope_policy_sha256(5),
+            },
+        }
+    else:
+        _assert_active_registry_matches_policy(version)
+        trust_root = _assert_active_trust_root_matches_policy(version)
+        payload = {
+            "version": version,
+            "discipline": discipline,
+            "review_infrastructure_paths": sorted(REVIEW_INFRASTRUCTURE_PATHS),
+            "review_infrastructure_core_paths": sorted(REVIEW_INFRASTRUCTURE_CORE_PATHS),
+            "protected_path_registry": _expected_registry_identity(version),
+            "reviewer_trust_root": trust_root,
+            "parent_policy": {
+                "version": 6,
+                "sha256": review_scope_policy_sha256(6),
             },
         }
     canonical = json.dumps(
@@ -231,7 +303,10 @@ def changed_paths_sha256(changed_paths: Iterable[str]) -> str:
 
 def classify_diff_scope(changed_paths: Iterable[str]) -> str:
     paths = _canonical_changed_paths(changed_paths)
-    if all(path in REVIEW_INFRASTRUCTURE_PATHS for path in paths):
+    if (
+        all(path in REVIEW_INFRASTRUCTURE_PATHS for path in paths)
+        and any(path in REVIEW_INFRASTRUCTURE_CORE_PATHS for path in paths)
+    ):
         return "REVIEW_INFRASTRUCTURE"
     if _canonical_protected_paths(paths):
         return "PROTECTED_SCIENTIFIC_GATE_MUTATION"
@@ -265,6 +340,7 @@ def review_receipt_context_sha256(
         workflow_runtime_sha,
     )
     registry_identity = _assert_active_registry_matches_policy(policy_version)
+    trust_root_identity = _assert_active_trust_root_matches_policy(policy_version)
     canonical = json.dumps(
         {
             "pr_number": pr_number,
@@ -276,6 +352,7 @@ def review_receipt_context_sha256(
             "review_scope_policy_version": policy_version,
             "review_scope_policy_sha256": review_scope_policy_sha256(policy_version),
             "protected_path_registry": registry_identity,
+            "reviewer_trust_root": trust_root_identity,
             "workflow_provenance": provenance,
             "integration_authority": "NONE",
         },
@@ -329,6 +406,9 @@ def verify_review_scope_receipt(
     trusted_registry = _assert_active_registry_matches_policy(version)
     if receipt.get("protected_path_registry") != trusted_registry:
         raise RuntimeError("protected-path registry identity mismatch")
+    trusted_root = _assert_active_trust_root_matches_policy(version)
+    if receipt.get("reviewer_trust_root") != trusted_root:
+        raise RuntimeError("reviewer trust-root identity mismatch")
 
     if isinstance(expected_pr_number, bool) or not isinstance(expected_pr_number, int) or expected_pr_number <= 0:
         raise RuntimeError("invalid trusted review PR number")
