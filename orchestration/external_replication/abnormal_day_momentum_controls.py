@@ -44,6 +44,60 @@ def _structural_no_hold_count(schedule: Sequence[SignalEvent], entry_delay_bars:
     return sum(event.entry_timestamp + delay >= event.exit_timestamp for event in schedule)
 
 
+def _is_zero_position_observation(event: ScoredEvent) -> bool:
+    """Identify the explicit baseline no-position sentinel emitted by score_schedule().
+
+    A real positioned trade with a flat price path has gross_return == 0 but still
+    pays base/stress costs, so it is deliberately *not* classified as a zero position.
+    The frozen baseline zero-direction observation is the only scored event whose
+    gross, base-cost net and stress-cost net economics are all exactly zero.
+    """
+
+    return (
+        event.gross_return == 0.0
+        and event.net_return == 0.0
+        and event.stress_3x_net_return == 0.0
+    )
+
+
+def _control_portfolio_summary(
+    scored: Sequence[ScoredEvent], execution: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Reuse candidate aggregation while preserving zero-position economics at 2x cost.
+
+    The Stage-1 candidate summary reconstructs the diagnostic 2x-cost value from
+    gross return because every candidate observation is a positioned trade.  The
+    primary control additionally permits an explicit zero-position observation when
+    the immediately preceding hourly return is exactly zero.  Such an observation
+    must remain zero at every cost stress rather than being charged a fictitious
+    round-trip cost.  Base and 3x values are already explicit on ScoredEvent; only
+    the reconstructed 2x diagnostic needs this control-aware correction.
+    """
+
+    events = tuple(scored)
+    summary = _portfolio_summary(events, dict(execution))
+    sizing = execution["portfolio_sizing"]
+    weight = float(sizing["nav_fraction_per_eligible_instrument"])
+    middle_cost = (
+        float(execution["screen"]["base_total_cost_bps"])
+        * float(execution["screen"]["middle_cost_multiplier"])
+        / 10_000.0
+    )
+
+    daily_middle: dict[object, float] = {}
+    for event in events:
+        day = event.signal.signal_timestamp.astimezone().date()
+        contribution = (
+            0.0
+            if _is_zero_position_observation(event)
+            else event.gross_return - middle_cost
+        )
+        daily_middle[day] = daily_middle.get(day, 0.0) + weight * contribution
+
+    summary["total_2x_cost_return"] = sum(daily_middle.values())
+    return summary
+
+
 def _arm_payload(
     *,
     arm_id: str,
@@ -71,8 +125,8 @@ def _arm_payload(
         "scored_windows": len(scored),
         "structural_no_hold_windows": structural_no_hold,
         "entry_delay_bars": entry_delay_bars,
-        "train": _portfolio_summary(periods["train"], dict(execution)),
-        "validation": _portfolio_summary(periods["validation"], dict(execution)),
+        "train": _control_portfolio_summary(periods["train"], execution),
+        "validation": _control_portfolio_summary(periods["validation"], execution),
         "protected_oos_opened": False,
         "genuine_forward_opened": False,
         "promotion_authority": False,
