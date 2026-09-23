@@ -1,0 +1,109 @@
+{
+  "schema": "two_x_quote_native_liquidity_contract.v1",
+  "artifact_id": "2X-COHORT-001-QUOTE-NATIVE-LIQUIDITY-v2",
+  "frozen_at": "2026-09-23T17:07:58Z",
+  "parent_issue": 721,
+  "scientific_parents": [505, 514, 519, 520, 711],
+  "source_unit_dependency": {
+    "pr": 714,
+    "required_head_sha": "7af9bf0c0ba403cd3a39aabc89814b2f87bc866d",
+    "normalized_rows_schema": "binance_spot_daily_kline_rows.v2",
+    "provider_measure": "quote_asset_volume",
+    "legacy_usd_labeled_rows": "REJECT"
+  },
+  "ci_integrity_dependency": {
+    "issue": 717,
+    "repair_pr": 718,
+    "pre_repair_pull_request_ci_status": "MERGE_REF_ONLY_NOT_EXACT_HEAD_EVIDENCE",
+    "integration_requires_marker": "EXACT_HEAD_PR_CHECKOUT_V1",
+    "integration_requires_checkout_identity_gate": true
+  },
+  "outcome_access": "SEALED",
+  "authority": {
+    "historical_outcome_label_authority": false,
+    "matched_control_outcome_authority": false,
+    "prospective_candidate_authority": false,
+    "prediction_authority": false,
+    "promotion_authority": false,
+    "broker_connected": false,
+    "live_trading": false
+  },
+  "universe_scope": {
+    "venue": "BINANCE_SPOT",
+    "quote_asset": "USDT",
+    "symbol_binding": "EXACT_VENUE_SYMBOL_AND_AUTHENTICATED_PROVIDER_LOCATOR",
+    "current_survivor_list_allowed": false
+  },
+  "feature": {
+    "field": "liquidity_quote_asset",
+    "source_id": "TRAILING_30D_MEDIAN_QUOTE_ASSET_VOLUME_V2",
+    "unit": "USDT",
+    "unit_semantics": "SOURCE_NATIVE_QUOTE_ASSET_NOT_USD",
+    "window_days": 30,
+    "statistic": "median",
+    "measure": "quote_asset_volume",
+    "bar_cadence": "1d",
+    "calendar": "UTC",
+    "completed_daily_bars_only": true,
+    "decision_boundary": "STRICTLY_BEFORE_DECISION_AT",
+    "required_observation_count": 30,
+    "required_date_policy": "ALL_PREVIOUS_30_UTC_CALENDAR_DATES",
+    "duplicate_date_policy": "REJECT",
+    "missing_date_policy": "UNKNOWN_FAIL_CLOSED",
+    "nonfinite_or_negative_policy": "REJECT",
+    "caller_value_policy": "RECOMPUTE_AND_EXACTLY_BIND_WITH_NUMERIC_TOLERANCE_ONLY",
+    "transform_version": "2"
+  },
+  "cohort_liquidity_gate": {
+    "threshold": 10000000,
+    "unit": "USDT",
+    "comparison": ">=",
+    "meaning": "COARSE_SOURCE_NATIVE_VENUE_LIQUIDITY_SCREEN_ONLY",
+    "usd_equivalence_claim": false,
+    "threshold_selection": "OUTCOME_BLIND_PREDECLARATION_BEFORE_LABEL_OPEN"
+  },
+  "legacy_v1_containment": {
+    "feature": "liquidity_usd",
+    "source_id": "TRAILING_30D_MEDIAN_QUOTE_VOLUME_USD_V1",
+    "raw_binance_quote_asset_volume_may_satisfy": false,
+    "silent_reinterpretation": false,
+    "future_true_usd_path_requires": "SEPARATE_PIT_AUTHENTICATED_QUOTE_ASSET_TO_USD_CONVERSION_CONTRACT"
+  },
+  "provenance_requirements": {
+    "trusted_binance_acquisition_required": true,
+    "exact_archive_url_binding_required": true,
+    "exact_checksum_url_binding_required": true,
+    "exact_archive_bytes_binding_required": true,
+    "exact_checksum_bytes_binding_required": true,
+    "provider_native_subject_binding_required": true,
+    "exact_symbol_binding_required": true,
+    "exact_quote_asset_binding_required": true,
+    "exact_cadence_binding_required": true,
+    "post_decision_rows_allowed": false,
+    "caller_authored_event_time_has_chronology_authority": false
+  },
+  "adversarial_regressions": [
+    "REJECT_QUOTE_VOLUME_USD_ALIAS",
+    "REJECT_RAW_USDT_CLAIMED_AS_USD",
+    "REJECT_NON_USDT_QUOTE_ASSET",
+    "REJECT_SYMBOL_QUOTE_ASSET_MISMATCH",
+    "REJECT_ONE_MISSING_REQUIRED_DATE",
+    "REJECT_DUPLICATE_DATE",
+    "REJECT_POST_DECISION_ROW",
+    "REJECT_NONFINITE_OR_NEGATIVE_VOLUME",
+    "REJECT_WRONG_TRANSFORM_ID_VERSION_OR_PARAMETERS",
+    "REJECT_CALLER_VALUE_NOT_EQUAL_TO_RECOMPUTED_MEDIAN",
+    "REJECT_DIGEST_VALID_BUT_UNAUTHENTICATED_BINANCE_BYTES",
+    "REJECT_LEGACY_V1_NORMALIZED_ROWS"
+  ],
+  "tradability_boundary": {
+    "this_feature_establishes_strict_tradability": false,
+    "strict_tradability_requires": [
+      "PIT_EVENT_TIME_DEPTH",
+      "PIT_EVENT_TIME_SPREAD",
+      "PIT_EVENT_TIME_SLIPPAGE"
+    ],
+    "parent_issue": 519
+  },
+  "success_condition": "MACHINE_VALIDATED_SOURCE_NATIVE_LIQUIDITY_RECOMPUTATION_WITH_LEGACY_USD_PATH_STILL_BLOCKED_AND_NO_OUTCOMES_OPENED"
+}
