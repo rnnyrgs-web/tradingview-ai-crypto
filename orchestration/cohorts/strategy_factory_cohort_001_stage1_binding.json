@@ -1,0 +1,116 @@
+{
+  "artifact_type": "strategy_factory_cohort_001_stage1_binding_receipt",
+  "baseline_halving_plan": {
+    "cohort_planning_id": "STRATEGY-FACTORY-COHORT-001-BASELINE-HALVING-PLAN-v1",
+    "planning_contract_sha256": "4cf46291af242a350d065bf24418b8fdf5c6d36e4fea1b923a9cb1a51046c392"
+  },
+  "binding_id": "STRATEGY-FACTORY-COHORT-001-STAGE1-BINDING-v1",
+  "binding_receipt_sha256": "53777547473c4d0857f6a1fd73949fe8371e8bfcc7b9893701ea7dbddc4ae7ab",
+  "canonical_admission": {
+    "outcomes_read": false,
+    "protected_start_utc": "2026-09-01T00:00:00+00:00",
+    "receipt_sha256": "fc7c237e67600390cca369965161ccfc555dd2bc9bebbabc83d774fafd57182a",
+    "selection_dataset_receipt_sha256": "910759b7448baec737f5a884b9531cf29726a842e09aa54abbd5cc6d9f4cab22"
+  },
+  "cheap_stage_gate": {
+    "catastrophic_tail_veto": true,
+    "minimum_independent_trades_train": 40,
+    "minimum_independent_trades_validation": 20,
+    "require_3x_cost_positive": true,
+    "require_positive_after_cost_train": true,
+    "require_positive_after_cost_validation": true,
+    "require_profit_factor_above_one": true,
+    "require_validation_halves_positive": true,
+    "single_winner_dependence_veto": true
+  },
+  "eligible_stage1_candidates": [
+    {
+      "admission_status": "ADMITTED_DATA_QUALIFIED",
+      "contract_sha256": "7ec0f2e59d8c018b31baf5abbf0c14e06316e0dfd8dfeac753901eac4e3f2deb",
+      "fingerprint_id": "DISC-RESIDUAL-REV-001-v1",
+      "scientific_design_sha256": "58cffd1ffd951a2b4e91510b6b19168f60bccfa1c701d13d08aa2cbfdf20940b",
+      "strategy_behavior_sha256": "5353080405cb0d8e68bc57d661b5b564af1d457b34667978c4371f71ed0900ff"
+    },
+    {
+      "admission_status": "ADMITTED_DATA_QUALIFIED",
+      "contract_sha256": "36d133e2f4f7e432415a1d3b170619d58f8b5d57aeab28afc32dedc4f575be7b",
+      "fingerprint_id": "DISC-SIGNED-VOLUME-DRIFT-001-v1",
+      "scientific_design_sha256": "e23c5bc8a11829279d3f450ae2d2fb2e0fe4b9210424f68fe3b409dcddb482a2",
+      "strategy_behavior_sha256": "876f9d0cb428808064d08ce983e615532c3adf55ad8a7e9a7fc32dfb1b8192ec"
+    },
+    {
+      "admission_status": "ADMITTED_DATA_QUALIFIED",
+      "contract_sha256": "1f170c562b9eb6b9ec1c01f397a7e266c2decbc250aebc863ac472fc8b0cd0c1",
+      "fingerprint_id": "DISC-LOWVOL-DRIFT-REV-001-v1",
+      "scientific_design_sha256": "7585d5e739ed135c4f05662690bbcd2d16491758d548ad5bce5ebc20c4fd7ba8",
+      "strategy_behavior_sha256": "4187cb1952482edc4f1aacb1a05fa87a69b6ab6af19b029d11a7cd6d50150201"
+    },
+    {
+      "admission_status": "ADMITTED_DATA_QUALIFIED_POWER_RISK",
+      "contract_sha256": "fd8ae5976b28351b83eab0ffce4db0eb746bb88af581885ef25aa17095ba2897",
+      "fingerprint_id": "DISC-WEEKEND-NORMALIZE-001-v1",
+      "scientific_design_sha256": "a8786015cd70778e74f4451357c15927fee8d2e03c7688ba0167dc8cbe5266f3",
+      "strategy_behavior_sha256": "1293e8457be524ebc823a640883ac27f7ed0e49555a38fbbadf8b8fbd2b21e52"
+    },
+    {
+      "admission_status": "ADMITTED_DATA_QUALIFIED",
+      "contract_sha256": "815ed6db303e2571828fd4ac47b983a94ee59a4c0f4d7076e61b6e9748fada1f",
+      "fingerprint_id": "DISC-MODERATEVOL-AUTOCORR-001-v1",
+      "scientific_design_sha256": "c46ee97005372478eb886f61119903d8695da74253dc7605b0564e7ca626014e",
+      "strategy_behavior_sha256": "f878906f9643627e6554326d24a21493410235cd1868652e807d96a5816689f1"
+    },
+    {
+      "admission_status": "ADMITTED_DATA_QUALIFIED",
+      "contract_sha256": "719adfcf5f0e127baad8e852c917c343f3bcdb29b5e95a26e9ddc29d73fa50f9",
+      "fingerprint_id": "DISC-RANGE-AUCTION-REV-001-v1",
+      "scientific_design_sha256": "3f52473af1f1fad2243f0d789e03b12554e0342a705818255904f02acae45420",
+      "strategy_behavior_sha256": "1b0261b0fc14366259f15663756cb400569a705e3709171d7be301577ef226b4"
+    }
+  ],
+  "evidence_locks": {
+    "broker_connected": false,
+    "genuine_forward_opened": false,
+    "outcomes_read_to_form_binding": false,
+    "post_outcome_threshold_tuning_allowed": false,
+    "protected_oos_opened": false,
+    "selection_data_only": true,
+    "trade_authority": false
+  },
+  "excluded_stage1_candidates": [
+    {
+      "admission_status": "HOLD_ACTIVE_OWNERSHIP_COLLISION",
+      "fingerprint_id": "DISC-BREADTH-PERSIST-001-v1",
+      "reason": "Existing COORD-DATA-005 / DATA-BREADTH-001 ownership collision remains fail-closed."
+    },
+    {
+      "admission_status": "DATA_BLOCKED",
+      "fingerprint_id": "DISC-DELTA-CARRY-001-v1",
+      "reason": "Issue #520 has not authenticated the frozen spot/perpetual/funding input contract."
+    }
+  ],
+  "execution_authority": {
+    "may_execute_stage1_before_parent_515_integrates_and_exact_head_review_clears": false,
+    "may_prepare_deterministic_stage1_code": true,
+    "may_promote_strategy": false,
+    "may_read_protected_oos": false,
+    "may_trade": false
+  },
+  "formed_at": "2026-09-22T01:00:34Z",
+  "next_transition": "After PR #515 integrates and this binding is reconciled to that canonical main with exact-head CI/review, launch all six eligible development-only Stage-1 screens deterministically in parallel; route rejects/inconclusive results to #510 and only real survivors to #517.",
+  "schema_version": 1,
+  "source_cohort_head_sha": "64aef8e5ec904694010c8c541182aa079bb6dd23",
+  "source_cohort_pr": 515,
+  "stage1_cost_contract": {
+    "adverse_funding_allowance_bps_per_trade": 4.0,
+    "deeper_validation_requires_pit_funding": true,
+    "fees_bps": 12.0,
+    "slippage_bps": 6.0,
+    "spread_bps": 2.0,
+    "stress_totals_bps": {
+      "1x": 24.0,
+      "2x": 48.0,
+      "3x": 72.0
+    }
+  },
+  "status": "OUTCOME_BLIND_BOUND_WAIT_PARENT_INTEGRATION_AND_EXACT_HEAD_REVIEW"
+}

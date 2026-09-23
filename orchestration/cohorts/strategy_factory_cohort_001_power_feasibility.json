@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "artifact_type": "strategy_factory_stage1_preoutcome_power_feasibility",
+  "artifact_id": "STRATEGY-FACTORY-COHORT-001-POWER-FEASIBILITY-v1",
+  "formed_at": "2026-09-23T10:17:00+00:00",
+  "scope": "OUTCOME_BLIND_CALENDAR_AND_EXECUTION_GEOMETRY_ONLY",
+  "source_contracts": {
+    "baseline_halving_plan_id": "STRATEGY-FACTORY-COHORT-001-BASELINE-HALVING-PLAN-v1",
+    "baseline_halving_plan_sha256": "4cf46291af242a350d065bf24418b8fdf5c6d36e4fea1b923a9cb1a51046c392",
+    "stage1_runner_blob_sha": "3df14a72ccae572fe10eef7c64da5748ed5df08d",
+    "stage1_execution_contract_blob_sha": "0d9c5347bddbdfd16dc0be20385200282f795faa",
+    "audited_stage1_head": "0e4a991b1b875122ff81770564c88f04064f472d"
+  },
+  "candidate": {
+    "fingerprint_id": "DISC-WEEKEND-NORMALIZE-001-v1",
+    "family": "weekend_liquidity_normalization_reversal",
+    "signal_clock": "Sunday 23:00 UTC",
+    "entry_clock": "Monday 00:00 UTC",
+    "exit_clock": "Monday 12:00 UTC",
+    "validation_start": "2026-05-01T00:00:00+00:00",
+    "validation_end": "2026-08-31T23:00:00+00:00",
+    "minimum_independent_events_validation": 20,
+    "eligible_signal_blocks_in_validation_before_any_market_filter": 18,
+    "first_possible_signal": "2026-05-03T23:00:00+00:00",
+    "last_possible_signal": "2026-08-30T23:00:00+00:00",
+    "independence_rule": "Overlapping trades across BTC/ETH/SOL are one connected IndependentEvent; therefore each Sunday block contributes at most one validation independent event.",
+    "maximum_possible_validation_independent_events": 18,
+    "power_gate_possible": false
+  },
+  "deterministic_conclusion": {
+    "classification": "INCONCLUSIVE_POWER_PRE_OUTCOME",
+    "reason": "The frozen calendar/execution geometry admits at most 18 independent validation blocks, below the predeclared minimum of 20, even if every asset signals every weekend.",
+    "stage1_allocation": "SKIP_OUTCOME_SCORING_FOR_THIS_COHORT_CANDIDATE",
+    "economic_evidence": "NONE_OPENED",
+    "family_evidence": "UNDERPOWERED_STRUCTURAL_NOT_ECONOMIC_REJECTION",
+    "threshold_or_window_change_allowed": false,
+    "post_hoc_validation_extension_allowed": false,
+    "successor_rule": "Any future weekend-normalization test must be a newly frozen prospective design/cohort with sufficient predeclared independent-event horizon; do not extend Cohort-001 after seeing outcomes."
+  },
+  "authority": {
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false,
+    "broker_connected": false,
+    "trade_authority": false,
+    "promotion_authority": false,
+    "rejected_exact_memory_mutated": false,
+    "rejected_semantic_memory_mutated": false
+  },
+  "artifact_sha256": "30e9b3081ac6bd21b1a9a91aa2ec8542b85f8943d43d25c9cb6e0b2a762fce6c"
+}
