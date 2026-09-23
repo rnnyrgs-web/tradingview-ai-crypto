@@ -5,6 +5,8 @@
     "provider": "Tardis.dev",
     "endpoint_family": "GET /v1/exchanges/binance",
     "retained_response_sha256_required": true,
+    "raw_response_bytes_rehashed_before_parse": true,
+    "caller_digest_only_is_insufficient": true,
     "capture_time_required": true
   },
   "frozen_semantics": {
@@ -12,7 +14,9 @@
     "availableTo": "provider data-collection coverage stop only; never exact exchange delisting time",
     "active": "current tradability only; never consumed for historical membership",
     "duplicate_or_reused_symbol_id": "fail closed pending timestamp-safe external identity resolution",
-    "filtered_universe": "Binance Spot instrument IDs ending in USDT; grouped pseudo-symbols excluded"
+    "filtered_universe": "Binance Spot instrument IDs ending in USDT; grouped pseudo-symbols excluded",
+    "provenance_binding": "The manifest source digest must be recomputed from the exact retained provider response bytes before JSON parsing. Parsed/caller-authored metadata paired with an unrelated claimed digest is rejected.",
+    "fingerprints": "manifest_fingerprint binds exact retained source bytes and capture receipt; enumeration_semantic_fingerprint is permutation-stable over the authority-limited enumerated records only."
   },
   "authority": {
     "candidate_identity_enumeration": true,
@@ -25,5 +29,5 @@
     "broker_trading": false
   },
   "next_required_evidence": "Timestamp-safe exchange/provider identity and listing/delisting evidence is required before any enumerated symbol can enter historical cohort membership, a delisting competing-risk label, or a matched non-winner pool.",
-  "scientific_reason": "Prevent present-day survivor filtering without upgrading best-effort/current provider metadata into historical truth."
+  "scientific_reason": "Prevent present-day survivor filtering without upgrading best-effort/current provider metadata into historical truth, and prevent a caller from laundering mutated parsed metadata through an unrelated retained-response digest."
 }
