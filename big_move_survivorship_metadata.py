@@ -17,7 +17,9 @@ Important semantic boundary:
 - duplicate JSON object keys and non-standard JSON numeric constants fail closed so one
   retained byte stream cannot have parser-dependent semantics;
 - ``captured_at`` is chronology metadata only unless a separate trusted capture receipt
-  authenticates it. It is never historical availability proof by itself.
+  authenticates it. It is never historical availability proof by itself;
+- the enumeration manifest is structurally quarantined: its only sanctioned downstream
+  product is an unresolved identity-resolution work queue. It is never cohort evidence.
 """
 
 from __future__ import annotations
@@ -30,12 +32,15 @@ from typing import Any
 
 CONTRACT_ID = "2X-SURVIVORSHIP-METADATA-ENUMERATION-001-v1"
 OUTPUT_SCHEMA = "2X-SURVIVORSHIP-ENUMERATION-MANIFEST-001-v1"
+QUEUE_CONTRACT_ID = "2X-SURVIVORSHIP-IDENTITY-RESOLUTION-QUEUE-001-v1"
+QUEUE_SCHEMA = "2X-SURVIVORSHIP-IDENTITY-RESOLUTION-QUEUE-MANIFEST-001-v1"
 SOURCE_ID = "TARDIS_EXCHANGE_DETAILS_BINANCE"
 VENUE = "BINANCE_SPOT"
 EXCHANGE_ID = "binance"
 SYMBOL_RE = re.compile(r"^[A-Z0-9]{2,24}USDT$")
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 GROUPED_IDS = {"SPOT", "FUTURES", "PERPETUALS", "OPTIONS"}
+ONLY_ALLOWED_DOWNSTREAM_CONSUMER = "UNRESOLVED_IDENTITY_RESOLUTION_WORK_QUEUE_ONLY"
 
 
 class SurvivorshipMetadataError(ValueError):
@@ -167,6 +172,8 @@ def _symbol_records(provider_payload: dict[str, Any]) -> list[dict[str, Any]]:
                 "current_active_field_consumed": False,
                 "available_to_is_delisting_time": False,
                 "enumeration_authority": "CANDIDATE_IDENTITY_ENUMERATION_ONLY",
+                "cohort_snapshot_authority": False,
+                "allowed_downstream_consumer": ONLY_ALLOWED_DOWNSTREAM_CONSUMER,
             }
         )
     return sorted(records, key=lambda row: row["symbol"])
@@ -223,9 +230,116 @@ def build_survivorship_enumeration_manifest(
         "label_authority": "NONE",
         "candidate_authority": "NONE",
         "model_authority": "NONE",
+        "cohort_snapshot_authority": False,
         "broker_trading_authority": "NONE",
+        "only_allowed_downstream_consumer": ONLY_ALLOWED_DOWNSTREAM_CONSUMER,
         "next_required_evidence": (
             "timestamp-safe exchange/provider identity and listing/delisting evidence before cohort membership or outcome use"
         ),
     }
     return {**core, "manifest_fingerprint": _fingerprint(core)}
+
+
+def build_identity_resolution_work_queue(manifest: dict[str, Any]) -> dict[str, Any]:
+    """Convert one authentic enumeration manifest into a quarantined unresolved queue.
+
+    This is the only sanctioned downstream transformation of enumeration metadata.
+    The queue deliberately strips any possibility of a member/tradable/non-winner
+    interpretation. Provider collection bounds are carried only as search hints for a
+    future timestamp-safe resolver; they never become listing/delisting chronology.
+    """
+
+    if not isinstance(manifest, dict):
+        raise SurvivorshipMetadataError("enumeration manifest must be an object")
+    if manifest.get("schema_version") != OUTPUT_SCHEMA or manifest.get("contract_id") != CONTRACT_ID:
+        raise SurvivorshipMetadataError("unexpected enumeration manifest identity")
+    manifest_fingerprint = manifest.get("manifest_fingerprint")
+    if not isinstance(manifest_fingerprint, str) or SHA256_RE.fullmatch(manifest_fingerprint) is None:
+        raise SurvivorshipMetadataError("enumeration manifest fingerprint missing")
+    expected = _fingerprint({key: value for key, value in manifest.items() if key != "manifest_fingerprint"})
+    if manifest_fingerprint != expected:
+        raise SurvivorshipMetadataError("enumeration manifest fingerprint mismatch")
+    source_response_sha256 = manifest.get("source_response_sha256")
+    if not isinstance(source_response_sha256, str) or SHA256_RE.fullmatch(source_response_sha256) is None:
+        raise SurvivorshipMetadataError("enumeration source response SHA-256 missing")
+
+    required_no_authority = {
+        "historical_membership_authority": "NONE",
+        "delisting_time_authority": "NONE",
+        "negative_control_authority": "NONE",
+        "label_authority": "NONE",
+        "candidate_authority": "NONE",
+        "model_authority": "NONE",
+        "broker_trading_authority": "NONE",
+    }
+    for key, expected_value in required_no_authority.items():
+        if manifest.get(key) != expected_value:
+            raise SurvivorshipMetadataError(f"enumeration manifest unexpectedly grants {key}")
+    if manifest.get("cohort_snapshot_authority") is not False:
+        raise SurvivorshipMetadataError("enumeration manifest cannot grant cohort snapshot authority")
+    if manifest.get("only_allowed_downstream_consumer") != ONLY_ALLOWED_DOWNSTREAM_CONSUMER:
+        raise SurvivorshipMetadataError("enumeration manifest downstream-consumer boundary drifted")
+
+    symbols = manifest.get("symbols")
+    if not isinstance(symbols, list) or manifest.get("symbol_count") != len(symbols):
+        raise SurvivorshipMetadataError("enumeration symbol list/count mismatch")
+
+    items: list[dict[str, Any]] = []
+    seen_symbols: set[str] = set()
+    for index, record in enumerate(symbols):
+        if not isinstance(record, dict):
+            raise SurvivorshipMetadataError(f"enumeration symbol[{index}] malformed")
+        symbol = record.get("symbol")
+        if not isinstance(symbol, str) or SYMBOL_RE.fullmatch(symbol) is None:
+            raise SurvivorshipMetadataError(f"enumeration symbol[{index}] invalid")
+        if symbol in seen_symbols:
+            raise SurvivorshipMetadataError(f"duplicate/reused symbol {symbol} remains unresolved")
+        seen_symbols.add(symbol)
+        if record.get("historical_membership_state") != "UNRESOLVED":
+            raise SurvivorshipMetadataError("enumeration record cannot pre-resolve historical membership")
+        if record.get("cohort_snapshot_authority") is not False:
+            raise SurvivorshipMetadataError("enumeration record cannot grant cohort snapshot authority")
+        if record.get("allowed_downstream_consumer") != ONLY_ALLOWED_DOWNSTREAM_CONSUMER:
+            raise SurvivorshipMetadataError("enumeration record downstream-consumer boundary drifted")
+        if record.get("current_active_field_consumed") is not False:
+            raise SurvivorshipMetadataError("current active state cannot affect resolution queue")
+        if record.get("available_to_is_delisting_time") is not False:
+            raise SurvivorshipMetadataError("provider collection stop cannot become delisting authority")
+
+        item_core = {
+            "enumeration_manifest_fingerprint": manifest_fingerprint,
+            "source_response_sha256": source_response_sha256,
+            "venue": record.get("venue"),
+            "venue_symbol": symbol,
+            "provider_collection_search_hint_since": record.get("provider_collection_available_since"),
+            "provider_collection_search_hint_to": record.get("provider_collection_available_to"),
+            "provider_collection_bounds_authority": "SEARCH_HINT_ONLY",
+            "identity_resolution_state": "UNRESOLVED_TIMESTAMP_SAFE_MARKET_PRESENCE_REQUIRED",
+            "historical_membership_authority": "NONE",
+            "delisting_time_authority": "NONE",
+            "negative_control_authority": "NONE",
+            "label_authority": "NONE",
+            "cohort_snapshot_authority": False,
+            "model_authority": "NONE",
+            "candidate_authority": "NONE",
+            "broker_trading_authority": "NONE",
+            "required_next_proof": "SEPARATE_TIMESTAMP_SAFE_PIT_MARKET_PRESENCE_PROOF",
+        }
+        items.append({**item_core, "work_item_fingerprint": _fingerprint(item_core)})
+
+    queue_core = {
+        "schema_version": QUEUE_SCHEMA,
+        "contract_id": QUEUE_CONTRACT_ID,
+        "source_enumeration_manifest_fingerprint": manifest_fingerprint,
+        "source_response_sha256": source_response_sha256,
+        "venue": VENUE,
+        "work_item_count": len(items),
+        "work_items": items,
+        "consumer_authority": "IDENTITY_RESOLUTION_WORK_QUEUE_ONLY",
+        "historical_membership_authority": "NONE",
+        "negative_control_authority": "NONE",
+        "label_authority": "NONE",
+        "cohort_snapshot_authority": False,
+        "broker_trading_authority": "NONE",
+    }
+    return {**queue_core, "queue_fingerprint": _fingerprint(queue_core)}
