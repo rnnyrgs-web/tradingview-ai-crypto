@@ -1,0 +1,61 @@
+{
+  "artifact_id": "STRATEGY-FACTORY-COHORT-001-SCIENTIFIC-CONTROL-v1",
+  "authority": {
+    "broker_connected": false,
+    "genuine_forward_opened": false,
+    "promotion_authority": false,
+    "screening_results_opened_by_this_contract": false,
+    "trade_authority": false,
+    "untouched_oos_opened": false
+  },
+  "cohort_id": "STRATEGY-FACTORY-COHORT-001-SEED",
+  "contract_sha256_excluding_self": "3a668c62d707333159d76432eda7b664bace5e8c3248ba98423dd55de21d3139",
+  "formed_pre_outcome": true,
+  "ledger": {
+    "canonical_admission_receipt_is_current_admission_authority": true,
+    "exact_head_ci_required": true,
+    "formation_seed_is_historical_input_not_current_authority": true,
+    "independent_exact_head_review_required": true,
+    "source_or_code_change_invalidates_exact_head_clearance": true
+  },
+  "multiple_testing": {
+    "family_id": "STRATEGY-FACTORY-COHORT-001-20260921",
+    "familywise_alpha": 0.05,
+    "method": "HOLM_BONFERRONI",
+    "planned_hypothesis_count": 8,
+    "post_outcome_parameter_search_allowed": false,
+    "stage1_inferential_claim_authority": false,
+    "stage1_survival_is_not_statistical_significance": true,
+    "structural_power_exclusion_does_not_reduce_family_size": true,
+    "successor_search_must_preserve_and_increment_family_ancestry": true
+  },
+  "promotion": {
+    "genuine_forward_required": true,
+    "max_expensive_deep_candidates": 1,
+    "protected_oos_requires_frozen_selection_pass": true,
+    "stage1_survivor_must_pass_frozen_economic_and_power_gates": true,
+    "survivor_must_face_baselines_placebos_and_ablations": true
+  },
+  "sample_and_regime": {
+    "admission_opens_stage1_outcomes": false,
+    "admission_regime_claim_authority": false,
+    "minimum_independent_trades_train": 40,
+    "minimum_independent_trades_validation": 20,
+    "regime_claim_requires_observed_powered_screen_evidence": true,
+    "underpowered_classification": "INCONCLUSIVE"
+  },
+  "schema_version": 1,
+  "stage1_role": {
+    "carry_candidate_screening_authority": false,
+    "costs_are_authenticated_execution_measurements": false,
+    "costs_are_conservative_screen_assumptions": true,
+    "deeper_validation_requires_pit_funding_and_execution_evidence": true,
+    "economic_cost_totals_bps": [
+      24.0,
+      48.0,
+      72.0
+    ],
+    "profitability_claim_authority": false,
+    "purpose": "FALSIFICATION_ONLY"
+  }
+}
