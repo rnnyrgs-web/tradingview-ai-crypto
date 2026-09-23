@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "artifact_type": "strategy_factory_cohort_001_candidate_bound_baseline_bundle",
+  "bundle_id": "STRATEGY-FACTORY-COHORT-001-CANDIDATE-BOUND-BASELINES-v1",
+  "formed_at": "2026-09-23T15:02:17Z",
+  "status": "OUTCOME_BLIND_FROZEN_WAIT_STAGE1_SURVIVORS",
+  "source_baseline_halving_plan": {
+    "cohort_planning_id": "STRATEGY-FACTORY-COHORT-001-BASELINE-HALVING-PLAN-v1",
+    "planning_contract_sha256": "4cf46291af242a350d065bf24418b8fdf5c6d36e4fea1b923a9cb1a51046c392"
+  },
+  "source_stage1_binding": {
+    "binding_id": "STRATEGY-FACTORY-COHORT-001-STAGE1-BINDING-v1",
+    "binding_receipt_sha256": "53777547473c4d0857f6a1fd73949fe8371e8bfcc7b9893701ea7dbddc4ae7ab"
+  },
+  "source_stage1_execution_contract": {
+    "contract_id": "STRATEGY-FACTORY-COHORT-001-STAGE1-EXECUTION-v1",
+    "execution_contract_sha256": "58c7d6fa3db62c7589768b59af8e048acbf9ca1e904b0f7fd5df64f0c9bd19c5"
+  },
+  "formation_locks": {
+    "stage1_or_baseline_outcomes_read": false,
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false,
+    "post_outcome_baseline_substitution_allowed": false,
+    "post_outcome_threshold_tuning_allowed": false,
+    "broker_connected": false,
+    "trade_authority": false,
+    "promotion_authority": false
+  },
+  "allocation": {
+    "economically_executable_candidate_count": 5,
+    "active_candidate_ids": [
+      "DISC-RESIDUAL-REV-001-v1",
+      "DISC-SIGNED-VOLUME-DRIFT-001-v1",
+      "DISC-LOWVOL-DRIFT-REV-001-v1",
+      "DISC-MODERATEVOL-AUTOCORR-001-v1",
+      "DISC-RANGE-AUCTION-REV-001-v1"
+    ],
+    "withheld_candidate": {
+      "fingerprint_id": "DISC-WEEKEND-NORMALIZE-001-v1",
+      "status": "INCONCLUSIVE_POWER_PRE_OUTCOME",
+      "reason": "Frozen structural-power proof caps validation at 18 independent weekend blocks versus the 20-event gate; do not open Cohort-001 economic outcomes for this candidate."
+    }
+  },
+  "candidate_bound_baselines": [
+    {
+      "fingerprint_id": "DISC-RESIDUAL-REV-001-v1",
+      "scientific_design_sha256": "58cffd1ffd951a2b4e91510b6b19168f60bccfa1c701d13d08aa2cbfdf20940b",
+      "strategy_behavior_sha256": "5353080405cb0d8e68bc57d661b5b564af1d457b34667978c4371f71ed0900ff",
+      "contract_sha256": "7ec0f2e59d8c018b31baf5abbf0c14e06316e0dfd8dfeac753901eac4e3f2deb",
+      "status": "BOUND_PRE_OUTCOME_NOT_EXECUTED",
+      "primary_mechanism_baseline": "Simple follower 6h reversal with the same follower universe/hold/costs but no beta residualization or correlation gate.",
+      "additional_falsifiers": [
+        "Unhedged follower reversal using the candidate residual sign.",
+        "Beta-hedged residual reversion without the correlation gate.",
+        "One-bar delayed candidate signal.",
+        "Frequency- and direction-matched randomized timing for the beta-hedged pair."
+      ],
+      "randomized_timing_seed": {
+        "rule": "uint64(first_16_hex(SHA256(cohort_planning_id + '|' + canonical_candidate_scientific_design_sha256 + '|randomized_timing_v1')))",
+        "first_16_hex": "27927b3d075b4eed",
+        "uint64": 2851477016125591277
+      },
+      "candidate_baseline_bundle_sha256": "3e08f99bddeb3338c1225a7584c17ed82df4a543eeab692bd91fcdcb297f8f61"
+    },
+    {
+      "fingerprint_id": "DISC-SIGNED-VOLUME-DRIFT-001-v1",
+      "scientific_design_sha256": "e23c5bc8a11829279d3f450ae2d2fb2e0fe4b9210424f68fe3b409dcddb482a2",
+      "strategy_behavior_sha256": "876f9d0cb428808064d08ce983e615532c3adf55ad8a7e9a7fc32dfb1b8192ec",
+      "contract_sha256": "36d133e2f4f7e432415a1d3b170619d58f8b5d57aeab28afc32dedc4f575be7b",
+      "status": "BOUND_PRE_OUTCOME_NOT_EXECUTED",
+      "primary_mechanism_baseline": "Simple 4h price momentum with the same 3h hold and no quote-volume-pressure condition.",
+      "additional_falsifiers": [
+        "Signed-volume pressure rule without the close-location gate.",
+        "One-bar delayed candidate signal.",
+        "Frequency- and direction-matched randomized timing.",
+        "Explicit diagnostic label that signed candle-body volume is an OHLCV proxy, not authenticated aggressive order flow."
+      ],
+      "randomized_timing_seed": {
+        "rule": "uint64(first_16_hex(SHA256(cohort_planning_id + '|' + canonical_candidate_scientific_design_sha256 + '|randomized_timing_v1')))",
+        "first_16_hex": "daa482980374e19e",
+        "uint64": 15754860985853469086
+      },
+      "candidate_baseline_bundle_sha256": "960655dcd31bb4fda35b63a4bdb08bbf6b175830c7d28668c4e392e946b52e50"
+    },
+    {
+      "fingerprint_id": "DISC-LOWVOL-DRIFT-REV-001-v1",
+      "scientific_design_sha256": "7585d5e739ed135c4f05662690bbcd2d16491758d548ad5bce5ebc20c4fd7ba8",
+      "strategy_behavior_sha256": "4187cb1952482edc4f1aacb1a05fa87a69b6ab6af19b029d11a7cd6d50150201",
+      "contract_sha256": "1f170c562b9eb6b9ec1c01f397a7e266c2decbc250aebc863ac472fc8b0cd0c1",
+      "status": "BOUND_PRE_OUTCOME_NOT_EXECUTED",
+      "primary_mechanism_baseline": "Simple 8h move reversal with the same 6h hold and no low-participation condition.",
+      "additional_falsifiers": [
+        "Same move gate with ordinary/high participation rather than low participation.",
+        "Same move gate without the shock-exclusion filter.",
+        "One-bar delayed candidate signal.",
+        "Frequency- and direction-matched randomized timing."
+      ],
+      "randomized_timing_seed": {
+        "rule": "uint64(first_16_hex(SHA256(cohort_planning_id + '|' + canonical_candidate_scientific_design_sha256 + '|randomized_timing_v1')))",
+        "first_16_hex": "9c7228f0dcb530dc",
+        "uint64": 11273117832221896924
+      },
+      "candidate_baseline_bundle_sha256": "79a3802814c695d6aada46036da0a4877b37bf864755171a5bf66bb4ade7537d"
+    },
+    {
+      "fingerprint_id": "DISC-MODERATEVOL-AUTOCORR-001-v1",
+      "scientific_design_sha256": "c46ee97005372478eb886f61119903d8695da74253dc7605b0564e7ca626014e",
+      "strategy_behavior_sha256": "f878906f9643627e6554326d24a21493410235cd1868652e807d96a5816689f1",
+      "contract_sha256": "815ed6db303e2571828fd4ac47b983a94ee59a4c0f4d7076e61b6e9748fada1f",
+      "status": "BOUND_PRE_OUTCOME_NOT_EXECUTED",
+      "primary_mechanism_baseline": "Plain three-bar same-sign continuation with the candidate holding period and no moderate-volatility filter.",
+      "additional_falsifiers": [
+        "Same continuation rule without the volatility-state restriction.",
+        "One-bar delayed candidate signal.",
+        "Sign-shuffled or frequency-matched randomized timing baseline."
+      ],
+      "randomized_timing_seed": {
+        "rule": "uint64(first_16_hex(SHA256(cohort_planning_id + '|' + canonical_candidate_scientific_design_sha256 + '|randomized_timing_v1')))",
+        "first_16_hex": "913c8adc99efcd8e",
+        "uint64": 10465392314182258062
+      },
+      "candidate_baseline_bundle_sha256": "7e236cca7447abbb433265d9abdb1753072d463702e1a7cd5d716387f009afc3"
+    },
+    {
+      "fingerprint_id": "DISC-RANGE-AUCTION-REV-001-v1",
+      "scientific_design_sha256": "3f52473af1f1fad2243f0d789e03b12554e0342a705818255904f02acae45420",
+      "strategy_behavior_sha256": "1b0261b0fc14366259f15663756cb400569a705e3709171d7be301577ef226b4",
+      "contract_sha256": "719adfcf5f0e127baad8e852c917c343f3bcdb29b5e95a26e9ddc29d73fa50f9",
+      "status": "BOUND_PRE_OUTCOME_NOT_EXECUTED",
+      "primary_mechanism_baseline": "Simple range-edge reversal with the same hold/costs but without the low-efficiency/auction condition.",
+      "additional_falsifiers": [
+        "Generic short-horizon reversal with matched hold.",
+        "One-bar delayed candidate signal.",
+        "Frequency- and direction-matched randomized timing."
+      ],
+      "randomized_timing_seed": {
+        "rule": "uint64(first_16_hex(SHA256(cohort_planning_id + '|' + canonical_candidate_scientific_design_sha256 + '|randomized_timing_v1')))",
+        "first_16_hex": "8a4b4a3682d59876",
+        "uint64": 9965140198471080054
+      },
+      "candidate_baseline_bundle_sha256": "b8a4bcfe48951dc7f19ffd7f6ba551f89a54644ebc3b299332fb2fd83bc1606b"
+    }
+  ],
+  "execution_rule": "Only a candidate that legitimately passes Stage 1 may execute its already-bound baseline/falsifier bundle. Formation identity and randomized-timing seed are fixed here before any Stage-1 or baseline outcome is opened. No post-result baseline substitution, seed redraw, threshold rescue, validation-window extension, or protected-OOS/forward use is allowed.",
+  "next_transition": "After #515 integrates and #602 is reconciled/CI-reviewed on canonical main, execute the five frozen Stage-1 screens exactly once. For each genuine survivor, materialize and score only this pre-bound baseline/falsifier bundle before medium-stage allocation.",
+  "bundle_sha256": "f111fc25b57372c4369d86f9b71822553a9e24cd6d02d98a7dd861764dd7decf"
+}
