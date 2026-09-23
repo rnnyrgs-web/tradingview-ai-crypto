@@ -46,7 +46,8 @@
     "first_start_utc": "2026-05-01T00:00:00Z",
     "first_end_utc": "2026-06-30T23:00:00Z",
     "second_start_utc": "2026-07-01T00:00:00Z",
-    "second_end_utc": "2026-08-31T23:00:00Z"
+    "second_end_utc": "2026-08-31T23:00:00Z",
+    "return_containment_rule": "signal_entry_exit_must_all_be_within_assigned_half_fail_closed"
   },
   "stage1_gates": {
     "minimum_independent_utc_signal_days_train": 40,
