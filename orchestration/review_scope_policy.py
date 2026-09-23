@@ -5,10 +5,10 @@ import json
 import re
 from typing import Any, Iterable
 
-from orchestration.protected_paths import find_protected_matches, load_protected_paths
+from orchestration.protected_paths import DEFAULT_PATH, find_protected_matches, load_protected_paths
 
-REVIEW_SCOPE_POLICY_VERSION = 5
-REVIEW_RECEIPT_SCHEMA_VERSION = 4
+REVIEW_SCOPE_POLICY_VERSION = 6
+REVIEW_RECEIPT_SCHEMA_VERSION = 5
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 _REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 
@@ -24,7 +24,9 @@ REVIEW_INFRASTRUCTURE_PATHS = frozenset(
     }
 )
 
-REVIEW_SCOPE_DISCIPLINE = (
+# Version 5 is retained byte-for-byte as historical lineage. New policy versions
+# must be additive registrations rather than reinterpretations of old receipts.
+_REVIEW_SCOPE_DISCIPLINE_V5 = (
     "REVIEW_SCOPE_DISCIPLINE: Judge this exact diff against the claims and authority it actually grants. "
     "DIFF_SCOPE_CLASS is produced by executable changed-path classification against both the strict review-"
     "infrastructure allowlist and the canonical protected-path registry. REVIEW_INFRASTRUCTURE means only the "
@@ -53,8 +55,49 @@ REVIEW_SCOPE_DISCIPLINE = (
     "finding."
 )
 
+REVIEW_SCOPE_DISCIPLINE = (
+    _REVIEW_SCOPE_DISCIPLINE_V5
+    + " REVIEW_PROVENANCE_V6: bind every production receipt to the exact reviewer-runtime Git SHA and the explicit "
+      "version+digest identity of the canonical protected-path registry. A workflow run id/ref without the runtime SHA "
+      "is insufficient provenance. Policy lineage is append-only: the immediately prior registered policy digest is "
+      "committed into the new policy identity, so a new version cannot silently reinterpret an earlier receipt. "
+      "Same-version protected-registry drift fails closed and requires a new policy version before review can proceed. "
+      "GitHub's durable workflow run plus review-attempt issue provide the server-authored causal/audit trail; the JSON "
+      "receipt remains non-authoritative unless a consumer independently supplies matching PR/head/diff, workflow run/ref, "
+      "reviewer-runtime SHA, and protected-registry identity."
+)
+
 REVIEW_SCOPE_POLICIES: dict[int, str] = {
+    5: _REVIEW_SCOPE_DISCIPLINE_V5,
     REVIEW_SCOPE_POLICY_VERSION: REVIEW_SCOPE_DISCIPLINE,
+}
+
+# The v5 policy used the then-current registry patterns directly in its digest.
+# Freeze them here so the historical v5 digest cannot drift when the live registry changes.
+_V5_PROTECTED_PATH_PATTERNS = (
+    "AI_STATE.md",
+    "AGENTS.md",
+    "docs/CHATGPT_SPECIALISTS.md",
+    "docs/MULTI_ENGINE_PROTOCOL.md",
+    "agents/*",
+    "orchestration/*",
+    ".github/workflows/*",
+    "requirements.txt",
+    "Dockerfile",
+    "live_promotions.json",
+    "resource_recommendations_decisions.json",
+    "BUG_REGRESSION_LEDGER.md",
+    "fleet_coordination.json",
+    ".env*",
+    "**/.env*",
+)
+
+# Policy v6 is authorized only against this exact registry identity. If the
+# canonical registry changes, review fails closed until a new policy version is
+# created and independently reviewed.
+_V6_PROTECTED_REGISTRY = {
+    "version": 1,
+    "sha256": "00e9f1a404d1f5b92210f0c172295cd0067ff1078c33e4dcb284a4e3be4c7f25",
 }
 
 
@@ -72,10 +115,65 @@ def _canonical_protected_paths(changed_paths: Iterable[str]) -> tuple[str, ...]:
     return tuple(find_protected_matches(list(paths)))
 
 
+def protected_path_registry_identity() -> dict[str, Any]:
+    payload = json.loads(DEFAULT_PATH.read_text(encoding="utf-8"))
+    version = payload.get("version")
+    patterns = payload.get("patterns")
+    if isinstance(version, bool) or not isinstance(version, int) or version <= 0:
+        raise RuntimeError("protected-path registry version is invalid")
+    if (
+        not isinstance(patterns, list)
+        or not patterns
+        or not all(isinstance(pattern, str) and pattern for pattern in patterns)
+    ):
+        raise RuntimeError("protected-path registry patterns are invalid")
+    if tuple(patterns) != load_protected_paths():
+        raise RuntimeError("protected-path registry loader mismatch")
+    canonical = json.dumps(
+        {"version": version, "patterns": patterns},
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+    )
+    return {
+        "version": version,
+        "sha256": hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
+    }
+
+
+def _expected_registry_identity(version: int) -> dict[str, Any]:
+    if version == 5:
+        canonical = json.dumps(
+            {"version": 1, "patterns": list(_V5_PROTECTED_PATH_PATTERNS)},
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+        )
+        return {
+            "version": 1,
+            "sha256": hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
+        }
+    if version == REVIEW_SCOPE_POLICY_VERSION:
+        return dict(_V6_PROTECTED_REGISTRY)
+    raise RuntimeError("unknown review-scope policy version")
+
+
+def _assert_active_registry_matches_policy(version: int = REVIEW_SCOPE_POLICY_VERSION) -> dict[str, Any]:
+    actual = protected_path_registry_identity()
+    expected = _expected_registry_identity(version)
+    if actual != expected:
+        raise RuntimeError(
+            "protected-path registry identity drifted from the active review policy; "
+            "a new policy version and independent review are required"
+        )
+    return actual
+
+
 def _workflow_provenance(
     repository: str,
     run_id: int,
     workflow_ref: str,
+    runtime_git_sha: str,
 ) -> dict[str, Any]:
     if not isinstance(repository, str) or _REPO_RE.fullmatch(repository) is None:
         raise RuntimeError("invalid trusted workflow repository")
@@ -83,10 +181,13 @@ def _workflow_provenance(
         raise RuntimeError("invalid trusted workflow run id")
     if not isinstance(workflow_ref, str) or not workflow_ref.strip() or len(workflow_ref) > 1024:
         raise RuntimeError("invalid trusted workflow ref")
+    if not isinstance(runtime_git_sha, str) or not _SHA_RE.fullmatch(runtime_git_sha):
+        raise RuntimeError("invalid trusted reviewer-runtime git SHA")
     return {
         "repository": repository,
         "run_id": run_id,
         "workflow_ref": workflow_ref.strip(),
+        "runtime_git_sha": runtime_git_sha,
     }
 
 
@@ -94,13 +195,27 @@ def review_scope_policy_sha256(version: int = REVIEW_SCOPE_POLICY_VERSION) -> st
     discipline = REVIEW_SCOPE_POLICIES.get(version)
     if discipline is None:
         raise RuntimeError("unknown review-scope policy version")
-    canonical = json.dumps(
-        {
+    if version == 5:
+        payload = {
             "version": version,
             "discipline": discipline,
             "review_infrastructure_paths": sorted(REVIEW_INFRASTRUCTURE_PATHS),
-            "protected_path_patterns": list(load_protected_paths()),
-        },
+            "protected_path_patterns": list(_V5_PROTECTED_PATH_PATTERNS),
+        }
+    else:
+        _assert_active_registry_matches_policy(version)
+        payload = {
+            "version": version,
+            "discipline": discipline,
+            "review_infrastructure_paths": sorted(REVIEW_INFRASTRUCTURE_PATHS),
+            "protected_path_registry": _expected_registry_identity(version),
+            "parent_policy": {
+                "version": 5,
+                "sha256": review_scope_policy_sha256(5),
+            },
+        }
+    canonical = json.dumps(
+        payload,
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=True,
@@ -132,6 +247,7 @@ def review_receipt_context_sha256(
     workflow_repository: str,
     workflow_run_id: int,
     workflow_ref: str,
+    workflow_runtime_sha: str,
     policy_version: int = REVIEW_SCOPE_POLICY_VERSION,
 ) -> str:
     if isinstance(pr_number, bool) or not isinstance(pr_number, int) or pr_number <= 0:
@@ -146,7 +262,9 @@ def review_receipt_context_sha256(
         workflow_repository,
         workflow_run_id,
         workflow_ref,
+        workflow_runtime_sha,
     )
+    registry_identity = _assert_active_registry_matches_policy(policy_version)
     canonical = json.dumps(
         {
             "pr_number": pr_number,
@@ -157,6 +275,7 @@ def review_receipt_context_sha256(
             "diff_scope_class": diff_scope_class,
             "review_scope_policy_version": policy_version,
             "review_scope_policy_sha256": review_scope_policy_sha256(policy_version),
+            "protected_path_registry": registry_identity,
             "workflow_provenance": provenance,
             "integration_authority": "NONE",
         },
@@ -177,9 +296,10 @@ def verify_review_scope_receipt(
     expected_workflow_repository: str | None = None,
     expected_workflow_run_id: int | None = None,
     expected_workflow_ref: str | None = None,
+    expected_workflow_runtime_sha: str | None = None,
 ) -> None:
     # A receipt is never allowed to authenticate its own context. Callers must
-    # supply PR/head/diff and GitHub workflow provenance from a trusted source.
+    # supply PR/head/diff plus GitHub workflow/runtime provenance from a trusted source.
     if (
         expected_pr_number is None
         or expected_head_sha is None
@@ -188,8 +308,9 @@ def verify_review_scope_receipt(
         or expected_workflow_repository is None
         or expected_workflow_run_id is None
         or expected_workflow_ref is None
+        or expected_workflow_runtime_sha is None
     ):
-        raise RuntimeError("trusted review context and workflow provenance required")
+        raise RuntimeError("trusted review context, workflow provenance, and runtime SHA required")
 
     schema_version = receipt.get("review_receipt_schema_version")
     if isinstance(schema_version, bool) or schema_version != REVIEW_RECEIPT_SCHEMA_VERSION:
@@ -199,9 +320,15 @@ def verify_review_scope_receipt(
     version = receipt.get("review_scope_policy_version")
     if isinstance(version, bool) or not isinstance(version, int):
         raise RuntimeError("invalid review-scope policy version")
+    if version != REVIEW_SCOPE_POLICY_VERSION:
+        raise RuntimeError("stale review-scope policy version")
     expected_policy_sha = review_scope_policy_sha256(version)
     if receipt.get("review_scope_policy_sha256") != expected_policy_sha:
         raise RuntimeError("review-scope policy digest mismatch")
+
+    trusted_registry = _assert_active_registry_matches_policy(version)
+    if receipt.get("protected_path_registry") != trusted_registry:
+        raise RuntimeError("protected-path registry identity mismatch")
 
     if isinstance(expected_pr_number, bool) or not isinstance(expected_pr_number, int) or expected_pr_number <= 0:
         raise RuntimeError("invalid trusted review PR number")
@@ -239,6 +366,7 @@ def verify_review_scope_receipt(
         expected_workflow_repository,
         expected_workflow_run_id,
         expected_workflow_ref,
+        expected_workflow_runtime_sha,
     )
     if receipt.get("workflow_provenance") != trusted_provenance:
         raise RuntimeError("workflow provenance mismatch")
@@ -251,6 +379,7 @@ def verify_review_scope_receipt(
         workflow_repository=expected_workflow_repository,
         workflow_run_id=expected_workflow_run_id,
         workflow_ref=expected_workflow_ref,
+        workflow_runtime_sha=expected_workflow_runtime_sha,
         policy_version=version,
     )
     if receipt.get("review_context_sha256") != expected_context_sha:
