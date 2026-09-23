@@ -19,6 +19,10 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
+from big_move_primary_historical_availability import (
+    validate_primary_document_historical_availability,
+)
+
 SOURCE_POLICY_PATH = "money_intelligence/2x_source_provenance_preflight_v1.json"
 SOURCE_POLICY_GIT_BLOB_SHA = "f0c9048228dac566def31f5872406d3437d114c7"
 SOURCE_POLICY_ARTIFACT_ID = "2X-SOURCE-PREFLIGHT-001-v1"
@@ -61,6 +65,16 @@ def _utc(value: Any, *, field: str) -> datetime:
     if parsed.tzinfo is None or parsed.utcoffset() != timezone.utc.utcoffset(parsed):
         raise ValueError(f"{field} must be UTC")
     return parsed
+
+
+def _decision_at_text(value: datetime) -> str:
+    """Serialize only an explicitly UTC decision clock for trusted PIT validators."""
+
+    if not isinstance(value, datetime) or value.tzinfo is None:
+        raise ValueError("decision_at must be a timezone-aware UTC datetime")
+    if value.utcoffset() != timezone.utc.utcoffset(value):
+        raise ValueError("decision_at must be UTC")
+    return value.isoformat().replace("+00:00", "Z")
 
 
 def _same_value(left: Any, right: Any) -> bool:
@@ -291,6 +305,22 @@ def _validate_primary_document_proof(
     )
     if "claim_value" not in proof or proof.get("claim_value") != record.get("value"):
         raise ValueError(f"{field} primary-document claim does not match evidence value")
+
+    # Caller-authored publication/effective clocks are semantic constraints only. They
+    # do not establish that these exact retained bytes were knowable at decision_at.
+    # Reuse the trusted Common Crawl acquisition + WARC binding boundary so both direct
+    # and derived primary evidence require an independently authenticated pre-decision
+    # capture of the same locator and document bytes.
+    try:
+        validate_primary_document_historical_availability(
+            record,
+            decision_at=_decision_at_text(decision_at),
+            artifact_root=root,
+        )
+    except ValueError as exc:
+        raise ValueError(
+            f"{field} primary document lacks trusted historical capture: {exc}"
+        ) from exc
 
 
 def _validate_input_authenticity(
