@@ -11,6 +11,10 @@ When an exact URL query contains multiple authentic Common Crawl captures, the
 outcome-blind v2 selector deterministically chooses the latest pre-decision capture and
 requires that exact selected row identity to be frozen in the capture proof.
 
+Authenticated JSON is interpreted fail-closed: duplicate object keys and Python's
+non-standard NaN/Infinity constants are rejected before the chronology evidence can
+be consumed. This keeps exact-byte provenance from acquiring parser-dependent meaning.
+
 It grants historical-evidence authority only; never label, forecast, promotion, broker
 or trading authority.
 """
@@ -78,6 +82,17 @@ def _reject_nonstandard_json_constant(value: str, *, field: str) -> Any:
     raise ValueError(f"{field} contains non-standard JSON numeric constant {value}")
 
 
+def _strict_json_loads(text: str, *, field: str) -> Any:
+    try:
+        return json.loads(
+            text,
+            object_pairs_hook=lambda pairs: _unique_json_object(pairs, field=field),
+            parse_constant=lambda constant: _reject_nonstandard_json_constant(constant, field=field),
+        )
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"{field} must contain valid JSON") from exc
+
+
 def _verified_json(root: Path, ref: Any, *, field: str) -> dict[str, Any]:
     if not isinstance(ref, dict):
         raise ValueError(f"{field} retained reference missing")
@@ -86,17 +101,38 @@ def _verified_json(root: Path, ref: Any, *, field: str) -> dict[str, Any]:
         text = raw.decode("utf-8")
     except UnicodeDecodeError as exc:
         raise ValueError(f"{field} must contain JSON") from exc
-    try:
-        value = json.loads(
-            text,
-            object_pairs_hook=lambda pairs: _unique_json_object(pairs, field=field),
-            parse_constant=lambda constant: _reject_nonstandard_json_constant(constant, field=field),
-        )
-    except json.JSONDecodeError as exc:
-        raise ValueError(f"{field} must contain JSON") from exc
+    value = _strict_json_loads(text, field=field)
     if not isinstance(value, dict):
         raise ValueError(f"{field} must contain a JSON object")
     return value
+
+
+def _verify_json_lines(root: Path, ref: Any, *, field: str) -> None:
+    """Strictly parse digest-authenticated JSON-lines before chronology use.
+
+    Trusted-origin validation downstream independently proves these retained bytes equal
+    the attested provider response. This step only removes parser ambiguity; it grants no
+    provider-origin or chronology authority on its own.
+    """
+
+    if not isinstance(ref, dict):
+        raise ValueError(f"{field} retained reference missing")
+    raw = _verified_bytes(root, ref.get("artifact_relpath"), ref.get("sha256"), field=field)
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise ValueError(f"{field} must be UTF-8 JSON-lines") from exc
+    row_count = 0
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        row = _strict_json_loads(stripped, field=f"{field}.row")
+        if not isinstance(row, dict):
+            raise ValueError(f"{field}.row must contain a JSON object")
+        row_count += 1
+    if row_count == 0:
+        raise ValueError(f"{field} contains no JSON rows")
 
 
 def validate_primary_document_historical_availability(
@@ -131,6 +167,11 @@ def validate_primary_document_historical_availability(
         root,
         proof.get("historical_capture"),
         field="primary.historical_capture",
+    )
+    _verify_json_lines(
+        root,
+        capture.get("index_response"),
+        field="primary.historical_capture.index_response",
     )
     result = validate_trusted_commoncrawl_historical_capture_v2(
         capture,
