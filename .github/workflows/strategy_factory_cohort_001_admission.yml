@@ -5,10 +5,12 @@ on:
     branches: [main]
     paths:
       - "orchestration/strategy_factory_cohort_001_admission.py"
+      - "orchestration/strategy_factory_cohort_001_provenance.py"
       - "orchestration/cohorts/strategy_factory_cohort_001_*.json"
       - "tests/test_strategy_factory_cohort_001_admission.py"
       - "tests/test_strategy_factory_cohort_001_receipt_lock.py"
       - "tests/test_strategy_factory_cohort_001_multiplicity_authority.py"
+      - "tests/test_strategy_factory_cohort_001_provenance_lock.py"
       - ".github/workflows/strategy_factory_cohort_001_admission.yml"
   workflow_dispatch:
 
@@ -37,20 +39,24 @@ jobs:
           python-version: "3.12"
       - name: Install focused test dependency
         run: python -m pip install pytest
-      - name: Verify canonical admission, immutable receipt and multiplicity authority
+      - name: Verify canonical admission, immutable receipt, multiplicity and provenance authority
         run: >-
           python -m pytest -q
           tests/test_strategy_factory_cohort_001_admission.py
           tests/test_strategy_factory_cohort_001_receipt_lock.py
           tests/test_strategy_factory_cohort_001_multiplicity_authority.py
+          tests/test_strategy_factory_cohort_001_provenance_lock.py
       - name: Emit deterministic canonical admission receipt
         run: python -m orchestration.strategy_factory_cohort_001_admission > strategy_factory_cohort_001_canonical_admission.json
       - name: Assert research-only authority and exact execution holds
         run: |
           python - <<'PY'
           import json
+          from orchestration.strategy_factory_cohort_001_provenance import verify_admission_provenance_lock
+
           payload = json.load(open("strategy_factory_cohort_001_canonical_admission.json", encoding="utf-8"))
           multiplicity = json.load(open("orchestration/cohorts/strategy_factory_cohort_001_multiplicity_authority.json", encoding="utf-8"))
+          provenance = verify_admission_provenance_lock()
           statuses = {row["fingerprint_id"]: row["status"] for row in payload["candidates"]}
           dataset = payload["selection_dataset_qualification"]
           assert payload["schema_version"] == 3
@@ -72,6 +78,8 @@ jobs:
           assert multiplicity["stage1_multiplicity_semantics"]["stage1_pass_grants_statistical_significance"] is False
           assert multiplicity["stage1_multiplicity_semantics"]["stage1_pass_grants_profitability_authentication"] is False
           assert multiplicity["cost_authority"]["a_72bps_stage1_pass_cannot_substitute_for_later_authenticated_cost_evidence"] is True
+          assert provenance["status"] == "VERIFIED_OUTCOME_BLIND_ADMISSION_PROVENANCE"
+          assert provenance["integration_authority"] == "NONE"
           assert payload["outcomes_read"] is False
           assert payload["protected_oos_opened"] is False
           assert payload["genuine_forward_opened"] is False
