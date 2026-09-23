@@ -37,7 +37,7 @@ def test_type7_and_population_std_are_frozen() -> None:
     assert population_std([1.0, 2.0, 3.0]) == pytest.approx(math.sqrt(2.0 / 3.0))
 
 
-def test_half_open_overlap_clustering_and_gross_notional_weighting() -> None:
+def test_half_open_overlap_clustering_uses_fixed_entry_slots_not_gross_notional_weighting() -> None:
     cid = CANDIDATE_IDS[0]
     t0 = datetime(2026, 1, 1, 0, tzinfo=UTC)
     first = _trade(cid, t0, t0 + timedelta(hours=3), 0.01, weight=2.0)
@@ -59,7 +59,11 @@ def test_half_open_overlap_clustering_and_gross_notional_weighting() -> None:
     events = cluster_independent_events([equality_is_independent, overlapping, first])
     assert len(events) == 2
     assert len(events[0].trades) == 2
-    expected = (2.0 * (0.01 - 0.0024) + 1.0 * (-0.01 - 0.0024)) / 3.0
+    # gross_notional is already internal to a trade's normalized return. It must not
+    # resize an admitted trade's frozen 1/3-NAV portfolio slot inside the final
+    # overlap cluster; later overlap information cannot causally change entry sizing.
+    expected = ((0.01 - 0.0024) + (-0.01 - 0.0024)) / 3.0
+    assert first.gross_notional == 2.0
     assert events[0].return_at_cost(24.0) == pytest.approx(expected)
     assert events[1].entry_time == events[0].exit_time
 
