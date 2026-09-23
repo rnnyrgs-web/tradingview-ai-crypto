@@ -54,7 +54,6 @@ def test_claude_receives_same_protected_context(tmp_path: Path, monkeypatch: pyt
     diff_path = tmp_path / "candidate.diff"
     output = tmp_path / "review.json"
     diff_path.write_text(_diff(), encoding="utf-8")
-    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: ["protected/file.py"])
     captured: dict[str, str] = {}
 
     def fake_claude(review_input: str, raw_output: Path) -> int:
@@ -76,11 +75,11 @@ def test_claude_receives_same_protected_context(tmp_path: Path, monkeypatch: pyt
     assert review.review_exact_head(
         "claude-adversarial", diff_path, output, pr_number=507, head_sha=HEAD_SHA
     ) == 0
-    assert "PROTECTED_PATH_CONTEXT: protected/file.py" in captured["input"]
+    assert "PROTECTED_PATH_CONTEXT: orchestration/strategy_predeclaration.py" in captured["input"]
     assert "INTEGRATION_AUTHORITY: NONE" in captured["input"]
     verdict = json.loads(output.read_text(encoding="utf-8"))
     assert verdict["integration_authority"] == "NONE"
-    assert verdict["protected_paths"] == ["protected/file.py"]
+    assert verdict["protected_paths"] == ["orchestration/strategy_predeclaration.py"]
 
 
 def test_invalid_exact_head_fails_before_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
