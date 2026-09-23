@@ -65,13 +65,34 @@ def _verified_bytes(root: Path, relpath: Any, sha256: Any, *, field: str) -> byt
     return raw
 
 
+def _unique_json_object(pairs: list[tuple[str, Any]], *, field: str) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"{field} contains duplicate JSON object key {key!r}")
+        result[key] = value
+    return result
+
+
+def _reject_nonstandard_json_constant(value: str, *, field: str) -> Any:
+    raise ValueError(f"{field} contains non-standard JSON numeric constant {value}")
+
+
 def _verified_json(root: Path, ref: Any, *, field: str) -> dict[str, Any]:
     if not isinstance(ref, dict):
         raise ValueError(f"{field} retained reference missing")
     raw = _verified_bytes(root, ref.get("artifact_relpath"), ref.get("sha256"), field=field)
     try:
-        value = json.loads(raw.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise ValueError(f"{field} must contain JSON") from exc
+    try:
+        value = json.loads(
+            text,
+            object_pairs_hook=lambda pairs: _unique_json_object(pairs, field=field),
+            parse_constant=lambda constant: _reject_nonstandard_json_constant(constant, field=field),
+        )
+    except json.JSONDecodeError as exc:
         raise ValueError(f"{field} must contain JSON") from exc
     if not isinstance(value, dict):
         raise ValueError(f"{field} must contain a JSON object")
