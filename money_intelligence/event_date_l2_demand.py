@@ -27,6 +27,7 @@ INPUT_SCHEMA = "2X-HISTORICAL-EVENT-CONTROL-L2-HANDOFF-001-v1"
 OUTPUT_SCHEMA = "2X-EVENT-DATE-L2-DEMAND-MANIFEST-001-v1"
 PROVIDER_CONTRACT = "TARDIS_BINANCE_SPOT_INCREMENTAL_BOOK_L2"
 VENUE = "BINANCE_SPOT"
+CHRONOLOGY_CONTRACT = "CROSSING_EXECUTION_INTERVAL_INTERSECTION_V1"
 ALLOWED_ROLES = {"EVENT", "MATCHED_CONTROL"}
 ALLOWED_BANDS = (1_000, 10_000, 50_000, 100_000)
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -126,6 +127,8 @@ class L2CaseDemand:
             raise DemandManifestError(f"venue must be {VENUE}")
         if not isinstance(value["instrument"], str) or SYMBOL_RE.fullmatch(value["instrument"]) is None:
             raise DemandManifestError("instrument must be an uppercase Binance USDT spot symbol")
+        if value["chronology_contract"] != CHRONOLOGY_CONTRACT:
+            raise DemandManifestError(f"chronology_contract must be {CHRONOLOGY_CONTRACT}")
         if value["strict_l2_required"] is not True:
             raise DemandManifestError("only cases explicitly requiring strict L2 may enter the demand manifest")
         if value["tradability_state"] != "UNKNOWN_TRADABILITY":
@@ -151,18 +154,19 @@ class L2CaseDemand:
 @dataclass
 class _MergedDemand:
     instrument: str
+    canonical_asset_id: str
     chronology_contract: str
     start: datetime
     end: datetime
     bands: set[int]
     case_ids: set[str]
     roles: set[str]
-    assets: set[str]
     reasons: set[str]
 
     def accepts(self, case: L2CaseDemand) -> bool:
         return (
             self.instrument == case.instrument
+            and self.canonical_asset_id == case.canonical_asset_id
             and self.chronology_contract == case.chronology_contract
             and case.window_start <= self.end
             and case.window_end >= self.start
@@ -174,12 +178,21 @@ class _MergedDemand:
         self.bands.update(case.required_notional_bands_usd)
         self.case_ids.add(case.case_id)
         self.roles.add(case.role)
-        self.assets.add(case.canonical_asset_id)
         self.reasons.add(case.strict_l2_reason)
 
 
 def _merge_cases(cases: Iterable[L2CaseDemand]) -> list[_MergedDemand]:
-    ordered = sorted(cases, key=lambda item: (item.instrument, item.chronology_contract, item.window_start, item.window_end, item.case_id))
+    ordered = sorted(
+        cases,
+        key=lambda item: (
+            item.instrument,
+            item.canonical_asset_id,
+            item.chronology_contract,
+            item.window_start,
+            item.window_end,
+            item.case_id,
+        ),
+    )
     merged: list[_MergedDemand] = []
     for case in ordered:
         target = next((item for item in reversed(merged) if item.accepts(case)), None)
@@ -187,13 +200,13 @@ def _merge_cases(cases: Iterable[L2CaseDemand]) -> list[_MergedDemand]:
             merged.append(
                 _MergedDemand(
                     instrument=case.instrument,
+                    canonical_asset_id=case.canonical_asset_id,
                     chronology_contract=case.chronology_contract,
                     start=case.window_start,
                     end=case.window_end,
                     bands=set(case.required_notional_bands_usd),
                     case_ids={case.case_id},
                     roles={case.role},
-                    assets={case.canonical_asset_id},
                     reasons={case.strict_l2_reason},
                 )
             )
@@ -229,6 +242,14 @@ def build_demand_manifest(handoff: dict[str, Any]) -> dict[str, Any]:
     if len(ids) != len(set(ids)):
         raise DemandManifestError("case_id values must be unique")
 
+    instrument_assets: dict[str, str] = {}
+    for case in cases:
+        prior_asset = instrument_assets.setdefault(case.instrument, case.canonical_asset_id)
+        if prior_asset != case.canonical_asset_id:
+            raise DemandManifestError(
+                "one Binance instrument cannot be bound to multiple canonical_asset_id values"
+            )
+
     merged = _merge_cases(cases)
     requests: list[dict[str, Any]] = []
     for item in merged:
@@ -236,13 +257,13 @@ def build_demand_manifest(handoff: dict[str, Any]) -> dict[str, Any]:
             "provider_contract": PROVIDER_CONTRACT,
             "venue": VENUE,
             "instrument": item.instrument,
+            "canonical_asset_id": item.canonical_asset_id,
             "window_start": _iso(item.start),
             "window_end": _iso(item.end),
             "required_notional_bands_usd": sorted(item.bands),
             "chronology_contract": item.chronology_contract,
             "source_case_ids": sorted(item.case_ids),
             "source_roles": sorted(item.roles),
-            "canonical_asset_ids": sorted(item.assets),
             "strict_l2_reasons": sorted(item.reasons),
             "tradability_state_before_acquisition": "UNKNOWN_TRADABILITY",
             "purchase_authority": "NONE",
@@ -250,7 +271,15 @@ def build_demand_manifest(handoff: dict[str, Any]) -> dict[str, Any]:
         request_payload["demand_fingerprint"] = _sha256_json(request_payload)
         requests.append(request_payload)
 
-    requests.sort(key=lambda item: (item["instrument"], item["window_start"], item["window_end"], item["demand_fingerprint"]))
+    requests.sort(
+        key=lambda item: (
+            item["instrument"],
+            item["canonical_asset_id"],
+            item["window_start"],
+            item["window_end"],
+            item["demand_fingerprint"],
+        )
+    )
     total_source_cases = len(cases)
     status = "NO_L2_DEMAND" if not requests else "USER_APPROVAL_REQUIRED_FOR_ANY_NONZERO_PAID_ACQUISITION"
     manifest = {
@@ -260,6 +289,7 @@ def build_demand_manifest(handoff: dict[str, Any]) -> dict[str, Any]:
         "source_cohort_id": handoff["cohort_id"],
         "source_dataset_fingerprint": handoff["dataset_fingerprint"],
         "provider_contract": PROVIDER_CONTRACT,
+        "chronology_contract": CHRONOLOGY_CONTRACT,
         "status": status,
         "source_case_count": total_source_cases,
         "deduplicated_request_count": len(requests),
