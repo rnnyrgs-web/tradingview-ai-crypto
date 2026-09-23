@@ -2,7 +2,7 @@
 
 This module uses retained Tardis Binance exchange-details metadata only to enumerate
 historical instrument IDs that must not be silently dropped from later Cohort-001
-identity work.  It grants no historical-membership, delisting-time, outcome, control,
+identity work. It grants no historical-membership, delisting-time, outcome, control,
 model, candidate, broker, or trading authority.
 
 Important semantic boundary:
@@ -11,7 +11,9 @@ Important semantic boundary:
 - current ``active`` state, if present in a provider response, is ignored for historical
   membership so today's survivors cannot define the historical universe;
 - duplicate/reused symbol IDs fail closed until an external timestamp-safe identity
-  resolver proves which asset identity applies to each interval.
+  resolver proves which asset identity applies to each interval;
+- the retained provider response SHA-256 is recomputed from the exact raw bytes before
+  parsing. A caller-supplied digest cannot authenticate a different parsed payload.
 """
 
 from __future__ import annotations
@@ -66,8 +68,34 @@ def _fingerprint(value: Any) -> str:
 
 def _source_sha(value: Any) -> str:
     if not isinstance(value, str) or SHA256_RE.fullmatch(value) is None:
-        raise SurvivorshipMetadataError("source_response_sha256 must be lowercase SHA-256")
+        raise SurvivorshipMetadataError("expected_source_response_sha256 must be lowercase SHA-256")
     return value
+
+
+def _authenticated_provider_payload(
+    provider_response_bytes: Any,
+    *,
+    expected_source_response_sha256: str,
+) -> tuple[dict[str, Any], str]:
+    """Authenticate exact retained bytes before interpreting provider metadata."""
+
+    if not isinstance(provider_response_bytes, bytes) or not provider_response_bytes:
+        raise SurvivorshipMetadataError("provider_response_bytes must be non-empty exact retained bytes")
+    expected = _source_sha(expected_source_response_sha256)
+    actual = hashlib.sha256(provider_response_bytes).hexdigest()
+    if actual != expected:
+        raise SurvivorshipMetadataError("provider response bytes do not match expected SHA-256")
+    try:
+        response_text = provider_response_bytes.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise SurvivorshipMetadataError("provider response bytes must be valid UTF-8 JSON") from exc
+    try:
+        payload = json.loads(response_text)
+    except json.JSONDecodeError as exc:
+        raise SurvivorshipMetadataError("provider response bytes must contain valid JSON") from exc
+    if not isinstance(payload, dict):
+        raise SurvivorshipMetadataError("provider response JSON must be an object")
+    return payload, actual
 
 
 def _symbol_records(provider_payload: dict[str, Any]) -> list[dict[str, Any]]:
@@ -124,35 +152,46 @@ def _symbol_records(provider_payload: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def build_survivorship_enumeration_manifest(
-    provider_payload: dict[str, Any],
+    provider_response_bytes: bytes,
     *,
-    source_response_sha256: str,
+    expected_source_response_sha256: str,
     captured_at: str,
 ) -> dict[str, Any]:
-    """Build a deterministic no-label manifest from retained Tardis exchange details.
+    """Build a deterministic no-label manifest from authenticated retained bytes.
 
     The result may be used only to ensure inactive/dead historical symbols receive
-    identity-resolution work.  It must never be consumed as proof that a symbol was a
+    identity-resolution work. It must never be consumed as proof that a symbol was a
     historical member at a decision time, that ``availableTo`` equals delisting time,
     or that an unresolved symbol is a matched non-winner.
     """
 
-    if not isinstance(provider_payload, dict):
-        raise SurvivorshipMetadataError("provider_payload must be an object")
-    digest = _source_sha(source_response_sha256)
+    provider_payload, digest = _authenticated_provider_payload(
+        provider_response_bytes,
+        expected_source_response_sha256=expected_source_response_sha256,
+    )
     captured = _utc(captured_at, field="captured_at")
     assert captured is not None
     records = _symbol_records(provider_payload)
 
+    semantic_fingerprint = _fingerprint(
+        {
+            "contract_id": CONTRACT_ID,
+            "source_id": SOURCE_ID,
+            "venue": VENUE,
+            "symbols": records,
+        }
+    )
     core = {
         "schema_version": OUTPUT_SCHEMA,
         "contract_id": CONTRACT_ID,
         "source_id": SOURCE_ID,
         "source_response_sha256": digest,
+        "source_response_bytes_verified": True,
         "captured_at": _iso(captured),
         "venue": VENUE,
         "symbol_count": len(records),
         "symbols": records,
+        "enumeration_semantic_fingerprint": semantic_fingerprint,
         "historical_membership_authority": "NONE",
         "delisting_time_authority": "NONE",
         "negative_control_authority": "NONE",
