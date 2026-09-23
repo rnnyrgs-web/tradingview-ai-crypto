@@ -124,14 +124,47 @@ def _verified_bytes(root: Path, relpath: Any, expected_sha256: Any, *, field: st
     return raw
 
 
+def _unique_json_object(pairs: list[tuple[str, Any]], *, field: str) -> dict[str, Any]:
+    value: dict[str, Any] = {}
+    for key, item in pairs:
+        if key in value:
+            raise ValueError(f"{field} contains duplicate JSON object key {key!r}")
+        value[key] = item
+    return value
+
+
+def _reject_nonstandard_json_constant(value: str, *, field: str) -> Any:
+    raise ValueError(f"{field} contains non-standard JSON numeric constant {value}")
+
+
+def _strict_json_loads(raw: bytes, *, field: str, json_error: str) -> Any:
+    """Parse authenticated JSON with one deterministic semantic interpretation."""
+
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise ValueError(json_error) from exc
+    try:
+        return json.loads(
+            text,
+            object_pairs_hook=lambda pairs: _unique_json_object(pairs, field=field),
+            parse_constant=lambda constant: _reject_nonstandard_json_constant(
+                constant, field=field
+            ),
+        )
+    except json.JSONDecodeError as exc:
+        raise ValueError(json_error) from exc
+
+
 def _verified_json(root: Path, ref: Any, *, field: str) -> dict[str, Any]:
     if not isinstance(ref, dict):
         raise ValueError(f"{field} source_proof missing")
     raw = _verified_bytes(root, ref.get("artifact_relpath"), ref.get("sha256"), field=field)
-    try:
-        value = json.loads(raw.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise ValueError(f"{field} source proof must be JSON") from exc
+    value = _strict_json_loads(
+        raw,
+        field=field,
+        json_error=f"{field} source proof must be JSON",
+    )
     if not isinstance(value, dict):
         raise ValueError(f"{field} source proof must be an object")
     return value
@@ -251,10 +284,11 @@ def _validate_coinmetrics_proof(
         proof.get("raw_response_sha256"),
         field=f"{field}.coinmetrics_raw_response",
     )
-    try:
-        response = json.loads(raw.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise ValueError(f"{field} Coin Metrics raw response must be JSON") from exc
+    response = _strict_json_loads(
+        raw,
+        field=f"{field}.coinmetrics_raw_response",
+        json_error=f"{field} Coin Metrics raw response must be JSON",
+    )
     rows = response.get("data") if isinstance(response, dict) else None
     if not isinstance(rows, list):
         raise ValueError(f"{field} Coin Metrics raw response data missing")
@@ -366,23 +400,25 @@ def validate_record_authenticity(
         for index, ref in enumerate(inputs):
             if not isinstance(ref, dict):
                 raise ValueError(f"{field}.derivation.inputs[{index}] malformed")
+            input_field = f"{field}.derivation.inputs[{index}]"
             raw = _verified_bytes(
                 artifact_root,
                 ref.get("artifact_relpath"),
                 ref.get("sha256"),
-                field=f"{field}.derivation.inputs[{index}]",
+                field=input_field,
             )
-            try:
-                artifact = json.loads(raw.decode("utf-8"))
-            except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-                raise ValueError(f"{field}.derivation.inputs[{index}] must be JSON") from exc
+            artifact = _strict_json_loads(
+                raw,
+                field=input_field,
+                json_error=f"{input_field} must be JSON",
+            )
             if not isinstance(artifact, dict):
-                raise ValueError(f"{field}.derivation.inputs[{index}] must be an object")
+                raise ValueError(f"{input_field} must be an object")
             _validate_input_authenticity(
                 artifact,
                 artifact_root,
                 decision_at,
-                field=f"{field}.derivation.inputs[{index}]",
+                field=input_field,
             )
         return
 
