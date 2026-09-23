@@ -41,7 +41,7 @@ def test_source_occupancy_amendment_is_self_authenticated_and_parent_bound() -> 
     assert _canonical_sha256(unsigned_amendment) == claimed
 
 
-def test_source_and_placebo_occupancy_are_both_outcome_blind_maximum_intervals() -> None:
+def test_source_exclusion_and_placebo_occupancy_use_same_maximum_interval_convention() -> None:
     parent = _load(PARENT_PATH)
     amendment = _load(AMENDMENT_PATH)
     randomized = parent["common_controls"]["randomized_timing"]
@@ -51,9 +51,13 @@ def test_source_and_placebo_occupancy_are_both_outcome_blind_maximum_intervals()
     assert "maximum possible exposure interval" in randomized["outcome_blind_occupancy"]
     assert "realized outcome-dependent early exit" in randomized["outcome_blind_occupancy"]
 
-    # The amendment closes the source-side ambiguity with the same convention.
+    # The amendment closes only the source-side exclusion ambiguity.
     assert rules["source_candidate_exclusion_basis"] == "MAXIMUM_POSSIBLE_OCCUPANCY_ONLY"
-    assert "Do not use realized forward returns" in rules["source_cluster_formation"]
+    assert "does not change candidate Stage-1 scoring" in rules["source_cluster_identity"]
+    assert "Only for excluding original candidate signal/exposure intervals" in rules[
+        "source_exclusion_interval_formation"
+    ]
+    assert "Do not shorten that exclusion" in rules["source_exclusion_interval_formation"]
     assert "reserved maximum-exposure interval" in rules["anchor_overlap_rule"]
     assert "source candidate reserved maximum-exposure interval" in rules["anchor_overlap_rule"]
     assert "union of all constituent maximum-occupancy intervals" in rules["cluster_concurrency"]
