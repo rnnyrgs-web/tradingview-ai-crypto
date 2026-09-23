@@ -26,9 +26,9 @@ _V6_REVIEW_INFRASTRUCTURE_PATHS = frozenset(
 _V5_REVIEW_INFRASTRUCTURE_PATHS = _V6_REVIEW_INFRASTRUCTURE_PATHS
 
 # Current review-infrastructure scope includes the machine-readable trust root,
-# its verifier, the canonical review workflow and durable regression/threat-model
-# ledger. A ledger-only/docs-only change is never REVIEW_INFRASTRUCTURE because
-# classify_diff_scope() also requires one CORE path to change.
+# its verifier, canonical review workflow and reviewer-specific regression/threat-
+# model companions. A ledger-only/docs-only change is never REVIEW_INFRASTRUCTURE
+# because classify_diff_scope() also requires one CORE path to change.
 REVIEW_INFRASTRUCTURE_CORE_PATHS = frozenset(
     {
         "orchestration/exact_head_review.py",
@@ -42,6 +42,9 @@ REVIEW_INFRASTRUCTURE_PATHS = frozenset(
     set(REVIEW_INFRASTRUCTURE_CORE_PATHS)
     | {
         "tests/test_exact_head_review.py",
+        "tests/test_exact_head_review_nonverdict_bootstrap.py",
+        "tests/test_exact_head_review_wait_authority_contract.py",
+        "tests/test_exact_head_review_workflow.py",
         "tests/test_review_scope_policy.py",
         "tests/test_reviewer_trust_root.py",
         "BUG_REGRESSION_LEDGER.md",
