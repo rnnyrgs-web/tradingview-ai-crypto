@@ -6,23 +6,36 @@ POLICY = Path("orchestration/model_routing_policy.json")
 
 def test_model_routing_policy_is_machine_readable_and_safe():
     data = json.loads(POLICY.read_text(encoding="utf-8"))
-    assert data["version"] == 1
+    assert data["version"] == 2
     assert data["invariants"]["broker_connected"] is False
     assert data["invariants"]["trade_authority"] is False
     assert data["invariants"]["max_active_deep_strategy_candidates"] == 1
+    assert data["invariants"]["subscription_first_for_substantive_model_work"] is True
+    assert data["invariants"]["never_claim_unavailable_model_or_work"] is True
     routes = data["routes"]
+    assert routes["subscription_sol_high"]["model"] == "gpt-5.6-sol"
+    assert routes["subscription_sol_high"]["reasoning"] == "high"
+    assert routes["subscription_sol_high"]["executor"] == "chatgpt_subscription"
+    assert routes["work"]["executor"] == "chatgpt_work"
+    assert routes["codex"]["executor"] == "codex"
+    assert routes["api_luna_fallback"]["model"] == "gpt-5.6-luna"
+    assert routes["api_terra_fallback"]["model"] == "gpt-5.6-terra"
+    assert routes["api_sol_fallback"]["model"] == "gpt-5.6-sol"
+    assert routes["api_luna"]["compatibility_only"] is True
     assert routes["api_luna"]["model"] == "gpt-5.6-luna"
-    assert routes["api_terra"]["model"] == "gpt-5.6-terra"
-    assert routes["api_sol"]["model"] == "gpt-5.6-sol"
-    assert routes["work_astra"]["model"] == "GPT-6 Astra"
-    assert routes["work_astra"]["executor"] == "chatgpt_work"
-    assert routes["codex_astra"]["executor"] == "codex"
-    assert any(rule["then"] == "work_astra" for rule in data["routing_rules"])
-    assert any(rule["then"] == "api_sol" for rule in data["routing_rules"])
+    assert any(rule["then"] == "work" for rule in data["routing_rules"])
+    assert any(rule["then"] == "subscription_sol_high" for rule in data["routing_rules"])
 
 
-def test_policy_never_routes_astra_through_openai_api():
+def test_policy_keeps_legacy_luna_adapter_out_of_substantive_routing():
     data = json.loads(POLICY.read_text(encoding="utf-8"))
-    for name, route in data["routes"].items():
-        if route.get("model") == "GPT-6 Astra":
-            assert route["executor"] in {"chatgpt_work", "codex"}, name
+    route = data["routes"]["api_luna"]
+    assert route["compatibility_only"] is True
+    assert route["cost_priority"] > data["routes"]["api_luna_fallback"]["cost_priority"]
+    assert all(rule.get("then") != "api_luna" for rule in data["routing_rules"])
+
+
+def test_no_subscription_or_work_route_is_mislabeled_as_openai_api():
+    data = json.loads(POLICY.read_text(encoding="utf-8"))
+    assert data["routes"]["subscription_sol_high"]["executor"] == "chatgpt_subscription"
+    assert data["routes"]["work"]["executor"] == "chatgpt_work"
