@@ -87,8 +87,11 @@ jobs:
             BASE_REF="$(printf '%s' "$PR_JSON" | jq -r '.baseRefName')"
             HEAD_BRANCH="$(printf '%s' "$PR_JSON" | jq -r '.headRefName')"
             HEAD_SHA="$(printf '%s' "$PR_JSON" | jq -r '.headRefOid')"
-            if [ "$PR_STATE" != "OPEN" ] || [ "$PR_DRAFT" = "true" ] || [ "$BASE_REF" != "main" ]; then
+            if [ "$PR_STATE" != "OPEN" ] || [ "$BASE_REF" != "main" ]; then
               continue
+            fi
+            if [ "$PR_DRAFT" = "true" ]; then
+              echo "PR #$PR_NUMBER is DRAFT; exact-head review is allowed without changing draft or integration state."
             fi
             if [ "$HEAD_SHA" != "$REQUESTED_SHA" ]; then
               gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Exact head moved: request=$REQUESTED_SHA current=$HEAD_SHA. This request cannot authorize a different head; closing. Create a new request for the new exact SHA after its CI is green."
