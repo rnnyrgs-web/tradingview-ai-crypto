@@ -66,7 +66,9 @@ def _canonical_sha256_without(payload: dict[str, Any], digest_field: str) -> str
 def git_blob_sha1(path: Path) -> str:
     data = path.read_bytes()
     header = f"blob {len(data)}\0".encode("ascii")
-    return hashlib.sha1(header + data).hexdigest()  # noqa: S324 - Git object identity
+    # SHA-1 is required here only to reproduce Git's object identifier, not as a
+    # security primitive. The provenance contract additionally self-binds with SHA-256.
+    return hashlib.sha1(header + data, usedforsecurity=False).hexdigest()
 
 
 def verify_admission_provenance_lock(
