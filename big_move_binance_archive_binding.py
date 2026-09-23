@@ -2,10 +2,16 @@
 
 The historical gate must not trust a normalized price/volume row merely because it
 references a retained Binance archive. This module parses the retained archive bytes
-and binds normalized daily close / quote-volume observations back to those bytes.
+and binds normalized daily close / source-native quote-asset-volume observations back
+to those bytes.
+
+Binance kline field 7 is quote-asset volume. Its unit is the venue symbol's quote
+asset (for example USDT for BTCUSDT); this module deliberately does not relabel that
+provider-native measure as USD and grants no currency-conversion authority.
 
 It intentionally does not decide cohort membership, open outcomes, form forecasts, or
-connect to a broker. Fetching/capture provenance remains a separate ingestion concern.
+connect to a broker. Fetching/capture provenance and any later PIT currency conversion
+remain separate ingestion/scientific concerns.
 """
 
 from __future__ import annotations
@@ -120,7 +126,12 @@ def _safe_single_member(archive_bytes: bytes) -> tuple[str, bytes]:
 
 
 def parse_spot_1d_kline_archive(archive_bytes: bytes, *, decision_at: str) -> list[dict[str, Any]]:
-    """Parse official 12-column spot klines and keep only completed pre-cutoff bars."""
+    """Parse official 12-column spot klines and keep only completed pre-cutoff bars.
+
+    Field 7 is returned as ``quote_asset_volume`` exactly because Binance defines it
+    in the symbol's quote-asset unit. Callers must not infer USD semantics from this
+    provider-native value.
+    """
     cutoff = _utc(decision_at, field="decision_at")
     _, csv_bytes = _safe_single_member(archive_bytes)
     try:
@@ -170,7 +181,7 @@ def parse_spot_1d_kline_archive(archive_bytes: bytes, *, decision_at: str) -> li
                 "low": str(low),
                 "close": str(close),
                 "volume": str(volume),
-                "quote_volume_usd": str(quote_volume),
+                "quote_asset_volume": str(quote_volume),
                 "trade_count": trade_count,
             }
         )
@@ -184,7 +195,11 @@ def verify_normalized_daily_rows(
     *,
     decision_at: str,
 ) -> list[dict[str, Any]]:
-    """Bind normalized `{date, close, quote_volume_usd}` rows to parsed archive bytes."""
+    """Bind normalized `{date, close, quote_asset_volume}` rows to archive bytes.
+
+    A row carrying the legacy ``quote_volume_usd`` key does not satisfy this binder:
+    raw Binance quote-asset volume has no implicit USD conversion authority.
+    """
     if not isinstance(normalized_rows, list) or not normalized_rows:
         raise ValueError("normalized_rows must be a non-empty list")
     parsed = parse_spot_1d_kline_archive(archive_bytes, decision_at=decision_at)
@@ -206,7 +221,7 @@ def verify_normalized_daily_rows(
         source = by_date.get(date)
         if source is None:
             raise ValueError(f"normalized row {date} is absent from retained Binance archive")
-        for key in ("close", "quote_volume_usd"):
+        for key in ("close", "quote_asset_volume"):
             if key not in row:
                 raise ValueError(f"normalized row {date}.{key} missing")
             try:
