@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "objective": "Continuously maximize scientifically credible progress toward (A) finding liquid assets with unusually strong evidence of very large upside over ~90 days, especially potential 2x+ moves, and (B) discovering at least one genuinely profitable after-cost algorithmic trading strategy.",
   "invariants": {
     "github_is_source_of_truth": true,
@@ -10,7 +10,9 @@
     "preserve_untouched_oos": true,
     "preserve_rejected_fingerprints": true,
     "supabase_bulk_polling_forbidden": true,
-    "adaptive_spending_policy_required": true
+    "adaptive_spending_policy_required": true,
+    "subscription_first_for_substantive_model_work": true,
+    "never_claim_unavailable_model_or_work": true
   },
   "routes": {
     "deterministic": {
@@ -20,108 +22,124 @@
         "cheap deterministic screens",
         "backtests",
         "artifact validation",
-        "queue/state checks"
+        "queue/state checks",
+        "mechanical reproducible calculations"
       ],
       "cost_priority": 1
     },
-    "api_luna": {
-      "executor": "openai_api",
-      "model": "gpt-5.6-luna",
-      "reasoning": "medium",
-      "use_for": [
-        "routine extraction",
-        "small provenance/data tasks",
-        "classification",
-        "bounded low-risk repo edits"
-      ],
-      "cost_priority": 2
-    },
-    "api_terra": {
-      "executor": "openai_api",
-      "model": "gpt-5.6-terra",
-      "reasoning": "high",
-      "use_for": [
-        "medium-complexity research synthesis",
-        "hypothesis drafting",
-        "bounded implementation where Luna is insufficient"
-      ],
-      "cost_priority": 3
-    },
-    "api_sol": {
-      "executor": "openai_api",
+    "subscription_sol_high": {
+      "executor": "chatgpt_subscription",
       "model": "gpt-5.6-sol",
       "reasoning": "high",
       "use_for": [
-        "deep scientific review",
+        "every substantive scheduled reasoning run when the runtime exposes this model and effort",
+        "scientific review",
+        "research synthesis",
+        "hypothesis drafting",
         "experiment design",
         "falsification",
-        "architecture/decision review",
-        "highest-value ambiguous research decisions"
+        "architecture and decision review",
+        "debugging judgment",
+        "bounded repository edits requiring model judgment",
+        "high-value ambiguous research decisions"
       ],
-      "cost_priority": 4,
-      "constraint": "Use sparingly within the approved API budget; prefer deterministic/Luna/Terra when equivalent."
+      "cost_priority": 2,
+      "constraint": "Hard preference for substantive model judgment because the subscription is already paid for. Never claim Sol High was used unless the runtime actually exposes/selects it; otherwise use the strongest available execution path and checkpoint honestly."
     },
-    "work_astra": {
+    "work": {
       "executor": "chatgpt_work",
-      "model": "GPT-6 Astra",
-      "reasoning": "Medium",
+      "model": "platform_available_strongest_appropriate",
+      "reasoning": "high_preferred_when_selectable",
       "use_for": [
         "substantial multi-file implementation",
         "repository exploration",
         "backtesting milestone implementation",
-        "CI/debugging",
-        "long coherent research+engineering tasks"
+        "CI and debugging loops",
+        "browser or computer workflows",
+        "long coherent research plus engineering tasks",
+        "persistent cloud workspace tasks"
       ],
-      "cost_priority": 5,
-      "setup": "Scheduled ChatGPT Work tasks are enabled for this project; requested execution preference is GPT-6 Astra Medium, but the scheduler may not expose a pin to a specific execution model."
+      "cost_priority": 2,
+      "setup": "Route or hand off to ChatGPT Work when a persistent multi-step workspace materially improves completion quality or throughput. Do not claim a specific Work model or effort if the runtime does not expose that selection."
     },
-    "codex_astra": {
+    "codex": {
       "executor": "codex",
-      "model": "GPT-6 Astra",
-      "reasoning": "Medium",
+      "model": "platform_available_strongest_appropriate",
+      "reasoning": "high_preferred_when_selectable",
       "use_for": [
         "pure heavy repository coding",
         "large refactors",
-        "test/debug loops"
+        "test and debug loops"
+      ],
+      "cost_priority": 3,
+      "setup": "Use when it is materially better for code execution and does not duplicate an active Work or branch owner; keep GitHub handoff canonical."
+    },
+    "api_luna_fallback": {
+      "executor": "openai_api",
+      "model": "gpt-5.6-luna",
+      "reasoning": "medium",
+      "use_for": [
+        "fallback routine extraction",
+        "fallback small provenance or data tasks",
+        "explicit API-only automation paths"
+      ],
+      "cost_priority": 4,
+      "constraint": "Fallback or explicitly API-required path only; do not use as the silent default for substantive work that can use the paid ChatGPT subscription."
+    },
+    "api_terra_fallback": {
+      "executor": "openai_api",
+      "model": "gpt-5.6-terra",
+      "reasoning": "high",
+      "use_for": [
+        "fallback medium-complexity synthesis when subscription-backed execution is unavailable",
+        "explicit API-only bounded implementation"
       ],
       "cost_priority": 5,
-      "setup": "Optional separate Codex automation/manual task; keep GitHub handoff canonical."
+      "constraint": "Fallback or overflow only within the approved API budget."
+    },
+    "api_sol_fallback": {
+      "executor": "openai_api",
+      "model": "gpt-5.6-sol",
+      "reasoning": "high",
+      "use_for": [
+        "fallback deep scientific review",
+        "fallback experiment design and falsification",
+        "explicit API-only high-value reasoning"
+      ],
+      "cost_priority": 6,
+      "constraint": "Use only when subscription-backed Sol High or Work cannot execute the task and the API path is justified within the approved budget."
     }
   },
   "routing_rules": [
     {
-      "if": "task can be answered by deterministic code/data without model judgment",
+      "if": "task can be completed mechanically and reproducibly without model judgment",
       "then": "deterministic"
     },
     {
-      "if": "routine low-risk interpretation or small bounded data task",
-      "then": "api_luna"
+      "if": "task is a substantial multi-step research, engineering, repository, CI/debugging, browser/computer, or persistent-workspace milestone",
+      "then": "work"
     },
     {
-      "if": "medium-complexity research synthesis but not a large implementation",
-      "then": "api_terra"
+      "if": "task requires substantive model judgment and is not better served by Work",
+      "then": "subscription_sol_high"
     },
     {
-      "if": "deep scientific decision, falsification, experiment design, or ambiguous high-value review",
-      "then": "api_sol"
+      "if": "task is mostly pure heavy coding/refactor/testing and Codex is materially better than Work for that bounded milestone",
+      "then": "codex"
     },
     {
-      "if": "substantial multi-file implementation/backtest/CI-debug milestone",
-      "then": "work_astra"
+      "if": "subscription-backed Sol High, Work, or Codex is unavailable/capacity-limited, or the execution path explicitly requires API access",
+      "then": "use the least expensive sufficient API fallback, checkpoint the limitation honestly, and never imply that subscription Sol High or Work ran when it did not"
     },
     {
-      "if": "mostly pure heavy coding/refactor/testing",
-      "then": "codex_astra"
-    },
-    {
-      "if": "Astra task is unavailable or capacity-limited",
-      "then": "checkpoint exact handoff in GitHub and continue independent deterministic/API work rather than stalling"
+      "if": "a preferred strong route is temporarily unavailable",
+      "then": "continue non-duplicative deterministic or justified fallback work rather than stalling; preserve exact durable handoff in GitHub"
     }
   ],
   "task_selection": {
     "strategy_lane": "Follow current strategy_discovery_queue and specialist coordination. Reject->learn->record->pivot. Exactly one expensive deep candidate.",
     "big_move_lane": "Study historical 2x+ events reached within 90 days and matched controls; convert recurring pre-move precursors into predeclared tests. Rank current liquid assets only from timestamp-defensible evidence, reporting base rates, lift and uncertainty.",
-    "arbitration": "Choose the single action with highest expected information gain/economic value that does not duplicate active work. If one lane is waiting on future evidence, advance the other lane. Before recommending paid resources, apply the adaptive spending policy and prefer the lowest-cost option that resolves the measured bottleneck."
+    "arbitration": "Choose the single action with highest expected information gain/economic value that does not duplicate active work. If one lane is waiting on future evidence, advance the other lane. Before recommending paid resources, apply the adaptive spending policy and prefer the lowest-incremental-cost option that resolves the measured bottleneck while still using already-paid subscription capability fully."
   },
   "reporting": {
     "quiet_by_default": true,
@@ -130,7 +148,8 @@
       "strategy passes a major evidence gate",
       "critical incident",
       "user-only blocker",
-      "justified paid-data recommendation"
+      "justified paid-data recommendation",
+      "persistent inability to use the preferred subscription-backed execution path for substantive work"
     ]
   },
   "spending_policy": "orchestration/adaptive_research_spending_policy.json"
