@@ -237,8 +237,36 @@ jobs:
           PY
           }
 
+          is_valid_rejection_file() {
+            python - "$1" <<'PY'
+          import json
+          import os
+          import pathlib
+          import sys
+
+          path = pathlib.Path(sys.argv[1])
+          try:
+              value = json.loads(path.read_text(encoding="utf-8"))
+          except (OSError, json.JSONDecodeError):
+              raise SystemExit(1)
+          valid = (
+              isinstance(value, dict)
+              and value.get("approve") is False
+              and value.get("risk") in {"low", "medium", "high"}
+              and isinstance(value.get("reason"), str)
+              and bool(value["reason"].strip())
+              and value.get("integration_authority") == "NONE"
+              and value.get("review_scope") == "READ_ONLY_EXACT_HEAD"
+              and value.get("pr_number") == int(os.environ["PR_NUMBER"])
+              and value.get("exact_head_sha") == os.environ["HEAD_SHA"]
+          )
+          raise SystemExit(0 if valid else 1)
+          PY
+          }
+
           STATUS=0
           WAIT=0
+          REJECTED=0
 
           # Different providers may run in parallel, but keep the two OpenAI
           # reviewers serial so they do not compete for the same rate-limit bucket.
@@ -255,9 +283,11 @@ jobs:
             else
               STATUS=1
             fi
+          elif is_valid_rejection_file /tmp/security-review.json; then
+            REJECTED=1
           fi
 
-          if [ "$STATUS" -eq 0 ] && [ "$WAIT" -eq 0 ]; then
+          if [ "$STATUS" -eq 0 ] && [ "$WAIT" -eq 0 ] && [ "$REJECTED" -eq 0 ]; then
             set +e
             python -m orchestration.exact_head_review review --reviewer lead --diff /tmp/candidate.diff --output /tmp/lead-review.json --pr-number "$PR_NUMBER" --head-sha "$HEAD_SHA" 2>&1 | tee /tmp/lead-review.log
             LEAD_STATUS=${PIPESTATUS[0]}
@@ -268,6 +298,8 @@ jobs:
               else
                 STATUS=1
               fi
+            elif is_valid_rejection_file /tmp/lead-review.json; then
+              REJECTED=1
             fi
           fi
 
@@ -282,7 +314,19 @@ jobs:
             else
               STATUS=1
             fi
+          elif is_valid_rejection_file /tmp/claude-adversarial-review.json; then
+            REJECTED=1
           fi
+
+          # Any available schema-valid independent scientific rejection is terminal
+          # for this exact candidate SHA and dominates provider WAIT or other absence.
+          if [ "$REJECTED" -eq 1 ]; then
+            echo "rejected=true" >> "$GITHUB_OUTPUT"
+            echo "wait=false" >> "$GITHUB_OUTPUT"
+            echo "A valid independent scientific rejection is terminal for this exact SHA; no bounded retry may reviewer-shop it."
+            exit 0
+          fi
+          echo "rejected=false" >> "$GITHUB_OUTPUT"
 
           if [ "$STATUS" -ne 0 ]; then
             echo "wait=false" >> "$GITHUB_OUTPUT"
@@ -306,7 +350,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Require all three independent reviewers to approve
-        if: steps.select.outputs.pr_number != '' && steps.review_models.outputs.wait != 'true'
+        if: steps.select.outputs.pr_number != '' && steps.review_models.outputs.wait != 'true' && steps.review_models.outputs.rejected != 'true'
         run: |
           jq -e '.approve == true and .integration_authority == "NONE"' /tmp/security-review.json
           jq -e '.approve == true and .integration_authority == "NONE"' /tmp/lead-review.json
@@ -314,7 +358,7 @@ jobs:
 
       - id: approval_record
         name: Record review-only approval for exact head
-        if: steps.select.outputs.pr_number != '' && steps.review_models.outputs.wait != 'true'
+        if: steps.select.outputs.pr_number != '' && steps.review_models.outputs.wait != 'true' && steps.review_models.outputs.rejected != 'true'
         env:
           PR_NUMBER: ${{ steps.select.outputs.pr_number }}
           HEAD_SHA: ${{ steps.select.outputs.sha }}
@@ -397,12 +441,13 @@ jobs:
 
           approved_outcome = os.environ.get("APPROVAL_OUTCOME", "")
           controlled_wait = os.environ.get("CONTROLLED_WAIT", "").lower() == "true"
-          if controlled_wait:
+          rejection_present = any(value is not None and not value["approve"] for value in verdicts)
+          if rejection_present:
+              outcome = "REJECTED"
+          elif controlled_wait:
               outcome = "WAIT_RETRYABLE"
           elif approved_outcome.startswith("REVIEW_APPROVED_"):
               outcome = approved_outcome
-          elif all(value is not None for value in verdicts) and any(not value["approve"] for value in verdicts):
-              outcome = "REJECTED"
           else:
               outcome = "FAILED"
 
@@ -428,8 +473,11 @@ jobs:
           if gh issue view "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --json state --jq '.state' | grep -qx OPEN; then
             if [ "$OUTCOME" = "WAIT_RETRYABLE" ]; then
               gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as WAIT_RETRYABLE because an independent reviewer provider was throttled/unavailable. Candidate remains unapproved. Request stays open for a later bounded retry (maximum three attempts)."
+            elif [ "$OUTCOME" = "REJECTED" ]; then
+              gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as REJECTED. REJECTED is terminal for the exact SHA; do not retry the same {pr, sha}. A materially new candidate SHA is required after repair."
+              gh issue close "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY"
             else
-              gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as $OUTCOME. This request is closed to prevent unbounded paid retries. FAILED/REJECTED does not permanently blacklist the exact SHA: after the cause is repaired or an explicit bounded retry is justified, create a new request with the same {pr, sha}."
+              gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as $OUTCOME. This request is closed fail-closed; repair the cause and create a new request for a materially changed head when appropriate."
               gh issue close "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY"
             fi
           fi

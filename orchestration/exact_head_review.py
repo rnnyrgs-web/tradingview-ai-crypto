@@ -6,6 +6,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+import httpx
+
 from agents.autonomous_orchestrator import (
     REVIEWERS,
     _review_diff_claude_adversarial,
@@ -23,6 +25,7 @@ from orchestration.protected_paths import find_protected_matches
 # review of a >80 kB scientific gate change.
 MAX_DIFF_BYTES = 256_000
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+_RETRYABLE_PROVIDER_STATUSES = frozenset({408, 409, 429, 500, 502, 503, 504})
 
 
 def _validate_exact_head(pr_number: int, head_sha: str) -> None:
@@ -50,6 +53,16 @@ def _context_header(*, pr_number: int, head_sha: str, protected_hits: list[str])
     )
 
 
+def _validate_verdict_schema(verdict: dict[str, Any]) -> None:
+    if not isinstance(verdict.get("approve"), bool):
+        raise RuntimeError("reviewer returned invalid approval")
+    if verdict.get("risk") not in {"low", "medium", "high"}:
+        raise RuntimeError("reviewer returned invalid risk")
+    reason = verdict.get("reason")
+    if not isinstance(reason, str) or not reason.strip():
+        raise RuntimeError("reviewer returned invalid reason")
+
+
 def _enrich_verdict(
     verdict: dict[str, Any],
     *,
@@ -57,10 +70,7 @@ def _enrich_verdict(
     head_sha: str,
     protected_hits: list[str],
 ) -> dict[str, Any]:
-    if not isinstance(verdict.get("approve"), bool):
-        raise RuntimeError("reviewer returned invalid approval")
-    if verdict.get("risk") not in {"low", "medium", "high"}:
-        raise RuntimeError("reviewer returned invalid risk")
+    _validate_verdict_schema(verdict)
     enriched = dict(verdict)
     enriched.update(
         {
@@ -72,6 +82,74 @@ def _enrich_verdict(
         }
     )
     return enriched
+
+
+def _retryable_provider_transport(exc: BaseException) -> bool:
+    if isinstance(exc, (httpx.TimeoutException, httpx.NetworkError)):
+        return True
+    if isinstance(exc, httpx.HTTPStatusError):
+        return exc.response.status_code in _RETRYABLE_PROVIDER_STATUSES
+    return False
+
+
+def _claude_exact_head_verdict(review_input: str, temporary: Path) -> dict[str, Any]:
+    """Run Claude once; classify malformed/transient output as a bounded non-verdict."""
+
+    temporary.unlink(missing_ok=True)
+    try:
+        _review_diff_claude_adversarial(review_input, temporary)
+    except (httpx.TimeoutException, httpx.NetworkError, httpx.HTTPStatusError) as exc:
+        if not _retryable_provider_transport(exc):
+            raise
+        raise RuntimeError(
+            "temporarily unavailable: Claude reviewer provider transport exhausted bounded retries"
+        ) from exc
+    except (json.JSONDecodeError, OSError) as exc:
+        raise RuntimeError(
+            "temporarily unavailable: Claude reviewer returned malformed or incomplete JSON"
+        ) from exc
+
+    try:
+        verdict = json.loads(temporary.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        raise RuntimeError(
+            "temporarily unavailable: Claude reviewer returned malformed or incomplete JSON"
+        ) from exc
+    if not isinstance(verdict, dict):
+        raise RuntimeError("reviewer returned non-object JSON")
+    _validate_verdict_schema(verdict)
+    return verdict
+
+
+def _openai_exact_head_verdict(prompt: str) -> dict[str, Any]:
+    """Run one OpenAI reviewer invocation and preserve hard-vs-transient failures."""
+
+    try:
+        response = post_response({"model": model_name(), "input": prompt})
+    except (httpx.TimeoutException, httpx.NetworkError, httpx.HTTPStatusError) as exc:
+        if not _retryable_provider_transport(exc):
+            raise
+        raise RuntimeError(
+            "temporarily unavailable: OpenAI reviewer provider transport exhausted bounded retries"
+        ) from exc
+
+    try:
+        text = response_text(response)
+    except (json.JSONDecodeError, TypeError, KeyError, AttributeError) as exc:
+        raise RuntimeError(
+            "temporarily unavailable: OpenAI reviewer returned malformed or incomplete JSON"
+        ) from exc
+    if not isinstance(text, str) or not text.strip():
+        raise RuntimeError("temporarily unavailable: OpenAI reviewer returned empty output")
+
+    try:
+        verdict = extract_json(text)
+    except (json.JSONDecodeError, RuntimeError) as exc:
+        raise RuntimeError(
+            "temporarily unavailable: OpenAI reviewer returned malformed or incomplete JSON"
+        ) from exc
+    _validate_verdict_schema(verdict)
+    return verdict
 
 
 def review_exact_head(
@@ -110,8 +188,7 @@ def review_exact_head(
     if reviewer == "claude-adversarial":
         temporary = output.with_suffix(output.suffix + ".raw")
         try:
-            _review_diff_claude_adversarial(review_input, temporary)
-            verdict = json.loads(temporary.read_text(encoding="utf-8"))
+            verdict = _claude_exact_head_verdict(review_input, temporary)
         finally:
             temporary.unlink(missing_ok=True)
     else:
@@ -133,8 +210,7 @@ and has no unsupported live-trading or promotion claim. Protected scientific pat
 skip review: scrutinize them more heavily. Approval never grants merge/integration authority. When
 evidence is insufficient, reject.
 """
-        response = post_response({"model": model_name(), "input": prompt})
-        verdict = extract_json(response_text(response))
+        verdict = _openai_exact_head_verdict(prompt)
 
     enriched = _enrich_verdict(
         verdict,
