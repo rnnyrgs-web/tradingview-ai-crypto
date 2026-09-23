@@ -1,0 +1,29 @@
+{
+  "artifact_id": "2X-SURVIVORSHIP-METADATA-ENUMERATION-001-v1",
+  "purpose": "Enumerate Binance Spot USDT historical instrument IDs from retained Tardis exchange-details metadata so inactive/dead symbols are not silently omitted from Cohort-001 identity work.",
+  "source": {
+    "provider": "Tardis.dev",
+    "endpoint_family": "GET /v1/exchanges/binance",
+    "retained_response_sha256_required": true,
+    "capture_time_required": true
+  },
+  "frozen_semantics": {
+    "availableSince": "provider data-collection coverage start only",
+    "availableTo": "provider data-collection coverage stop only; never exact exchange delisting time",
+    "active": "current tradability only; never consumed for historical membership",
+    "duplicate_or_reused_symbol_id": "fail closed pending timestamp-safe external identity resolution",
+    "filtered_universe": "Binance Spot instrument IDs ending in USDT; grouped pseudo-symbols excluded"
+  },
+  "authority": {
+    "candidate_identity_enumeration": true,
+    "historical_membership": false,
+    "delisting_time": false,
+    "matched_negative_control": false,
+    "label": false,
+    "model": false,
+    "prospective_candidate": false,
+    "broker_trading": false
+  },
+  "next_required_evidence": "Timestamp-safe exchange/provider identity and listing/delisting evidence is required before any enumerated symbol can enter historical cohort membership, a delisting competing-risk label, or a matched non-winner pool.",
+  "scientific_reason": "Prevent present-day survivor filtering without upgrading best-effort/current provider metadata into historical truth."
+}
