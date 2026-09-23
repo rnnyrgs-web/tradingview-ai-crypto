@@ -5,6 +5,7 @@ def _healthy_inputs():
     coordinator = {
         "production_ok": True,
         "state_ok": True,
+        "state_failure_reason": None,
         "consecutive_failures": 0,
     }
     army = {
@@ -39,6 +40,8 @@ def test_canary_becomes_healthy_after_grace():
     assert result["status"] == "healthy"
     assert result["rollback_recommended"] is False
     assert result["reasons"] == []
+    assert result["rollback_reasons"] == []
+    assert result["recommended_action"] == "none"
 
 
 def test_supervisor_failure_recommends_rollback_after_grace():
@@ -60,6 +63,31 @@ def test_repeated_dependency_failures_recommend_rollback():
     assert result["rollback_recommended"] is True
     assert "production_health_check_failed" in result["reasons"]
     assert "coordinator_repeated_failures" in result["reasons"]
+
+
+def test_stale_canonical_state_degrades_without_spurious_rollback():
+    coordinator, army = _healthy_inputs()
+    coordinator["state_ok"] = False
+    coordinator["state_failure_reason"] = "stale_timestamp"
+    coordinator["consecutive_failures"] = 4
+    result = evaluate_canary(coordinator, army, uptime_seconds=CANARY_GRACE_SECONDS + 1)
+    assert result["status"] == "coordination_state_degraded"
+    assert result["rollback_recommended"] is False
+    assert result["reasons"] == ["canonical_state_stale"]
+    assert result["rollback_reasons"] == []
+    assert result["recommended_action"] == "refresh_or_repair_ai_state"
+
+
+def test_state_failure_does_not_hide_real_runtime_rollback_evidence():
+    coordinator, army = _healthy_inputs()
+    coordinator["state_ok"] = False
+    coordinator["state_failure_reason"] = "stale_timestamp"
+    army["supervisor"]["healthy"] = False
+    result = evaluate_canary(coordinator, army, uptime_seconds=CANARY_GRACE_SECONDS + 1)
+    assert result["status"] == "rollback_recommended"
+    assert result["rollback_recommended"] is True
+    assert "canonical_state_stale" in result["reasons"]
+    assert "worker_supervisor_unhealthy" in result["rollback_reasons"]
 
 
 def test_worker_failure_rate_requires_minimum_sample_depth():
