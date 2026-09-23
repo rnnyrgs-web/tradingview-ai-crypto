@@ -1,0 +1,160 @@
+{
+  "schema": "two_x_binance_cohort_bootstrap_slice.v1",
+  "artifact_id": "2X-BINANCE-COHORT-BOOTSTRAP-SLICE-001-v1",
+  "frozen_at": "2026-09-23T15:00:00Z",
+  "base_main_sha": "c81fef0528b1bfca72eabd676613a8d4680e8736",
+  "parents": [505, 514, 516, 519, 520, 705],
+  "purpose": "Freeze one outcome-blind, exact Binance Spot 1d Cohort-001 provenance canary so the #705 positive trusted-acquisition path can be implemented and falsified without opening historical outcomes or broadening provider authority.",
+  "selection": {
+    "decision_at": "2021-02-01T00:00:00Z",
+    "decision_grid": "MONDAY_00_UTC_WEEKLY",
+    "decision_rule": "Use the first frozen Cohort-001 Monday for which the previous 30 completed UTC daily observations and the latest completed decision-price bar are wholly contained in one already-complete prior Binance monthly 1d archive.",
+    "subject": {
+      "venue": "BINANCE_SPOT",
+      "symbol": "BTCUSDT",
+      "base_asset": "BTC",
+      "quote_asset": "USDT",
+      "dataset": "klines",
+      "cadence": "1d",
+      "archive_period": "2021-01"
+    },
+    "subject_rationale": "BTCUSDT is a provider-path canary only. It is chosen to minimize new acquisition surface because the repository already has narrowly scoped Binance direct-object acquisition mechanics for BTCUSDT. This selection grants no historical-universe, membership, label, control, precursor, model, candidate, or trading authority and cannot satisfy Cohort-001 coverage thresholds by itself."
+  },
+  "provider_objects": {
+    "archive": {
+      "source_kind": "BINANCE_2X_COHORT_BOOTSTRAP_ARCHIVE",
+      "object_path": "data/spot/monthly/klines/BTCUSDT/1d/BTCUSDT-1d-2021-01.zip",
+      "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1d/BTCUSDT-1d-2021-01.zip"
+    },
+    "checksum": {
+      "source_kind": "BINANCE_2X_COHORT_BOOTSTRAP_CHECKSUM",
+      "object_path": "data/spot/monthly/klines/BTCUSDT/1d/BTCUSDT-1d-2021-01.zip.CHECKSUM",
+      "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1d/BTCUSDT-1d-2021-01.zip.CHECKSUM"
+    }
+  },
+  "trusted_acquisition_requirements": {
+    "execution_boundary": "PIT Trusted Remote Acquisition workflow on canonical main via workflow_dispatch",
+    "archive_and_checksum_must_be_separate_attested_acquisitions": true,
+    "caller_supplied_receipt_object_is_trust": false,
+    "self_consistent_receipt_digest_is_trust": false,
+    "required_verified_identity": [
+      "repository",
+      "git_sha",
+      "git_ref",
+      "workflow_ref",
+      "run_id",
+      "run_attempt",
+      "event_name",
+      "source_kind",
+      "exact_request_url",
+      "response_sha256",
+      "response_byte_count",
+      "artifact_attestation_subject"
+    ],
+    "repository": "rnnyrgs-web/tradingview-ai-crypto",
+    "git_ref": "refs/heads/main",
+    "event_name": "workflow_dispatch",
+    "workflow_ref": "rnnyrgs-web/tradingview-ai-crypto/.github/workflows/pit-trusted-remote-acquisition.yml@refs/heads/main",
+    "required_attestation_subject": "trusted-acquisition.tar",
+    "request_url_must_equal_frozen_object_url": true,
+    "retained_response_bytes_must_equal_attested_response_sha256_and_byte_count": true,
+    "missing_or_unverifiable_attestation": "UNKNOWN_NO_COHORT_AUTHORITY"
+  },
+  "source_native_binding": {
+    "checksum": {
+      "encoding": "ASCII",
+      "required_semantics": "exact SHA-256 plus exact archive filename",
+      "expected_archive_filename": "BTCUSDT-1d-2021-01.zip",
+      "digest_substring_match_forbidden": true,
+      "wrong_filename_forbidden": true
+    },
+    "archive": {
+      "container": "ZIP",
+      "single_safe_csv_member_required": true,
+      "expected_csv_subject": "BTCUSDT-1d-2021-01",
+      "unsafe_member_forbidden": true,
+      "multiple_csv_members_forbidden": true,
+      "mixed_symbol_forbidden": true,
+      "wrong_interval_forbidden": true,
+      "wrong_period_forbidden": true,
+      "malformed_or_unsupported_rows": "UNKNOWN_NO_COHORT_AUTHORITY"
+    },
+    "chronology": {
+      "provider_native_open_and_close_times_required": true,
+      "caller_event_time_max_authority": false,
+      "latest_consumed_close_time_must_be_before_decision_at": true,
+      "post_decision_row_policy": "REJECT_FOR_THIS_BOOTSTRAP_SLICE",
+      "reason": "The selected archive month ends before decision_at, so any post-decision row indicates subject/period/content corruption rather than a row that should be silently filtered."
+    }
+  },
+  "allowed_scientific_consumers": {
+    "decision_price": {
+      "binding_contract": "2X-BINANCE-PRICE-BINDING-001-v1",
+      "semantics": "Close of the latest completed UTC Binance Spot 1d kline whose close_time is strictly before decision_at.",
+      "expected_bar_date": "2021-01-31",
+      "expected_numeric_value": null,
+      "numeric_value_must_be_derived_only_after_trusted_bytes": true
+    },
+    "trailing_30d_median_quote_volume_usd": {
+      "transform_id": "TRAILING_30D_MEDIAN_QUOTE_VOLUME_USD_V1",
+      "window_days": 30,
+      "statistic": "median",
+      "measure": "quote_volume_usd",
+      "required_completed_utc_dates": {
+        "start": "2021-01-02",
+        "end": "2021-01-31",
+        "count": 30
+      },
+      "expected_numeric_value": null,
+      "numeric_value_must_be_derived_only_after_trusted_bytes": true
+    }
+  },
+  "explicitly_out_of_scope_or_unknown": {
+    "historical_universe_membership": "UNKNOWN",
+    "listing_age_days": "UNKNOWN",
+    "tradable_strict_l2": "UNKNOWN",
+    "matched_control_status": "PROHIBITED",
+    "historical_2x_label": "SEALED",
+    "future_return": "SEALED",
+    "max_forward_return": "SEALED",
+    "precursor_effect": "UNTESTED",
+    "relationship_graph_effect": "UNTESTED",
+    "competing_risk_model_input_authority": false,
+    "prospective_candidate_authority": false,
+    "prediction_authority": false,
+    "promotion_authority": false,
+    "broker_connected": false,
+    "live_trading": false,
+    "spend_authority": false
+  },
+  "adversarial_acceptance_matrix": [
+    "missing verified archive attestation identity -> reject/UNKNOWN",
+    "missing verified checksum attestation identity -> reject/UNKNOWN",
+    "canonical-looking but unattested receipt -> reject/UNKNOWN",
+    "wrong repository/ref/workflow/run identity -> reject/UNKNOWN",
+    "archive request URL substitution -> reject/UNKNOWN",
+    "checksum request URL substitution -> reject/UNKNOWN",
+    "archive response hash or byte-count substitution -> reject/UNKNOWN",
+    "checksum response hash or byte-count substitution -> reject/UNKNOWN",
+    "checksum digest under wrong filename -> reject/UNKNOWN",
+    "archive/checksum cross-object substitution -> reject/UNKNOWN",
+    "cross-symbol, cross-market, cross-cadence or cross-period path/content substitution -> reject/UNKNOWN",
+    "caller-old event_time_max with provider-native post-decision rows -> reject/UNKNOWN",
+    "unsafe or multiple ZIP members -> reject/UNKNOWN",
+    "malformed or unsupported provider rows -> reject/UNKNOWN",
+    "one real externally attested archive plus checksum pair for the exact frozen objects -> may unlock only the two allowed scientific consumers after source-native validation"
+  ],
+  "success_state": "PROVENANCE_BOOTSTRAP_SLICE_AUTHENTICATED_ONLY",
+  "success_does_not_mean": [
+    "Cohort-001 membership ready",
+    "survivor-safe event/control cohort populated",
+    "historical 2x event identified",
+    "matched non-winner identified",
+    "strict tradability established",
+    "precursor or graph hypothesis supported",
+    "competing-risk model powered",
+    "prospective 2x candidate formed"
+  ],
+  "blocker_until_positive_control": "BINANCE_2X_BOOTSTRAP_SLICE_TRUSTED_PROVIDER_BYTES_NOT_YET_ATTESTED_AND_CONSUMED",
+  "broker_live_trading": "OFF"
+}
