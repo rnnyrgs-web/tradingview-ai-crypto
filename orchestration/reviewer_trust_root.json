@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "trust_boundary_id": "EXACT_HEAD_REVIEW_TRUST_ROOT_V1",
+  "platform": "github.com",
+  "repository": "rnnyrgs-web/tradingview-ai-crypto",
+  "workflow_path": ".github/workflows/exact_head_independent_review.yml",
+  "workflow_ref": "refs/heads/main",
+  "api_base_url": "https://api.github.com",
+  "required_runner_environment": "github-hosted",
+  "required_github_actions": true,
+  "trusted_control_plane": [
+    "GitHub-hosted Actions workflow identity and immutable run id/attempt metadata",
+    "read-only checkout of canonical main verified against git rev-parse HEAD",
+    "GitHub Actions REST run metadata obtained with actions:read",
+    "GitHub Git refs REST metadata for refs/heads/main obtained with contents:read",
+    "exact PR/head/diff context independently resolved by the review queue"
+  ],
+  "required_observations": [
+    "repository",
+    "run_id",
+    "run_attempt",
+    "event_name",
+    "workflow_ref",
+    "workflow_sha",
+    "runtime_git_sha",
+    "github_sha",
+    "server_run_head_sha",
+    "server_run_event",
+    "server_run_attempt",
+    "server_run_path",
+    "server_main_sha"
+  ],
+  "out_of_scope_platform_compromise": [
+    "GitHub.com control-plane compromise",
+    "GitHub-hosted runner image or Actions service compromise",
+    "repository owner or administrator intentionally rewriting trusted repository state",
+    "GitHub-issued token compromise outside this workflow"
+  ],
+  "authority": {
+    "review_receipt_is_authentication_token": false,
+    "approval_receipt_grants_integration": false,
+    "integration_authority": "NONE",
+    "broker_authority": false,
+    "trading_authority": false,
+    "protected_oos_authority": false
+  }
+}
