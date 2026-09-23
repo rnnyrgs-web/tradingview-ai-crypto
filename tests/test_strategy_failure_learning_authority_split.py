@@ -133,8 +133,8 @@ def _proposal(parent: dict) -> dict:
     child["signal_rules"]["entry_condition"] = "independent materially different frozen rule"
     child["validation_plan"]["successor_uses_fresh_nonoverlapping_selection_window"] = True
     child["validation_plan"]["successor_selection_window"] = {
-        "start_utc": "2026-09-01T00:00:00+00:00",
-        "end_utc": "2026-09-15T00:00:00+00:00",
+        "start_utc": "2026-09-21T00:00:00+00:00",
+        "end_utc": "2026-10-01T00:00:00+00:00",
     }
     child["search_plan"]["planned_hypothesis_count"] = 5
     return {
