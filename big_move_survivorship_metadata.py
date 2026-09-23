@@ -13,7 +13,11 @@ Important semantic boundary:
 - duplicate/reused symbol IDs fail closed until an external timestamp-safe identity
   resolver proves which asset identity applies to each interval;
 - the retained provider response SHA-256 is recomputed from the exact raw bytes before
-  parsing. A caller-supplied digest cannot authenticate a different parsed payload.
+  parsing. A caller-supplied digest cannot authenticate a different parsed payload;
+- duplicate JSON object keys and non-standard JSON numeric constants fail closed so one
+  retained byte stream cannot have parser-dependent semantics;
+- ``captured_at`` is chronology metadata only unless a separate trusted capture receipt
+  authenticates it. It is never historical availability proof by itself.
 """
 
 from __future__ import annotations
@@ -72,6 +76,19 @@ def _source_sha(value: Any) -> str:
     return value
 
 
+def _unique_json_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise SurvivorshipMetadataError(f"provider response JSON contains duplicate object key {key!r}")
+        result[key] = value
+    return result
+
+
+def _reject_nonstandard_json_constant(value: str) -> Any:
+    raise SurvivorshipMetadataError(f"provider response JSON contains non-standard numeric constant {value}")
+
+
 def _authenticated_provider_payload(
     provider_response_bytes: Any,
     *,
@@ -90,7 +107,11 @@ def _authenticated_provider_payload(
     except UnicodeDecodeError as exc:
         raise SurvivorshipMetadataError("provider response bytes must be valid UTF-8 JSON") from exc
     try:
-        payload = json.loads(response_text)
+        payload = json.loads(
+            response_text,
+            object_pairs_hook=_unique_json_object,
+            parse_constant=_reject_nonstandard_json_constant,
+        )
     except json.JSONDecodeError as exc:
         raise SurvivorshipMetadataError("provider response bytes must contain valid JSON") from exc
     if not isinstance(payload, dict):
@@ -162,7 +183,9 @@ def build_survivorship_enumeration_manifest(
     The result may be used only to ensure inactive/dead historical symbols receive
     identity-resolution work. It must never be consumed as proof that a symbol was a
     historical member at a decision time, that ``availableTo`` equals delisting time,
-    or that an unresolved symbol is a matched non-winner.
+    or that an unresolved symbol is a matched non-winner. ``captured_at`` is retained
+    for chronology/audit only and has no historical-availability authority without a
+    separate trusted non-backdateable capture receipt.
     """
 
     provider_payload, digest = _authenticated_provider_payload(
@@ -188,6 +211,8 @@ def build_survivorship_enumeration_manifest(
         "source_response_sha256": digest,
         "source_response_bytes_verified": True,
         "captured_at": _iso(captured),
+        "capture_time_authority": "CALLER_DECLARED_NONE",
+        "capture_time_is_historical_availability_proof": False,
         "venue": VENUE,
         "symbol_count": len(records),
         "symbols": records,
