@@ -79,7 +79,7 @@ def evaluate_state_handoff_timestamp(
         "state_structure_ok": bool(has_exact_next_step),
         "state_failure_reason": None,
     }
-    if last_updated is None:
+    if not isinstance(last_updated, str) or not last_updated.strip():
         result["state_failure_reason"] = "missing_timestamp"
         return result
 
