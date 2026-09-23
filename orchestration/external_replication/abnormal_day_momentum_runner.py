@@ -259,12 +259,12 @@ def build_signal_schedule(
                 exit_ts = day + DAY
                 if entry_ts >= protected_dt or exit_ts >= protected_dt:
                     break
-                if period == "train" and exit_ts > train_end_dt + HOUR:
-                    # The train event may exit at the next 00:00 boundary only if that
-                    # timestamp is still before validation starts.
-                    if exit_ts >= validation_start_dt:
-                        break
-                if period == "validation" and exit_ts > validation_end_dt + HOUR:
+                # Keep every scored return entirely inside its declared chronological
+                # period. In particular, the final training day's midnight exit may
+                # not consume the first validation timestamp.
+                if period == "train" and exit_ts > train_end_dt:
+                    break
+                if period == "validation" and exit_ts > validation_end_dt:
                     break
 
                 # The frozen #517 simple-trend baseline is defined on the exact
