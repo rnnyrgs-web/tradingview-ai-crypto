@@ -6,6 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "exact_head_independent_review.yml"
 REVIEWER = ROOT / "orchestration" / "exact_head_review.py"
+TRUST = ROOT / "orchestration" / "reviewer_trust_root.py"
 
 
 def _text() -> str:
@@ -48,6 +49,7 @@ def test_full_scientific_diff_has_one_consistent_hard_context_bound() -> None:
 
 def test_protected_paths_are_reviewed_but_never_auto_integrated() -> None:
     text = _text()
+    trust = TRUST.read_text(encoding="utf-8")
     assert 'contents: read' in text
     assert 'contents: write' not in text
     assert 'AUTONOMOUS_MERGE_ENABLED: "false"' in text
@@ -55,7 +57,10 @@ def test_protected_paths_are_reviewed_but_never_auto_integrated() -> None:
     assert "Run independent exact-head reviewers with bounded transient WAIT" in text
     assert "gh pr merge" not in text
     assert "merge_pull_request" not in text
-    assert "integration_authority == \"NONE\"" in text
+    assert "verify-current-receipt" in text
+    assert "verify-current-approval" in text
+    assert '"integration_authority": "NONE"' in trust
+    assert "review receipt must not grant integration authority" in trust
 
 
 def test_retryable_wait_is_bounded_but_valid_rejection_is_terminal() -> None:
