@@ -22,6 +22,7 @@ from fastapi import FastAPI
 from basis_observability import compact_basis_falsification
 from continuous_specialist_factory import run_factory, snapshot as specialist_factory_snapshot
 from continuous_worker_army import run_army, snapshot as worker_army_snapshot
+from coordination_state_health import evaluate_state_handoff_timestamp
 from cross_asset_runner import MIN_LIQUIDITY_SUBSET_COVERAGE
 from deployment_canary import evaluate_canary
 from profitability_learning.runtime import refresh_director, director_snapshot as research_director_snapshot
@@ -49,6 +50,10 @@ _status = {
     "production_ok": False,
     "state_ok": False,
     "state_last_updated": None,
+    "state_age_seconds": None,
+    "state_fresh": False,
+    "state_structure_ok": False,
+    "state_failure_reason": "not_checked",
     "consecutive_failures": 0,
     "last_error_type": None,
 }
@@ -350,6 +355,10 @@ async def check_once(client: httpx.AsyncClient) -> dict:
         "production_ok": False,
         "state_ok": False,
         "state_last_updated": None,
+        "state_age_seconds": None,
+        "state_fresh": False,
+        "state_structure_ok": False,
+        "state_failure_reason": "not_checked",
         "last_error_type": None,
     }
     try:
@@ -361,7 +370,14 @@ async def check_once(client: httpx.AsyncClient) -> dict:
         state.raise_for_status()
         result["production_ok"] = validate_production_health(production.json())
         result["state_last_updated"] = parse_state_last_updated(state.text)
-        result["state_ok"] = bool(result["state_last_updated"] and "## EXACT NEXT STEP" in state.text)
+        state_health = evaluate_state_handoff_timestamp(
+            result["state_last_updated"],
+            has_exact_next_step="## EXACT NEXT STEP" in state.text,
+        )
+        result.update(state_health)
+        result["state_ok"] = bool(
+            state_health["state_fresh"] and state_health["state_structure_ok"]
+        )
     except (httpx.HTTPError, ValueError, TypeError) as exc:
         result["last_error_type"] = type(exc).__name__
         log.warning("coordinator check failed: %s", type(exc).__name__)
