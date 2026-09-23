@@ -74,6 +74,20 @@ def _screen(parent: dict) -> dict:
         "contract_sha256": parent["contract_sha256"],
         "screen_id": "SCREEN-NO-RESCUE-001",
         "screen_cutoff": "2026-09-20T21:00:00+00:00",
+        "validation_window": {
+            "start_utc": "2026-08-01T00:00:00+00:00",
+            "end_utc": "2026-08-31T00:00:00+00:00",
+            "half_windows": [
+                {
+                    "start_utc": "2026-08-01T00:00:00+00:00",
+                    "end_utc": "2026-08-16T00:00:00+00:00",
+                },
+                {
+                    "start_utc": "2026-08-16T00:00:00+00:00",
+                    "end_utc": "2026-08-31T00:00:00+00:00",
+                },
+            ],
+        },
         "untouched_oos_opened": False,
         "genuine_forward_opened": False,
         "data_quality": {
@@ -114,15 +128,15 @@ def _proposal(parent: dict, fingerprint: str, *, distinct_behavior: bool) -> dic
     if distinct_behavior:
         child["signal_rules"]["entry_condition"] = "independent materially different frozen rule"
     child["validation_plan"]["successor_uses_fresh_nonoverlapping_selection_window"] = True
+    child["validation_plan"]["successor_selection_window"] = {
+        "start_utc": "2026-09-21T00:00:00+00:00",
+        "end_utc": "2026-10-01T00:00:00+00:00",
+    }
     child["search_plan"]["planned_hypothesis_count"] = parent["search_plan"]["planned_hypothesis_count"] + 1
     return {
         "predeclaration": child,
         "change_dimensions": ["economic_mechanism", "structural_component"],
         "rationale": "Test a genuinely distinct executable mechanism rather than relabeling the failed parent.",
-        "expected_information_gain": 0.8,
-        "economic_plausibility": 0.8,
-        "data_readiness": 0.9,
-        "compute_cost": 0.2,
     }
 
 
@@ -154,6 +168,9 @@ def test_genuine_supported_behavior_change_remains_eligible() -> None:
         artifact = build_failure_learning_artifact(parent, _screen(parent), [proposal], rejected_entries=[])
         assert len(artifact["successors"]) == 1
         assert artifact["successors"][0]["predeclaration"]["fingerprint_id"] == "DISC-DISTINCT-003-v2"
+        assert artifact["successors"][0]["eligibility"] == "ELIGIBLE_UNRANKED"
+        assert artifact["successor_ranking_authority"] is False
+        assert artifact["successor_allocation_authority"] is False
         assert artifact["untouched_oos_opened"] is False
         assert artifact["genuine_forward_opened"] is False
         assert artifact["trade_authority"] is False
