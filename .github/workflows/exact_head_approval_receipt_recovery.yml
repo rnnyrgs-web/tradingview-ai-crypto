@@ -1,0 +1,118 @@
+name: Exact-Head Approval Receipt Recovery
+
+on:
+  issues:
+    types: [opened, reopened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+# Serialize with the scientific reviewer queue. Recovery is a control-plane
+# persistence repair only; it must never race a new scientific review attempt.
+concurrency:
+  group: exact-head-independent-review
+  cancel-in-progress: false
+
+jobs:
+  recover-approval-receipt:
+    if: startsWith(github.event.issue.title, 'exact-head-approval-recovery-request:')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PYTHONPATH: ${{ github.workspace }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - id: recover
+        name: Validate finalized approval and recreate only the missing receipt
+        shell: bash
+        env:
+          REQUEST_ISSUE: ${{ github.event.issue.number }}
+          REQUEST_TITLE: ${{ github.event.issue.title }}
+          REQUEST_AUTHOR: ${{ github.event.issue.user.login }}
+        run: |
+          set -euo pipefail
+          MAIN_SHA="$(git rev-parse HEAD)"
+          LIVE_MAIN_SHA="$(gh api "/repos/$GITHUB_REPOSITORY/branches/main" --jq '.commit.sha')"
+          REPO_OWNER="${GITHUB_REPOSITORY%%/*}"
+
+          if [ "$REQUEST_AUTHOR" != "$REPO_OWNER" ]; then
+            gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Unauthorized approval-receipt recovery request. Only repository owner $REPO_OWNER may request this trusted control-plane repair. No reviewer or candidate authority was invoked."
+            gh issue close "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY"
+            exit 0
+          fi
+
+          if [ "$LIVE_MAIN_SHA" != "$MAIN_SHA" ]; then
+            gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Canonical main advanced after this recovery event was created. Historical positive approval cannot be upgraded to current integration authority. Close this request and revalidate under current reviewer main."
+            gh issue close "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY"
+            exit 0
+          fi
+
+          if [[ ! "$REQUEST_TITLE" =~ ^exact-head-approval-recovery-request:\ pr=([0-9]+)\ sha=([0-9a-f]{40})\ source=([0-9]+)$ ]]; then
+            echo "Malformed recovery title; fail closed."
+            exit 1
+          fi
+          PR_NUMBER="${BASH_REMATCH[1]}"
+          HEAD_SHA="${BASH_REMATCH[2]}"
+          SOURCE_ISSUE="${BASH_REMATCH[3]}"
+
+          PR_JSON="$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --json headRefOid,baseRefName,isDraft,state)"
+          test "$(printf '%s' "$PR_JSON" | jq -r '.state')" = "OPEN"
+          test "$(printf '%s' "$PR_JSON" | jq -r '.isDraft')" = "false"
+          test "$(printf '%s' "$PR_JSON" | jq -r '.baseRefName')" = "main"
+          test "$(printf '%s' "$PR_JSON" | jq -r '.headRefOid')" = "$HEAD_SHA"
+
+          gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100&sort=created&direction=asc" \
+            | jq -s 'add | map(select(.pull_request == null))' \
+            > /tmp/exact-head-control-issues.json
+
+          python -m orchestration.exact_head_approval_recovery \
+            --issues /tmp/exact-head-control-issues.json \
+            --pr-number "$PR_NUMBER" \
+            --head-sha "$HEAD_SHA" \
+            --workflow-main-sha "$MAIN_SHA" \
+            --repository "$GITHUB_REPOSITORY" \
+            --source-issue "$SOURCE_ISSUE" \
+            --output /tmp/approval-recovery.json
+
+          jq -r '.receipt_body' /tmp/approval-recovery.json > /tmp/exact-head-review-approved-recovered.md
+          RECEIPT_TITLE="$(jq -r '.receipt_title' /tmp/approval-recovery.json)"
+          RECEIPT_URL="$(gh issue create --repo "$GITHUB_REPOSITORY" --title "$RECEIPT_TITLE" --body-file /tmp/exact-head-review-approved-recovered.md)"
+          RECEIPT_ISSUE="${RECEIPT_URL##*/}"
+          test -n "$RECEIPT_ISSUE"
+
+          gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100&sort=created&direction=asc" \
+            | jq -s 'add | map(select(.pull_request == null))' \
+            > /tmp/exact-head-control-issues-after-recovery.json
+          STATE="$(python -m orchestration.exact_head_control_state \
+            --issues /tmp/exact-head-control-issues-after-recovery.json \
+            --pr-number "$PR_NUMBER" \
+            --head-sha "$HEAD_SHA" \
+            --workflow-main-sha "$MAIN_SHA" \
+            --repository "$GITHUB_REPOSITORY")"
+
+          test "$(printf '%s' "$STATE" | jq -r '.approved')" = "true"
+          test "$(printf '%s' "$STATE" | jq -r '.rejected')" = "false"
+          test "$(printf '%s' "$STATE" | jq -r '.interrupted')" = "false"
+          test "$(printf '%s' "$STATE" | jq -r '.ambiguous_control_state')" = "false"
+          MATCH="$(printf '%s' "$STATE" | jq --argjson issue "$RECEIPT_ISSUE" '[.validated_approval_receipts[] | select(. == $issue)] | length')"
+          test "$MATCH" -eq 1
+
+          gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Recovered only the missing secondary approval receipt as #$RECEIPT_ISSUE from validated finalized source attempt #$SOURCE_ISSUE. No reviewer was rerun; no scientific judgment, candidate SHA, or integration authority changed."
+          gh issue close "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY"
+
+          {
+            echo "### Exact-head approval receipt persistence recovery"
+            echo "- PR: #$PR_NUMBER"
+            echo "- Candidate SHA: $HEAD_SHA"
+            echo "- Finalized source attempt: #$SOURCE_ISSUE"
+            echo "- Recovered receipt: #$RECEIPT_ISSUE"
+            echo "- Reviewer rerun: NO"
+            echo "- Autonomous merge authority: NONE"
+          } >> "$GITHUB_STEP_SUMMARY"
