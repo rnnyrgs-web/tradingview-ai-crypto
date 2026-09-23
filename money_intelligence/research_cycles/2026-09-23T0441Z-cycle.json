@@ -1,0 +1,284 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-23T0441Z",
+  "information_cutoff": "2026-09-23T04:41:35Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_observed_before_write": "b986b0e10fd120fa009f5b58e7052b739e287238",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles": true,
+    "searched_prediction_artifacts": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "last_owner_report_cycle": "2026-09-22T0616Z",
+    "run_start_utc": "2026-09-23T04:33:10Z",
+    "artifact_cutoff_utc": "2026-09-23T04:41:35Z",
+    "seconds_this_run_minimum": 505,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 0,
+    "minimum_cumulative_seconds_since_last_owner_report": 505,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active research/execution time is counted. Schedule gaps, idle time, publication timestamps and background time are excluded."
+  },
+  "daily_big_move_scan": {
+    "selected_moves": [
+      "Nasdaq reached another intraday record on September 22 while U.S. AI/technology equities remained leaders, yet AI-linked investment-grade debt traded at materially wider spreads than the broader IG market.",
+      "Brent fell below/near $100 as Saudi Arabia restarted the East-West pipeline at a reduced rate and prepared to resume Yanbu exports, despite continuing Hormuz disruption and extremely low visible vessel counts.",
+      "China Vanke A shares rose 4.38% on September 22 after two prior sessions near the 10% daily limit, producing roughly a 25% three-session rally while regulators reportedly asked banks to extend Vanke loans and keep overdue exposures from NPL classification.",
+      "BTC held around $86k after the September 21 squeeze breakout; completed September 21 U.S. spot BTC ETF flow was +$999M and the September 22 Farside table showed at least +$364.4M before IBIT was populated, while funding had normalized but open interest remained elevated.",
+      "Gold fell about 0.4% toward $4,325/oz despite continuing geopolitical risk as the dollar and expected Fed tightening remained dominant marginal pricing variables.",
+      "USD/CAD reached roughly 1.4078, a nearly seven-week high, as U.S.-Canada yield differentials outweighed the Bank of Canada's more hawkish rhetoric."
+    ],
+    "selection_logic": "Selected for abnormality and causal information value using asset- and volatility-sensitive thresholds rather than one fixed percentage."
+  },
+  "highest_information_question": "When a capital-intensive growth theme remains an equity-market leader while its debt simultaneously cheapens, how much of the credit spread is a supply/concentration technical versus an early fundamental warning, and which pre-move variables separate the two?",
+  "fresh_research": [
+    {
+      "topic": "AI equity leadership can coexist with an AI-specific credit supply premium; widening sector debt spreads are not automatically a default signal",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / AI / CORPORATE CREDIT / CAPITAL STRUCTURE / SUPPLY",
+      "observed_facts": [
+        "Reuters reported on September 22 that AI-related corporate bonds were trading around 115 bp over Treasuries versus roughly 78 bp for the broader investment-grade market, even though portfolio managers said the concern was mainly borrowing volume, unpredictability and concentration rather than near-term default risk.",
+        "Goldman Sachs data cited by Reuters project hyperscaler gross debt issuance at roughly $420B in 2027, about 60% above estimated 2026 issuance.",
+        "SIFMA reported U.S. corporate bond issuance of $1.8998T through August 2026, up 29.8% year over year, confirming that the broader primary market is already absorbing unusually heavy supply.",
+        "On the same day, Nasdaq reached an intraday record and AI-linked technology remained the strongest equity narrative, producing a useful within-theme equity/credit divergence rather than a broad risk-off move.",
+        "The prior Money Intelligence cycle already documented strong differentiation within AI financing: SoftBank could raise large unsecured financing, contract/collateral-backed structures drew demand, while Oracle-linked Project Jupiter loans traded around 89-91 cents amid residual project and leverage concerns."
+      ],
+      "historical_controls": [
+        "BIS reported that the 1999 surge in corporate bond issuance itself distorted swap/credit spreads through hedging and supply mechanics even as equity prices rose and general economic optimism remained strong.",
+        "By 2000-2001, telecom/technology spreads widened much more severely and were accompanied by collapsing sector equity returns and rising credit concerns. San Francisco Fed historical work found telecom junk spreads rose about 1,129 bp from January 2000 to August 2001 while associated telecom equities fell about 57%, a fundamentally different joint signal from a modest supply premium.",
+        "The historical telecom cycle therefore warns against treating every early spread widening as harmless, but also shows that transition from supply technical to fundamental stress should produce broader confirmation in cash flow, equity, CDS/rating and refinancing conditions."
+      ],
+      "inference": "AI debt currently carries a sector-specific capital-supply/concentration premium. Equity investors are paying for growth optionality while creditors demand compensation for uncertain future issuance, portfolio concentration and unclear return on invested capital. The current 115-vs-78 bp spread gap is therefore not yet sufficient evidence of default stress or an equity short. It becomes materially more bearish if the premium persists/widens while issuer CDS, secondary bond prices, free cash flow, capex returns and equity relative strength deteriorate together.",
+      "causal_chain": "AI demand/capex plans -> repeated large bond issuance and project financing -> fixed-income portfolio concentration/limited risk budgets -> higher new-issue concessions and secondary spread cheapening -> increased financing cost -> potential reduction in residual equity economics if capex returns do not rise enough -> only then, if fundamentals deteriorate, broader deleveraging/refinancing feedback.",
+      "source_destination_chain": "Pension/insurance/asset-manager cash -> corporate bond primary/secondary market -> hyperscaler and AI infrastructure issuers -> data centers/chips/power/cooling -> creditors receive coupons/seniority while equity retains residual upside/downside; portfolio concentration limits can redirect marginal bond demand toward non-AI issuers even while equity capital keeps favoring AI.",
+      "negative_findings": [
+        "Do not infer 'AI bond spreads wider' means markets expect imminent default when primary supply and portfolio concentration are documented drivers.",
+        "Do not infer strong AI equities mean financing is cheap; credit can reprice independently because bondholders face duration, issuance and concentration risk.",
+        "Do not use gross AI financing volume as a bullish equity signal; the cost, seniority, recourse, guarantees and return on the funded capex determine value capture."
+      ],
+      "pre_move_predictors_to_test": [
+        "AI-sector OAS minus matched-rating/maturity non-AI OAS",
+        "New-issue concession and orderbook coverage",
+        "Issuer CDS versus cash-bond spread to separate credit-risk from supply/liquidity premium",
+        "Net debt issuance relative to free cash flow and capex",
+        "Portfolio/index concentration and dealer inventory",
+        "Hyperscaler capex ROIC, backlog quality and contracted revenue",
+        "Equity-credit divergence duration and whether equity breadth narrows further"
+      ],
+      "learning_candidate": {
+        "id": "MI-H-20260923-AI-CREDIT-SUPPLY-VS-FUNDAMENTALS",
+        "status": "SUPPORTED_PROVISIONAL_WITH_HISTORICAL_CONTROL",
+        "claim": "In a capital-intensive growth boom, sector credit spreads can widen from issuance supply and portfolio concentration while equities keep rising. Treat the spread as an early financing-cost state variable, not a fundamental bearish signal, unless it is confirmed by CDS/fundamental deterioration, weaker refinancing demand and equity/cash-flow weakness."
+      },
+      "decision_support": {
+        "theme": "AI equities and AI-linked corporate credit",
+        "action": "SELECTIVE HOLD / RESEARCH FOR BUY IN CREDIT CONCESSIONS; NO SECTOR-WIDE EQUITY SHORT",
+        "horizon": "weeks to years",
+        "confidence": "MODERATE-HIGH on mechanism; LOW on immediate asset direction",
+        "confirmations": [
+          "Sector spread premium remains elevated after controlling for issuance calendar and duration",
+          "New-issue concessions rise and orderbooks weaken",
+          "CDS and cash-bond spreads widen together",
+          "Free cash flow/ROIC disappoints while capex remains high"
+        ],
+        "invalidation": "If supply slows, new-issue concessions compress and AI spreads mean-revert without worsening fundamentals, the current widening was predominantly technical rather than a durable risk signal.",
+        "cost_capacity": "Investment-grade markets are deep, but issue-level liquidity and index concentration matter; equity exposure remains valuation-sensitive."
+      },
+      "sources": [
+        "Reuters 2026-09-22 Corporate bond buyers get picky with flood of AI debt",
+        "SIFMA US Corporate Bonds Statistics, published 2026-09-14",
+        "BIS International Banking and Financial Market Developments, Q4 1999 and Q3 2000",
+        "Federal Reserve Bank of San Francisco Economic Letter 2001-11 on junk-bond spreads"
+      ]
+    },
+    {
+      "topic": "Vanke rally plus explicit regulatory forbearance: survival probability can improve while reported NPL quality becomes less informative",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / CHINA PROPERTY / BANK CREDIT / FORBEARANCE / MEASUREMENT REGIME",
+      "observed_facts": [
+        "China Vanke A shares closed 3.81 yuan on September 22, +4.38%, after +9.94% on September 21 and +9.93% on September 18; volume was hundreds of millions of shares per session, making the three-day move abnormal relative to the preceding range.",
+        "Reuters reported September 22 that Chinese regulators informally asked major banks not to classify overdue Vanke loans as non-performing, to extend repayment deadlines and to defer some interest collection.",
+        "Vanke's June 30, 2026 interim financial statements showed RMB53.08B cash and cash equivalents versus RMB178.86B of bank loans, other borrowings and bonds due within one year, and Deloitte highlighted material uncertainty over going concern.",
+        "The same interim report showed current bank/financial-institution borrowings of RMB167.25B and non-current borrowings of RMB130.00B, with substantial collateral and shareholder support.",
+        "The equity rally began on September 18, before the September 22 Reuters publication, so the public report cannot truthfully be assigned as the catalyst for the entire three-session move; earlier policy expectations/leakage or other support may have contributed but remain unverified.",
+        "The IMF's 2025 China FSAP explicitly warned that loss-deferral/forbearance practices reduce transparency and may veil losses; its 2026 Article IV said the practice of using forbearance to delay loss recognition should be discontinued."
+      ],
+      "inference": "Regulatory forbearance changes the timing and visibility of losses rather than necessarily removing the underlying economic impairment. It can raise a distressed borrower's equity by reducing near-term default/collection pressure and buying time, while simultaneously making reported bank NPL ratios a weaker real-time measure of credit stress.",
+      "causal_chain": "Property cash-flow weakness -> looming maturities/default risk -> state/regulatory forbearance and maturity extension -> reduced immediate collection/default pressure -> higher near-term survival probability and equity optionality -> delayed loss recognition at banks/state sponsor -> weaker signal content in reported NPL metrics -> eventual outcome depends on property sales, asset values, cash interest and fresh support.",
+      "matched_controls": [
+        "Vanke's January 2026 bond restructurings paid 40% of principal and extended 60% by one year; Fitch treated the restructuring as a distressed debt exchange even though it relieved the immediate maturity wall.",
+        "China's 2023 stricter classification framework was explicitly designed to reduce opportunities to hide problem loans, making the September 2026 Vanke-specific window guidance a measurement-regime exception rather than evidence the economic loan quality improved."
+      ],
+      "negative_findings": [
+        "Do not infer reported NPL stability at exposed banks means underlying Vanke/property credit risk stabilized when classification is being administratively delayed.",
+        "Do not attribute the full Vanke equity rally to the September 22 public guidance because price began moving materially before the report.",
+        "Do not equate maturity extension with solvency repair; cash generation and asset-sale economics remain decisive."
+      ],
+      "pre_move_predictors_to_test": [
+        "Overdue loans and special-mention loans versus reported NPLs",
+        "Cash interest actually collected versus capitalized/deferred interest",
+        "Maturity extensions and collateral enhancement",
+        "State-shareholder loans and guarantees",
+        "Property contracted sales/cash collections",
+        "Bank provisioning/ECL stage changes",
+        "Offshore/onshore bond prices versus reported bank asset quality"
+      ],
+      "learning_candidate": {
+        "id": "MI-H-20260923-FORBEARANCE-MEASUREMENT-REGIME",
+        "status": "SUPPORTED_REGIME_SPECIFIC",
+        "claim": "When regulators permit loan extensions or suspend NPL recognition, reported bank asset-quality metrics can decouple from economic credit impairment. Track overdue/restructured cash flows, provisions and market credit pricing rather than treating NPL ratios as a sufficient state variable."
+      },
+      "decision_support": {
+        "instrument": "China Vanke / China property credit / exposed banks",
+        "action": "WAIT / AVOID CHASING Vanke; ADJUST bank-credit analysis for forbearance",
+        "horizon": "weeks to years",
+        "confidence": "HIGH on measurement mechanism; LOW on immediate equity direction",
+        "confirmations": [
+          "Continued extensions/non-cash interest treatment",
+          "Gap between overdue/restructured exposures and reported NPLs widens",
+          "Sponsor support continues while underlying sales/cash flows stay weak"
+        ],
+        "invalidation": "The measurement concern would weaken if subsequent data show cash repayments normalize, extensions end and asset quality improves without administrative exceptions.",
+        "cost_capacity": "Policy intervention and state support create severe gap/event risk in both equity and credit."
+      },
+      "sources": [
+        "Reuters 2026-09-22 China asks banks to keep Vanke loans off bad-debt books",
+        "China Vanke 2026 interim report / Deloitte review",
+        "IMF China FSAP 2025 and 2026 Article IV",
+        "S&P Global 2023 analysis of stricter China bank asset-classification rules"
+      ]
+    },
+    {
+      "topic": "Stablecoin reserve rules route capital between banks and sovereign short-duration assets; regulatory plumbing matters before token price narratives",
+      "label": "MONEY / STABLECOINS / BANK FUNDING / RESERVES / SOVEREIGN BILLS / REGULATION",
+      "observed_facts": [
+        "Reuters reported September 22 that the ECB and EU national central banks recommended dropping MiCA's current requirement that stablecoin issuers hold at least 30% of reserves as bank deposits, rising to 60% for significant issuers, and instead favor minimum holdings in assets maturing within one to five working days.",
+        "The ECB has argued publicly that mandated stablecoin bank deposits can replace relatively sticky retail deposits with potentially run-sensitive issuer deposits, creating two-way contagion between stablecoins and banks.",
+        "The March 2023 USDC/Silicon Valley Bank episode is a historical matched control: bank-reserve exposure impaired confidence in USDC and caused a temporary depeg.",
+        "Circle disclosed that as of June 30, 2026 approximately 84% of USDC reserves were held in the Circle Reserve Fund, a government money-market fund holding short-dated Treasuries, overnight Treasury repo and cash; only the remainder was held as bank cash.",
+        "USDC circulation was about $74.6B on September 21, 2026, while Circle's EURC circulation was only about EUR403.9M and the broader euro stablecoin market was around EUR650M by mid-2026. The current euro-area system-level balance-sheet effect is therefore small even though the structural mechanism is important.",
+        "The September 22 change is a central-bank recommendation, not an implemented final rule at this cutoff."
+      ],
+      "inference": "Stablecoin reserve regulation is a capital-routing rule. A mandatory bank-deposit floor sends part of new stablecoin backing into commercial-bank funding but increases bank/stablecoin contagion; allowing more near-cash sovereign securities/repo/MMFs can redirect the same reserve growth toward sovereign short-duration collateral and away from bank deposits. The macro effect depends on scale, not stablecoin market cap alone.",
+      "causal_chain": "User converts bank money/cash into stablecoin -> issuer acquires reserve assets according to regulation -> deposit-floor regime routes a fixed share back into banks; liquid-securities regime routes more toward bills/repo/MMFs -> bank funding mix and short-sovereign demand change -> redemption shocks reverse the flow -> banking/reserve-asset markets absorb liquidity stress.",
+      "negative_findings": [
+        "Do not infer today's ECB recommendation already changed reserve allocations.",
+        "Do not treat tokenized/stablecoin notional growth as automatic native-token value capture.",
+        "Do not extrapolate U.S. USDC reserve composition one-for-one to MiCA euro stablecoins without legal-entity and jurisdictional accounting.",
+        "Current euro stablecoin scale is too small to justify a macro rates trade from the proposal alone."
+      ],
+      "pre_move_predictors_to_test": [
+        "Final MiCA/EBA reserve rule and effective date",
+        "Issuer reserve composition by legal entity/jurisdiction",
+        "Stablecoin supply growth versus bank-deposit displacement",
+        "Issuer deposit concentration at individual banks",
+        "Short sovereign bill/repo/MMF allocation and maturity profile",
+        "Redemption velocity during stress",
+        "Stablecoin reserve yield versus issuer operating economics"
+      ],
+      "learning_candidate": {
+        "id": "MI-H-20260923-STABLECOIN-RESERVE-ROUTING",
+        "status": "SUPPORTED_PROVISIONAL",
+        "claim": "Stablecoin reserve requirements determine where the backing capital actually sits. Deposit floors can add wholesale bank funding but increase two-way run contagion; highly liquid securities requirements can shift capital toward short sovereign collateral. Asset-price implications require scale and implemented rules, not stablecoin headlines alone."
+      },
+      "decision_support": {
+        "theme": "Euro stablecoins / European bank funding / short sovereign collateral",
+        "action": "WAIT / NO EDGE",
+        "horizon": "months to years",
+        "confidence": "MODERATE-HIGH on plumbing; LOW on current price impact",
+        "confirmations": [
+          "Rule is formally adopted",
+          "EUR stablecoin supply grows materially",
+          "Issuer bank-deposit share falls and short-sovereign/repo allocation rises"
+        ],
+        "invalidation": "Proposal is rejected or euro stablecoin scale remains too small to affect bank funding or sovereign collateral demand.",
+        "cost_capacity": "No direct trade identified; effects are balance-sheet and regulatory."
+      },
+      "sources": [
+        "Reuters 2026-09-22 ECB, EU central banks suggest dropping stablecoin deposits rule",
+        "ECB 2026-06-01 speech From money market funds to stablecoins: lessons for central banks",
+        "Circle 2026 Q2 SEC filing and September 21 reserve/transparency pages",
+        "EBA MiCAR reserve-liquidity technical standards"
+      ]
+    },
+    {
+      "topic": "BTC post-breakout follow-through: voluntary ETF demand persisted for a second session, but current-day flow remained incomplete at cutoff",
+      "label": "CRYPTO / BTC / ETF / DERIVATIVES / CAUSAL CLOCK",
+      "observed_facts": [
+        "BTC traded around $85.9k at the cutoff after the prior session's roughly 6.7% breakout, preserving most of the move rather than immediately retracing once the initial short-liquidation wave faded.",
+        "Farside's completed September 21 U.S. spot BTC ETF total was +$999.0M and broad across IBIT, FBTC, ARKB and other funds.",
+        "At this cutoff, the September 22 Farside table showed at least +$364.4M with IBIT still unpopulated, so the current-session total must be treated as provisional/incomplete rather than final.",
+        "September 22 funding across major venues had normalized near neutral benchmarks while open interest remained substantially above the pre-breakout level, suggesting leverage size stayed elevated without extreme long-side funding cost.",
+        "ETH ETF flow for September 22 was also still incomplete at cutoff, with at least +$37.7M shown in the Farside table."
+      ],
+      "inference": "The post-breakout state is healthier than a one-hour squeeze-only explanation because large regulated-product demand persisted into a second session and price held. However the latest flow is incomplete and leverage remains elevated, so the evidence supports HOLD/WAIT rather than an immutable BUY forecast after an already-realized double-digit multi-day move.",
+      "negative_findings": [
+        "Do not call the September 22 BTC ETF total final while IBIT is blank.",
+        "Do not treat ETF creations as proof of same-timestamp exchange spot purchases; AP inventory/in-kind/hedging mechanics remain relevant.",
+        "Do not infer controlled funding means leverage is low when open interest remains elevated."
+      ],
+      "decision_support": {
+        "instrument": "BTC",
+        "action": "HOLD / WAIT FOR PERSISTENT POST-BREAKOUT ABSORPTION",
+        "horizon": "days to weeks",
+        "confidence": "MODERATE",
+        "confirmations": [
+          "Final September 22 flow remains strongly positive and several more sessions confirm breadth",
+          "BTC holds the prior breakout region on pullbacks",
+          "Open interest/funding do not accelerate faster than spot",
+          "Spot/on-chain/exchange evidence confirms absorption"
+        ],
+        "invalidation": "Breakout failure with ETF redemptions and elevated leverage.",
+        "cost_capacity": "Highly liquid; entry asymmetry worsens after a squeeze-driven vertical move."
+      },
+      "sources": [
+        "Farside Investors BTC and ETH ETF daily flow tables",
+        "CoinMarketCap BTC price snapshot",
+        "CoinGlass-derived derivatives reporting; funding/OI cross-checks"
+      ]
+    },
+    {
+      "topic": "Saudi East-West restart is another out-of-sample confirmation that effective deliverable supply dominates attack headlines and raw AIS counts",
+      "label": "OIL / PHYSICAL FLOWS / PIPELINE / HORMUZ / MATCHED CONTROL",
+      "observed_facts": [
+        "Saudi Arabia restarted its East-West pipeline at a reduced rate on September 22 and prepared to resume Yanbu exports; sources said full 7 mb/d capability may take six to eight weeks, but roughly 4 mb/d bypass capacity was becoming available again.",
+        "Brent fell more than $2 on the restart news and later traded around/below $100 as the expected effective supply loss shrank.",
+        "Visible Hormuz commodity-vessel crossings were extremely low, but AIS-dark shipping and recovered Saudi pipeline/export routes made raw visible-vessel counts an incomplete proxy for delivered barrels."
+      ],
+      "inference": "This is another direct validation of the existing Money Intelligence oil rule: geopolitical damage, gross route capacity and visible vessel counts only matter to price through effective deliverable barrels, expected outage duration, inventories, freight and substitution.",
+      "negative_findings": [
+        "Do not use AIS-visible vessel counts as a standalone supply-loss measure during conflict.",
+        "Do not buy crude solely on attack headlines once substitution/restart evidence improves effective supply."
+      ],
+      "decision_support": "Crude WAIT / high tail risk unchanged; no new directional forecast."
+    }
+  ],
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No new immutable directional forecast clears the evidence bar. Existing research remains learning-first and fail-closed."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. The AI credit-supply-vs-fundamentals and forbearance-measurement mechanisms are materially supported, but the owner-report gate has reset after the September 22 owner report and has not accumulated 60 minutes of verifiable execution. Avoid noisy dashboard/learning-ledger changes until at least one more direct validation or scheduled synthesis pass.",
+  "next_research": [
+    "Resolve final September 22 BTC/ETH ETF totals and compare with September 23 price, OI, funding, basis, Coinbase premium and spot breadth.",
+    "Build AI-credit panel: issuer OAS/CDS/new-issue concession/issuance/free-cash-flow/capex/ROIC across Alphabet, Meta, Amazon, Microsoft, Oracle and selected project-finance structures.",
+    "Test 1999-2001 telecom and 2020-2021 capex booms to identify when supply-driven spread widening transitioned into fundamental equity/credit stress.",
+    "Build China property-bank measurement panel using overdue loans, special-mention loans, NPLs, provisions/ECL stages, Vanke exposure, restructuring and state-support flows.",
+    "Track whether the ECB stablecoin reserve recommendation becomes a formal rule and quantify affected euro-stablecoin reserves before inferring bank-funding or sovereign-bill effects.",
+    "Continue physical oil validation using pipeline throughput, Yanbu loadings, Hormuz delivered barrels, freight and physical differentials rather than attack headlines."
+  ],
+  "lane_integrity": {
+    "signal_tables_changed": false,
+    "signal_confidence_changed": false,
+    "paper_trades_changed": false,
+    "promotion_gates_changed": false,
+    "broker_state_changed": false,
+    "real_money_trades_authorized_or_executed": false
+  }
+}
