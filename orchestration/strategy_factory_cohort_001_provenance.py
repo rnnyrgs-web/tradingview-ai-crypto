@@ -11,6 +11,7 @@ LOCK_RELATIVE_PATH = Path(
     "orchestration/cohorts/strategy_factory_cohort_001_admission_provenance_lock.json"
 )
 REQUIRED_SOURCE_PATHS = {
+    ".github/workflows/strategy_factory_cohort_001_admission.yml",
     "orchestration/cohorts/strategy_factory_cohort_001_seed.json",
     "orchestration/cohorts/strategy_factory_cohort_001_readiness.json",
     "orchestration/cohorts/strategy_factory_cohort_001_ownership_correction.json",
