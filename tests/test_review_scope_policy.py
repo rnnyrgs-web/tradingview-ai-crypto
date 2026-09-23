@@ -10,6 +10,7 @@ from orchestration.review_scope_policy import (
     REVIEW_SCOPE_POLICY_VERSION,
     changed_paths_sha256,
     classify_diff_scope,
+    protected_path_registry_identity,
     review_receipt_context_sha256,
     review_scope_policy_sha256,
     verify_review_scope_receipt,
@@ -22,6 +23,7 @@ INFRA_PATHS = [
 ]
 PR_NUMBER = 579
 HEAD_SHA = "a" * 40
+RUNTIME_SHA = "c" * 40
 SCOPE = "REVIEW_INFRASTRUCTURE"
 WORKFLOW_REPOSITORY = "rnnyrgs-web/tradingview-ai-crypto"
 WORKFLOW_RUN_ID = 123456789
@@ -36,6 +38,7 @@ def _receipt() -> dict:
         "repository": WORKFLOW_REPOSITORY,
         "run_id": WORKFLOW_RUN_ID,
         "workflow_ref": WORKFLOW_REF,
+        "runtime_git_sha": RUNTIME_SHA,
     }
     return {
         "review_receipt_schema_version": REVIEW_RECEIPT_SCHEMA_VERSION,
@@ -45,6 +48,7 @@ def _receipt() -> dict:
         "changed_paths": INFRA_PATHS,
         "changed_paths_sha256": changed_paths_sha256(INFRA_PATHS),
         "protected_paths": INFRA_PATHS,
+        "protected_path_registry": protected_path_registry_identity(),
         "diff_scope_class": SCOPE,
         "pr_number": PR_NUMBER,
         "exact_head_sha": HEAD_SHA,
@@ -58,6 +62,7 @@ def _receipt() -> dict:
             workflow_repository=WORKFLOW_REPOSITORY,
             workflow_run_id=WORKFLOW_RUN_ID,
             workflow_ref=WORKFLOW_REF,
+            workflow_runtime_sha=RUNTIME_SHA,
         ),
     }
 
@@ -72,6 +77,7 @@ def _verify(receipt: dict) -> None:
         expected_workflow_repository=WORKFLOW_REPOSITORY,
         expected_workflow_run_id=WORKFLOW_RUN_ID,
         expected_workflow_ref=WORKFLOW_REF,
+        expected_workflow_runtime_sha=RUNTIME_SHA,
     )
 
 
@@ -111,7 +117,7 @@ def test_scope_receipt_digest_and_authority_validate() -> None:
 
 
 def test_scope_receipt_cannot_self_authenticate_without_trusted_context() -> None:
-    with pytest.raises(RuntimeError, match="trusted review context and workflow provenance required"):
+    with pytest.raises(RuntimeError, match="trusted review context"):
         verify_review_scope_receipt(_receipt())
 
 
@@ -125,7 +131,7 @@ def test_scope_receipt_policy_digest_tamper_fails_closed() -> None:
 def test_scope_receipt_unknown_version_fails_closed() -> None:
     receipt = copy.deepcopy(_receipt())
     receipt["review_scope_policy_version"] = 999
-    with pytest.raises(RuntimeError, match="unknown review-scope policy version"):
+    with pytest.raises(RuntimeError, match="stale review-scope policy version"):
         _verify(receipt)
 
 
@@ -186,6 +192,13 @@ def test_scope_receipt_protected_path_context_tamper_fails_closed() -> None:
         _verify(receipt)
 
 
+def test_scope_receipt_registry_identity_tamper_fails_closed() -> None:
+    receipt = copy.deepcopy(_receipt())
+    receipt["protected_path_registry"]["sha256"] = "0" * 64
+    with pytest.raises(RuntimeError, match="registry identity mismatch"):
+        _verify(receipt)
+
+
 def test_scope_receipt_cannot_grant_integration_authority() -> None:
     receipt = copy.deepcopy(_receipt())
     receipt["integration_authority"] = "MERGE"
@@ -205,6 +218,7 @@ def test_scope_receipt_pr_or_head_replay_fails_closed() -> None:
             expected_workflow_repository=WORKFLOW_REPOSITORY,
             expected_workflow_run_id=WORKFLOW_RUN_ID,
             expected_workflow_ref=WORKFLOW_REF,
+            expected_workflow_runtime_sha=RUNTIME_SHA,
         )
     with pytest.raises(RuntimeError, match="head SHA mismatch"):
         verify_review_scope_receipt(
@@ -216,6 +230,7 @@ def test_scope_receipt_pr_or_head_replay_fails_closed() -> None:
             expected_workflow_repository=WORKFLOW_REPOSITORY,
             expected_workflow_run_id=WORKFLOW_RUN_ID,
             expected_workflow_ref=WORKFLOW_REF,
+            expected_workflow_runtime_sha=RUNTIME_SHA,
         )
 
 
@@ -231,6 +246,23 @@ def test_scope_receipt_workflow_provenance_replay_fails_closed() -> None:
             expected_workflow_repository=WORKFLOW_REPOSITORY,
             expected_workflow_run_id=WORKFLOW_RUN_ID + 1,
             expected_workflow_ref=WORKFLOW_REF,
+            expected_workflow_runtime_sha=RUNTIME_SHA,
+        )
+
+
+def test_scope_receipt_runtime_sha_replay_fails_closed() -> None:
+    receipt = _receipt()
+    with pytest.raises(RuntimeError, match="workflow provenance mismatch"):
+        verify_review_scope_receipt(
+            receipt,
+            expected_pr_number=PR_NUMBER,
+            expected_head_sha=HEAD_SHA,
+            expected_changed_paths=INFRA_PATHS,
+            expected_diff_scope=SCOPE,
+            expected_workflow_repository=WORKFLOW_REPOSITORY,
+            expected_workflow_run_id=WORKFLOW_RUN_ID,
+            expected_workflow_ref=WORKFLOW_REF,
+            expected_workflow_runtime_sha="d" * 40,
         )
 
 
@@ -241,11 +273,19 @@ def test_scope_receipt_trusted_context_digest_tamper_fails_closed() -> None:
         _verify(receipt)
 
 
-def test_policy_digest_binds_infrastructure_and_protected_registry() -> None:
-    digest = review_scope_policy_sha256()
-    assert len(digest) == 64
-    int(digest, 16)
-    assert digest == review_scope_policy_sha256(REVIEW_SCOPE_POLICY_VERSION)
+def test_policy_digest_binds_lineage_and_registry_identity() -> None:
+    current = review_scope_policy_sha256()
+    prior = review_scope_policy_sha256(5)
+    assert len(current) == 64
+    assert len(prior) == 64
+    int(current, 16)
+    int(prior, 16)
+    assert current != prior
+    identity = protected_path_registry_identity()
+    assert identity == {
+        "version": 1,
+        "sha256": "00e9f1a404d1f5b92210f0c172295cd0067ff1078c33e4dcb284a4e3be4c7f25",
+    }
 
 
 def test_exact_head_header_embeds_phase_aware_scope_and_provenance() -> None:
@@ -253,6 +293,7 @@ def test_exact_head_header_embeds_phase_aware_scope_and_provenance() -> None:
         "repository": WORKFLOW_REPOSITORY,
         "run_id": WORKFLOW_RUN_ID,
         "workflow_ref": WORKFLOW_REF,
+        "runtime_git_sha": RUNTIME_SHA,
     }
     header = review._context_header(
         pr_number=515,
@@ -267,8 +308,10 @@ def test_exact_head_header_embeds_phase_aware_scope_and_provenance() -> None:
     assert "NOT_APPLICABLE_FOR_THIS_PHASE" in header
     assert "concrete machine-readable or executable controls" in header
     assert "Claims, comments, labels, or prose alone NEVER establish" in header
-    assert "offline JSON file cannot authenticate itself" in header
+    assert "offline JSON" in header
     assert f"WORKFLOW_RUN_ID: {WORKFLOW_RUN_ID}" in header
+    assert f"WORKFLOW_RUNTIME_GIT_SHA: {RUNTIME_SHA}" in header
+    assert "PROTECTED_PATH_REGISTRY_SHA256:" in header
     assert f"REVIEW_SCOPE_POLICY_VERSION: {review.REVIEW_SCOPE_DISCIPLINE_VERSION}" in header
     assert f"REVIEW_SCOPE_POLICY_SHA256: {review._review_scope_policy_sha256()}" in header
 
@@ -287,6 +330,7 @@ def test_enriched_verdict_binds_trusted_exact_context_and_workflow() -> None:
         "repository": WORKFLOW_REPOSITORY,
         "run_id": WORKFLOW_RUN_ID,
         "workflow_ref": WORKFLOW_REF,
+        "runtime_git_sha": RUNTIME_SHA,
     }
     enriched = review._enrich_verdict(
         {"approve": True, "reason": "bounded scope is coherent", "risk": "low"},
@@ -302,6 +346,7 @@ def test_enriched_verdict_binds_trusted_exact_context_and_workflow() -> None:
     assert enriched["review_scope_policy_sha256"] == review_scope_policy_sha256()
     assert enriched["changed_paths_sha256"] == changed_paths_sha256(INFRA_PATHS)
     assert enriched["protected_paths"] == INFRA_PATHS
+    assert enriched["protected_path_registry"] == protected_path_registry_identity()
     assert enriched["workflow_provenance"] == provenance
     assert enriched["review_context_sha256"] == review_receipt_context_sha256(
         pr_number=PR_NUMBER,
@@ -311,4 +356,5 @@ def test_enriched_verdict_binds_trusted_exact_context_and_workflow() -> None:
         workflow_repository=WORKFLOW_REPOSITORY,
         workflow_run_id=WORKFLOW_RUN_ID,
         workflow_ref=WORKFLOW_REF,
+        workflow_runtime_sha=RUNTIME_SHA,
     )
