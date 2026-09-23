@@ -1,0 +1,39 @@
+{
+  "amendment_id": "STRATEGY-FACTORY-COHORT-001-RANDOMIZED-PLACEBO-SOURCE-OCCUPANCY-v1",
+  "amendment_sha256": "78518ae72cefc31db5944653fedb8e7c8a133911ebd5cdd7183f9fb096d66771",
+  "artifact_type": "strategy_factory_cohort_001_randomized_placebo_source_occupancy_amendment",
+  "authority_locks": {
+    "baseline_outcomes_opened_to_form_amendment": false,
+    "broker_connected": false,
+    "genuine_forward_opened": false,
+    "post_outcome_pool_redefinition_allowed": false,
+    "post_outcome_redraw_allowed": false,
+    "promotion_authority": false,
+    "protected_oos_opened": false,
+    "stage1_outcomes_opened_to_form_amendment": false,
+    "trade_authority": false
+  },
+  "defect": {
+    "classification": "PRE_OUTCOME_RANDOMIZED_PLACEBO_SOURCE_OCCUPANCY_AMBIGUITY",
+    "description": "The parent contract already reserves maximum possible occupancy for placebo templates, but its eligible-anchor rule says only that original candidate signal/exposure intervals are excluded. For a dynamic-exit candidate, interpreting that source-side exclusion with realized early-exit duration would let post-entry path information change the placebo anchor pool. This amendment removes that source-exclusion degree of freedom before any Stage-1 or baseline outcome is opened, without changing Stage-1 source-cluster identity or count.",
+    "outcomes_read": false
+  },
+  "formed_at": "2026-09-23T17:01:08Z",
+  "normative_rules": {
+    "anchor_overlap_rule": "A randomized-timing placebo anchor is ineligible if its reserved maximum-exposure interval overlaps any source candidate reserved maximum-exposure interval in the same training partition or frozen validation half. Apply the same interval convention to both source and placebo sides.",
+    "cluster_concurrency": "When a source independent-event cluster contains multiple constituents, reserve the union of all constituent maximum-occupancy intervals before selecting any placebo anchor.",
+    "fixed_hold_candidates": "For fixed-hold candidates, maximum possible occupancy equals the already-frozen fixed holding interval; there is no realized-exit shortening.",
+    "insufficient_pool": "If this stricter outcome-blind source reservation makes the deterministic placebo pool insufficient, return DATA/PIT_INCONCLUSIVE_RANDOMIZED_PLACEBO_POOL. Do not fall back to realized-exit exclusions, shrink the source set, redraw, relax partition/half containment, or reuse overlapping anchors.",
+    "range_auction_candidate": "For DISC-RANGE-AUCTION-REV-001-v1, freeze the source reserved interval from the original signal's t+1 entry open through the t+7 open corresponding to the frozen six-hour maximum hold, regardless of whether the realized path would trigger midpoint take-profit or ATR stop earlier.",
+    "source_candidate_exclusion_basis": "MAXIMUM_POSSIBLE_OCCUPANCY_ONLY",
+    "source_cluster_identity": "Keep the parent contract's source-unit identity and source independent-event count exactly as frozen from the scored Stage-1 schedule; this amendment does not change candidate Stage-1 scoring, trade scheduling, non-overlap, or clustering.",
+    "source_exclusion_interval_formation": "Only for excluding original candidate signal/exposure intervals from the randomized placebo eligible-anchor pool, reserve each source constituent's maximum possible exposure occupancy implied by the frozen candidate rules. Do not shorten that exclusion with realized stop/take-profit timing, realized early exits, realized P&L, or other post-entry path information."
+  },
+  "parent_baseline_execution_contract": {
+    "baseline_execution_contract_sha256": "4525c3a192d56cf0f02284e3f6d910a00a1ce5870deffb95b05543165f175519",
+    "contract_id": "STRATEGY-FACTORY-COHORT-001-BASELINE-EXECUTION-v1",
+    "path": "orchestration/cohorts/strategy_factory_cohort_001_baseline_execution_contract.json"
+  },
+  "schema_version": 1,
+  "status": "OUTCOME_BLIND_FROZEN_NORMATIVE_NARROWING"
+}
