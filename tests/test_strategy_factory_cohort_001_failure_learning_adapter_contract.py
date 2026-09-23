@@ -80,10 +80,15 @@ def test_failure_learning_adapter_fails_closed_on_authority_and_preserves_stage1
     assert implementation == {
         "supplemental_failure_diagnostics_implemented": True,
         "private_schema_mapper_implemented_for_fully_defined_metrics": True,
-        "sparse_result_schema_compatible_with_511": False,
+        "sparse_result_schema_compatible_with_511": True,
         "canonical_certified_dataset_adapter_implemented": False,
     }
-    assert payload["target_failure_learning_contract"]["sparse_metric_schema_repair_required_before_canonical_consumption"] is True
+    target = payload["target_failure_learning_contract"]
+    assert target["source_head_sha_observed"] == (
+        "3553a602892fc911f917664c8cfe502d877835bf"
+    )
+    assert target["sparse_metric_schema_repair_required_before_canonical_consumption"] is False
+    assert target["integration_required_before_canonical_consumption"] is True
     assert authority["protected_oos_opened"] is False
     assert authority["genuine_forward_opened"] is False
     assert authority["broker_connected"] is False
