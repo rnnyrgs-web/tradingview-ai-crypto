@@ -44,6 +44,27 @@ jobs:
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
 
+      - name: Enforce executable dispatch-only authority boundary
+        run: |
+          set -euo pipefail
+          python3 pit_trusted_acquisition_dispatch_authority.py --event "$GITHUB_EVENT_PATH" --output /tmp/pit-dispatch-authority.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          receipt = json.loads(Path('/tmp/pit-dispatch-authority.json').read_text(encoding='utf-8'))
+          assert receipt['dispatch_authority'] == 'DISPATCH_PROVIDER_ACQUISITION_ONLY'
+          assert receipt['scientific_evidence_authority'] is False
+          assert receipt['historical_membership_authority'] is False
+          assert receipt['historical_label_authority'] is False
+          assert receipt['matched_control_authority'] is False
+          assert receipt['model_or_metric_authority'] is False
+          assert receipt['prospective_candidate_authority'] is False
+          assert receipt['oos_or_forward_opening_authority'] is False
+          assert receipt['broker_authority'] is False
+          assert receipt['trade_authority'] is False
+          PY
+
       - name: Validate owner request and dispatch canonical acquisition workflow
         env:
           GH_TOKEN: ${{ github.token }}
