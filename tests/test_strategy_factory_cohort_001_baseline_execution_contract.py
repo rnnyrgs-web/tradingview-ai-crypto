@@ -167,9 +167,11 @@ def test_common_controls_are_single_draw_pit_safe_and_not_recomputed_after_delay
     assert "exactly one additional completed 1h bar" in delayed["entry"]
     assert randomized["single_draw"] is True
     assert randomized["redraw_after_results"] is False
-    assert "without replacement" in randomized["matching"]
-    assert "training and validation" in randomized["matching"]
-    assert "before any forward return is read" in randomized["eligible_pool"]
+    assert "No replacement and no redraw" in randomized["selection"]
+    assert "same training partition or frozen validation half" in randomized["eligible_anchor_pool"]
+    assert "independent-event count" in randomized["matching"]
+    assert "maximum possible exposure interval" in randomized["outcome_blind_occupancy"]
+    assert "DATA/PIT_INCONCLUSIVE_RANDOMIZED_PLACEBO_POOL" in randomized["insufficient_pool"]
 
 
 def test_signed_volume_proxy_note_is_diagnostic_not_an_economic_falsifier() -> None:
