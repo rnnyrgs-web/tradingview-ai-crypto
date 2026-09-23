@@ -2,7 +2,7 @@
   "schema_version": 1,
   "artifact_type": "strategy_factory_cohort_001_stage1_execution_contract",
   "contract_id": "STRATEGY-FACTORY-COHORT-001-STAGE1-EXECUTION-v1",
-  "execution_contract_sha256": "dc14285eb36d0519547b0bfc5cb2ff9a3e3fe94d7c6254f9c3a9a6d60342e91e",
+  "execution_contract_sha256": "58c7d6fa3db62c7589768b59af8e048acbf9ca1e904b0f7fd5df64f0c9bd19c5",
   "formed_at": "2026-09-22T08:13:55Z",
   "status": "OUTCOME_BLIND_FROZEN_WAIT_PARENT_INTEGRATION_AND_EXACT_HEAD_REVIEW",
   "source_stage1_binding": {
@@ -44,7 +44,7 @@
     "independent_event_return": "Each admitted trade receives a fixed 1/3 NAV gross portfolio slot at its own entry; unused slots remain cash and later overlapping signals cannot resize earlier trades. A trade's net return is its already internally gross-notional-normalized gross return minus the frozen round-trip cost. Connected-cluster economic return is sum((1/3) * trade_net_return) across constituent trades, with no normalization by final cluster size or gross_notional. This chronological cluster return is the unit for economic gates, winner/tail tests and profit factor.",
     "profit_factor_definition": "sum(positive independent-event net returns)/abs(sum(negative independent-event net returns)); if there are gains and no losses PF=+infinity; if there are no gains PF=0.",
     "three_x_gate": "Mean 72-bps after-cost independent-event return must be strictly positive in both training and validation.",
-    "validation_half_gate": "Mean 24-bps after-cost independent-event return must be strictly positive in each frozen validation half. A cluster spanning a half boundary is excluded from half-specific means but remains eligible for overall validation only if it stays inside validation.",
+    "validation_half_gate": "Mean 24-bps after-cost independent-event return must be strictly positive in each frozen validation half. Half-specific evidence requires every constituent trade's signal, entry and exit timestamps to be fully contained inside the same frozen half. A trade/cluster crossing a half boundary is excluded from half-specific means but remains eligible for overall validation only if every constituent trade stays inside the broader validation partition.",
     "single_winner_dependence_veto": "At 24-bps cost, remove the single best independent event separately in training and validation; the remaining mean must stay strictly positive in each partition.",
     "catastrophic_tail_veto": "At 24-bps cost, the absolute worst independent-event loss must be <= 50% of the sum of all positive independent-event returns, separately in training and validation. No positive-return pool means automatic failure.",
     "minimum_sample_gate": {
