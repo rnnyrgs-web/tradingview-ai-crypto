@@ -30,7 +30,7 @@ WORKFLOW_REPOSITORY = "rnnyrgs-web/tradingview-ai-crypto"
 WORKFLOW_RUN_ID = 123456789
 WORKFLOW_PATH = ".github/workflows/exact_head_independent_review.yml"
 WORKFLOW_REF = f"{WORKFLOW_REPOSITORY}/{WORKFLOW_PATH}@refs/heads/main"
-WORKFLOW_BLOB_SHA = "d935db971372189781aa2420d8ac363dd60bbbbc"
+WORKFLOW_BLOB_SHA = "6ff73beae3f3859418fb30ca941c8be8a8bc1824"
 WORKFLOW_SHA256 = "d" * 64
 
 
@@ -338,7 +338,7 @@ def test_policy_digest_binds_append_only_lineage_registry_and_trust_root() -> No
     assert reviewer_trust_root_identity() == {
         "schema_version": 2,
         "trust_boundary_id": "EXACT_HEAD_REVIEW_TRUST_ROOT_V2",
-        "sha256": "069dbf56f36f66669ead5d36d1dc5d32e3cb847a2f8af8052ee31a9c6deb3405",
+        "sha256": "5cf45d9cd44a8728ecd894fcfc1d79d9f43c0dfb24a579ed688dc5f800ec86dc",
     }
 
 
