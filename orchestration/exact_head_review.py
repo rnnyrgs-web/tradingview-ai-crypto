@@ -6,6 +6,8 @@ import re
 from pathlib import Path
 from typing import Any, Iterable
 
+import httpx
+
 from agents.autonomous_orchestrator import (
     REVIEWERS,
     _review_diff_claude_adversarial,
@@ -23,6 +25,7 @@ from orchestration.protected_paths import find_protected_matches
 # review of a >80 kB scientific gate change.
 MAX_DIFF_BYTES = 256_000
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+_RETRYABLE_PROVIDER_STATUSES = frozenset({408, 409, 429, 500, 502, 503, 504})
 
 
 def _validate_exact_head(pr_number: int, head_sha: str) -> None:
@@ -181,15 +184,31 @@ def classify_review_attempt_files(
     )
 
 
+def _retryable_provider_transport(exc: BaseException) -> bool:
+    """Recognize only provider failures that the lower HTTP client already retries.
+
+    Exact-head review must not turn a final exhausted timeout/5xx into a scientific
+    failure merely because the shell log does not contain one narrow rate-limit phrase.
+    Conversely, authentication/configuration/client errors such as 400/401/403 remain
+    hard failures and must never be silently converted into retryable WAIT state.
+    """
+
+    if isinstance(exc, (httpx.TimeoutException, httpx.NetworkError)):
+        return True
+    if isinstance(exc, httpx.HTTPStatusError):
+        return exc.response.status_code in _RETRYABLE_PROVIDER_STATUSES
+    return False
+
+
 def _claude_exact_head_verdict(review_input: str, temporary: Path) -> dict[str, Any]:
-    """Preserve the existing Claude scientific invocation exactly; reclassify format failure only.
+    """Preserve the existing Claude scientific invocation exactly; reclassify non-verdicts only.
 
     The same ``review_input`` is passed directly to the same adversarial reviewer function
     exactly once. Valid approvals and valid scientific rejections are returned unchanged.
-    Missing/unreadable raw output, malformed/truncated JSON, or an invalid verdict schema is
-    not a scientific verdict, so it becomes ``temporarily unavailable`` and the already-bounded
-    *outer workflow* may retry the exact head later. This helper never selects among multiple
-    model judgments.
+    Missing/unreadable raw output, malformed/truncated JSON, invalid verdict schema, or an
+    exhausted retryable provider transport failure is not a scientific verdict, so it becomes
+    ``temporarily unavailable`` and the already-bounded *outer workflow* may retry the exact
+    head later. Non-retryable HTTP/auth/configuration failures remain hard failures.
     """
 
     temporary.unlink(missing_ok=True)
@@ -200,6 +219,12 @@ def _claude_exact_head_verdict(review_input: str, temporary: Path) -> dict[str, 
             raise RuntimeError("claude reviewer returned non-object JSON")
         _validate_verdict_schema(verdict)
         return verdict
+    except (httpx.TimeoutException, httpx.NetworkError, httpx.HTTPStatusError) as exc:
+        if not _retryable_provider_transport(exc):
+            raise
+        raise RuntimeError(
+            "temporarily unavailable: Claude reviewer provider transport exhausted bounded retries"
+        ) from exc
     except (json.JSONDecodeError, RuntimeError, OSError) as exc:
         raise RuntimeError(
             "temporarily unavailable: Claude reviewer returned missing, unreadable, malformed, incomplete, or invalid-schema JSON"
@@ -207,17 +232,25 @@ def _claude_exact_head_verdict(review_input: str, temporary: Path) -> dict[str, 
 
 
 def _openai_exact_head_verdict(prompt: str) -> dict[str, Any]:
-    """Treat malformed OpenAI reviewer output as a bounded non-verdict, never as approval.
+    """Treat exhausted retryable transport/output failures as bounded non-verdicts.
 
-    Transport/authentication/configuration failures remain owned by ``post_response`` and the
-    outer workflow. This helper only normalizes provider output-shape failures so Security/Lead
-    have the same fail-closed non-verdict semantics as Claude. A valid approval or rejection is
-    returned unchanged after schema validation; there is no second scientific invocation.
+    ``post_response`` already performs bounded retries for timeouts/network failures and
+    HTTP 408/409/429/5xx responses. If those retries are exhausted, the reviewer produced no
+    scientific verdict and the outer workflow should enter bounded WAIT. Non-retryable HTTP
+    errors (for example 400/401/403), authentication/configuration failures, and other hard
+    runtime faults remain hard failures. Valid approval/rejection output is unchanged and no
+    second scientific invocation is introduced here.
     """
 
     model = model_name()
     try:
         response = post_response({"model": model, "input": prompt})
+    except (httpx.TimeoutException, httpx.NetworkError, httpx.HTTPStatusError) as exc:
+        if not _retryable_provider_transport(exc):
+            raise
+        raise RuntimeError(
+            "temporarily unavailable: OpenAI reviewer provider transport exhausted bounded retries"
+        ) from exc
     except json.JSONDecodeError as exc:
         raise RuntimeError(
             "temporarily unavailable: OpenAI reviewer returned a malformed provider response"
