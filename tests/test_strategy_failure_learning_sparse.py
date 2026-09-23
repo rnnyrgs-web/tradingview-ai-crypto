@@ -77,6 +77,20 @@ def _screen(parent: dict, *, trades: int = 0) -> dict:
         "contract_sha256": parent["contract_sha256"],
         "screen_id": "SCREEN-SPARSE-001",
         "screen_cutoff": "2026-09-20T21:00:00+00:00",
+        "validation_window": {
+            "start_utc": "2026-08-01T00:00:00+00:00",
+            "end_utc": "2026-08-31T00:00:00+00:00",
+            "half_windows": [
+                {
+                    "start_utc": "2026-08-01T00:00:00+00:00",
+                    "end_utc": "2026-08-16T00:00:00+00:00",
+                },
+                {
+                    "start_utc": "2026-08-16T00:00:00+00:00",
+                    "end_utc": "2026-08-31T00:00:00+00:00",
+                },
+            ],
+        },
         "untouched_oos_opened": False,
         "genuine_forward_opened": False,
         "data_quality": {
