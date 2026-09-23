@@ -24,13 +24,13 @@
     "orchestration/strategy_behavior_schema.py": "abc0b13876645980116c333a6a2d2b2fb57f247c",
     "orchestration/strategy_behavior_value_contract.py": "24192d05110c95787108f4a3043733b18d350341",
     "orchestration/strategy_factory_cohort_001_admission.py": "97d521678e904625882a1950d205278e1537a094",
-    "orchestration/strategy_factory_cohort_001_provenance.py": "15581d950bba8f916098f3df79afc8c87c7a1c01",
+    "orchestration/strategy_factory_cohort_001_provenance.py": "df28a80e5eba5dd652f448534a6410c097a2dd72",
     "orchestration/strategy_predeclaration.py": "acc45aebb5ef9c9730504591da98e048ba8052de",
     "strategy_dataset_preflight.py": "4e60bb186570bdb7d9aeb8ae00b60760ec0c784b"
   },
   "cohort_id": "STRATEGY-FACTORY-COHORT-001-SEED",
   "contract_id": "STRATEGY-FACTORY-COHORT-001-ADMISSION-PROVENANCE-LOCK-v1",
-  "contract_sha256": "592205c105116a2d49931ae5bda972e5412c2011a6cda7ce250e34882bd0a2c7",
+  "contract_sha256": "6d7d135e4eeaa3029f33f022e9aa54e0e69958b4df753dea27e6fdc9288b72c2",
   "review_phase_closure": {
     "empirical_execution_cost": "REQUIRED_BEFORE_DEEP_VALIDATION_OR_ANY_AUTHENTICATED_PROFITABILITY_CLAIM",
     "point_in_time_dataset_provenance": "BOUND_NOW_TO_EXACT_DATASET_PREFLIGHT_RUNTIME_AND_ADMISSION_RECEIPT",
