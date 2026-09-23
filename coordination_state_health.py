@@ -29,7 +29,7 @@ AI_STATE_MAX_AGE_SECONDS = _bounded_int_env(
     "AI_STATE_MAX_AGE_SECONDS",
     24 * 60 * 60,
     5 * 60,
-    7 * 24 * 60 * 60,
+    24 * 60 * 60,
 )
 AI_STATE_MAX_FUTURE_SKEW_SECONDS = _bounded_int_env(
     "AI_STATE_MAX_FUTURE_SKEW_SECONDS",
