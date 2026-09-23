@@ -23,8 +23,8 @@ def _bounded_int_env(name: str, default: int, lower: int, upper: int) -> int:
 
 
 # A continuously coordinated repository should refresh its canonical handoff at
-# least daily. Operators may tighten this without code changes, but cannot make
-# the default check effectively unbounded.
+# least daily. Operators may tighten these tolerances without code changes, but
+# cannot loosen them beyond the fail-closed defaults.
 AI_STATE_MAX_AGE_SECONDS = _bounded_int_env(
     "AI_STATE_MAX_AGE_SECONDS",
     24 * 60 * 60,
@@ -35,7 +35,7 @@ AI_STATE_MAX_FUTURE_SKEW_SECONDS = _bounded_int_env(
     "AI_STATE_MAX_FUTURE_SKEW_SECONDS",
     60,
     0,
-    60 * 60,
+    60,
 )
 
 
