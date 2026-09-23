@@ -35,15 +35,23 @@ REVIEW_SCOPE_DISCIPLINE = (
     "classified GENERAL_RESEARCH_OR_CODE, an unavailable future-evidence category may be "
     "NOT_APPLICABLE_FOR_THIS_PHASE only when the exact diff/current main contains concrete machine-readable or "
     "executable controls that prevent current access/use of that evidence, predeclare the future gate before the "
-    "evidence can be opened, and fail closed if the gate is absent or violated. Claims, comments, labels, or prose "
-    "alone NEVER satisfy those conditions. missing, ambiguous, bypassable, post-hoc, or weakened controls require "
-    "REJECT. This NEVER lowers the eventual evidence standard, never excuses an incomplete predeclaration, and "
-    "never permits premature protected access or grants promotion, protected-OOS, broker, or trading authority. "
-    "Review receipts are integrity records, not authentication or merge tokens: they must be revalidated against "
-    "trusted PR/head/diff context before consumption, while GitHub workflow/issue provenance remains the authority "
-    "for who produced the review. Historical prose may describe an earlier prerequisite; executable exact-head state "
-    "is authoritative. Keep reviewer JSON concise: each falsification finding should be at most 24 words and the "
-    "complete JSON should stay below 1400 tokens while still covering every material finding."
+    "evidence can be opened, and fail closed if the gate is absent or violated. Do not require deliberately closed "
+    "future P&L/OOS/forward evidence to be opened merely to approve the gate that keeps it closed. Claims, comments, "
+    "labels, or prose alone NEVER satisfy those conditions. missing, ambiguous, bypassable, post-hoc, or weakened "
+    "controls require REJECT. Unchanged executable code already integrated on canonical main is the trusted review "
+    "baseline and need not be copied into every candidate diff; review the changed code's binding to that baseline, "
+    "and reject if the binding is missing, ambiguous, stale, or weakened. The project durability trust boundary is "
+    "exact Git commit history plus exact-head CI/review and durable GitHub workflow/issue receipts; do not invent a "
+    "requirement for an external legal, signed-commit, or append-only ledger unless the diff claims such authority or "
+    "a separately frozen gate requires it. This does not excuse self-authenticating or mutable receipts that can grant "
+    "authority without trusted PR/head/diff provenance. This NEVER lowers the eventual evidence standard, never "
+    "excuses an incomplete predeclaration, and never permits premature protected access or grants promotion, "
+    "protected-OOS, broker, or trading authority. Review receipts are integrity records, not authentication or merge "
+    "tokens: they must be revalidated against trusted PR/head/diff context before consumption, while GitHub "
+    "workflow/issue provenance remains the authority for who produced the review. Historical prose may describe an "
+    "earlier prerequisite; executable exact-head state is authoritative. Keep reviewer JSON concise: each "
+    "falsification finding should be at most 24 words and the complete JSON should stay below 1400 tokens while "
+    "still covering every material finding."
 )
 
 # Historical policy text must remain registered when a later version is added.
@@ -72,12 +80,12 @@ def review_scope_policy_sha256(version: int = REVIEW_SCOPE_POLICY_VERSION) -> st
 
 
 def _canonical_changed_paths(changed_paths: Iterable[str]) -> tuple[str, ...]:
-    paths = tuple(sorted(set(changed_paths)))
-    if not paths:
+    raw_paths = tuple(changed_paths)
+    if not raw_paths:
         raise RuntimeError("diff contains no changed paths")
-    if any(not isinstance(path, str) or not path for path in paths):
+    if any(not isinstance(path, str) or not path for path in raw_paths):
         raise RuntimeError("invalid changed path")
-    return paths
+    return tuple(sorted(set(raw_paths)))
 
 
 def changed_paths_sha256(changed_paths: Iterable[str]) -> str:
