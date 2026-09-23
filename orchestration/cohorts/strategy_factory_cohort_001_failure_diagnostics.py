@@ -21,6 +21,7 @@ class Stage1FailureDiagnostics:
     validation_independent_events: int
     mean_48bps: float | None
     winner_concentration_share_24bps: float | None
+    mean_0bps: float | None = None
 
 
 def _validation_trades(candidate_id: str, trades: Iterable[Trade]) -> list[Trade]:
@@ -48,6 +49,11 @@ def build_stage1_failure_diagnostics(
     schema. Failure learning may independently classify actually observed tail
     evidence under #511, but this helper cannot change the frozen Stage-1 status
     precedence.
+
+    Gross economics are recomputed from the same independent-event stream at zero
+    cost. They must not be reconstructed by adding a flat per-trade round-trip cost
+    to the independent-event mean because each event may contain one, two, or three
+    fixed 1/3-NAV trade slots.
     """
     if candidate_id not in CANDIDATE_IDS:
         raise RuntimeError("candidate is not Stage-1 authorized")
@@ -61,8 +67,9 @@ def build_stage1_failure_diagnostics(
     if not validation_events:
         if result.validation.mean_24bps is not None or result.validation.mean_72bps is not None:
             raise RuntimeError("empty validation events disagree with Stage-1 summary")
-        return Stage1FailureDiagnostics(candidate_id, 0, None, None)
+        return Stage1FailureDiagnostics(candidate_id, 0, None, None, None)
 
+    mean_0 = fmean(event.return_at_cost(0.0) for event in validation_events)
     mean_24 = fmean(event.return_at_cost(24.0) for event in validation_events)
     mean_48 = fmean(event.return_at_cost(48.0) for event in validation_events)
     mean_72 = fmean(event.return_at_cost(72.0) for event in validation_events)
@@ -93,4 +100,5 @@ def build_stage1_failure_diagnostics(
         validation_independent_events=len(validation_events),
         mean_48bps=mean_48,
         winner_concentration_share_24bps=winner_share,
+        mean_0bps=mean_0,
     )
