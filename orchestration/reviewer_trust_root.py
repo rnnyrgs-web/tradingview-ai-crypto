@@ -82,7 +82,7 @@ def load_reviewer_trust_root(path: Path = TRUST_ROOT_PATH) -> dict[str, Any]:
     if not isinstance(authority, dict):
         raise RuntimeError("invalid reviewer trust-root authority")
     if authority != {
-        "review_receipt_is_authentication_token": False,
+        "review_receipt_is_authentication_token": False,  # nosec B105
         "approval_receipt_grants_integration": False,
         "integration_authority": "NONE",
         "broker_authority": False,
