@@ -29,5 +29,5 @@ def test_failure_learning_adapter_binds_exact_causal_execution_contract() -> Non
         == execution_sha
     )
     assert adapter["source_stage1_execution_contract"]["source_head_sha_observed"] == (
-        "46f67731eb128eb97da47ca11e879d9f5257aaa6"
+        "6b89c56209fc7dda0eb1d1a213f0a5cf8c05d750"
     )
