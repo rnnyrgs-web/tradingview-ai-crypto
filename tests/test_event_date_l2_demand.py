@@ -5,6 +5,7 @@ import copy
 import pytest
 
 from money_intelligence.event_date_l2_demand import (
+    CHRONOLOGY_CONTRACT,
     DemandManifestError,
     INPUT_SCHEMA,
     build_demand_manifest,
@@ -21,6 +22,7 @@ def _case(
     *,
     role: str = "EVENT",
     instrument: str = "ETHUSDT",
+    canonical_asset_id: str | None = None,
     start: str = "2024-01-01T00:00:00Z",
     end: str = "2024-01-01T01:00:00Z",
     bands: list[int] | None = None,
@@ -28,13 +30,13 @@ def _case(
     return {
         "case_id": case_id,
         "role": role,
-        "canonical_asset_id": instrument.removesuffix("USDT").lower(),
+        "canonical_asset_id": canonical_asset_id or instrument.removesuffix("USDT").lower(),
         "venue": "BINANCE_SPOT",
         "instrument": instrument,
         "window_start": start,
         "window_end": end,
         "required_notional_bands_usd": bands or [1_000, 10_000],
-        "chronology_contract": "CROSSING_EXECUTION_INTERVAL_INTERSECTION_V1",
+        "chronology_contract": CHRONOLOGY_CONTRACT,
         "strict_l2_required": True,
         "strict_l2_reason": "OHLCV/ADV cannot prove same-time full-notional executable bid depth",
         "tradability_state": "UNKNOWN_TRADABILITY",
@@ -67,12 +69,14 @@ def test_overlapping_same_instrument_windows_are_deduplicated() -> None:
     result = build_demand_manifest(handoff)
     assert result["source_case_count"] == 2
     assert result["deduplicated_request_count"] == 1
+    assert result["chronology_contract"] == CHRONOLOGY_CONTRACT
     request = result["requests"][0]
     assert request["window_start"] == "2024-01-01T00:00:00Z"
     assert request["window_end"] == "2024-01-01T03:00:00Z"
     assert request["required_notional_bands_usd"] == [1_000, 10_000, 50_000]
     assert request["source_case_ids"] == ["control-1", "event-1"]
     assert request["source_roles"] == ["EVENT", "MATCHED_CONTROL"]
+    assert request["canonical_asset_id"] == "eth"
     assert request["purchase_authority"] == "NONE"
     assert result["status"] == "USER_APPROVAL_REQUIRED_FOR_ANY_NONZERO_PAID_ACQUISITION"
 
@@ -99,6 +103,24 @@ def test_different_instruments_never_merge() -> None:
         )
     )
     assert result["deduplicated_request_count"] == 2
+
+
+def test_one_instrument_cannot_be_transplanted_across_canonical_assets() -> None:
+    handoff = _handoff(
+        [
+            _case("eth-real", instrument="ETHUSDT", canonical_asset_id="eth"),
+            _case("eth-transplant", instrument="ETHUSDT", canonical_asset_id="unrelated-asset"),
+        ]
+    )
+    with pytest.raises(DemandManifestError, match="cannot be bound to multiple canonical_asset_id"):
+        build_demand_manifest(handoff)
+
+
+def test_unrecognized_chronology_contract_cannot_enter_provider_demand() -> None:
+    case = _case("event-1")
+    case["chronology_contract"] = "NEAREST_NEIGHBOR_DEPTH_V0"
+    with pytest.raises(DemandManifestError, match="CROSSING_EXECUTION_INTERVAL_INTERSECTION_V1"):
+        build_demand_manifest(_handoff([case]))
 
 
 def test_manifest_is_deterministic_under_input_permutation() -> None:
