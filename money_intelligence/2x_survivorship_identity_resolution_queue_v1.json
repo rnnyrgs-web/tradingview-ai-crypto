@@ -1,0 +1,44 @@
+{
+  "artifact_id": "2X-SURVIVORSHIP-IDENTITY-RESOLUTION-QUEUE-001-v1",
+  "parent_artifact_id": "2X-SURVIVORSHIP-METADATA-ENUMERATION-001-v1",
+  "purpose": "Quarantine Tardis survivorship enumeration into unresolved identity-resolution work items so inactive/dead symbols are retained for follow-up without ever becoming point-in-time cohort membership, delisting time, matched controls, labels, or model evidence.",
+  "input_contract": {
+    "required_schema": "2X-SURVIVORSHIP-ENUMERATION-MANIFEST-001-v1",
+    "bind_exact_manifest_fingerprint": true,
+    "bind_exact_source_response_sha256": true,
+    "required_manifest_historical_membership_authority": "NONE",
+    "required_manifest_negative_control_authority": "NONE",
+    "required_manifest_label_authority": "NONE",
+    "required_manifest_cohort_snapshot_authority": false,
+    "only_allowed_downstream_consumer": "UNRESOLVED_IDENTITY_RESOLUTION_WORK_QUEUE_ONLY"
+  },
+  "work_item_contract": {
+    "bind_fields": [
+      "enumeration_manifest_fingerprint",
+      "source_response_sha256",
+      "venue",
+      "venue_symbol"
+    ],
+    "provider_collection_bounds_semantics": "SEARCH_HINT_ONLY",
+    "identity_resolution_state": "UNRESOLVED_TIMESTAMP_SAFE_MARKET_PRESENCE_REQUIRED",
+    "required_next_proof": "SEPARATE_TIMESTAMP_SAFE_PIT_MARKET_PRESENCE_PROOF",
+    "historical_membership_authority": "NONE",
+    "delisting_time_authority": "NONE",
+    "negative_control_authority": "NONE",
+    "label_authority": "NONE",
+    "cohort_snapshot_authority": false,
+    "model_authority": "NONE",
+    "candidate_authority": "NONE",
+    "broker_trading_authority": "NONE"
+  },
+  "forbidden_laundering": [
+    "Tardis availableSince/availableTo interpreted as listing/delisting chronology",
+    "current active interpreted as historical membership",
+    "caller capture time interpreted as historical availability",
+    "enumeration manifest or queue rewrapped as binance_market_presence.v1",
+    "enumeration manifest or queue cited as DERIVED_BINANCE_HISTORICAL_MEMBERSHIP_V1 authority",
+    "unresolved work item treated as matched non-winner or competing-risk delisting event"
+  ],
+  "scientific_boundary": "This queue prevents present-day survivor omission while deliberately granting no market-state truth. A separate timestamp-safe provider-native PIT market-presence proof is mandatory before Cohort-001 member/tradable evidence can pass.",
+  "broker_live_trading": "OFF"
+}
