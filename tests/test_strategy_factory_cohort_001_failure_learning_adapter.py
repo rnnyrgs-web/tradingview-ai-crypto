@@ -52,6 +52,7 @@ def _diagnostics() -> Stage1FailureDiagnostics:
         validation_independent_events=23,
         mean_48bps=0.0016,
         winner_concentration_share_24bps=0.30,
+        mean_0bps=0.0051,
     )
 
 
@@ -90,7 +91,10 @@ def test_private_mapper_preserves_exact_failure_learning_semantics() -> None:
     assert screen["fingerprint_id"] == "DISC-SIGNED-VOLUME-DRIFT-001-v1"
     assert screen["contract_sha256"] == PREDECLARATION_SHA
     assert screen["validation"]["trades"] == 23
-    assert screen["validation"]["gross_mean_bps"] == pytest.approx(64.0)
+    # Gross comes from the zero-cost clustered portfolio diagnostic, not from
+    # adding a flat 24 bps to the independent-event net mean.
+    assert screen["validation"]["gross_mean_bps"] == pytest.approx(51.0)
+    assert screen["validation"]["gross_mean_bps"] != pytest.approx(64.0)
     assert screen["validation"]["net_mean_bps"] == pytest.approx(40.0)
     assert screen["validation"]["profit_factor"] == pytest.approx(1.40)
     assert screen["validation"]["half_net_bps"] == pytest.approx([30.0, 50.0])
@@ -110,6 +114,20 @@ def test_private_mapper_preserves_exact_failure_learning_semantics() -> None:
         "stage1_binding_receipt_sha256": STAGE1_BINDING_RECEIPT_SHA256,
         "stage1_execution_contract_sha256": EXECUTION_CONTRACT_SHA256,
     }
+
+
+def test_private_mapper_requires_direct_gross_diagnostic_when_events_exist() -> None:
+    diagnostics = Stage1FailureDiagnostics(
+        candidate_id="DISC-SIGNED-VOLUME-DRIFT-001-v1",
+        validation_independent_events=23,
+        mean_48bps=0.0016,
+        winner_concentration_share_24bps=0.30,
+        mean_0bps=None,
+    )
+    with pytest.raises(RuntimeError, match="mean_0bps must be defined"):
+        _map_certified_failure_learning_screen(
+            _result(), diagnostics, _predeclaration(), _context()
+        )
 
 
 def test_public_canonical_minting_remains_fail_closed_pre_integration() -> None:
@@ -166,6 +184,7 @@ def test_candidate_diagnostic_and_safety_mismatches_fail_closed() -> None:
         validation_independent_events=23,
         mean_48bps=0.0016,
         winner_concentration_share_24bps=0.30,
+        mean_0bps=0.0051,
     )
     with pytest.raises(RuntimeError, match="diagnostics candidate_id"):
         _map_certified_failure_learning_screen(
