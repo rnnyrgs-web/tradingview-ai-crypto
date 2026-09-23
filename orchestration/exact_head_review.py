@@ -31,6 +31,12 @@ from orchestration.review_scope_policy import (
     review_scope_policy_sha256,
     verify_review_scope_receipt,
 )
+from orchestration.reviewer_trust_root import (
+    collect_trusted_workflow_context,
+    reviewer_trust_root_identity,
+    seal_review_receipt_trust,
+    verify_trust_bound_review_receipt,
+)
 
 MAX_DIFF_BYTES = 256_000
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -68,11 +74,11 @@ def _runtime_git_sha() -> str:
     return value
 
 
-def _workflow_provenance_from_env() -> dict[str, Any]:
-    """Return trusted GitHub workflow identity for production review receipts.
+def _workflow_provenance_from_env(runtime_git_sha: str | None = None) -> dict[str, Any]:
+    """Return the legacy receipt subset of trusted workflow identity.
 
-    The receipt remains non-authoritative by itself: downstream validation must obtain
-    these expected values independently from GitHub workflow/issue/run provenance.
+    Production review additionally requires collect_trusted_workflow_context(), which
+    reconciles these values against server-observed GitHub Actions/main metadata.
     """
     repository = os.environ.get("GITHUB_REPOSITORY", "")
     run_id_raw = os.environ.get("GITHUB_RUN_ID", "")
@@ -85,11 +91,28 @@ def _workflow_provenance_from_env() -> dict[str, Any]:
         raise RuntimeError("invalid GitHub workflow run id") from exc
     if run_id <= 0:
         raise RuntimeError("invalid GitHub workflow run id")
+    runtime_sha = runtime_git_sha if runtime_git_sha is not None else _runtime_git_sha()
+    if not isinstance(runtime_sha, str) or not _SHA_RE.fullmatch(runtime_sha):
+        raise RuntimeError("invalid reviewer-runtime git SHA")
     return {
         "repository": repository,
         "run_id": run_id,
         "workflow_ref": workflow_ref,
-        "runtime_git_sha": _runtime_git_sha(),
+        "runtime_git_sha": runtime_sha,
+    }
+
+
+def _trusted_workflow_context_from_env(runtime_git_sha: str | None = None) -> dict[str, Any]:
+    runtime_sha = runtime_git_sha if runtime_git_sha is not None else _runtime_git_sha()
+    return collect_trusted_workflow_context(runtime_git_sha=runtime_sha)
+
+
+def _legacy_provenance_from_trusted_context(context: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "repository": context["repository"],
+        "run_id": context["run_id"],
+        "workflow_ref": context["workflow_ref"],
+        "runtime_git_sha": context["runtime_git_sha"],
     }
 
 
@@ -100,9 +123,11 @@ def _context_header(
     protected_hits: list[str],
     diff_scope: str,
     workflow_provenance: dict[str, Any],
+    workflow_trust_context: dict[str, Any],
 ) -> str:
     protected = ", ".join(protected_hits) if protected_hits else "NONE"
     registry = protected_path_registry_identity()
+    trust_root = reviewer_trust_root_identity()
     return (
         "READ_ONLY_EXACT_HEAD_REVIEW_CONTEXT\n"
         f"PR_NUMBER: {pr_number}\n"
@@ -111,10 +136,16 @@ def _context_header(
         f"PROTECTED_PATH_CONTEXT: {protected}\n"
         f"PROTECTED_PATH_REGISTRY_VERSION: {registry['version']}\n"
         f"PROTECTED_PATH_REGISTRY_SHA256: {registry['sha256']}\n"
+        f"REVIEWER_TRUST_ROOT_SHA256: {trust_root['sha256']}\n"
         f"WORKFLOW_REPOSITORY: {workflow_provenance['repository']}\n"
         f"WORKFLOW_RUN_ID: {workflow_provenance['run_id']}\n"
+        f"WORKFLOW_RUN_ATTEMPT: {workflow_trust_context['run_attempt']}\n"
+        f"WORKFLOW_EVENT: {workflow_trust_context['event_name']}\n"
         f"WORKFLOW_REF: {workflow_provenance['workflow_ref']}\n"
+        f"WORKFLOW_SHA: {workflow_trust_context['workflow_sha']}\n"
         f"WORKFLOW_RUNTIME_GIT_SHA: {workflow_provenance['runtime_git_sha']}\n"
+        f"SERVER_RUN_HEAD_SHA: {workflow_trust_context['server_run_head_sha']}\n"
+        f"SERVER_MAIN_SHA: {workflow_trust_context['server_main_sha']}\n"
         "INTEGRATION_AUTHORITY: NONE\n"
         f"REVIEW_SCOPE_POLICY_VERSION: {REVIEW_SCOPE_DISCIPLINE_VERSION}\n"
         f"REVIEW_SCOPE_POLICY_SHA256: {_review_scope_policy_sha256()}\n"
@@ -144,10 +175,12 @@ def _enrich_verdict(
     changed_paths: list[str],
     diff_scope: str,
     workflow_provenance: dict[str, Any],
+    workflow_trust_context: dict[str, Any],
 ) -> dict[str, Any]:
     _validate_verdict_schema(verdict)
     canonical_paths = sorted(set(changed_paths))
     registry = protected_path_registry_identity()
+    trust_root = reviewer_trust_root_identity()
     enriched = dict(verdict)
     enriched.update(
         {
@@ -162,6 +195,7 @@ def _enrich_verdict(
             "exact_head_sha": head_sha,
             "protected_paths": protected_hits,
             "protected_path_registry": registry,
+            "reviewer_trust_root": trust_root,
             "workflow_provenance": dict(workflow_provenance),
             "integration_authority": "NONE",
         }
@@ -187,7 +221,14 @@ def _enrich_verdict(
         expected_workflow_ref=workflow_provenance["workflow_ref"],
         expected_workflow_runtime_sha=workflow_provenance["runtime_git_sha"],
     )
-    return enriched
+    sealed = seal_review_receipt_trust(enriched, trusted_context=workflow_trust_context)
+    verify_trust_bound_review_receipt(
+        sealed,
+        trusted_context=workflow_trust_context,
+        current_schema_version=REVIEW_RECEIPT_SCHEMA_VERSION,
+        require_approval=False,
+    )
+    return sealed
 
 
 def _retryable_provider_transport(exc: BaseException) -> bool:
@@ -256,6 +297,13 @@ def _openai_exact_head_verdict(prompt: str) -> dict[str, Any]:
     return verdict
 
 
+def _trusted_context_for_review() -> tuple[dict[str, Any], dict[str, Any]]:
+    runtime_sha = _runtime_git_sha()
+    trusted_context = _trusted_workflow_context_from_env(runtime_sha)
+    legacy_provenance = _legacy_provenance_from_trusted_context(trusted_context)
+    return legacy_provenance, trusted_context
+
+
 def review_exact_head(
     reviewer: str,
     diff_path: Path,
@@ -264,7 +312,7 @@ def review_exact_head(
     pr_number: int,
     head_sha: str,
 ) -> int:
-    """Review one exact PR head under trusted GitHub workflow provenance."""
+    """Review one exact PR head under independently reconciled GitHub provenance."""
     if reviewer not in REVIEWERS:
         raise RuntimeError("unknown reviewer")
     _validate_exact_head(pr_number, head_sha)
@@ -274,7 +322,9 @@ def review_exact_head(
     if not diff.strip():
         raise RuntimeError("diff is empty")
 
-    workflow_provenance = _workflow_provenance_from_env()
+    # Trust-root/server reconciliation happens before diff policy or any paid model
+    # invocation. Registry/policy drift likewise fails while constructing the header.
+    workflow_provenance, workflow_trust_context = _trusted_context_for_review()
     changed_paths = diff_changed_paths(diff)
     diff_scope = classify_diff_scope(changed_paths)
     protected_hits = _protected_context(diff)
@@ -284,6 +334,7 @@ def review_exact_head(
         protected_hits=protected_hits,
         diff_scope=diff_scope,
         workflow_provenance=workflow_provenance,
+        workflow_trust_context=workflow_trust_context,
     )
     review_input = f"{header}\nPROPOSED DIFF:\n{diff}"
 
@@ -327,9 +378,50 @@ protected-path mutation. The discipline never excuses missing executable closure
         changed_paths=changed_paths,
         diff_scope=diff_scope,
         workflow_provenance=workflow_provenance,
+        workflow_trust_context=workflow_trust_context,
     )
     output.write_text(json.dumps(enriched, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return 0
+
+
+def _verify_current_receipt(
+    *,
+    receipt_path: Path,
+    diff_path: Path,
+    pr_number: int,
+    head_sha: str,
+    require_approval: bool,
+) -> None:
+    _validate_exact_head(pr_number, head_sha)
+    payload = json.loads(receipt_path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise RuntimeError("review receipt must be one JSON object")
+    diff = diff_path.read_text(encoding="utf-8")
+    if len(diff.encode("utf-8")) > MAX_DIFF_BYTES:
+        raise RuntimeError("diff too large")
+    if not diff.strip():
+        raise RuntimeError("diff is empty")
+
+    workflow_provenance, workflow_trust_context = _trusted_context_for_review()
+    changed_paths = diff_changed_paths(diff)
+    diff_scope = classify_diff_scope(changed_paths)
+    verify_review_scope_receipt(
+        payload,
+        expected_pr_number=pr_number,
+        expected_head_sha=head_sha,
+        expected_changed_paths=changed_paths,
+        expected_diff_scope=diff_scope,
+        expected_workflow_repository=workflow_provenance["repository"],
+        expected_workflow_run_id=workflow_provenance["run_id"],
+        expected_workflow_ref=workflow_provenance["workflow_ref"],
+        expected_workflow_runtime_sha=workflow_provenance["runtime_git_sha"],
+    )
+    verify_trust_bound_review_receipt(
+        payload,
+        trusted_context=workflow_trust_context,
+        current_schema_version=REVIEW_RECEIPT_SCHEMA_VERSION,
+        require_approval=require_approval,
+    )
 
 
 def main() -> int:
@@ -343,15 +435,12 @@ def main() -> int:
     review.add_argument("--pr-number", type=int, required=True)
     review.add_argument("--head-sha", required=True)
 
-    verify = sub.add_parser("verify-receipt")
-    verify.add_argument("--receipt", required=True)
-    verify.add_argument("--diff", required=True)
-    verify.add_argument("--pr-number", type=int, required=True)
-    verify.add_argument("--head-sha", required=True)
-    verify.add_argument("--workflow-repository", required=True)
-    verify.add_argument("--workflow-run-id", type=int, required=True)
-    verify.add_argument("--workflow-ref", required=True)
-    verify.add_argument("--workflow-runtime-sha", required=True)
+    for command in ("verify-current-receipt", "verify-current-approval"):
+        verify = sub.add_parser(command)
+        verify.add_argument("--receipt", required=True)
+        verify.add_argument("--diff", required=True)
+        verify.add_argument("--pr-number", type=int, required=True)
+        verify.add_argument("--head-sha", required=True)
 
     args = parser.parse_args()
     if args.command == "review":
@@ -362,28 +451,13 @@ def main() -> int:
             pr_number=args.pr_number,
             head_sha=args.head_sha,
         )
-    if args.command == "verify-receipt":
-        _validate_exact_head(args.pr_number, args.head_sha)
-        payload = json.loads(Path(args.receipt).read_text(encoding="utf-8"))
-        if not isinstance(payload, dict):
-            raise RuntimeError("review receipt must be one JSON object")
-        diff = Path(args.diff).read_text(encoding="utf-8")
-        if len(diff.encode("utf-8")) > MAX_DIFF_BYTES:
-            raise RuntimeError("diff too large")
-        if not diff.strip():
-            raise RuntimeError("diff is empty")
-        changed_paths = diff_changed_paths(diff)
-        diff_scope = classify_diff_scope(changed_paths)
-        verify_review_scope_receipt(
-            payload,
-            expected_pr_number=args.pr_number,
-            expected_head_sha=args.head_sha,
-            expected_changed_paths=changed_paths,
-            expected_diff_scope=diff_scope,
-            expected_workflow_repository=args.workflow_repository,
-            expected_workflow_run_id=args.workflow_run_id,
-            expected_workflow_ref=args.workflow_ref,
-            expected_workflow_runtime_sha=args.workflow_runtime_sha,
+    if args.command in {"verify-current-receipt", "verify-current-approval"}:
+        _verify_current_receipt(
+            receipt_path=Path(args.receipt),
+            diff_path=Path(args.diff),
+            pr_number=args.pr_number,
+            head_sha=args.head_sha,
+            require_approval=args.command == "verify-current-approval",
         )
         return 0
     raise RuntimeError("unknown command")
