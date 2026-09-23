@@ -57,7 +57,7 @@ def _daily_rows(decision, *, days, start=100.0, step=1.0):
         rows.append({
             "date": d.isoformat(),
             "close": f"{close:.8f}",
-            "quote_volume_usd": "50000000.0",
+            "quote_asset_volume": "50000000.0",
         })
     return rows
 
@@ -83,7 +83,7 @@ def _archive_bytes(rows):
             row["close"],
             "1000.0",
             str(close_ms),
-            row["quote_volume_usd"],
+            row["quote_asset_volume"],
             "100",
             "500.0",
             "25000000.0",
@@ -174,6 +174,21 @@ def _snapshot(root):
 def test_retained_archive_bound_outputs_pass(tmp_path):
     snapshot = _snapshot(tmp_path)
     validate_snapshot_derived_output_bindings(snapshot, tmp_path)
+
+
+def test_legacy_usd_labeled_bound_row_schema_is_not_silently_reinterpreted(tmp_path):
+    snapshot = _snapshot(tmp_path)
+    ref = snapshot["features"]["return_30d"]["derivation"]["inputs"][0]
+    path = tmp_path / ref["artifact_relpath"]
+    artifact = json.loads(path.read_text())
+    artifact["schema"] = "binance_spot_daily_kline_rows.v1"
+    for row in artifact["rows"]:
+        row["quote_volume_usd"] = row.pop("quote_asset_volume")
+    raw = _json_bytes(artifact)
+    path.write_bytes(raw)
+    ref["sha256"] = hashlib.sha256(raw).hexdigest()
+    with pytest.raises(ValueError, match="binance_spot_daily_kline_rows.v2"):
+        validate_snapshot_derived_output_bindings(snapshot, tmp_path)
 
 
 def test_arbitrary_return_value_is_rejected(tmp_path):
