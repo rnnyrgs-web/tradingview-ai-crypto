@@ -67,13 +67,7 @@ def _record(tmp_path, presence: dict, *, value: bool = True) -> dict:
 def test_membership_boundary_requires_provider_native_provenance(tmp_path) -> None:
     record = _record(tmp_path, _presence(include_provenance=False))
     with pytest.raises(ValueError, match="membership provenance is required"):
-        _validate_membership_derivation(
-            record,
-            tmp_path,
-            DECISION_DT,
-            field="member",
-            venue_symbol="TESTUSDT",
-        )
+        _validate_membership_derivation(record, tmp_path, DECISION_DT, field="member")
 
 
 def test_membership_boundary_rejects_direct_survivorship_enumeration_material(tmp_path) -> None:
@@ -81,13 +75,7 @@ def test_membership_boundary_rejects_direct_survivorship_enumeration_material(tm
     presence["enumeration_manifest_fingerprint"] = "2" * 64
     record = _record(tmp_path, presence)
     with pytest.raises(ValueError, match="survivorship enumeration"):
-        _validate_membership_derivation(
-            record,
-            tmp_path,
-            DECISION_DT,
-            field="member",
-            venue_symbol="TESTUSDT",
-        )
+        _validate_membership_derivation(record, tmp_path, DECISION_DT, field="member")
 
 
 def test_membership_boundary_rejects_queue_rewrapping(tmp_path) -> None:
@@ -98,13 +86,7 @@ def test_membership_boundary_rejects_queue_rewrapping(tmp_path) -> None:
     }
     record = _record(tmp_path, presence)
     with pytest.raises(ValueError, match="survivorship enumeration"):
-        _validate_membership_derivation(
-            record,
-            tmp_path,
-            DECISION_DT,
-            field="member",
-            venue_symbol="TESTUSDT",
-        )
+        _validate_membership_derivation(record, tmp_path, DECISION_DT, field="member")
 
 
 def test_membership_boundary_rejects_source_proof_fingerprint_substitution(tmp_path) -> None:
@@ -112,13 +94,7 @@ def test_membership_boundary_rejects_source_proof_fingerprint_substitution(tmp_p
     presence["membership_provenance"] = _provenance(source_proof_sha256="3" * 64)
     record = _record(tmp_path, presence)
     with pytest.raises(ValueError, match="source-proof binding mismatch"):
-        _validate_membership_derivation(
-            record,
-            tmp_path,
-            DECISION_DT,
-            field="member",
-            venue_symbol="TESTUSDT",
-        )
+        _validate_membership_derivation(record, tmp_path, DECISION_DT, field="member")
 
 
 def test_membership_boundary_binds_provider_native_provenance_to_enclosing_symbol(tmp_path) -> None:
