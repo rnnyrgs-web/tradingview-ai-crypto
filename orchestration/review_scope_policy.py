@@ -8,7 +8,7 @@ from typing import Any, Iterable
 from orchestration.protected_paths import DEFAULT_PATH, find_protected_matches, load_protected_paths
 from orchestration.reviewer_trust_root import reviewer_trust_root_identity
 
-REVIEW_SCOPE_POLICY_VERSION = 8
+REVIEW_SCOPE_POLICY_VERSION = 9
 REVIEW_RECEIPT_SCHEMA_VERSION = 7
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 _REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
@@ -50,10 +50,12 @@ REVIEW_INFRASTRUCTURE_PATHS = frozenset(
         "BUG_REGRESSION_LEDGER.md",
     }
 )
-# Freeze v7's exact scope sets so v8 is append-only lineage rather than a
-# reinterpretation of the predecessor policy identity.
+# Freeze historical scope sets so later policies are append-only lineage rather
+# than reinterpretations of predecessor policy identities.
 _V7_REVIEW_INFRASTRUCTURE_CORE_PATHS = frozenset(REVIEW_INFRASTRUCTURE_CORE_PATHS)
 _V7_REVIEW_INFRASTRUCTURE_PATHS = frozenset(REVIEW_INFRASTRUCTURE_PATHS)
+_V8_REVIEW_INFRASTRUCTURE_CORE_PATHS = frozenset(REVIEW_INFRASTRUCTURE_CORE_PATHS)
+_V8_REVIEW_INFRASTRUCTURE_PATHS = frozenset(REVIEW_INFRASTRUCTURE_PATHS)
 
 # Version 5 is retained byte-for-byte as historical lineage. New policy versions
 # are additive registrations rather than reinterpretations of old receipts.
@@ -112,7 +114,7 @@ _REVIEW_SCOPE_DISCIPLINE_V7 = (
       "execution."
 )
 
-REVIEW_SCOPE_DISCIPLINE = (
+_REVIEW_SCOPE_DISCIPLINE_V8 = (
     _REVIEW_SCOPE_DISCIPLINE_V7
     + " REVIEW_TRUST_ROOT_V8: trusted server observations for this public repository are fetched without the workflow-"
       "issued GitHub token, so compromise of that token alone cannot forge the run/ref/workflow evidence used by the "
@@ -124,10 +126,22 @@ REVIEW_SCOPE_DISCIPLINE = (
       "authority."
 )
 
+REVIEW_SCOPE_DISCIPLINE = (
+    _REVIEW_SCOPE_DISCIPLINE_V8
+    + " REVIEW_QUEUE_V9: an owner-authorized exact-head review request may select an OPEN DRAFT pull request targeting "
+      "canonical main without changing its draft state. Draft status is containment against accidental integration, not "
+      "a scientific-review disqualifier. Selection still requires exact requested/current/fetched SHA equality, current-"
+      "main merge base, exact-head green Security and Reliability, bounded attempts, and the same trust-bound independent "
+      "review receipts. The review workflow must never mark the candidate ready, merge it, or grant integration authority. "
+      "The v9 policy cryptographically names the historical v8 policy rather than mutating v8 after its workflow source "
+      "identity changed."
+)
+
 REVIEW_SCOPE_POLICIES: dict[int, str] = {
     5: _REVIEW_SCOPE_DISCIPLINE_V5,
     6: _REVIEW_SCOPE_DISCIPLINE_V6,
     7: _REVIEW_SCOPE_DISCIPLINE_V7,
+    8: _REVIEW_SCOPE_DISCIPLINE_V8,
     REVIEW_SCOPE_POLICY_VERSION: REVIEW_SCOPE_DISCIPLINE,
 }
 
@@ -151,7 +165,7 @@ _V5_PROTECTED_PATH_PATTERNS = (
     "**/.env*",
 )
 
-# v6-v8 are authorized only against this exact registry identity. A registry
+# v6-v9 are authorized only against this exact registry identity. A registry
 # change requires a new policy version and fresh independent review.
 _V6_PROTECTED_REGISTRY = {
     "version": 1,
@@ -159,12 +173,18 @@ _V6_PROTECTED_REGISTRY = {
 }
 _V7_PROTECTED_REGISTRY = dict(_V6_PROTECTED_REGISTRY)
 _V8_PROTECTED_REGISTRY = dict(_V7_PROTECTED_REGISTRY)
+_V9_PROTECTED_REGISTRY = dict(_V8_PROTECTED_REGISTRY)
 _V7_REVIEWER_TRUST_ROOT = {
     "schema_version": 1,
     "trust_boundary_id": "EXACT_HEAD_REVIEW_TRUST_ROOT_V1",
     "sha256": "53c96f8eca58aba2f5242c858c766b5b4ca65d93839aa9734338ee3de0aebe3f",
 }
 _V8_REVIEWER_TRUST_ROOT = {
+    "schema_version": 2,
+    "trust_boundary_id": "EXACT_HEAD_REVIEW_TRUST_ROOT_V2",
+    "sha256": "069dbf56f36f66669ead5d36d1dc5d32e3cb847a2f8af8052ee31a9c6deb3405",
+}
+_V9_REVIEWER_TRUST_ROOT = {
     "schema_version": 2,
     "trust_boundary_id": "EXACT_HEAD_REVIEW_TRUST_ROOT_V2",
     "sha256": "5cf45d9cd44a8728ecd894fcfc1d79d9f43c0dfb24a579ed688dc5f800ec86dc",
@@ -227,16 +247,20 @@ def _expected_registry_identity(version: int) -> dict[str, Any]:
         return dict(_V6_PROTECTED_REGISTRY)
     if version == 7:
         return dict(_V7_PROTECTED_REGISTRY)
-    if version == REVIEW_SCOPE_POLICY_VERSION:
+    if version == 8:
         return dict(_V8_PROTECTED_REGISTRY)
+    if version == REVIEW_SCOPE_POLICY_VERSION:
+        return dict(_V9_PROTECTED_REGISTRY)
     raise RuntimeError("unknown review-scope policy version")
 
 
 def _expected_trust_root_identity(version: int) -> dict[str, Any]:
     if version == 7:
         return dict(_V7_REVIEWER_TRUST_ROOT)
-    if version == REVIEW_SCOPE_POLICY_VERSION:
+    if version == 8:
         return dict(_V8_REVIEWER_TRUST_ROOT)
+    if version == REVIEW_SCOPE_POLICY_VERSION:
+        return dict(_V9_REVIEWER_TRUST_ROOT)
     raise RuntimeError("reviewer trust root is unavailable for historical policy")
 
 
@@ -319,6 +343,19 @@ def review_scope_policy_sha256(version: int = REVIEW_SCOPE_POLICY_VERSION) -> st
                 "sha256": review_scope_policy_sha256(6),
             },
         }
+    elif version == 8:
+        payload = {
+            "version": version,
+            "discipline": discipline,
+            "review_infrastructure_paths": sorted(_V8_REVIEW_INFRASTRUCTURE_PATHS),
+            "review_infrastructure_core_paths": sorted(_V8_REVIEW_INFRASTRUCTURE_CORE_PATHS),
+            "protected_path_registry": _expected_registry_identity(version),
+            "reviewer_trust_root": _expected_trust_root_identity(version),
+            "parent_policy": {
+                "version": 7,
+                "sha256": review_scope_policy_sha256(7),
+            },
+        }
     else:
         _assert_active_registry_matches_policy(version)
         trust_root = _assert_active_trust_root_matches_policy(version)
@@ -330,8 +367,8 @@ def review_scope_policy_sha256(version: int = REVIEW_SCOPE_POLICY_VERSION) -> st
             "protected_path_registry": _expected_registry_identity(version),
             "reviewer_trust_root": trust_root,
             "parent_policy": {
-                "version": 7,
-                "sha256": review_scope_policy_sha256(7),
+                "version": 8,
+                "sha256": review_scope_policy_sha256(8),
             },
         }
     canonical = json.dumps(
