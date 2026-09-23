@@ -9,6 +9,7 @@ from orchestration import exact_head_review as review
 
 
 HEAD_SHA = "a" * 40
+WORKFLOW_PATH = Path(".github/workflows/exact_head_independent_review.yml")
 
 
 def _diff() -> str:
@@ -50,7 +51,7 @@ def test_protected_diff_is_reviewed_not_rejected(tmp_path: Path, monkeypatch: py
     assert "Protected scientific paths are NOT a reason to" in prompt
 
 
-def test_claude_receives_same_protected_context(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_claude_receives_exact_unmodified_review_context(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     diff_path = tmp_path / "candidate.diff"
     output = tmp_path / "review.json"
     diff_path.write_text(_diff(), encoding="utf-8")
@@ -76,11 +77,293 @@ def test_claude_receives_same_protected_context(tmp_path: Path, monkeypatch: pyt
     assert review.review_exact_head(
         "claude-adversarial", diff_path, output, pr_number=507, head_sha=HEAD_SHA
     ) == 0
-    assert "PROTECTED_PATH_CONTEXT: protected/file.py" in captured["input"]
-    assert "INTEGRATION_AUTHORITY: NONE" in captured["input"]
+    expected_header = review._context_header(
+        pr_number=507,
+        head_sha=HEAD_SHA,
+        protected_hits=["protected/file.py"],
+    )
+    assert captured["input"] == f"{expected_header}\nPROPOSED DIFF:\n{_diff()}"
     verdict = json.loads(output.read_text(encoding="utf-8"))
     assert verdict["integration_authority"] == "NONE"
     assert verdict["protected_paths"] == ["protected/file.py"]
+
+
+def test_valid_claude_scientific_rejection_is_final_single_vote(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "review.json"
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
+    calls = 0
+
+    def rejecting_claude(_review_input: str, raw_output: Path) -> int:
+        nonlocal calls
+        calls += 1
+        raw_output.write_text(
+            json.dumps(
+                {
+                    "approve": False,
+                    "reason": "scientific rejection remains authoritative",
+                    "risk": "high",
+                    "falsification_findings": {},
+                }
+            ),
+            encoding="utf-8",
+        )
+        return 0
+
+    monkeypatch.setattr(review, "_review_diff_claude_adversarial", rejecting_claude)
+    assert review.review_exact_head(
+        "claude-adversarial", diff_path, output, pr_number=579, head_sha=HEAD_SHA
+    ) == 0
+    assert calls == 1
+    verdict = json.loads(output.read_text(encoding="utf-8"))
+    assert verdict["approve"] is False
+    assert verdict["risk"] == "high"
+
+
+def test_valid_claude_approval_is_final_single_vote(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "review.json"
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
+    calls = 0
+
+    def approving_claude(_review_input: str, raw_output: Path) -> int:
+        nonlocal calls
+        calls += 1
+        raw_output.write_text(
+            json.dumps(
+                {
+                    "approve": True,
+                    "reason": "bounded repair passes",
+                    "risk": "low",
+                    "falsification_findings": {},
+                }
+            ),
+            encoding="utf-8",
+        )
+        return 0
+
+    monkeypatch.setattr(review, "_review_diff_claude_adversarial", approving_claude)
+    assert review.review_exact_head(
+        "claude-adversarial", diff_path, output, pr_number=579, head_sha=HEAD_SHA
+    ) == 0
+    assert calls == 1
+    verdict = json.loads(output.read_text(encoding="utf-8"))
+    assert verdict["approve"] is True
+    assert verdict["risk"] == "low"
+
+
+def test_claude_malformed_output_becomes_transient_without_second_vote(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "review.json"
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
+    calls = 0
+
+    def malformed(_review_input: str, _raw_output: Path) -> int:
+        nonlocal calls
+        calls += 1
+        raise json.JSONDecodeError("truncated", "{", 1)
+
+    monkeypatch.setattr(review, "_review_diff_claude_adversarial", malformed)
+    with pytest.raises(RuntimeError, match="temporarily unavailable"):
+        review.review_exact_head(
+            "claude-adversarial", diff_path, output, pr_number=579, head_sha=HEAD_SHA
+        )
+    assert calls == 1
+    assert not output.exists()
+    assert not output.with_suffix(output.suffix + ".raw").exists()
+
+
+def test_claude_missing_raw_output_becomes_transient_without_second_vote(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "review.json"
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
+    calls = 0
+
+    def no_raw_output(_review_input: str, _raw_output: Path) -> int:
+        nonlocal calls
+        calls += 1
+        return 0
+
+    monkeypatch.setattr(review, "_review_diff_claude_adversarial", no_raw_output)
+    with pytest.raises(RuntimeError, match="temporarily unavailable"):
+        review.review_exact_head(
+            "claude-adversarial", diff_path, output, pr_number=579, head_sha=HEAD_SHA
+        )
+    assert calls == 1
+    assert not output.exists()
+    assert not output.with_suffix(output.suffix + ".raw").exists()
+
+
+def test_claude_unreadable_raw_output_becomes_transient_without_second_vote(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "review.json"
+    raw_output = output.with_suffix(output.suffix + ".raw")
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
+    calls = 0
+
+    def writes_raw(_review_input: str, reviewer_raw_output: Path) -> int:
+        nonlocal calls
+        calls += 1
+        reviewer_raw_output.write_text('{"approve": true, "risk": "low"}', encoding="utf-8")
+        return 0
+
+    original_read_text = Path.read_text
+
+    def unreadable_raw(path: Path, *args: object, **kwargs: object) -> str:
+        if path == raw_output:
+            raise OSError("simulated unreadable reviewer output")
+        return original_read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(review, "_review_diff_claude_adversarial", writes_raw)
+    monkeypatch.setattr(Path, "read_text", unreadable_raw)
+    with pytest.raises(RuntimeError, match="temporarily unavailable"):
+        review.review_exact_head(
+            "claude-adversarial", diff_path, output, pr_number=579, head_sha=HEAD_SHA
+        )
+    assert calls == 1
+    assert not output.exists()
+    assert not raw_output.exists()
+
+
+def test_claude_invalid_verdict_schema_becomes_transient_without_second_vote(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "review.json"
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
+    calls = 0
+
+    def invalid_schema(_review_input: str, raw_output: Path) -> int:
+        nonlocal calls
+        calls += 1
+        raw_output.write_text(
+            json.dumps({"approve": "yes", "reason": "bad schema", "risk": "low"}),
+            encoding="utf-8",
+        )
+        return 0
+
+    monkeypatch.setattr(review, "_review_diff_claude_adversarial", invalid_schema)
+    with pytest.raises(RuntimeError, match="temporarily unavailable"):
+        review.review_exact_head(
+            "claude-adversarial", diff_path, output, pr_number=579, head_sha=HEAD_SHA
+        )
+    assert calls == 1
+    assert not output.exists()
+    assert not output.with_suffix(output.suffix + ".raw").exists()
+
+
+@pytest.mark.parametrize("reviewer_name", ["security", "lead"])
+def test_openai_malformed_output_becomes_transient_nonverdict(
+    reviewer_name: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "review.json"
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
+    monkeypatch.setattr(review, "model_name", lambda: "test-model")
+    calls = 0
+
+    def fake_post(_payload: dict[str, object]) -> dict[str, object]:
+        nonlocal calls
+        calls += 1
+        return {"output_text": "not-json"}
+
+    monkeypatch.setattr(review, "post_response", fake_post)
+    with pytest.raises(RuntimeError, match="temporarily unavailable"):
+        review.review_exact_head(reviewer_name, diff_path, output, pr_number=606, head_sha=HEAD_SHA)
+    assert calls == 1
+    assert not output.exists()
+
+
+@pytest.mark.parametrize("reviewer_name", ["security", "lead"])
+def test_openai_invalid_schema_becomes_transient_nonverdict(
+    reviewer_name: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "review.json"
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
+    monkeypatch.setattr(review, "model_name", lambda: "test-model")
+    calls = 0
+
+    def fake_post(_payload: dict[str, object]) -> dict[str, object]:
+        nonlocal calls
+        calls += 1
+        return {"output_text": '{"approve": "yes", "reason": "bad schema", "risk": "low"}'}
+
+    monkeypatch.setattr(review, "post_response", fake_post)
+    with pytest.raises(RuntimeError, match="temporarily unavailable"):
+        review.review_exact_head(reviewer_name, diff_path, output, pr_number=606, head_sha=HEAD_SHA)
+    assert calls == 1
+    assert not output.exists()
+
+
+@pytest.mark.parametrize("reviewer_name", ["security", "lead"])
+def test_valid_openai_scientific_rejection_remains_final(
+    reviewer_name: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "review.json"
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
+    monkeypatch.setattr(review, "model_name", lambda: "test-model")
+    calls = 0
+
+    def fake_post(_payload: dict[str, object]) -> dict[str, object]:
+        nonlocal calls
+        calls += 1
+        return {"output_text": '{"approve": false, "reason": "real blocker", "risk": "high"}'}
+
+    monkeypatch.setattr(review, "post_response", fake_post)
+    assert review.review_exact_head(reviewer_name, diff_path, output, pr_number=606, head_sha=HEAD_SHA) == 0
+    assert calls == 1
+    verdict = json.loads(output.read_text(encoding="utf-8"))
+    assert verdict["approve"] is False
+    assert verdict["risk"] == "high"
+    assert verdict["integration_authority"] == "NONE"
+
+
+def test_openai_provider_json_failure_becomes_transient_nonverdict(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "review.json"
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
+    monkeypatch.setattr(review, "model_name", lambda: "test-model")
+
+    def malformed_provider(_payload: dict[str, object]) -> dict[str, object]:
+        raise json.JSONDecodeError("invalid provider JSON", "{", 1)
+
+    monkeypatch.setattr(review, "post_response", malformed_provider)
+    with pytest.raises(RuntimeError, match="temporarily unavailable"):
+        review.review_exact_head("security", diff_path, output, pr_number=606, head_sha=HEAD_SHA)
+    assert not output.exists()
+
+
+def test_outer_workflow_retry_is_explicitly_bounded_and_transient_only() -> None:
+    workflow = WORKFLOW_PATH.read_text(encoding="utf-8")
+    assert 'ATTEMPT_COUNT" -ge 3' in workflow
+    assert "temporarily unavailable" in workflow
+    assert "WAIT_RETRYABLE" in workflow
+    assert "Require all three independent reviewers to approve" in workflow
+    assert "jq -e '.approve == true" in workflow
 
 
 def test_invalid_exact_head_fails_before_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -111,14 +394,18 @@ def test_oversized_diff_fails_before_model(tmp_path: Path, monkeypatch: pytest.M
         )
 
 
-def test_invalid_reviewer_verdict_fails_closed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_invalid_reviewer_verdict_is_fail_closed_transient_nonverdict(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     diff_path = tmp_path / "candidate.diff"
+    output = tmp_path / "out.json"
     diff_path.write_text(_diff(), encoding="utf-8")
     monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
     monkeypatch.setattr(review, "model_name", lambda: "test-model")
     monkeypatch.setattr(review, "post_response", lambda _payload: {"output_text": '{"approve": "yes", "risk": "low"}'})
     monkeypatch.setattr(review, "response_text", lambda payload: str(payload["output_text"]))
-    with pytest.raises(RuntimeError, match="invalid approval"):
+    with pytest.raises(RuntimeError, match="temporarily unavailable"):
         review.review_exact_head(
-            "security", diff_path, tmp_path / "out.json", pr_number=507, head_sha=HEAD_SHA
+            "security", diff_path, output, pr_number=507, head_sha=HEAD_SHA
         )
+    assert not output.exists()

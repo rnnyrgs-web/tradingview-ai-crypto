@@ -13,6 +13,9 @@ permissions:
   issues: write
   pull-requests: read
 
+# One repository-wide control-plane writer prevents two bot review attempts from
+# racing receipts for the same or different exact heads. Owner/admin mutation of
+# GitHub state remains the explicit trusted control-plane boundary.
 concurrency:
   group: exact-head-independent-review
   cancel-in-progress: false
@@ -32,7 +35,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          # Pin the executable reviewer/runtime snapshot to the exact workflow
+          # event SHA. Never fetch a newer main and then claim its SHA while
+          # continuing to execute validator code from an older checkout.
+          ref: ${{ github.sha }}
           fetch-depth: 100
 
       - uses: actions/setup-python@v5
@@ -50,8 +56,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git fetch --no-tags origin main
-          MAIN_SHA="$(git rev-parse origin/main)"
+          MAIN_SHA="$(git rev-parse HEAD)"
+          # All merge-base/diff/control-state operations below use this one
+          # pinned local main snapshot. Updating origin/main to a later network
+          # tip inside the run would break PIT binding between receipt SHA and
+          # the reviewer code that actually executed.
+          git update-ref refs/remotes/origin/main "$MAIN_SHA"
           REPO_OWNER="${GITHUB_REPOSITORY%%/*}"
           SELECTED_ISSUE=""
           SELECTED_PR=""
@@ -60,14 +70,20 @@ jobs:
           SELECTED_REF=""
           SECURITY_RUN_ID=""
 
-          REQUESTS="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 100 --json number,title,createdAt,author)"
+          # Complete pagination is a security property: a terminal old receipt
+          # may not disappear merely because >500 unrelated issues now exist.
+          gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=open&per_page=100&sort=created&direction=asc" \
+            | jq -s 'add | map(select(.pull_request == null))' \
+            > /tmp/exact-head-open-requests.json
+          gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100&sort=created&direction=asc" \
+            | jq -s 'add | map(select(.pull_request == null))' \
+            > /tmp/exact-head-control-issues.json
+
           while IFS=$'\t' read -r ISSUE_NUMBER TITLE CREATED_AT REQUEST_AUTHOR; do
             [ -n "$ISSUE_NUMBER" ] || continue
             if [[ ! "$TITLE" =~ ^exact-head-review-request:\ pr=([0-9]+)\ sha=([0-9a-f]{40})$ ]]; then
               continue
             fi
-            # Only the repository owner may authorize a paid independent review.
-            # This prevents arbitrary public issues from consuming reviewer budget.
             if [ "$REQUEST_AUTHOR" != "$REPO_OWNER" ]; then
               gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Unauthorized exact-head review request: only repository owner $REPO_OWNER may authorize reviewer execution. Closing without invoking any model/API."
               gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
@@ -96,19 +112,50 @@ jobs:
               continue
             fi
 
+            # Literal titles remain human-auditable, but title alone has zero
+            # authority. The validator requires bot author + exact body PR/SHA/
+            # source-attempt/run/outcome/authority + this canonical main SHA.
             APPROVED_TITLE="exact-head-review-approved: pr=$PR_NUMBER sha=$REQUESTED_SHA"
-            APPROVALS="$(gh issue list --repo "$GITHUB_REPOSITORY" --state all --limit 100 --json title)"
-            ALREADY_APPROVED="$(printf '%s' "$APPROVALS" | jq --arg title "$APPROVED_TITLE" '[.[] | select(.title == $title)] | length')"
-            if [ "$ALREADY_APPROVED" -gt 0 ]; then
-              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "An approval receipt already exists for PR #$PR_NUMBER exact head $REQUESTED_SHA; closing duplicate request."
+            REJECTED_TITLE="exact-head-review-rejected: pr=$PR_NUMBER sha=$REQUESTED_SHA"
+            CONTROL_STATE="$(python -m orchestration.exact_head_control_state \
+              --issues /tmp/exact-head-control-issues.json \
+              --pr-number "$PR_NUMBER" \
+              --head-sha "$REQUESTED_SHA" \
+              --workflow-main-sha "$MAIN_SHA")"
+            ALREADY_APPROVED="$(printf '%s' "$CONTROL_STATE" | jq -r '.approved')"
+            ALREADY_REJECTED="$(printf '%s' "$CONTROL_STATE" | jq -r '.rejected')"
+            TERMINAL_NONRETRYABLE="$(printf '%s' "$CONTROL_STATE" | jq -r '.terminal_nonretryable')"
+            AMBIGUOUS_CONTROL_STATE="$(printf '%s' "$CONTROL_STATE" | jq -r '.ambiguous_control_state')"
+            APPROVED_ATTEMPT_COUNT="$(printf '%s' "$CONTROL_STATE" | jq '.validated_approved_attempts | length')"
+            ATTEMPT_COUNT="$(printf '%s' "$CONTROL_STATE" | jq -r '.attempt_count')"
+
+            if [ "$ALREADY_REJECTED" = "true" ]; then
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Validated terminal rejection state already exists for PR #$PR_NUMBER exact head $REQUESTED_SHA. This exact SHA is terminal and cannot be reviewer-shopped; revise the candidate to a new head and pass fresh exact-head CI before requesting another scientific review."
               gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
               continue
             fi
-
-            ATTEMPT_PREFIX="exact-head-review-attempt: pr=$PR_NUMBER sha=$REQUESTED_SHA run="
-            ATTEMPT_COUNT="$(printf '%s' "$APPROVALS" | jq --arg prefix "$ATTEMPT_PREFIX" '[.[] | select(.title | startswith($prefix))] | length')"
+            if [ "$ALREADY_APPROVED" = "true" ]; then
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "A validated approval receipt already exists for PR #$PR_NUMBER exact head $REQUESTED_SHA; closing duplicate request."
+              gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
+              continue
+            fi
+            if [ "$TERMINAL_NONRETRYABLE" = "true" ]; then
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Validated terminal/nonretryable review-attempt state exists for PR #$PR_NUMBER exact head $REQUESTED_SHA. This SHA cannot invoke reviewers again. Repair control-plane persistence without rerunning scientific reviewers, or revise the candidate to a materially new SHA with fresh exact-head CI."
+              gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
+              continue
+            fi
+            if [ "$AMBIGUOUS_CONTROL_STATE" = "true" ]; then
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Ambiguous duplicate exact-head review control receipts exist for PR #$PR_NUMBER SHA $REQUESTED_SHA. Closing fail-closed without invoking reviewers; repair the durable control state or revise to a new exact head."
+              gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
+              continue
+            fi
+            if [ "$APPROVED_ATTEMPT_COUNT" -gt 0 ]; then
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "A validated approved source attempt exists for PR #$PR_NUMBER exact head $REQUESTED_SHA but no unique verified approval receipt exists. Closing fail-closed without rerunning reviewers; repair receipt persistence or revise to a new head."
+              gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
+              continue
+            fi
             if [ "$ATTEMPT_COUNT" -ge 3 ]; then
-              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Bounded reviewer retry limit reached for PR #$PR_NUMBER exact head $REQUESTED_SHA after $ATTEMPT_COUNT attempts. Closing without approval; create a new request only after the provider/runtime blocker is materially resolved."
+              gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Bounded reviewer retry limit reached for PR #$PR_NUMBER exact head $REQUESTED_SHA after $ATTEMPT_COUNT validated attempts. Closing without approval; create a new request only after the provider/runtime blocker is materially resolved."
               gh issue close "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY"
               continue
             fi
@@ -122,7 +169,7 @@ jobs:
             fi
             MERGE_BASE="$(git merge-base origin/main "$REVIEW_REF" 2>/dev/null || true)"
             if [ "$MERGE_BASE" != "$MAIN_SHA" ]; then
-              echo "PR #$PR_NUMBER exact head is not based on current main; request stays pending."
+              echo "PR #$PR_NUMBER exact head is not based on pinned reviewer main; request stays pending."
               continue
             fi
 
@@ -147,7 +194,7 @@ jobs:
             SELECTED_REF="$REVIEW_REF"
             SECURITY_RUN_ID="$RUN_ID"
             break
-          done < <(printf '%s' "$REQUESTS" | jq -r 'sort_by(.createdAt)[] | [.number, .title, .createdAt, (.author.login // "")] | @tsv')
+          done < <(jq -r 'sort_by(.created_at)[] | [.number, .title, .created_at, (.user.login // "")] | @tsv' /tmp/exact-head-open-requests.json)
 
           echo "request_issue=$SELECTED_ISSUE" >> "$GITHUB_OUTPUT"
           echo "pr_number=$SELECTED_PR" >> "$GITHUB_OUTPUT"
@@ -159,7 +206,7 @@ jobs:
           if [ -z "$SELECTED_PR" ]; then
             echo "No explicit exact-head review request is ready."
           else
-            echo "Selected PR #$SELECTED_PR ($SELECTED_BRANCH) exact head $SELECTED_SHA with Security and Reliability run $SECURITY_RUN_ID."
+            echo "Selected PR #$SELECTED_PR ($SELECTED_BRANCH) exact head $SELECTED_SHA with Security and Reliability run $SECURITY_RUN_ID on pinned reviewer main $MAIN_SHA."
           fi
 
       - name: Stop when no review request is ready
@@ -176,6 +223,7 @@ jobs:
           SECURITY_RUN_ID: ${{ steps.select.outputs.security_run_id }}
           MAIN_SHA: ${{ steps.select.outputs.main_sha }}
         run: |
+          set -euo pipefail
           cat >/tmp/exact-head-review-attempt.md <<EOF
           PR: #$PR_NUMBER
           Candidate branch: \`$BRANCH\`
@@ -206,9 +254,6 @@ jobs:
           BYTES="$(wc -c < /tmp/candidate.diff)"
           echo "Diff bytes: $BYTES"
           test "$BYTES" -gt 0
-          # One coherent protected scientific repair may legitimately span schema,
-          # durable memory and regressions. Review the full exact diff, bounded at
-          # 256 kB; never truncate it into a superficially reviewable subset.
           test "$BYTES" -le 256000 || { echo "Diff too large for one coherent exact-head review; fail closed and split the PR."; exit 1; }
 
       - id: review_models
@@ -226,22 +271,14 @@ jobs:
           import pathlib
           import re
           import sys
-
           text = pathlib.Path(sys.argv[1]).read_text(errors="replace")
-          transient = re.search(
-              r"429 Too Many Requests|rate[ -]?limit|temporarily unavailable|overloaded",
-              text,
-              re.I,
-          )
+          transient = re.search(r"429 Too Many Requests|rate[ -]?limit|temporarily unavailable|overloaded", text, re.I)
           raise SystemExit(0 if transient else 1)
           PY
           }
 
           STATUS=0
           WAIT=0
-
-          # Different providers may run in parallel, but keep the two OpenAI
-          # reviewers serial so they do not compete for the same rate-limit bucket.
           set +e
           python -m orchestration.exact_head_review review --reviewer claude-adversarial --diff /tmp/candidate.diff --output /tmp/claude-adversarial-review.json --pr-number "$PR_NUMBER" --head-sha "$HEAD_SHA" >/tmp/claude-review.log 2>&1 &
           PID_CLAUDE=$!
@@ -250,11 +287,7 @@ jobs:
           SECURITY_STATUS=${PIPESTATUS[0]}
           set -e
           if [ "$SECURITY_STATUS" -ne 0 ]; then
-            if is_transient_reviewer_failure /tmp/security-review.log; then
-              WAIT=1
-            else
-              STATUS=1
-            fi
+            if is_transient_reviewer_failure /tmp/security-review.log; then WAIT=1; else STATUS=1; fi
           fi
 
           if [ "$STATUS" -eq 0 ] && [ "$WAIT" -eq 0 ]; then
@@ -263,34 +296,51 @@ jobs:
             LEAD_STATUS=${PIPESTATUS[0]}
             set -e
             if [ "$LEAD_STATUS" -ne 0 ]; then
-              if is_transient_reviewer_failure /tmp/lead-review.log; then
-                WAIT=1
-              else
-                STATUS=1
-              fi
+              if is_transient_reviewer_failure /tmp/lead-review.log; then WAIT=1; else STATUS=1; fi
             fi
           fi
 
+          # Every reviewer that was actually launched is joined before the one
+          # shared deterministic rejection predicate is evaluated.
           set +e
           wait "$PID_CLAUDE"
           CLAUDE_STATUS=$?
           set -e
           cat /tmp/claude-review.log
           if [ "$CLAUDE_STATUS" -ne 0 ]; then
-            if is_transient_reviewer_failure /tmp/claude-review.log; then
-              WAIT=1
-            else
-              STATUS=1
-            fi
+            if is_transient_reviewer_failure /tmp/claude-review.log; then WAIT=1; else STATUS=1; fi
           fi
 
+          REJECTED="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          from orchestration.exact_head_review import has_terminal_rejection
+
+          verdicts = []
+          for path in (Path('/tmp/security-review.json'), Path('/tmp/lead-review.json'), Path('/tmp/claude-adversarial-review.json')):
+              try:
+                  value = json.loads(path.read_text(encoding='utf-8'))
+              except (OSError, ValueError, json.JSONDecodeError):
+                  value = None
+              verdicts.append(value if isinstance(value, dict) else None)
+          print('1' if has_terminal_rejection(verdicts) else '0')
+          PY
+          )"
+          if [ "$REJECTED" -eq 1 ]; then
+            echo "rejected=true" >> "$GITHUB_OUTPUT"
+            echo "wait=false" >> "$GITHUB_OUTPUT"
+            echo "A valid independent scientific rejection is terminal for this exact SHA and takes precedence over any transient provider absence."
+            exit 0
+          fi
+
+          echo "rejected=false" >> "$GITHUB_OUTPUT"
           if [ "$STATUS" -ne 0 ]; then
             echo "wait=false" >> "$GITHUB_OUTPUT"
             exit "$STATUS"
           fi
           if [ "$WAIT" -eq 1 ]; then
             echo "wait=true" >> "$GITHUB_OUTPUT"
-            echo "Transient reviewer throttling/overload detected; exact head remains unapproved and may retry only within the bounded attempt limit."
+            echo "Transient reviewer throttling/overload detected with no valid rejection; exact head remains unapproved and may retry only within the bounded attempt limit."
             exit 0
           fi
           echo "wait=false" >> "$GITHUB_OUTPUT"
@@ -301,63 +351,35 @@ jobs:
           {
             echo "### Controlled WAIT — independent reviewer capacity"
             echo "- Candidate remains **unapproved** and **unmerged**."
+            echo "- No valid scientific rejection was produced in this attempt."
             echo "- No scientific, security, or exact-head gate was weakened."
             echo "- The same explicit request may retry on a later queue cycle, bounded to three attempts."
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Stop terminally on any valid independent rejection
+        if: steps.select.outputs.pr_number != '' && steps.review_models.outputs.rejected == 'true'
+        run: |
+          echo "At least one independent reviewer produced a valid rejection. This exact SHA is terminal and cannot be reviewer-shopped."
+          exit 1
+
       - name: Require all three independent reviewers to approve
-        if: steps.select.outputs.pr_number != '' && steps.review_models.outputs.wait != 'true'
+        if: steps.select.outputs.pr_number != '' && steps.review_models.outputs.wait != 'true' && steps.review_models.outputs.rejected != 'true'
         run: |
           jq -e '.approve == true and .integration_authority == "NONE"' /tmp/security-review.json
           jq -e '.approve == true and .integration_authority == "NONE"' /tmp/lead-review.json
           jq -e '.approve == true and .integration_authority == "NONE"' /tmp/claude-adversarial-review.json
 
       - id: approval_record
-        name: Record review-only approval for exact head
-        if: steps.select.outputs.pr_number != '' && steps.review_models.outputs.wait != 'true'
-        env:
-          PR_NUMBER: ${{ steps.select.outputs.pr_number }}
-          HEAD_SHA: ${{ steps.select.outputs.sha }}
-          BRANCH: ${{ steps.select.outputs.branch }}
-          SECURITY_RUN_ID: ${{ steps.select.outputs.security_run_id }}
-          REQUEST_ISSUE: ${{ steps.select.outputs.request_issue }}
+        name: Freeze intended exact-head approval outcome
+        if: steps.select.outputs.pr_number != '' && steps.review_models.outputs.wait != 'true' && steps.review_models.outputs.rejected != 'true'
         run: |
+          set -euo pipefail
           PROTECTED_COUNT="$(jq '.protected_paths | length' /tmp/security-review.json)"
           if [ "$PROTECTED_COUNT" -gt 0 ]; then
             OUTCOME="REVIEW_APPROVED_PROTECTED_LEAD_INTEGRATION_REQUIRED"
           else
             OUTCOME="REVIEW_APPROVED_LEAD_INTEGRATION_REQUIRED"
           fi
-          PROTECTED_PATHS="$(jq -c '.protected_paths' /tmp/security-review.json)"
-          {
-            echo "PR: #$PR_NUMBER"
-            echo "Candidate branch: \`$BRANCH\`"
-            echo "Exact reviewed SHA: \`$HEAD_SHA\`"
-            echo "Exact-head Security and Reliability run: \`$SECURITY_RUN_ID\` — PASS"
-            echo "Outcome: \`$OUTCOME\`"
-            echo "Protected paths: \`$PROTECTED_PATHS\`"
-            echo "Integration authority: \`NONE\`"
-            echo
-            echo "Security reviewer:"
-            echo '```json'
-            cat /tmp/security-review.json
-            echo '```'
-            echo
-            echo "Lead reviewer:"
-            echo '```json'
-            cat /tmp/lead-review.json
-            echo '```'
-            echo
-            echo "Claude adversarial reviewer:"
-            echo '```json'
-            cat /tmp/claude-adversarial-review.json
-            echo '```'
-            echo
-            echo "This is read-only exact-head review evidence. Protected-path approval never grants autonomous merge/integration authority. Any new head SHA invalidates this receipt."
-          } >/tmp/exact-head-review-approved.md
-          gh issue create --repo "$GITHUB_REPOSITORY" --title "exact-head-review-approved: pr=$PR_NUMBER sha=$HEAD_SHA" --body-file /tmp/exact-head-review-approved.md
-          gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Exact-head independent review completed with $OUTCOME. Approval receipt was created for PR #$PR_NUMBER SHA $HEAD_SHA."
-          gh issue close "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY"
           echo "outcome=$OUTCOME" >> "$GITHUB_OUTPUT"
 
       - name: Finalize durable attempt receipt and bound retries
@@ -373,39 +395,27 @@ jobs:
           APPROVAL_OUTCOME: ${{ steps.approval_record.outputs.outcome }}
           CONTROLLED_WAIT: ${{ steps.review_models.outputs.wait }}
         run: |
+          set -euo pipefail
           python - <<'PY'
           import json
           import os
           from pathlib import Path
+          from orchestration.exact_head_review import classify_review_attempt_outcome
 
-          review_paths = [
-              Path("/tmp/security-review.json"),
-              Path("/tmp/lead-review.json"),
-              Path("/tmp/claude-adversarial-review.json"),
-          ]
+          review_paths = [Path('/tmp/security-review.json'), Path('/tmp/lead-review.json'), Path('/tmp/claude-adversarial-review.json')]
           verdicts = []
           for path in review_paths:
               try:
-                  value = json.loads(path.read_text(encoding="utf-8"))
-                  if not isinstance(value.get("approve"), bool):
-                      raise ValueError("invalid approval")
-                  if value.get("integration_authority") != "NONE":
-                      raise ValueError("review unexpectedly claims integration authority")
+                  value = json.loads(path.read_text(encoding='utf-8'))
               except (OSError, ValueError, AttributeError, json.JSONDecodeError):
                   value = None
-              verdicts.append(value)
+              verdicts.append(value if isinstance(value, dict) else None)
 
-          approved_outcome = os.environ.get("APPROVAL_OUTCOME", "")
-          controlled_wait = os.environ.get("CONTROLLED_WAIT", "").lower() == "true"
-          if controlled_wait:
-              outcome = "WAIT_RETRYABLE"
-          elif approved_outcome.startswith("REVIEW_APPROVED_"):
-              outcome = approved_outcome
-          elif all(value is not None for value in verdicts) and any(not value["approve"] for value in verdicts):
-              outcome = "REJECTED"
-          else:
-              outcome = "FAILED"
-
+          outcome = classify_review_attempt_outcome(
+              verdicts,
+              controlled_wait=os.environ.get('CONTROLLED_WAIT', '').lower() == 'true',
+              approved_outcome=os.environ.get('APPROVAL_OUTCOME', ''),
+          )
           lines = [
               f"PR: #{os.environ['PR_NUMBER']}",
               f"Candidate branch: `{os.environ['BRANCH']}`",
@@ -416,20 +426,136 @@ jobs:
               f"Outcome: `{outcome}`",
               "Integration authority: `NONE`",
           ]
-          labels = ["Security reviewer", "Lead reviewer", "Claude adversarial reviewer"]
+          labels = ['Security reviewer', 'Lead reviewer', 'Claude adversarial reviewer']
           for label, value in zip(labels, verdicts):
               if value is not None:
-                  lines += ["", f"{label}:", "```json", json.dumps(value, indent=2, sort_keys=True), "```"]
-          Path("/tmp/exact-head-review-attempt.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-          Path("/tmp/exact-head-review-outcome.txt").write_text(outcome + "\n", encoding="utf-8")
+                  lines += ['', f'{label}:', '```json', json.dumps(value, indent=2, sort_keys=True), '```']
+          Path('/tmp/exact-head-review-attempt.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+          Path('/tmp/exact-head-review-outcome.txt').write_text(outcome + '\n', encoding='utf-8')
           PY
+
           gh issue edit "$ATTEMPT_ISSUE" --repo "$GITHUB_REPOSITORY" --body-file /tmp/exact-head-review-attempt.md
           OUTCOME="$(cat /tmp/exact-head-review-outcome.txt)"
+
+          # Persisted source attempt is the primary crash-safe terminal evidence.
+          # Secondary rejection receipts are audit/index artifacts only; they
+          # can strengthen auditability but never create or erase rejection.
+          gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100&sort=created&direction=asc" \
+            | jq -s 'add | map(select(.pull_request == null))' \
+            > /tmp/exact-head-control-issues-after-attempt.json
+          SOURCE_STATE="$(python -m orchestration.exact_head_control_state \
+            --issues /tmp/exact-head-control-issues-after-attempt.json \
+            --pr-number "$PR_NUMBER" \
+            --head-sha "$HEAD_SHA" \
+            --workflow-main-sha "$MAIN_SHA")"
+
+          if [ "$OUTCOME" = "REJECTED" ]; then
+            test "$(printf '%s' "$SOURCE_STATE" | jq -r '.rejected')" = "true"
+            SOURCE_MATCH="$(printf '%s' "$SOURCE_STATE" | jq --argjson issue "$ATTEMPT_ISSUE" '[.validated_rejected_attempts[] | select(. == $issue)] | length')"
+            test "$SOURCE_MATCH" -eq 1
+            EXISTING_RECEIPTS="$(printf '%s' "$SOURCE_STATE" | jq '.validated_rejection_receipts | length')"
+            CREATED_REJECTION=""
+            if [ "$EXISTING_RECEIPTS" -eq 0 ]; then
+              cat >/tmp/exact-head-review-rejected.md <<EOF
+          PR: #$PR_NUMBER
+          Candidate branch: \`$BRANCH\`
+          Exact rejected SHA: \`$HEAD_SHA\`
+          Source attempt issue: #$ATTEMPT_ISSUE
+          Source workflow run: \`$GITHUB_RUN_ID\`
+          Workflow main SHA: \`$MAIN_SHA\`
+          Outcome: \`REJECTED\`
+          Integration authority: \`NONE\`
+
+          At least one independent reviewer produced a valid scientific rejection. This exact SHA is terminal for review and cannot be retried to seek a different model judgment.
+          EOF
+              if REJECTION_URL="$(gh issue create --repo "$GITHUB_REPOSITORY" --title "exact-head-review-rejected: pr=$PR_NUMBER sha=$HEAD_SHA" --body-file /tmp/exact-head-review-rejected.md 2>/tmp/exact-head-rejection-receipt-error.log)"; then
+                CREATED_REJECTION="${REJECTION_URL##*/}"
+                test -n "$CREATED_REJECTION"
+              else
+                echo "Secondary rejection receipt creation failed; persisted rejected source attempt remains terminal." >&2
+                cat /tmp/exact-head-rejection-receipt-error.log >&2 || true
+              fi
+            fi
+
+            gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100&sort=created&direction=asc" \
+              | jq -s 'add | map(select(.pull_request == null))' \
+              > /tmp/exact-head-control-issues-after-receipt.json
+            VERIFIED_STATE="$(python -m orchestration.exact_head_control_state \
+              --issues /tmp/exact-head-control-issues-after-receipt.json \
+              --pr-number "$PR_NUMBER" \
+              --head-sha "$HEAD_SHA" \
+              --workflow-main-sha "$MAIN_SHA")"
+            test "$(printf '%s' "$VERIFIED_STATE" | jq -r '.rejected')" = "true"
+            VERIFIED_SOURCE_MATCH="$(printf '%s' "$VERIFIED_STATE" | jq --argjson issue "$ATTEMPT_ISSUE" '[.validated_rejected_attempts[] | select(. == $issue)] | length')"
+            test "$VERIFIED_SOURCE_MATCH" -eq 1
+            if [ -n "$CREATED_REJECTION" ]; then
+              CREATED_MATCH="$(printf '%s' "$VERIFIED_STATE" | jq --argjson issue "$CREATED_REJECTION" '[.validated_rejection_receipts[] | select(. == $issue)] | length')"
+              test "$CREATED_MATCH" -eq 1
+            fi
+          elif [[ "$OUTCOME" == REVIEW_APPROVED_* ]]; then
+            test "$(printf '%s' "$SOURCE_STATE" | jq -r '.rejected')" = "false"
+            test "$(printf '%s' "$SOURCE_STATE" | jq -r '.interrupted')" = "false"
+            test "$(printf '%s' "$SOURCE_STATE" | jq -r '.terminal_nonretryable')" = "true"
+            test "$(printf '%s' "$SOURCE_STATE" | jq -r '.approval_persistence_incomplete')" = "true"
+            SOURCE_MATCH="$(printf '%s' "$SOURCE_STATE" | jq --argjson issue "$ATTEMPT_ISSUE" '[.validated_approved_attempts[] | select(. == $issue)] | length')"
+            test "$SOURCE_MATCH" -eq 1
+            test "$(printf '%s' "$SOURCE_STATE" | jq '.validated_approval_receipts | length')" -eq 0
+            test "$(printf '%s' "$SOURCE_STATE" | jq '.invalid_trusted_control_issues | length')" -eq 0
+
+            PROTECTED_PATHS="$(jq -c '.protected_paths' /tmp/security-review.json)"
+            {
+              echo "PR: #$PR_NUMBER"
+              echo "Candidate branch: \`$BRANCH\`"
+              echo "Exact reviewed SHA: \`$HEAD_SHA\`"
+              echo "Exact-head Security and Reliability run: \`$SECURITY_RUN_ID\` — PASS"
+              echo "Source attempt issue: #$ATTEMPT_ISSUE"
+              echo "Source workflow run: \`$GITHUB_RUN_ID\`"
+              echo "Workflow main SHA: \`$MAIN_SHA\`"
+              echo "Outcome: \`$OUTCOME\`"
+              echo "Protected paths: \`$PROTECTED_PATHS\`"
+              echo "Integration authority: \`NONE\`"
+              echo
+              echo "Security reviewer:"
+              echo '```json'; cat /tmp/security-review.json; echo '```'
+              echo
+              echo "Lead reviewer:"
+              echo '```json'; cat /tmp/lead-review.json; echo '```'
+              echo
+              echo "Claude adversarial reviewer:"
+              echo '```json'; cat /tmp/claude-adversarial-review.json; echo '```'
+              echo
+              echo "This is read-only exact-head review evidence. Any new head SHA invalidates this receipt."
+            } >/tmp/exact-head-review-approved.md
+            URL="$(gh issue create --repo "$GITHUB_REPOSITORY" --title "exact-head-review-approved: pr=$PR_NUMBER sha=$HEAD_SHA" --body-file /tmp/exact-head-review-approved.md)"
+            APPROVAL_RECEIPT_ISSUE="${URL##*/}"
+            test -n "$APPROVAL_RECEIPT_ISSUE"
+
+            gh api --paginate "/repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100&sort=created&direction=asc" \
+              | jq -s 'add | map(select(.pull_request == null))' \
+              > /tmp/exact-head-control-issues-after-approval.json
+            VERIFIED_STATE="$(python -m orchestration.exact_head_control_state \
+              --issues /tmp/exact-head-control-issues-after-approval.json \
+              --pr-number "$PR_NUMBER" \
+              --head-sha "$HEAD_SHA" \
+              --workflow-main-sha "$MAIN_SHA")"
+            test "$(printf '%s' "$VERIFIED_STATE" | jq -r '.approved')" = "true"
+            test "$(printf '%s' "$VERIFIED_STATE" | jq -r '.rejected')" = "false"
+            test "$(printf '%s' "$VERIFIED_STATE" | jq -r '.ambiguous_control_state')" = "false"
+            RECEIPT_MATCH="$(printf '%s' "$VERIFIED_STATE" | jq --argjson issue "$APPROVAL_RECEIPT_ISSUE" '[.validated_approval_receipts[] | select(. == $issue)] | length')"
+            test "$RECEIPT_MATCH" -eq 1
+          fi
+
           if gh issue view "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --json state --jq '.state' | grep -qx OPEN; then
             if [ "$OUTCOME" = "WAIT_RETRYABLE" ]; then
-              gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as WAIT_RETRYABLE because an independent reviewer provider was throttled/unavailable. Candidate remains unapproved. Request stays open for a later bounded retry (maximum three attempts)."
+              gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as WAIT_RETRYABLE because an independent reviewer provider was throttled/unavailable and no valid rejection was produced. Candidate remains unapproved. Request stays open for a later bounded retry (maximum three attempts)."
+            elif [ "$OUTCOME" = "REJECTED" ]; then
+              gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as REJECTED. A validated independent rejection is durably bound to this exact SHA; revise the candidate to a new head and pass fresh exact-head CI before requesting another scientific review."
+              gh issue close "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY"
+            elif [[ "$OUTCOME" == REVIEW_APPROVED_* ]]; then
+              gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Exact-head independent review completed with $OUTCOME. The unique approval receipt was created only after source attempt #$ATTEMPT_ISSUE was durably finalized, then re-read and validated on canonical reviewer main $MAIN_SHA."
+              gh issue close "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY"
             else
-              gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as $OUTCOME. This request is closed to prevent unbounded paid retries. FAILED/REJECTED does not permanently blacklist the exact SHA: after the cause is repaired or an explicit bounded retry is justified, create a new request with the same {pr, sha}."
+              gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as $OUTCOME. This request is closed to prevent unbounded paid retries. FAILED indicates missing/invalid infrastructure evidence rather than a scientific rejection; retry the same SHA only after the objective runtime cause is materially repaired and under the bounded attempt limit."
               gh issue close "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY"
             fi
           fi
