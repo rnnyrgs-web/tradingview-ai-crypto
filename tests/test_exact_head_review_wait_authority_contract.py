@@ -17,14 +17,20 @@ def test_temporarily_unavailable_is_only_a_nonverdict_and_cannot_mint_approval()
     assert "temporarily unavailable:" in reviewer
     assert "temporarily unavailable|overloaded" in workflow
 
-    # A WAIT must skip both the unanimity gate and approval-receipt creation.
+    # A WAIT or an available valid rejection must skip both the unanimity gate and
+    # approval-receipt creation. Tightening this gate must not weaken WAIT safety.
+    approval_gate = (
+        "steps.select.outputs.pr_number != '' && "
+        "steps.review_models.outputs.wait != 'true' && "
+        "steps.review_models.outputs.rejected != 'true'"
+    )
     assert (
         "name: Require all three independent reviewers to approve\n"
-        "        if: steps.select.outputs.pr_number != '' && steps.review_models.outputs.wait != 'true'"
+        f"        if: {approval_gate}"
     ) in workflow
     assert (
         "name: Record review-only approval for exact head\n"
-        "        if: steps.select.outputs.pr_number != '' && steps.review_models.outputs.wait != 'true'"
+        f"        if: {approval_gate}"
     ) in workflow
     assert "Candidate remains **unapproved** and **unmerged**" in workflow
 
