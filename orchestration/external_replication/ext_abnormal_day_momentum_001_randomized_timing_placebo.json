@@ -8,6 +8,7 @@
   "source_predeclaration_artifact_sha256": "45a1b336db757259781e47530e2940f50025011da8631c1ab3338e1bd3261e8b",
   "source_stage1_execution": "orchestration/external_replication/ext_abnormal_day_momentum_001_stage1_execution.json",
   "source_stage1_head_sha": "dab303eaf380da591147535f57bcbb4526085ac0",
+  "regenerate_if_source_stage1_head_changes": true,
   "planning_source": "orchestration/cohorts/strategy_factory_cohort_001_baseline_halving_plan.json",
   "planning_contract_sha256": "4cf46291af242a350d065bf24418b8fdf5c6d36e4fea1b923a9cb1a51046c392",
   "purpose": "Freeze one deterministic frequency/direction/concurrency-matched eligible-window timing placebo before any abnormal-day replication P&L is opened.",
@@ -96,5 +97,7 @@
     "trade_authority": false,
     "protected_oos_opened": false,
     "genuine_forward_opened": false
-  }
+  },
+  "contract_digest_rule": "SHA256(canonical JSON with sorted keys and compact separators, excluding contract_sha256)",
+  "contract_sha256": "e614fffdab4bbeaf123aca3d5cd398396e98cfa8625990126afc2c9f4f00c9f1"
 }
