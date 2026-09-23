@@ -86,6 +86,17 @@
       "cost_priority": 4,
       "constraint": "Fallback or explicitly API-required path only; do not use as the silent default for substantive work that can use the paid ChatGPT subscription."
     },
+    "api_luna": {
+      "executor": "openai_api",
+      "model": "gpt-5.6-luna",
+      "reasoning": "medium",
+      "use_for": [
+        "legacy autonomous_cloud_specialist adapter compatibility only"
+      ],
+      "cost_priority": 100,
+      "compatibility_only": true,
+      "constraint": "Compatibility alias consumed by the existing bounded development orchestrator. It is not a substantive default route and must not override subscription_sol_high or work routing preference."
+    },
     "api_terra_fallback": {
       "executor": "openai_api",
       "model": "gpt-5.6-terra",
