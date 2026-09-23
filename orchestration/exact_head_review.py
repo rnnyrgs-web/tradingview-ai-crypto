@@ -104,21 +104,21 @@ def _claude_exact_head_verdict(review_input: str, temporary: Path) -> dict[str, 
         raise RuntimeError(
             "temporarily unavailable: Claude reviewer provider transport exhausted bounded retries"
         ) from exc
-    except (json.JSONDecodeError, RuntimeError, OSError) as exc:
+    except (json.JSONDecodeError, OSError) as exc:
         raise RuntimeError(
             "temporarily unavailable: Claude reviewer returned malformed or incomplete JSON"
         ) from exc
 
     try:
         verdict = json.loads(temporary.read_text(encoding="utf-8"))
-        if not isinstance(verdict, dict):
-            raise RuntimeError("reviewer returned non-object JSON")
-        _validate_verdict_schema(verdict)
-        return verdict
-    except (json.JSONDecodeError, RuntimeError, OSError) as exc:
+    except (json.JSONDecodeError, OSError) as exc:
         raise RuntimeError(
             "temporarily unavailable: Claude reviewer returned malformed or incomplete JSON"
         ) from exc
+    if not isinstance(verdict, dict):
+        raise RuntimeError("reviewer returned non-object JSON")
+    _validate_verdict_schema(verdict)
+    return verdict
 
 
 def _openai_exact_head_verdict(prompt: str) -> dict[str, Any]:
@@ -135,15 +135,21 @@ def _openai_exact_head_verdict(prompt: str) -> dict[str, Any]:
 
     try:
         text = response_text(response)
-        if not isinstance(text, str) or not text.strip():
-            raise RuntimeError("reviewer returned empty output")
-        verdict = extract_json(text)
-        _validate_verdict_schema(verdict)
-        return verdict
-    except (json.JSONDecodeError, RuntimeError, TypeError, KeyError, AttributeError) as exc:
+    except (json.JSONDecodeError, TypeError, KeyError, AttributeError) as exc:
         raise RuntimeError(
             "temporarily unavailable: OpenAI reviewer returned malformed or incomplete JSON"
         ) from exc
+    if not isinstance(text, str) or not text.strip():
+        raise RuntimeError("temporarily unavailable: OpenAI reviewer returned empty output")
+
+    try:
+        verdict = extract_json(text)
+    except (json.JSONDecodeError, RuntimeError) as exc:
+        raise RuntimeError(
+            "temporarily unavailable: OpenAI reviewer returned malformed or incomplete JSON"
+        ) from exc
+    _validate_verdict_schema(verdict)
+    return verdict
 
 
 def review_exact_head(
