@@ -1,3 +1,4 @@
+# Regression coverage for issue #702: specialist-factory health must not fail silently.
 from datetime import datetime, timedelta, timezone
 
 import continuous_specialist_factory as factory
