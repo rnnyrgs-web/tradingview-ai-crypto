@@ -98,3 +98,28 @@ def test_openai_reviewers_are_serial_while_claude_can_run_in_parallel() -> None:
     lead = text.index("LEAD_STATUS=")
     assert claude < security < lead
     assert "same rate-limit bucket" in text
+
+
+def test_draft_candidates_are_reviewable_without_opening_merge_surface() -> None:
+    text = _text()
+    assert "--json number,headRefName,headRefOid,baseRefName,isDraft,state" in text
+    assert '[ "$PR_STATE" != "OPEN" ] || [ "$BASE_REF" != "main" ]' in text
+    assert '[ "$PR_STATE" != "OPEN" ] || [ "$PR_DRAFT" = "true" ]' not in text
+    assert "remains DRAFT; exact-head review is allowed without exposing an unapproved PR to mergeability" in text
+    assert "gh pr ready" not in text
+    assert "pull-requests: write" not in text
+
+
+def test_independent_review_status_is_exact_head_bound_and_wait_safe() -> None:
+    text = _text()
+    assert "statuses: write" in text
+    assert '"repos/$GITHUB_REPOSITORY/statuses/$HEAD_SHA"' in text
+    assert "-f context=independent-review" in text
+    assert '-f state=pending' in text
+    assert 'WAIT_RETRYABLE)' in text
+    assert 'STATUS_STATE="pending"' in text
+    assert 'REJECTED)' in text
+    assert 'STATUS_STATE="failure"' in text
+    assert 'REVIEW_APPROVED_*)' in text
+    assert 'STATUS_STATE="success"' in text
+    assert 'STATUS_STATE="error"' in text
