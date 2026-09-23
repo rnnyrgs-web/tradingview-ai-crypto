@@ -16,6 +16,8 @@ WORKFLOW_REF = (
     "rnnyrgs-web/tradingview-ai-crypto/.github/workflows/"
     "exact_head_independent_review.yml@refs/heads/main"
 )
+WORKFLOW_BLOB_SHA = "b" * 40
+WORKFLOW_SHA256 = "d" * 64
 
 
 def _legacy_provenance() -> dict[str, object]:
@@ -42,6 +44,11 @@ def _trust_context() -> dict[str, object]:
         "server_run_attempt": 1,
         "server_run_path": ".github/workflows/exact_head_independent_review.yml",
         "server_main_sha": RUNTIME_SHA,
+        "local_workflow_blob_sha": WORKFLOW_BLOB_SHA,
+        "local_workflow_sha256": WORKFLOW_SHA256,
+        "server_workflow_blob_sha": WORKFLOW_BLOB_SHA,
+        "server_workflow_sha256": WORKFLOW_SHA256,
+        "server_observation_auth": "PUBLIC_UNAUTHENTICATED_GITHUB_API",
     }
 
 
@@ -89,7 +96,9 @@ def test_protected_diff_is_reviewed_not_rejected(tmp_path: Path, monkeypatch: py
     assert verdict["exact_head_sha"] == HEAD_SHA
     assert verdict["workflow_provenance"]["runtime_git_sha"] == RUNTIME_SHA
     assert verdict["workflow_trust_context"]["server_main_sha"] == RUNTIME_SHA
-    assert verdict["review_trust_binding_version"] == 1
+    assert verdict["workflow_trust_context"]["local_workflow_blob_sha"] == WORKFLOW_BLOB_SHA
+    assert verdict["workflow_trust_context"]["server_observation_auth"] == "PUBLIC_UNAUTHENTICATED_GITHUB_API"
+    assert verdict["review_trust_binding_version"] == 2
     assert verdict["approval_consumption"]["approve_true_required"] is True
     prompt = str(captured["input"])
     assert "PROTECTED_PATH_CONTEXT: orchestration/strategy_predeclaration.py" in prompt
@@ -135,6 +144,7 @@ def test_claude_receives_same_protected_context(tmp_path: Path, monkeypatch: pyt
     assert verdict["protected_paths"] == ["orchestration/strategy_predeclaration.py"]
     assert verdict["workflow_provenance"]["runtime_git_sha"] == RUNTIME_SHA
     assert verdict["workflow_trust_context"]["server_run_attempt"] == 1
+    assert verdict["workflow_trust_context"]["server_workflow_sha256"] == WORKFLOW_SHA256
 
 
 def test_runtime_git_sha_is_bound_from_checked_out_reviewer_runtime(
