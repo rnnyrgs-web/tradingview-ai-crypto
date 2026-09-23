@@ -114,3 +114,19 @@ def test_stage1_remains_noninferential_and_cost_proxy_cannot_promote() -> None:
         "strategy_outcomes_read_to_form_contract": False,
         "trade_authority": False,
     }
+
+
+def test_pr_515_admission_cannot_execute_stage1_outcomes_by_itself() -> None:
+    contract = _load(CONTRACT_PATH)
+    authority = contract["execution_authority"]
+
+    assert authority["may_execute_real_stage1_from_pr_515_alone"] is False
+    assert authority["protected_oos_or_genuine_forward_authority"] is False
+    assert authority["promotion_authority"] is False
+    assert authority["broker_or_trade_authority"] is False
+    required = authority["required_before_any_real_stage1_outcome_read"]
+    assert len(required) == 5
+    assert any("reconciled onto that canonical main" in step for step in required)
+    assert any("multiplicity authority" in step for step in required)
+    assert any("exact-head CI" in step for step in required)
+    assert any("independent review" in step for step in required)
