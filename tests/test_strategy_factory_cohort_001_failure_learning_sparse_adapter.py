@@ -69,6 +69,7 @@ def test_zero_event_sparse_screen_preserves_undefined_statistics_as_null() -> No
         validation_independent_events=0,
         mean_48bps=None,
         winner_concentration_share_24bps=None,
+        mean_0bps=None,
     )
 
     screen = _map_certified_failure_learning_screen(
@@ -104,12 +105,14 @@ def test_no_loss_profit_factor_and_one_sparse_half_are_not_fabricated() -> None:
         validation_independent_events=1,
         mean_48bps=0.0096,
         winner_concentration_share_24bps=1.0,
+        mean_0bps=0.0128,
     )
 
     screen = _map_certified_failure_learning_screen(
         _result(validation, (0.012, None)), diagnostics, _predeclaration(), _context()
     )
 
+    assert screen["validation"]["gross_mean_bps"] == pytest.approx(128.0)
     assert screen["validation"]["profit_factor"] == float("inf")
     assert screen["validation"]["half_net_bps"] == [pytest.approx(120.0), None]
     assert screen["risk"]["without_best_net_mean_bps"] is None
@@ -140,6 +143,7 @@ def test_invalid_nonfinite_sparse_values_still_fail_closed(field: str, value: fl
         validation_independent_events=1,
         mean_48bps=0.0075,
         winner_concentration_share_24bps=1.0,
+        mean_0bps=0.0108,
     )
 
     with pytest.raises(RuntimeError, match=match):
