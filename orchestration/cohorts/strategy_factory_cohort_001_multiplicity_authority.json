@@ -13,7 +13,7 @@
     "successor_rule": "Any materially distinct successor proposed after observing Cohort-001 development outcomes must retain Cohort-001 ancestry/search breadth and receive a newly frozen multiplicity contract before any new outcome read. It may not inherit or recycle unused alpha from this family."
   },
   "contract_id": "STRATEGY-FACTORY-COHORT-001-MULTIPLICITY-AUTHORITY-v1",
-  "contract_sha256": "793b8dd22350b3fe498ae4971165c9f423e1f1377d19cbc9627537a0421d72d9",
+  "contract_sha256": "9a7c32f8f8ea5959fbcd9b5c55707cb8a46d0a066a43a7d2db854b45c9b68e65",
   "cost_authority": {
     "a_72bps_stage1_pass_cannot_substitute_for_later_authenticated_cost_evidence": true,
     "delta_carry_candidate_is_not_covered_by_the_non_carry_stage1_cost_proxy": true,
@@ -34,6 +34,20 @@
     "protected_oos_opened": false,
     "strategy_outcomes_read_to_form_contract": false,
     "trade_authority": false
+  },
+  "execution_authority": {
+    "broker_or_trade_authority": false,
+    "canonical_admission_screening_authority_means": "eligibility for a separately frozen, exact-head-reviewed Stage-1 execution binding; it is not permission for PR #515 alone to read real strategy returns",
+    "may_execute_real_stage1_from_pr_515_alone": false,
+    "promotion_authority": false,
+    "protected_oos_or_genuine_forward_authority": false,
+    "required_before_any_real_stage1_outcome_read": [
+      "PR #515 integrates after exact-head CI and legitimate independent review",
+      "Stage-1 execution/binding branch is reconciled onto that canonical main",
+      "Stage-1 frozen execution semantics, structural-power allocation, multiplicity authority, and source identities are mutually bound",
+      "fresh exact-head CI passes",
+      "fresh legitimate independent review approves that execution head"
+    ]
   },
   "family": {
     "failed_blocked_or_underpowered_members_remain_counted": true,
