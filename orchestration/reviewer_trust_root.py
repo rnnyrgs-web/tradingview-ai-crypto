@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import os
@@ -10,9 +11,15 @@ from typing import Any
 import httpx
 
 TRUST_ROOT_PATH = Path(__file__).with_name("reviewer_trust_root.json")
-TRUST_BINDING_VERSION = 1
+TRUST_BINDING_VERSION = 2
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+_SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 _REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+_PARENT_TRUST_ROOT = {
+    "schema_version": 1,
+    "trust_boundary_id": "EXACT_HEAD_REVIEW_TRUST_ROOT_V1",
+    "sha256": "53c96f8eca58aba2f5242c858c766b5b4ca65d93839aa9734338ee3de0aebe3f",
+}
 
 
 def _strict_object(raw: str) -> dict[str, Any]:
@@ -46,19 +53,21 @@ def load_reviewer_trust_root(path: Path = TRUST_ROOT_PATH) -> dict[str, Any]:
         "repository",
         "workflow_path",
         "workflow_ref",
+        "workflow_source",
         "api_base_url",
         "required_runner_environment",
         "required_github_actions",
         "trusted_control_plane",
         "required_observations",
         "out_of_scope_platform_compromise",
+        "parent_trust_root",
         "authority",
     }
     if set(root) != required:
         raise RuntimeError("reviewer trust root key set mismatch")
-    if root["schema_version"] != 1 or isinstance(root["schema_version"], bool):
+    if root["schema_version"] != 2 or isinstance(root["schema_version"], bool):
         raise RuntimeError("unsupported reviewer trust root schema")
-    if root["trust_boundary_id"] != "EXACT_HEAD_REVIEW_TRUST_ROOT_V1":
+    if root["trust_boundary_id"] != "EXACT_HEAD_REVIEW_TRUST_ROOT_V2":
         raise RuntimeError("unexpected reviewer trust boundary id")
     if root["platform"] != "github.com":
         raise RuntimeError("unsupported review platform")
@@ -68,6 +77,13 @@ def load_reviewer_trust_root(path: Path = TRUST_ROOT_PATH) -> dict[str, Any]:
         raise RuntimeError("unexpected trusted review workflow path")
     if root["workflow_ref"] != "refs/heads/main":
         raise RuntimeError("trusted review workflow must run from canonical main")
+    workflow_source = root["workflow_source"]
+    if not isinstance(workflow_source, dict) or set(workflow_source) != {"git_blob_sha", "binding"}:
+        raise RuntimeError("invalid trusted workflow-source binding")
+    if _SHA_RE.fullmatch(str(workflow_source.get("git_blob_sha", ""))) is None:
+        raise RuntimeError("invalid trusted workflow Git blob SHA")
+    if workflow_source.get("binding") != "git_blob_sha_plus_runtime_sha256":
+        raise RuntimeError("unexpected workflow-source binding mode")
     if root["api_base_url"] != "https://api.github.com":
         raise RuntimeError("unexpected trusted GitHub API base URL")
     if root["required_runner_environment"] != "github-hosted":
@@ -78,6 +94,8 @@ def load_reviewer_trust_root(path: Path = TRUST_ROOT_PATH) -> dict[str, Any]:
         values = root[key]
         if not isinstance(values, list) or not values or not all(isinstance(v, str) and v for v in values):
             raise RuntimeError(f"invalid reviewer trust-root list: {key}")
+    if root["parent_trust_root"] != _PARENT_TRUST_ROOT:
+        raise RuntimeError("reviewer trust-root lineage drift")
     authority = root["authority"]
     if not isinstance(authority, dict):
         raise RuntimeError("invalid reviewer trust-root authority")
@@ -120,10 +138,16 @@ def _positive_int(raw: str, label: str) -> int:
     return value
 
 
-def _github_api_json(url: str, token: str) -> dict[str, Any]:
+def _github_public_api_json(url: str) -> dict[str, Any]:
+    """Read public GitHub server state without the workflow-issued token.
+
+    The repository is public. Keeping this observation path unauthenticated makes
+    a compromised workflow GH_TOKEN/GITHUB_TOKEN unable, by itself, to forge the
+    server observations used by the receipt trust binding. GitHub control-plane
+    compromise remains explicitly outside the declared threat model.
+    """
     headers = {
         "Accept": "application/vnd.github+json",
-        "Authorization": f"Bearer {token}",
         "X-GitHub-Api-Version": "2022-11-28",
         "User-Agent": "tradingview-ai-crypto-exact-head-review",
     }
@@ -132,18 +156,44 @@ def _github_api_json(url: str, token: str) -> dict[str, Any]:
         response.raise_for_status()
         value = response.json()
     except (httpx.HTTPError, json.JSONDecodeError) as exc:
-        raise RuntimeError("trusted GitHub API observation unavailable") from exc
+        raise RuntimeError("trusted public GitHub API observation unavailable") from exc
     if not isinstance(value, dict):
-        raise RuntimeError("trusted GitHub API observation must be an object")
+        raise RuntimeError("trusted public GitHub API observation must be an object")
     return value
 
 
+def _git_blob_sha(data: bytes) -> str:
+    payload = f"blob {len(data)}\0".encode("ascii") + data
+    return hashlib.sha1(payload, usedforsecurity=False).hexdigest()  # nosec B324 - Git object identity
+
+
+def _workflow_bytes(root: dict[str, Any]) -> bytes:
+    path = Path(__file__).resolve().parents[1] / root["workflow_path"]
+    try:
+        return path.read_bytes()
+    except OSError as exc:
+        raise RuntimeError("trusted workflow source is unavailable locally") from exc
+
+
+def _server_workflow_bytes(payload: dict[str, Any]) -> bytes:
+    if payload.get("type") != "file" or payload.get("encoding") != "base64":
+        raise RuntimeError("trusted server workflow source is not an inline base64 file")
+    raw = payload.get("content")
+    if not isinstance(raw, str) or not raw:
+        raise RuntimeError("trusted server workflow source content missing")
+    try:
+        return base64.b64decode(raw, validate=True)
+    except (ValueError, TypeError) as exc:
+        raise RuntimeError("trusted server workflow source base64 invalid") from exc
+
+
 def collect_trusted_workflow_context(*, runtime_git_sha: str) -> dict[str, Any]:
-    """Bind reviewer execution to server-observed GitHub Actions/main identities.
+    """Bind reviewer execution to public server-observed Actions/main/workflow identities.
 
     This intentionally fails closed if canonical main advances while the review is
-    executing. A fresh queue attempt on the new canonical state is safer than
-    treating stale reviewer-runtime provenance as approval authority.
+    executing or if the exact review workflow differs from the independently
+    reviewed workflow object frozen in the trust root. A fresh queue attempt on a
+    new canonical state is safer than treating stale provenance as approval.
     """
     root = load_reviewer_trust_root()
     if not isinstance(runtime_git_sha, str) or _SHA_RE.fullmatch(runtime_git_sha) is None:
@@ -173,21 +223,22 @@ def collect_trusted_workflow_context(*, runtime_git_sha: str) -> dict[str, Any]:
     github_ref = _required_env("GITHUB_REF")
     if github_ref != root["workflow_ref"]:
         raise RuntimeError("review workflow is not executing from canonical main ref")
-    for label, sha in (
-        ("workflow SHA", workflow_sha),
-        ("GitHub SHA", github_sha),
-    ):
+    for label, sha in (("workflow SHA", workflow_sha), ("GitHub SHA", github_sha)):
         if _SHA_RE.fullmatch(sha) is None:
             raise RuntimeError(f"invalid trusted {label}")
         if sha != runtime_git_sha:
             raise RuntimeError(f"trusted {label} does not match reviewer runtime")
 
-    token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN") or ""
-    if not token:
-        raise RuntimeError("trusted GitHub API token unavailable")
+    local_workflow = _workflow_bytes(root)
+    local_workflow_blob_sha = _git_blob_sha(local_workflow)
+    local_workflow_sha256 = hashlib.sha256(local_workflow).hexdigest()
+    expected_workflow_blob_sha = root["workflow_source"]["git_blob_sha"]
+    if local_workflow_blob_sha != expected_workflow_blob_sha:
+        raise RuntimeError("local review workflow source drifted from the trust root")
+
     api = root["api_base_url"]
-    run = _github_api_json(f"{api}/repos/{repository}/actions/runs/{run_id}", token)
-    main_ref = _github_api_json(f"{api}/repos/{repository}/git/ref/heads/main", token)
+    run = _github_public_api_json(f"{api}/repos/{repository}/actions/runs/{run_id}")
+    main_ref = _github_public_api_json(f"{api}/repos/{repository}/git/ref/heads/main")
 
     if run.get("id") != run_id:
         raise RuntimeError("GitHub run identity mismatch")
@@ -215,6 +266,21 @@ def collect_trusted_workflow_context(*, runtime_git_sha: str) -> dict[str, Any]:
     if server_main_sha != runtime_git_sha:
         raise RuntimeError("canonical main advanced during reviewer execution; retry on current main")
 
+    server_workflow = _github_public_api_json(
+        f"{api}/repos/{repository}/contents/{root['workflow_path']}?ref={server_main_sha}"
+    )
+    server_workflow_blob_sha = server_workflow.get("sha")
+    if server_workflow_blob_sha != expected_workflow_blob_sha:
+        raise RuntimeError("server review workflow source drifted from the trust root")
+    server_workflow_bytes = _server_workflow_bytes(server_workflow)
+    if _git_blob_sha(server_workflow_bytes) != server_workflow_blob_sha:
+        raise RuntimeError("server review workflow content does not match its Git blob identity")
+    server_workflow_sha256 = hashlib.sha256(server_workflow_bytes).hexdigest()
+    if server_workflow_bytes != local_workflow or server_workflow_sha256 != local_workflow_sha256:
+        raise RuntimeError("local and server review workflow sources differ")
+    if _SHA256_RE.fullmatch(server_workflow_sha256) is None:
+        raise RuntimeError("invalid trusted workflow SHA256")
+
     context = {
         "repository": repository,
         "run_id": run_id,
@@ -229,6 +295,11 @@ def collect_trusted_workflow_context(*, runtime_git_sha: str) -> dict[str, Any]:
         "server_run_attempt": run.get("run_attempt"),
         "server_run_path": run.get("path"),
         "server_main_sha": server_main_sha,
+        "local_workflow_blob_sha": local_workflow_blob_sha,
+        "local_workflow_sha256": local_workflow_sha256,
+        "server_workflow_blob_sha": server_workflow_blob_sha,
+        "server_workflow_sha256": server_workflow_sha256,
+        "server_observation_auth": "PUBLIC_UNAUTHENTICATED_GITHUB_API",
     }
     if set(context) != set(root["required_observations"]):
         raise RuntimeError("trusted workflow observation set drift")
