@@ -64,6 +64,8 @@ def test_inactive_dead_symbol_is_retained_for_identity_enumeration() -> None:
     manifest = _manifest()
     assert manifest["contract_id"] == CONTRACT_ID
     assert manifest["source_response_bytes_verified"] is True
+    assert manifest["capture_time_authority"] == "CALLER_DECLARED_NONE"
+    assert manifest["capture_time_is_historical_availability_proof"] is False
     assert [row["symbol"] for row in manifest["symbols"]] == ["LIVEUSDT", "OLDUSDT"]
     old = manifest["symbols"][1]
     assert old["provider_collection_available_to"] == "2022-06-01T00:00:00Z"
@@ -172,5 +174,32 @@ def test_provider_bytes_must_be_exact_valid_json_object() -> None:
         build_survivorship_enumeration_manifest(
             array_payload,
             expected_source_response_sha256=hashlib.sha256(array_payload).hexdigest(),
+            captured_at="2026-09-23T02:00:00Z",
+        )
+
+
+def test_duplicate_json_object_keys_fail_closed_before_semantic_use() -> None:
+    raw = (
+        b'{"id":"binance","datasets":{"symbols":[]},'
+        b'"datasets":{"symbols":[{"id":"OLDUSDT","availableSince":"2021-01-01T00:00:00Z",'
+        b'"dataTypes":["trades"]}]}}'
+    )
+    with pytest.raises(SurvivorshipMetadataError, match="duplicate object key 'datasets'"):
+        build_survivorship_enumeration_manifest(
+            raw,
+            expected_source_response_sha256=hashlib.sha256(raw).hexdigest(),
+            captured_at="2026-09-23T02:00:00Z",
+        )
+
+
+def test_nonstandard_json_numeric_constants_fail_closed() -> None:
+    raw = (
+        b'{"id":"binance","datasets":{"symbols":[]},'
+        b'"providerDiagnostic":NaN}'
+    )
+    with pytest.raises(SurvivorshipMetadataError, match="non-standard numeric constant NaN"):
+        build_survivorship_enumeration_manifest(
+            raw,
+            expected_source_response_sha256=hashlib.sha256(raw).hexdigest(),
             captured_at="2026-09-23T02:00:00Z",
         )
