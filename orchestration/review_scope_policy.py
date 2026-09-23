@@ -167,7 +167,7 @@ _V7_REVIEWER_TRUST_ROOT = {
 _V8_REVIEWER_TRUST_ROOT = {
     "schema_version": 2,
     "trust_boundary_id": "EXACT_HEAD_REVIEW_TRUST_ROOT_V2",
-    "sha256": "069dbf56f36f66669ead5d36d1dc5d32e3cb847a2f8af8052ee31a9c6deb3405",
+    "sha256": "5cf45d9cd44a8728ecd894fcfc1d79d9f43c0dfb24a579ed688dc5f800ec86dc",
 }
 
 
