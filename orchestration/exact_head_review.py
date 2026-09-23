@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import re
+import subprocess  # nosec B404 - fixed git argv used only to bind reviewer-runtime provenance
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +26,7 @@ from orchestration.review_scope_policy import (
     REVIEW_SCOPE_POLICY_VERSION,
     changed_paths_sha256,
     classify_diff_scope,
+    protected_path_registry_identity,
     review_receipt_context_sha256,
     review_scope_policy_sha256,
     verify_review_scope_receipt,
@@ -51,11 +53,26 @@ def _protected_context(diff: str) -> list[str]:
     return sorted(find_protected_matches(diff_changed_paths(diff)))
 
 
+def _runtime_git_sha() -> str:
+    try:
+        value = subprocess.run(  # nosec B603 B607 - fixed argv, no shell
+            ["git", "rev-parse", "HEAD"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise RuntimeError("unable to determine reviewer-runtime git SHA") from exc
+    if not _SHA_RE.fullmatch(value):
+        raise RuntimeError("invalid reviewer-runtime git SHA")
+    return value
+
+
 def _workflow_provenance_from_env() -> dict[str, Any]:
     """Return trusted GitHub workflow identity for production review receipts.
 
     The receipt remains non-authoritative by itself: downstream validation must obtain
-    these expected values independently from GitHub workflow/issue provenance.
+    these expected values independently from GitHub workflow/issue/run provenance.
     """
     repository = os.environ.get("GITHUB_REPOSITORY", "")
     run_id_raw = os.environ.get("GITHUB_RUN_ID", "")
@@ -72,6 +89,7 @@ def _workflow_provenance_from_env() -> dict[str, Any]:
         "repository": repository,
         "run_id": run_id,
         "workflow_ref": workflow_ref,
+        "runtime_git_sha": _runtime_git_sha(),
     }
 
 
@@ -84,15 +102,19 @@ def _context_header(
     workflow_provenance: dict[str, Any],
 ) -> str:
     protected = ", ".join(protected_hits) if protected_hits else "NONE"
+    registry = protected_path_registry_identity()
     return (
         "READ_ONLY_EXACT_HEAD_REVIEW_CONTEXT\n"
         f"PR_NUMBER: {pr_number}\n"
         f"EXACT_HEAD_SHA: {head_sha}\n"
         f"DIFF_SCOPE_CLASS: {diff_scope}\n"
         f"PROTECTED_PATH_CONTEXT: {protected}\n"
+        f"PROTECTED_PATH_REGISTRY_VERSION: {registry['version']}\n"
+        f"PROTECTED_PATH_REGISTRY_SHA256: {registry['sha256']}\n"
         f"WORKFLOW_REPOSITORY: {workflow_provenance['repository']}\n"
         f"WORKFLOW_RUN_ID: {workflow_provenance['run_id']}\n"
         f"WORKFLOW_REF: {workflow_provenance['workflow_ref']}\n"
+        f"WORKFLOW_RUNTIME_GIT_SHA: {workflow_provenance['runtime_git_sha']}\n"
         "INTEGRATION_AUTHORITY: NONE\n"
         f"REVIEW_SCOPE_POLICY_VERSION: {REVIEW_SCOPE_DISCIPLINE_VERSION}\n"
         f"REVIEW_SCOPE_POLICY_SHA256: {_review_scope_policy_sha256()}\n"
@@ -125,6 +147,7 @@ def _enrich_verdict(
 ) -> dict[str, Any]:
     _validate_verdict_schema(verdict)
     canonical_paths = sorted(set(changed_paths))
+    registry = protected_path_registry_identity()
     enriched = dict(verdict)
     enriched.update(
         {
@@ -138,6 +161,7 @@ def _enrich_verdict(
             "pr_number": pr_number,
             "exact_head_sha": head_sha,
             "protected_paths": protected_hits,
+            "protected_path_registry": registry,
             "workflow_provenance": dict(workflow_provenance),
             "integration_authority": "NONE",
         }
@@ -150,6 +174,7 @@ def _enrich_verdict(
         workflow_repository=workflow_provenance["repository"],
         workflow_run_id=workflow_provenance["run_id"],
         workflow_ref=workflow_provenance["workflow_ref"],
+        workflow_runtime_sha=workflow_provenance["runtime_git_sha"],
     )
     verify_review_scope_receipt(
         enriched,
@@ -160,6 +185,7 @@ def _enrich_verdict(
         expected_workflow_repository=workflow_provenance["repository"],
         expected_workflow_run_id=workflow_provenance["run_id"],
         expected_workflow_ref=workflow_provenance["workflow_ref"],
+        expected_workflow_runtime_sha=workflow_provenance["runtime_git_sha"],
     )
     return enriched
 
@@ -325,6 +351,7 @@ def main() -> int:
     verify.add_argument("--workflow-repository", required=True)
     verify.add_argument("--workflow-run-id", type=int, required=True)
     verify.add_argument("--workflow-ref", required=True)
+    verify.add_argument("--workflow-runtime-sha", required=True)
 
     args = parser.parse_args()
     if args.command == "review":
@@ -356,6 +383,7 @@ def main() -> int:
             expected_workflow_repository=args.workflow_repository,
             expected_workflow_run_id=args.workflow_run_id,
             expected_workflow_ref=args.workflow_ref,
+            expected_workflow_runtime_sha=args.workflow_runtime_sha,
         )
         return 0
     raise RuntimeError("unknown command")
