@@ -170,8 +170,10 @@ def validate_derived_record(
     return computed
 
 
-def passes_coarse_liquidity_gate(value: Any) -> bool:
+def passes_coarse_liquidity_gate(value: Any, *, unit: str) -> bool:
     """Apply the frozen 10M-USDT coarse screen; this is not strict tradability."""
+    if unit != QUOTE_ASSET:
+        raise ValueError("coarse liquidity gate requires explicit USDT unit")
     if isinstance(value, bool):
         raise ValueError("liquidity value must be numeric")
     try:
