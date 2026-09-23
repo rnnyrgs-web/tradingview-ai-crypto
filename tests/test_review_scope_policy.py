@@ -28,10 +28,10 @@ RUNTIME_SHA = "c" * 40
 SCOPE = "REVIEW_INFRASTRUCTURE"
 WORKFLOW_REPOSITORY = "rnnyrgs-web/tradingview-ai-crypto"
 WORKFLOW_RUN_ID = 123456789
-WORKFLOW_REF = (
-    "rnnyrgs-web/tradingview-ai-crypto/.github/workflows/"
-    "exact_head_independent_review.yml@refs/heads/main"
-)
+WORKFLOW_PATH = ".github/workflows/exact_head_independent_review.yml"
+WORKFLOW_REF = f"{WORKFLOW_REPOSITORY}/{WORKFLOW_PATH}@refs/heads/main"
+WORKFLOW_BLOB_SHA = "d935db971372189781aa2420d8ac363dd60bbbbc"
+WORKFLOW_SHA256 = "d" * 64
 
 
 def _trust_context() -> dict:
@@ -47,8 +47,13 @@ def _trust_context() -> dict:
         "server_run_head_sha": RUNTIME_SHA,
         "server_run_event": "issues",
         "server_run_attempt": 1,
-        "server_run_path": ".github/workflows/exact_head_independent_review.yml",
+        "server_run_path": WORKFLOW_PATH,
         "server_main_sha": RUNTIME_SHA,
+        "local_workflow_blob_sha": WORKFLOW_BLOB_SHA,
+        "local_workflow_sha256": WORKFLOW_SHA256,
+        "server_workflow_blob_sha": WORKFLOW_BLOB_SHA,
+        "server_workflow_sha256": WORKFLOW_SHA256,
+        "server_observation_auth": "PUBLIC_UNAUTHENTICATED_GITHUB_API",
     }
 
 
@@ -318,21 +323,22 @@ def test_scope_receipt_trusted_context_digest_tamper_fails_closed() -> None:
 
 def test_policy_digest_binds_append_only_lineage_registry_and_trust_root() -> None:
     current = review_scope_policy_sha256()
+    v7 = review_scope_policy_sha256(7)
     v6 = review_scope_policy_sha256(6)
     v5 = review_scope_policy_sha256(5)
-    assert all(len(value) == 64 for value in (current, v6, v5))
-    for value in (current, v6, v5):
+    assert all(len(value) == 64 for value in (current, v7, v6, v5))
+    for value in (current, v7, v6, v5):
         int(value, 16)
-    assert len({current, v6, v5}) == 3
+    assert len({current, v7, v6, v5}) == 4
     identity = protected_path_registry_identity()
     assert identity == {
         "version": 1,
         "sha256": "00e9f1a404d1f5b92210f0c172295cd0067ff1078c33e4dcb284a4e3be4c7f25",
     }
     assert reviewer_trust_root_identity() == {
-        "schema_version": 1,
-        "trust_boundary_id": "EXACT_HEAD_REVIEW_TRUST_ROOT_V1",
-        "sha256": "53c96f8eca58aba2f5242c858c766b5b4ca65d93839aa9734338ee3de0aebe3f",
+        "schema_version": 2,
+        "trust_boundary_id": "EXACT_HEAD_REVIEW_TRUST_ROOT_V2",
+        "sha256": "01ebba5a33df29b6edd5f457ef1a700b758c8f1187e9efedad76702dedee890d",
     }
 
 
@@ -404,7 +410,7 @@ def test_enriched_verdict_binds_trusted_exact_context_and_workflow() -> None:
     assert enriched["reviewer_trust_root"] == reviewer_trust_root_identity()
     assert enriched["workflow_provenance"] == provenance
     assert enriched["workflow_trust_context"] == _trust_context()
-    assert enriched["review_trust_binding_version"] == 1
+    assert enriched["review_trust_binding_version"] == 2
     assert enriched["approval_consumption"]["integrity_verification_is_approval"] is False
     assert enriched["review_context_sha256"] == review_receipt_context_sha256(
         pr_number=PR_NUMBER,
