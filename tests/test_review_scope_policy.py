@@ -15,6 +15,7 @@ from orchestration.review_scope_policy import (
     review_scope_policy_sha256,
     verify_review_scope_receipt,
 )
+from orchestration.reviewer_trust_root import reviewer_trust_root_identity
 
 
 INFRA_PATHS = [
@@ -33,6 +34,24 @@ WORKFLOW_REF = (
 )
 
 
+def _trust_context() -> dict:
+    return {
+        "repository": WORKFLOW_REPOSITORY,
+        "run_id": WORKFLOW_RUN_ID,
+        "run_attempt": 1,
+        "event_name": "issues",
+        "workflow_ref": WORKFLOW_REF,
+        "workflow_sha": RUNTIME_SHA,
+        "runtime_git_sha": RUNTIME_SHA,
+        "github_sha": RUNTIME_SHA,
+        "server_run_head_sha": RUNTIME_SHA,
+        "server_run_event": "issues",
+        "server_run_attempt": 1,
+        "server_run_path": ".github/workflows/exact_head_independent_review.yml",
+        "server_main_sha": RUNTIME_SHA,
+    }
+
+
 def _receipt() -> dict:
     provenance = {
         "repository": WORKFLOW_REPOSITORY,
@@ -49,6 +68,7 @@ def _receipt() -> dict:
         "changed_paths_sha256": changed_paths_sha256(INFRA_PATHS),
         "protected_paths": INFRA_PATHS,
         "protected_path_registry": protected_path_registry_identity(),
+        "reviewer_trust_root": reviewer_trust_root_identity(),
         "diff_scope_class": SCOPE,
         "pr_number": PR_NUMBER,
         "exact_head_sha": HEAD_SHA,
@@ -86,10 +106,19 @@ def test_review_infrastructure_scope_is_exact_allowlist_only() -> None:
         [
             "orchestration/exact_head_review.py",
             "orchestration/review_scope_policy.py",
+            "orchestration/reviewer_trust_root.py",
+            "orchestration/reviewer_trust_root.json",
+            ".github/workflows/exact_head_independent_review.yml",
             "tests/test_exact_head_review.py",
             "tests/test_review_scope_policy.py",
+            "tests/test_reviewer_trust_root.py",
+            "BUG_REGRESSION_LEDGER.md",
         ]
     ) == "REVIEW_INFRASTRUCTURE"
+
+
+def test_ancillary_ledger_only_is_not_review_infrastructure() -> None:
+    assert classify_diff_scope(["BUG_REGRESSION_LEDGER.md"]) == "PROTECTED_SCIENTIFIC_GATE_MUTATION"
 
 
 def test_protected_strategy_path_forces_gate_mutation_scope() -> None:
@@ -152,6 +181,13 @@ def test_legacy_unversioned_receipt_is_not_reinterpreted() -> None:
         _verify(legacy)
 
 
+def test_previous_schema_receipt_is_historical_not_current() -> None:
+    receipt = copy.deepcopy(_receipt())
+    receipt["review_receipt_schema_version"] = REVIEW_RECEIPT_SCHEMA_VERSION - 1
+    with pytest.raises(RuntimeError, match="unsupported review receipt schema version"):
+        _verify(receipt)
+
+
 def test_scope_receipt_boolean_schema_version_fails_closed() -> None:
     receipt = copy.deepcopy(_receipt())
     receipt["review_receipt_schema_version"] = True
@@ -196,6 +232,13 @@ def test_scope_receipt_registry_identity_tamper_fails_closed() -> None:
     receipt = copy.deepcopy(_receipt())
     receipt["protected_path_registry"]["sha256"] = "0" * 64
     with pytest.raises(RuntimeError, match="registry identity mismatch"):
+        _verify(receipt)
+
+
+def test_scope_receipt_trust_root_identity_tamper_fails_closed() -> None:
+    receipt = copy.deepcopy(_receipt())
+    receipt["reviewer_trust_root"]["sha256"] = "0" * 64
+    with pytest.raises(RuntimeError, match="trust-root identity mismatch"):
         _verify(receipt)
 
 
@@ -273,18 +316,23 @@ def test_scope_receipt_trusted_context_digest_tamper_fails_closed() -> None:
         _verify(receipt)
 
 
-def test_policy_digest_binds_lineage_and_registry_identity() -> None:
+def test_policy_digest_binds_append_only_lineage_registry_and_trust_root() -> None:
     current = review_scope_policy_sha256()
-    prior = review_scope_policy_sha256(5)
-    assert len(current) == 64
-    assert len(prior) == 64
-    int(current, 16)
-    int(prior, 16)
-    assert current != prior
+    v6 = review_scope_policy_sha256(6)
+    v5 = review_scope_policy_sha256(5)
+    assert all(len(value) == 64 for value in (current, v6, v5))
+    for value in (current, v6, v5):
+        int(value, 16)
+    assert len({current, v6, v5}) == 3
     identity = protected_path_registry_identity()
     assert identity == {
         "version": 1,
         "sha256": "00e9f1a404d1f5b92210f0c172295cd0067ff1078c33e4dcb284a4e3be4c7f25",
+    }
+    assert reviewer_trust_root_identity() == {
+        "schema_version": 1,
+        "trust_boundary_id": "EXACT_HEAD_REVIEW_TRUST_ROOT_V1",
+        "sha256": "53c96f8eca58aba2f5242c858c766b5b4ca65d93839aa9734338ee3de0aebe3f",
     }
 
 
@@ -301,6 +349,7 @@ def test_exact_head_header_embeds_phase_aware_scope_and_provenance() -> None:
         protected_hits=["orchestration/cohorts/example.json"],
         diff_scope="PROTECTED_SCIENTIFIC_GATE_MUTATION",
         workflow_provenance=provenance,
+        workflow_trust_context=_trust_context(),
     )
     assert "DIFF_SCOPE_CLASS: PROTECTED_SCIENTIFIC_GATE_MUTATION" in header
     assert "REVIEW_SCOPE_DISCIPLINE" in header
@@ -310,8 +359,12 @@ def test_exact_head_header_embeds_phase_aware_scope_and_provenance() -> None:
     assert "Claims, comments, labels, or prose alone NEVER establish" in header
     assert "offline JSON" in header
     assert f"WORKFLOW_RUN_ID: {WORKFLOW_RUN_ID}" in header
+    assert "WORKFLOW_RUN_ATTEMPT: 1" in header
     assert f"WORKFLOW_RUNTIME_GIT_SHA: {RUNTIME_SHA}" in header
+    assert f"WORKFLOW_SHA: {RUNTIME_SHA}" in header
+    assert f"SERVER_MAIN_SHA: {RUNTIME_SHA}" in header
     assert "PROTECTED_PATH_REGISTRY_SHA256:" in header
+    assert "REVIEWER_TRUST_ROOT_SHA256:" in header
     assert f"REVIEW_SCOPE_POLICY_VERSION: {review.REVIEW_SCOPE_DISCIPLINE_VERSION}" in header
     assert f"REVIEW_SCOPE_POLICY_SHA256: {review._review_scope_policy_sha256()}" in header
 
@@ -340,6 +393,7 @@ def test_enriched_verdict_binds_trusted_exact_context_and_workflow() -> None:
         changed_paths=INFRA_PATHS,
         diff_scope=SCOPE,
         workflow_provenance=provenance,
+        workflow_trust_context=_trust_context(),
     )
     assert enriched["integration_authority"] == "NONE"
     assert enriched["review_receipt_schema_version"] == REVIEW_RECEIPT_SCHEMA_VERSION
@@ -347,7 +401,11 @@ def test_enriched_verdict_binds_trusted_exact_context_and_workflow() -> None:
     assert enriched["changed_paths_sha256"] == changed_paths_sha256(INFRA_PATHS)
     assert enriched["protected_paths"] == INFRA_PATHS
     assert enriched["protected_path_registry"] == protected_path_registry_identity()
+    assert enriched["reviewer_trust_root"] == reviewer_trust_root_identity()
     assert enriched["workflow_provenance"] == provenance
+    assert enriched["workflow_trust_context"] == _trust_context()
+    assert enriched["review_trust_binding_version"] == 1
+    assert enriched["approval_consumption"]["integrity_verification_is_approval"] is False
     assert enriched["review_context_sha256"] == review_receipt_context_sha256(
         pr_number=PR_NUMBER,
         exact_head_sha=HEAD_SHA,
