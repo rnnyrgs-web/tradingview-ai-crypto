@@ -1,0 +1,64 @@
+{
+  "affected_candidates": {
+    "DISC-LOWVOL-DRIFT-REV-001-v1": {
+      "contract_sha256": "1f170c562b9eb6b9ec1c01f397a7e266c2decbc250aebc863ac472fc8b0cd0c1",
+      "declared_warmup_hours": 720,
+      "derivation": "8h move first forms at index 8; move reference needs 720 prior fully formed 8h moves => 8+720=728",
+      "derived_first_eligible_index": 728,
+      "scientific_design_sha256": "7585d5e739ed135c4f05662690bbcd2d16491758d548ad5bce5ebc20c4fd7ba8",
+      "strategy_behavior_sha256": "4187cb1952482edc4f1aacb1a05fa87a69b6ab6af19b029d11a7cd6d50150201"
+    },
+    "DISC-MODERATEVOL-AUTOCORR-001-v1": {
+      "contract_sha256": "815ed6db303e2571828fd4ac47b983a94ee59a4c0f4d7076e61b6e9748fada1f",
+      "declared_warmup_hours": 2160,
+      "derivation": "24-return realized volatility first forms at index 24; volatility reference needs 2160 prior fully formed PIT volatility observations => 24+2160=2184",
+      "derived_first_eligible_index": 2184,
+      "scientific_design_sha256": "c46ee97005372478eb886f61119903d8695da74253dc7605b0564e7ca626014e",
+      "strategy_behavior_sha256": "f878906f9643627e6554326d24a21493410235cd1868652e807d96a5816689f1"
+    },
+    "DISC-RESIDUAL-REV-001-v1": {
+      "contract_sha256": "7ec0f2e59d8c018b31baf5abbf0c14e06316e0dfd8dfeac753901eac4e3f2deb",
+      "declared_warmup_hours": 720,
+      "derivation": "first PIT residual index 336; z-score needs 720 prior fully formed PIT residuals => 336+720=1056",
+      "derived_first_eligible_index": 1056,
+      "scientific_design_sha256": "58cffd1ffd951a2b4e91510b6b19168f60bccfa1c701d13d08aa2cbfdf20940b",
+      "strategy_behavior_sha256": "5353080405cb0d8e68bc57d661b5b564af1d457b34667978c4371f71ed0900ff"
+    },
+    "DISC-SIGNED-VOLUME-DRIFT-001-v1": {
+      "contract_sha256": "36d133e2f4f7e432415a1d3b170619d58f8b5d57aeab28afc32dedc4f575be7b",
+      "declared_warmup_hours": 720,
+      "derivation": "PIT signed-volume first forms at index 720; 4-bar aggregate first forms at 723; pressure reference needs 720 prior fully formed aggregates => 723+720=1443",
+      "derived_first_eligible_index": 1443,
+      "scientific_design_sha256": "e23c5bc8a11829279d3f450ae2d2fb2e0fe4b9210424f68fe3b409dcddb482a2",
+      "strategy_behavior_sha256": "876f9d0cb428808064d08ce983e615532c3adf55ad8a7e9a7fc32dfb1b8192ec"
+    }
+  },
+  "artifact_type": "strategy_factory_cohort_001_derived_warmup_contract",
+  "contract_id": "STRATEGY-FACTORY-COHORT-001-DERIVED-WARMUP-v1",
+  "evidence_locks": {
+    "broker_connected": false,
+    "genuine_forward_opened": false,
+    "partial_reference_windows_allowed": false,
+    "promotion_authority": false,
+    "protected_oos_opened": false,
+    "reuse_current_beta_for_historical_residuals_allowed": false,
+    "strategy_outcomes_read": false,
+    "threshold_tuning_allowed": false,
+    "trade_authority": false
+  },
+  "formed_at": "2026-09-23T08:59:20Z",
+  "interpretation": {
+    "identity_effect": "NONE: this artifact records deterministic consequences of already-frozen signal semantics and does not change candidate thresholds, windows, execution, costs, chronology, multiple-testing family, or scientific/behavior/contract identities.",
+    "rule": "warmup_hours is a minimum history floor, not an assertion that every nested PIT feature is already fully formed at that index. A candidate may become eligible later when all frozen prior-only nested feature/reference windows are complete. Partial windows, present-beta backfills, threshold changes, or post-outcome shortcuts are forbidden.",
+    "warmup_hours_semantics": "LOWER_BOUND_ONLY"
+  },
+  "payload_sha256_excluding_this_field": "14d8d0b1afe83d12851774f1ce82038f16d0fd44cfb8ea8c3a8991c30b9280bd",
+  "schema_version": 1,
+  "source_execution_contract_sha256": "58c7d6fa3db62c7589768b59af8e048acbf9ca1e904b0f7fd5df64f0c9bd19c5",
+  "source_stage1_binding_receipt_sha256": "53777547473c4d0857f6a1fd73949fe8371e8bfcc7b9893701ea7dbddc4ae7ab",
+  "status": "OUTCOME_BLIND_DERIVED_EXECUTION_SEMANTICS",
+  "unaffected_or_calendar_candidates": {
+    "DISC-RANGE-AUCTION-REV-001-v1": "No nested-reference inconsistency identified; existing prior-window completeness remains authoritative.",
+    "DISC-WEEKEND-NORMALIZE-001-v1": "Calendar-history eligibility is governed by the frozen prior-20-weekday/minimum-history rules rather than warmup_hours."
+  }
+}
