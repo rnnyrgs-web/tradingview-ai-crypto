@@ -116,6 +116,8 @@ def _map_certified_failure_learning_screen(
     Sparse Stage-1 statistics remain ``None`` when mathematically undefined.
     A no-loss profit factor may remain positive infinity, matching the truthful
     downstream #510/#511 schema. No zero/one/finite placeholder is fabricated.
+    Gross economics are supplied by zero-cost independent-event diagnostics rather
+    than reconstructed from a flat round-trip cost, because event cluster sizes vary.
     """
     fingerprint_id = _nonempty_text(
         predeclaration.get("fingerprint_id"),
@@ -147,9 +149,14 @@ def _map_certified_failure_learning_screen(
     if diagnostics.validation_independent_events != independent_events:
         raise RuntimeError("failure diagnostics independent-event count does not match Stage-1 result")
 
+    mean_0 = _optional_number(diagnostics.mean_0bps, "failure_diagnostics.mean_0bps")
     mean_24 = _optional_number(_attribute(validation, "mean_24bps"), "validation.mean_24bps")
     mean_48 = _optional_number(diagnostics.mean_48bps, "failure_diagnostics.mean_48bps")
     mean_72 = _optional_number(_attribute(validation, "mean_72bps"), "validation.mean_72bps")
+    if independent_events > 0 and mean_0 is None:
+        raise RuntimeError("failure_diagnostics.mean_0bps must be defined when validation events exist")
+    if independent_events == 0 and mean_0 is not None:
+        raise RuntimeError("failure_diagnostics.mean_0bps must be null when validation events are absent")
     profit_factor = _optional_number(
         _attribute(validation, "profit_factor_24bps"),
         "validation.profit_factor_24bps",
@@ -198,7 +205,7 @@ def _map_certified_failure_learning_screen(
         },
         "validation": {
             "trades": independent_events,
-            "gross_mean_bps": None if mean_24 is None else mean_24 * 10_000.0 + 24.0,
+            "gross_mean_bps": None if mean_0 is None else mean_0 * 10_000.0,
             "net_mean_bps": None if mean_24 is None else mean_24 * 10_000.0,
             "profit_factor": profit_factor,
             "half_net_bps": half_bps,
