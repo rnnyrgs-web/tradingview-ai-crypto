@@ -25,6 +25,10 @@ from big_move_source_authenticity import (
     validate_record_authenticity,
     verify_source_policy_pin,
 )
+from big_move_survivorship_resolution_queue import (
+    reject_survivorship_enumeration_as_membership_lineage,
+    validate_provider_native_membership_provenance,
+)
 
 SCHEMA = "two_x_cohort_preflight.v1"
 RESULT_SCHEMA = "two_x_cohort_coverage_result.v1"
@@ -336,7 +340,8 @@ def _validate_listing_age_derivation(record: dict[str, Any], root: Path | None, 
 
 
 def _validate_membership_derivation(
-    record: dict[str, Any], root: Path | None, decision_at: datetime, *, field: str
+    record: dict[str, Any], root: Path | None, decision_at: datetime, *, field: str,
+    venue_symbol: str | None = None,
 ) -> None:
     _, inputs = _expect_derivation(
         record, root, field=field,
@@ -345,15 +350,38 @@ def _validate_membership_derivation(
     if len(inputs) != 1 or not isinstance(inputs[0], dict) or inputs[0].get("schema") != "binance_market_presence.v1":
         raise ValueError(f"{field} requires one binance_market_presence.v1 input")
     presence = inputs[0]
+    reject_survivorship_enumeration_as_membership_lineage(presence)
+    decision_text = decision_at.astimezone(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
     if _utc(presence.get("decision_at"), field=f"{field}.presence.decision_at") != decision_at:
         raise ValueError(f"{field} presence input decision timestamp mismatch")
     if presence.get(field) is not record.get("value"):
         raise ValueError(f"{field} value does not equal retained historical presence input")
 
+    source_proof = presence.get("source_proof")
+    if not isinstance(source_proof, dict):
+        raise ValueError(f"{field} presence source_proof missing")
+    source_proof_sha256 = source_proof.get("sha256")
+    if not isinstance(source_proof_sha256, str) or SHA256_RE.fullmatch(source_proof_sha256) is None:
+        raise ValueError(f"{field} presence source_proof.sha256 must be lowercase SHA-256")
+
+    provenance = presence.get("membership_provenance")
+    if not isinstance(provenance, dict):
+        raise ValueError("membership provenance is required")
+    if provenance.get("source_proof_sha256") != source_proof_sha256:
+        raise ValueError("membership provenance source-proof binding mismatch")
+    if venue_symbol is None or not isinstance(venue_symbol, str) or not venue_symbol.strip():
+        raise ValueError(f"{field} enclosing venue_symbol is required")
+    validate_provider_native_membership_provenance(
+        provenance,
+        venue_symbol=venue_symbol,
+        decision_at=decision_text,
+        source_proof_sha256=source_proof_sha256,
+    )
+
 
 def _validate_source(
     record: dict[str, Any], *, decision_at: datetime, field: str, kind: str,
-    allowed_sources: list[str], artifact_root: Path | None,
+    allowed_sources: list[str], artifact_root: Path | None, venue_symbol: str | None = None,
 ) -> None:
     if not isinstance(record, dict):
         raise ValueError(f"{field} evidence must be an object")
@@ -393,7 +421,9 @@ def _validate_source(
         elif field == "listing_age_days":
             _validate_listing_age_derivation(record, artifact_root, decision_at)
         else:
-            _validate_membership_derivation(record, artifact_root, decision_at, field=field)
+            _validate_membership_derivation(
+                record, artifact_root, decision_at, field=field, venue_symbol=venue_symbol
+            )
     elif is_derived_source(record["source_id"]):
         _expect_derivation(record, artifact_root, field=field, transform_id=record["source_id"])
 
@@ -481,6 +511,7 @@ def validate_snapshot(
                     features.get(field), decision_at=decision_at, field=field,
                     kind=contract["feature_kinds"][field],
                     allowed_sources=contract["source_eligibility"][field], artifact_root=artifact_root,
+                    venue_symbol=snapshot.get("venue_symbol"),
                 )
             except ValueError as exc:
                 reasons.append(str(exc))
