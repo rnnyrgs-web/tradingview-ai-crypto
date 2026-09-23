@@ -238,9 +238,17 @@ jobs:
           }
 
           is_valid_rejection_file() {
-            python - "$1" <<'PY'
+            RECEIPT="$1"
+            if ! python -m orchestration.exact_head_review verify-current-receipt \
+              --receipt "$RECEIPT" \
+              --diff /tmp/candidate.diff \
+              --pr-number "$PR_NUMBER" \
+              --head-sha "$HEAD_SHA" >/tmp/rejection-receipt-verify.log 2>&1; then
+              cat /tmp/rejection-receipt-verify.log
+              return 1
+            fi
+            python - "$RECEIPT" <<'PY'
           import json
-          import os
           import pathlib
           import sys
 
@@ -257,8 +265,6 @@ jobs:
               and bool(value["reason"].strip())
               and value.get("integration_authority") == "NONE"
               and value.get("review_scope") == "READ_ONLY_EXACT_HEAD"
-              and value.get("pr_number") == int(os.environ["PR_NUMBER"])
-              and value.get("exact_head_sha") == os.environ["HEAD_SHA"]
           )
           raise SystemExit(0 if valid else 1)
           PY
@@ -318,7 +324,7 @@ jobs:
             REJECTED=1
           fi
 
-          # Any available schema-valid independent scientific rejection is terminal
+          # Any available trust-bound independent scientific rejection is terminal
           # for this exact candidate SHA and dominates provider WAIT or other absence.
           if [ "$REJECTED" -eq 1 ]; then
             echo "rejected=true" >> "$GITHUB_OUTPUT"
@@ -349,12 +355,23 @@ jobs:
             echo "- The same explicit request may retry on a later queue cycle, bounded to three attempts."
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Require all three independent reviewers to approve
+      - name: Require all three trust-bound independent reviewers to approve
         if: steps.select.outputs.pr_number != '' && steps.review_models.outputs.wait != 'true' && steps.review_models.outputs.rejected != 'true'
+        env:
+          PR_NUMBER: ${{ steps.select.outputs.pr_number }}
+          HEAD_SHA: ${{ steps.select.outputs.sha }}
         run: |
-          jq -e '.approve == true and .integration_authority == "NONE"' /tmp/security-review.json
-          jq -e '.approve == true and .integration_authority == "NONE"' /tmp/lead-review.json
-          jq -e '.approve == true and .integration_authority == "NONE"' /tmp/claude-adversarial-review.json
+          set -euo pipefail
+          for RECEIPT in \
+            /tmp/security-review.json \
+            /tmp/lead-review.json \
+            /tmp/claude-adversarial-review.json; do
+            python -m orchestration.exact_head_review verify-current-approval \
+              --receipt "$RECEIPT" \
+              --diff /tmp/candidate.diff \
+              --pr-number "$PR_NUMBER" \
+              --head-sha "$HEAD_SHA"
+          done
 
       - id: approval_record
         name: Record review-only approval for exact head
