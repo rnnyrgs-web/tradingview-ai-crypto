@@ -8,7 +8,7 @@ choices.
 """
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import timedelta, timezone
 from typing import Any, Iterable, Mapping, Sequence
 
 from orchestration.external_replication.abnormal_day_momentum_runner import (
@@ -86,7 +86,7 @@ def _control_portfolio_summary(
 
     daily_middle: dict[object, float] = {}
     for event in events:
-        day = event.signal.signal_timestamp.astimezone().date()
+        day = event.signal.signal_timestamp.astimezone(timezone.utc).date()
         contribution = (
             0.0
             if _is_zero_position_observation(event)
