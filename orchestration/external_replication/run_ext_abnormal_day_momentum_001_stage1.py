@@ -138,6 +138,17 @@ def _validate_contracts(predecl: dict[str, Any], execution: dict[str, Any]) -> N
     ):
         raise RuntimeError("catastrophic-tail veto must use the frozen independent UTC-day block")
 
+    halves = execution.get("validation_halves")
+    if halves != {
+        "definition": "fixed_wall_clock_split_frozen_before_outcomes",
+        "first_start_utc": "2026-05-01T00:00:00Z",
+        "first_end_utc": "2026-06-30T23:00:00Z",
+        "second_start_utc": "2026-07-01T00:00:00Z",
+        "second_end_utc": "2026-08-31T23:00:00Z",
+        "return_containment_rule": "signal_entry_exit_must_all_be_within_assigned_half_fail_closed",
+    }:
+        raise RuntimeError("validation-half chronology contract drifted")
+
 
 def _load_development_rows(dataset_path: Path) -> tuple[list[dict[str, object]], dict[str, Any]]:
     qualification = qualify_cohort001_dataset(dataset_path)
@@ -295,14 +306,57 @@ def _positive_profit_factor(summary: dict[str, Any], threshold: float) -> bool:
     )
 
 
-def _subset_by_signal_time(
-    scored: Iterable[ScoredEvent], *, start: datetime, end: datetime
-) -> tuple[ScoredEvent, ...]:
-    return tuple(
-        event
-        for event in scored
-        if start <= event.signal.signal_timestamp.astimezone(UTC) <= end
-    )
+def _partition_validation_halves(
+    validation: Iterable[ScoredEvent], execution: dict[str, Any]
+) -> tuple[tuple[ScoredEvent, ...], tuple[ScoredEvent, ...]]:
+    """Partition validation returns only when each realization stays in one frozen half.
+
+    The May-Jun / Jul-Aug robustness split is a wall-clock partition of economic
+    evidence, not merely a label on the signal timestamp. A first-half signal may
+    therefore never consume an entry or exit price from the second half (and vice
+    versa). Boundary-crossing evidence fails closed before half-specific economics
+    are evaluated; it is never silently reassigned or dropped after outcomes.
+    """
+
+    halves = execution["validation_halves"]
+    if halves.get("return_containment_rule") != (
+        "signal_entry_exit_must_all_be_within_assigned_half_fail_closed"
+    ):
+        raise RuntimeError("validation-half chronology containment rule is not frozen")
+
+    first_start = _parse_utc(halves["first_start_utc"])
+    first_end = _parse_utc(halves["first_end_utc"])
+    second_start = _parse_utc(halves["second_start_utc"])
+    second_end = _parse_utc(halves["second_end_utc"])
+    first: list[ScoredEvent] = []
+    second: list[ScoredEvent] = []
+
+    for event in validation:
+        signal_ts = event.signal.signal_timestamp.astimezone(UTC)
+        entry_ts = event.signal.entry_timestamp.astimezone(UTC)
+        exit_ts = event.signal.exit_timestamp.astimezone(UTC)
+        if first_start <= signal_ts <= first_end:
+            if not (
+                first_start <= entry_ts <= first_end
+                and first_start <= exit_ts <= first_end
+            ):
+                raise RuntimeError(
+                    "validation-half chronology boundary crossed by first-half scored return"
+                )
+            first.append(event)
+        elif second_start <= signal_ts <= second_end:
+            if not (
+                second_start <= entry_ts <= second_end
+                and second_start <= exit_ts <= second_end
+            ):
+                raise RuntimeError(
+                    "validation-half chronology boundary crossed by second-half scored return"
+                )
+            second.append(event)
+        else:
+            raise RuntimeError("validation-half contract does not partition all validation events")
+
+    return tuple(first), tuple(second)
 
 
 def evaluate_stage1_gates(
@@ -310,19 +364,7 @@ def evaluate_stage1_gates(
     validation: tuple[ScoredEvent, ...],
     execution: dict[str, Any],
 ) -> tuple[str, dict[str, bool], dict[str, dict[str, Any]]]:
-    halves = execution["validation_halves"]
-    first = _subset_by_signal_time(
-        validation,
-        start=_parse_utc(halves["first_start_utc"]),
-        end=_parse_utc(halves["first_end_utc"]),
-    )
-    second = _subset_by_signal_time(
-        validation,
-        start=_parse_utc(halves["second_start_utc"]),
-        end=_parse_utc(halves["second_end_utc"]),
-    )
-    if len(first) + len(second) != len(validation):
-        raise RuntimeError("validation-half contract does not partition all validation events")
+    first, second = _partition_validation_halves(validation, execution)
 
     summaries = {
         "train": _portfolio_summary(train, execution),
