@@ -130,7 +130,7 @@ def _proposal(parent: dict) -> dict:
     child["fingerprint_id"] = "DISC-AUTHORITY-SPLIT-SUCCESSOR-001-v1"
     child["economic_mechanism"] = "Inventory replenishment after a completed dislocation can produce reversion."
     child["hypothesis"] = "A separately frozen replenishment rule has after-cost expectancy."
-    child["signal_rules"]["entry_condition"] = "materially distinct frozen successor rule"
+    child["signal_rules"]["entry_condition"] = "independent materially different frozen rule"
     child["validation_plan"]["successor_uses_fresh_nonoverlapping_selection_window"] = True
     child["validation_plan"]["successor_selection_window"] = {
         "start_utc": "2026-09-01T00:00:00+00:00",
@@ -169,7 +169,7 @@ def test_predeclaration_cannot_lower_project_validation_floor() -> None:
     candidate = _candidate()
     candidate["failure_learning_plan"]["minimum_validation_trades"] = 1
     parent = _frozen(candidate)
-    with pytest.raises(RuntimeError, match="project.*minimum|minimum.*20"):
+    with allow_test_behavior_schemas(), pytest.raises(RuntimeError, match="project.*minimum|minimum.*20"):
         classify_failure(parent, _screen(parent), rejected_entries=[])
 
 
@@ -177,7 +177,9 @@ def test_screen_cutoff_must_follow_frozen_formation_cutoff() -> None:
     parent = _frozen()
     screen = _screen(parent)
     screen["screen_cutoff"] = "2026-09-20T19:59:59+00:00"
-    with pytest.raises(RuntimeError, match="screen_cutoff.*formation_cutoff|formation_cutoff.*screen_cutoff"):
+    with allow_test_behavior_schemas(), pytest.raises(
+        RuntimeError, match="screen_cutoff.*formation_cutoff|formation_cutoff.*screen_cutoff"
+    ):
         classify_failure(parent, screen, rejected_entries=[])
 
 
@@ -185,7 +187,7 @@ def test_chronological_halves_must_be_nonoverlapping_exact_partition() -> None:
     parent = _frozen()
     screen = _screen(parent)
     screen["validation_window"]["half_windows"][1]["start_utc"] = "2026-08-15T23:00:00+00:00"
-    with pytest.raises(RuntimeError, match="half.*overlap|partition|chronological"):
+    with allow_test_behavior_schemas(), pytest.raises(RuntimeError, match="half.*overlap|partition|chronological"):
         classify_failure(parent, screen, rejected_entries=[])
 
 
