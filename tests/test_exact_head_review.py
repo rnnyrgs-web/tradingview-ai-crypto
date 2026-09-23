@@ -9,6 +9,24 @@ from orchestration import exact_head_review as review
 
 
 HEAD_SHA = "a" * 40
+RUNTIME_SHA = "c" * 40
+
+
+@pytest.fixture(autouse=True)
+def _trusted_workflow_provenance(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        review,
+        "_workflow_provenance_from_env",
+        lambda: {
+            "repository": "rnnyrgs-web/tradingview-ai-crypto",
+            "run_id": 123456789,
+            "workflow_ref": (
+                "rnnyrgs-web/tradingview-ai-crypto/.github/workflows/"
+                "exact_head_independent_review.yml@refs/heads/main"
+            ),
+            "runtime_git_sha": RUNTIME_SHA,
+        },
+    )
 
 
 def _diff() -> str:
@@ -44,8 +62,12 @@ def test_protected_diff_is_reviewed_not_rejected(tmp_path: Path, monkeypatch: py
     assert verdict["protected_paths"] == ["orchestration/strategy_predeclaration.py"]
     assert verdict["integration_authority"] == "NONE"
     assert verdict["exact_head_sha"] == HEAD_SHA
+    assert verdict["workflow_provenance"]["runtime_git_sha"] == RUNTIME_SHA
+    assert verdict["protected_path_registry"]["version"] == 1
     prompt = str(captured["input"])
     assert "PROTECTED_PATH_CONTEXT: orchestration/strategy_predeclaration.py" in prompt
+    assert f"WORKFLOW_RUNTIME_GIT_SHA: {RUNTIME_SHA}" in prompt
+    assert "PROTECTED_PATH_REGISTRY_SHA256:" in prompt
     assert "INTEGRATION_AUTHORITY: NONE" in prompt
     assert "Protected scientific paths are NOT a reason to" in prompt
 
@@ -76,10 +98,48 @@ def test_claude_receives_same_protected_context(tmp_path: Path, monkeypatch: pyt
         "claude-adversarial", diff_path, output, pr_number=507, head_sha=HEAD_SHA
     ) == 0
     assert "PROTECTED_PATH_CONTEXT: orchestration/strategy_predeclaration.py" in captured["input"]
+    assert f"WORKFLOW_RUNTIME_GIT_SHA: {RUNTIME_SHA}" in captured["input"]
     assert "INTEGRATION_AUTHORITY: NONE" in captured["input"]
     verdict = json.loads(output.read_text(encoding="utf-8"))
     assert verdict["integration_authority"] == "NONE"
     assert verdict["protected_paths"] == ["orchestration/strategy_predeclaration.py"]
+    assert verdict["workflow_provenance"]["runtime_git_sha"] == RUNTIME_SHA
+
+
+def test_runtime_git_sha_is_bound_from_checked_out_reviewer_runtime(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.undo()
+    monkeypatch.setenv("GITHUB_REPOSITORY", "rnnyrgs-web/tradingview-ai-crypto")
+    monkeypatch.setenv("GITHUB_RUN_ID", "123")
+    monkeypatch.setenv(
+        "GITHUB_WORKFLOW_REF",
+        "rnnyrgs-web/tradingview-ai-crypto/.github/workflows/exact_head_independent_review.yml@refs/heads/main",
+    )
+
+    class _Result:
+        stdout = RUNTIME_SHA + "\n"
+
+    monkeypatch.setattr(review.subprocess, "run", lambda *args, **kwargs: _Result())
+    provenance = review._workflow_provenance_from_env()
+    assert provenance["runtime_git_sha"] == RUNTIME_SHA
+
+
+def test_invalid_runtime_git_sha_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.undo()
+    monkeypatch.setenv("GITHUB_REPOSITORY", "rnnyrgs-web/tradingview-ai-crypto")
+    monkeypatch.setenv("GITHUB_RUN_ID", "123")
+    monkeypatch.setenv(
+        "GITHUB_WORKFLOW_REF",
+        "rnnyrgs-web/tradingview-ai-crypto/.github/workflows/exact_head_independent_review.yml@refs/heads/main",
+    )
+
+    class _Result:
+        stdout = "not-a-sha\n"
+
+    monkeypatch.setattr(review.subprocess, "run", lambda *args, **kwargs: _Result())
+    with pytest.raises(RuntimeError, match="invalid reviewer-runtime git SHA"):
+        review._workflow_provenance_from_env()
 
 
 def test_invalid_exact_head_fails_before_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
