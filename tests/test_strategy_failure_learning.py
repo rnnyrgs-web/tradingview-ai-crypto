@@ -82,6 +82,23 @@ def _frozen() -> dict:
     return freeze_predeclaration(_candidate(), rejected_entries=[])
 
 
+def _validation_window() -> dict:
+    return {
+        "start_utc": "2026-08-01T00:00:00+00:00",
+        "end_utc": "2026-08-31T00:00:00+00:00",
+        "half_windows": [
+            {
+                "start_utc": "2026-08-01T00:00:00+00:00",
+                "end_utc": "2026-08-16T00:00:00+00:00",
+            },
+            {
+                "start_utc": "2026-08-16T00:00:00+00:00",
+                "end_utc": "2026-08-31T00:00:00+00:00",
+            },
+        ],
+    }
+
+
 def _screen(parent: dict | None = None) -> dict:
     parent = parent or _frozen()
     return {
@@ -90,6 +107,7 @@ def _screen(parent: dict | None = None) -> dict:
         "contract_sha256": parent["contract_sha256"],
         "screen_id": "SCREEN-TEST-001",
         "screen_cutoff": "2026-09-20T21:00:00+00:00",
+        "validation_window": _validation_window(),
         "untouched_oos_opened": False,
         "genuine_forward_opened": False,
         "data_quality": {
@@ -252,7 +270,7 @@ def test_screen_identity_and_protected_evidence_fail_closed():
         classify_failure(parent, opened, rejected_entries=[])
 
 
-def _successor(parent: dict, fingerprint: str, score: tuple[float, float, float, float]) -> dict:
+def _successor(parent: dict, fingerprint: str, _legacy_score: tuple[float, float, float, float]) -> dict:
     child = copy.deepcopy(parent)
     child.pop("contract_sha256", None)
     child["hypothesis_id"] = fingerprint.removesuffix("-v2").removesuffix("-v1")
@@ -264,36 +282,40 @@ def _successor(parent: dict, fingerprint: str, score: tuple[float, float, float,
         "entry_condition": "independent materially different frozen rule",
     }
     child["validation_plan"]["successor_uses_fresh_nonoverlapping_selection_window"] = True
+    child["validation_plan"]["successor_selection_window"] = {
+        "start_utc": "2026-09-21T00:00:00+00:00",
+        "end_utc": "2026-10-01T00:00:00+00:00",
+    }
     child["search_plan"]["planned_hypothesis_count"] = parent["search_plan"]["planned_hypothesis_count"] + 1
-    info, plaus, ready, cost = score
     return {
         "predeclaration": child,
         "change_dimensions": ["economic_mechanism", "structural_component"],
         "rationale": "Test a different causal mechanism rather than tuning the failed continuation threshold.",
-        "expected_information_gain": info,
-        "economic_plausibility": plaus,
-        "data_readiness": ready,
-        "compute_cost": cost,
     }
 
 
-def test_failure_artifact_ranks_materially_distinct_successors_deterministically():
+def test_failure_artifact_keeps_materially_distinct_successors_unranked_and_deterministic():
     parent = _frozen()
     screen = _screen(parent)
     screen["validation"]["gross_mean_bps"] = -5
     screen["validation"]["net_mean_bps"] = -20
 
-    low = _successor(parent, "DISC-TEST-REPLENISH-001-v2", (0.6, 0.7, 0.6, 0.4))
-    high = _successor(parent, "DISC-TEST-REPLENISH-002-v2", (0.9, 0.9, 0.9, 0.2))
-    # Ranking must compare genuinely distinct executable hypotheses. Merely
-    # changing IDs/scores would now be correctly rejected as a duplicate sibling.
-    high["predeclaration"]["execution_rules"]["entry_delay_bars"] = 2
-    a = build_failure_learning_artifact(parent, screen, [low, high], rejected_entries=[])
-    b = build_failure_learning_artifact(parent, screen, [low, high], rejected_entries=[])
+    first = _successor(parent, "DISC-TEST-REPLENISH-002-v2", (0.6, 0.7, 0.6, 0.4))
+    second = _successor(parent, "DISC-TEST-REPLENISH-001-v2", (0.9, 0.9, 0.9, 0.2))
+    first["predeclaration"]["execution_rules"]["entry_delay_bars"] = 2
+    a = build_failure_learning_artifact(parent, screen, [first, second], rejected_entries=[])
+    b = build_failure_learning_artifact(parent, screen, [first, second], rejected_entries=[])
 
     assert a["artifact_sha256"] == b["artifact_sha256"]
-    assert a["successors"][0]["predeclaration"]["fingerprint_id"] == "DISC-TEST-REPLENISH-002-v2"
-    assert a["successors"][0]["rank"] == 1
+    assert [row["predeclaration"]["fingerprint_id"] for row in a["successors"]] == [
+        "DISC-TEST-REPLENISH-001-v2",
+        "DISC-TEST-REPLENISH-002-v2",
+    ]
+    assert all(row["eligibility"] == "ELIGIBLE_UNRANKED" for row in a["successors"])
+    assert all("rank" not in row and "rank_score" not in row for row in a["successors"])
+    assert a["successor_ranking_authority"] is False
+    assert a["successor_allocation_authority"] is False
+    assert a["successor_allocation_owner"] == "ISSUE_517"
     assert a["research_only"] is True
     assert a["trade_authority"] is False
     assert a["untouched_oos_opened"] is False
@@ -308,15 +330,15 @@ def test_unchanged_or_same_fingerprint_successor_is_rejected():
     unchanged = copy.deepcopy(parent)
     unchanged.pop("contract_sha256", None)
     unchanged["validation_plan"]["successor_uses_fresh_nonoverlapping_selection_window"] = True
+    unchanged["validation_plan"]["successor_selection_window"] = {
+        "start_utc": "2026-09-21T00:00:00+00:00",
+        "end_utc": "2026-10-01T00:00:00+00:00",
+    }
     unchanged["search_plan"]["planned_hypothesis_count"] += 1
     proposal = {
         "predeclaration": unchanged,
         "change_dimensions": ["economic_mechanism"],
         "rationale": "rename",
-        "expected_information_gain": 0.5,
-        "economic_plausibility": 0.5,
-        "data_readiness": 0.5,
-        "compute_cost": 0.1,
     }
     with pytest.raises(RuntimeError, match="reuse the failed parent fingerprint"):
         build_failure_learning_artifact(parent, screen, [proposal], rejected_entries=[])
