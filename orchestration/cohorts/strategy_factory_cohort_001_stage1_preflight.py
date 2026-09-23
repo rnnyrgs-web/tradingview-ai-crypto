@@ -17,6 +17,10 @@ from orchestration.cohorts.strategy_factory_cohort_001_stage1_runner import CAND
 POWER_ARTIFACT_PATH = Path(__file__).with_name(
     "strategy_factory_cohort_001_power_feasibility.json"
 )
+STAGE1_RUNNER_PATH = Path(__file__).with_name("strategy_factory_cohort_001_stage1_runner.py")
+STAGE1_EXECUTION_CONTRACT_PATH = Path(__file__).with_name(
+    "strategy_factory_cohort_001_stage1_execution_contract.json"
+)
 POWER_ARTIFACT_ID = "STRATEGY-FACTORY-COHORT-001-POWER-FEASIBILITY-v1"
 POWER_ARTIFACT_TYPE = "strategy_factory_stage1_preoutcome_power_feasibility"
 POWER_SCOPE = "OUTCOME_BLIND_CALENDAR_AND_EXECUTION_GEOMETRY_ONLY"
@@ -35,6 +39,66 @@ def _canonical_sha256(payload: dict[str, Any]) -> str:
         ensure_ascii=False,
     ).encode("utf-8")
     return hashlib.sha256(canonical).hexdigest()
+
+
+def _git_blob_sha1(raw: bytes) -> str:
+    """Return Git's blob object id for exact repository bytes."""
+    header = f"blob {len(raw)}\0".encode("ascii")
+    return hashlib.sha1(header + raw).hexdigest()  # nosec B324 - Git object identity only
+
+
+def _load_source_bytes(path: Path, label: str) -> bytes:
+    try:
+        return path.read_bytes()
+    except OSError as exc:
+        raise RuntimeError(f"Cohort-001 {label} source unavailable") from exc
+
+
+def _validate_source_contracts(payload: dict[str, Any], candidate: dict[str, Any]) -> None:
+    """Authenticate structural-power proof inputs against the executable sources."""
+    sources = payload.get("source_contracts")
+    if not isinstance(sources, dict):
+        raise RuntimeError("Cohort-001 power-feasibility source contracts missing")
+
+    expected_runner_sha = sources.get("stage1_runner_blob_sha")
+    expected_execution_sha = sources.get("stage1_execution_contract_blob_sha")
+    if not isinstance(expected_runner_sha, str) or len(expected_runner_sha) != 40:
+        raise RuntimeError("Cohort-001 Stage-1 runner source blob identity invalid")
+    if not isinstance(expected_execution_sha, str) or len(expected_execution_sha) != 40:
+        raise RuntimeError("Cohort-001 Stage-1 execution source blob identity invalid")
+
+    runner_raw = _load_source_bytes(STAGE1_RUNNER_PATH, "Stage-1 runner")
+    execution_raw = _load_source_bytes(
+        STAGE1_EXECUTION_CONTRACT_PATH,
+        "Stage-1 execution contract",
+    )
+    if _git_blob_sha1(runner_raw) != expected_runner_sha:
+        raise RuntimeError("Cohort-001 Stage-1 runner source blob mismatch")
+    if _git_blob_sha1(execution_raw) != expected_execution_sha:
+        raise RuntimeError("Cohort-001 Stage-1 execution source blob mismatch")
+
+    try:
+        execution_contract = json.loads(execution_raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RuntimeError("Cohort-001 Stage-1 execution contract is invalid JSON") from exc
+    if not isinstance(execution_contract, dict):
+        raise RuntimeError("Cohort-001 Stage-1 execution contract must be an object")
+
+    try:
+        contract_minimum = execution_contract["global_numerical_semantics"][
+            "minimum_sample_gate"
+        ]["validation_independent_events"]
+    except (KeyError, TypeError) as exc:
+        raise RuntimeError(
+            "Cohort-001 Stage-1 validation minimum missing from execution contract"
+        ) from exc
+    artifact_minimum = candidate.get("minimum_independent_events_validation")
+    if type(contract_minimum) is not int or type(artifact_minimum) is not int:
+        raise RuntimeError("Cohort-001 Stage-1 validation minimum must be an integer")
+    if contract_minimum != artifact_minimum:
+        raise RuntimeError(
+            "Cohort-001 structural-power validation minimum diverges from execution contract"
+        )
 
 
 def load_power_feasibility() -> dict[str, Any]:
@@ -69,6 +133,9 @@ def load_power_feasibility() -> dict[str, Any]:
     minimum = candidate.get("minimum_independent_events_validation")
     if type(maximum) is not int or type(minimum) is not int or maximum >= minimum:
         raise RuntimeError("structural power inequality is not fail-closed")
+
+    _validate_source_contracts(payload, candidate)
+
     if conclusion.get("classification") != PREOUTCOME_INCONCLUSIVE:
         raise RuntimeError("structural power classification drift")
     if conclusion.get("stage1_allocation") != SKIP_OUTCOME_SCORING:
