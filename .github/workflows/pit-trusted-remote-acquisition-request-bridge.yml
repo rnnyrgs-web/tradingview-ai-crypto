@@ -65,6 +65,23 @@ jobs:
           assert receipt['trade_authority'] is False
           PY
 
+      - name: Persist dispatch-only no-scientific-authority receipt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          set -euo pipefail
+          {
+            echo 'PIT_TRUSTED_ACQUISITION_DISPATCH_AUTHORITY_V1'
+            echo
+            echo 'This receipt authorizes provider-acquisition dispatch only. It grants no scientific, label, model, candidate, OOS/forward, broker, promotion, or trade authority.'
+            echo
+            echo '```json'
+            cat /tmp/pit-dispatch-authority.json
+            echo '```'
+          } >/tmp/pit-dispatch-authority-comment.md
+          gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file /tmp/pit-dispatch-authority-comment.md
+
       - name: Validate owner request and dispatch canonical acquisition workflow
         env:
           GH_TOKEN: ${{ github.token }}
