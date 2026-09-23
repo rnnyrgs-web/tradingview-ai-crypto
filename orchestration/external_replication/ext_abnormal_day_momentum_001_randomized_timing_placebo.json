@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "artifact_type": "external_replication_randomized_timing_placebo_contract",
+  "contract_id": "EXT-ABNORMAL-DAY-MOMENTUM-001-v1-RANDOMIZED-TIMING-PLACEBO-v1",
+  "replication_id": "EXT-ABNORMAL-DAY-MOMENTUM-001-v1",
+  "formed_before_replication_outcomes": true,
+  "source_predeclaration": "orchestration/external_replication/ext_abnormal_day_momentum_001_v1.json",
+  "source_predeclaration_artifact_sha256": "45a1b336db757259781e47530e2940f50025011da8631c1ab3338e1bd3261e8b",
+  "source_stage1_execution": "orchestration/external_replication/ext_abnormal_day_momentum_001_stage1_execution.json",
+  "source_stage1_head_sha": "dab303eaf380da591147535f57bcbb4526085ac0",
+  "planning_source": "orchestration/cohorts/strategy_factory_cohort_001_baseline_halving_plan.json",
+  "planning_contract_sha256": "4cf46291af242a350d065bf24418b8fdf5c6d36e4fea1b923a9cb1a51046c392",
+  "purpose": "Freeze one deterministic frequency/direction/concurrency-matched eligible-window timing placebo before any abnormal-day replication P&L is opened.",
+  "formation": {
+    "draw_count": 1,
+    "post_outcome_redraw_allowed": false,
+    "seed_rule": "uint64(first_16_hex(SHA256(cohort_planning_id + '|' + source_predeclaration_artifact_sha256 + '|randomized_timing_v1')))",
+    "cohort_planning_id": "STRATEGY-FACTORY-COHORT-001-BASELINE-HALVING-PLAN-v1",
+    "seed_sha256": "d65352a4f897cbf80bd1795156f69d7f8a008adfb3f697ba95646a9834a42c61",
+    "seed_uint64": 15443778415682374648,
+    "authoritative_randomization_unit": "unique_utc_signal_day_portfolio_block",
+    "block_preservation": [
+      "period",
+      "validation_half_when_applicable",
+      "number_of_independent_utc_signal_day_blocks",
+      "instrument_set_per_block",
+      "signal_hour_per_instrument",
+      "direction_per_instrument",
+      "fixed_one_third_nav_sizing_geometry"
+    ],
+    "eligible_pool": "UTC days on which every leg in the source block satisfies the candidate's frozen timestamp-safe non-outcome eligibility: same instrument/hour, >=90 fully observed prior completed UTC days, finite positive trailing daily-return standard deviation, continuous same-day bars from 00:00 through the decision hour, required next-hour entry and next-UTC-midnight exit bars, strict train/validation chronology, and validation-half return containment.",
+    "candidate_signal_days_excluded": true,
+    "placebo_days_without_replacement": true,
+    "rank_rule": "For each source UTC-day block in chronological order, rank currently unused eligible placebo UTC days by SHA256(seed_uint64 + '|' + source_block_signature + '|' + placebo_utc_day); take the lexicographically lowest digest.",
+    "source_block_signature": "period|validation_half_or_train|sorted(instrument@signal_hour@direction)",
+    "insufficient_pool_action": "DATA/PIT_INCONCLUSIVE_RANDOMIZED_PLACEBO_POOL",
+    "sample_shrinking_allowed": false,
+    "selection_features_allowed": [
+      "instrument",
+      "timestamp/date/hour",
+      "source candidate direction labels needed only for matching",
+      "past completed bars needed for warmup and trailing-standard-deviation eligibility",
+      "bar-presence/chronology metadata"
+    ],
+    "selection_features_forbidden": [
+      "placebo forward return",
+      "placebo entry-to-exit P&L",
+      "candidate forward return or P&L",
+      "protected OOS values",
+      "genuine-forward outcomes"
+    ]
+  },
+  "frozen_windows": {
+    "train_start_utc": "2025-05-07T05:00:00Z",
+    "train_end_utc": "2026-04-30T23:00:00Z",
+    "validation_start_utc": "2026-05-01T00:00:00Z",
+    "validation_end_utc": "2026-08-31T23:00:00Z",
+    "validation_first_start_utc": "2026-05-01T00:00:00Z",
+    "validation_first_end_utc": "2026-06-30T23:00:00Z",
+    "validation_second_start_utc": "2026-07-01T00:00:00Z",
+    "validation_second_end_utc": "2026-08-31T23:00:00Z",
+    "protected_oos_start_utc": "2026-09-01T00:00:00Z"
+  },
+  "candidate_eligibility": {
+    "reference_days": 90,
+    "latest_signal_hour_utc": 22,
+    "entry_delay_hours": 1,
+    "exit": "next_utc_day_00_open",
+    "missing_bar_interpolation_allowed": false,
+    "required_reference_day": "exactly_24_hourly_bars_00_through_23",
+    "signal_day_continuity": "00_through_decision_hour",
+    "trailing_std_must_be_finite_and_gt_zero": true
+  },
+  "scoring": {
+    "direction": "preserve_source_block_direction_per_instrument",
+    "same_candidate_cost_semantics": true,
+    "base_total_cost_bps": 24.0,
+    "middle_total_cost_bps": 48.0,
+    "stress_total_cost_bps": 72.0,
+    "same_portfolio_sizing_and_utc_day_aggregation": true,
+    "nav_fraction_per_eligible_instrument": 0.3333333333333333,
+    "final_same_day_signal_count_normalization_allowed": false,
+    "protected_oos_may_be_read": false
+  },
+  "stage2_use": {
+    "run_only_if_stage1_survives": true,
+    "candidate_must_beat_placebo_incrementally": true,
+    "placebo_equal_or_better_in_both_train_and_validation": "REJECT_OR_DEPRIORITIZE_COMPLEXITY",
+    "failed_or_inconclusive_result_routes_to_issue_510": true,
+    "placebo_result_may_not_redefine_candidate": true
+  },
+  "authority": {
+    "research_only": true,
+    "promotion_authority": false,
+    "broker_connected": false,
+    "trade_authority": false,
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false
+  }
+}
