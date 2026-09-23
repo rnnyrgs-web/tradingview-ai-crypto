@@ -44,6 +44,37 @@ CHECKSUM_RE = re.compile(
 )
 
 
+def _reject_duplicate_object_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    parsed: dict[str, object] = {}
+    for key, value in pairs:
+        if key in parsed:
+            raise ValueError(f"duplicate JSON object key: {key}")
+        parsed[key] = value
+    return parsed
+
+
+def _reject_nonstandard_json_constant(value: str) -> object:
+    raise ValueError(f"non-standard JSON numeric constant: {value}")
+
+
+def _strict_contract_json(raw: bytes) -> dict:
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise ValueError("2x Binance bootstrap contract JSON must be UTF-8") from exc
+    try:
+        payload = json.loads(
+            text,
+            object_pairs_hook=_reject_duplicate_object_keys,
+            parse_constant=_reject_nonstandard_json_constant,
+        )
+    except (json.JSONDecodeError, ValueError) as exc:
+        raise ValueError(f"2x Binance bootstrap contract JSON rejected: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise ValueError("2x Binance bootstrap contract JSON root must be an object")
+    return payload
+
+
 def _contract_bytes(repo_root: str | Path | None = None) -> bytes:
     root = Path(repo_root) if repo_root is not None else Path(__file__).resolve().parent
     return (root / CONTRACT_PATH).resolve().read_bytes()
@@ -52,7 +83,7 @@ def _contract_bytes(repo_root: str | Path | None = None) -> bytes:
 def load_contract(repo_root: str | Path | None = None) -> dict:
     """Load and fail-close the exact frozen bootstrap contract shape we consume."""
     raw = _contract_bytes(repo_root)
-    payload = json.loads(raw.decode("utf-8"))
+    payload = _strict_contract_json(raw)
     if payload.get("artifact_id") != CONTRACT_ID:
         raise ValueError("2x Binance bootstrap contract identity mismatch")
 
