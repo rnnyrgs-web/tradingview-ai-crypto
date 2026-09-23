@@ -38,6 +38,7 @@ def test_failure_learning_adapter_preserves_frozen_cost_and_independence_semanti
     mapping = payload["mapping"]
     rules = payload["scientific_rules"]
     assert mapping["validation.trades"] == "validation.independent_events"
+    assert mapping["validation.gross_mean_bps"].startswith("failure_diagnostics.mean_0bps * 10000")
     assert rules["raw_trade_count_may_substitute_for_independent_validation_events"] is False
     assert rules["cost_stress_must_exactly_cover_frozen_multipliers"] == [1.0, 2.0, 3.0]
     rows = mapping["cost_stress"]
@@ -45,10 +46,14 @@ def test_failure_learning_adapter_preserves_frozen_cost_and_independence_semanti
     assert rows[0]["net_mean_bps"] == "validation.mean_24bps * 10000 when defined"
     assert rows[1]["net_mean_bps"] == "failure_diagnostics.mean_48bps * 10000 when defined"
     assert rows[2]["net_mean_bps"] == "validation.mean_72bps * 10000 when defined"
-    assert rules["supplemental_48bps_and_winner_share_must_be_recomputed_from_the_same_validation_trade_stream_and_cross_asset_independent_event_clustering"] is True
+    assert rules["supplemental_0bps_48bps_and_winner_share_must_be_recomputed_from_the_same_validation_trade_stream_and_cross_asset_independent_event_clustering"] is True
+    assert rules["gross_mean_must_not_be_reconstructed_by_adding_flat_round_trip_cost_to_independent_event_net_mean"] is True
     assert rules["undefined_sparse_metrics_must_not_be_fabricated_zero_filled_or_finite_capped"] is True
     assert rules["profit_factor_no_losses_must_preserve_mathematical_positive_infinity_semantics_without_nonstandard_JSON_numbers"] is True
     assert rules["no_new_48bps_promotion_gate_is_created"] is True
+    correction = payload["correction"]
+    assert correction["classification"] == "PRE_OUTCOME_FAILURE_LEARNING_ACCOUNTING_DEFECT"
+    assert correction["outcomes_read"] is False
 
 
 def test_failure_learning_adapter_fails_closed_on_authority_and_preserves_stage1_precedence() -> None:
