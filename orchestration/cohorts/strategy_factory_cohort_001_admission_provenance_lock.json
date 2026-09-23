@@ -14,6 +14,7 @@
   "bound_admission_receipt_sha256": "fc7c237e67600390cca369965161ccfc555dd2bc9bebbabc83d774fafd57182a",
   "bound_multiplicity_contract_sha256": "9a7c32f8f8ea5959fbcd9b5c55707cb8a46d0a066a43a7d2db854b45c9b68e65",
   "bound_source_git_blobs": {
+    ".github/workflows/strategy_factory_cohort_001_admission.yml": "2b360a2bd3a689c25394eceddb6f97073baadcac",
     "orchestration/cohorts/strategy_factory_cohort_001_canonical_admission.json": "282102a44e2e02b8eece644304c3913a7412fb33",
     "orchestration/cohorts/strategy_factory_cohort_001_multiplicity_authority.json": "acda04916df05b22a063bb7682674dd2529ddb77",
     "orchestration/cohorts/strategy_factory_cohort_001_ownership_correction.json": "19e50c9a00675698968645378f6aacdd13ae2b06",
@@ -23,13 +24,13 @@
     "orchestration/strategy_behavior_schema.py": "abc0b13876645980116c333a6a2d2b2fb57f247c",
     "orchestration/strategy_behavior_value_contract.py": "24192d05110c95787108f4a3043733b18d350341",
     "orchestration/strategy_factory_cohort_001_admission.py": "97d521678e904625882a1950d205278e1537a094",
-    "orchestration/strategy_factory_cohort_001_provenance.py": "bd3814e4afbd916a54466c0e1fdca37a97522e02",
+    "orchestration/strategy_factory_cohort_001_provenance.py": "15581d950bba8f916098f3df79afc8c87c7a1c01",
     "orchestration/strategy_predeclaration.py": "acc45aebb5ef9c9730504591da98e048ba8052de",
     "strategy_dataset_preflight.py": "4e60bb186570bdb7d9aeb8ae00b60760ec0c784b"
   },
   "cohort_id": "STRATEGY-FACTORY-COHORT-001-SEED",
   "contract_id": "STRATEGY-FACTORY-COHORT-001-ADMISSION-PROVENANCE-LOCK-v1",
-  "contract_sha256": "26256d066dbc030f43cb1e95a87a8d29b93fd76c79bcc462d124c860f405faa6",
+  "contract_sha256": "592205c105116a2d49931ae5bda972e5412c2011a6cda7ce250e34882bd0a2c7",
   "review_phase_closure": {
     "empirical_execution_cost": "REQUIRED_BEFORE_DEEP_VALIDATION_OR_ANY_AUTHENTICATED_PROFITABILITY_CLAIM",
     "point_in_time_dataset_provenance": "BOUND_NOW_TO_EXACT_DATASET_PREFLIGHT_RUNTIME_AND_ADMISSION_RECEIPT",
