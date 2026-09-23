@@ -34,6 +34,13 @@
     "authoritative_economic_unit": "nav_weighted_unique_utc_signal_day_portfolio_block",
     "controls_use_same_sizing_and_aggregation": true
   },
+  "baseline_control": {
+    "definition": "sign_of_immediately_preceding_completed_1h_close_to_close_return_on_exact_candidate_window",
+    "prior_bar_lookup": "exact_t_minus_1h_across_utc_day_boundaries",
+    "missing_required_prior_bar": "DATA/PIT_INCONCLUSIVE",
+    "exact_zero_prior_hour_return": "preserve_candidate_window_as_zero_position_zero_economics",
+    "candidate_window_membership_may_change": false
+  },
   "validation_halves": {
     "definition": "fixed_wall_clock_split_frozen_before_outcomes",
     "first_start_utc": "2026-05-01T00:00:00Z",
@@ -64,6 +71,7 @@
   "classification": {
     "insufficient_independent_days": "UNDERPOWERED",
     "missing_required_entry_or_exit_bar": "DATA/PIT_INCONCLUSIVE",
+    "missing_required_baseline_bar": "DATA/PIT_INCONCLUSIVE",
     "any_economic_gate_false": "STAGE1_REJECTED",
     "all_gates_true": "STAGE1_SURVIVOR_REQUIRES_FROZEN_CONTROLS"
   },
