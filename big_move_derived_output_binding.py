@@ -5,6 +5,10 @@ proofs. This module closes a different integrity gap: a derived record must also
 that its *claimed value* is the deterministic result of retained Binance spot kline
 bytes, not merely a caller-supplied number attached to authentic inputs.
 
+Bound-row schema v2 explicitly preserves Binance field 7 as source-native
+``quote_asset_volume``. The former v1 schema used a USD-labelled key and is not
+silently reinterpreted here.
+
 Only pre-outcome market features are handled here. Sector/classification remains a
 separate unresolved binding because its mechanical primary-document classifier has
 not yet been frozen strongly enough for authoritative label opening.
@@ -40,7 +44,7 @@ UTC = timezone.utc
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 MAX_RETAINED_BYTES = 128 * 1024 * 1024
 BINANCE_SOURCE_ID = "BINANCE_PUBLIC_DATA_SPOT_RAW"
-BOUND_ROWS_SCHEMA = "binance_spot_daily_kline_rows.v1"
+BOUND_ROWS_SCHEMA = "binance_spot_daily_kline_rows.v2"
 COMPLETED_DERIVED_FIELDS = ("return_30d", "volatility_30d", "regime")
 
 
