@@ -61,3 +61,45 @@ def test_tampered_artifact_digest_fails_closed(monkeypatch, tmp_path) -> None:
     monkeypatch.setattr(preflight, "POWER_ARTIFACT_PATH", tampered)
     with pytest.raises(RuntimeError, match="digest mismatch"):
         preflight.load_power_feasibility()
+
+
+@pytest.mark.parametrize(
+    ("source_key", "error_match"),
+    (
+        ("stage1_runner_blob_sha", "runner source blob mismatch"),
+        ("stage1_execution_contract_blob_sha", "execution source blob mismatch"),
+    ),
+)
+def test_valid_self_digest_cannot_hide_source_blob_drift(
+    monkeypatch,
+    tmp_path,
+    source_key: str,
+    error_match: str,
+) -> None:
+    import orchestration.cohorts.strategy_factory_cohort_001_stage1_preflight as preflight
+
+    payload = json.loads(POWER_ARTIFACT_PATH.read_text(encoding="utf-8"))
+    payload["source_contracts"][source_key] = "0" * 40
+    payload["artifact_sha256"] = preflight._canonical_sha256(payload)
+    tampered = tmp_path / f"{source_key}.json"
+    tampered.write_text(json.dumps(payload), encoding="utf-8")
+
+    monkeypatch.setattr(preflight, "POWER_ARTIFACT_PATH", tampered)
+    with pytest.raises(RuntimeError, match=error_match):
+        preflight.load_power_feasibility()
+
+
+def test_valid_self_digest_cannot_hide_validation_minimum_drift(monkeypatch, tmp_path) -> None:
+    import orchestration.cohorts.strategy_factory_cohort_001_stage1_preflight as preflight
+
+    payload = json.loads(POWER_ARTIFACT_PATH.read_text(encoding="utf-8"))
+    # Keep the structural inequality true (18 < 19) so the source-contract gate,
+    # rather than the already-existing arithmetic guard, must catch the drift.
+    payload["candidate"]["minimum_independent_events_validation"] = 19
+    payload["artifact_sha256"] = preflight._canonical_sha256(payload)
+    tampered = tmp_path / "minimum-drift.json"
+    tampered.write_text(json.dumps(payload), encoding="utf-8")
+
+    monkeypatch.setattr(preflight, "POWER_ARTIFACT_PATH", tampered)
+    with pytest.raises(RuntimeError, match="validation minimum diverges"):
+        preflight.load_power_feasibility()
