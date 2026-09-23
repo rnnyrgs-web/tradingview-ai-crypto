@@ -2,7 +2,7 @@
   "schema_version": 1,
   "artifact_type": "strategy_factory_cohort_001_failure_learning_adapter_contract",
   "contract_id": "STRATEGY-FACTORY-COHORT-001-FAILURE-LEARNING-ADAPTER-v1",
-  "contract_sha256": "6a3af9641803e59ff2c0db5f6f0018b91b7b09aa13a7e2cfb02a9142fffd0b58",
+  "contract_sha256": "39ef2ebf8b5bcd3fadaaeae2df2972a2f5ebbab617c2f9298c833b3d49e05820",
   "contract_hash_definition": "SHA-256 of canonical JSON with sorted keys and compact separators, excluding contract_sha256 and contract_hash_definition.",
   "formed_at": "2026-09-22T12:58:57Z",
   "status": "OUTCOME_BLIND_FROZEN_CANONICAL_MINT_BLOCKED",
@@ -15,9 +15,9 @@
   "target_failure_learning_contract": {
     "schema_version": 1,
     "source_pr": 511,
-    "source_head_sha_observed": "b3289b9254b2890af15a29bd3621c65abd25b707",
+    "source_head_sha_observed": "3553a602892fc911f917664c8cfe502d877835bf",
     "integration_required_before_canonical_consumption": true,
-    "sparse_metric_schema_repair_required_before_canonical_consumption": true
+    "sparse_metric_schema_repair_required_before_canonical_consumption": false
   },
   "authority": {
     "public_canonical_minting_available": false,
@@ -84,7 +84,7 @@
   "implementation_state": {
     "supplemental_failure_diagnostics_implemented": true,
     "private_schema_mapper_implemented_for_fully_defined_metrics": true,
-    "sparse_result_schema_compatible_with_511": false,
+    "sparse_result_schema_compatible_with_511": true,
     "canonical_certified_dataset_adapter_implemented": false
   },
   "evidence_locks": {
@@ -93,5 +93,5 @@
     "genuine_forward_opened": false,
     "post_outcome_mapping_changes_allowed": false
   },
-  "next_transition": "In parallel, repair existing #511 so underpowered screens can truthfully carry undefined sparse metrics and no-loss PF without fabricated finite placeholders, then add/independently review a certified Cohort adapter that authenticates exact admission/binding/execution receipts, exact protected-safe dataset bytes/receipt, chronology/PIT checks and a pre-frozen liquidity/capacity rule before it may call the private mapper. Keep public canonical minting fail-closed and do not open real Cohort outcomes before parent/review gates clear."
+  "next_transition": "Require the current sparse-compatible #511 failure-learning head to receive legitimate independent review and integrate before canonical consumption. In parallel, add and independently review a certified Cohort adapter that authenticates exact admission/binding/execution receipts, exact protected-safe dataset bytes/receipt, chronology/PIT checks and a pre-frozen liquidity/capacity rule before it may call the private mapper. Keep public canonical minting fail-closed and do not open real Cohort outcomes before parent/review gates clear."
 }
