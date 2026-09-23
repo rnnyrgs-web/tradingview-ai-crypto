@@ -12,6 +12,7 @@ permissions:
   actions: read
   issues: write
   pull-requests: read
+  statuses: write
 
 concurrency:
   group: exact-head-independent-review
@@ -87,8 +88,11 @@ jobs:
             BASE_REF="$(printf '%s' "$PR_JSON" | jq -r '.baseRefName')"
             HEAD_BRANCH="$(printf '%s' "$PR_JSON" | jq -r '.headRefName')"
             HEAD_SHA="$(printf '%s' "$PR_JSON" | jq -r '.headRefOid')"
-            if [ "$PR_STATE" != "OPEN" ] || [ "$PR_DRAFT" = "true" ] || [ "$BASE_REF" != "main" ]; then
+            if [ "$PR_STATE" != "OPEN" ] || [ "$BASE_REF" != "main" ]; then
               continue
+            fi
+            if [ "$PR_DRAFT" = "true" ]; then
+              echo "PR #$PR_NUMBER remains DRAFT; exact-head review is allowed without exposing an unapproved PR to mergeability."
             fi
             if [ "$HEAD_SHA" != "$REQUESTED_SHA" ]; then
               gh issue comment "$ISSUE_NUMBER" --repo "$GITHUB_REPOSITORY" --body "Exact head moved: request=$REQUESTED_SHA current=$HEAD_SHA. This request cannot authorize a different head; closing. Create a new request for the new exact SHA after its CI is green."
@@ -188,6 +192,17 @@ jobs:
           EOF
           URL="$(gh issue create --repo "$GITHUB_REPOSITORY" --title "exact-head-review-attempt: pr=$PR_NUMBER sha=$HEAD_SHA run=$GITHUB_RUN_ID" --body-file /tmp/exact-head-review-attempt.md)"
           echo "issue=${URL##*/}" >> "$GITHUB_OUTPUT"
+
+      - name: Mark exact-head independent-review status pending
+        if: steps.select.outputs.pr_number != ''
+        env:
+          HEAD_SHA: ${{ steps.select.outputs.sha }}
+        run: |
+          gh api --method POST "repos/$GITHUB_REPOSITORY/statuses/$HEAD_SHA" \
+            -f state=pending \
+            -f context=independent-review \
+            -f description="Independent exact-head review in progress" \
+            -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
 
       - name: Fail closed unless all independent reviewer credentials are available
         if: steps.select.outputs.pr_number != ''
@@ -470,6 +485,25 @@ jobs:
           PY
           gh issue edit "$ATTEMPT_ISSUE" --repo "$GITHUB_REPOSITORY" --body-file /tmp/exact-head-review-attempt.md
           OUTCOME="$(cat /tmp/exact-head-review-outcome.txt)"
+          case "$OUTCOME" in
+            WAIT_RETRYABLE)
+              STATUS_STATE="pending"
+              ;;
+            REJECTED)
+              STATUS_STATE="failure"
+              ;;
+            REVIEW_APPROVED_*)
+              STATUS_STATE="success"
+              ;;
+            *)
+              STATUS_STATE="error"
+              ;;
+          esac
+          gh api --method POST "repos/$GITHUB_REPOSITORY/statuses/$HEAD_SHA" \
+            -f state="$STATUS_STATE" \
+            -f context=independent-review \
+            -f description="Exact-head review outcome: $OUTCOME" \
+            -f target_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           if gh issue view "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --json state --jq '.state' | grep -qx OPEN; then
             if [ "$OUTCOME" = "WAIT_RETRYABLE" ]; then
               gh issue comment "$REQUEST_ISSUE" --repo "$GITHUB_REPOSITORY" --body "Review attempt finished as WAIT_RETRYABLE because an independent reviewer provider was throttled/unavailable. Candidate remains unapproved. Request stays open for a later bounded retry (maximum three attempts)."
