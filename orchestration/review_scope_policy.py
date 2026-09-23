@@ -8,8 +8,8 @@ from typing import Any, Iterable
 from orchestration.protected_paths import DEFAULT_PATH, find_protected_matches, load_protected_paths
 from orchestration.reviewer_trust_root import reviewer_trust_root_identity
 
-REVIEW_SCOPE_POLICY_VERSION = 7
-REVIEW_RECEIPT_SCHEMA_VERSION = 6
+REVIEW_SCOPE_POLICY_VERSION = 8
+REVIEW_RECEIPT_SCHEMA_VERSION = 7
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 _REPO_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
 
@@ -50,6 +50,10 @@ REVIEW_INFRASTRUCTURE_PATHS = frozenset(
         "BUG_REGRESSION_LEDGER.md",
     }
 )
+# Freeze v7's exact scope sets so v8 is append-only lineage rather than a
+# reinterpretation of the predecessor policy identity.
+_V7_REVIEW_INFRASTRUCTURE_CORE_PATHS = frozenset(REVIEW_INFRASTRUCTURE_CORE_PATHS)
+_V7_REVIEW_INFRASTRUCTURE_PATHS = frozenset(REVIEW_INFRASTRUCTURE_PATHS)
 
 # Version 5 is retained byte-for-byte as historical lineage. New policy versions
 # are additive registrations rather than reinterpretations of old receipts.
@@ -94,7 +98,7 @@ _REVIEW_SCOPE_DISCIPLINE_V6 = (
       "reviewer-runtime SHA, and protected-registry identity."
 )
 
-REVIEW_SCOPE_DISCIPLINE = (
+_REVIEW_SCOPE_DISCIPLINE_V7 = (
     _REVIEW_SCOPE_DISCIPLINE_V6
     + " REVIEW_TRUST_ROOT_V7: the reviewer trust root is machine-readable and policy-bound. Production review execution "
       "must independently reconcile GitHub-hosted runner identity, exact workflow path/ref/SHA, run id+attempt+event, "
@@ -108,9 +112,22 @@ REVIEW_SCOPE_DISCIPLINE = (
       "execution."
 )
 
+REVIEW_SCOPE_DISCIPLINE = (
+    _REVIEW_SCOPE_DISCIPLINE_V7
+    + " REVIEW_TRUST_ROOT_V8: trusted server observations for this public repository are fetched without the workflow-"
+      "issued GitHub token, so compromise of that token alone cannot forge the run/ref/workflow evidence used by the "
+      "receipt binding. The exact canonical review workflow source is frozen by Git blob identity and reconciled byte-for-"
+      "byte plus SHA256 between the checked-out runtime and GitHub's public server view before reviewer execution. The "
+      "v8 trust root cryptographically names its v7 predecessor, while v7 policy and receipt identities remain historical "
+      "and non-reusable. Any active trust-root/workflow/registry drift fails closed and requires a new policy version plus "
+      "fresh independent review. These controls still grant no integration, promotion, broker, protected-OOS, or trading "
+      "authority."
+)
+
 REVIEW_SCOPE_POLICIES: dict[int, str] = {
     5: _REVIEW_SCOPE_DISCIPLINE_V5,
     6: _REVIEW_SCOPE_DISCIPLINE_V6,
+    7: _REVIEW_SCOPE_DISCIPLINE_V7,
     REVIEW_SCOPE_POLICY_VERSION: REVIEW_SCOPE_DISCIPLINE,
 }
 
@@ -134,17 +151,23 @@ _V5_PROTECTED_PATH_PATTERNS = (
     "**/.env*",
 )
 
-# v6 and v7 are authorized only against this exact registry identity. A registry
+# v6-v8 are authorized only against this exact registry identity. A registry
 # change requires a new policy version and fresh independent review.
 _V6_PROTECTED_REGISTRY = {
     "version": 1,
     "sha256": "00e9f1a404d1f5b92210f0c172295cd0067ff1078c33e4dcb284a4e3be4c7f25",
 }
 _V7_PROTECTED_REGISTRY = dict(_V6_PROTECTED_REGISTRY)
+_V8_PROTECTED_REGISTRY = dict(_V7_PROTECTED_REGISTRY)
 _V7_REVIEWER_TRUST_ROOT = {
     "schema_version": 1,
     "trust_boundary_id": "EXACT_HEAD_REVIEW_TRUST_ROOT_V1",
     "sha256": "53c96f8eca58aba2f5242c858c766b5b4ca65d93839aa9734338ee3de0aebe3f",
+}
+_V8_REVIEWER_TRUST_ROOT = {
+    "schema_version": 2,
+    "trust_boundary_id": "EXACT_HEAD_REVIEW_TRUST_ROOT_V2",
+    "sha256": "01ebba5a33df29b6edd5f457ef1a700b758c8f1187e9efedad76702dedee890d",
 }
 
 
@@ -202,9 +225,19 @@ def _expected_registry_identity(version: int) -> dict[str, Any]:
         }
     if version == 6:
         return dict(_V6_PROTECTED_REGISTRY)
-    if version == REVIEW_SCOPE_POLICY_VERSION:
+    if version == 7:
         return dict(_V7_PROTECTED_REGISTRY)
+    if version == REVIEW_SCOPE_POLICY_VERSION:
+        return dict(_V8_PROTECTED_REGISTRY)
     raise RuntimeError("unknown review-scope policy version")
+
+
+def _expected_trust_root_identity(version: int) -> dict[str, Any]:
+    if version == 7:
+        return dict(_V7_REVIEWER_TRUST_ROOT)
+    if version == REVIEW_SCOPE_POLICY_VERSION:
+        return dict(_V8_REVIEWER_TRUST_ROOT)
+    raise RuntimeError("reviewer trust root is unavailable for historical policy")
 
 
 def _assert_active_registry_matches_policy(version: int = REVIEW_SCOPE_POLICY_VERSION) -> dict[str, Any]:
@@ -219,10 +252,9 @@ def _assert_active_registry_matches_policy(version: int = REVIEW_SCOPE_POLICY_VE
 
 
 def _assert_active_trust_root_matches_policy(version: int = REVIEW_SCOPE_POLICY_VERSION) -> dict[str, Any]:
-    if version < 7:
-        raise RuntimeError("reviewer trust root is unavailable for historical policy")
     actual = reviewer_trust_root_identity()
-    if actual != _V7_REVIEWER_TRUST_ROOT:
+    expected = _expected_trust_root_identity(version)
+    if actual != expected:
         raise RuntimeError(
             "reviewer trust-root identity drifted from the active review policy; "
             "a new policy version and independent review are required"
@@ -274,6 +306,19 @@ def review_scope_policy_sha256(version: int = REVIEW_SCOPE_POLICY_VERSION) -> st
                 "sha256": review_scope_policy_sha256(5),
             },
         }
+    elif version == 7:
+        payload = {
+            "version": version,
+            "discipline": discipline,
+            "review_infrastructure_paths": sorted(_V7_REVIEW_INFRASTRUCTURE_PATHS),
+            "review_infrastructure_core_paths": sorted(_V7_REVIEW_INFRASTRUCTURE_CORE_PATHS),
+            "protected_path_registry": _expected_registry_identity(version),
+            "reviewer_trust_root": _expected_trust_root_identity(version),
+            "parent_policy": {
+                "version": 6,
+                "sha256": review_scope_policy_sha256(6),
+            },
+        }
     else:
         _assert_active_registry_matches_policy(version)
         trust_root = _assert_active_trust_root_matches_policy(version)
@@ -285,8 +330,8 @@ def review_scope_policy_sha256(version: int = REVIEW_SCOPE_POLICY_VERSION) -> st
             "protected_path_registry": _expected_registry_identity(version),
             "reviewer_trust_root": trust_root,
             "parent_policy": {
-                "version": 6,
-                "sha256": review_scope_policy_sha256(6),
+                "version": 7,
+                "sha256": review_scope_policy_sha256(7),
             },
         }
     canonical = json.dumps(
