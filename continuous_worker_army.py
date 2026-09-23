@@ -26,6 +26,7 @@ from signal_development import load_objective
 from worker_supervisor import infer_error_type, record_incident, sanitize_diagnostic, supervisor_summary
 
 PROJECT_ROOT = Path(__file__).resolve().parent
+STRATEGY_DISCOVERY_QUEUE_PATH = PROJECT_ROOT / "orchestration" / "strategy_discovery_queue.json"
 MAX_CONCURRENT = max(1, min(int(os.getenv("WORKER_ARMY_MAX_CONCURRENT", "2")), 4))
 LIGHTWEIGHT_MAX_CONCURRENT = max(1, min(int(os.getenv("WORKER_ARMY_LIGHTWEIGHT_MAX_CONCURRENT", "2")), 4))
 JOB_TIMEOUT_SECONDS = max(300, min(int(os.getenv("WORKER_ARMY_JOB_TIMEOUT_SECONDS", "2700")), 3600))
@@ -91,38 +92,75 @@ WORKERS = (
 )
 
 
-def focused_worker_specs(workers: tuple[WorkerSpec, ...], objective: dict) -> tuple[WorkerSpec, ...]:
-    """Return only workers authorized by the canonical one-candidate lifecycle.
+def load_strategy_discovery_queue(path: Path = STRATEGY_DISCOVERY_QUEUE_PATH) -> dict:
+    """Load the canonical discovery queue fail-closed."""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, TypeError) as exc:
+        raise RuntimeError("strategy discovery queue is unreadable") from exc
+    if not isinstance(data, dict):
+        raise RuntimeError("strategy discovery queue must be an object")
+    return data
 
-    Selection permits only explicitly declared cheap screeners plus the lightweight
-    research-brain workers. Those screeners receive an environment guard that keeps
-    untouched OOS locked. Once the Lead freezes one immutable candidate, only its
-    explicitly declared deep workers may run. Unknown names fail closed.
+
+def _active_candidate_identity(candidate) -> str | None:
+    if candidate is None:
+        return None
+    if isinstance(candidate, str):
+        identity = candidate.strip()
+        if identity:
+            return identity
+        raise RuntimeError("active candidate identity is empty")
+    if not isinstance(candidate, dict):
+        raise RuntimeError("active candidate must be an object or identifier")
+    for key in ("fingerprint_id", "candidate_id", "hypothesis_id", "id"):
+        identity = str(candidate.get(key) or "").strip()
+        if identity:
+            return identity
+    raise RuntimeError("active candidate has no comparable identity")
+
+
+def focused_worker_specs(
+    workers: tuple[WorkerSpec, ...],
+    objective: dict,
+    discovery_queue: dict | None = None,
+) -> tuple[WorkerSpec, ...]:
+    """Return only workers jointly authorized by objective and discovery queue.
+
+    Candidate-specific heavy work is fail-closed. When both canonical sources say
+    that no candidate is active, only lightweight diagnostics/factory work may run.
+    If the sources disagree, no heavy worker is guessed into existence. Once both
+    sources identify the same immutable candidate, only its declared deep workers
+    may run. Unknown names and incomplete contracts still fail closed.
     """
     focus = objective.get("single_strategy_focus") or {}
     if focus.get("enabled") is not True or focus.get("max_active_deep_candidates") != 1:
         raise RuntimeError("single-strategy worker focus is invalid")
+    if discovery_queue is None:
+        discovery_queue = load_strategy_discovery_queue()
+    if not isinstance(discovery_queue, dict):
+        raise RuntimeError("strategy discovery queue must be an object")
+    if discovery_queue.get("max_active_deep_candidates") != 1:
+        raise RuntimeError("strategy discovery queue candidate limit is invalid")
+
     lightweight = tuple(spec for spec in workers if spec.compute_class == "lightweight")
     candidate = focus.get("active_candidate")
-    if candidate is None:
-        selection_names = focus.get("selection_screen_workers")
-        if not isinstance(selection_names, list) or not selection_names:
-            raise RuntimeError("selection phase has no declared screening workers")
-        allowed = {str(name).strip() for name in selection_names if str(name).strip()}
-        known = {spec.name for spec in workers}
-        unknown = allowed - known
-        if unknown:
-            raise RuntimeError(f"selection phase declares unknown screening workers: {sorted(unknown)}")
-        selected = list(lightweight)
-        for spec in workers:
-            if spec.name not in allowed:
-                continue
-            if spec.compute_class != "heavy":
-                raise RuntimeError(f"selection screener must be a bounded heavy worker: {spec.name}")
-            env = dict(spec.env)
-            env["SINGLE_STRATEGY_SELECTION_MODE"] = "1"
-            selected.append(replace(spec, env=env))
-        return tuple(selected)
+    queue_candidate = discovery_queue.get("active_deep_candidate")
+    objective_identity = _active_candidate_identity(candidate)
+    queue_identity = _active_candidate_identity(queue_candidate)
+
+    if objective_identity is None and queue_identity is None:
+        return lightweight
+    if objective_identity is None or queue_identity is None:
+        raise RuntimeError("objective and discovery queue disagree on active candidate")
+    if objective_identity != queue_identity:
+        raise RuntimeError(
+            "objective and discovery queue active candidate identities disagree: "
+            f"{objective_identity!r} != {queue_identity!r}"
+        )
+    if not isinstance(candidate, dict):
+        raise RuntimeError("objective active candidate must contain immutable deep-worker contracts")
+
     contracts = candidate.get("deep_worker_contracts")
     if not isinstance(contracts, dict) or not contracts:
         raise RuntimeError("active candidate has no declared deep worker contracts")
@@ -134,10 +172,15 @@ def focused_worker_specs(workers: tuple[WorkerSpec, ...], objective: dict) -> tu
     fingerprint = str(candidate.get("fingerprint_id") or "").strip()
     if not fingerprint:
         raise RuntimeError("active candidate has no immutable fingerprint")
+    if fingerprint != objective_identity:
+        raise RuntimeError("objective candidate identity does not match immutable fingerprint")
+
     selected = list(lightweight)
     for spec in workers:
         if spec.name not in allowed:
             continue
+        if spec.compute_class != "heavy":
+            raise RuntimeError(f"active candidate deep worker must be heavy: {spec.name}")
         contract = contracts[spec.name]
         family = str((contract or {}).get("strategy_family") or "").strip()
         if not family:
@@ -150,6 +193,7 @@ def focused_worker_specs(workers: tuple[WorkerSpec, ...], objective: dict) -> tu
         })
         selected.append(replace(spec, env=env))
     return tuple(selected)
+
 
 SUMMARY_ENV_BY_SCRIPT = {
     "cross_asset_runner.py": "CROSS_ASSET_SUMMARY_PATH",
@@ -517,14 +561,16 @@ def _build_lanes(workers: tuple[WorkerSpec, ...] = WORKERS) -> dict[str, asyncio
 
 
 async def run_army() -> None:
-    active_workers = focused_worker_specs(WORKERS, load_objective())
+    objective = load_objective()
+    discovery_queue = load_strategy_discovery_queue()
+    active_workers = focused_worker_specs(WORKERS, objective, discovery_queue)
     with _lock:
         _status["started_at"] = _now()
         _status["workers"] = {spec.name: _initial_worker_state(spec) for spec in active_workers}
         _status["worker_count"] = len(active_workers)
         _status["heavy_worker_count"] = sum(1 for spec in active_workers if spec.compute_class == "heavy")
         _status["lightweight_worker_count"] = sum(1 for spec in active_workers if spec.compute_class == "lightweight")
-        _status["single_strategy_lifecycle"] = load_objective()["single_strategy_focus"]["lifecycle_phase"]
+        _status["single_strategy_lifecycle"] = objective["single_strategy_focus"]["lifecycle_phase"]
     lanes = _build_lanes(active_workers)
     specs = {spec.name: spec for spec in active_workers}
     tasks = {name: asyncio.create_task(_worker_loop(spec, lanes[name]), name=name) for name, spec in specs.items()}
