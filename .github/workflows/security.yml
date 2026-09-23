@@ -25,24 +25,47 @@ jobs:
     env:
       PYTHONPATH: ${{ github.workspace }}
     steps:
-      # EXACT_HEAD_PR_CHECKOUT_V1: pull_request evidence must execute the exact PR head,
-      # not GitHub's synthetic refs/pull/<n>/merge checkout.
-      - uses: actions/checkout@v4
+      # EXACT_HEAD_PR_CHECKOUT_V2: keep PR and non-PR subjects explicit. Never rely on
+      # the pull_request event's synthetic refs/pull/<n>/merge default checkout.
+      - name: Checkout exact pull-request head
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Verify checked-out commit identity
+      - name: Checkout exact non-PR triggering commit
+        if: github.event_name != 'pull_request'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Verify pull-request checkout identity
+        if: github.event_name == 'pull_request'
         shell: bash
         env:
-          EXPECTED_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           set -euo pipefail
           ACTUAL_SHA="$(git rev-parse HEAD)"
-          if [ "$ACTUAL_SHA" != "$EXPECTED_SHA" ]; then
+          test "$ACTUAL_SHA" = "$EXPECTED_SHA" || {
             echo "Security checkout identity mismatch: expected=$EXPECTED_SHA actual=$ACTUAL_SHA" >&2
             exit 1
-          fi
-          echo "Verified Security and Reliability subject SHA: $ACTUAL_SHA"
+          }
+          echo "Verified Security and Reliability PR subject SHA: $ACTUAL_SHA"
+
+      - name: Verify non-PR checkout identity
+        if: github.event_name != 'pull_request'
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          ACTUAL_SHA="$(git rev-parse HEAD)"
+          test "$ACTUAL_SHA" = "$EXPECTED_SHA" || {
+            echo "Security checkout identity mismatch: expected=$EXPECTED_SHA actual=$ACTUAL_SHA" >&2
+            exit 1
+          }
+          echo "Verified Security and Reliability non-PR subject SHA: $ACTUAL_SHA"
 
       - uses: actions/setup-python@v5
         with:
