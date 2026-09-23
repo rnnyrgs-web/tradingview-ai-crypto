@@ -143,6 +143,33 @@ def _install_fake_attested_provider(monkeypatch, root: Path):
     monkeypatch.setattr(trusted_origin, "verify_attested_acquisition_bundle", fake_verify)
 
 
+def _replace_index_bytes(root: Path, record: dict, proof_ref: dict, raw_index: bytes) -> None:
+    proof_path = root / proof_ref["artifact_relpath"]
+    proof = json.loads(proof_path.read_text())
+    capture_ref = proof["historical_capture"]
+    capture_path = root / capture_ref["artifact_relpath"]
+    capture = json.loads(capture_path.read_text())
+
+    index_path = root / capture["index_response"]["artifact_relpath"]
+    index_path.write_bytes(raw_index)
+    capture["index_response"] = {
+        "artifact_relpath": capture["index_response"]["artifact_relpath"],
+        "sha256": hashlib.sha256(raw_index).hexdigest(),
+    }
+    raw_capture = json.dumps(capture, sort_keys=True, separators=(",", ":")).encode()
+    capture_path.write_bytes(raw_capture)
+    proof["historical_capture"] = {
+        "artifact_relpath": capture_ref["artifact_relpath"],
+        "sha256": hashlib.sha256(raw_capture).hexdigest(),
+    }
+    raw_proof = json.dumps(proof, sort_keys=True, separators=(",", ":")).encode()
+    proof_path.write_bytes(raw_proof)
+    record["source_proof"] = {
+        "artifact_relpath": proof_ref["artifact_relpath"],
+        "sha256": hashlib.sha256(raw_proof).hexdigest(),
+    }
+
+
 def test_primary_document_requires_exact_predecision_archive_binding(tmp_path, monkeypatch):
     record, _ = _record(tmp_path)
     _install_fake_attested_provider(monkeypatch, tmp_path)
@@ -211,6 +238,68 @@ def test_postdecision_archive_capture_fails_even_with_old_declared_publication(t
     record, _ = _record(tmp_path, capture_timestamp="20250102030405")
     _install_fake_attested_provider(monkeypatch, tmp_path)
     with pytest.raises(ValueError, match="at or before decision_at"):
+        validate_primary_document_historical_availability(
+            record,
+            decision_at="2024-01-01T00:00:00Z",
+            artifact_root=tmp_path,
+        )
+
+
+def test_authenticated_primary_proof_duplicate_json_key_fails_closed(tmp_path):
+    record, proof_ref = _record(tmp_path)
+    proof_path = tmp_path / proof_ref["artifact_relpath"]
+    proof = json.loads(proof_path.read_text())
+    canonical = json.dumps(proof, sort_keys=True, separators=(",", ":"))
+    raw = (canonical[:-1] + ',"schema":"primary_document_proof.v1"}').encode()
+    proof_path.write_bytes(raw)
+    record["source_proof"] = {
+        "artifact_relpath": proof_ref["artifact_relpath"],
+        "sha256": hashlib.sha256(raw).hexdigest(),
+    }
+    with pytest.raises(ValueError, match="duplicate JSON object key"):
+        validate_primary_document_historical_availability(
+            record,
+            decision_at="2024-01-01T00:00:00Z",
+            artifact_root=tmp_path,
+        )
+
+
+def test_authenticated_primary_proof_nonstandard_numeric_constant_fails_closed(tmp_path):
+    record, proof_ref = _record(tmp_path)
+    proof_path = tmp_path / proof_ref["artifact_relpath"]
+    proof = json.loads(proof_path.read_text())
+    canonical = json.dumps(proof, sort_keys=True, separators=(",", ":"))
+    raw = (canonical[:-1] + ',"ambiguous_numeric":NaN}').encode()
+    proof_path.write_bytes(raw)
+    record["source_proof"] = {
+        "artifact_relpath": proof_ref["artifact_relpath"],
+        "sha256": hashlib.sha256(raw).hexdigest(),
+    }
+    with pytest.raises(ValueError, match="non-standard JSON numeric constant"):
+        validate_primary_document_historical_availability(
+            record,
+            decision_at="2024-01-01T00:00:00Z",
+            artifact_root=tmp_path,
+        )
+
+
+def test_authenticated_commoncrawl_index_duplicate_json_key_fails_closed(tmp_path):
+    record, proof_ref = _record(tmp_path)
+    raw = b'{"url":"https://example.org/original-document","url":"https://example.org/original-document"}\n'
+    _replace_index_bytes(tmp_path, record, proof_ref, raw)
+    with pytest.raises(ValueError, match="duplicate JSON object key"):
+        validate_primary_document_historical_availability(
+            record,
+            decision_at="2024-01-01T00:00:00Z",
+            artifact_root=tmp_path,
+        )
+
+
+def test_authenticated_commoncrawl_index_nonstandard_numeric_constant_fails_closed(tmp_path):
+    record, proof_ref = _record(tmp_path)
+    raw = b'{"url":"https://example.org/original-document","ambiguous_numeric":Infinity}\n'
+    _replace_index_bytes(tmp_path, record, proof_ref, raw)
+    with pytest.raises(ValueError, match="non-standard JSON numeric constant"):
         validate_primary_document_historical_availability(
             record,
             decision_at="2024-01-01T00:00:00Z",
