@@ -18,7 +18,8 @@ def test_temporarily_unavailable_is_only_a_nonverdict_and_cannot_mint_approval()
     assert "temporarily unavailable|overloaded" in workflow
 
     # A WAIT or an available valid rejection must skip both the unanimity gate and
-    # approval-receipt creation. Tightening this gate must not weaken WAIT safety.
+    # even the intended approval-outcome freeze. The durable approval receipt is
+    # created later only after the source attempt is persisted and re-read.
     approval_gate = (
         "steps.select.outputs.pr_number != '' && "
         "steps.review_models.outputs.wait != 'true' && "
@@ -29,7 +30,7 @@ def test_temporarily_unavailable_is_only_a_nonverdict_and_cannot_mint_approval()
         f"        if: {approval_gate}"
     ) in workflow
     assert (
-        "name: Record review-only approval for exact head\n"
+        "name: Freeze intended exact-head approval outcome\n"
         f"        if: {approval_gate}"
     ) in workflow
     assert "Candidate remains **unapproved** and **unmerged**" in workflow
