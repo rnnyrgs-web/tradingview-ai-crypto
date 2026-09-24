@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "artifact_type": "external_replication_survivor_control_predeclaration",
+  "control_contract_id": "EXT-ETH-SESSION-REVERSAL-001-v1-SURVIVOR-CONTROLS-v1",
+  "status": "FROZEN_PRE_OUTCOME_STAGE2_ONLY",
+  "formed_at": "2026-09-24T03:00:00Z",
+  "related_issues": [
+    510,
+    517,
+    518,
+    520
+  ],
+  "parent_replication": {
+    "replication_id": "EXT-ETH-SESSION-REVERSAL-001-v1",
+    "pr": 779,
+    "exact_head_sha": "f3ae2ee6fd9ff648632ec3a557608af100902b08",
+    "predeclaration_path": "orchestration/external_replication/ext_eth_session_reversal_001_v1.json",
+    "predeclaration_git_blob_sha": "e27a19904130ceb0dcaff670b0eecb93b550103e",
+    "predeclaration_artifact_sha256": "fee604ea0e2f993cd109cadcc6717deedbb7bd02e044cf380de2ef80e91afcc3",
+    "source_replication_code_blob_sha": "82b79f2be4332858de55de46341bd3fc81fa0c38",
+    "parent_may_be_mutated_by_this_contract": false
+  },
+  "purpose": {
+    "gap": "Freeze the remaining #517 survivor-control semantics before any Stage-1 outcome is opened so a future survivor cannot choose placebo or volatility-control definitions after seeing results.",
+    "stage1_unchanged": true,
+    "stage2_only": true,
+    "outcomes_opened_by_this_contract": false
+  },
+  "baseline_gauntlet_coverage": {
+    "market_beta": {
+      "status": "FROZEN_PARENT_CONTROL",
+      "control": "always-long ETH on the identical 05:00/17:00 UTC boundaries",
+      "strict_incremental_gate": false,
+      "reason": "Market-beta diagnostic; lower-turnover buy/hold is informative but is not mechanically equivalent to the active day/night mechanism."
+    },
+    "simple_trend": {
+      "status": "FROZEN_PARENT_CONTROL_AND_EXACT_VOLATILITY_MATCH",
+      "control": "night LONG plus daytime MOMENTUM sign of the immediately previous completed daytime return",
+      "strict_incremental_gate": true
+    },
+    "simple_reversal": {
+      "status": "NOT_APPLICABLE_REDUNDANT_WITH_PRIMARY_MECHANISM",
+      "reason": "The challenged daytime component is already the simplest one-lag sign reversal. Adding another 'simple reversal' would be a parameter variant, not a simpler independent baseline."
+    },
+    "randomized_timing": {
+      "status": "FROZEN_BY_THIS_CONTRACT",
+      "control": "causal randomized-lag daytime reversal placebo with lags 3..7 calendar trading dates; night remains LONG",
+      "strict_incremental_gate": true
+    },
+    "one_period_delay": {
+      "status": "FROZEN_PARENT_CONTROL",
+      "control": "night LONG plus daytime reversal of the daytime return from exactly two calendar trading dates earlier",
+      "strict_incremental_gate": true
+    },
+    "volatility_matched": {
+      "status": "FROZEN_EXACT_SAME_DATE_MATCH",
+      "control": "the parent daytime-MOMENTUM sign-flip comparator on the exact same trading dates and exact same 05:00/17:00 boundaries",
+      "strict_incremental_gate": true,
+      "reason": "The candidate trades every eligible date at unit absolute daytime exposure (or zero on an exact-zero prior return), so there is no untreated same-window date pool to match. The sign-flip control is exactly co-temporal, same-asset, same-boundary and same-absolute-exposure, hence it shares the realized volatility state without a post-outcome caliper or resample."
+    },
+    "ablation": {
+      "status": "FROZEN_PARENT_CONTROL",
+      "control": "night LONG plus daytime CASH",
+      "strict_incremental_gate": true
+    }
+  },
+  "randomized_timing_placebo": {
+    "control_id": "EXT-ETH-SESSION-REVERSAL-001-v1-RANDOMIZED-LAG-PLACEBO-v1",
+    "purpose": "Break the one-day signal timing relation while preserving PIT causality, the fixed 05:00/17:00 execution schedule, ETH exposure scale, night-long leg, and cost accounting.",
+    "why_not_entry_timestamp_permutation": "The primary strategy occupies every eligible day/night session. Permuting entry timestamps would either map occupied sessions to other occupied sessions or change the source-frozen UTC session mechanism itself. Randomizing the lag of the already-completed daytime information is the timing placebo that changes temporal alignment without changing the execution clock.",
+    "common_support_start_date": "2026-01-08",
+    "common_support_end_date": "2026-06-30",
+    "common_support_reason": "The maximum frozen lag is 7 calendar trading dates and 2026-01-01 is the earliest warmup daytime return. Starting 2026-01-08 guarantees every placebo signal references an already completed in-contract daytime return without acquiring 2025 data.",
+    "validation_half_1": "2026-01-08 through 2026-03-31 inclusive",
+    "validation_half_2": "2026-04-01 through 2026-06-30 inclusive",
+    "night_position": 1,
+    "day_position_rule": "For UTC trading date D, choose K(D) deterministically from {3,4,5,6,7}; daytime position = -sign(daytime_return on exact UTC calendar date D-K(D)). Exact-zero source return => 0.",
+    "lag_calendar_semantics": "K counts UTC calendar trading dates, not previous available rows. Missing any required source or target session makes that target date DATA/PIT_INCONCLUSIVE; dates are never skipped/reindexed to rescue the sample.",
+    "lag_set": [
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "seed_sha256": "1b84c1e4021cedaccf1e0364378c6b2cc8507d395d189bf07cf614e60b09a976",
+    "seed_derivation": "SHA256(parent_predeclaration_artifact_sha256 + '|' + control_contract_id + '|RANDOMIZED_TIMING')",
+    "lag_derivation": "K(D) = 3 + (big_endian_uint64(first_8_bytes(SHA256(seed_sha256 + '|' + YYYY-MM-DD))) mod 5)",
+    "single_draw": true,
+    "redraw_allowed": false,
+    "post_outcome_lag_search_allowed": false,
+    "future_or_target_session_return_allowed_in_schedule_formation": false,
+    "execution_boundaries": [
+      "05:00 UTC",
+      "17:00 UTC"
+    ],
+    "cost_ladder_bps_per_unit_turnover": [
+      24.0,
+      48.0,
+      72.0
+    ],
+    "turnover_definition": "absolute change in signed position at each session boundary; long-to-short or short-to-long flip has turnover 2",
+    "comparison_rule": "Rescore the candidate and placebo on the identical frozen common-support dates. At 24 bps and 72 bps, candidate cumulative arithmetic net PnL must exceed placebo in the full common-support window and in each chronological half. Failure is mechanism-negative Stage-2 evidence; missing required data is inconclusive, never a redraw trigger."
+  },
+  "volatility_matched_control": {
+    "control_id": "EXT-ETH-SESSION-REVERSAL-001-v1-EXACT-COTEMPORAL-VOL-MATCH-v1",
+    "matching_method": "EXACT_SAME_DATE_SAME_SESSION_SAME_ABSOLUTE_EXPOSURE",
+    "candidate_day_position": "-sign(previous completed daytime return)",
+    "control_day_position": "+sign(previous completed daytime return)",
+    "night_position_both": 1,
+    "exact_zero_rule_both": "0 daytime exposure when the immediately previous daytime return is exactly zero",
+    "same_asset": "Kraken ETH/USD spot",
+    "same_dates": true,
+    "same_day_night_boundaries": true,
+    "same_absolute_day_exposure": true,
+    "same_realized_volatility_state": true,
+    "resampling": false,
+    "volatility_estimator_or_caliper": null,
+    "post_outcome_matching_choice_allowed": false,
+    "comparison_rule": "On every date where both are defined, candidate after-cost cumulative arithmetic net PnL must exceed the exact co-temporal momentum sign-flip control at 24 bps and 72 bps in the full replication and both frozen chronological halves. Missing required bars is DATA/PIT_INCONCLUSIVE, not permission to rematch."
+  },
+  "stage2_authority": {
+    "requires_legitimate_stage1_survivor": true,
+    "requires_parent_integration_and_legitimate_independent_review": true,
+    "requires_this_contract_integration_and_legitimate_independent_review": true,
+    "requires_authenticated_kraken_data_and_boundary_semantics": true,
+    "requires_canonical_exact_and_semantic_rejected_memory_admission": true,
+    "retrospective_holdout_opened": false,
+    "genuine_forward_shadow_opened": false,
+    "broker_connected": false,
+    "trade_authority": false,
+    "promotion_authority": false,
+    "automatic_deep_validation_authority": false
+  },
+  "failure_learning": {
+    "pre_outcome_gap_classification": "PRE_OUTCOME_SURVIVOR_CONTROL_DEFINITION_GAP",
+    "negative_strategy_evidence_from_this_freeze": false,
+    "family_priority_change_from_this_freeze": false,
+    "rejected_memory_write_from_this_freeze": false,
+    "future_control_failure_routes_to_issue": 510,
+    "pool_or_data_inconclusive_must_not_be_recorded_as_economic_rejection": true
+  },
+  "artifact_sha256": "45b840de940eafb54d1f9bfd36552568220b54cbd28f024f69ea586023e1f63c"
+}
