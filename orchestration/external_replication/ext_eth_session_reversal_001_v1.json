@@ -39,29 +39,34 @@
     "falsifiable_claim": "Without tuning the 05:00 UTC cutoff or the Long/Reversal rule, the source-frozen ETH strategy has positive after-screening-cost expectancy in a strict post-source-sample 2026H1 replication, beats exposure-matched simple baselines, and is not explained by one validation subperiod or a single extreme day."
   },
   "data_contract": {
-    "source": "Kraken official downloadable historical OHLCVT archive",
+    "source": "Kraken official downloadable historical OHLCVT incremental archives",
     "instrument": "ETH/USD spot pair as named by the frozen Kraken archive manifest",
     "bar_interval": "60m",
     "timezone": "UTC",
     "archive_required_through": "2026-06-30T23:00:00Z",
-    "replication_start_utc": "2026-01-01T00:00:00Z",
-    "replication_end_utc": "2026-06-30T23:00:00Z",
-    "validation_half_1_start_utc": "2026-01-01T00:00:00Z",
-    "validation_half_1_end_utc": "2026-03-31T23:00:00Z",
-    "validation_half_2_start_utc": "2026-04-01T00:00:00Z",
-    "validation_half_2_end_utc": "2026-06-30T23:00:00Z",
     "protected_shadow_start_utc": "2026-07-01T00:00:00Z",
     "screen_may_read_protected_shadow": false,
     "point_in_time": true,
     "required_archive_receipts": [
-      "manifest bytes and sha256",
-      "archive part filenames/checksums used",
+      "2026Q1 and 2026Q2 archive bytes and sha256",
+      "MANIFEST.json bytes and sha256 from each archive",
       "resolved exact ETH/USD filename/pair identity",
       "extracted normalized-row sha256"
     ],
     "pair_resolution_rule": "Resolve the exact ETH/USD file from the Kraken archive manifest/preflight. Do not silently substitute ETH/USDT, futures, another exchange, or a guessed filename.",
     "missing_hour_policy": "Any trading date lacking one of the required hourly close observations for the previous/current day or night session is DATA/PIT_INCONCLUSIVE for that date; no interpolation or forward fill.",
-    "no_paid_data_required": true
+    "no_paid_data_required": true,
+    "required_incremental_archives": [
+      "https://assets.kraken.com/marketing/institutions/Kraken_OHLCVT_2026Q1.zip",
+      "https://assets.kraken.com/marketing/institutions/Kraken_OHLCVT_2026Q2.zip"
+    ],
+    "required_data_start_utc": "2026-01-01T05:00:00Z",
+    "required_data_end_utc": "2026-06-30T16:59:59Z",
+    "scored_trading_date_start": "2026-01-02",
+    "scored_trading_date_end": "2026-06-30",
+    "validation_half_1_trading_dates": "2026-01-02 through 2026-03-31 inclusive",
+    "validation_half_2_trading_dates": "2026-04-01 through 2026-06-30 inclusive",
+    "incremental_archive_reason": "Q1+Q2 2026 are sufficient: 2026-01-01 daytime is warmup only; the first scored trading date is 2026-01-02, and source trading-date semantics pair each date's 05:00-17:00 day with the prior 17:00-05:00 night."
   },
   "signal_rules": {
     "parameter_variants": 1,
@@ -72,7 +77,7 @@
     "night_position": 1,
     "day_position": "negative sign of the immediately previous completed 05:00-17:00 UTC daytime-session return",
     "exact_zero_previous_day_return": "day position = 0",
-    "first_replication_day_day_position": "requires the immediately previous completed daytime-session return from 2025-12-31 05:00-17:00 UTC as warmup only; that warmup return may set direction but is not scored",
+    "first_replication_day_day_position": "2026-01-01 05:00-17:00 UTC daytime-session return is warmup only; the first scored trading date is 2026-01-02, whose daytime position uses the sign of that completed 2026-01-01 daytime return",
     "future_return_access_during_schedule_formation": false,
     "post_outcome_cutoff_search_allowed": false,
     "post_outcome_rule_search_allowed": false
@@ -146,7 +151,7 @@
     "randomized_timing_and_volatility_match": "Required only for a legitimate Stage-1 survivor under #517; exact controls must be frozen and independently reviewed before those survivor outcomes are used for Stage 2."
   },
   "successive_halving": {
-    "stage_1": "one strict 2026H1 post-source-sample screen with the frozen 05:00 UTC Long/Reversal rule and screen-only 24/48/72 bps costs",
+    "stage_1": "one strict 2026-01-02 through 2026-06-30 post-source-sample screen with the frozen 05:00 UTC Long/Reversal rule and screen-only 24/48/72 bps costs",
     "stage_2": "only if Stage 1 survives: run already-frozen/simple baselines and then independently frozen #517 randomized-timing/volatility-matched controls plus authenticated execution-cost and short-implementability evidence",
     "stage_3": "at most one global Strategy Factory deep candidate may advance; no publication-derived promotion priority",
     "shadow_opened": false
@@ -177,6 +182,6 @@
     "implementation_cost": "LOW",
     "priority_reason": "A simple materially distinct mechanism with public code and an untouched 2026H1 post-source-sample window can cheaply settle whether the published ETH session effect survives our much harsher after-cost screen."
   },
-  "exact_next_action": "Complete #520 hypothesis-driven Kraken ETH/USD hourly archive preflight through 2026-06-30 without reading 2026-07-01 onward, bind the exact manifest/archive/normalized-row identities into a new execution contract, pass canonical semantic/exact rejected-memory admission, exact-head CI and independent review, then run this v1 exactly once. Do not tune from the result.",
-  "artifact_sha256": "b2e6cdaaafd1768a6e32e25fc6c3f65c9ecd5c76a159c4828871a8c03ba8e9b3"
+  "exact_next_action": "Complete #520 hypothesis-driven Kraken 2026Q1+Q2 ETH/USD hourly incremental-archive preflight without reading 2026-07-01 onward, bind exact archive/MANIFEST/normalized-row identities into a new execution contract, pass canonical semantic/exact rejected-memory admission, exact-head CI and independent review, then run this v1 exactly once. Do not tune from the result.",
+  "artifact_sha256": "6b8b71a5508fb61823f823e4596b644c29b6e4146175a2cd53cbd99f3976471a"
 }
