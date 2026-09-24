@@ -103,6 +103,7 @@ jobs:
               --object-path "$OBJECT_PATH" \
               --output-dir trusted-acquisition-output
           elif [[ "$SOURCE_KIND" == "KRAKEN_ETH_SESSION_2026Q1_ARCHIVE" || "$SOURCE_KIND" == "KRAKEN_ETH_SESSION_2026Q2_ARCHIVE" ]]; then
+            python3 kraken_eth_session_source_chronology_gate.py
             python3 kraken_eth_session_direct_acquisition.py \
               --source-kind "$SOURCE_KIND" \
               --output-dir trusted-acquisition-output
