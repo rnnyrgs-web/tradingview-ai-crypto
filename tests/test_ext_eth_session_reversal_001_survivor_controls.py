@@ -45,7 +45,7 @@ def test_survivor_control_contract_self_digest_and_parent_binding() -> None:
 
     assert control["artifact_sha256"] == _self_digest(control)
     assert control["artifact_sha256"] == (
-        "45b840de940eafb54d1f9bfd36552568220b54cbd28f024f69ea586023e1f63c"
+        "83ad1728763fb9a1d37f52d4084c7d7ebac931c873cd379a628b77c8ee47d1af"
     )
     parent_binding = control["parent_replication"]
     assert parent["replication_id"] == parent_binding["replication_id"]
@@ -127,6 +127,24 @@ def test_volatility_control_is_exact_cotemporal_not_posthoc_matching() -> None:
     assert "both frozen chronological halves" in vol["comparison_rule"]
 
 
+def test_market_beta_is_a_strict_incremental_stage2_gate() -> None:
+    control = _load(CONTROL_PATH)
+    beta = control["market_beta_control"]
+
+    assert beta["control_position_sequence"] == "LONG in both night and daytime sessions"
+    assert beta["same_asset"] == "Kraken ETH/USD spot"
+    assert beta["same_scored_dates"] is True
+    assert beta["same_day_night_boundaries"] is True
+    assert beta["candidate_max_gross_exposure"] == 1.0
+    assert beta["control_max_gross_exposure"] == 1.0
+    assert beta["cost_ladder_bps_per_unit_turnover"] == [24.0, 48.0, 72.0]
+    assert beta["post_outcome_respecification_allowed"] is False
+    assert "candidate cumulative arithmetic net PnL must exceed always-long" in beta[
+        "comparison_rule"
+    ]
+    assert "both frozen chronological halves" in beta["comparison_rule"]
+
+
 def test_full_517_baseline_gauntlet_is_classified_before_outcomes() -> None:
     control = _load(CONTROL_PATH)
     coverage = control["baseline_gauntlet_coverage"]
@@ -140,7 +158,10 @@ def test_full_517_baseline_gauntlet_is_classified_before_outcomes() -> None:
         "volatility_matched",
         "ablation",
     }
-    assert coverage["market_beta"]["status"] == "FROZEN_PARENT_CONTROL"
+    assert coverage["market_beta"]["status"] == (
+        "FROZEN_PARENT_CONTROL_AND_STRICT_INCREMENTAL_GATE"
+    )
+    assert coverage["market_beta"]["strict_incremental_gate"] is True
     assert coverage["simple_trend"]["strict_incremental_gate"] is True
     assert coverage["randomized_timing"]["status"] == "FROZEN_BY_THIS_CONTRACT"
     assert coverage["one_period_delay"]["status"] == "FROZEN_PARENT_CONTROL"
