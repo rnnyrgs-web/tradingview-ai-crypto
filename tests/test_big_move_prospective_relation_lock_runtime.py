@@ -39,6 +39,7 @@ def _exact_lock_helper_sql() -> str:
 def _reset_fixture() -> None:
     assert DSN is not None
     with psycopg.connect(DSN, autocommit=True) as conn:
+        conn.execute("drop function if exists public.toctou_function_probe()")
         conn.execute(
             "drop function if exists public.acquire_big_move_prospective_relation_locks_v1()"
         )
@@ -122,3 +123,85 @@ def test_relation_lock_barrier_blocks_concurrent_required_relation_ddl_until_tx_
             """
         ).fetchone()[0]
     assert drift_after_commit == 1
+
+
+def test_residual_function_definition_race_is_reproduced_and_remains_blocking():
+    """Prove the separately documented pg_proc race is real, not hypothetical.
+
+    #785's relation locks protect the truth tables, but they do not lock pg_proc.
+    The current function-boundary guard validates owner, SECURITY DEFINER and an
+    exact local search_path setting; it does not bind the function body. This
+    falsifier shows a same-owner/same-security/same-search_path CREATE OR REPLACE
+    can commit while the relation locks are held, after which the first session
+    executes the replacement body. Until a separately reviewed mechanism closes
+    this class, PROSPECTIVE_SCHEMA_FUNCTION_DEFINITION_TOCTOU_NOT_YET_PROVEN must
+    remain a blocking state.
+    """
+    assert DSN is not None
+    _reset_fixture()
+
+    original_sql = """
+        create or replace function public.toctou_function_probe()
+        returns text
+        language sql
+        security definer
+        set search_path = ''
+        as $$ select 'ORIGINAL'::text $$
+    """
+    replacement_sql = """
+        create or replace function public.toctou_function_probe()
+        returns text
+        language sql
+        security definer
+        set search_path = ''
+        as $$ select 'REPLACED'::text $$
+    """
+
+    with psycopg.connect(DSN, autocommit=True) as setup:
+        setup.execute(original_sql)
+
+    with psycopg.connect(DSN) as session_a, psycopg.connect(DSN) as session_b:
+        session_a.execute("select public.acquire_big_move_prospective_relation_locks_v1()")
+
+        metadata_before = session_a.execute(
+            """
+            select p.proowner, p.prosecdef, p.proconfig
+              from pg_catalog.pg_proc p
+             where p.oid = to_regprocedure('public.toctou_function_probe()')
+            """
+        ).fetchone()
+        source_before = session_a.execute(
+            """
+            select p.prosrc
+              from pg_catalog.pg_proc p
+             where p.oid = to_regprocedure('public.toctou_function_probe()')
+            """
+        ).fetchone()[0]
+        assert session_a.execute("select public.toctou_function_probe()").fetchone()[0] == "ORIGINAL"
+
+        # Relation locks must not be misrepresented as pg_proc serialization.
+        session_b.execute("set local lock_timeout = '1s'")
+        session_b.execute(replacement_sql)
+        session_b.commit()
+
+        metadata_after = session_a.execute(
+            """
+            select p.proowner, p.prosecdef, p.proconfig
+              from pg_catalog.pg_proc p
+             where p.oid = to_regprocedure('public.toctou_function_probe()')
+            """
+        ).fetchone()
+        source_after = session_a.execute(
+            """
+            select p.prosrc
+              from pg_catalog.pg_proc p
+             where p.oid = to_regprocedure('public.toctou_function_probe()')
+            """
+        ).fetchone()[0]
+
+        # These are the same metadata dimensions frozen by the current #785
+        # function-boundary guard, so a body-only replacement is invisible to it.
+        assert metadata_after == metadata_before
+        assert source_after != source_before
+        assert session_a.execute("select public.toctou_function_probe()").fetchone()[0] == "REPLACED"
+        session_a.rollback()
