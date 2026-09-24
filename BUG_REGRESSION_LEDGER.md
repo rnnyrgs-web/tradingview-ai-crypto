@@ -188,3 +188,57 @@ Replaced the best-effort local-snapshot check with `reserve_fleet_budget()`, whi
 
 ### Safety invariants
 No change to `pacing_snapshot()`/`fleet_budget_gate()`'s pacing math (paced $30/month budget, $2-3 burst days) -- this fix is additive (an optional `pending_reservations_usd` parameter, defaulting to 0.0) and does not alter their existing, separately-tested behavior. No strategy logic, evidence threshold, OOS/forward-proof rule, paper ledger, broker connectivity, promotion authority, or live-trade authority is affected. No engine gained merge, push-to-main, or credential-exposure capability.
+
+## REVIEW-TRUST-001 — Reviewer receipts trusted self-consistent workflow context without an explicit machine trust root
+
+Status: FIXED IN PR #579 (pending exact-head CI and independent review at time of entry)
+Component: `orchestration/exact_head_review.py` / `orchestration/review_scope_policy.py` / `orchestration/reviewer_trust_root.py` / `.github/workflows/exact_head_independent_review.yml`
+Detected: 2026-09-23
+Severity: scientific/operational integrity (review-approval provenance)
+
+### Symptom
+The rejected #579 head bound receipts to PR/head/diff, protected-registry identity, workflow repository/run/ref, reviewer-runtime SHA and a context digest, but the production verifier still treated self-consistent GitHub workflow environment values plus the local checkout as its provenance root. The exact trust boundary was prose rather than a machine-readable object. The queue also consumed final approvals with direct JSON boolean checks, so generic receipt integrity and approval consumption were not represented as separate executable semantics. Historical receipt schemas were rejected by the current verifier, but there was no explicit historical-only lineage classification for downstream consumers.
+
+### Threat model / trust boundary
+The repair trusts GitHub-hosted Actions run identity, the read-only canonical-main checkout, GitHub Actions REST run metadata, the Git refs REST identity of canonical `main`, and independently resolved exact PR/head/diff context. It explicitly does **not** claim to solve GitHub.com control-plane compromise, GitHub-hosted runner/Actions-service compromise, intentional repository-owner/admin rewriting of trusted repository state, or compromise of the GitHub-issued workflow token outside this workflow. Those are platform/root-admin compromise cases, not properties a repository-local hash can honestly eliminate.
+
+### Reproducer
+- Replay a syntactically valid receipt under a different workflow run attempt, event, workflow SHA, runtime SHA, or canonical-main SHA.
+- Tamper a current receipt's trust context while retaining the old PR/head/diff fields.
+- Feed an integrity-valid `approve:false` receipt to the approval consumer.
+- Present an older receipt schema as though it were a current approval.
+- Drift the active protected-path registry and attempt to enter reviewer-provider execution.
+
+Before this fix there was no one executable trust-root layer that rejected all of these cases before approval consumption/provider execution.
+
+### Fix
+- `orchestration/reviewer_trust_root.json` freezes the machine-readable reviewer trust boundary, required server observations, explicit out-of-scope platform compromise and zero integration/trading authority.
+- `collect_trusted_workflow_context()` reconciles GitHub Actions environment identity with independently fetched server run metadata and the server-observed canonical-main ref, binding run id+attempt+event, workflow ref/SHA, runtime SHA and current-main SHA before any reviewer provider is invoked.
+- review policy advances to v7 / receipt schema v6 with append-only v5 -> v6 -> v7 policy lineage, a policy-bound trust-root digest and an unchanged protected-registry identity gate.
+- receipts carry a second trust-binding digest over review context, trust-root identity, server-observed workflow context and the reviewer verdict.
+- `verify-current-receipt` is integrity-only; `verify-current-approval` additionally requires `approve:true`. An integrity-valid rejection can therefore never be consumed as approval, and neither verifier grants integration authority.
+- the canonical review workflow consumes both rejection and approval receipts through those trust-bound verifiers instead of bare approval booleans.
+- old schema/policy receipts are explicitly `HISTORICAL_ONLY_NOT_APPROVAL` rather than silently reinterpreted.
+- active protected-registry drift is regression-tested to fail before any reviewer model/provider call.
+
+### Permanent regression coverage
+`tests/test_reviewer_trust_root.py`
+- verifies the frozen trust-root identity and explicit authority boundary;
+- reconciles trusted environment values with server run/current-main observations;
+- rejects replay across runner class, run attempt, event, workflow SHA, GitHub SHA and current-main identity;
+- proves `approve:false` may be integrity-valid but cannot pass approval consumption;
+- proves old receipt schemas remain historical-only;
+- verifies the workflow uses trust-bound receipt/approval verification instead of bare JSON booleans.
+
+`tests/test_exact_head_review.py`
+- verifies trust-bound receipts are produced for both OpenAI and Claude reviewer paths;
+- verifies the extended externally observable workflow context reaches the reviewer prompt;
+- proves active protected-registry drift fails before any reviewer provider invocation.
+
+`tests/test_review_scope_policy.py`
+- freezes append-only v5/v6/v7 policy lineage, current protected-registry identity and reviewer trust-root identity;
+- rejects registry/trust-root/context tampering and old receipt schemas;
+- keeps ancillary ledger-only edits outside the special REVIEW_INFRASTRUCTURE scope.
+
+### Safety invariants
+This is review/integrity control only. It opens no strategy P&L, protected OOS/forward sample, promotion, broker connection, deployment or live-trade authority. Every review receipt and approval record still carries `integration_authority: NONE`; Lead integration remains a separate gate.
