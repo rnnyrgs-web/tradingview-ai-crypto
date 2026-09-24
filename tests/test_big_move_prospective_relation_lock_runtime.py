@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import threading
 from pathlib import Path
 
 import pytest
@@ -208,6 +209,84 @@ def test_authorized_function_ddl_and_authority_calls_serialize_both_directions()
         authority_c.execute("select public.acquire_big_move_prospective_ddl_read_lock_v1()")
         assert authority_c.execute("select public.toctou_function_probe()").fetchone()[0] == "REPLACED"
         authority_c.rollback()
+
+
+def test_bootstrap_exclusive_first_drains_old_writer_without_deadlock():
+    """Three-session falsifier for the protocol-transition bootstrap ordering.
+
+    A pre-protocol writer may already hold the relation locks. Bootstrap must still
+    take exclusive advisory first, then wait for those relation locks. A new-protocol
+    writer must wait on the shared advisory lock behind bootstrap, so no inverse
+    advisory/relation cycle exists and PostgreSQL need not abort a deadlock victim.
+    """
+    assert DSN is not None
+    _reset_fixture()
+
+    bootstrap_has_exclusive = threading.Event()
+    bootstrap_has_relations = threading.Event()
+    allow_bootstrap_commit = threading.Event()
+    new_writer_has_shared = threading.Event()
+    new_writer_done = threading.Event()
+    errors: list[BaseException] = []
+
+    def bootstrap_migration() -> None:
+        try:
+            with psycopg.connect(DSN) as conn:
+                conn.execute("select public.acquire_big_move_prospective_ddl_write_lock_v1()")
+                bootstrap_has_exclusive.set()
+                conn.execute("select public.acquire_big_move_prospective_relation_locks_v1()")
+                bootstrap_has_relations.set()
+                if not allow_bootstrap_commit.wait(5):
+                    raise AssertionError("bootstrap commit release was not signalled")
+                conn.commit()
+        except BaseException as exc:  # pragma: no cover - surfaced by main-thread assertion
+            errors.append(exc)
+
+    def new_protocol_writer() -> None:
+        try:
+            with psycopg.connect(DSN) as conn:
+                conn.execute("select public.acquire_big_move_prospective_ddl_read_lock_v1()")
+                new_writer_has_shared.set()
+                conn.execute("select public.acquire_big_move_prospective_relation_locks_v1()")
+                conn.commit()
+                new_writer_done.set()
+        except BaseException as exc:  # pragma: no cover - surfaced by main-thread assertion
+            errors.append(exc)
+
+    with psycopg.connect(DSN) as old_writer:
+        # Pre-protocol writer: relation lock only, no advisory participation.
+        old_writer.execute("select public.acquire_big_move_prospective_relation_locks_v1()")
+
+        bootstrap = threading.Thread(target=bootstrap_migration, daemon=True)
+        bootstrap.start()
+        assert bootstrap_has_exclusive.wait(2), "bootstrap did not acquire exclusive advisory"
+        assert not bootstrap_has_relations.wait(0.3), (
+            "bootstrap relation drain should wait for the pre-protocol writer"
+        )
+
+        new_writer = threading.Thread(target=new_protocol_writer, daemon=True)
+        new_writer.start()
+        assert not new_writer_has_shared.wait(0.3), (
+            "new writer acquired shared advisory while bootstrap held exclusive"
+        )
+
+        # Once the old writer leaves, bootstrap must win the relation drain while the
+        # new writer is still stopped at the first (shared-advisory) boundary.
+        old_writer.commit()
+        assert bootstrap_has_relations.wait(2), "bootstrap never drained old relation lock"
+        assert not new_writer_has_shared.wait(0.3), (
+            "new writer bypassed bootstrap before migration commit"
+        )
+
+        allow_bootstrap_commit.set()
+        bootstrap.join(timeout=3)
+        new_writer.join(timeout=3)
+
+        assert not bootstrap.is_alive(), "bootstrap remained blocked after old writer released"
+        assert not new_writer.is_alive(), "new writer remained blocked after bootstrap committed"
+        assert errors == []
+        assert new_writer_has_shared.is_set()
+        assert new_writer_done.is_set()
 
 
 def test_noncooperative_owner_ddl_is_explicit_trusted_root_not_self_defendable():
