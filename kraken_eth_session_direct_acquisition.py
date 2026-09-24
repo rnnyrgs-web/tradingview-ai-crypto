@@ -1,13 +1,13 @@
 """Trusted direct Kraken OHLCVT acquisition for EXT-ETH-SESSION-REVERSAL-001-v1.
 
 This helper authorizes only the two official Kraken incremental OHLCVT archives frozen
-by the external-replication predeclaration.  It deliberately does *not* interpret
+by the external-replication predeclaration. It deliberately does *not* interpret
 strategy outcomes, resolve the ETH/USD member, normalize rows, or grant any screening,
 promotion, broker, or trading authority.
 
 Provider bytes become scientific provenance only after the emitted bundle has a valid
 GitHub artifact attestation for this repository and downstream deterministic preflight
-verifies the archive/MANIFEST/pair/timestamp contract.  The helper streams large ZIPs
+verifies the archive/MANIFEST/pair/timestamp contract. The helper streams large ZIPs
 to disk instead of loading them into memory.
 """
 
@@ -30,7 +30,7 @@ from trusted_remote_acquisition import trusted_github_context
 
 CONTRACT_PATH = "orchestration/external_replication/ext_eth_session_reversal_001_v1.json"
 CONTRACT_ID = "EXT-ETH-SESSION-REVERSAL-001-v1"
-CONTRACT_ARTIFACT_SHA256 = "6b8b71a5508fb61823f823e4596b644c29b6e4146175a2cd53cbd99f3976471a"
+CONTRACT_ARTIFACT_SHA256 = "fee604ea0e2f993cd109cadcc6717deedbb7bd02e044cf380de2ef80e91afcc3"
 HOST = "assets.kraken.com"
 SOURCE_URLS = {
     "KRAKEN_ETH_SESSION_2026Q1_ARCHIVE": (
@@ -122,7 +122,7 @@ def _contract_bytes(repo_root: str | Path | None = None) -> bytes:
 
 
 def load_contract(repo_root: str | Path | None = None) -> dict[str, Any]:
-    """Load exactly the frozen #779 scientific contract and fail closed on drift."""
+    """Load exactly the corrected frozen #779 contract and fail closed on drift."""
     raw = _contract_bytes(repo_root)
     payload = _strict_json(raw, label="ETH session replication contract")
     if not isinstance(payload, dict):
@@ -143,10 +143,22 @@ def load_contract(repo_root: str | Path | None = None) -> dict[str, Any]:
         raise ValueError("frozen Kraken instrument contract changed")
     if data.get("bar_interval") != "60m" or data.get("timezone") != "UTC":
         raise ValueError("frozen Kraken cadence/timezone contract changed")
-    if data.get("protected_shadow_start_utc") != "2026-07-01T00:00:00Z":
-        raise ValueError("protected shadow boundary changed")
-    if data.get("screen_may_read_protected_shadow") is not False:
-        raise ValueError("protected shadow must remain sealed")
+    if data.get("required_data_start_utc") != "2026-01-01T04:00:00Z":
+        raise ValueError("source-consistent Kraken warmup context changed")
+    if data.get("retrospective_holdout_start_utc") != "2026-07-01T00:00:00Z":
+        raise ValueError("retrospective historical-tail boundary changed")
+    if data.get("retrospective_holdout_classification") != (
+        "SEALED_HISTORICAL_TAIL_NOT_GENUINE_FORWARD"
+    ):
+        raise ValueError("retrospective historical-tail classification changed")
+    if data.get("screen_may_read_retrospective_holdout") is not False:
+        raise ValueError("retrospective historical tail must remain sealed")
+    if data.get("genuine_forward_shadow_start_utc") != "2026-09-24T17:00:00Z":
+        raise ValueError("genuine-forward boundary changed")
+    if data.get("genuine_forward_first_complete_trading_date") != "2026-09-25":
+        raise ValueError("genuine-forward first complete trading date changed")
+    if data.get("screen_may_read_genuine_forward_shadow") is not False:
+        raise ValueError("genuine-forward shadow must remain sealed")
     if data.get("no_paid_data_required") is not True:
         raise ValueError("Kraken archive path must remain zero-new-cost")
 
@@ -156,8 +168,12 @@ def load_contract(repo_root: str | Path | None = None) -> dict[str, Any]:
         raise ValueError("screening/execution authority blocks missing")
     if authority.get("screen_started") is not False:
         raise ValueError("trusted acquisition cannot consume an already-started screen")
-    if authority.get("protected_shadow_opened") is not False:
-        raise ValueError("protected shadow must remain unopened")
+    if authority.get("retrospective_holdout_opened") is not False:
+        raise ValueError("retrospective historical tail must remain unopened")
+    if authority.get("genuine_forward_shadow_opened") is not False:
+        raise ValueError("genuine-forward shadow must remain unopened")
+    if authority.get("retrospective_h1_may_claim_genuine_forward") is not False:
+        raise ValueError("retrospective H1 cannot carry genuine-forward authority")
     if authority.get("trade_authority") is not False or authority.get("promotion_authority") is not False:
         raise ValueError("trusted acquisition cannot carry trade/promotion authority")
     if execution.get("broker_connected") is not False or execution.get("live_trading") is not False:
@@ -354,7 +370,8 @@ def canonical_receipt(
             "timestamp_semantics_authority": False,
             "normalized_rows_authority": False,
             "strategy_screen_authority": False,
-            "protected_shadow_authority": False,
+            "retrospective_holdout_authority": False,
+            "genuine_forward_shadow_authority": False,
             "profitability_claim_authority": False,
             "promotion_authority": False,
             "broker_connected": False,
