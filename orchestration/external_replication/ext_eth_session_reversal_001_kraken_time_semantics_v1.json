@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "artifact_type": "kraken_eth_session_timestamp_semantics_preflight_contract",
+  "preflight_id": "EXT-ETH-SESSION-REVERSAL-001-v1-KRAKEN-TIME-SEMANTICS-v1",
+  "status": "PREDECLARED_STACKED_WAIT_AUTHENTICATED_ARCHIVE_PAIR_RESOLUTION",
+  "formed_at": "2026-09-24T04:00:00Z",
+  "purpose": "Freeze the point-in-time interpretation of Kraken 60-minute OHLCVT timestamps and the source-replication boundary mapping before any 2026H1 strategy return is opened.",
+  "parent_replication": {
+    "replication_id": "EXT-ETH-SESSION-REVERSAL-001-v1",
+    "pr": 779,
+    "exact_head_sha": "f3ae2ee6fd9ff648632ec3a557608af100902b08",
+    "contract_path": "orchestration/external_replication/ext_eth_session_reversal_001_v1.json",
+    "contract_git_blob_sha": "e27a19904130ceb0dcaff670b0eecb93b550103e",
+    "contract_artifact_sha256": "fee604ea0e2f993cd109cadcc6717deedbb7bd02e044cf380de2ef80e91afcc3"
+  },
+  "acquisition_parent": {
+    "pr": 781,
+    "exact_head_sha": "6018652b2020db82ec3ede4ba51a4c3d22d853bd",
+    "helper_path": "kraken_eth_session_direct_acquisition.py",
+    "helper_git_blob_sha": "ea128e75bcc97ded30a600add865de7aff75dbbe",
+    "workflow_path": ".github/workflows/pit-trusted-remote-acquisition.yml",
+    "workflow_git_blob_sha": "927f84720547c0c8a11b02807772313823e852d5"
+  },
+  "official_semantic_basis": {
+    "downloadable_ohlcvt_doc": "https://support.kraken.com/articles/360047124832-downloadable-historical-ohlcvt-open-high-low-close-volume-trades-data",
+    "downloadable_doc_observation": "Kraken describes downloadable OHLCVT as API-equivalent candlestick data, defines Close as the final traded price within the timeframe, offers 60-minute intervals, and states missing candles mean no trades occurred.",
+    "websocket_v2_ohlc_doc": "https://docs.kraken.com/exchange/api-reference/spot-websocket-v2/ohlc",
+    "websocket_doc_observation": "Kraken defines interval_begin (and deprecated timestamp) as the timestamp of the start of the interval and Close as the last trade price within the interval.",
+    "external_source_repository": "wzf01195010-png/Crypto-day-night-effects",
+    "external_source_commit": "5693993e108f2b3668bd21b1dd36ae31f79d8fcd",
+    "external_source_path": "btc_eth_backtest.py",
+    "external_source_git_blob_sha": "82b79f2be4332858de55de46341bd3fc81fa0c38",
+    "external_source_observation": "The pinned replication code treats its hourly timestamp/open_time as UTC interval labels, computes close.pct_change() before grouping, and groups cutoff-5 day labels 05:00..16:00 and night labels 17:00..04:00 into 12-bar sessions.",
+    "published_results_are_evidence": false,
+    "mutable_web_docs_are_runtime_data_authority": false
+  },
+  "frozen_time_semantics": {
+    "timezone": "UTC",
+    "interval_minutes": 60,
+    "archive_timestamp_interpretation": "INTERVAL_BEGIN",
+    "row_close_meaning": "LAST_TRADE_PRICE_WITHIN_INTERVAL",
+    "row_close_available_at_rule": "interval_begin + 60 minutes; never at interval_begin",
+    "source_bar_return_label_rule": "For an hourly row labelled t, source-style close.pct_change() represents close_available_at(t+60m) / close_available_at(t) - 1, so the return labelled t economically spans boundary t to boundary t+60m.",
+    "day_session_interval_begin_labels": "05:00 through 16:00 UTC inclusive on trading date D",
+    "day_session_economic_boundaries": "05:00 through 17:00 UTC on trading date D",
+    "night_session_interval_begin_labels": "17:00 through 23:00 UTC on D-1 plus 00:00 through 04:00 UTC on D",
+    "night_session_economic_boundaries": "17:00 UTC on D-1 through 05:00 UTC on D",
+    "day_decision_0500_executable_boundary_price": "close of the interval beginning 04:00 UTC and ending 05:00 UTC",
+    "day_exit_night_entry_1700_executable_boundary_price": "close of the interval beginning 16:00 UTC and ending 17:00 UTC",
+    "night_exit_0500_executable_boundary_price": "close of the interval beginning 04:00 UTC and ending 05:00 UTC",
+    "previous_day_signal_availability": "The prior trading date daytime return's final contributing interval begins 16:00 and its close is available at 17:00 on that prior date, strictly before the next trading date 05:00 day decision.",
+    "forbidden_lookahead": [
+      "using the close of a 05:00-labelled 60m candle as if it were known at 05:00",
+      "using the close of a 17:00-labelled 60m candle as if it were known at 17:00",
+      "moving session labels to rescue missing rows",
+      "interpolating or forward-filling missing Kraken candles"
+    ]
+  },
+  "frozen_window": {
+    "required_interval_begin_start_utc": "2026-01-01T04:00:00Z",
+    "required_interval_begin_end_utc": "2026-06-30T16:00:00Z",
+    "context_only_interval_begin": "2026-01-01T04:00:00Z",
+    "warmup_day": "2026-01-01",
+    "scored_trading_date_start": "2026-01-02",
+    "scored_trading_date_end": "2026-06-30",
+    "sealed_historical_tail_start_utc": "2026-07-01T00:00:00Z",
+    "genuine_forward_shadow_start_utc": "2026-09-24T17:00:00Z",
+    "screen_may_read_sealed_historical_tail": false,
+    "screen_may_read_genuine_forward_shadow": false
+  },
+  "preflight_rules": {
+    "timestamp_must_be_utc": true,
+    "timestamp_must_align_to_whole_hour": true,
+    "duplicate_interval_begin_allowed": false,
+    "missing_interval_policy": "Record exact missing interval_begin values and route dependent trading dates to DATA/PIT_INCONCLUSIVE; never synthesize a candle.",
+    "pair_resolution": "Not granted here. A downstream deterministic preflight must resolve exactly one ETH/USD 60m member from independently attested Kraken archive/MANIFEST bytes. No guessed filename, alias substitution, ETH/USDT, futures, or other venue.",
+    "archive_attestation_required": true,
+    "pair_resolution_required_before_row_normalization": true,
+    "independent_review_required_before_semantics_authority": true
+  },
+  "authority": {
+    "provider_bytes_authenticated": false,
+    "pair_resolution_authority": false,
+    "timestamp_semantics_frozen_for_review": true,
+    "timestamp_semantics_runtime_authority": false,
+    "normalized_rows_authority": false,
+    "stage_1_screen_authority": false,
+    "baseline_or_control_pnl_authority": false,
+    "retrospective_holdout_authority": false,
+    "genuine_forward_shadow_authority": false,
+    "profitability_claim_authority": false,
+    "promotion_authority": false,
+    "broker_connected": false,
+    "live_trading": false,
+    "trade_authority": false
+  },
+  "failure_learning": {
+    "issue": 510,
+    "classification_if_semantics_cannot_be_authenticated": "DATA/PIT_INCONCLUSIVE",
+    "economic_negative_evidence": false,
+    "family_priority_reduction": false,
+    "rejected_memory_write": false
+  },
+  "exact_next_action": "After #779 and #781 are legitimately integrated and the two Kraken archive bundles are independently attested, resolve exactly one ETH/USD 60m member from authenticated MANIFEST/archive bytes and apply this frozen time mapping. If exact archive schema or timestamps conflict with INTERVAL_BEGIN semantics, stop as DATA/PIT_INCONCLUSIVE before any strategy return is computed.",
+  "artifact_sha256": "3a60bc76d98b47e4c381f11a95c8dfea7b1252569197b22b38df340a35bdc91b"
+}
