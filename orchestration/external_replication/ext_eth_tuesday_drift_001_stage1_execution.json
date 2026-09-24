@@ -10,7 +10,7 @@
   "dataset_path": "orchestration/evidence/liquidity_meanrev_001_cache/dataset.json.gz",
   "instrument": "ETH-USDT-SWAP",
   "runner_path": "orchestration/external_replication/eth_tuesday_drift_runner.py",
-  "runner_git_blob_sha1": "2194c5d3d3ccec1ae80dfc1f9d05675e49267ac8",
+  "runner_git_blob_sha1": "c344c8eedbd6c96aeaec8b78d4870fef0cda1487",
   "schedule": {
     "week_start_utc": "MONDAY_00:00",
     "entry": "TUESDAY_00:00_UTC_OPEN",
@@ -21,7 +21,9 @@
     "half_2_start_utc": "2026-01-05T00:00:00Z",
     "last_week_start_utc": "2026-08-24T00:00:00Z",
     "protected_oos_start_utc": "2026-09-01T00:00:00Z",
-    "missing_required_boundary_policy": "DATA/PIT_INCONCLUSIVE_SESSION_NO_FILL_NO_SUBSTITUTION"
+    "missing_required_boundary_policy": "DATA/PIT_INCONCLUSIVE_SESSION_NO_FILL_NO_SUBSTITUTION",
+    "missing_required_boundary_status": "DATA/PIT_INCONCLUSIVE",
+    "missing_required_boundary_failure_classification": "DATA/PIT_INCONCLUSIVE_SESSION"
   },
   "economics": {
     "gross_return": "(wednesday_00_open / tuesday_00_open - 1) * 10000_bps",
@@ -41,6 +43,7 @@
     "data_pit_contract_valid": true
   },
   "failure_classification_order": [
+    "DATA/PIT_INCONCLUSIVE_SESSION",
     "INCONCLUSIVE_POWER",
     "NO_GROSS_EDGE",
     "COST_ERASED_EDGE",
@@ -66,5 +69,5 @@
     "runner_result_can_mint_stage2_authority": false,
     "runner_result_can_mint_profitability_or_promotion": false
   },
-  "artifact_sha256": "489159b0d5a81bc85b02dc3f500f4176bdca61cea115f0de8588b70266966086"
+  "artifact_sha256": "430435980349efe950d9ebe6a2ddbde02401306621b6426d67b49e28c748382c"
 }

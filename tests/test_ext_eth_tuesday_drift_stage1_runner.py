@@ -10,7 +10,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 RUNNER_PATH = ROOT / "orchestration" / "external_replication" / "eth_tuesday_drift_runner.py"
 CONTRACT_PATH = ROOT / "orchestration" / "external_replication" / "ext_eth_tuesday_drift_001_stage1_execution.json"
-EXPECTED_CONTRACT_SHA256 = "489159b0d5a81bc85b02dc3f500f4176bdca61cea115f0de8588b70266966086"
+EXPECTED_CONTRACT_SHA256 = "430435980349efe950d9ebe6a2ddbde02401306621b6426d67b49e28c748382c"
 
 
 def _load_runner():
@@ -58,6 +58,8 @@ def test_execution_contract_is_self_bound_and_binds_runner_bytes():
     assert contract["dataset_sha256"] == "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f"
     assert contract["dataset_git_blob_sha1"] == "3a93beb4b1b4ef7f5d32b2936bf3119c692e7c15"
     assert contract["runner_git_blob_sha1"] == _git_blob_sha1(RUNNER_PATH.read_bytes())
+    assert contract["schedule"]["missing_required_boundary_status"] == "DATA/PIT_INCONCLUSIVE"
+    assert contract["schedule"]["missing_required_boundary_failure_classification"] == "DATA/PIT_INCONCLUSIVE_SESSION"
     assert contract["result_authority"]["runner_result_can_mint_stage2_authority"] is False
 
 
@@ -107,14 +109,27 @@ def test_chronological_half_instability_is_rejected():
     assert result["metrics"]["half_2_48bps"]["mean_net_bps"] < 0
 
 
-def test_underpowered_half_is_inconclusive_not_rejected():
+def test_missing_sessions_are_data_inconclusive_not_power_evidence():
     r = _load_runner()
     result = r.evaluate_stage1(_rows([100.0] * 68, omit_weeks=range(10)))
-    assert result["status"] == "INCONCLUSIVE_POWER"
-    assert result["failure_classification"] == "INCONCLUSIVE_POWER"
+    assert result["status"] == "DATA/PIT_INCONCLUSIVE"
+    assert result["failure_classification"] == "DATA/PIT_INCONCLUSIVE_SESSION"
     assert len(result["missing_sessions"]) == 10
     assert result["metrics"]["half_1_48bps"]["sessions"] == 24
+    assert result["gates"]["data_pit_contract_valid"] is False
+    assert result["survived_stage1_economic_gates"] is False
     assert result["authority"]["stage2_baseline_execution_allowed"] is False
+
+
+def test_single_missing_week_cannot_survive_even_when_power_floor_still_passes():
+    r = _load_runner()
+    result = r.evaluate_stage1(_rows([100.0] * 68, omit_weeks=(0,)))
+    assert result["metrics"]["half_1_48bps"]["sessions"] == 33
+    assert result["gates"]["minimum_sessions_per_half"] is True
+    assert result["gates"]["data_pit_contract_valid"] is False
+    assert result["status"] == "DATA/PIT_INCONCLUSIVE"
+    assert result["failure_classification"] == "DATA/PIT_INCONCLUSIVE_SESSION"
+    assert result["survived_stage1_economic_gates"] is False
 
 
 def test_single_winner_concentration_blocks_survival():

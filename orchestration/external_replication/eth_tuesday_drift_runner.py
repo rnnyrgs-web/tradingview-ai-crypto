@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gzip
 import hashlib
 import json
 from dataclasses import dataclass
@@ -278,6 +279,7 @@ def evaluate_stage1(rows: Iterable[Mapping[str, object]]) -> dict:
         len(half_1_sessions) >= MIN_SESSIONS_PER_HALF
         and len(half_2_sessions) >= MIN_SESSIONS_PER_HALF
     )
+    data_pit_ok = not missing and len(sessions) == 68
     concentration = primary["max_positive_pnl_share"]
     concentration_ok = concentration is not None and float(concentration) <= 0.5
     gates = {
@@ -288,10 +290,13 @@ def evaluate_stage1(rows: Iterable[Mapping[str, object]]) -> dict:
         "full_profit_factor_above_1_48bps": _pf_above_one(primary),
         "full_mean_net_positive_72bps": stress["mean_net_bps"] is not None and float(stress["mean_net_bps"]) > 0,
         "max_positive_pnl_share_le_50pct_48bps": concentration_ok,
-        "data_pit_contract_valid": True,
+        "data_pit_contract_valid": data_pit_ok,
     }
     survived = all(gates.values())
-    if survived:
+    if not data_pit_ok:
+        status = "DATA/PIT_INCONCLUSIVE"
+        failure_classification = "DATA/PIT_INCONCLUSIVE_SESSION"
+    elif survived:
         status = "STAGE1_SURVIVOR_ONLY"
         failure_classification = None
     elif not power_ok:
@@ -335,13 +340,31 @@ def evaluate_stage1(rows: Iterable[Mapping[str, object]]) -> dict:
 
 
 def load_frozen_eth_rows(dataset_path: Path = DATASET_PATH) -> tuple[dict, ...]:
-    # Identity checking the complete frozen object is a provenance operation only.
-    # Economics are computed solely after _extract_boundary_bars drops the protected tail
-    # without inspecting protected price fields.
-    from liquidity_mean_reversion_selection import _load_frozen_cache
+    """Load only authenticated development ETH rows; protected OHLCV stays opaque."""
+    from strategy_dataset_preflight import (
+        DEVELOPMENT_END_UTC,
+        PROTECTED_START_UTC,
+        _parse_development_view,
+        qualify_cohort001_dataset,
+    )
 
     if dataset_path.resolve() != DATASET_PATH.resolve():
         raise RuntimeError("fresh-history or alternate dataset substitution is forbidden")
+
+    # The canonical #528 preflight authenticates the exact compressed source and
+    # validates development OHLCV while decoding only timestamps in the protected tail.
+    receipt = qualify_cohort001_dataset(dataset_path)
+    if receipt.get("status") != "QUALIFIED_DEVELOPMENT_ONLY":
+        raise RuntimeError("canonical development-only dataset preflight did not qualify")
+    if receipt.get("source_git_blob_sha1") != DATASET_GIT_BLOB_SHA1:
+        raise RuntimeError("canonical preflight source blob identity mismatch")
+    if receipt.get("source_dataset_sha256") != DATASET_SHA256:
+        raise RuntimeError("canonical preflight normalized dataset identity mismatch")
+    if receipt.get("protected_start_utc") != PROTECTED_OOS_START.isoformat():
+        raise RuntimeError("canonical preflight protected boundary mismatch")
+    if receipt.get("checks", {}).get("protected_ohlcv_json_decoded") is not False:
+        raise RuntimeError("canonical preflight protected opacity guarantee missing")
+
     raw = dataset_path.read_bytes()
     raw_git_blob = hashlib.sha1(
         f"blob {len(raw)}\0".encode() + raw,
@@ -349,13 +372,30 @@ def load_frozen_eth_rows(dataset_path: Path = DATASET_PATH) -> tuple[dict, ...]:
     ).hexdigest()
     if raw_git_blob != DATASET_GIT_BLOB_SHA1:
         raise RuntimeError("frozen compressed dataset git-blob identity mismatch")
-    _, dataset = _load_frozen_cache(dataset_path.parent)
-    histories = dataset.get("histories")
-    if not isinstance(histories, Mapping):
-        raise RuntimeError("frozen dataset histories missing")
-    rows = histories.get(INSTRUMENT)
-    if not isinstance(rows, list):
-        raise RuntimeError("exact ETH-USDT-SWAP history missing")
+    try:
+        uncompressed = gzip.decompress(raw)
+    except OSError as exc:
+        raise RuntimeError("frozen compressed dataset gzip payload is invalid") from exc
+
+    development_end = datetime.fromisoformat(DEVELOPMENT_END_UTC).astimezone(UTC)
+    protected_start = datetime.fromisoformat(PROTECTED_START_UTC).astimezone(UTC)
+    if protected_start != PROTECTED_OOS_START:
+        raise RuntimeError("protected chronology drift")
+    metadata, development_histories, _ = _parse_development_view(
+        uncompressed,
+        cutoff_ms=int(development_end.timestamp() * 1000),
+        protected_ms=int(protected_start.timestamp() * 1000),
+    )
+    if metadata.get("source") != "OKX /api/v5/market/history-candles":
+        raise RuntimeError("unexpected dataset source")
+    if metadata.get("bar") != "1H":
+        raise RuntimeError("unexpected dataset bar interval")
+    rows = development_histories.get(INSTRUMENT)
+    if not isinstance(rows, list) or not rows:
+        raise RuntimeError("exact ETH-USDT-SWAP development history missing")
+    protected_ms = int(PROTECTED_OOS_START.timestamp() * 1000)
+    if any(int(row["ts"]) >= protected_ms for row in rows):
+        raise RuntimeError("protected timestamp leaked into development rows")
     return tuple(rows)
 
 
