@@ -396,15 +396,4 @@ def load_frozen_eth_rows(dataset_path: Path = DATASET_PATH) -> tuple[dict, ...]:
 
 
 def run_canonical_stage1() -> dict:
-    """Score only the exact frozen dataset after static contracts are authenticated.
-
-    Legitimate scientific authority still depends on the external exact-head
-    CI/independent-review/integration gate. This function deliberately does not
-    mint Stage-2, profitability, promotion, broker or trading authority.
-    """
-    load_and_validate_contracts()
-    rows = load_frozen_eth_rows()
-    result = evaluate_stage1(rows)
-    result["evidence_authority"] = "FROZEN_DATASET_VERIFIED_REVIEW_AUTHORITY_EXTERNAL"
-    result["authority"]["stage2_baseline_execution_allowed"] = False
-    return result
+    """Reject direct base-runner execution before durable review admission.\n\n    ``evaluate_stage1`` remains a pure caller-row evaluator for deterministic\n    synthetic tests. The real frozen dataset may only be scored by the separate\n    admission-gated authority-bearing runner after an exact reviewed identity\n    is durably integrated.\n    """\n    raise RuntimeError("base Stage-1 runner direct execution is non-authoritative")\n
