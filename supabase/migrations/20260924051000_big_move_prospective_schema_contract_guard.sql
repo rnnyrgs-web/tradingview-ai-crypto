@@ -29,6 +29,9 @@ declare
   v_trigger_fn oid := to_regprocedure('public.reject_big_move_forward_outcome_observation_mutation_v1()');
   v_internal oid;
   v_service_role oid := to_regrole('service_role');
+  v_col record;
+  v_rel record;
+  v_rpc record;
 begin
   -- Required relations must be real tables/partitioned tables, not views or aliases.
   if v_ref is null or not exists (
@@ -47,110 +50,75 @@ begin
     raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: outcome table missing/incompatible';
   end if;
 
-  -- Freeze only the columns that carry #506 authority. Harmless additive columns do
-  -- not fail the guard, but every required type/nullability/identity property must
-  -- match exactly. sequence must remain GENERATED ALWAYS identity.
-  if exists (
-    select 1
-      from (values
-        ('sequence', 'bigint', true, 'a'),
-        ('asset_id', 'text', true, ''),
-        ('source_id', 'text', true, ''),
-        ('reference_price', 'numeric', true, ''),
-        ('observed_at', 'timestamp with time zone', true, ''),
-        ('captured_at', 'timestamp with time zone', true, ''),
-        ('evidence_sha256', 'text', true, ''),
-        ('evidence', 'jsonb', true, ''),
-        ('created_at', 'timestamp with time zone', true, '')
-      ) e(attname, typ, notnull, identity_kind)
-      left join pg_catalog.pg_attribute a
-        on a.attrelid = v_ref and a.attnum > 0 and not a.attisdropped
-       and a.attname = e.attname
-     where a.attnum is null
-        or pg_catalog.format_type(a.atttypid, a.atttypmod) is distinct from e.typ
-        or a.attnotnull is distinct from e.notnull
-        or a.attidentity::text is distinct from e.identity_kind
-  ) then
-    raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: reference column contract drift';
-  end if;
-
-  if exists (
-    select 1
-      from (values
-        ('sequence', 'bigint', true, 'a'),
-        ('forecast_fingerprint', 'text', true, ''),
-        ('reference_observation_sequence', 'bigint', true, ''),
-        ('formation_payload', 'jsonb', true, ''),
-        ('created_at', 'timestamp with time zone', true, '')
-      ) e(attname, typ, notnull, identity_kind)
-      left join pg_catalog.pg_attribute a
-        on a.attrelid = v_form and a.attnum > 0 and not a.attisdropped
-       and a.attname = e.attname
-     where a.attnum is null
-        or pg_catalog.format_type(a.atttypid, a.atttypmod) is distinct from e.typ
-        or a.attnotnull is distinct from e.notnull
-        or a.attidentity::text is distinct from e.identity_kind
-  ) then
-    raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: formation column contract drift';
-  end if;
-
-  if exists (
-    select 1
-      from (values
-        ('sequence', 'bigint', true, 'a'),
-        ('formation_sequence', 'bigint', true, ''),
-        ('forecast_fingerprint', 'text', true, ''),
-        ('formation_receipt_fingerprint', 'text', true, ''),
-        ('source_reference_observation_sequence', 'bigint', true, ''),
-        ('asset_id', 'text', true, ''),
-        ('binance_symbol', 'text', true, ''),
-        ('okx_inst_id', 'text', true, ''),
-        ('observed_price', 'numeric', true, ''),
-        ('observed_at', 'timestamp with time zone', true, ''),
-        ('captured_at', 'timestamp with time zone', true, ''),
-        ('source_evidence_sha256', 'text', true, ''),
-        ('binding_sha256', 'text', true, ''),
-        ('created_at', 'timestamp with time zone', true, '')
-      ) e(attname, typ, notnull, identity_kind)
-      left join pg_catalog.pg_attribute a
-        on a.attrelid = v_out and a.attnum > 0 and not a.attisdropped
-       and a.attname = e.attname
-     where a.attnum is null
-        or pg_catalog.format_type(a.atttypid, a.atttypmod) is distinct from e.typ
-        or a.attnotnull is distinct from e.notnull
-        or a.attidentity::text is distinct from e.identity_kind
-  ) then
-    raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: outcome column contract drift';
-  end if;
+  -- Freeze only columns that carry #506 authority. Harmless additive columns do not
+  -- fail the guard, but each required type/nullability/identity property must match.
+  for v_col in
+    select * from (values
+      (v_ref, 'reference', 'sequence', 'bigint', true, 'a'),
+      (v_ref, 'reference', 'asset_id', 'text', true, ''),
+      (v_ref, 'reference', 'source_id', 'text', true, ''),
+      (v_ref, 'reference', 'reference_price', 'numeric', true, ''),
+      (v_ref, 'reference', 'observed_at', 'timestamp with time zone', true, ''),
+      (v_ref, 'reference', 'captured_at', 'timestamp with time zone', true, ''),
+      (v_ref, 'reference', 'evidence_sha256', 'text', true, ''),
+      (v_ref, 'reference', 'evidence', 'jsonb', true, ''),
+      (v_ref, 'reference', 'created_at', 'timestamp with time zone', true, ''),
+      (v_form, 'formation', 'sequence', 'bigint', true, 'a'),
+      (v_form, 'formation', 'forecast_fingerprint', 'text', true, ''),
+      (v_form, 'formation', 'reference_observation_sequence', 'bigint', true, ''),
+      (v_form, 'formation', 'formation_payload', 'jsonb', true, ''),
+      (v_form, 'formation', 'created_at', 'timestamp with time zone', true, ''),
+      (v_out, 'outcome', 'sequence', 'bigint', true, 'a'),
+      (v_out, 'outcome', 'formation_sequence', 'bigint', true, ''),
+      (v_out, 'outcome', 'forecast_fingerprint', 'text', true, ''),
+      (v_out, 'outcome', 'formation_receipt_fingerprint', 'text', true, ''),
+      (v_out, 'outcome', 'source_reference_observation_sequence', 'bigint', true, ''),
+      (v_out, 'outcome', 'asset_id', 'text', true, ''),
+      (v_out, 'outcome', 'binance_symbol', 'text', true, ''),
+      (v_out, 'outcome', 'okx_inst_id', 'text', true, ''),
+      (v_out, 'outcome', 'observed_price', 'numeric', true, ''),
+      (v_out, 'outcome', 'observed_at', 'timestamp with time zone', true, ''),
+      (v_out, 'outcome', 'captured_at', 'timestamp with time zone', true, ''),
+      (v_out, 'outcome', 'source_evidence_sha256', 'text', true, ''),
+      (v_out, 'outcome', 'binding_sha256', 'text', true, ''),
+      (v_out, 'outcome', 'created_at', 'timestamp with time zone', true, '')
+    ) e(relid, rel_label, attname, typ, required_notnull, identity_kind)
+  loop
+    if not exists (
+      select 1
+        from pg_catalog.pg_attribute a
+       where a.attrelid = v_col.relid
+         and a.attnum > 0
+         and not a.attisdropped
+         and a.attname = v_col.attname
+         and pg_catalog.format_type(a.atttypid, a.atttypmod) = v_col.typ
+         and a.attnotnull is not distinct from v_col.required_notnull
+         and a.attidentity::text is not distinct from v_col.identity_kind
+    ) then
+      raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: % column % drift',
+        v_col.rel_label, v_col.attname;
+    end if;
+  end loop;
 
   -- Server clocks are part of the non-backdateable receipt contract.
-  select pg_catalog.pg_get_expr(d.adbin, d.adrelid)
-    into v_default
-    from pg_catalog.pg_attrdef d
-    join pg_catalog.pg_attribute a
-      on a.attrelid = d.adrelid and a.attnum = d.adnum
-   where d.adrelid = v_ref and a.attname = 'created_at';
-  if lower(coalesce(v_default, '')) <> 'clock_timestamp()' then
-    raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: reference receipt clock drift';
-  end if;
-  select pg_catalog.pg_get_expr(d.adbin, d.adrelid)
-    into v_default
-    from pg_catalog.pg_attrdef d
-    join pg_catalog.pg_attribute a
-      on a.attrelid = d.adrelid and a.attnum = d.adnum
-   where d.adrelid = v_form and a.attname = 'created_at';
-  if lower(coalesce(v_default, '')) <> 'clock_timestamp()' then
-    raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: formation receipt clock drift';
-  end if;
-  select pg_catalog.pg_get_expr(d.adbin, d.adrelid)
-    into v_default
-    from pg_catalog.pg_attrdef d
-    join pg_catalog.pg_attribute a
-      on a.attrelid = d.adrelid and a.attnum = d.adnum
-   where d.adrelid = v_out and a.attname = 'created_at';
-  if lower(coalesce(v_default, '')) <> 'clock_timestamp()' then
-    raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: outcome receipt clock drift';
-  end if;
+  for v_rel in
+    select * from (values
+      (v_ref, 'reference'),
+      (v_form, 'formation'),
+      (v_out, 'outcome')
+    ) e(relid, rel_label)
+  loop
+    select pg_catalog.pg_get_expr(d.adbin, d.adrelid)
+      into v_default
+      from pg_catalog.pg_attrdef d
+      join pg_catalog.pg_attribute a
+        on a.attrelid = d.adrelid and a.attnum = d.adnum
+     where d.adrelid = v_rel.relid and a.attname = 'created_at';
+    if lower(coalesce(v_default, '')) <> 'clock_timestamp()' then
+      raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: % receipt clock drift',
+        v_rel.rel_label;
+    end if;
+  end loop;
 
   -- RLS and the RPC-only mutation boundary must remain intact.
   if not (select relrowsecurity from pg_catalog.pg_class where oid = v_ref)
@@ -277,60 +245,41 @@ begin
   end if;
 
   -- Exact RPC input + result signatures and SECURITY DEFINER/search_path hardening.
-  v_fn := to_regprocedure('public.append_big_move_reference_observation_v1(text,text)');
-  if v_fn is null then
-    raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: reference append RPC missing/wrong signature';
-  end if;
-  select p.prosecdef, coalesce(array_to_string(p.proconfig, ','), ''),
-         regexp_replace(lower(pg_catalog.pg_get_function_result(p.oid)), '\s+', '', 'g')
-    into v_prosecdef, v_proconfig, v_result
-    from pg_catalog.pg_proc p where p.oid = v_fn;
-  if not v_prosecdef or v_proconfig not like '%search_path=%'
-     or v_result <> 'table(sequencebigint,asset_idtext,reference_pricenumeric,observed_attimestampwithtimezone,captured_attimestampwithtimezone,created_attimestampwithtimezone,source_idtext,evidence_sha256text,evidencejsonb)' then
-    raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: reference append RPC contract drift';
-  end if;
+  for v_rpc in
+    select * from (values
+      ('public.append_big_move_reference_observation_v1(text,text)',
+       'table(sequencebigint,asset_idtext,reference_pricenumeric,observed_attimestampwithtimezone,captured_attimestampwithtimezone,created_attimestampwithtimezone,source_idtext,evidence_sha256text,evidencejsonb)',
+       'reference append'),
+      ('public.append_big_move_forward_formation_v1(text,bigint,jsonb)',
+       'table(sequencebigint,forecast_fingerprinttext,reference_observation_sequencebigint,reference_observation_created_attimestampwithtimezone,reference_observationjsonb,created_attimestampwithtimezone,formation_payloadjsonb)',
+       'formation append'),
+      ('public.append_big_move_forward_outcome_observation_v1(bigint)',
+       'table(sequencebigint,formation_sequencebigint,forecast_fingerprinttext,formation_receipt_fingerprinttext,source_reference_observation_sequencebigint,asset_idtext,binance_symboltext,okx_inst_idtext,observed_pricenumeric,observed_attimestampwithtimezone,captured_attimestampwithtimezone,source_evidence_sha256text,binding_sha256text,created_attimestampwithtimezone,source_reference_observationjsonb)',
+       'outcome append'),
+      ('public.derive_big_move_forward_hit_evidence_v1(bigint)',
+       'table(formation_sequencebigint,forecast_fingerprinttext,formation_receipt_fingerprinttext,target_pricenumeric,breach_observationjsonb)',
+       'hit derive')
+    ) e(signature, expected_result, rpc_label)
+  loop
+    v_fn := to_regprocedure(v_rpc.signature);
+    if v_fn is null then
+      raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: % RPC missing/wrong signature',
+        v_rpc.rpc_label;
+    end if;
+    select p.prosecdef, coalesce(array_to_string(p.proconfig, ','), ''),
+           regexp_replace(lower(pg_catalog.pg_get_function_result(p.oid)), '\s+', '', 'g')
+      into v_prosecdef, v_proconfig, v_result
+      from pg_catalog.pg_proc p where p.oid = v_fn;
+    if not coalesce(v_prosecdef, false)
+       or v_proconfig not like '%search_path=%'
+       or v_result is distinct from v_rpc.expected_result then
+      raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: % RPC contract drift',
+        v_rpc.rpc_label;
+    end if;
+  end loop;
 
-  v_fn := to_regprocedure('public.append_big_move_forward_formation_v1(text,bigint,jsonb)');
-  if v_fn is null then
-    raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: formation append RPC missing/wrong signature';
-  end if;
-  select p.prosecdef, coalesce(array_to_string(p.proconfig, ','), ''),
-         regexp_replace(lower(pg_catalog.pg_get_function_result(p.oid)), '\s+', '', 'g')
-    into v_prosecdef, v_proconfig, v_result
-    from pg_catalog.pg_proc p where p.oid = v_fn;
-  if not v_prosecdef or v_proconfig not like '%search_path=%'
-     or v_result <> 'table(sequencebigint,forecast_fingerprinttext,reference_observation_sequencebigint,reference_observation_created_attimestampwithtimezone,reference_observationjsonb,created_attimestampwithtimezone,formation_payloadjsonb)' then
-    raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: formation append RPC contract drift';
-  end if;
-
-  v_fn := to_regprocedure('public.append_big_move_forward_outcome_observation_v1(bigint)');
-  if v_fn is null then
-    raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: outcome append RPC missing/wrong signature';
-  end if;
-  select p.prosecdef, coalesce(array_to_string(p.proconfig, ','), ''),
-         regexp_replace(lower(pg_catalog.pg_get_function_result(p.oid)), '\s+', '', 'g')
-    into v_prosecdef, v_proconfig, v_result
-    from pg_catalog.pg_proc p where p.oid = v_fn;
-  if not v_prosecdef or v_proconfig not like '%search_path=%'
-     or v_result <> 'table(sequencebigint,formation_sequencebigint,forecast_fingerprinttext,formation_receipt_fingerprinttext,source_reference_observation_sequencebigint,asset_idtext,binance_symboltext,okx_inst_idtext,observed_pricenumeric,observed_attimestampwithtimezone,captured_attimestampwithtimezone,source_evidence_sha256text,binding_sha256text,created_attimestampwithtimezone,source_reference_observationjsonb)' then
-    raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: outcome append RPC contract drift';
-  end if;
-
-  v_fn := to_regprocedure('public.derive_big_move_forward_hit_evidence_v1(bigint)');
-  if v_fn is null then
-    raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: hit derive RPC missing/wrong signature';
-  end if;
-  select p.prosecdef, coalesce(array_to_string(p.proconfig, ','), ''),
-         regexp_replace(lower(pg_catalog.pg_get_function_result(p.oid)), '\s+', '', 'g')
-    into v_prosecdef, v_proconfig, v_result
-    from pg_catalog.pg_proc p where p.oid = v_fn;
-  if not v_prosecdef or v_proconfig not like '%search_path=%'
-     or v_result <> 'table(formation_sequencebigint,forecast_fingerprinttext,formation_receipt_fingerprinttext,target_pricenumeric,breach_observationjsonb)' then
-    raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: hit derive RPC contract drift';
-  end if;
-
-  -- The outcome table must retain an enabled BEFORE ROW UPDATE OR DELETE rejector
-  -- bound to the exact trigger function. PostgreSQL tgtype 27 = ROW|BEFORE|DELETE|UPDATE.
+  -- The outcome table must retain an enabled BEFORE ROW UPDATE OR DELETE rejector.
+  -- PostgreSQL tgtype 27 = ROW | BEFORE | DELETE | UPDATE.
   if v_trigger_fn is null then
     raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: outcome mutation-rejection function missing';
   end if;
@@ -338,7 +287,8 @@ begin
     into v_prosecdef, v_proconfig
     from pg_catalog.pg_proc p
    where p.oid = v_trigger_fn and p.prorettype = 'pg_catalog.trigger'::regtype;
-  if not coalesce(v_prosecdef, false) or v_proconfig not like '%search_path=%'
+  if not coalesce(v_prosecdef, false)
+     or v_proconfig not like '%search_path=%'
      or not exists (
        select 1
          from pg_catalog.pg_trigger t
@@ -352,20 +302,22 @@ begin
     raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: outcome mutation-rejection trigger drift';
   end if;
 
-  -- Renamed pre-guard delegates exist only so the guarded wrappers can reuse proven
+  -- Renamed pre-guard delegates exist only so guarded wrappers can reuse proven
   -- implementation. service_role (including PUBLIC inheritance) must not EXECUTE them.
-  v_internal := to_regprocedure('public.append_big_move_forward_formation_v1_unguarded_784(text,bigint,jsonb)');
-  if v_internal is null or pg_catalog.has_function_privilege('service_role', v_internal, 'EXECUTE') then
-    raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: formation guard bypass exposed';
-  end if;
-  v_internal := to_regprocedure('public.append_big_move_forward_outcome_observation_v1_unguarded_784(bigint)');
-  if v_internal is null or pg_catalog.has_function_privilege('service_role', v_internal, 'EXECUTE') then
-    raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: outcome guard bypass exposed';
-  end if;
-  v_internal := to_regprocedure('public.derive_big_move_forward_hit_evidence_v1_unguarded_784(bigint)');
-  if v_internal is null or pg_catalog.has_function_privilege('service_role', v_internal, 'EXECUTE') then
-    raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: hit guard bypass exposed';
-  end if;
+  for v_rpc in
+    select * from (values
+      ('public.append_big_move_forward_formation_v1_unguarded_784(text,bigint,jsonb)', 'formation'),
+      ('public.append_big_move_forward_outcome_observation_v1_unguarded_784(bigint)', 'outcome'),
+      ('public.derive_big_move_forward_hit_evidence_v1_unguarded_784(bigint)', 'hit')
+    ) e(signature, rpc_label)
+  loop
+    v_internal := to_regprocedure(v_rpc.signature);
+    if v_internal is null
+       or pg_catalog.has_function_privilege('service_role', v_internal, 'EXECUTE') then
+      raise exception 'PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN: % guard bypass exposed',
+        v_rpc.rpc_label;
+    end if;
+  end loop;
 end;
 $$;
 
