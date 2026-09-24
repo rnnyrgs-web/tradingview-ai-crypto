@@ -1,0 +1,35 @@
+{
+  "sha": "25e3b1d90ffddef11c1663f8fa43696f60bc8061",
+  "node_id": "MDY6Q29tbWl0MTM3NDcwNTQzOjI1ZTNiMWQ5MGZmZGRlZjExYzE2NjNmOGZhNDM2OTZmNjBiYzgwNjE=",
+  "url": "https://api.github.com/repos/coinmetrics/data/git/commits/25e3b1d90ffddef11c1663f8fa43696f60bc8061",
+  "html_url": "https://github.com/coinmetrics/data/commit/25e3b1d90ffddef11c1663f8fa43696f60bc8061",
+  "author": {
+    "name": "CoinMetrics Bot",
+    "email": "gitbot@coinmetrics.io",
+    "date": "2021-01-03T13:09:06Z"
+  },
+  "committer": {
+    "name": "CoinMetrics Bot",
+    "email": "gitbot@coinmetrics.io",
+    "date": "2021-01-03T13:09:06Z"
+  },
+  "tree": {
+    "sha": "c0c58a48402cb33032c6c3f00402cb50e1923fd8",
+    "url": "https://api.github.com/repos/coinmetrics/data/git/trees/c0c58a48402cb33032c6c3f00402cb50e1923fd8"
+  },
+  "message": "Update CSV 2021-01-03",
+  "parents": [
+    {
+      "sha": "1c65b30900d79308a6edc9d8ef1024b3ac316500",
+      "url": "https://api.github.com/repos/coinmetrics/data/git/commits/1c65b30900d79308a6edc9d8ef1024b3ac316500",
+      "html_url": "https://github.com/coinmetrics/data/commit/1c65b30900d79308a6edc9d8ef1024b3ac316500"
+    }
+  ],
+  "verification": {
+    "verified": false,
+    "reason": "unsigned",
+    "signature": null,
+    "payload": null,
+    "verified_at": null
+  }
+}
