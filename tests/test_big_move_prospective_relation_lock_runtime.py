@@ -13,9 +13,13 @@ pytestmark = pytest.mark.skipif(
     reason="runtime PostgreSQL falsifier requires TOCTOU_PG_DSN",
 )
 
-MIGRATION = (
+RELATION_MIGRATION = (
     Path(__file__).parents[1]
     / "supabase/migrations/20260924065000_big_move_prospective_relation_lock_guard.sql"
+)
+DDL_MIGRATION = (
+    Path(__file__).parents[1]
+    / "supabase/migrations/20260924123000_big_move_prospective_ddl_advisory_guard.sql"
 )
 
 TABLES = (
@@ -25,15 +29,33 @@ TABLES = (
 )
 
 
-def _exact_lock_helper_sql() -> str:
-    """Extract the exact behavior-bearing lock helper from the reviewed migration."""
-    sql = MIGRATION.read_text(encoding="utf-8")
-    signature = (
-        "create or replace function public.acquire_big_move_prospective_relation_locks_v1()"
-    )
-    start = sql.lower().index(signature)
+def _exact_function_sql(path: Path, signature: str) -> str:
+    """Extract one exact behavior-bearing function from a reviewed migration."""
+    sql = path.read_text(encoding="utf-8")
+    start = sql.lower().index(signature.lower())
     end = sql.index("$$;", start) + len("$$;")
     return sql[start:end]
+
+
+def _exact_relation_lock_helper_sql() -> str:
+    return _exact_function_sql(
+        RELATION_MIGRATION,
+        "create or replace function public.acquire_big_move_prospective_relation_locks_v1()",
+    )
+
+
+def _exact_ddl_read_lock_helper_sql() -> str:
+    return _exact_function_sql(
+        DDL_MIGRATION,
+        "create or replace function public.acquire_big_move_prospective_ddl_read_lock_v1()",
+    )
+
+
+def _exact_ddl_write_lock_helper_sql() -> str:
+    return _exact_function_sql(
+        DDL_MIGRATION,
+        "create or replace function public.acquire_big_move_prospective_ddl_write_lock_v1()",
+    )
 
 
 def _reset_fixture() -> None:
@@ -41,24 +63,38 @@ def _reset_fixture() -> None:
     with psycopg.connect(DSN, autocommit=True) as conn:
         conn.execute("drop function if exists public.toctou_function_probe()")
         conn.execute(
+            "drop function if exists public.acquire_big_move_prospective_ddl_write_lock_v1()"
+        )
+        conn.execute(
+            "drop function if exists public.acquire_big_move_prospective_ddl_read_lock_v1()"
+        )
+        conn.execute(
             "drop function if exists public.acquire_big_move_prospective_relation_locks_v1()"
         )
         for table in reversed(TABLES):
             conn.execute(f"drop table if exists public.{table} cascade")
         for table in TABLES:
             conn.execute(f"create table public.{table} (id bigint primary key)")
-        conn.execute(_exact_lock_helper_sql())
+        conn.execute(_exact_relation_lock_helper_sql())
+        conn.execute(_exact_ddl_read_lock_helper_sql())
+        conn.execute(_exact_ddl_write_lock_helper_sql())
+
+
+def _install_probe(value: str, conn) -> None:
+    conn.execute(
+        f"""
+        create or replace function public.toctou_function_probe()
+        returns text
+        language sql
+        security definer
+        set search_path = ''
+        as $$ select '{value}'::text $$
+        """
+    )
 
 
 def test_relation_lock_barrier_blocks_concurrent_required_relation_ddl_until_tx_end():
-    """Runtime RED->GREEN falsifier for the relation-level check/use TOCTOU class.
-
-    The helper must retain SHARE ROW EXCLUSIVE locks after it returns. A second
-    PostgreSQL session attempting authority-bearing relation DDL must therefore
-    fail on lock timeout while session A's transaction is open, then succeed
-    after session A ends. This uses the exact helper SQL from the migration rather
-    than a hand-written approximation.
-    """
+    """Runtime falsifier for the relation-level check/use TOCTOU class."""
     assert DSN is not None
     _reset_fixture()
 
@@ -89,7 +125,6 @@ def test_relation_lock_barrier_blocks_concurrent_required_relation_ddl_until_tx_
             )
         session_b.rollback()
 
-        # The DDL was not applied while the reviewed lock barrier was held.
         with psycopg.connect(DSN, autocommit=True) as observer:
             drift_before_commit = observer.execute(
                 """
@@ -104,7 +139,6 @@ def test_relation_lock_barrier_blocks_concurrent_required_relation_ddl_until_tx_
 
         session_a.commit()
 
-        # After the authority transaction ends, the same DDL can acquire its lock.
         session_b.execute("set local lock_timeout = '2s'")
         session_b.execute(
             "alter table public.big_move_reference_observations "
@@ -125,73 +159,103 @@ def test_relation_lock_barrier_blocks_concurrent_required_relation_ddl_until_tx_
     assert drift_after_commit == 1
 
 
-def test_residual_function_definition_race_is_reproduced_and_remains_blocking():
-    """Prove the separately documented pg_proc race is real, not hypothetical.
+def test_authorized_function_ddl_and_authority_calls_serialize_both_directions():
+    """Prove the reviewed shared-writer/exclusive-migration advisory protocol.
 
-    #785's relation locks protect the truth tables, but they do not lock pg_proc.
-    The current function-boundary guard validates owner, SECURITY DEFINER and an
-    exact local search_path setting; it does not bind the function body. This
-    falsifier shows a same-owner/same-security/same-search_path CREATE OR REPLACE
-    can commit while the relation locks are held, after which the first session
-    executes the replacement body. Until a separately reviewed mechanism closes
-    this class, PROSPECTIVE_SCHEMA_FUNCTION_DEFINITION_TOCTOU_NOT_YET_PROVEN must
-    remain a blocking state.
+    An authority transaction holding the shared lock must block an authorized
+    repository migration from acquiring the exclusive lock. After the authority
+    transaction ends, the migration can obtain the exclusive lock and replace a
+    function. While the migration lock is held, a new authority transaction must
+    block rather than run against a half-migrated function set.
     """
     assert DSN is not None
     _reset_fixture()
-
-    original_sql = """
-        create or replace function public.toctou_function_probe()
-        returns text
-        language sql
-        security definer
-        set search_path = ''
-        as $$ select 'ORIGINAL'::text $$
-    """
-    replacement_sql = """
-        create or replace function public.toctou_function_probe()
-        returns text
-        language sql
-        security definer
-        set search_path = ''
-        as $$ select 'REPLACED'::text $$
-    """
-
     with psycopg.connect(DSN, autocommit=True) as setup:
-        setup.execute(original_sql)
+        _install_probe("ORIGINAL", setup)
 
-    with psycopg.connect(DSN) as session_a, psycopg.connect(DSN) as session_b:
-        session_a.execute("select public.acquire_big_move_prospective_relation_locks_v1()")
+    with (
+        psycopg.connect(DSN) as authority_a,
+        psycopg.connect(DSN) as migration_b,
+        psycopg.connect(DSN) as authority_c,
+    ):
+        authority_a.execute("select public.acquire_big_move_prospective_ddl_read_lock_v1()")
+        authority_a.execute("select public.acquire_big_move_prospective_relation_locks_v1()")
+        assert authority_a.execute("select public.toctou_function_probe()").fetchone()[0] == "ORIGINAL"
 
-        metadata_before = session_a.execute(
+        migration_b.execute("set local lock_timeout = '500ms'")
+        with pytest.raises(psycopg.errors.LockNotAvailable):
+            migration_b.execute("select public.acquire_big_move_prospective_ddl_write_lock_v1()")
+        migration_b.rollback()
+
+        # No replacement occurred while the in-flight authority call was protected.
+        with psycopg.connect(DSN, autocommit=True) as observer:
+            assert observer.execute("select public.toctou_function_probe()").fetchone()[0] == "ORIGINAL"
+
+        authority_a.commit()
+
+        migration_b.execute("set local lock_timeout = '2s'")
+        migration_b.execute("select public.acquire_big_move_prospective_ddl_write_lock_v1()")
+        _install_probe("REPLACED", migration_b)
+
+        authority_c.execute("set local lock_timeout = '500ms'")
+        with pytest.raises(psycopg.errors.LockNotAvailable):
+            authority_c.execute("select public.acquire_big_move_prospective_ddl_read_lock_v1()")
+        authority_c.rollback()
+
+        migration_b.commit()
+
+        authority_c.execute("set local lock_timeout = '2s'")
+        authority_c.execute("select public.acquire_big_move_prospective_ddl_read_lock_v1()")
+        assert authority_c.execute("select public.toctou_function_probe()").fetchone()[0] == "REPLACED"
+        authority_c.rollback()
+
+
+def test_noncooperative_owner_ddl_is_explicit_trusted_root_not_self_defendable():
+    """Keep the owner-bypass falsifier: the protocol only serializes authorized DDL.
+
+    A same-owner CREATE OR REPLACE that intentionally ignores the exclusive advisory
+    lock can still replace a function while an authority transaction holds the shared
+    advisory + relation locks. That is not hidden or mislabeled as solved: it defines
+    the explicit DB-owner/control-plane trust root. The SQL layer must never claim to
+    defend against an owner that can also replace the guard and lock helpers.
+    """
+    assert DSN is not None
+    _reset_fixture()
+    with psycopg.connect(DSN, autocommit=True) as setup:
+        _install_probe("ORIGINAL", setup)
+
+    with psycopg.connect(DSN) as authority_a, psycopg.connect(DSN) as owner_bypass:
+        authority_a.execute("select public.acquire_big_move_prospective_ddl_read_lock_v1()")
+        authority_a.execute("select public.acquire_big_move_prospective_relation_locks_v1()")
+
+        metadata_before = authority_a.execute(
             """
             select p.proowner, p.prosecdef, p.proconfig
               from pg_catalog.pg_proc p
              where p.oid = to_regprocedure('public.toctou_function_probe()')
             """
         ).fetchone()
-        source_before = session_a.execute(
+        source_before = authority_a.execute(
             """
             select p.prosrc
               from pg_catalog.pg_proc p
              where p.oid = to_regprocedure('public.toctou_function_probe()')
             """
         ).fetchone()[0]
-        assert session_a.execute("select public.toctou_function_probe()").fetchone()[0] == "ORIGINAL"
 
-        # Relation locks must not be misrepresented as pg_proc serialization.
-        session_b.execute("set local lock_timeout = '1s'")
-        session_b.execute(replacement_sql)
-        session_b.commit()
+        # Deliberately ignore acquire_big_move_prospective_ddl_write_lock_v1().
+        owner_bypass.execute("set local lock_timeout = '1s'")
+        _install_probe("OWNER_BYPASS", owner_bypass)
+        owner_bypass.commit()
 
-        metadata_after = session_a.execute(
+        metadata_after = authority_a.execute(
             """
             select p.proowner, p.prosecdef, p.proconfig
               from pg_catalog.pg_proc p
              where p.oid = to_regprocedure('public.toctou_function_probe()')
             """
         ).fetchone()
-        source_after = session_a.execute(
+        source_after = authority_a.execute(
             """
             select p.prosrc
               from pg_catalog.pg_proc p
@@ -199,9 +263,7 @@ def test_residual_function_definition_race_is_reproduced_and_remains_blocking():
             """
         ).fetchone()[0]
 
-        # These are the same metadata dimensions frozen by the current #785
-        # function-boundary guard, so a body-only replacement is invisible to it.
         assert metadata_after == metadata_before
         assert source_after != source_before
-        assert session_a.execute("select public.toctou_function_probe()").fetchone()[0] == "REPLACED"
-        session_a.rollback()
+        assert authority_a.execute("select public.toctou_function_probe()").fetchone()[0] == "OWNER_BYPASS"
+        authority_a.rollback()
