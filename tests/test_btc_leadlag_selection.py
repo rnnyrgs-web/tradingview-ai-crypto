@@ -11,6 +11,7 @@ from btc_leadlag_selection import (
     _load_contract,
     _signal,
     _simulate_segment,
+    _sealed_artifact_analysis,
     _validate_histories,
     evaluate_selection_from_histories,
     persist_selection,
@@ -208,3 +209,18 @@ def test_committed_frozen_screen_replays_and_preserves_negative_evidence():
     assert selection["economic_pre_oos_pass"] is False
     assert selection["untouched_oos_opened"] is False
     assert selection["variants"]["primary_50bps"]["3x"]["validation"]["pooled"]["mean_net_bps"] == pytest.approx(-113.68599715563137)
+
+
+def test_sealed_artifact_projection_does_not_weaken_runtime_analysis():
+    selection = run(datetime(2026, 9, 19, 10, tzinfo=timezone.utc))["payload"]["selection"]
+    experiment = selection["rich_primary_max_stress"]["training"]["experiment"]
+
+    sealed = _sealed_artifact_analysis(experiment)
+    assert "largest_independent_event_profit_share" not in sealed["concentration"]
+    assert "net_pnl_without_best_independent_event" not in sealed["concentration"]
+
+    from profitability_learning.analytics import analyze
+
+    current = analyze(experiment)
+    assert "largest_independent_event_profit_share" in current["concentration"]
+    assert "net_pnl_without_best_independent_event" in current["concentration"]

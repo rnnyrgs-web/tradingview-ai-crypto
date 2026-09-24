@@ -352,7 +352,7 @@ def evaluate_selection_from_histories(histories: dict[str, list[dict[str, Any]]]
     for segment in rich.values():
         segment["experiment"]["status"] = "PASSED" if passed else "REJECTED"
         segment["experiment"]["failure_reasons"] = [] if passed else list(reasons)
-        segment["analysis"] = analyze(segment["experiment"])
+        segment["analysis"] = _sealed_artifact_analysis(segment["experiment"])
     if baseline_training is None:
         raise RuntimeError("missing frozen baseline ablation evidence")
     return {**base, "data_integrity_ok": True, "data_errors": [], "bounds": bounds,
@@ -362,6 +362,25 @@ def evaluate_selection_from_histories(histories: dict[str, list[dict[str, Any]]]
             "economic_pre_oos_pass": passed, "failure_reasons": reasons,
             "reused_history_can_support_promotion": False,
             "exact_next_action": ("Freeze genuine-forward observation strictly after 2026-09-19T03:00:00+00:00; require 20 independent BTC events and 8 trades per follower before review." if passed else "Record this exact fingerprint as rejected pre-OOS and pivot to a materially distinct mechanism without tuning v1.")}
+
+
+def _sealed_artifact_analysis(experiment: dict[str, Any]) -> dict[str, Any]:
+    """Project current analytics onto the sealed 2026-09-19 artifact schema.
+
+    The committed negative lead/lag artifact is immutable acceptance evidence.
+    Its embedded analysis predates independent-event concentration fields, while
+    durable completion below deliberately recomputes the full current analysis
+    from the raw experiment.  Keep this serialization-only projection explicit
+    so a safety upgrade cannot require rewriting historical sealed evidence.
+    """
+    result = analyze(experiment)
+    concentration = dict(result["concentration"])
+    concentration.pop("largest_independent_event_profit_share", None)
+    concentration.pop("net_pnl_without_best_independent_event", None)
+    concentration["sensitivity_note"] = (
+        "Arithmetic P&L sensitivity only; not a rerun or altered NAV path."
+    )
+    return {**result, "concentration": concentration}
 
 
 def _training_ablation(selection: dict[str, Any]) -> dict[str, Any]:

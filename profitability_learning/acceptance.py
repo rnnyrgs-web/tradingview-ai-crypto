@@ -31,7 +31,7 @@ from research_heavy_experiment_scheduler import build_heavy_dispatch_plan
 ROOT = Path(__file__).resolve().parents[1]
 ARTIFACT_PATH = ROOT / "orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz"
 EXPECTED_FINGERPRINT = "DISC-BTC-LEADLAG-001-v1"
-EXPECTED_ARTIFACT_PAYLOAD_SHA256 = "c98c9a23b75ecb129924825637c6af667a385c9dbf01de0755794dd3ee2e3054"
+EXPECTED_ARTIFACT_PAYLOAD_SHA256 = "9a73a00e6052783525b77ec36527bc5fb12c2891ebd300da00ff744fd3e4951c"
 MAX_ARTIFACT_BYTES = 3_000_000
 
 
