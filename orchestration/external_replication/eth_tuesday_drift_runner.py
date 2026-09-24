@@ -343,7 +343,10 @@ def load_frozen_eth_rows(dataset_path: Path = DATASET_PATH) -> tuple[dict, ...]:
     if dataset_path.resolve() != DATASET_PATH.resolve():
         raise RuntimeError("fresh-history or alternate dataset substitution is forbidden")
     raw = dataset_path.read_bytes()
-    raw_git_blob = hashlib.sha1(f"blob {len(raw)}\0".encode() + raw).hexdigest()
+    raw_git_blob = hashlib.sha1(
+        f"blob {len(raw)}\0".encode() + raw,
+        usedforsecurity=False,
+    ).hexdigest()
     if raw_git_blob != DATASET_GIT_BLOB_SHA1:
         raise RuntimeError("frozen compressed dataset git-blob identity mismatch")
     _, dataset = _load_frozen_cache(dataset_path.parent)
