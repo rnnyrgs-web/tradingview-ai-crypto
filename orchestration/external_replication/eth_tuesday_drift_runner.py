@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import gzip
 import hashlib
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from math import isfinite
 from pathlib import Path
@@ -320,8 +319,10 @@ def evaluate_stage1(rows: Iterable[Mapping[str, object]]) -> dict:
             "raw_gross": raw,
         },
         "gates": gates,
+        "survived_stage1_economic_gates": survived,
+        "evidence_authority": "TEST_ONLY_UNTRUSTED_CALLER_ROWS",
         "authority": {
-            "stage2_baseline_execution_allowed": survived,
+            "stage2_baseline_execution_allowed": False,
             "profitability_claim_allowed": False,
             "deep_promotion_allowed": False,
             "protected_oos_opened": False,
@@ -351,6 +352,15 @@ def load_frozen_eth_rows(dataset_path: Path = DATASET_PATH) -> tuple[dict, ...]:
 
 
 def run_canonical_stage1() -> dict:
+    """Score only the exact frozen dataset after static contracts are authenticated.
+
+    Legitimate scientific authority still depends on the external exact-head
+    CI/independent-review/integration gate. This function deliberately does not
+    mint Stage-2, profitability, promotion, broker or trading authority.
+    """
     load_and_validate_contracts()
     rows = load_frozen_eth_rows()
-    return evaluate_stage1(rows)
+    result = evaluate_stage1(rows)
+    result["evidence_authority"] = "FROZEN_DATASET_VERIFIED_REVIEW_AUTHORITY_EXTERNAL"
+    result["authority"]["stage2_baseline_execution_allowed"] = False
+    return result
