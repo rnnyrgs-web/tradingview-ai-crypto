@@ -13,6 +13,8 @@ on:
           - BINANCE_C101H_CHECKSUM
           - COMMONCRAWL_INDEX
           - COMMONCRAWL_WARC_RANGE
+          - KRAKEN_ETH_SESSION_2026Q1_ARCHIVE
+          - KRAKEN_ETH_SESSION_2026Q2_ARCHIVE
       prefix:
         description: "Binance S3 prefix (BINANCE_LISTOBJECTS_V2 only)"
         required: false
@@ -99,6 +101,10 @@ jobs:
             python3 c101h_binance_direct_acquisition.py \
               --source-kind "$SOURCE_KIND" \
               --object-path "$OBJECT_PATH" \
+              --output-dir trusted-acquisition-output
+          elif [[ "$SOURCE_KIND" == "KRAKEN_ETH_SESSION_2026Q1_ARCHIVE" || "$SOURCE_KIND" == "KRAKEN_ETH_SESSION_2026Q2_ARCHIVE" ]]; then
+            python3 kraken_eth_session_direct_acquisition.py \
+              --source-kind "$SOURCE_KIND" \
               --output-dir trusted-acquisition-output
           else
             args=(--source-kind "$SOURCE_KIND" --output-dir trusted-acquisition-output)
