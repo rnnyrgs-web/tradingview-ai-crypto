@@ -10,6 +10,46 @@ from orchestration import exact_head_review as review
 
 
 HEAD_SHA = "a" * 40
+RUNTIME_SHA = "c" * 40
+WORKFLOW_REPOSITORY = "rnnyrgs-web/tradingview-ai-crypto"
+WORKFLOW_REF = (
+    "rnnyrgs-web/tradingview-ai-crypto/.github/workflows/"
+    "exact_head_independent_review.yml@refs/heads/main"
+)
+
+
+def _trusted_review_context() -> tuple[dict[str, object], dict[str, object]]:
+    provenance = {
+        "repository": WORKFLOW_REPOSITORY,
+        "run_id": 123456789,
+        "workflow_ref": WORKFLOW_REF,
+        "runtime_git_sha": RUNTIME_SHA,
+    }
+    context = {
+        "repository": WORKFLOW_REPOSITORY,
+        "run_id": 123456789,
+        "run_attempt": 1,
+        "event_name": "issues",
+        "workflow_ref": WORKFLOW_REF,
+        "workflow_sha": RUNTIME_SHA,
+        "runtime_git_sha": RUNTIME_SHA,
+        "github_sha": RUNTIME_SHA,
+        "server_run_head_sha": RUNTIME_SHA,
+        "server_run_event": "issues",
+        "server_run_attempt": 1,
+        "server_run_path": ".github/workflows/exact_head_independent_review.yml",
+        "server_main_sha": RUNTIME_SHA,
+    }
+    return provenance, context
+
+
+@pytest.fixture(autouse=True)
+def _bypass_live_workflow_trust_only_for_provider_unit_tests(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # These tests exercise provider error classification after trust admission.
+    # Trust reconciliation itself is covered adversarially in test_reviewer_trust_root.py.
+    monkeypatch.setattr(review, "_trusted_context_for_review", _trusted_review_context)
 
 
 def _diff() -> str:
