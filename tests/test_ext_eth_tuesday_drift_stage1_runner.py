@@ -10,7 +10,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 RUNNER_PATH = ROOT / "orchestration" / "external_replication" / "eth_tuesday_drift_runner.py"
 CONTRACT_PATH = ROOT / "orchestration" / "external_replication" / "ext_eth_tuesday_drift_001_stage1_execution.json"
-EXPECTED_CONTRACT_SHA256 = "650814758fb010504c40717d152bffb8c291e30c4d6dc00f2f4a20cf834cce15"
+EXPECTED_CONTRACT_SHA256 = "489159b0d5a81bc85b02dc3f500f4176bdca61cea115f0de8588b70266966086"
 
 
 def _load_runner():
