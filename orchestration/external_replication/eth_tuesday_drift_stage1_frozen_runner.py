@@ -138,19 +138,5 @@ def load_and_validate_execution_provenance(
 
 
 def run_canonical_stage1_frozen() -> dict:
-    """Execute the frozen cheap Stage-1 path after all pre-outcome bindings clear."""
-    base.load_and_validate_contracts()
-    risk_guard.load_and_validate_risk_amendment()
-    load_and_validate_execution_provenance()
-
-    rows = protected_loader.load_frozen_eth_development_rows()
-    result = risk_guard.evaluate_stage1_guarded(rows)
-    result["evidence_authority"] = (
-        "FROZEN_DATASET_BOUND_TRANSITIVE_CODE_IDENTITY_REVIEW_AUTHORITY_EXTERNAL_RISK_OVERLAY"
-    )
-    result["authority"]["stage2_baseline_execution_allowed"] = False
-    result["authority"]["profitability_claim_allowed"] = False
-    result["authority"]["deep_promotion_allowed"] = False
-    result["authority"]["protected_oos_opened"] = False
-    result["authority"]["trade_authority"] = False
-    return result
+    """Reject direct legacy entry; only the admission-gated runner may execute."""
+    raise RuntimeError("legacy Stage-1 runner is non-authoritative")

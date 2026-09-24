@@ -8,18 +8,18 @@ from pathlib import Path
 import pytest
 
 from orchestration.external_replication import eth_tuesday_drift_stage1_authorized_runner as authorized
+from orchestration.external_replication import eth_tuesday_drift_stage1_frozen_runner as legacy_frozen
 
 ROOT = Path(__file__).resolve().parents[1]
 ANCHOR_PATH = (
     ROOT
     / "orchestration"
     / "external_replication"
-    / "ext_eth_tuesday_drift_001_stage1_authority_anchor_v1.json"
+    / "ext_eth_tuesday_drift_001_stage1_authority_anchor_v2.json"
 )
-EXPECTED_ANCHOR_SHA256 = "51dc12aa867d54c357c82df970b3d48aa8d04e90f6f661d75dab54ad5d8137a8"
+EXPECTED_ANCHOR_SHA256 = "8bada39aacc7f988d90b418a2a15337e97ed750b7674f2d68a7be96daa080d58"
+EXPECTED_PARENT_ANCHOR_SHA256 = "51dc12aa867d54c357c82df970b3d48aa8d04e90f6f661d75dab54ad5d8137a8"
 EXPECTED_V2_SHA256 = "e452f5b55971854e7df40eee5c03b5a68c6c250fefd5ef9536733790a317a66d"
-EXPECTED_BASE_EXECUTION_SHA256 = "823d7bbfbd411056358721dfb1e7f3764c7a445306f62aaa156945a6cd2ca46c"
-EXPECTED_RISK_AMENDMENT_SHA256 = "8e13286cd6c586c98f6ade79409a243efde266b55e7f4ee57492affd97c4c2c0"
 
 
 def _canonical_json(value: object) -> bytes:
@@ -42,6 +42,7 @@ def _rehash_artifact(path: Path, mutate) -> None:
 def _copy_closure(tmp_path: Path) -> Path:
     target_root = tmp_path / "repo"
     relative_paths = [
+        "orchestration/external_replication/ext_eth_tuesday_drift_001_stage1_authority_anchor_v2.json",
         "orchestration/external_replication/ext_eth_tuesday_drift_001_stage1_authority_anchor_v1.json",
         "orchestration/external_replication/ext_eth_tuesday_drift_001_stage1_execution_provenance_v2.json",
         "orchestration/external_replication/ext_eth_tuesday_drift_001_stage1_execution.json",
@@ -68,21 +69,14 @@ def test_authority_anchor_is_independently_pinned_and_pre_outcome() -> None:
     assert document["formed_pre_outcome"] is True
     assert document["outcomes_read_to_form_anchor"] is False
     assert (
-        document["parent_execution_provenance_v2"]["artifact_sha256"]
-        == EXPECTED_V2_SHA256
-        == authorized.EXPECTED_PARENT_PROVENANCE_V2_SHA256
+        document["parent_authority_anchor_v1"]["artifact_sha256"]
+        == EXPECTED_PARENT_ANCHOR_SHA256
+        == authorized.EXPECTED_PARENT_AUTHORITY_ANCHOR_V1_SHA256
     )
-    assert (
-        document["base_execution_contract_sha256"]
-        == EXPECTED_BASE_EXECUTION_SHA256
-        == authorized.EXPECTED_BASE_EXECUTION_CONTRACT_SHA256
-    )
-    assert (
-        document["risk_amendment_sha256"]
-        == EXPECTED_RISK_AMENDMENT_SHA256
-        == authorized.EXPECTED_RISK_AMENDMENT_SHA256
-    )
-    assert document["entrypoint_policy"]["legacy_v2_final_runner_direct_entry_allowed"] is False
+    assert document["legacy_v2_final_runner_replacement"]["direct_stage1_entry_allowed"] is False
+    assert document["admission_policy"]["stage1_execution_admitted"] is False
+    assert document["admission_policy"]["integrated_admission_artifact_sha256"] is None
+    assert document["admission_policy"]["read_only_review_receipt_is_execution_token"] is False
     assert all(value is False for value in document["authority_locks"].values())
 
 
@@ -96,6 +90,34 @@ def test_canonical_closure_validates_without_importing_behavior_for_scoring() ->
         "risk_guarded_runner",
         "legacy_v2_final_runner",
     }
+
+
+def test_stage1_execution_fails_closed_before_scientific_closure_without_integrated_admission(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def forbidden_closure() -> None:
+        pytest.fail("scientific closure must not be reached before independent admission")
+
+    monkeypatch.setattr(authorized, "verify_execution_closure", forbidden_closure)
+
+    with pytest.raises(RuntimeError, match="independent review admission is not integrated"):
+        authorized.run_canonical_stage1_frozen()
+
+
+def test_legacy_frozen_runner_cannot_bypass_authorized_admission(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def forbidden_dataset_load() -> None:
+        pytest.fail("legacy runner must not reach the frozen dataset")
+
+    monkeypatch.setattr(
+        legacy_frozen.protected_loader,
+        "load_frozen_eth_development_rows",
+        forbidden_dataset_load,
+    )
+
+    with pytest.raises(RuntimeError, match="legacy Stage-1 runner is non-authoritative"):
+        legacy_frozen.run_canonical_stage1_frozen()
 
 
 def test_tampered_behavior_is_rejected_before_import_time_sentinel_executes(tmp_path: Path) -> None:
@@ -174,12 +196,12 @@ def test_self_rehashed_rewritten_anchor_cannot_replace_compiled_root(tmp_path: P
         root
         / "orchestration"
         / "external_replication"
-        / "ext_eth_tuesday_drift_001_stage1_authority_anchor_v1.json"
+        / "ext_eth_tuesday_drift_001_stage1_authority_anchor_v2.json"
     )
     _rehash_artifact(
         anchor_path,
-        lambda document: document["behavior_bindings"]["base_stage1_runner"].__setitem__(
-            "git_blob_sha1", "0" * 40
+        lambda document: document["admission_policy"].__setitem__(
+            "stage1_execution_admitted", True
         ),
     )
 
