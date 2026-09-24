@@ -91,10 +91,80 @@ def test_high_correlation_penalizes_duplicate_exposure():
     }
     ka = ("BTC-USDT", "1H", "trend")
     kb = ("ETH-USDT", "1H", "trend")
-    result = build_champion_challenger(candidates, history, {(ka, kb): 0.92})
+    kc = ("SOL-USDT", "1H", "mean_reversion")
+    result = build_champion_challenger(
+        candidates,
+        history,
+        {(ka, kb): 0.92, (ka, kc): 0.10, (kb, kc): 0.15},
+    )
     members = {row["symbol"]: row for row in result["members"]}
     assert members["ETH-USDT"]["correlation_penalty"] <= 0.35
     assert members["SOL-USDT"]["correlation_penalty"] == 1.0
+
+
+def test_missing_correlation_fails_closed_without_equating_unknown_to_zero():
+    a = _candidate("BTC-USDT", "trend")
+    b = _candidate("ETH-USDT", "momentum")
+    candidates = [a, b]
+    history = {
+        (row["symbol"], row["bar"], row["strategy_family"]): [
+            _run("2026-01-01T00:00:00Z"),
+            _run("2026-02-01T00:00:00Z"),
+            _run("2026-03-01T00:00:00Z"),
+        ]
+        for row in candidates
+    }
+    result = build_champion_challenger(candidates, history)
+    members = {row["symbol"]: row for row in result["members"]}
+
+    assert members["ETH-USDT"]["correlation_penalty"] == 0.35
+    assert members["ETH-USDT"]["correlation_evidence_complete"] is False
+    assert members["ETH-USDT"]["unknown_correlation_pairs"] == 1
+
+
+def test_explicit_low_correlation_remains_unpenalized():
+    a = _candidate("BTC-USDT", "trend")
+    b = _candidate("ETH-USDT", "momentum")
+    candidates = [a, b]
+    history = {
+        (row["symbol"], row["bar"], row["strategy_family"]): [
+            _run("2026-01-01T00:00:00Z"),
+            _run("2026-02-01T00:00:00Z"),
+            _run("2026-03-01T00:00:00Z"),
+        ]
+        for row in candidates
+    }
+    ka = ("BTC-USDT", "1H", "trend")
+    kb = ("ETH-USDT", "1H", "momentum")
+    result = build_champion_challenger(candidates, history, {(ka, kb): 0.10})
+    members = {row["symbol"]: row for row in result["members"]}
+
+    assert members["ETH-USDT"]["correlation_penalty"] == 1.0
+    assert members["ETH-USDT"]["correlation_evidence_complete"] is True
+    assert members["ETH-USDT"]["unknown_correlation_pairs"] == 0
+
+
+def test_invalid_correlation_values_fail_closed_as_unknown():
+    a = _candidate("BTC-USDT", "trend")
+    b = _candidate("ETH-USDT", "momentum")
+    candidates = [a, b]
+    history = {
+        (row["symbol"], row["bar"], row["strategy_family"]): [
+            _run("2026-01-01T00:00:00Z"),
+            _run("2026-02-01T00:00:00Z"),
+            _run("2026-03-01T00:00:00Z"),
+        ]
+        for row in candidates
+    }
+    ka = ("BTC-USDT", "1H", "trend")
+    kb = ("ETH-USDT", "1H", "momentum")
+
+    for invalid in ("not-a-correlation", float("nan"), 1.01):
+        result = build_champion_challenger(candidates, history, {(ka, kb): invalid})
+        members = {row["symbol"]: row for row in result["members"]}
+        assert members["ETH-USDT"]["correlation_penalty"] == 0.35
+        assert members["ETH-USDT"]["correlation_evidence_complete"] is False
+        assert members["ETH-USDT"]["unknown_correlation_pairs"] == 1
 
 
 def test_less_than_three_runs_cannot_enter_ensemble():
