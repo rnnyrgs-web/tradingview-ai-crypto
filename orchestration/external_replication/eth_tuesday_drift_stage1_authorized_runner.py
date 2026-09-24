@@ -2,11 +2,14 @@ from __future__ import annotations
 
 """Authority-bearing Stage-1 entry for EXT-ETH-TUESDAY-DRIFT-001-v1.
 
-This stdlib-only bootstrap closes two pre-outcome trust-boundary defects:
+This stdlib-only bootstrap closes pre-outcome trust-boundary defects:
 1. behavior-bearing project modules are authenticated as inert bytes before any
-   of them are imported or allowed to execute top-level code; and
+   of them are imported or allowed to execute top-level code;
 2. the exact v2 provenance document is pinned by an append-only authority
-   anchor whose digest is compiled into this entrypoint.
+   anchor whose digest is compiled into this entrypoint; and
+3. the actual base execution contract and risk-amendment artifacts are
+   authenticated against their hard-pinned immutable digests before imports or
+   dataset access, then rechecked after downstream validation.
 
 No outcome is opened by importing this module or by validating the closure.
 Independent exact-head scientific/review admission remains external authority.
@@ -26,6 +29,12 @@ AUTHORITY_ANCHOR_PATH = (
     / "orchestration"
     / "external_replication"
     / "ext_eth_tuesday_drift_001_stage1_authority_anchor_v1.json"
+)
+BASE_EXECUTION_CONTRACT_RELATIVE_PATH = (
+    "orchestration/external_replication/ext_eth_tuesday_drift_001_stage1_execution.json"
+)
+RISK_AMENDMENT_RELATIVE_PATH = (
+    "orchestration/external_replication/ext_eth_tuesday_drift_001_stage1_risk_amendment.json"
 )
 
 REPLICATION_ID = "EXT-ETH-TUESDAY-DRIFT-001-v1"
@@ -73,6 +82,14 @@ def _load_exact_artifact(
     return document
 
 
+def _verified_repo_file(root: Path, relative_path: str, *, label: str) -> Path:
+    root_resolved = root.resolve()
+    path = (root_resolved / relative_path).resolve()
+    if not path.is_relative_to(root_resolved) or not path.is_file():
+        raise RuntimeError(f"{label} path is not an in-repository file")
+    return path
+
+
 def _verified_bound_path(
     root: Path,
     binding: Mapping[str, object],
@@ -86,10 +103,7 @@ def _verified_bound_path(
     if not isinstance(expected_blob, str) or len(expected_blob) != 40:
         raise RuntimeError(f"{label} Git blob identity missing")
 
-    root_resolved = root.resolve()
-    path = (root_resolved / relative_path).resolve()
-    if not path.is_relative_to(root_resolved) or not path.is_file():
-        raise RuntimeError(f"{label} path is not an in-repository file")
+    path = _verified_repo_file(root, relative_path, label=label)
     actual_blob = _git_blob_sha1(path.read_bytes())
     if actual_blob != expected_blob:
         raise RuntimeError(f"{label} Git blob identity mismatch")
@@ -101,7 +115,7 @@ def verify_execution_closure(
     root: Path = ROOT,
     anchor_path: Path | None = None,
 ) -> tuple[dict, dict, dict[str, Path]]:
-    """Authenticate the entire behavior chain as inert bytes before imports."""
+    """Authenticate frozen artifacts and behavior code as inert bytes before imports."""
     root = root.resolve()
     if anchor_path is None:
         anchor_path = (
@@ -137,9 +151,7 @@ def verify_execution_closure(
     parent_path_value = parent.get("path")
     if not isinstance(parent_path_value, str) or not parent_path_value:
         raise RuntimeError("authority-anchor v2 path missing")
-    parent_path = (root / parent_path_value).resolve()
-    if not parent_path.is_relative_to(root) or not parent_path.is_file():
-        raise RuntimeError("authority-anchor v2 path invalid")
+    parent_path = _verified_repo_file(root, parent_path_value, label="authority-anchor v2")
 
     provenance_v2 = _load_exact_artifact(
         parent_path,
@@ -154,6 +166,41 @@ def verify_execution_closure(
         raise RuntimeError("execution provenance v2 base-contract mismatch")
     if provenance_v2.get("risk_amendment_sha256") != EXPECTED_RISK_AMENDMENT_SHA256:
         raise RuntimeError("execution provenance v2 risk-amendment mismatch")
+
+    # The authority anchor's digest strings are not sufficient by themselves.
+    # Authenticate the actual frozen scientific artifacts as inert data before
+    # any behavior-bearing project module is imported or any dataset is read.
+    base_contract_path = _verified_repo_file(
+        root,
+        BASE_EXECUTION_CONTRACT_RELATIVE_PATH,
+        label="base execution contract",
+    )
+    base_contract = _load_exact_artifact(
+        base_contract_path,
+        expected_sha256=EXPECTED_BASE_EXECUTION_CONTRACT_SHA256,
+        label="base execution contract",
+    )
+    if base_contract.get("replication_id") != REPLICATION_ID:
+        raise RuntimeError("base execution contract replication mismatch")
+    if base_contract.get("parent_artifact_sha256") != EXPECTED_PARENT_ARTIFACT_SHA256:
+        raise RuntimeError("base execution contract parent mismatch")
+
+    risk_amendment_path = _verified_repo_file(
+        root,
+        RISK_AMENDMENT_RELATIVE_PATH,
+        label="risk amendment",
+    )
+    risk_amendment = _load_exact_artifact(
+        risk_amendment_path,
+        expected_sha256=EXPECTED_RISK_AMENDMENT_SHA256,
+        label="risk amendment",
+    )
+    if risk_amendment.get("replication_id") != REPLICATION_ID:
+        raise RuntimeError("risk amendment replication mismatch")
+    if risk_amendment.get("parent_artifact_sha256") != EXPECTED_PARENT_ARTIFACT_SHA256:
+        raise RuntimeError("risk amendment parent mismatch")
+    if risk_amendment.get("base_execution_contract_sha256") != EXPECTED_BASE_EXECUTION_CONTRACT_SHA256:
+        raise RuntimeError("risk amendment execution-contract mismatch")
 
     anchor_bindings = anchor.get("behavior_bindings")
     if not isinstance(anchor_bindings, Mapping):
@@ -298,15 +345,19 @@ def run_canonical_stage1_frozen() -> dict:
     _, _, paths = verify_execution_closure()
     base, loader, risk_guard, previous = _load_verified_behavior_modules(paths)
     try:
-        base.load_and_validate_contracts()
-        risk_guard.load_and_validate_risk_amendment()
+        _, execution_contract = base.load_and_validate_contracts()
+        if execution_contract.get("artifact_sha256") != EXPECTED_BASE_EXECUTION_CONTRACT_SHA256:
+            raise RuntimeError("base execution contract immutable digest changed after closure verification")
+        risk_amendment = risk_guard.load_and_validate_risk_amendment()
+        if risk_amendment.get("artifact_sha256") != EXPECTED_RISK_AMENDMENT_SHA256:
+            raise RuntimeError("risk amendment immutable digest changed after closure verification")
         rows = loader.load_frozen_eth_development_rows()
         result = risk_guard.evaluate_stage1_guarded(rows)
     finally:
         _restore_modules(previous)
 
     result["evidence_authority"] = (
-        "FROZEN_DATASET_PREIMPORT_CODE_AUTHENTICATED_REVIEW_AUTHORITY_EXTERNAL_RISK_OVERLAY"
+        "FROZEN_DATASET_PREIMPORT_CODE_AND_CONTRACT_AUTHENTICATED_REVIEW_AUTHORITY_EXTERNAL_RISK_OVERLAY"
     )
     result["authority"]["stage2_baseline_execution_allowed"] = False
     result["authority"]["profitability_claim_allowed"] = False
