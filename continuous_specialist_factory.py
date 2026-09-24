@@ -186,7 +186,9 @@ _state: dict[str, object] = {
     "enabled": True,
     "started_at": None,
     "last_refresh_at": None,
+    "last_success_at": None,
     "last_error_type": None,
+    "consecutive_failures": 0,
     "refresh_seconds": REFRESH_SECONDS,
     "logical_worker_count": len(SPECIALISTS),
     "core_worker_count": len(CORE_SPECIALISTS),
@@ -261,15 +263,19 @@ def refresh_once(rows: list[dict] | None = None) -> dict:
     try:
         source_rows = list(rows) if rows is not None else fetch_shadow_predictions(limit=MAX_ROWS)
         workers = build_specialist_snapshot(source_rows)
+        refreshed_at = _now()
         with _lock:
             _state["workers"] = workers
-            _state["last_refresh_at"] = _now()
+            _state["last_refresh_at"] = refreshed_at
+            _state["last_success_at"] = refreshed_at
             _state["last_error_type"] = None
+            _state["consecutive_failures"] = 0
             _state["cycles_completed"] = int(_state["cycles_completed"]) + 1
     except Exception as exc:
         with _lock:
             _state["last_refresh_at"] = _now()
             _state["last_error_type"] = type(exc).__name__
+            _state["consecutive_failures"] = int(_state["consecutive_failures"]) + 1
     return snapshot()
 
 
