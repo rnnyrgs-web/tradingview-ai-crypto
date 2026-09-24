@@ -21,7 +21,7 @@
     "replication_code_blob_sha": "82b79f2be4332858de55de46341bd3fc81fa0c38",
     "mechanism_only": true,
     "published_results_are_internal_evidence": false,
-    "source_selection_warning": "The paper searches many cutoff/strategy combinations in-sample, then reports a 2021-2025 holdout. We do not import either result as our evidence and do not repeat the search.",
+    "source_selection_warning": "The paper searches many cutoff/strategy combinations in-sample, then reports a 2021-2025 holdout. We do not import either result as our evidence and do not repeat the search. The paper was published on 2026-09-06, after every 2026H1 observation in our frozen Stage-1 window; therefore 2026H1 is a retrospective post-source-sample replication that was unread by this project at predeclaration, not a prospective/live or publication-blind holdout.",
     "extracted_mechanism": "A fixed UTC day/night decomposition may expose persistent intraday return structure. The source's frozen ETH 05:00-17:00 UTC daytime / 17:00-05:00 UTC nighttime specification combines a constant-long nighttime leg with daytime reversal based only on the prior completed daytime-session return.",
     "external_code_semantics": {
       "timezone": "UTC",
@@ -31,12 +31,13 @@
       "night_rule": "LONG",
       "day_rule": "REVERSAL_OF_PREVIOUS_SAME_SESSION_RETURN",
       "source_data_sample_end": "2025-12-31T23:00:00Z"
-    }
+    },
+    "publication_date": "2026-09-06"
   },
   "scientific_hypothesis": {
     "family": "fixed_utc_session_lagged_reversal",
     "economic_mechanism": "If crypto liquidity/risk transfer has persistent UTC time-of-day structure, the sign of the prior completed ETH daytime session may be negatively autocorrelated with the next 05:00-17:00 UTC daytime session while the complementary 17:00-05:00 UTC session retains positive drift.",
-    "falsifiable_claim": "Without tuning the 05:00 UTC cutoff or the Long/Reversal rule, the source-frozen ETH strategy has positive after-screening-cost expectancy in a strict post-source-sample 2026H1 replication, beats exposure-matched simple baselines, and is not explained by one validation subperiod or a single extreme day."
+    "falsifiable_claim": "Without tuning the 05:00 UTC cutoff or the Long/Reversal rule, the source-frozen ETH strategy has positive after-screening-cost expectancy in the frozen retrospective post-source-sample 2026H1 replication, beats exposure-matched simple baselines, and is not explained by one validation subperiod or a single extreme day. Passing this screen is replication evidence only and cannot be called genuine-forward evidence."
   },
   "data_contract": {
     "source": "Kraken official downloadable historical OHLCVT incremental archives",
@@ -44,8 +45,6 @@
     "bar_interval": "60m",
     "timezone": "UTC",
     "archive_required_through": "2026-06-30T23:00:00Z",
-    "protected_shadow_start_utc": "2026-07-01T00:00:00Z",
-    "screen_may_read_protected_shadow": false,
     "point_in_time": true,
     "required_archive_receipts": [
       "2026Q1 and 2026Q2 archive bytes and sha256",
@@ -66,7 +65,15 @@
     "scored_trading_date_end": "2026-06-30",
     "validation_half_1_trading_dates": "2026-01-02 through 2026-03-31 inclusive",
     "validation_half_2_trading_dates": "2026-04-01 through 2026-06-30 inclusive",
-    "incremental_archive_reason": "Q1+Q2 2026 are sufficient: 2026-01-01 daytime is warmup only; the first scored trading date is 2026-01-02, and source trading-date semantics pair each date's 05:00-17:00 day with the prior 17:00-05:00 night."
+    "incremental_archive_reason": "Q1+Q2 2026 are sufficient: 2026-01-01 daytime is warmup only; the first scored trading date is 2026-01-02, and source trading-date semantics pair each date's 05:00-17:00 day with the prior 17:00-05:00 night.",
+    "predeclaration_time_utc": "2026-09-24T01:00:00Z",
+    "retrospective_holdout_start_utc": "2026-07-01T00:00:00Z",
+    "retrospective_holdout_classification": "SEALED_HISTORICAL_TAIL_NOT_GENUINE_FORWARD",
+    "screen_may_read_retrospective_holdout": false,
+    "genuine_forward_shadow_start_utc": "2026-09-24T17:00:00Z",
+    "genuine_forward_first_complete_trading_date": "2026-09-25",
+    "genuine_forward_boundary_reason": "The predeclaration formed at 2026-09-24T01:00:00Z during the 2026-09-24 trading date's 17:00-05:00 night session. To prevent partial pre-formation exposure from entering a full trading-date unit, genuine-forward authority starts at the next 17:00 UTC night-entry boundary; 2026-09-25 is the first complete night+day trading date wholly formed after predeclaration.",
+    "screen_may_read_genuine_forward_shadow": false
   },
   "signal_rules": {
     "parameter_variants": 1,
@@ -137,7 +144,7 @@
     "catastrophic_tail_veto": true,
     "single_day_dependence_veto": true,
     "single_day_dependence_rule": "Remove the single best UTC trading date; remaining after-cost cumulative arithmetic PnL must stay positive.",
-    "underpowered_action": "classify UNDERPOWERED/DATA_INCONCLUSIVE; do not change cutoff, session length, rule, or protected boundary"
+    "underpowered_action": "classify UNDERPOWERED/DATA_INCONCLUSIVE; do not change cutoff, session length, rule, retrospective-holdout boundary, or genuine-forward boundary"
   },
   "baseline_and_ablation_plan": {
     "formation_before_outcomes": true,
@@ -151,10 +158,11 @@
     "randomized_timing_and_volatility_match": "Required only for a legitimate Stage-1 survivor under #517; exact controls must be frozen and independently reviewed before those survivor outcomes are used for Stage 2."
   },
   "successive_halving": {
-    "stage_1": "one strict 2026-01-02 through 2026-06-30 post-source-sample screen with the frozen 05:00 UTC Long/Reversal rule and screen-only 24/48/72 bps costs",
+    "stage_1": "one strict 2026-01-02 through 2026-06-30 retrospective post-source-sample screen, frozen before this project reads those outcomes, with the fixed 05:00 UTC Long/Reversal rule and screen-only 24/48/72 bps costs",
     "stage_2": "only if Stage 1 survives: run already-frozen/simple baselines and then independently frozen #517 randomized-timing/volatility-matched controls plus authenticated execution-cost and short-implementability evidence",
-    "stage_3": "at most one global Strategy Factory deep candidate may advance; no publication-derived promotion priority",
-    "shadow_opened": false
+    "stage_3": "at most one global Strategy Factory deep candidate may advance; no publication-derived promotion priority; genuine-forward evidence begins only at the frozen post-formation boundary",
+    "retrospective_holdout_opened": false,
+    "genuine_forward_shadow_opened": false
   },
   "failure_learning": {
     "issue": 510,
@@ -170,18 +178,20 @@
     "requires_current_main_reconciliation": true,
     "requires_exact_head_ci": true,
     "requires_independent_review": true,
-    "protected_shadow_opened": false,
     "broker_connected": false,
     "trade_authority": false,
-    "promotion_authority": false
+    "promotion_authority": false,
+    "retrospective_holdout_opened": false,
+    "genuine_forward_shadow_opened": false,
+    "retrospective_h1_may_claim_genuine_forward": false
   },
   "experiment_value": {
     "economic_value": "HIGH_IF_REPLICATED",
     "falsification_value": "HIGH",
     "data_readiness": "HIGH_FREE_OFFICIAL_KRAKEN_ARCHIVE",
     "implementation_cost": "LOW",
-    "priority_reason": "A simple materially distinct mechanism with public code and an untouched 2026H1 post-source-sample window can cheaply settle whether the published ETH session effect survives our much harsher after-cost screen."
+    "priority_reason": "A simple materially distinct mechanism with public code and a frozen, unread-by-project 2026H1 post-source-sample retrospective window can cheaply test temporal extension under much harsher after-cost screening; only post-formation observations at the frozen genuine-forward boundary can later support genuine-forward claims."
   },
-  "exact_next_action": "Complete #520 hypothesis-driven Kraken 2026Q1+Q2 ETH/USD hourly incremental-archive preflight without reading 2026-07-01 onward, bind exact archive/MANIFEST/normalized-row identities into a new execution contract, pass canonical semantic/exact rejected-memory admission, exact-head CI and independent review, then run this v1 exactly once. Do not tune from the result.",
-  "artifact_sha256": "6b8b71a5508fb61823f823e4596b644c29b6e4146175a2cd53cbd99f3976471a"
+  "exact_next_action": "Complete #520 hypothesis-driven Kraken 2026Q1+Q2 ETH/USD hourly incremental-archive preflight without reading 2026-07-01 onward, bind exact archive/MANIFEST/normalized-row identities into a new execution contract, pass canonical semantic/exact rejected-memory admission, exact-head CI and independent review, then run the frozen retrospective 2026H1 v1 exactly once. Do not tune from the result and do not call it genuine-forward evidence. Preserve the separately frozen post-formation genuine-forward boundary.",
+  "artifact_sha256": "5eedde6e11d325ce1557a6ee27c3e91a2c03f83267c7dbdcb0f5d151ce990d91"
 }
