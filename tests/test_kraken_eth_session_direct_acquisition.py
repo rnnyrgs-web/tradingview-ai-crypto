@@ -31,18 +31,50 @@ def _write_zip(path: Path, *, manifest: bytes = b'{"build":"test"}') -> None:
         archive.writestr("ETHUSD_60.csv", "1767229200,1,2,0.5,1.5,10,3\n")
 
 
-def test_contract_is_exactly_bound_to_frozen_replication() -> None:
+def test_contract_is_exactly_bound_to_corrected_frozen_replication() -> None:
     contract = acquisition.load_contract()
+    data = contract["data_contract"]
+    authority = contract["screening_authority"]
+
     assert contract["replication_id"] == acquisition.CONTRACT_ID
     assert contract["artifact_sha256"] == acquisition.CONTRACT_ARTIFACT_SHA256
-    assert contract["data_contract"]["required_incremental_archives"] == list(
-        acquisition.SOURCE_URLS.values()
+    assert contract["artifact_sha256"] == (
+        "fee604ea0e2f993cd109cadcc6717deedbb7bd02e044cf380de2ef80e91afcc3"
     )
-    assert contract["data_contract"]["screen_may_read_protected_shadow"] is False
-    assert contract["screening_authority"]["screen_started"] is False
-    assert contract["screening_authority"]["trade_authority"] is False
+    assert data["required_incremental_archives"] == list(acquisition.SOURCE_URLS.values())
+    assert data["required_data_start_utc"] == "2026-01-01T04:00:00Z"
+    assert data["retrospective_holdout_classification"] == (
+        "SEALED_HISTORICAL_TAIL_NOT_GENUINE_FORWARD"
+    )
+    assert data["screen_may_read_retrospective_holdout"] is False
+    assert data["genuine_forward_shadow_start_utc"] == "2026-09-24T17:00:00Z"
+    assert data["genuine_forward_first_complete_trading_date"] == "2026-09-25"
+    assert data["screen_may_read_genuine_forward_shadow"] is False
+    assert authority["screen_started"] is False
+    assert authority["retrospective_holdout_opened"] is False
+    assert authority["genuine_forward_shadow_opened"] is False
+    assert authority["retrospective_h1_may_claim_genuine_forward"] is False
+    assert authority["trade_authority"] is False
     assert contract["execution_rules"]["broker_connected"] is False
     assert contract["execution_rules"]["live_trading"] is False
+
+
+def test_old_ambiguous_shadow_contract_fails_closed(tmp_path: Path) -> None:
+    contract = acquisition.load_contract()
+    tampered = json.loads(json.dumps(contract))
+    tampered["data_contract"]["protected_shadow_start_utc"] = "2026-07-01T00:00:00Z"
+    tampered["data_contract"].pop("retrospective_holdout_start_utc")
+    tampered["data_contract"].pop("retrospective_holdout_classification")
+    tampered["data_contract"].pop("screen_may_read_retrospective_holdout")
+    tampered["data_contract"].pop("genuine_forward_shadow_start_utc")
+    tampered["data_contract"].pop("genuine_forward_first_complete_trading_date")
+    tampered["data_contract"].pop("screen_may_read_genuine_forward_shadow")
+    tampered["artifact_sha256"] = acquisition._canonical_artifact_digest(tampered)
+    path = tmp_path / acquisition.CONTRACT_PATH
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(tampered), encoding="utf-8")
+    with pytest.raises(ValueError, match="artifact identity mismatch|historical-tail boundary"):
+        acquisition.load_contract(tmp_path)
 
 
 def test_only_two_exact_kraken_archives_are_authorized() -> None:
@@ -109,7 +141,7 @@ def test_content_length_is_bounded_and_exact_when_present() -> None:
         acquisition._parse_content_length({"content-length": "1.5"}, maximum=200)
 
 
-def test_receipt_never_grants_screen_or_trading_authority() -> None:
+def test_receipt_never_grants_screen_forward_or_trading_authority() -> None:
     request = acquisition.freeze_kraken_request(
         source_kind="KRAKEN_ETH_SESSION_2026Q1_ARCHIVE"
     )
@@ -140,11 +172,13 @@ def test_receipt_never_grants_screen_or_trading_authority() -> None:
     assert authority["timestamp_semantics_authority"] is False
     assert authority["normalized_rows_authority"] is False
     assert authority["strategy_screen_authority"] is False
-    assert authority["protected_shadow_authority"] is False
+    assert authority["retrospective_holdout_authority"] is False
+    assert authority["genuine_forward_shadow_authority"] is False
     assert authority["profitability_claim_authority"] is False
     assert authority["promotion_authority"] is False
     assert authority["broker_connected"] is False
     assert authority["live_trading"] is False
+    assert "protected_shadow_authority" not in authority
 
     unsigned = dict(receipt)
     stored = unsigned.pop("receipt_sha256")
