@@ -1,8 +1,8 @@
 {
-  "schema": "two_x_archive_native_presence_age_floor_contract.v1",
-  "artifact_id": "2X-ARCHIVE-NATIVE-PRESENCE-AGE-FLOOR-001-v1",
+  "schema": "two_x_archive_native_presence_history_span_contract.v1",
+  "artifact_id": "2X-ARCHIVE-NATIVE-PRESENCE-HISTORY-SPAN-001-v1",
   "status": "PREDECLARED_BLOCKED_TRUSTED_ATTESTED_ROWS_NOT_YET_CONSUMABLE",
-  "purpose": "Freeze an outcome-blind provider-native proof that an exact Binance Spot/USDT market traded immediately before a historical decision and had traded at least 180 days earlier, without claiming exact listing time, delisting, strict tradability, or any 2x outcome.",
+  "purpose": "Freeze an outcome-blind provider-native proof that an exact Binance Spot/USDT market traded immediately before a historical decision and that provider-native trading was observed at least 180 days earlier, without claiming continuous listing age, exact listing time, delisting, strict tradability, or any 2x outcome.",
   "parents": [
     505,
     514,
@@ -34,7 +34,7 @@
       "required_close_time_ms": 1612137599999,
       "required_relation_to_decision": "IMMEDIATELY_PRECEDING_COMPLETED_UTC_DAY"
     },
-    "age_floor_archive": {
+    "history_span_anchor_archive": {
       "path": "data/spot/monthly/klines/BTCUSDT/1d/BTCUSDT-1d-2020-07.zip",
       "checksum_path": "data/spot/monthly/klines/BTCUSDT/1d/BTCUSDT-1d-2020-07.zip.CHECKSUM",
       "required_row_date": "2020-07-31",
@@ -76,25 +76,29 @@
     "missing_evidence_is_false_membership": false,
     "archive_object_existence_alone_has_presence_authority": false
   },
-  "age_floor_rule": {
-    "output_schema": "binance_listing_age_floor_from_attested_kline.v1",
+  "observed_history_span_rule": {
+    "output_schema": "binance_observed_trading_history_span_from_attested_kline.v1",
     "threshold_days": 180,
-    "claim": "LISTING_AGE_AT_LEAST_180D",
+    "claim": "TRADING_OBSERVED_AT_LEAST_180D_BEFORE_DECISION",
     "require_same_exact_symbol_market_quote_asset_cadence": true,
     "require_authenticated_trade_row_at_or_before_cutoff": true,
     "require_trade_count_gt_zero": true,
     "require_base_asset_volume_gt_zero": true,
     "require_quote_asset_volume_gt_zero": true,
+    "continuous_listing_authority": "NONE",
+    "listing_age_ge_180d_authority": "NONE",
     "exact_first_trade_or_listing_time_authority": "NONE",
     "missing_or_untrusted_evidence_state": "UNKNOWN",
     "archive_absence_has_delisting_authority": false,
-    "archive_absence_has_negative_control_authority": false
+    "archive_absence_has_negative_control_authority": false,
+    "scientific_reason": "Two authenticated positive trading observations separated by >=180 days prove an observed trading-history span, but do not by themselves prove uninterrupted listing continuity; delist/relist or symbol-reuse histories remain possible without separate identity/continuity evidence."
   },
   "versioned_consumer_boundary": {
     "legacy_exact_age_transform": "DERIVED_BINANCE_LISTING_AGE_DAYS_V1",
     "legacy_basis": "first_verified_venue_trade",
     "legacy_transform_must_not_be_reinterpreted": true,
-    "new_age_floor_transform": "DERIVED_BINANCE_LISTING_AGE_GE_180D_V2",
+    "new_observed_history_transform": "DERIVED_BINANCE_OBSERVED_TRADING_HISTORY_GE_180D_V1",
+    "cohort_listing_age_gate_authority": "NONE_REQUIRES_TRUSTED_LISTING_START_OR_CONTINUITY_EVIDENCE",
     "membership_provenance_target": "binance_market_presence_provenance.v1",
     "current_preflight_authority": "NONE_UNTIL_SEPARATELY_REVIEWED_VERSIONED_CONSUMER"
   },
@@ -107,13 +111,16 @@
     "PRESENCE_ROW_NOT_IMMEDIATELY_PREDECISION",
     "PRESENCE_ROW_POSTDECISION",
     "ZERO_OR_NONFINITE_TRADING_EVIDENCE",
-    "AGE_ROW_AFTER_180D_CUTOFF",
+    "HISTORY_ANCHOR_ROW_AFTER_180D_CUTOFF",
+    "SPARSE_ROWS_REINTERPRETED_AS_CONTINUOUS_LISTING_AGE",
     "TARDIS_ENUMERATION_OR_QUEUE_LINEAGE_AS_MEMBERSHIP_PROOF",
     "CALLER_TIMESTAMP_OVERRIDES_NATIVE_ROW_TIME",
     "ARCHIVE_OBJECT_EXISTENCE_WITHOUT_AUTHENTICATED_ROW_CONTENT"
   ],
   "forbidden_authority": {
     "exact_listing_time": false,
+    "listing_age_ge_180d": false,
+    "continuous_listing": false,
     "delisting_time": false,
     "matched_nonwinner": false,
     "historical_2x_label": false,
