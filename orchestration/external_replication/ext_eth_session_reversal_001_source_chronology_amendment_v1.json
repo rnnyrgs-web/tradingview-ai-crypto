@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "artifact_type": "external_replication_source_chronology_amendment",
+  "amendment_id": "EXT-ETH-SESSION-REVERSAL-001-v1-SOURCE-CHRONOLOGY-v1",
+  "status": "FROZEN_PRE_OUTCOME",
+  "parent_replication_id": "EXT-ETH-SESSION-REVERSAL-001-v1",
+  "parent_artifact_sha256": "fee604ea0e2f993cd109cadcc6717deedbb7bd02e044cf380de2ef80e91afcc3",
+  "parent_contract_git_blob_sha": "e27a19904130ceb0dcaff670b0eecb93b550103e",
+  "formed_before_stage1_outcomes": true,
+  "observed_source_provenance": {
+    "source_repository": "wzf01195010-png/Crypto-day-night-effects",
+    "repository_created_at_utc": "2026-08-19T05:25:44Z",
+    "replication_code_path": "btc_eth_backtest.py",
+    "replication_code_first_public_commit_sha": "540574518f46fb0fbf71aa8d91aaf3995d814b29",
+    "replication_code_first_public_commit_at_utc": "2026-08-19T17:23:01Z",
+    "pinned_replication_commit_sha": "5693993e108f2b3668bd21b1dd36ae31f79d8fcd",
+    "pinned_replication_commit_at_utc": "2026-08-19T17:44:20Z",
+    "paper_publication_date": "2026-09-06",
+    "source_data_sample_end_utc": "2025-12-31T23:00:00Z",
+    "evidence_scope": "PUBLIC_GITHUB_AND_PUBLISHED_PAPER_ONLY",
+    "pre_h1_strategy_freeze_proven": false,
+    "reason": "The public repository and the first public commit containing the pinned replication code are dated 2026-08-19, after the entire frozen 2026H1 Stage-1 window. The paper's source-data sample ending in 2025 does not by itself prove that the selected ETH 05:00 Long/Reversal design was frozen before 2026H1 outcomes existed. This is an absence-of-proof classification, not a claim that the authors used 2026H1 outcomes."
+  },
+  "evidence_reclassification": {
+    "h1_stage1_window": "2026-01-02 through 2026-06-30",
+    "old_label_disallowed_for_positive_authority": "POST_SOURCE_SAMPLE_INDEPENDENT_REPLICATION",
+    "new_label": "RETROSPECTIVE_PROJECT_UNREAD_SOURCE_CHRONOLOGY_UNPROVEN",
+    "project_outcome_unread_before_predeclaration": true,
+    "source_independent_of_h1_outcomes_proven": false,
+    "positive_h1_result_authority": "HYPOTHESIS_PRESERVATION_AND_RETROSPECTIVE_DIAGNOSTICS_ONLY",
+    "negative_h1_result_authority": "FALSIFICATION_ALLOWED_UNDER_PROJECT_FROZEN_RULES",
+    "independent_replication_claim_allowed_from_h1": false,
+    "profitability_claim_allowed_from_h1": false,
+    "deep_candidate_promotion_allowed_from_h1_alone": false,
+    "stage2_h1_controls_if_stage1_survives": "ALLOWED_AS_RETROSPECTIVE_DIAGNOSTICS_ONLY_NO_PROMOTION_AUTHORITY",
+    "strong_positive_evidence_requires_one_of": [
+      "AUTHENTICATED_SOURCE_FREEZE_BEFORE_2026-01-02",
+      "GENUINE_FORWARD_POST_PROJECT_FORMATION_EVIDENCE"
+    ]
+  },
+  "genuine_forward_binding": {
+    "start_utc": "2026-09-24T17:00:00Z",
+    "first_complete_trading_date": "2026-09-25",
+    "shadow_must_remain_immutable_and_research_only": true,
+    "tuning_from_shadow_forbidden": true,
+    "broker_connected": false,
+    "live_trading": false,
+    "promotion_authority": false
+  },
+  "failure_learning": {
+    "classification": "PRE_OUTCOME_EXTERNAL_SOURCE_CHRONOLOGY_GAP",
+    "economic_negative_evidence": false,
+    "family_priority_reduction_from_this_gap": false,
+    "rejected_memory_write_from_this_gap": false,
+    "if_h1_economic_screen_fails": "ROUTE_NORMAL_ECONOMIC_FAILURE_TO_ISSUE_510",
+    "if_h1_screen_passes": "PRESERVE_HYPOTHESIS_BUT_DO_NOT_CALL_IT_INDEPENDENT_REPLICATION_OR_PROMOTE_FROM_H1_ALONE"
+  },
+  "authority_locks": {
+    "stage1_started": false,
+    "stage1_pnl_opened": false,
+    "retrospective_holdout_opened": false,
+    "genuine_forward_shadow_opened": false,
+    "protected_oos_opened": false,
+    "broker_connected": false,
+    "trade_authority": false,
+    "promotion_authority": false
+  },
+  "artifact_sha256": "17d17c81790b40225d886972369d4cac601c20286ce06eecafba4f5b31094722"
+}
