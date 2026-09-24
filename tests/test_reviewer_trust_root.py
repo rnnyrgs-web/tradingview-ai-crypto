@@ -131,6 +131,41 @@ def test_trusted_context_reconciles_env_with_public_server_and_workflow_source(
     assert len(trust.workflow_trust_context_sha256(context)) == 64
 
 
+@pytest.mark.parametrize("line_ending", ["\n", "\r\n"])
+def test_trusted_context_accepts_github_line_wrapped_workflow_source(
+    monkeypatch: pytest.MonkeyPatch, line_ending: str
+) -> None:
+    _env(monkeypatch)
+
+    def fake_api(url: str) -> dict:
+        if "/actions/runs/" in url:
+            return _server_run()
+        if url.endswith("/git/ref/heads/main"):
+            return _server_main()
+        if f"/contents/{WORKFLOW_PATH}?ref={RUNTIME_SHA}" in url:
+            payload = _server_workflow()
+            encoded = payload["content"]
+            payload["content"] = line_ending.join(
+                encoded[index : index + 60] for index in range(0, len(encoded), 60)
+            )
+            return payload
+        raise AssertionError(f"unexpected URL: {url}")
+
+    monkeypatch.setattr(trust, "_github_public_api_json", fake_api)
+    context = trust.collect_trusted_workflow_context(runtime_git_sha=RUNTIME_SHA)
+    assert context["server_workflow_blob_sha"] == EXPECTED_WORKFLOW_BLOB
+
+
+@pytest.mark.parametrize("separator", [" ", "\t", "#"])
+def test_server_workflow_base64_rejects_non_line_wrapping(separator: str) -> None:
+    payload = _server_workflow()
+    encoded = payload["content"]
+    payload["content"] = encoded[:60] + separator + encoded[60:]
+
+    with pytest.raises(RuntimeError, match="server workflow source base64 invalid"):
+        trust._server_workflow_bytes(payload)
+
+
 def test_public_server_observation_does_not_send_workflow_token(monkeypatch: pytest.MonkeyPatch) -> None:
     class FakeResponse:
         def raise_for_status(self) -> None:

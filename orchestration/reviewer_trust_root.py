@@ -181,8 +181,16 @@ def _server_workflow_bytes(payload: dict[str, Any]) -> bytes:
     raw = payload.get("content")
     if not isinstance(raw, str) or not raw:
         raise RuntimeError("trusted server workflow source content missing")
+    # GitHub's contents API line-wraps inline base64 with LF (and intermediaries
+    # may preserve it as CRLF).  Remove only those transport line endings before
+    # strict decoding; spaces, tabs, non-alphabet bytes, and bad padding must
+    # still fail closed.  The decoded bytes are subsequently bound to both the
+    # server-reported Git blob SHA and the local trusted workflow source.
+    normalized = raw.replace("\r", "").replace("\n", "")
+    if not normalized:
+        raise RuntimeError("trusted server workflow source content missing")
     try:
-        return base64.b64decode(raw, validate=True)
+        return base64.b64decode(normalized, validate=True)
     except (ValueError, TypeError) as exc:
         raise RuntimeError("trusted server workflow source base64 invalid") from exc
 
