@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -27,15 +28,19 @@ def _self_digest(contract: dict) -> str:
     return hashlib.sha256(canonical).hexdigest()
 
 
+def _utc(text: str) -> datetime:
+    return datetime.fromisoformat(text.replace("Z", "+00:00")).astimezone(timezone.utc)
+
+
 def test_predeclaration_self_digest_is_immutable() -> None:
     contract = _contract()
     assert contract["artifact_sha256"] == _self_digest(contract)
     assert contract["artifact_sha256"] == (
-        "6b8b71a5508fb61823f823e4596b644c29b6e4146175a2cd53cbd99f3976471a"
+        "5eedde6e11d325ce1557a6ee27c3e91a2c03f83267c7dbdcb0f5d151ce990d91"
     )
 
 
-def test_external_source_identity_and_strategy_are_frozen() -> None:
+def test_external_source_identity_strategy_and_publication_date_are_frozen() -> None:
     contract = _contract()
     source = contract["source_research"]
     semantics = source["external_code_semantics"]
@@ -47,7 +52,10 @@ def test_external_source_identity_and_strategy_are_frozen() -> None:
     assert source["replication_code_blob_sha"] == (
         "82b79f2be4332858de55de46341bd3fc81fa0c38"
     )
+    assert source["publication_date"] == "2026-09-06"
     assert source["published_results_are_internal_evidence"] is False
+    assert "retrospective post-source-sample" in source["source_selection_warning"]
+    assert "not a prospective/live" in source["source_selection_warning"]
     assert semantics == {
         "timezone": "UTC",
         "eth_cutoff_hour_utc": 5,
@@ -59,7 +67,7 @@ def test_external_source_identity_and_strategy_are_frozen() -> None:
     }
 
 
-def test_replication_uses_only_2026_incrementals_and_shadow_is_sealed() -> None:
+def test_replication_uses_only_2026_incrementals_and_future_evidence_is_sealed() -> None:
     contract = _contract()
     data = contract["data_contract"]
 
@@ -76,9 +84,44 @@ def test_replication_uses_only_2026_incrementals_and_shadow_is_sealed() -> None:
     assert data["validation_half_2_trading_dates"] == (
         "2026-04-01 through 2026-06-30 inclusive"
     )
-    assert data["protected_shadow_start_utc"] == "2026-07-01T00:00:00Z"
-    assert data["screen_may_read_protected_shadow"] is False
+
+    # July 1 through formation is historical at predeclaration time and cannot be
+    # relabeled as prospective/genuine-forward evidence.
+    assert "protected_shadow_start_utc" not in data
+    assert data["retrospective_holdout_start_utc"] == "2026-07-01T00:00:00Z"
+    assert data["retrospective_holdout_classification"] == (
+        "SEALED_HISTORICAL_TAIL_NOT_GENUINE_FORWARD"
+    )
+    assert data["screen_may_read_retrospective_holdout"] is False
+
+    # The independent sample unit is a full UTC trading date whose night leg starts
+    # at 17:00 UTC. Formation occurred mid-night-session, so the first fully
+    # post-formation trading date starts at the next 17:00 boundary.
+    formed = _utc(contract["formed_at"])
+    genuine_start = _utc(data["genuine_forward_shadow_start_utc"])
+    assert data["predeclaration_time_utc"] == contract["formed_at"]
+    assert genuine_start > formed
+    assert data["genuine_forward_shadow_start_utc"] == "2026-09-24T17:00:00Z"
+    assert data["genuine_forward_first_complete_trading_date"] == "2026-09-25"
+    assert data["screen_may_read_genuine_forward_shadow"] is False
     assert data["no_paid_data_required"] is True
+
+
+def test_retrospective_stage_one_cannot_claim_genuine_forward_authority() -> None:
+    contract = _contract()
+    stage = contract["successive_halving"]
+    authority = contract["screening_authority"]
+
+    assert "retrospective post-source-sample" in stage["stage_1"]
+    assert "genuine-forward evidence begins only" in stage["stage_3"]
+    assert stage["retrospective_holdout_opened"] is False
+    assert stage["genuine_forward_shadow_opened"] is False
+    assert authority["retrospective_holdout_opened"] is False
+    assert authority["genuine_forward_shadow_opened"] is False
+    assert authority["retrospective_h1_may_claim_genuine_forward"] is False
+    assert "cannot be called genuine-forward evidence" in contract["scientific_hypothesis"][
+        "falsifiable_claim"
+    ]
 
 
 def test_signal_has_one_fixed_cutoff_and_no_post_outcome_search() -> None:
@@ -153,7 +196,8 @@ def test_authority_remains_fail_closed_before_data_and_review() -> None:
     assert authority["requires_canonical_semantic_rejected_memory_check"] is True
     assert authority["requires_exact_head_ci"] is True
     assert authority["requires_independent_review"] is True
-    assert authority["protected_shadow_opened"] is False
+    assert authority["retrospective_holdout_opened"] is False
+    assert authority["genuine_forward_shadow_opened"] is False
     assert authority["trade_authority"] is False
     assert authority["promotion_authority"] is False
     assert execution["broker_connected"] is False
