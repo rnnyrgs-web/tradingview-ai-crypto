@@ -41,7 +41,7 @@ def test_durable_control_state_not_title_only_memory_authorizes_reviews() -> Non
     assert "ALREADY_REJECTED" in text
     assert "TERMINAL_NONRETRYABLE" in text
     assert "AMBIGUOUS_CONTROL_STATE" in text
-    assert "validated terminal rejection state already exists" in text
+    assert "validated terminal rejection state already exists" in text.lower()
     assert "title alone" not in text.lower()
     assert "APPROVALS=\"$(gh issue list" not in text
 
