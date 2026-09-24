@@ -99,13 +99,17 @@ def main():
     manifest = json.loads(manifest_bytes)
     tree = json.loads((ROOT / "upstream_tree.json").read_text())
     commit = json.loads((ROOT / "upstream_commit.json").read_text())
-    assert manifest["source_commit"] == commit["sha"] == COMMIT
-    assert manifest["source_tree"] == commit["tree"]["sha"] == tree["sha"] == TREE
-    assert tree["truncated"] is False and manifest["decision_at"] == CUTOFF
+    if not manifest["source_commit"] == commit["sha"] == COMMIT:
+        raise ValueError("source commit mismatch")
+    if not manifest["source_tree"] == commit["tree"]["sha"] == tree["sha"] == TREE:
+        raise ValueError("source tree mismatch")
+    if tree["truncated"] is not False or manifest["decision_at"] != CUTOFF:
+        raise ValueError("truncated tree or cutoff mismatch")
     expected = [f for f in tree["tree"] if f["type"] == "blob" and
                 f["path"].startswith("csv/") and f["path"].endswith(".csv") and
                 f["path"] != "csv/metrics.csv"]
-    assert manifest["files"] == expected and len(expected) == 100
+    if manifest["files"] != expected or len(expected) != 100:
+        raise ValueError("frozen denominator mismatch")
     raw_dir = ROOT / "raw"
     raw_dir.mkdir(exist_ok=True)
 

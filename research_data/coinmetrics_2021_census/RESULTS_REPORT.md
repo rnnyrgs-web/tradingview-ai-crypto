@@ -140,8 +140,10 @@ size and upstream Git blob identity before parsing. Default execution is offline
 Every failure remains in `results.json`; no silent denominator reduction is allowed.
 The full per-file metric values/missingness and SHA256 identities are in that file.
 
-- Results SHA256: `d6584f06b39c3a4869ac6593130102cf622e14f08f6c8343e334e36a64a5224f`.
-- Offline replay reproduced that exact hash.
+- Results SHA256: `88be7c16f5f638397a4f0ee2aa6f3146b720fce18268fbce529223a3ba522bd0`.
+- Offline replay reproduced that exact hash. Integrity checks use explicit exceptions
+  and remain active under Python optimization; replacing assertions changed only the
+  parser identity, not any source observation or count.
 - Synthetic parser/hash/cutoff tests: **12 passed** after a 12-failure RED run.
 - Full applicable repository suite: **1,862 passed, 2 skipped** in 51.72 seconds.
 - Initial collection errors were local missing dependencies; installed the existing
