@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "artifact_type": "strategy_factory_cohort_001_volatility_matched_baseline_contract",
+  "contract_id": "STRATEGY-FACTORY-COHORT-001-VOLATILITY-MATCHED-BASELINE-v1",
+  "formed_at": "2026-09-24T00:00:36Z",
+  "status": "OUTCOME_BLIND_FROZEN_WAIT_STAGE1_SURVIVORS",
+  "defect": {
+    "classification": "PRE_OUTCOME_BASELINE_GAUNTLET_COVERAGE_GAP",
+    "description": "The governing #517 baseline gauntlet requires a volatility-matched baseline where meaningful. The frozen Cohort-001 plan and executable baseline bundle already define mechanism baselines, ablations, delayed-signal and randomized-timing controls, but do not freeze an executable volatility-matched control for the five still-power-eligible hourly candidates. Because candidate signal incidence can be strongly state-dependent, leaving volatility matching undefined until after Stage-1 results would create a post-outcome control-design degree of freedom.",
+    "outcomes_read": false,
+    "economic_negative_evidence": false
+  },
+  "parent_bindings": {
+    "baseline_halving_plan": {
+      "path": "orchestration/cohorts/strategy_factory_cohort_001_baseline_halving_plan.json",
+      "cohort_planning_id": "STRATEGY-FACTORY-COHORT-001-BASELINE-HALVING-PLAN-v1",
+      "planning_contract_sha256": "4cf46291af242a350d065bf24418b8fdf5c6d36e4fea1b923a9cb1a51046c392"
+    },
+    "baseline_execution_contract": {
+      "path": "orchestration/cohorts/strategy_factory_cohort_001_baseline_execution_contract.json",
+      "contract_id": "STRATEGY-FACTORY-COHORT-001-BASELINE-EXECUTION-v1",
+      "baseline_execution_contract_sha256": "4525c3a192d56cf0f02284e3f6d910a00a1ce5870deffb95b05543165f175519"
+    },
+    "source_occupancy_amendment": {
+      "path": "orchestration/cohorts/strategy_factory_cohort_001_randomized_placebo_source_occupancy_amendment.json",
+      "amendment_id": "STRATEGY-FACTORY-COHORT-001-RANDOMIZED-PLACEBO-SOURCE-OCCUPANCY-v1",
+      "amendment_sha256": "78518ae72cefc31db5944653fedb8e7c8a133911ebd5cdd7183f9fb096d66771"
+    }
+  },
+  "candidate_scope": {
+    "candidate_count": 5,
+    "fingerprint_ids": [
+      "DISC-RESIDUAL-REV-001-v1",
+      "DISC-SIGNED-VOLUME-DRIFT-001-v1",
+      "DISC-LOWVOL-DRIFT-REV-001-v1",
+      "DISC-MODERATEVOL-AUTOCORR-001-v1",
+      "DISC-RANGE-AUCTION-REV-001-v1"
+    ],
+    "withheld_candidate": {
+      "fingerprint_id": "DISC-WEEKEND-NORMALIZE-001-v1",
+      "status": "INCONCLUSIVE_POWER_PRE_OUTCOME",
+      "volatility_matched_control_authority": false
+    }
+  },
+  "volatility_state": {
+    "state_id": "PRE_SIGNAL-24H-HOURLY-REALIZED-VOL-v1",
+    "return_definition": "close[h] / close[h-1] - 1",
+    "window_returns": 24,
+    "estimator": "sample_standard_deviation_ddof_1",
+    "source_window": "For each constituent, use the immediately preceding 24 fully completed hourly returns ending at t-1, where t is that constituent's original completed candidate decision bar. The candidate signal bar t is excluded.",
+    "control_window": "At a proposed matched constituent decision anchor a, use the immediately preceding 24 fully completed hourly returns ending at a-1. The proposed control decision bar a is excluded.",
+    "required_state": "Every source and candidate control constituent must have finite strictly-positive sigma and gap-free required closes. Missing, nonfinite, nonpositive or gapped state makes that source/control pairing ineligible; do not impute or widen the rule.",
+    "rationale": "Match the pre-signal volatility regime rather than the triggering signal-bar move itself, so this control tests timing/mechanism value conditional on background volatility without turning the volatility matcher into a hidden copy of the candidate trigger."
+  },
+  "matching_contract": {
+    "control_id": "VOLATILITY-MATCHED-TIMING-v1",
+    "source_unit": "Use the candidate's scored Stage-1 independent-event clusters after its frozen per-asset/follower non-overlap. Each source cluster becomes exactly one immutable volatility-matched control template before any control outcome is read.",
+    "template_geometry": "Preserve the source cluster's constituent instruments/legs, long-short direction pattern, relative decision/entry offsets, fixed holding lengths, pair gross-normalization semantics, concurrency and candidate-specific maximum-occupancy geometry.",
+    "partition_rule": "Every matched template must remain wholly inside the same training partition or same frozen validation half as its source cluster. Never cross the train/validation boundary or validation-half boundary.",
+    "caliper": {
+      "symmetric_sigma_ratio_max": 1.25,
+      "absolute_log_sigma_ratio_max": 0.22314355131420976,
+      "per_constituent_required": true,
+      "post_result_widening_allowed": false
+    },
+    "candidate_signal_exclusion": "A proposed control anchor is ineligible if any shifted constituent decision timestamp is itself a qualifying signal timestamp for that same candidate. Do not turn another candidate event into the control.",
+    "source_occupancy_exclusion": "Exclude overlap with the union of source candidate maximum-possible-occupancy intervals under the bound source-occupancy amendment; never shorten source exclusion using realized early exits.",
+    "control_occupancy": "Reserve each control template's maximum possible exposure interval before reading control outcomes. Dynamic exits may shorten realized exposure only after the full matched schedule is frozen and may not free an anchor for another template.",
+    "without_replacement": true,
+    "assignment_order": "Within each training partition or validation half, compute every source template's eligible control anchors using only permitted pre-outcome state. Assign source templates in ascending eligible-anchor count (scarcity first), then source-cluster entry time, then stable source-template SHA-256.",
+    "anchor_rank": "For one source template, rank eligible anchors by maximum constituent abs(log(sigma_control/sigma_source)), then mean constituent abs(log ratio), then SHA256(contract_id|'|'|candidate_scientific_design_sha256|'|'|source_template_sha256|'|'|anchor_timestamp_utc). Select the first anchor whose reserved control occupancy does not overlap a previously assigned control template.",
+    "no_redraw": "One deterministic assignment only. Do not redraw, change assignment order, widen the caliper, shrink source templates, alter direction, relax partition/half containment, reuse anchors or change the volatility estimator after outcomes.",
+    "insufficient_pool": "If any source template cannot be assigned under the frozen rules, return DATA/PIT_INCONCLUSIVE_VOLATILITY_MATCH_POOL for this control. Do not treat pool insufficiency as negative economic evidence and do not reduce candidate/family priority solely for this reason."
+  },
+  "scoring_contract": {
+    "score_only_after_stage1_survival": true,
+    "schedule_before_outcomes": true,
+    "costs_bps": [
+      24.0,
+      48.0,
+      72.0
+    ],
+    "portfolio_slot": "Use the same fixed 1/3-NAV slot and gross-notional normalization as the comparable candidate Stage-1 event.",
+    "fixed_hold_candidates": "At the matched anchor, preserve source direction/leg structure and score the already-frozen fixed holding interval without recomputing the candidate signal.",
+    "range_auction_dynamic_exit": "For DISC-RANGE-AUCTION-REV-001-v1, preserve the source long/short direction and six-hour maximum occupancy. At the matched anchor, recompute only price-level state required by the already-frozen exit mechanics (prior-48h range midpoint and ATR14) from completed bars available at that matched decision time; do not reapply the candidate entry gate, efficiency gate or volume gate. Evaluate the frozen midpoint take-profit/ATR-stop rules only after the full control schedule is fixed.",
+    "residual_pair": "For DISC-RESIDUAL-REV-001-v1, preserve the full follower/BTC hedge leg structure, source direction pattern, frozen beta-hedged gross normalization and relative timing; do not recompute whether the candidate residual/correlation signal qualifies at the control anchor.",
+    "independent_event_count": "The matched control must contain exactly one template per source Stage-1 independent-event cluster; overlapping constituent realizations never create extra independent observations.",
+    "incremental_value_use": "This control has Stage-2 falsification authority only. It may show whether a survivor adds economic value beyond exposure at comparable pre-signal volatility state; it cannot by itself promote a candidate or establish authenticated profitability."
+  },
+  "formation_forbidden_inputs": [
+    "candidate or control entry-to-exit return",
+    "candidate or control P&L",
+    "candidate or control realized early-exit time",
+    "protected OOS rows at or after 2026-09-01T00:00:00Z",
+    "genuine-forward outcomes",
+    "post-result parameter, caliper, estimator or schedule changes"
+  ],
+  "authority_locks": {
+    "stage1_outcomes_read_to_form_contract": false,
+    "baseline_outcomes_read_to_form_contract": false,
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false,
+    "post_outcome_matching_change_allowed": false,
+    "promotion_authority": false,
+    "broker_connected": false,
+    "trade_authority": false
+  },
+  "next_transition": "Do not implement or execute this control now merely to consume capacity. After a candidate legitimately survives the one-time Stage-1 screen and the reconciled baseline-control stack has fresh exact-head CI plus independent review, deterministically materialize this already-frozen volatility-matched schedule together with the candidate's other bound controls before any medium-stage allocation.",
+  "contract_sha256": "463039fd9e7956988a2ec579e9e3d7836086d6b9799198cdd8ae77cd13b83e2f"
+}
