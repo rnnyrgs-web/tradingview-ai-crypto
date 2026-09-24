@@ -25,7 +25,7 @@ def test_temporarily_unavailable_is_only_a_nonverdict_and_cannot_mint_approval()
         "steps.review_models.outputs.rejected != 'true'"
     )
     assert (
-        "name: Require all three independent reviewers to approve\n"
+        "name: Require all three trust-bound independent reviewers to approve\n"
         f"        if: {approval_gate}"
     ) in workflow
     assert (
@@ -34,14 +34,18 @@ def test_temporarily_unavailable_is_only_a_nonverdict_and_cannot_mint_approval()
     ) in workflow
     assert "Candidate remains **unapproved** and **unmerged**" in workflow
 
-    # Missing one reviewer can never be substituted by the other two: the approval
-    # gate still requires all three concrete review JSON files.
+    # Missing one reviewer can never be substituted by the other two. Final
+    # consumption now uses the trust-bound approval verifier, not a bare JSON
+    # boolean, and still iterates all three concrete receipt paths.
     for path in (
         "/tmp/security-review.json",
         "/tmp/lead-review.json",
         "/tmp/claude-adversarial-review.json",
     ):
-        assert f"jq -e '.approve == true and .integration_authority == \"NONE\"' {path}" in workflow
+        assert path in workflow
+    assert "verify-current-approval" in workflow
+    assert "verify-current-receipt" in workflow
+    assert "jq -e '.approve == true" not in workflow
 
 
 def test_nonverdict_exception_precedes_any_output_write() -> None:
