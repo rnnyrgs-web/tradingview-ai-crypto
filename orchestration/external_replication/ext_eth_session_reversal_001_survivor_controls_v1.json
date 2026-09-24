@@ -28,10 +28,10 @@
   },
   "baseline_gauntlet_coverage": {
     "market_beta": {
-      "status": "FROZEN_PARENT_CONTROL",
+      "status": "FROZEN_PARENT_CONTROL_AND_STRICT_INCREMENTAL_GATE",
       "control": "always-long ETH on the identical 05:00/17:00 UTC boundaries",
-      "strict_incremental_gate": false,
-      "reason": "Market-beta diagnostic; lower-turnover buy/hold is informative but is not mechanically equivalent to the active day/night mechanism."
+      "strict_incremental_gate": true,
+      "reason": "Always-long ETH is a relevant lower-complexity market-beta baseline under #517: it uses the same asset, scored dates, fixed 05:00/17:00 UTC boundaries and unit gross exposure, while avoiding the candidate's active daytime sign switching. A Stage-2 survivor must demonstrate incremental after-cost value over it rather than treating it as diagnostic only."
     },
     "simple_trend": {
       "status": "FROZEN_PARENT_CONTROL_AND_EXACT_VOLATILITY_MATCH",
@@ -63,6 +63,24 @@
       "control": "night LONG plus daytime CASH",
       "strict_incremental_gate": true
     }
+  },
+  "market_beta_control": {
+    "control_id": "EXT-ETH-SESSION-REVERSAL-001-v1-MARKET-BETA-BASELINE-v1",
+    "candidate_position_sequence": "night LONG; daytime -sign(previous completed daytime return)",
+    "control_position_sequence": "LONG in both night and daytime sessions",
+    "same_asset": "Kraken ETH/USD spot",
+    "same_scored_dates": true,
+    "same_day_night_boundaries": true,
+    "candidate_max_gross_exposure": 1.0,
+    "control_max_gross_exposure": 1.0,
+    "cost_ladder_bps_per_unit_turnover": [
+      24.0,
+      48.0,
+      72.0
+    ],
+    "turnover_definition": "absolute change in signed position at each session boundary; continuous LONG has zero turnover at an unchanged boundary",
+    "post_outcome_respecification_allowed": false,
+    "comparison_rule": "On every trading date where the candidate is legitimately defined, compare the candidate and always-long ETH with identical boundary-price and cost-accounting semantics. At 24 bps and 72 bps, candidate cumulative arithmetic net PnL must exceed always-long in the full 2026H1 replication and in both frozen chronological halves. Failure is mechanism-negative Stage-2 evidence; missing required data is DATA/PIT_INCONCLUSIVE and cannot be rescued by dropping dates or redefining the beta baseline."
   },
   "randomized_timing_placebo": {
     "control_id": "EXT-ETH-SESSION-REVERSAL-001-v1-RANDOMIZED-LAG-PLACEBO-v1",
@@ -140,5 +158,5 @@
     "future_control_failure_routes_to_issue": 510,
     "pool_or_data_inconclusive_must_not_be_recorded_as_economic_rejection": true
   },
-  "artifact_sha256": "45b840de940eafb54d1f9bfd36552568220b54cbd28f024f69ea586023e1f63c"
+  "artifact_sha256": "83ad1728763fb9a1d37f52d4084c7d7ebac931c873cd379a628b77c8ee47d1af"
 }
