@@ -1,0 +1,316 @@
+{
+  "schema_version": 1,
+  "artifact_id": "2X-SOURCE-PREFLIGHT-001-v1",
+  "as_of": "2026-09-21T04:32:00Z",
+  "base_main_sha": "09015514f97d0b21107d033748446e606468e06d",
+  "issue": 505,
+  "purpose": "Outcome-blind source/provenance and matched-control preflight for the <=90-day 2x+ Move Factory. This artifact authorizes no forecast, trade, promotion, OOS opening, broker action, or Phase-3 causal-acceptance change.",
+  "current_scorecard": {
+    "immutable_2x_forecasts_in_prediction_ledger": 0,
+    "immutable_2x_forecasts_resolved": 0,
+    "prediction_ledger_rows_total_observed": 112462,
+    "prediction_ledger_rows_with_big_move_2x_manifest_observed": 0,
+    "candidate_status": "NO_CURRENT_CANDIDATE_CLEARS_GATE"
+  },
+  "upstream_contract": {
+    "implementation_pr": 433,
+    "status": "OPEN_UNMERGED",
+    "required_snapshot_features": [
+      "price",
+      "liquidity_usd",
+      "market_cap_usd",
+      "float_supply",
+      "listing_age_days",
+      "volatility_30d",
+      "return_30d",
+      "sector",
+      "regime",
+      "tradable",
+      "member"
+    ],
+    "matching_rule_summary": "Freeze same-time/same-venue/same-sector/same-regime nearest-neighbor pools from pre-outcome covariates before labels. Never refill a pool because a candidate later moved or failed to move. Censored/missing/delisted outcomes are never negative controls.",
+    "ownership_boundary": "Do not modify PR #433 event-builder ownership from this artifact."
+  },
+  "source_policy": {
+    "required_for_use": [
+      "stable asset identity that cannot silently follow a recycled ticker",
+      "observation timestamp",
+      "availability timestamp or a conservative timestamp rule justified by the raw public event semantics",
+      "upstream URL/identifier",
+      "raw-file or response digest when persisted",
+      "revision policy",
+      "explicit missingness rather than inferred/default values",
+      "survivorship-safe inclusion of delisted/non-surviving markets",
+      "no current-universe filter applied before historical outcomes are known"
+    ],
+    "forbidden": [
+      "using today's exchange symbol list as the historical universe",
+      "using today's sector/category tag as if it existed historically",
+      "backfilling historical circulating supply from a current supply value",
+      "treating a missing derivatives/on-chain field as zero",
+      "discarding delisted assets because the provider no longer lists them",
+      "using an already-observed 2x outcome to decide which controls or fields to fetch",
+      "treating an archive retrieval timestamp as proof that a derived value was available at the historical decision time",
+      "silently rewriting historical records after an upstream archive correction"
+    ]
+  },
+  "sources": [
+    {
+      "source_id": "BINANCE_PUBLIC_DATA_SPOT_RAW",
+      "provider": "Binance Public Data / data.binance.vision",
+      "cost_class": "FREE_NO_KEY",
+      "status": "ACCEPTABLE_FOR_RAW_VENUE_PRICE_AND_VOLUME_WITH_VERSIONING",
+      "primary_url": "https://github.com/binance/binance-public-data",
+      "documented_fields": [
+        "spot trades with trade id, price, quantity, quote quantity, trade timestamp",
+        "spot klines with open/high/low/close, quote volume, trade count, close time",
+        "SHA-256 CHECKSUM sidecars"
+      ],
+      "availability_semantics": "For reconstructed features, use only raw trades/events whose public event timestamps are <= cutoff; completed-bar aggregates may be used only after the bar close. The downloadable daily archive itself is published later (documented as next day), so archive publication is provenance for the later historical copy, not the historical feature availability timestamp.",
+      "revision_policy": "Pin every downloaded archive/checksum. Binance documents that archived files can later be corrected; a changed checksum creates a new source version and must not silently replace an old research artifact.",
+      "supports": [
+        "price",
+        "trailing quote-volume liquidity",
+        "return_30d",
+        "volatility_30d",
+        "venue trading age from first observed public trade when full archive coverage is proven",
+        "same-venue historical member/tradable evidence when actual trade presence and gaps are audited",
+        "post-decision OHLC outcome labeling"
+      ],
+      "does_not_support_safely_by_itself": [
+        "stable underlying asset identity across ticker migrations",
+        "historical market cap",
+        "historical circulating/free float",
+        "historical sector classification",
+        "cross-venue liquidity/depth",
+        "token unlock schedules"
+      ]
+    },
+    {
+      "source_id": "COINMETRICS_COMMUNITY_CATALOG_MARKET",
+      "provider": "Coin Metrics Community API",
+      "cost_class": "FREE_NO_KEY_COMMUNITY_ENDPOINT_WHERE_AVAILABLE",
+      "status": "CONDITIONAL_CATALOG_AND_CROSSCHECK",
+      "primary_url": "https://docs.coinmetrics.io/api/v4/",
+      "documented_fields": [
+        "catalog-all market/exchange coverage with min_time and max_time",
+        "market-trade/candle catalogs",
+        "funding-rate/open-interest/liquidation catalogs where available",
+        "asset-metric series for community-enabled metrics"
+      ],
+      "availability_semantics": "Catalog min/max timestamps are useful for survivorship and coverage audits but are not automatically exact historical publication timestamps for derived metrics. A derived series must expose a defensible event/database/status timestamp or be independently archived before the cutoff to qualify as PIT evidence.",
+      "supports": [
+        "cross-provider historical market existence cross-check including markets no longer current",
+        "coverage-gap audit",
+        "selected community asset/network metrics when catalog marks them community-enabled",
+        "selected funding/open-interest/liquidation history when community coverage exists"
+      ],
+      "does_not_support_safely_by_itself": [
+        "universal broad-asset market-cap/supply coverage",
+        "exact PIT availability for every derived candle/metric",
+        "historical sector taxonomy"
+      ],
+      "coverage_rule": "Field is eligible only asset-by-asset after catalog verification; missing community coverage remains MISSING, never imputed."
+    },
+    {
+      "source_id": "COINGECKO_HISTORICAL_MARKET_CHART",
+      "provider": "CoinGecko API",
+      "cost_class": "CONDITIONAL_EXISTING_PLAN_ONLY_NO_NEW_PURCHASE",
+      "status": "CONDITIONAL_FOR_MARKET_CAP_AND_VOLUME_NOT_CANONICAL_UNIVERSE",
+      "primary_url": "https://docs.coingecko.com/reference/coins-id-market-chart-range",
+      "documented_fields": [
+        "historical price",
+        "historical market cap",
+        "historical total volume"
+      ],
+      "documented_availability_notes": [
+        "hourly data available from 2018-01-30",
+        "last completed UTC daily point available about 00:35 UTC",
+        "Basic-plan historical range documented as restricted to the past two years"
+      ],
+      "supports": [
+        "historical market_cap_usd for covered IDs and eligible plan/range",
+        "historical total volume cross-check"
+      ],
+      "does_not_support_safely_by_itself": [
+        "survivorship-safe historical universe membership",
+        "free broad full-history supply",
+        "venue-level price execution semantics"
+      ],
+      "hard_rule": "Do not purchase a new plan for this factory. Use only if an already-authorized key/plan exists and the exact requested date range is covered."
+    },
+    {
+      "source_id": "COINGECKO_HISTORICAL_CIRCULATING_SUPPLY",
+      "provider": "CoinGecko API",
+      "cost_class": "PAID_TIER_ENDPOINT_IN_CURRENT_DOCS",
+      "status": "NOT_AUTHORIZED_FOR_FACTORY_BASELINE",
+      "primary_url": "https://docs.coingecko.com/reference/coins-id-circulating-supply-chart",
+      "documented_fields": [
+        "historical circulating supply from 2019-06-22 onward"
+      ],
+      "reason_blocked": "The endpoint is marked premium in current documentation and the factory is instructed not to add paid provider spend for routine work."
+    },
+    {
+      "source_id": "BINANCE_FUTURES_PUBLIC_ARCHIVE",
+      "provider": "Binance Public Data / Futures archives",
+      "cost_class": "FREE_NO_KEY",
+      "status": "CONDITIONAL_PRECURSOR_SOURCE",
+      "primary_url": "https://github.com/binance/binance-public-data",
+      "supports": [
+        "futures trades/klines",
+        "funding/open-interest-related archive families where present",
+        "leverage and derivatives precursor studies after gap audit"
+      ],
+      "risk": "Historical metrics have documented missing periods for some symbols. Every feature must carry coverage/gap state; missing observations cannot be converted to zero or excluded after outcomes are known."
+    }
+  ],
+  "required_feature_preflight": {
+    "price": {
+      "status": "READY_WITH_RAW_VENUE_SOURCE",
+      "rule": "Use a frozen venue and stable asset identity. Decision price must be the exact last completed supported bar/trade price at the decision timestamp."
+    },
+    "liquidity_usd": {
+      "status": "READY_AS_TRAILING_VENUE_QUOTE_VOLUME_PROXY_ONLY",
+      "rule": "Freeze a pre-outcome window such as trailing 30 calendar days and sum quote notional from raw trades/klines. Label it venue quote-volume liquidity, not depth/ADV across all venues."
+    },
+    "market_cap_usd": {
+      "status": "PARTIAL_BLOCKER",
+      "rule": "Require timestamped historical market cap from an audited provider. CoinGecko may be used only with already-authorized access/range; Coin Metrics community coverage must be verified asset-by-asset. Missing means ineligible under the current #433 contract."
+    },
+    "float_supply": {
+      "status": "HARD_BLOCKER_FOR_BROAD_UNIVERSE",
+      "rule": "No zero-cost broad historical free-float/circulating-supply source is currently proven for the full liquid universe. Community/on-chain coverage may qualify selected assets only after catalog/status-time audit. Do not infer from today's supply or fill with total/max supply."
+    },
+    "listing_age_days": {
+      "status": "READY_IF_FULL_VENUE_ARCHIVE_AND_IDENTITY_AUDIT_PASS",
+      "rule": "Measure from first verified public trade/listing event on the frozen venue, not from current metadata. If archive history is incomplete, leave unavailable."
+    },
+    "volatility_30d": {
+      "status": "READY_DERIVED",
+      "rule": "Freeze estimator and cadence before labels; derive from only completed pre-cutoff bars."
+    },
+    "return_30d": {
+      "status": "READY_DERIVED",
+      "rule": "Derive from only completed pre-cutoff bars using a frozen exact definition."
+    },
+    "sector": {
+      "status": "HARD_BLOCKER_FOR_AUTOMATED_BROAD_MATCHING",
+      "rule": "Current categories are look-ahead-prone. Require a timestamped historical taxonomy or a predeclared mechanical classification based only on information already public at each decision time. Do not assign a convenient current category retrospectively."
+    },
+    "regime": {
+      "status": "READY_DERIVED_IF_PREDECLARED",
+      "rule": "Use an outcome-blind BTC/market regime function based solely on data <= decision time; freeze thresholds before labels."
+    },
+    "tradable": {
+      "status": "READY_WITH_CONSERVATIVE_VENUE_RULE",
+      "rule": "True only when the frozen pair has observed public trading at the decision time and passes frozen freshness/gap rules. No interpolation across suspensions."
+    },
+    "member": {
+      "status": "READY_ONLY_AFTER_SURVIVORSHIP_AUDIT",
+      "rule": "Build membership from historical venue archives/coverage, including markets that later delist. Current exchangeInfo/current provider lists cannot define historical membership."
+    }
+  },
+  "stable_identity_blocker": {
+    "status": "MUST_RESOLVE_BEFORE_REAL_COHORT",
+    "problem": "Exchange symbols can be renamed, redenominated, migrated, or recycled. The event lab requires asset_id to be stable across history.",
+    "minimum_manifest_fields": [
+      "stable_asset_id",
+      "venue_symbol",
+      "base_asset_network_or_contract_identity",
+      "identity_valid_from",
+      "identity_valid_to",
+      "evidence_source",
+      "mapping_frozen_at",
+      "mapping_sha256"
+    ],
+    "rule": "Ambiguous identity excludes that interval rather than guessing."
+  },
+  "matched_control_preflight": {
+    "pool_freeze_order": [
+      "freeze historical universe snapshot",
+      "freeze stable identities and source versions",
+      "compute all eligible pre-move covariates",
+      "freeze exact matching calipers/distance",
+      "build and hash candidate neighbor pools without outcome access",
+      "only then attach 2x labels and choose complete non-movers from pre-frozen pools"
+    ],
+    "control_eligibility": [
+      "same frozen decision timestamp",
+      "same frozen venue",
+      "same PIT sector only if sector source passes audit",
+      "same PIT regime",
+      "passes identical liquidity/member/tradable/missing-data gates as the event asset",
+      "complete forward 90-day observation with no unresolved gap/delisting censorship",
+      "did not reach 2x within the frozen horizon",
+      "not the same underlying asset within the overlap exclusion window"
+    ],
+    "forbidden_control_shortcuts": [
+      "replace a censored delisted asset with a surviving asset",
+      "refill farther neighbors after learning closer neighbors became winners",
+      "match on post-move market cap/liquidity/sector",
+      "drop controls because derivative/on-chain fields are missing after seeing outcomes",
+      "count reused controls as independent observations"
+    ],
+    "base_rate_rule": "Estimate full-cohort base rate only when the eligible cohort has outcome-complete coverage under a predeclared censoring policy. Matched-pair rates are conditional comparisons, not population base rates."
+  },
+  "precursor_field_policy": {
+    "baseline_matching_fields": "Only fields whose PIT source audit passes before label opening.",
+    "optional_research_fields": [
+      "spot-vs-leverage decomposition",
+      "open interest",
+      "funding",
+      "basis",
+      "liquidations",
+      "exchange/on-chain flows",
+      "issuance/unlocks",
+      "catalyst state",
+      "relative strength"
+    ],
+    "rule": "Optional fields may be studied as separate frozen hypotheses with explicit coverage masks. They cannot retroactively decide cohort membership or matched controls unless a new predeclared dataset version is created before its outcomes are opened."
+  },
+  "forecast_gate": {
+    "required_before_any_new_forward_2x_candidate": [
+      "reference price and timestamp",
+      "information cutoff <= formation time",
+      "1-90 day horizon",
+      "target multiple >=2x",
+      "stable asset identity",
+      "survivorship-safe historical comparison set",
+      "matched-control/base-rate evidence that is not outcome-selected",
+      "evidence_for",
+      "evidence_against",
+      "explicit invalidation rule",
+      "source IDs with PIT chronology",
+      "no evidence that target was already reached before formation"
+    ],
+    "current_decision": "DO_NOT_FREEZE_CANDIDATE"
+  },
+  "research_truth_labels": {
+    "facts": [
+      "Current main has zero immutable big_move_2x rows in the production prediction ledger at this cutoff.",
+      "PR #433 already owns the historical event/control builder and remains open/unmerged.",
+      "PR #506 separately owns the immutable forward formation/resolution contract and remains open/unmerged.",
+      "Binance documents public raw spot/futures archives with checksums and later archive corrections.",
+      "CoinGecko documents historical price/market-cap/volume and separate historical circulating-supply endpoints with explicit availability constraints.",
+      "Coin Metrics documents a no-key Community API plus historical market catalogs and selected market/asset metrics."
+    ],
+    "inferences": [
+      "A no-new-spend historical price/liquidity backbone is feasible, but broad PIT float supply and historical sector classification remain the strongest blockers to running the current #433 contract over a large survivorship-safe universe.",
+      "The scientifically fastest path is a narrow cohort whose every asset passes supply/identity/sector coverage, not a broad cohort padded with inferred fields."
+    ],
+    "hypotheses": [
+      "A narrow, coverage-complete cohort can produce a cleaner initial estimate of precursor lift than a nominally broad universe with hidden survivorship and metadata look-ahead.",
+      "Derivatives/leverage fields are likely useful conditional precursors but should enter only after the baseline event/control cohort is frozen and their own missingness policy is predeclared."
+    ]
+  },
+  "next_bounded_action": {
+    "action": "Build a stable-asset identity + coverage manifest for a narrow liquid crypto cohort, using historical venue archives and no outcome data. Select only assets for which PIT market cap, supply and historical sector semantics can be independently proven. If fewer than the predeclared minimum qualify, persist COVERAGE_BLOCKED instead of weakening fields.",
+    "do_not": [
+      "open event labels before the cohort/source manifest is frozen",
+      "modify Phase-3 #462 contracts",
+      "modify signal/promotion/live-trading code",
+      "purchase a new data plan",
+      "create a forward candidate merely to populate a dashboard"
+    ]
+  }
+}

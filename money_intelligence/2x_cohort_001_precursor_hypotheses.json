@@ -1,0 +1,118 @@
+{
+  "schema": "two_x_precursor_hypotheses.v1",
+  "artifact_id": "2X-COHORT-001-PRECURSORS-v1",
+  "frozen_at": "2026-09-21T06:11:00Z",
+  "parent_issue": 505,
+  "cohort_issue": 514,
+  "outcome_access_at_freeze": "SEALED",
+  "prospective_candidate_authority": false,
+  "source_learning": {
+    "money_intelligence_main_sha": "460e46e8de9f0217b5df5777aaeccdf8da9f2f34",
+    "cycle_id": "2026-09-21T0512Z",
+    "status": "HYPOTHESIS_SOURCE_ONLY_NOT_2X_EVIDENCE",
+    "fact": "The latest Money Intelligence matched-control work strengthened a causal mechanism in which scheduled or compulsory capital flow can be real while headline flow estimates alone are poor timing predictors; implementation schedule, offsetting flows, free float, ownership constraints, liquidity/depth and prior positioning determine price impact.",
+    "inference": "For large-upside research, forced-flow intensity relative to available float and trading capacity is a more defensible precursor family than raw announced flow size.",
+    "unknown": "This mechanism has not yet been shown to predict <=90-day 2x outcomes in the Cohort 001 crypto universe."
+  },
+  "hypotheses": [
+    {
+      "hypothesis_id": "2X-H-FORCED-FLOW-FLOAT-001",
+      "status": "PREDECLARED_UNTESTED",
+      "claim": "When a genuinely rules-based or contractually scheduled net-buying catalyst exists before the decision cutoff, larger expected net forced demand relative to PIT free-float market value is associated with higher <=90-day 2x incidence than matched controls, conditional on liquidity and prior positioning.",
+      "economic_mechanism": "precommitted buyer budget -> implementation schedule -> demand that is less price-elastic than ordinary discretionary flow -> finite free float / ownership headroom -> market impact -> reflexive attention and follow-on discretionary demand",
+      "feature_definition": {
+        "name": "forced_net_flow_to_free_float",
+        "numerator": "PIT expected gross compulsory buying USD minus PIT expected compulsory selling/reweight offsets USD",
+        "denominator": "PIT free-float market value USD",
+        "transform": "signed_ratio",
+        "missing_policy": "UNKNOWN_EXCLUDE_FROM_THIS_HYPOTHESIS_ONLY",
+        "no_imputation": true
+      },
+      "eligible_catalysts": [
+        "index/benchmark inclusion or weight change with published rules",
+        "contractually scheduled treasury/buyback purchase with documented size/timing",
+        "mechanical fund or wrapper allocation with documented target exposure",
+        "other predeclared price-insensitive flow only when the buyer mandate and budget are timestamp-defensible"
+      ],
+      "excluded_narratives": [
+        "rumored inflows",
+        "social-media attention without a committed buyer budget",
+        "headline market-cap estimates treated as buying flow",
+        "post-outcome reconstruction of who must have bought"
+      ],
+      "required_controls": [
+        "same PIT cohort eligibility as Cohort 001",
+        "same decision time / venue / regime",
+        "matching pool frozen before outcomes",
+        "prior 30d return and volatility",
+        "PIT liquidity",
+        "PIT free float",
+        "prior observable positioning/flow where available"
+      ],
+      "falsifiers": [
+        "no lift over matched base rate after coverage-complete testing",
+        "effect disappears after conditioning on prior momentum/liquidity",
+        "apparent lift is driven by one event family or one asset",
+        "forced-flow estimate is not reproducible from information available at cutoff"
+      ]
+    },
+    {
+      "hypothesis_id": "2X-H-FORCED-FLOW-LIQUIDITY-002",
+      "status": "PREDECLARED_UNTESTED",
+      "claim": "For the same eligible forced-flow events, expected net compulsory buying relative to pre-event trading capacity is more informative than the absolute announced flow amount.",
+      "economic_mechanism": "compulsory demand concentrated into limited implementation windows -> demand/available-liquidity imbalance -> temporary or persistent price impact depending offsetting supply and follow-on demand",
+      "feature_definition": {
+        "name": "forced_net_flow_to_implementation_liquidity",
+        "numerator": "PIT expected net compulsory buying USD",
+        "denominator": "PIT trailing-30d median daily venue quote volume USD multiplied by predeclared implementation trading days",
+        "implementation_days_rule": "use the published implementation/tranche window known at cutoff; if not published, feature is UNKNOWN",
+        "transform": "signed_ratio",
+        "missing_policy": "UNKNOWN_EXCLUDE_FROM_THIS_HYPOTHESIS_ONLY",
+        "no_imputation": true
+      },
+      "timing_variables": [
+        "announcement timestamp",
+        "confirmation timestamp",
+        "implementation/tranche timestamps",
+        "prior return from announcement to decision",
+        "prior net flow when timestamp-defensible"
+      ],
+      "falsifiers": [
+        "headline/absolute flow performs as well after matched controls",
+        "ratio has no stable ranking lift out of sample",
+        "price impact occurs entirely before the frozen decision point",
+        "liquidity denominator is not PIT or is dominated by venue migration"
+      ]
+    }
+  ],
+  "evaluation_precommitment": {
+    "membership_effect": "NONE; these optional features cannot decide baseline cohort membership or matched-control pools for the already-frozen Cohort 001 dataset",
+    "coverage_mask": "freeze availability mask before opening outcomes for this hypothesis family",
+    "primary_metrics": [
+      "precision_at_k",
+      "recall_at_k",
+      "pr_auc",
+      "lift_over_matched_base_rate"
+    ],
+    "tradability_checks": [
+      "pre-event liquidity",
+      "spread/depth where timestamp-defensible",
+      "capacity relative to the hypothetical position size"
+    ],
+    "minimum_independent_2x_events_for_inferential_claim": 20,
+    "below_minimum_policy": "DESCRIPTIVE_ONLY",
+    "multiple_testing_family": "2X-COHORT-001-FLOW-PRECURSORS",
+    "no_post_outcome_rescue": true
+  },
+  "strategy_factory_handoff": {
+    "status": "HYPOTHESIS_ONLY_DO_NOT_SCREEN_UNTIL_DATA_READY",
+    "candidate_mechanism": "event-driven continuation/temporary-impact strategy conditioned on forced-flow-to-float and forced-flow-to-liquidity, with the causal clock starting at first public announcement rather than effective-date open",
+    "reason_not_ready": "PIT forced-flow, float/depth and implementation data have not yet been assembled into a survivorship-safe selection dataset; no after-cost strategy claim is justified."
+  },
+  "authority": {
+    "prediction_authority": false,
+    "promotion_authority": false,
+    "broker_connected": false,
+    "live_trading": false
+  }
+}

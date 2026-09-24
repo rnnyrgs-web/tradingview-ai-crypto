@@ -290,6 +290,13 @@ def diff_changed_paths(diff_text: str) -> list[str]:
 
 
 def extract_json(text: str) -> dict[str, Any]:
+    """Extract exactly one reviewer JSON object from otherwise harmless prose.
+
+    Providers occasionally wrap a valid verdict in markdown or append
+    explanatory text despite a JSON-only instruction. Accept that presentation
+    noise, but fail closed if there is no object, the decoded value is not an
+    object, or a second JSON object is present.
+    """
     stripped = text.strip()
     if stripped.startswith("```"):
         lines = stripped.splitlines()
@@ -298,7 +305,28 @@ def extract_json(text: str) -> dict[str, Any]:
         if lines and lines[-1].strip() == "```":
             lines = lines[:-1]
         stripped = "\n".join(lines).strip()
-    return json.loads(stripped)
+
+    try:
+        value = json.loads(stripped)
+    except json.JSONDecodeError:
+        start = stripped.find("{")
+        if start < 0:
+            raise
+        decoder = json.JSONDecoder()
+        value, consumed = decoder.raw_decode(stripped[start:])
+        trailing = stripped[start + consumed :].strip()
+        if trailing:
+            second_start = trailing.find("{")
+            if second_start >= 0:
+                try:
+                    decoder.raw_decode(trailing[second_start:])
+                except json.JSONDecodeError:
+                    pass
+                else:
+                    raise RuntimeError("reviewer returned multiple JSON objects")
+    if not isinstance(value, dict):
+        raise RuntimeError("reviewer returned non-object JSON")
+    return value
 
 
 def validate_plan(plan: dict[str, Any], roles: dict[str, Any]) -> None:

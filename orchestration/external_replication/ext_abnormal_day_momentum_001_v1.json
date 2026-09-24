@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "artifact_type": "external_edge_replication_predeclaration",
+  "replication_id": "EXT-ABNORMAL-DAY-MOMENTUM-001-v1",
+  "status": "PREDECLARED_RUNNER_REPAIRED_WAIT_INDEPENDENT_REVIEW",
+  "formed_at": "2026-09-21T16:29:15Z",
+  "related_issues": [
+    504,
+    510,
+    513,
+    517,
+    518
+  ],
+  "source_research": {
+    "title": "Momentum effects in the cryptocurrency market after one-day abnormal returns",
+    "authors": [
+      "Guglielmo Maria Caporale",
+      "Alex Plastun"
+    ],
+    "venue": "Financial Markets and Portfolio Management",
+    "publication_year": 2020,
+    "mechanism_only": true,
+    "published_results_are_internal_evidence": false,
+    "extracted_mechanism": "After an unusually large current-day move relative to recent completed-day volatility, directional order-flow/behavioral continuation may persist through the remainder of the same UTC day.",
+    "adaptation_note": "The source used asset-specific abnormal-return coefficients and reported results without our cost model. This replication deliberately freezes one common coefficient for all assets, uses point-in-time trailing completed days, next-bar execution, realistic costs, and our own chronological selection evidence."
+  },
+  "scientific_hypothesis": {
+    "family": "abnormal_day_intraday_momentum",
+    "economic_mechanism": "Large intraday moves that are extreme relative to a point-in-time distribution of completed daily returns can reflect persistent information/order-flow rather than a completed one-off shock; if the move is genuinely persistent, same-direction continuation through the remaining UTC day should survive next-open execution and costs.",
+    "falsifiable_claim": "The first intraday crossing of a fixed 1.5-sigma abnormal daily-return boundary has positive same-direction after-cost expectancy from the next completed 1h bar open through the next UTC-day 00:00 open, in both training and validation, and adds economic value over simple same-window one-hour momentum and outcome-blind placebos."
+  },
+  "data_contract": {
+    "source": "certified fixed BTC/ETH/SOL 1H OKX dataset",
+    "normalized_rows_sha256": "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f",
+    "fixed_instruments": [
+      "BTC-USDT-SWAP",
+      "ETH-USDT-SWAP",
+      "SOL-USDT-SWAP"
+    ],
+    "bar_interval": "1H",
+    "timezone": "UTC",
+    "point_in_time": true,
+    "missing_bar_interpolation_allowed": false,
+    "scheduled_execution_missingness_policy": "Any frozen scheduled event missing a required entry or exit bar makes that scoring arm DATA/PIT_INCONCLUSIVE; required bars may not be silently dropped after schedule formation.",
+    "complete_utc_day_required_for_reference_distribution": true,
+    "selection_train_start_utc": "2025-05-07T05:00:00Z",
+    "selection_train_end_utc": "2026-04-30T23:00:00Z",
+    "selection_validation_start_utc": "2026-05-01T00:00:00Z",
+    "selection_validation_end_utc": "2026-08-31T23:00:00Z",
+    "protected_oos_start_utc": "2026-09-01T00:00:00Z",
+    "screen_may_read_protected_oos": false,
+    "genuine_forward_opened": false
+  },
+  "signal_rules": {
+    "reference_window_completed_utc_days": 90,
+    "abnormal_sigma_multiple": 1.5,
+    "parameter_variants": 1,
+    "daily_return_definition": "completed UTC day: close_23:00 / open_00:00 - 1",
+    "intraday_return_definition": "at completed hourly bar t: close_t / open_00:00_of_same_UTC_day - 1",
+    "reference_mean_and_std": "sample mean and sample standard deviation of the immediately preceding 90 fully observed completed UTC-day returns for the same instrument; current day excluded",
+    "long_trigger": "intraday_return > trailing_mean + 1.5 * trailing_std",
+    "short_trigger": "intraday_return < trailing_mean - 1.5 * trailing_std",
+    "trigger_occurrence": "first qualifying completed hourly bar per instrument per UTC day only",
+    "latest_signal_hour_utc": 22,
+    "signal_at_23_utc_forbidden": true,
+    "decision_time": "completed 1h bar close only",
+    "missing_or_incomplete_reference_day": "exclude that day from the 90-day reference window; no interpolation; signal day itself must have continuous bars from 00:00 through decision time",
+    "warmup": "90 fully observed completed UTC days"
+  },
+  "execution_rules": {
+    "entry": "next completed 1h bar open after the qualifying signal",
+    "direction": "same sign as qualifying abnormal intraday return",
+    "exit": "next UTC day 00:00 1h bar open",
+    "stop": null,
+    "target": null,
+    "same_instrument_retrigger": "forbidden until next UTC day",
+    "cross_instrument_concurrency": "allowed",
+    "event_independence": "at most one event per instrument per UTC day",
+    "pooled_independent_unit": "unique UTC signal day across all BTC/ETH/SOL instruments; raw asset-event count must be reported separately and must not satisfy the 40/20 sample gate",
+    "protected_oos_access": false
+  },
+  "cost_model": {
+    "base_round_trip_fee_spread_slippage_bps": 20.0,
+    "adverse_funding_allowance_bps_per_trade": 4.0,
+    "base_total_bps": 24.0,
+    "stress_multipliers": [
+      1.0,
+      2.0,
+      3.0
+    ],
+    "three_x_total_bps": 72.0,
+    "funding_note": "This v1 freezes a conservative fixed adverse funding allowance rather than reading future realized funding. If authenticated PIT funding data later becomes available, changing this assumption requires a newly frozen version before outcomes."
+  },
+  "multiple_testing": {
+    "family_id": "EXT-ABNORMAL-DAY-MOMENTUM-001",
+    "planned_hypothesis_count": 1,
+    "planned_parameter_variants": 1,
+    "post_outcome_threshold_or_window_tuning_allowed": false,
+    "source_paper_asset_specific_thresholds_reused": false
+  },
+  "cheap_stage_gates": {
+    "minimum_independent_trades_train": 40,
+    "minimum_independent_trades_validation": 20,
+    "independent_sample_unit": "unique UTC signal day across pooled instruments",
+    "require_positive_after_cost_train": true,
+    "require_positive_after_cost_validation": true,
+    "require_validation_halves_positive": true,
+    "require_profit_factor_above_one": true,
+    "require_3x_cost_positive": true,
+    "catastrophic_tail_veto": true,
+    "single_winner_dependence_veto": true,
+    "underpowered_action": "classify UNDERPOWERED via #510; do not lower sigma threshold, shorten reference window, extend protected period, or create parameter variants"
+  },
+  "baseline_and_ablation_plan": {
+    "formation_before_outcomes": true,
+    "primary_mechanism_baseline": "On the exact candidate event windows, trade the sign of the immediately preceding completed 1h close-to-close return instead of the abnormal current-day cumulative-return direction; same next-open entry, same midnight exit, same costs.",
+    "sign_flip_falsifier": "Trade opposite the candidate direction on the exact candidate event windows; same entry/exit/costs.",
+    "one_bar_delay": "Delay candidate entry by exactly one completed 1h bar while preserving original signal direction and midnight exit; a structurally empty hold interval is omitted by the frozen price-independent rule and counted, while a missing required delayed entry/exit bar makes that arm DATA/PIT_INCONCLUSIVE rather than silently dropping the event.",
+    "randomized_timing_placebo": "Use #517/#523 deterministic frequency- and direction-matched eligible-window randomization separately in training and validation, without reading forward returns during schedule formation.",
+    "ablation": "Candidate event schedule and direction without the 1.5-sigma abnormality requirement is not permitted post hoc; the mechanism gate is instead tested by the frozen randomized eligible-window placebo and the simple one-hour-momentum baseline.",
+    "complexity_rule": "Reject/deprioritize if the candidate does not beat the primary simple baseline after costs in both training and validation or if placebo/delayed controls explain the result."
+  },
+  "successive_halving": {
+    "stage_1": "development-only cheap chronological train+validation screen through 2026-08-31T23:00:00Z",
+    "stage_2": "only if Stage 1 survives: run frozen #517 baseline/placebo/ablation gauntlet and medium stability checks",
+    "stage_3": "at most one global Strategy Factory deep candidate may advance; this replication has no special promotion priority",
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false
+  },
+  "failure_learning": {
+    "issue": 510,
+    "every_failure_or_inconclusive_result_must_be_durable": true,
+    "successor_must_be_materially_distinct": true,
+    "same_exact_or_semantic_identity_rescue_forbidden": true
+  },
+  "screening_authority": {
+    "screen_started": false,
+    "requires_integrated_pr_507_production_admission": true,
+    "requires_canonical_semantic_rejected_memory_check": true,
+    "requires_exact_dataset_preflight": true,
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false,
+    "broker_connected": false,
+    "trade_authority": false,
+    "promotion_authority": false
+  },
+  "exact_next_action": "After this missingness/independence repair receives fresh exact-head CI and independent review, reconcile onto current canonical main, regenerate/admit this contract through the integrated production identity gate, verify the certified development boundary without reading protected OOS, then run exactly one deterministic Stage-1 screen. Any failed or underpowered result must be persisted through #510 without tuning this v1.",
+  "artifact_sha256": "45a1b336db757259781e47530e2940f50025011da8631c1ab3338e1bd3261e8b"
+}

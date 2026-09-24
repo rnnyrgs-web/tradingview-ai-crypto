@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T2055Z",
+  "information_cutoff": "2026-09-20T20:55:45Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_observed_before_write": "807b8362afd79325eb8c72d458c850e9ca3ba53d",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles": true,
+    "searched_prediction_artifacts": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "last_owner_report_cycle": "2026-09-20T1630Z",
+    "run_start_utc": "2026-09-20T20:53:11Z",
+    "artifact_cutoff_utc": "2026-09-20T20:55:45Z",
+    "seconds_this_run_minimum": 154,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 1086,
+    "minimum_cumulative_seconds_since_last_owner_report": 1240,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted. Schedule gaps, idle time, publication timestamps and background time are excluded."
+  },
+  "highest_information_question": "Can the weekend Saudi attack episode improve the system's decomposition of producer-equity price response into expected commodity-price upside versus own-asset damage, and does current BTC holding behavior after leverage cooling provide evidence of voluntary spot absorption rather than squeeze-only support?",
+  "fresh_research": [
+    {
+      "topic": "Saudi/Aramco weekend control: attack headlines do not determine producer-equity sign; own physical damage and operational resilience must be separated from commodity-price upside",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / SAUDI ARABIA / ARAMCO / ENERGY / GEOPOLITICS / PRODUCER EQUITY",
+      "observed_facts": [
+        "Reuters reported that the Saudi benchmark TASI closed September 20 down about 0.3% after Houthi-claimed attacks around Riyadh, while Saudi Aramco recovered from early losses and closed about 1.3% higher. Qatar's index fell about 1.1%, showing broader regional risk aversion rather than a uniform energy-equity rally.",
+        "Saudi Press Agency reported that Saudi air defence intercepted and destroyed a ballistic missile aimed at Riyadh on September 19 and said attempted attacks on Bish, Taif, Farasan and Yanbu were thwarted. At this cutoff there is no primary Saudi/Aramco confirmation of a fresh incremental loss of Yanbu oil-export capacity from those attempts.",
+        "A within-week matched control points the other way when physical damage was verified: after the September 14 East-West pipeline disruption, Reuters reported the Saudi index slightly higher but Aramco about 0.2% lower while the market assessed an actual logistics outage and limited Yanbu inventories.",
+        "Historical severity control: after the September 2019 Abqaiq/Khurais attacks knocked out more than half of Saudi crude output, the Saudi equity index opened about 2.3% lower. Aramco itself was not yet listed, so this is a broad-market rather than company-share control.",
+        "Operational-resilience evidence is not merely narrative. Saudi official reporting in April 2026 documented restoration of the East-West pipeline to roughly 7 mb/d after earlier attacks, and Aramco's 2026 investor materials emphasize route, storage and export-terminal redundancy during the Hormuz crisis."
+      ],
+      "inference": "For an integrated producer/exporter, geopolitical attack risk has two opposing valuation channels: expected commodity scarcity can raise realized price/margins, while direct damage can reduce saleable volume, raise repair/capex/insurance costs and impair logistics. When new direct damage is unconfirmed and the operator has credible routing/storage resilience, the commodity-price/optionality channel can dominate the equity response even while the local broad market falls. Therefore 'attack -> producer stock down' and 'attack -> oil stock up' are both insufficient one-factor rules.",
+      "causal_chain": "attack threat/claims -> probability-weighted oil scarcity and broader risk premium rise -> market separately estimates operator-specific lost deliverable barrels and repair/logistics burden -> operational redundancy lowers expected volume loss -> higher expected commodity realization can offset local-risk discount -> producer equity may outperform broad local equities; verified physical loss reverses that balance depending outage size/duration and substitution capacity.",
+      "source_destination_chain": "Global hedging/speculative/energy-allocation capital can move toward scarcity-sensitive producer exposure while domestic/regional risk capital exits broader Gulf equities; direct account-level source-of-funds and marginal counterparties remain UNKNOWN.",
+      "catalyst_transmission_amplifier": {
+        "catalyst": "September 19-20 missile/drone attack claims and interceptions around Riyadh/Yanbu.",
+        "transmission": "Expected oil scarcity versus expected company-specific lost deliverable supply changes future cash-flow distribution and relative value of producer equity versus the local market.",
+        "amplifiers": [
+          "Brent/product scarcity risk when markets reopen",
+          "Freight and insurance premia",
+          "Momentum/hedging demand",
+          "State/operational support and route redundancy"
+        ],
+        "dampeners": [
+          "Successful interception with no verified fresh capacity loss",
+          "Alternative Gulf/Oman routing and inventories",
+          "Demand destruction at high oil/product prices",
+          "Local geopolitical equity-risk premium"
+        ]
+      },
+      "matched_controls": [
+        "September 14, 2026 verified East-West pipeline disruption: Aramco about -0.2%, demonstrating actual operator/logistics damage can offset scarcity upside.",
+        "September 20, 2026 attack claims/interceptions with no verified fresh oil-capacity loss at cutoff: Aramco +1.3% while TASI -0.3%, consistent with scarcity/operational-resilience optionality dominating broad local risk.",
+        "September 2019 Abqaiq/Khurais severe output loss: Saudi index -2.3% at the Sunday open, a high-severity control where physical supply loss was enormous."
+      ],
+      "negative_findings": [
+        "Do not use attack count or proximity as a standalone predictor of producer-equity direction.",
+        "Do not infer that Aramco's +1.3% proves no physical damage; absence of public confirmation is not proof of absence.",
+        "Do not infer the source of buying from price alone; commodity hedgers, domestic investors and other accounts are plausible but unverified.",
+        "Do not promote a crude or Aramco BUY before reopened crude/product curves, physical loadings/differentials and verified damage show the marginal supply effect."
+      ],
+      "learning_candidate": {
+        "status": "SUPPORTED_PROVISIONAL_CANDIDATE",
+        "claim": "For commodity producers exposed to geopolitical attacks, equity direction depends on the net of commodity-price scarcity benefit and operator-specific effective deliverable-supply loss. Operational redundancy and substitution capacity can make the producer outperform the local market after an attack when fresh physical loss is limited or unverified."
+      },
+      "decision_support": {
+        "crude": "WAIT / high tail risk unchanged; the next decisive evidence is the reopened curve, physical differentials, freight/loading data and confirmed incremental capacity loss.",
+        "aramco": "HOLD / WAIT for research; no new BUY or SHORT-thesis without valuation plus verified physical/price-capture evidence.",
+        "confidence": "MODERATE on mechanism; LOW on immediate forward direction before oil markets reopen."
+      },
+      "sources": [
+        "https://www.reuters.com/world/middle-east/saudi-gulf-stocks-fall-after-houthis-claim-riyadh-attacks-2026-09-20/",
+        "https://spa.gov.sa/N2680557",
+        "https://www.reuters.com/business/energy/saudi-offers-more-crude-via-oman-loading-after-pipeline-attacks-sources-say-2026-09-16/",
+        "https://www.spa.gov.sa/fr/N2557744",
+        "https://www.aramco.com/en/investors/reports-and-presentations",
+        "https://www.dawn.com/news/1505349"
+      ]
+    },
+    {
+      "topic": "BTC holds near $81k while aggregate leverage and funding cool; this improves rally quality but cannot substitute for Monday spot/ETF confirmation",
+      "label": "CRYPTO / BTC / DERIVATIVES / ETF / WEEKEND CONTROL",
+      "observed_facts": [
+        "CoinMarketCap around 20:53 UTC showed BTC near $81,078, approximately flat over 24 hours and +4.9% over seven days, with BTC dominance about 58.6%.",
+        "CoinMarketCap global derivatives data showed total crypto open interest around $429.3B, down about 4.0% over 24 hours and 6.3% over seven days. Perpetual funding was about 0.00520 and down about 15.9% versus the prior 24-hour window.",
+        "BTC 24-hour liquidations were about $42.5M, with roughly $35.0M longs versus $7.6M shorts. The earlier broad short-squeeze impulse is therefore no longer the dominant mechanical buyer at this snapshot.",
+        "The finalized U.S. spot-BTC ETF week ending September 18 was approximately flat in net terms after Friday's strong positive session; U.S. ETF venues are closed during the weekend, so fresh institutional-flow confirmation is unavailable until the next completed session."
+      ],
+      "inference": "Holding the post-breakout price while aggregate leverage and funding cool is healthier than a price rise that requires expanding open interest and continued short liquidations. It modestly increases the probability of non-forced spot absorption, but aggregate derivatives data are not BTC venue-specific enough to prove that chain, and closed ETF markets prevent institutional confirmation.",
+      "negative_findings": [
+        "Do not upgrade BTC to BUY from weekend price stability alone.",
+        "Do not equate falling aggregate crypto OI with BTC-specific spot accumulation.",
+        "Do not infer durable institutional accumulation from one strong Friday ETF session when the full week was approximately flat."
+      ],
+      "decision_support": "BTC remains WAIT / tactical-confirmation candidate. Upgrade only if completed ETF sessions show broad positive flow while BTC holds/advances without renewed leverage expansion; downgrade if ETF redemptions resume or price loses the breakout as funding/OI rebuild."
+    },
+    {
+      "topic": "NEAR and AVAX remain major weekend outliers; new price continuation does not resolve the causal-quality gaps",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / NEAR / AVAX / NEGATIVE FINDINGS",
+      "observed_facts": [
+        "CoinMarketCap around 20:51-20:52 UTC showed NEAR around $4.20, +18.8%/24h and +78.9%/7d with turnover about 35.6% of market cap; AVAX was around $11.21, +15.3%/24h and +50.7%/7d with turnover about 30.3%. BTC and ETH were roughly flat over 24 hours.",
+        "NEAR's official revenue dashboard, updated September 20, showed about $5.52M of 30-day gross fees, $1.87M of 30-day net revenue and about $97.9M of confidential TVL. These are measurable activity/value-capture data, but remain small relative to NEAR's roughly $5.5B market capitalization and token issuance.",
+        "The prior NEAR@3.33 reward pool is only 333,333 tokens, far too small relative to circulating supply and daily turnover to mechanically explain the weekly price move.",
+        "AVAX's September 22 Helicon activation remains a known pre-event catalyst rather than a new Sunday disclosure. Public market reporting indicates rising AVAX derivatives positioning, which increases the need to distinguish realized post-upgrade activity from leveraged pre-positioning."
+      ],
+      "inference": "Continued idiosyncratic outperformance confirms that broad crypto beta is insufficient, but it does not validate durable source-to-venue capital-flow chains. NEAR has stronger product/revenue evidence than a pure narrative rally, while AVAX still requires post-Helicon usage/fee/bridge-flow evidence. Both moves remain vulnerable to reflexive momentum and incentive/event positioning.",
+      "decision_support": "NEAR WAIT / AVOID CHASING; research for BUY only if post-incentive usage and net revenue persist with healthier leverage. AVAX WAIT / AVOID CHASING until post-Helicon price-normalized activity, fees and net bridge/stablecoin flows confirm real demand."
+    },
+    {
+      "topic": "U.S.-China talks are a pre-event condition set, not yet a flow signal",
+      "label": "GEOPOLITICS / CHINA / TRADE / CRITICAL MINERALS / PRE-MOVE WATCH",
+      "observed_facts": [
+        "U.S. Treasury Secretary Scott Bessent and USTR Jamieson Greer met Chinese Vice Premier He Lifeng in New York on September 20 ahead of the Trump-Xi summit. Public agendas include trade, AI security/safety and critical-mineral/rare-earth access.",
+        "At this cutoff there is no completed official readout establishing a new quota, licensing regime, tariff schedule or verified physical mineral-supply increase."
+      ],
+      "inference": "For critical minerals and trade-sensitive assets, the predictive state variable should be executable policy and physical availability—quotas, licenses, inventories, lead times and contract pricing—rather than a generic 'constructive talks' headline.",
+      "decision_support": "WAIT / no directional trade from meeting headlines alone. Preserve as a pre-event watch for later point-in-time resolution."
+    }
+  ],
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast clears the evidence bar in this cycle."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. The Saudi/Aramco producer-equity sign decomposition is high-information and has useful matched controls, but crude markets have not reopened and fresh physical damage remains unverified; require the next oil-market/physical-supply test before promoting to canonical dashboard or learning ledger. BTC, NEAR and AVAX states are confirmations/refinements of existing WAIT research rather than new canonical regime changes. No code or signal-system state changed.",
+  "next_research": [
+    "When Brent/WTI and refined-product markets reopen, measure gap, curve/backwardation, cracks, freight/insurance and physical differentials against verified Saudi loading/damage status; then resolve the weekend attack control.",
+    "After the next completed U.S. ETF session, reconcile BTC/ETH ETF breadth with venue-grade OI/funding/basis/liquidations and exchange/on-chain spot absorption before changing BTC WAIT.",
+    "After Helicon activation, measure AVAX price-normalized activity, fee/revenue, bridge and stablecoin net flows, validator/staking changes and derivatives positioning versus the pre-event baseline.",
+    "For NEAR, verify whether the three-day VWAP reward condition is officially satisfied and measure post-unlock TVL, net revenue, spot flow and derivatives positioning rather than assuming the price-conditioned incentive creates durable demand.",
+    "After an official U.S.-China meeting readout, translate any critical-mineral/trade commitments into physical quotas/licenses/inventory/contract-price implications before assessing asset-level capital flows."
+  ]
+}

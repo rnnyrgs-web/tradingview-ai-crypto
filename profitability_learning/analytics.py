@@ -112,14 +112,27 @@ def analyze(experiment):
         return {**base, "outcome": "INFRA_DATA_FAILURE"}
     metrics = _metrics(e)
     pnls = [net_pnl(t) for t in e["trades"]]
+    independent_event_pnls = [
+        sum(net_pnl(t) for t in block)
+        for block in independent_blocks(e["trades"])
+    ]
     positive = sum(max(0, x) for x in pnls)
     best = max(pnls, default=0)
+    positive_events = sum(max(0, x) for x in independent_event_pnls)
+    best_event = max(independent_event_pnls, default=0)
     cost_burden = sum(metrics["costs"].values())
     concentration = {
         "largest_winner_share": max(0, best) / positive if positive else 0,
         "net_pnl_without_best_trade": metrics["net_pnl"] - best,
+        "largest_independent_event_profit_share": (
+            max(0, best_event) / positive_events if positive_events else 0
+        ),
+        "net_pnl_without_best_independent_event": metrics["net_pnl"] - best_event,
         "net_pnl_at_double_variable_cost": metrics["net_pnl"] - cost_burden,
-        "sensitivity_note": "Arithmetic P&L sensitivity only; not a rerun or altered NAV path.",
+        "sensitivity_note": (
+            "Arithmetic P&L sensitivity only; independent events conservatively combine "
+            "same-ID and overlapping intervals; not a rerun or altered NAV path."
+        ),
     }
     flags = []
     if e["equity"][-1]["nav"] == 0:
@@ -131,7 +144,8 @@ def analyze(experiment):
         flags.append("CATASTROPHIC_LOSS")
     if positive and concentration["largest_winner_share"] > .5:
         flags.append("SINGLE_WINNER_CONCENTRATION")
-    if metrics["net_pnl"] > 0 and concentration["net_pnl_without_best_trade"] <= 0:
+    if (metrics["net_pnl"] > 0
+            and concentration["net_pnl_without_best_independent_event"] <= 0):
         flags.append("SINGLE_WINNER_DEPENDENCE")
     if metrics["net_pnl"] > 0 and concentration["net_pnl_at_double_variable_cost"] <= 0:
         flags.append("COST_SENSITIVE")
