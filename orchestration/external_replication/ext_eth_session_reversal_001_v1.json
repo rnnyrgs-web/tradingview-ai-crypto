@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "artifact_type": "external_edge_replication_predeclaration",
+  "replication_id": "EXT-ETH-SESSION-REVERSAL-001-v1",
+  "status": "PREDECLARED_WAIT_DATA_PREFLIGHT_ADMISSION_REVIEW",
+  "formed_at": "2026-09-24T01:00:00Z",
+  "related_issues": [
+    510,
+    517,
+    518,
+    520
+  ],
+  "source_research": {
+    "title": "On the Performance of Lagged Momentum and Reversal Strategies Across Daytime and Overnight Sessions in Bitcoin and Ethereum Cryptocurrencies",
+    "venue": "Journal of Risk and Financial Management",
+    "publication_year": 2026,
+    "source_url": "https://www.mdpi.com/1911-8074/19/9/692",
+    "replication_repository": "wzf01195010-png/Crypto-day-night-effects",
+    "replication_repository_commit": "5693993e108f2b3668bd21b1dd36ae31f79d8fcd",
+    "replication_code_path": "btc_eth_backtest.py",
+    "replication_code_blob_sha": "82b79f2be4332858de55de46341bd3fc81fa0c38",
+    "mechanism_only": true,
+    "published_results_are_internal_evidence": false,
+    "source_selection_warning": "The paper searches many cutoff/strategy combinations in-sample, then reports a 2021-2025 holdout. We do not import either result as our evidence and do not repeat the search.",
+    "extracted_mechanism": "A fixed UTC day/night decomposition may expose persistent intraday return structure. The source's frozen ETH 05:00-17:00 UTC daytime / 17:00-05:00 UTC nighttime specification combines a constant-long nighttime leg with daytime reversal based only on the prior completed daytime-session return.",
+    "external_code_semantics": {
+      "timezone": "UTC",
+      "eth_cutoff_hour_utc": 5,
+      "day_window": "05:00-17:00 UTC",
+      "night_window": "17:00-05:00 UTC",
+      "night_rule": "LONG",
+      "day_rule": "REVERSAL_OF_PREVIOUS_SAME_SESSION_RETURN",
+      "source_data_sample_end": "2025-12-31T23:00:00Z"
+    }
+  },
+  "scientific_hypothesis": {
+    "family": "fixed_utc_session_lagged_reversal",
+    "economic_mechanism": "If crypto liquidity/risk transfer has persistent UTC time-of-day structure, the sign of the prior completed ETH daytime session may be negatively autocorrelated with the next 05:00-17:00 UTC daytime session while the complementary 17:00-05:00 UTC session retains positive drift.",
+    "falsifiable_claim": "Without tuning the 05:00 UTC cutoff or the Long/Reversal rule, the source-frozen ETH strategy has positive after-screening-cost expectancy in a strict post-source-sample 2026H1 replication, beats exposure-matched simple baselines, and is not explained by one validation subperiod or a single extreme day."
+  },
+  "data_contract": {
+    "source": "Kraken official downloadable historical OHLCVT archive",
+    "instrument": "ETH/USD spot pair as named by the frozen Kraken archive manifest",
+    "bar_interval": "60m",
+    "timezone": "UTC",
+    "archive_required_through": "2026-06-30T23:00:00Z",
+    "replication_start_utc": "2026-01-01T00:00:00Z",
+    "replication_end_utc": "2026-06-30T23:00:00Z",
+    "validation_half_1_start_utc": "2026-01-01T00:00:00Z",
+    "validation_half_1_end_utc": "2026-03-31T23:00:00Z",
+    "validation_half_2_start_utc": "2026-04-01T00:00:00Z",
+    "validation_half_2_end_utc": "2026-06-30T23:00:00Z",
+    "protected_shadow_start_utc": "2026-07-01T00:00:00Z",
+    "screen_may_read_protected_shadow": false,
+    "point_in_time": true,
+    "required_archive_receipts": [
+      "manifest bytes and sha256",
+      "archive part filenames/checksums used",
+      "resolved exact ETH/USD filename/pair identity",
+      "extracted normalized-row sha256"
+    ],
+    "pair_resolution_rule": "Resolve the exact ETH/USD file from the Kraken archive manifest/preflight. Do not silently substitute ETH/USDT, futures, another exchange, or a guessed filename.",
+    "missing_hour_policy": "Any trading date lacking one of the required hourly close observations for the previous/current day or night session is DATA/PIT_INCONCLUSIVE for that date; no interpolation or forward fill.",
+    "no_paid_data_required": true
+  },
+  "signal_rules": {
+    "parameter_variants": 1,
+    "cutoff_hour_utc": 5,
+    "day_session": "05:00 inclusive to 17:00 exclusive UTC",
+    "night_session": "17:00 inclusive to next-day 05:00 exclusive UTC",
+    "session_return": "compound the 12 hourly close-to-close bar returns in the exact session; require all 12 bars",
+    "night_position": 1,
+    "day_position": "negative sign of the immediately previous completed 05:00-17:00 UTC daytime-session return",
+    "exact_zero_previous_day_return": "day position = 0",
+    "first_replication_day_day_position": "requires the immediately previous completed daytime-session return from 2025-12-31 05:00-17:00 UTC as warmup only; that warmup return may set direction but is not scored",
+    "future_return_access_during_schedule_formation": false,
+    "post_outcome_cutoff_search_allowed": false,
+    "post_outcome_rule_search_allowed": false
+  },
+  "execution_rules": {
+    "decision_times": [
+      "05:00 UTC",
+      "17:00 UTC"
+    ],
+    "day_entry": "05:00 UTC boundary after prior daytime-session return is already completed",
+    "day_exit": "17:00 UTC boundary",
+    "night_entry": "17:00 UTC boundary",
+    "night_exit": "next 05:00 UTC boundary",
+    "position_sequence": "night LONG; day REVERSAL_OF_PREVIOUS_DAY_SESSION_SIGN; repeat",
+    "trade_price_semantics": "use the first executable hourly boundary price represented by the Kraken hourly archive after confirming archive timestamp semantics in deterministic preflight; if the archive cannot support exact boundary execution without look-ahead, classify DATA/PIT_INCONCLUSIVE and do not proxy with future close",
+    "same_session_reentry": false,
+    "leverage": 1.0,
+    "max_gross_exposure": 1.0,
+    "broker_connected": false,
+    "live_trading": false
+  },
+  "cost_model": {
+    "stage_1_screen_only": true,
+    "base_total_bps_per_unit_turnover": 24.0,
+    "stress_total_bps_per_unit_turnover": [
+      24.0,
+      48.0,
+      72.0
+    ],
+    "turnover_definition": "absolute change in signed position at each session boundary; long-to-short or short-to-long flip has turnover 2",
+    "source_costs_are_not_reused": true,
+    "authenticated_execution_cost_claim_allowed": false,
+    "survivor_requirement": "Before any profitability or deep-validation claim, replace screen-only costs with trustworthy PIT Kraken fee/spread/slippage evidence and, for short exposure, authenticated margin/borrow/funding implementability and cost evidence."
+  },
+  "multiple_testing": {
+    "family_id": "EXT-ETH-SESSION-REVERSAL-001",
+    "planned_primary_hypotheses": 1,
+    "planned_parameter_variants": 1,
+    "stage_1_is_non_inferential": true,
+    "familywise_significance_claim_allowed_from_stage_1": false,
+    "future_siblings_same_family": [
+      "different UTC cutoffs",
+      "BTC variants",
+      "different day/night strategy pairs",
+      "DST-aware clocks",
+      "alternate session lengths"
+    ],
+    "future_sibling_rule": "Any future sibling must be newly frozen before its outcomes and remains in the same multiplicity family; it cannot reset rejected/exact/semantic memory."
+  },
+  "cheap_stage_gates": {
+    "minimum_independent_days": 120,
+    "independent_sample_unit": "UTC trading date",
+    "require_positive_after_cost_full_replication": true,
+    "require_both_validation_halves_positive_after_cost": true,
+    "require_profit_factor_above_one": true,
+    "require_3x_cost_positive": true,
+    "catastrophic_tail_veto": true,
+    "single_day_dependence_veto": true,
+    "single_day_dependence_rule": "Remove the single best UTC trading date; remaining after-cost cumulative arithmetic PnL must stay positive.",
+    "underpowered_action": "classify UNDERPOWERED/DATA_INCONCLUSIVE; do not change cutoff, session length, rule, or protected boundary"
+  },
+  "baseline_and_ablation_plan": {
+    "formation_before_outcomes": true,
+    "baseline_1_always_long": "On identical 05:00/17:00 boundaries, remain long ETH in both day and night sessions with identical turnover/cost accounting.",
+    "baseline_2_night_only": "Long only the 17:00-05:00 UTC night session and hold cash in the 05:00-17:00 daytime session.",
+    "baseline_3_day_always_long": "Long only the 05:00-17:00 UTC daytime session and hold cash overnight.",
+    "primary_ablation": "Keep the night LONG leg but replace daytime reversal with CASH; tests whether the reversal component adds incremental economic value beyond night drift.",
+    "sign_flip_falsifier": "Keep night LONG but use daytime MOMENTUM, i.e. positive sign of the previous completed daytime-session return.",
+    "one_session_delay": "Keep night LONG; set each daytime position to negative sign of the daytime-session return from two trading dates earlier rather than one; no retuning.",
+    "complexity_rule": "The combined strategy does not survive as a mechanism if it fails to add after-cost value over night-only in the full replication and both halves, even if total PnL is positive.",
+    "randomized_timing_and_volatility_match": "Required only for a legitimate Stage-1 survivor under #517; exact controls must be frozen and independently reviewed before those survivor outcomes are used for Stage 2."
+  },
+  "successive_halving": {
+    "stage_1": "one strict 2026H1 post-source-sample screen with the frozen 05:00 UTC Long/Reversal rule and screen-only 24/48/72 bps costs",
+    "stage_2": "only if Stage 1 survives: run already-frozen/simple baselines and then independently frozen #517 randomized-timing/volatility-matched controls plus authenticated execution-cost and short-implementability evidence",
+    "stage_3": "at most one global Strategy Factory deep candidate may advance; no publication-derived promotion priority",
+    "shadow_opened": false
+  },
+  "failure_learning": {
+    "issue": 510,
+    "every_failure_or_inconclusive_result_must_be_durable": true,
+    "repeated_family_failure_must_lower_priority": true,
+    "successor_must_be_materially_distinct": true,
+    "same_exact_or_semantic_identity_rescue_forbidden": true
+  },
+  "screening_authority": {
+    "screen_started": false,
+    "requires_canonical_semantic_rejected_memory_check": true,
+    "requires_exact_data_preflight": true,
+    "requires_current_main_reconciliation": true,
+    "requires_exact_head_ci": true,
+    "requires_independent_review": true,
+    "protected_shadow_opened": false,
+    "broker_connected": false,
+    "trade_authority": false,
+    "promotion_authority": false
+  },
+  "experiment_value": {
+    "economic_value": "HIGH_IF_REPLICATED",
+    "falsification_value": "HIGH",
+    "data_readiness": "HIGH_FREE_OFFICIAL_KRAKEN_ARCHIVE",
+    "implementation_cost": "LOW",
+    "priority_reason": "A simple materially distinct mechanism with public code and an untouched 2026H1 post-source-sample window can cheaply settle whether the published ETH session effect survives our much harsher after-cost screen."
+  },
+  "exact_next_action": "Complete #520 hypothesis-driven Kraken ETH/USD hourly archive preflight through 2026-06-30 without reading 2026-07-01 onward, bind the exact manifest/archive/normalized-row identities into a new execution contract, pass canonical semantic/exact rejected-memory admission, exact-head CI and independent review, then run this v1 exactly once. Do not tune from the result.",
+  "artifact_sha256": "b2e6cdaaafd1768a6e32e25fc6c3f65c9ecd5c76a159c4828871a8c03ba8e9b3"
+}
