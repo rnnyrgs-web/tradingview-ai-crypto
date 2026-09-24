@@ -39,15 +39,22 @@ def _function_body(sql: str, function_name: str) -> str:
     return sql[start:end]
 
 
-def test_bootstrap_drains_pre_protocol_writers_before_exclusive_advisory_lock():
+def test_bootstrap_takes_exclusive_advisory_before_draining_pre_protocol_writers():
+    """Lock ordering must be globally consistent to avoid bootstrap deadlock.
+
+    New-protocol authority writers take shared-advisory -> relation locks. The
+    bootstrap migration therefore must take exclusive-advisory -> relation locks,
+    so it can wait for pre-protocol writers without creating an inverse cycle with
+    a new writer that already holds the shared advisory lock.
+    """
     sql = _sql().lower()
-    relation_lock = sql.index("lock table")
     exclusive_lock = sql.index(f"pg_catalog.pg_advisory_xact_lock({LOCK_KEY})")
+    relation_lock = sql.index("lock table")
     first_wrapper = sql.index(
         "create or replace function public.append_big_move_reference_observation_v1("
     )
-    assert relation_lock < exclusive_lock < first_wrapper
-    assert "in share row exclusive mode" in sql[relation_lock:exclusive_lock]
+    assert exclusive_lock < relation_lock < first_wrapper
+    assert "in share row exclusive mode" in sql[relation_lock:first_wrapper]
 
 
 def test_fixed_shared_and_exclusive_helpers_use_the_same_frozen_key():
