@@ -73,6 +73,7 @@ scientifically validated, priority order -- not settled ground truth.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 from typing import Any
 
 from research_director import mission_priority
@@ -93,7 +94,13 @@ class ScoreBreakdown:
 
 
 def _clamp01(value: float) -> float:
-    return max(0.0, min(1.0, float(value)))
+    try:
+        normalized = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("mission estimate must be a finite number") from exc
+    if not math.isfinite(normalized):
+        raise ValueError("mission estimate must be a finite number")
+    return max(0.0, min(1.0, normalized))
 
 
 def score_breakdown(

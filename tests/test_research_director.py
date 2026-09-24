@@ -1,4 +1,7 @@
+from dataclasses import replace
 from datetime import datetime, timedelta, timezone
+
+import pytest
 
 from research_director import build_daily_lead_report, build_mission, claim_is_active, claim_mission, mission_priority, next_claimable_mission, rank_missions, stable_mission_id
 
@@ -52,3 +55,56 @@ def test_daily_report_explicitly_reports_no_production_promotion():
     assert report["experiments"]["rejected"] == 2
     assert report["production_promotion_occurred"] is False
     assert "Measured evidence" in report["evidence_note"]
+
+
+@pytest.mark.parametrize("nonfinite", [float("nan"), float("inf"), float("-inf")])
+def test_mission_admission_rejects_nonfinite_scientific_estimates(nonfinite):
+    """Malformed estimates must not become maximum-priority evidence."""
+    with pytest.raises(ValueError, match="finite"):
+        build_mission(
+            lane="strategy-discovery",
+            horizon="24h",
+            direction="RESEARCH_ONLY",
+            theme="malformed-priority",
+            hypothesis="non-finite profitability must not claim research capacity",
+            expected_information_gain=0.7,
+            expected_signal_impact=0.6,
+            expected_profitability_impact=nonfinite,
+            sample_readiness=0.8,
+            novelty=0.7,
+        )
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "priority",
+        "expected_information_gain",
+        "expected_signal_impact",
+        "expected_profitability_impact",
+        "sample_readiness",
+        "novelty",
+        "falsification_value",
+        "actionable_evidence_probability",
+        "compute_cost",
+        "redundancy_risk",
+    ],
+)
+def test_ranking_rejects_nonfinite_scientific_state_on_imported_mission(field):
+    """A caller cannot bypass admission by constructing a mission directly."""
+    valid = build_mission(
+        lane="strategy-discovery",
+        horizon="24h",
+        direction="RESEARCH_ONLY",
+        theme="finite-priority",
+        hypothesis="finite mission remains rankable",
+        expected_information_gain=0.7,
+        expected_signal_impact=0.6,
+        expected_profitability_impact=0.5,
+        sample_readiness=0.8,
+        novelty=0.7,
+    )
+    forged = replace(valid, mission_id="mission-forged", **{field: float("nan")})
+
+    with pytest.raises(ValueError, match="finite"):
+        rank_missions([valid, forged])
