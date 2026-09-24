@@ -31,7 +31,7 @@ def test_predeclaration_self_digest_is_immutable() -> None:
     contract = _contract()
     assert contract["artifact_sha256"] == _self_digest(contract)
     assert contract["artifact_sha256"] == (
-        "b2e6cdaaafd1768a6e32e25fc6c3f65c9ecd5c76a159c4828871a8c03ba8e9b3"
+        "6b8b71a5508fb61823f823e4596b644c29b6e4146175a2cd53cbd99f3976471a"
     )
 
 
@@ -59,14 +59,23 @@ def test_external_source_identity_and_strategy_are_frozen() -> None:
     }
 
 
-def test_replication_is_post_source_sample_and_shadow_is_sealed() -> None:
+def test_replication_uses_only_2026_incrementals_and_shadow_is_sealed() -> None:
     contract = _contract()
     data = contract["data_contract"]
 
-    assert data["replication_start_utc"] == "2026-01-01T00:00:00Z"
-    assert data["replication_end_utc"] == "2026-06-30T23:00:00Z"
-    assert data["validation_half_1_end_utc"] == "2026-03-31T23:00:00Z"
-    assert data["validation_half_2_start_utc"] == "2026-04-01T00:00:00Z"
+    assert data["required_incremental_archives"] == [
+        "https://assets.kraken.com/marketing/institutions/Kraken_OHLCVT_2026Q1.zip",
+        "https://assets.kraken.com/marketing/institutions/Kraken_OHLCVT_2026Q2.zip",
+    ]
+    assert data["required_data_start_utc"] == "2026-01-01T05:00:00Z"
+    assert data["scored_trading_date_start"] == "2026-01-02"
+    assert data["scored_trading_date_end"] == "2026-06-30"
+    assert data["validation_half_1_trading_dates"] == (
+        "2026-01-02 through 2026-03-31 inclusive"
+    )
+    assert data["validation_half_2_trading_dates"] == (
+        "2026-04-01 through 2026-06-30 inclusive"
+    )
     assert data["protected_shadow_start_utc"] == "2026-07-01T00:00:00Z"
     assert data["screen_may_read_protected_shadow"] is False
     assert data["no_paid_data_required"] is True
@@ -83,6 +92,8 @@ def test_signal_has_one_fixed_cutoff_and_no_post_outcome_search() -> None:
         "negative sign of the immediately previous completed 05:00-17:00 UTC "
         "daytime-session return"
     )
+    assert "2026-01-01" in signal["first_replication_day_day_position"]
+    assert "warmup only" in signal["first_replication_day_day_position"]
     assert signal["post_outcome_cutoff_search_allowed"] is False
     assert signal["post_outcome_rule_search_allowed"] is False
     assert signal["future_return_access_during_schedule_formation"] is False
