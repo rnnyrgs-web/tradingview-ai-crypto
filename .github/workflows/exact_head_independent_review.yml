@@ -33,7 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.sha }}
           fetch-depth: 100
 
       - uses: actions/setup-python@v5
@@ -51,8 +51,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git fetch --no-tags origin main
-          MAIN_SHA="$(git rev-parse origin/main)"
+          MAIN_SHA="$(git rev-parse HEAD)"
           REPO_OWNER="${GITHUB_REPOSITORY%%/*}"
           SELECTED_ISSUE=""
           SELECTED_PR=""
@@ -152,7 +151,7 @@ jobs:
               echo "PR #$PR_NUMBER fetch mismatch; request stays pending."
               continue
             fi
-            MERGE_BASE="$(git merge-base origin/main "$REVIEW_REF" 2>/dev/null || true)"
+            MERGE_BASE="$(git merge-base "$MAIN_SHA" "$REVIEW_REF" 2>/dev/null || true)"
             if [ "$MERGE_BASE" != "$MAIN_SHA" ]; then
               echo "PR #$PR_NUMBER exact head is not based on current main; request stays pending."
               continue
@@ -246,7 +245,7 @@ jobs:
         env:
           REVIEW_REF: ${{ steps.select.outputs.review_ref }}
         run: |
-          git diff --binary origin/main..."$REVIEW_REF" > /tmp/candidate.diff
+          git diff --binary "$MAIN_SHA"..."$REVIEW_REF" > /tmp/candidate.diff
           BYTES="$(wc -c < /tmp/candidate.diff)"
           echo "Diff bytes: $BYTES"
           test "$BYTES" -gt 0
