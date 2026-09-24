@@ -82,10 +82,22 @@ def test_final_stage1_binds_one_isolated_protected_safe_loader_without_rewriting
 
 
 def test_final_runner_runtime_validates_all_behavior_bearing_file_identities():
-    source = FINAL_RUNNER.read_text(encoding="utf-8")
-    assert "load_and_validate_execution_provenance()" in source
-    assert "_verified_bound_path" in source
-    assert "protected_safe_loader" in source
-    assert "risk_guarded_runner" in source
-    assert "final_stage1_runner" in source
-    assert "Git blob identity mismatch" in source
+    from orchestration.external_replication import eth_tuesday_drift_stage1_frozen_runner as final
+
+    binding = final.load_and_validate_execution_provenance()
+    assert binding["artifact_sha256"] == EXPECTED_PROVENANCE_SHA256
+    assert binding["protected_safe_loader"]["git_blob_sha1"] == "791358a1a48993e3ffbbee42c8a561313d8f60ae"
+    assert binding["final_stage1_runner"]["git_blob_sha1"] == "f8440fbf543e6d534cd497b4dd9d251055679784"
+
+
+def test_bound_loader_materializes_only_frozen_development_eth_rows():
+    """Exercise the actual bound loader without computing any strategy outcome."""
+    from orchestration.external_replication import eth_tuesday_protected_safe_loader as loader
+
+    rows = loader.load_frozen_eth_development_rows()
+    assert rows
+    protected_ms = int(loader._parse_hour(loader.PROTECTED_START_UTC).timestamp() * 1000)
+    cutoff_ms = int(loader._parse_hour(loader.DEVELOPMENT_END_UTC).timestamp() * 1000)
+    assert int(rows[-1]["ts"]) == cutoff_ms
+    assert all(int(row["ts"]) < protected_ms for row in rows)
+    assert all(float(row["open"]) > 0 for row in rows)
