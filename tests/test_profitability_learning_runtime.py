@@ -8,8 +8,9 @@ from test_profitability_learning_development import setup_ablation, evaluator
 from test_research_heavy_experiment_scheduler import _experiment
 from profitability_learning.development import run_ablation
 from profitability_learning.memory import Memory
-from profitability_learning.runtime import (complete_experiment, learning_snapshot,
+from profitability_learning.runtime import (apply_queue_feedback, complete_experiment, learning_snapshot,
     enrich_legacy_lesson, factory_feedback, refresh_director)
+from research_heavy_experiment_scheduler import build_heavy_dispatch_plan
 
 
 def configure(monkeypatch, tmp_path):
@@ -139,6 +140,26 @@ def test_existing_factory_candidates_reordered_from_completed_memory(monkeypatch
     result = apply_queue_feedback(queue)
     assert result["experiments"][0]["experiment_id"] == "fresh"
     assert queue["experiments"][0]["experiment_id"] == "old"
+
+
+@pytest.mark.parametrize("nonfinite", [float("nan"), float("inf"), float("-inf")])
+@pytest.mark.parametrize("priority_field", ["information_priority", "base_information_priority"])
+def test_nonfinite_queue_priority_is_an_eligibility_veto(
+    monkeypatch, tmp_path, nonfinite, priority_field
+):
+    """Malformed durable queue priority must not survive into heavy dispatch."""
+    configure(monkeypatch, tmp_path)
+    candidate = _experiment("malformed-priority", 100)
+    candidate[priority_field] = nonfinite
+
+    queue = apply_queue_feedback({"experiments": [candidate], "experiment_count": 1})
+
+    row = queue["experiments"][0]
+    assert row["information_priority"] == 0.0
+    assert row["learning_feedback"]["factor"] == 0.0
+    assert row["learning_feedback"]["reason"] == "invalid_information_priority"
+    assert row["learning_feedback"]["changes_eligibility"] is True
+    assert build_heavy_dispatch_plan(queue)["selected"] == []
 
 
 def test_configured_memory_outage_blocks_new_candidate_dispatch(monkeypatch, tmp_path):
