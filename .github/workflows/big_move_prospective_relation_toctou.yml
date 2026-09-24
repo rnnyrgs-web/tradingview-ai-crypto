@@ -1,4 +1,4 @@
-name: Big Move Prospective Relation TOCTOU Runtime
+name: Big Move Prospective DDL TOCTOU Runtime
 
 on:
   workflow_dispatch:
@@ -7,14 +7,16 @@ on:
       - main
     paths:
       - "supabase/migrations/20260924065000_big_move_prospective_relation_lock_guard.sql"
+      - "supabase/migrations/20260924123000_big_move_prospective_ddl_advisory_guard.sql"
       - "tests/test_big_move_prospective_relation_lock_runtime.py"
+      - "tests/test_big_move_prospective_ddl_advisory_guard.py"
       - ".github/workflows/big_move_prospective_relation_toctou.yml"
 
 permissions:
   contents: read
 
 concurrency:
-  group: big-move-relation-toctou-${{ github.event.pull_request.number || github.ref }}
+  group: big-move-prospective-ddl-toctou-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -72,6 +74,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install "pytest==8.3.5" "psycopg[binary]==3.2.10"
 
-      - name: Run two-session relation-lock falsifier
+      - name: Run relation and authorized-function-DDL falsifiers
         run: |
           pytest -q tests/test_big_move_prospective_relation_lock_runtime.py
