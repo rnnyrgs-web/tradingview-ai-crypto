@@ -87,8 +87,6 @@ def test_replication_uses_only_2026_incrementals_and_future_evidence_is_sealed()
         "2026-04-01 through 2026-06-30 inclusive"
     )
 
-    # July 1 through formation is historical at predeclaration time and cannot be
-    # relabeled as prospective/genuine-forward evidence.
     assert "protected_shadow_start_utc" not in data
     assert data["retrospective_holdout_start_utc"] == "2026-07-01T00:00:00Z"
     assert data["retrospective_holdout_classification"] == (
@@ -96,9 +94,6 @@ def test_replication_uses_only_2026_incrementals_and_future_evidence_is_sealed()
     )
     assert data["screen_may_read_retrospective_holdout"] is False
 
-    # The independent sample unit is a full UTC trading date whose night leg starts
-    # at 17:00 UTC. Formation occurred mid-night-session, so the first fully
-    # post-formation trading date starts at the next 17:00 boundary.
     formed = _utc(contract["formed_at"])
     genuine_start = _utc(data["genuine_forward_shadow_start_utc"])
     assert data["predeclaration_time_utc"] == contract["formed_at"]
