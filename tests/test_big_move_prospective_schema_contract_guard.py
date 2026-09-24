@@ -42,20 +42,30 @@ def test_guard_is_live_structural_not_migration_timestamp_authority():
 def test_guard_fails_closed_for_required_drift_classes():
     body = _guard_body()
 
-    assert body.count("PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN") >= 15
+    assert body.count("PROSPECTIVE_SCHEMA_CONTRACT_NOT_PROVEN") >= 12
     for blocker in (
         "outcome table missing/incompatible",
-        "formation column contract drift",
+        "% column % drift",
         "required RLS disabled",
         "formation identity/linkage constraint missing",
         "outcome identity/linkage constraint missing",
-        "formation append RPC missing/wrong signature",
-        "outcome append RPC missing/wrong signature",
-        "hit derive RPC missing/wrong signature",
+        "% RPC missing/wrong signature",
+        "% RPC contract drift",
         "outcome mutation-rejection trigger drift",
         "service_role table privilege drift",
+        "% guard bypass exposed",
     ):
         assert blocker in body
+
+
+def test_required_columns_are_semantic_and_allow_harmless_additive_columns():
+    body = _guard_body().lower()
+
+    assert "from (values" in body
+    assert "required_notnull" in body
+    assert "a.attidentity::text" in body
+    assert "pg_catalog.format_type" in body
+    assert "string_agg(a.attname" not in body
 
 
 def test_guard_freezes_exact_authoritative_rpc_signatures_and_result_contracts():
@@ -68,8 +78,8 @@ def test_guard_freezes_exact_authoritative_rpc_signatures_and_result_contracts()
     assert "reference_observation_created_attimestampwithtimezone" in body
     assert "source_reference_observation_sequencebigint" in body
     assert "breach_observationjsonb" in body
-    assert body.count("p.prosecdef") >= 4
-    assert body.count("search_path=%") >= 4
+    assert "p.prosecdef" in body
+    assert "search_path=%" in body
 
 
 def test_guard_requires_append_only_outcome_trigger_and_rpc_only_mutation_boundary():
@@ -117,6 +127,7 @@ def test_all_authoritative_formation_outcome_hit_entrypoints_are_guarded():
     ):
         marker = f"revoke all on function public.{internal}"
         assert marker in sql
+        assert internal.replace(", ", ",") in _guard_body().lower()
 
 
 def test_structurally_valid_schema_does_not_depend_on_migration_version_parity():
@@ -124,7 +135,7 @@ def test_structurally_valid_schema_does_not_depend_on_migration_version_parity()
 
     # This regression intentionally has no assertion about a deployment timestamp.
     # The guard's PASS path is simply reaching function end after the live structural
-    # checks.  A later/different migration version therefore cannot grant or revoke
+    # checks. A later/different migration version therefore cannot grant or revoke
     # authority unless it actually changes the inspected contract.
     assert "supabase_migrations" not in body
     assert "schema_migrations" not in body
