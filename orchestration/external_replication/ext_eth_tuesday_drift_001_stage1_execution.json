@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "artifact_type": "external_replication_stage1_execution_contract",
+  "replication_id": "EXT-ETH-TUESDAY-DRIFT-001-v1",
+  "formed_pre_outcome": true,
+  "parent_artifact_sha256": "6ddab16cbfbb846d0690dced9e2128244e2bc9ec6221243a02cb48fea4b5c98b",
+  "parent_predeclaration_git_blob_sha1": "ed70bd0b422b2cb60113f536ca0e920ac66240db",
+  "dataset_sha256": "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f",
+  "dataset_git_blob_sha1": "3a93beb4b1b4ef7f5d32b2936bf3119c692e7c15",
+  "dataset_path": "orchestration/evidence/liquidity_meanrev_001_cache/dataset.json.gz",
+  "instrument": "ETH-USDT-SWAP",
+  "runner_path": "orchestration/external_replication/eth_tuesday_drift_runner.py",
+  "runner_git_blob_sha1": "cd4a5796876e9dc66dc001e4b9e3b1ec43c417d1",
+  "schedule": {
+    "week_start_utc": "MONDAY_00:00",
+    "entry": "TUESDAY_00:00_UTC_OPEN",
+    "exit": "WEDNESDAY_00:00_UTC_OPEN",
+    "weeks_total": 68,
+    "half_1_weeks": 34,
+    "half_2_weeks": 34,
+    "half_2_start_utc": "2026-01-05T00:00:00Z",
+    "last_week_start_utc": "2026-08-24T00:00:00Z",
+    "protected_oos_start_utc": "2026-09-01T00:00:00Z",
+    "missing_required_boundary_policy": "DATA/PIT_INCONCLUSIVE_SESSION_NO_FILL_NO_SUBSTITUTION"
+  },
+  "economics": {
+    "gross_return": "(wednesday_00_open / tuesday_00_open - 1) * 10000_bps",
+    "round_trip_cost_bps": [
+      24.0,
+      48.0,
+      72.0
+    ],
+    "primary_cost_bps": 48.0,
+    "stress_cost_bps": 72.0,
+    "cost_application": "ONE_FULL_ROUND_TRIP_COST_PER_SCORED_TUESDAY_SESSION"
+  },
+  "survival_gates": {
+    "minimum_scored_sessions_per_half": 25,
+    "full_mean_net_bps_gt_zero_at_48": true,
+    "half_1_mean_net_bps_gt_zero_at_48": true,
+    "half_2_mean_net_bps_gt_zero_at_48": true,
+    "full_profit_factor_gt_one_at_48": true,
+    "full_mean_net_bps_gt_zero_at_72": true,
+    "max_single_positive_session_share_le_0_5_at_48": true,
+    "data_pit_contract_valid": true
+  },
+  "failure_classification_order": [
+    "INCONCLUSIVE_POWER",
+    "NO_GROSS_EDGE",
+    "COST_ERASED_EDGE",
+    "REGIME_OR_CHRONOLOGY_INSTABILITY",
+    "COST_STRESS_ERASED_EDGE",
+    "WINNER_CONCENTRATION",
+    "PROFIT_FACTOR_FAILURE",
+    "UNCLASSIFIED_STAGE1_FAILURE"
+  ],
+  "authority_locks": {
+    "real_stage1_execution_before_independent_review": false,
+    "baseline_pnl_opened": false,
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false,
+    "profitability_claim_allowed": false,
+    "promotion_authority": false,
+    "broker_connected": false,
+    "trade_authority": false
+  },
+  "artifact_sha256": "5c0354badb8650149907db8a7956bb97f159fe7aa9231bba790c01a923f294cf"
+}
