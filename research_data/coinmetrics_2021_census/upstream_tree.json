@@ -1,0 +1,885 @@
+{
+  "sha": "c0c58a48402cb33032c6c3f00402cb50e1923fd8",
+  "url": "https://api.github.com/repos/coinmetrics/data/git/trees/c0c58a48402cb33032c6c3f00402cb50e1923fd8",
+  "tree": [
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3c3629e647f5ddf82548912e337bea9826b434af",
+      "size": 13,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/3c3629e647f5ddf82548912e337bea9826b434af"
+    },
+    {
+      "path": ".gitlab-ci.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fdb8b66e7ed2eab73e2aa2ae33d13b0a1026b52b",
+      "size": 457,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/fdb8b66e7ed2eab73e2aa2ae33d13b0a1026b52b"
+    },
+    {
+      "path": "LICENSE",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f8f2af023ec95cb746dd08ec624c4c147b375af9",
+      "size": 289,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/f8f2af023ec95cb746dd08ec624c4c147b375af9"
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d630e48f45e6f5f7d09ecf09ba189d8c5c854250",
+      "size": 982,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/d630e48f45e6f5f7d09ecf09ba189d8c5c854250"
+    },
+    {
+      "path": "csv",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "8c652ca85e45c58575dd4609205fb2a77b8a829c",
+      "url": "https://api.github.com/repos/coinmetrics/data/git/trees/8c652ca85e45c58575dd4609205fb2a77b8a829c"
+    },
+    {
+      "path": "csv/aave.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "35b4bdfa71901c15f9d15ed9634a2797228efdce",
+      "size": 34775,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/35b4bdfa71901c15f9d15ed9634a2797228efdce"
+    },
+    {
+      "path": "csv/ada.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b0335ee0acfe5dfaafad6145ac0f63c7d077ecb0",
+      "size": 744192,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/b0335ee0acfe5dfaafad6145ac0f63c7d077ecb0"
+    },
+    {
+      "path": "csv/ant.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "51b579d2fa89eb3b0d6f9be736f3d0755ceb82e1",
+      "size": 566128,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/51b579d2fa89eb3b0d6f9be736f3d0755ceb82e1"
+    },
+    {
+      "path": "csv/bal.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4c5ab3270db02e49cdad109b5ae30ad81803a243",
+      "size": 81481,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/4c5ab3270db02e49cdad109b5ae30ad81803a243"
+    },
+    {
+      "path": "csv/bat.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7c2a4207673c72f71fe5424719a29fde2db11dac",
+      "size": 584938,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/7c2a4207673c72f71fe5424719a29fde2db11dac"
+    },
+    {
+      "path": "csv/bch.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fbab5247bbe00a0038dd437b2a70ff4bbc00910f",
+      "size": 929046,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/fbab5247bbe00a0038dd437b2a70ff4bbc00910f"
+    },
+    {
+      "path": "csv/bnb.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1d2d2f7e884bdfa278335a34dc24000a301aed6b",
+      "size": 290636,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/1d2d2f7e884bdfa278335a34dc24000a301aed6b"
+    },
+    {
+      "path": "csv/bnb_mainnet.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2cdb575210f633365d4096ddad81bfc79f808254",
+      "size": 326576,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/2cdb575210f633365d4096ddad81bfc79f808254"
+    },
+    {
+      "path": "csv/bsv.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bf7d283a538949792b1595ff7d278fe6bef486f6",
+      "size": 574246,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/bf7d283a538949792b1595ff7d278fe6bef486f6"
+    },
+    {
+      "path": "csv/btc.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a8c0c48690d381f7dcf4fb4cb5d06f785990eafc",
+      "size": 2888564,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/a8c0c48690d381f7dcf4fb4cb5d06f785990eafc"
+    },
+    {
+      "path": "csv/btg.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b6fcdb121e845711a0bf18fde2e17ed743c62612",
+      "size": 876463,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/b6fcdb121e845711a0bf18fde2e17ed743c62612"
+    },
+    {
+      "path": "csv/busd.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c49664a0721c45d0eddf7abeb4dfd70a16ceebbd",
+      "size": 224788,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/c49664a0721c45d0eddf7abeb4dfd70a16ceebbd"
+    },
+    {
+      "path": "csv/comp.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bf3f5d0a9563670755f615b59747c713dc04fef6",
+      "size": 89989,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/bf3f5d0a9563670755f615b59747c713dc04fef6"
+    },
+    {
+      "path": "csv/cro.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e7480270b4ba01c5907fbf9477092ab5cf1d450f",
+      "size": 268078,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/e7480270b4ba01c5907fbf9477092ab5cf1d450f"
+    },
+    {
+      "path": "csv/crv.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a2f6cc8a5629dc804404fde14156b2b136c658c9",
+      "size": 73805,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/a2f6cc8a5629dc804404fde14156b2b136c658c9"
+    },
+    {
+      "path": "csv/cvc.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f390f31082f94d1c4e442395e3009966a78099bb",
+      "size": 496974,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/f390f31082f94d1c4e442395e3009966a78099bb"
+    },
+    {
+      "path": "csv/dai.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b81954ae8163ebff7c45b534007ff1d36eff3e00",
+      "size": 214484,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/b81954ae8163ebff7c45b534007ff1d36eff3e00"
+    },
+    {
+      "path": "csv/dash.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fd70f0d0869c8be52723da4127f7cd5eec78b1ff",
+      "size": 1959936,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/fd70f0d0869c8be52723da4127f7cd5eec78b1ff"
+    },
+    {
+      "path": "csv/dcr.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c8aac92f916b281b0354bdc60c44aa422213161a",
+      "size": 1132776,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/c8aac92f916b281b0354bdc60c44aa422213161a"
+    },
+    {
+      "path": "csv/dgb.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2cec858e47bce290612388169d6e9aa7bcba95f2",
+      "size": 1756570,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/2cec858e47bce290612388169d6e9aa7bcba95f2"
+    },
+    {
+      "path": "csv/dgx.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1c2e0b65315e0b7e6fabf52d50b48c2ad14c28d4",
+      "size": 329444,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/1c2e0b65315e0b7e6fabf52d50b48c2ad14c28d4"
+    },
+    {
+      "path": "csv/doge.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1a452def6dd0f1b766ad50eb849ca0f3db3574aa",
+      "size": 2095640,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/1a452def6dd0f1b766ad50eb849ca0f3db3574aa"
+    },
+    {
+      "path": "csv/drgn.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6fa29f577c9d9b8eca298090717f0bb52122d354",
+      "size": 481544,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/6fa29f577c9d9b8eca298090717f0bb52122d354"
+    },
+    {
+      "path": "csv/elf.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "49b1bde750b290aea1066cf7f7577a709c86900b",
+      "size": 502125,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/49b1bde750b290aea1066cf7f7577a709c86900b"
+    },
+    {
+      "path": "csv/eng.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "37eada528a723f88543320f7530ccad48029e821",
+      "size": 464728,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/37eada528a723f88543320f7530ccad48029e821"
+    },
+    {
+      "path": "csv/eos.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8c836eafbabc900ac04cd960853b724d4c178d7f",
+      "size": 154547,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/8c836eafbabc900ac04cd960853b724d4c178d7f"
+    },
+    {
+      "path": "csv/eos_eth.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "39fde171228c5db731a48f49a32c8b734d83f43b",
+      "size": 135058,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/39fde171228c5db731a48f49a32c8b734d83f43b"
+    },
+    {
+      "path": "csv/etc.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "01d948dfeb9b761ed159747e096f9f33f856d099",
+      "size": 1266878,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/01d948dfeb9b761ed159747e096f9f33f856d099"
+    },
+    {
+      "path": "csv/eth.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1ca417a6cdd4ce35df4547a93d9bcb3b37018d88",
+      "size": 1563375,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/1ca417a6cdd4ce35df4547a93d9bcb3b37018d88"
+    },
+    {
+      "path": "csv/ethos.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9f45db6778ea310b9e02a0575644f3861f1c08db",
+      "size": 535696,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/9f45db6778ea310b9e02a0575644f3861f1c08db"
+    },
+    {
+      "path": "csv/ftt.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "49a17eb92358d4870a6b9217750011ec0cd4eb41",
+      "size": 241788,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/49a17eb92358d4870a6b9217750011ec0cd4eb41"
+    },
+    {
+      "path": "csv/fun.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6763234c8c4ec441a8e784b453c2b6612a57547a",
+      "size": 539593,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/6763234c8c4ec441a8e784b453c2b6612a57547a"
+    },
+    {
+      "path": "csv/fxc.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7f99d5066b755a298dea20e68ed394d69f9466d9",
+      "size": 259364,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/7f99d5066b755a298dea20e68ed394d69f9466d9"
+    },
+    {
+      "path": "csv/gas.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "eb884881067d83194a93944a4eb7a117dce7f456",
+      "size": 593475,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/eb884881067d83194a93944a4eb7a117dce7f456"
+    },
+    {
+      "path": "csv/gno.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8ad2e2dbf9d699e5496402ba883c775baf641e2b",
+      "size": 556316,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/8ad2e2dbf9d699e5496402ba883c775baf641e2b"
+    },
+    {
+      "path": "csv/gnt.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a944d7419d9bfc830bac4d7b6cc935265926c515",
+      "size": 624286,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/a944d7419d9bfc830bac4d7b6cc935265926c515"
+    },
+    {
+      "path": "csv/grin.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5d9811e509415dd7dd87cf1026e40a825b2d149e",
+      "size": 286963,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/5d9811e509415dd7dd87cf1026e40a825b2d149e"
+    },
+    {
+      "path": "csv/gusd.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ca0bec8664e74abe7ba973b12864c7b9dd3f3907",
+      "size": 325360,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/ca0bec8664e74abe7ba973b12864c7b9dd3f3907"
+    },
+    {
+      "path": "csv/hedg.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cac0b942be6ebb6f4672cade0216656188a98f93",
+      "size": 201866,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/cac0b942be6ebb6f4672cade0216656188a98f93"
+    },
+    {
+      "path": "csv/ht.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "19c692bb76934b82e7e46e4331d5859a8f2a6a23",
+      "size": 356977,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/19c692bb76934b82e7e46e4331d5859a8f2a6a23"
+    },
+    {
+      "path": "csv/husd.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e733fe3c4982004c02977cd85b6e2e518c33d175",
+      "size": 249862,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/e733fe3c4982004c02977cd85b6e2e518c33d175"
+    },
+    {
+      "path": "csv/kcs.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5b793280696ec99e6edc4bd9399fddde2f6ba2d7",
+      "size": 130255,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/5b793280696ec99e6edc4bd9399fddde2f6ba2d7"
+    },
+    {
+      "path": "csv/knc.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bd654cf021bbaf4aad1ff6ab1708d84996f47af9",
+      "size": 560616,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/bd654cf021bbaf4aad1ff6ab1708d84996f47af9"
+    },
+    {
+      "path": "csv/lend.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5e06c76f7e5651c74006c7308c29c582ada507d7",
+      "size": 562906,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/5e06c76f7e5651c74006c7308c29c582ada507d7"
+    },
+    {
+      "path": "csv/leo_eos.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "80af33f88599005448587d0d05475661b7480a07",
+      "size": 195190,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/80af33f88599005448587d0d05475661b7480a07"
+    },
+    {
+      "path": "csv/leo_eth.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "69736e47d89a802f50d36e0ae78ec32c072e2905",
+      "size": 237109,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/69736e47d89a802f50d36e0ae78ec32c072e2905"
+    },
+    {
+      "path": "csv/link.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c3721e53d065ca8fae88ec4300d561316ec262db",
+      "size": 551656,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/c3721e53d065ca8fae88ec4300d561316ec262db"
+    },
+    {
+      "path": "csv/loom.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "160ed39b9b96c9a61fd36013f41455199541f29a",
+      "size": 425347,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/160ed39b9b96c9a61fd36013f41455199541f29a"
+    },
+    {
+      "path": "csv/lsk.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f2eef0cfe612d0b58acfff60a534fc22ba4a4055",
+      "size": 1019246,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/f2eef0cfe612d0b58acfff60a534fc22ba4a4055"
+    },
+    {
+      "path": "csv/ltc.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "45b3fc319d9fbe44adcf77871e84f846a0344889",
+      "size": 2289252,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/45b3fc319d9fbe44adcf77871e84f846a0344889"
+    },
+    {
+      "path": "csv/maid.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "81b25eb70c6380428b7895755e69e64101ea0109",
+      "size": 882454,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/81b25eb70c6380428b7895755e69e64101ea0109"
+    },
+    {
+      "path": "csv/mana.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d2ca16b1862a39d983adfad5a6e3fdb781adaaf3",
+      "size": 583484,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/d2ca16b1862a39d983adfad5a6e3fdb781adaaf3"
+    },
+    {
+      "path": "csv/mco.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a4a4358a6f1af8e16f28533a8b5e3dad678622c5",
+      "size": 488401,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/a4a4358a6f1af8e16f28533a8b5e3dad678622c5"
+    },
+    {
+      "path": "csv/metrics.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6afe03ff3359cecbe1fd044d299c0f286a0a99cf",
+      "size": 11303,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/6afe03ff3359cecbe1fd044d299c0f286a0a99cf"
+    },
+    {
+      "path": "csv/mkr.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "484353f5b6636e8f22526b70eb435dee5122a54e",
+      "size": 607175,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/484353f5b6636e8f22526b70eb435dee5122a54e"
+    },
+    {
+      "path": "csv/neo.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "02e09712bf1e39ca260452e2ff11a0be439e1d07",
+      "size": 654279,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/02e09712bf1e39ca260452e2ff11a0be439e1d07"
+    },
+    {
+      "path": "csv/nxm.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ec3266d30c2a946ef38b6d5b3e02467c3a299751",
+      "size": 136123,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/ec3266d30c2a946ef38b6d5b3e02467c3a299751"
+    },
+    {
+      "path": "csv/omg.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6e62d5e164137a38d1e440e4a405e4887d752ec1",
+      "size": 592096,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/6e62d5e164137a38d1e440e4a405e4887d752ec1"
+    },
+    {
+      "path": "csv/pax.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "47f6c8c35be5f15ed15892188d205a05761cf859",
+      "size": 389237,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/47f6c8c35be5f15ed15892188d205a05761cf859"
+    },
+    {
+      "path": "csv/paxg.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b82db6e1b06115ec9a73d1686a932686fa239eb8",
+      "size": 164561,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/b82db6e1b06115ec9a73d1686a932686fa239eb8"
+    },
+    {
+      "path": "csv/pay.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f3ffa04da947753204891b1a15acd2c481d73d29",
+      "size": 568338,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/f3ffa04da947753204891b1a15acd2c481d73d29"
+    },
+    {
+      "path": "csv/pivx.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fccfcad077e349884f08ac383b883574a365d25e",
+      "size": 830154,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/fccfcad077e349884f08ac383b883574a365d25e"
+    },
+    {
+      "path": "csv/poly.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b21f3378d4be41e2028fb71c31507afb7d511e04",
+      "size": 416785,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/b21f3378d4be41e2028fb71c31507afb7d511e04"
+    },
+    {
+      "path": "csv/powr.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "af2171bdd7bd5fbbf0f95189ac02153ac577c5d2",
+      "size": 472828,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/af2171bdd7bd5fbbf0f95189ac02153ac577c5d2"
+    },
+    {
+      "path": "csv/ppt.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8a56ca88f7525d99eb7450fe370aefa809c22637",
+      "size": 489132,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/8a56ca88f7525d99eb7450fe370aefa809c22637"
+    },
+    {
+      "path": "csv/qash.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "05ac6821aca7322af5ebe7c905ab7551ef47b16e",
+      "size": 450024,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/05ac6821aca7322af5ebe7c905ab7551ef47b16e"
+    },
+    {
+      "path": "csv/ren.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ac41f55e89ad0c54ddd9b99fbcd7fa58f892ccc8",
+      "size": 401276,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/ac41f55e89ad0c54ddd9b99fbcd7fa58f892ccc8"
+    },
+    {
+      "path": "csv/renbtc.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "37e62ef26d78694c8e186a75e0623b845d071c61",
+      "size": 89189,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/37e62ef26d78694c8e186a75e0623b845d071c61"
+    },
+    {
+      "path": "csv/rep.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "be61e1a7a8bdbe588af0ff9e43aa29724fb96a34",
+      "size": 649974,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/be61e1a7a8bdbe588af0ff9e43aa29724fb96a34"
+    },
+    {
+      "path": "csv/sai.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c798cb91bb00cb7d9e88b7ac2b41ead218041607",
+      "size": 344981,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/c798cb91bb00cb7d9e88b7ac2b41ead218041607"
+    },
+    {
+      "path": "csv/snt.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e43307d929200671755495e3742e7a5b72a9323a",
+      "size": 620380,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/e43307d929200671755495e3742e7a5b72a9323a"
+    },
+    {
+      "path": "csv/snx.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "86928a9c8d634289103d3f6f2c82833f765891d5",
+      "size": 254239,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/86928a9c8d634289103d3f6f2c82833f765891d5"
+    },
+    {
+      "path": "csv/srm.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "94156de96f5d9ee88490eed6c65c17820742d0e6",
+      "size": 53602,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/94156de96f5d9ee88490eed6c65c17820742d0e6"
+    },
+    {
+      "path": "csv/sushi.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "39375479b642ee0ddbc7de4a3c2251714263cc4f",
+      "size": 64624,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/39375479b642ee0ddbc7de4a3c2251714263cc4f"
+    },
+    {
+      "path": "csv/swrv.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4257953ed6be5dbf9e0453de234adc33ba7f0f3f",
+      "size": 53594,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/4257953ed6be5dbf9e0453de234adc33ba7f0f3f"
+    },
+    {
+      "path": "csv/trx.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "42c5b677033cf4c73e3bf17d5744bd0bc5e46a1f",
+      "size": 381355,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/42c5b677033cf4c73e3bf17d5744bd0bc5e46a1f"
+    },
+    {
+      "path": "csv/trx_eth.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fe0e6bdbb3afe8cd3356a192e0345f3c711db8eb",
+      "size": 104601,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/fe0e6bdbb3afe8cd3356a192e0345f3c711db8eb"
+    },
+    {
+      "path": "csv/tusd.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e4fe5594d5663e945395d4045728233908cc87a3",
+      "size": 369767,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/e4fe5594d5663e945395d4045728233908cc87a3"
+    },
+    {
+      "path": "csv/uma.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "07ca3731339da77201b6cc99fa54f069395e48e1",
+      "size": 88743,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/07ca3731339da77201b6cc99fa54f069395e48e1"
+    },
+    {
+      "path": "csv/uni.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e4ca8637667679cb2ecba92cf4c4e4650da18998",
+      "size": 43532,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/e4ca8637667679cb2ecba92cf4c4e4650da18998"
+    },
+    {
+      "path": "csv/usdc.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6e79960617be37bdb886defb522ea6e9ee5c5997",
+      "size": 391521,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/6e79960617be37bdb886defb522ea6e9ee5c5997"
+    },
+    {
+      "path": "csv/usdk.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "35432b0c5c5c785e36b31273c8739546db387587",
+      "size": 99717,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/35432b0c5c5c785e36b31273c8739546db387587"
+    },
+    {
+      "path": "csv/usdt.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "80ac98931ae08e04c8fee36e5cb0082a52de7569",
+      "size": 999519,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/80ac98931ae08e04c8fee36e5cb0082a52de7569"
+    },
+    {
+      "path": "csv/usdt_eth.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6109e0ea581131cf8c4ca3a031bda626e73a33e4",
+      "size": 501538,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/6109e0ea581131cf8c4ca3a031bda626e73a33e4"
+    },
+    {
+      "path": "csv/usdt_trx.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a9f37fe1ee1ad99681838b1dc41e76e84c5c5c3c",
+      "size": 275055,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/a9f37fe1ee1ad99681838b1dc41e76e84c5c5c3c"
+    },
+    {
+      "path": "csv/vtc.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "38d6448b873c3821eb17d94497da65037ade770a",
+      "size": 1723772,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/38d6448b873c3821eb17d94497da65037ade770a"
+    },
+    {
+      "path": "csv/waves.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ee14fa1a8ca5f6c0eb58b20db7f282896d7fceb9",
+      "size": 839739,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/ee14fa1a8ca5f6c0eb58b20db7f282896d7fceb9"
+    },
+    {
+      "path": "csv/wbtc.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "21ca5f9ee467b7b865e2e72c35ddc0602765f95c",
+      "size": 275689,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/21ca5f9ee467b7b865e2e72c35ddc0602765f95c"
+    },
+    {
+      "path": "csv/weth.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5008f29056e0d5bdae522f0bc817b2931395bb02",
+      "size": 568727,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/5008f29056e0d5bdae522f0bc817b2931395bb02"
+    },
+    {
+      "path": "csv/wnxm.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a535da2afe4b452179a4df163c3a2e039c9d6c77",
+      "size": 67968,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/a535da2afe4b452179a4df163c3a2e039c9d6c77"
+    },
+    {
+      "path": "csv/wtc.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8f7024951c8bb4f0126adf7d98fece8bab19e8ef",
+      "size": 498916,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/8f7024951c8bb4f0126adf7d98fece8bab19e8ef"
+    },
+    {
+      "path": "csv/xaut.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "af8b4d3d708d30cfc144c4c1dcdee73f05916472",
+      "size": 103331,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/af8b4d3d708d30cfc144c4c1dcdee73f05916472"
+    },
+    {
+      "path": "csv/xem.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "067d5b9b54ef82deaca6c4666a40bde074754515",
+      "size": 1142553,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/067d5b9b54ef82deaca6c4666a40bde074754515"
+    },
+    {
+      "path": "csv/xlm.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b296fe625ad565aebf9ea82cb27057ed39a61a41",
+      "size": 1174471,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/b296fe625ad565aebf9ea82cb27057ed39a61a41"
+    },
+    {
+      "path": "csv/xmr.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e9c22a973f5efe9734c3f9b339d58ccd07a4e066",
+      "size": 1387565,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/e9c22a973f5efe9734c3f9b339d58ccd07a4e066"
+    },
+    {
+      "path": "csv/xrp.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d8be2c8ecd20093b6b94dd032fa13cbc32ca3f80",
+      "size": 1515272,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/d8be2c8ecd20093b6b94dd032fa13cbc32ca3f80"
+    },
+    {
+      "path": "csv/xtz.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aa8929d9f785476d9013766ffe07b4144a101af6",
+      "size": 579142,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/aa8929d9f785476d9013766ffe07b4144a101af6"
+    },
+    {
+      "path": "csv/xvg.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "06e7b7bc1bad60a8c54e184508e66fa1bf283b3b",
+      "size": 1064321,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/06e7b7bc1bad60a8c54e184508e66fa1bf283b3b"
+    },
+    {
+      "path": "csv/yfi.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4fd268a7e5a3e33e866e8978f7abc3fd7d353b28",
+      "size": 64966,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/4fd268a7e5a3e33e866e8978f7abc3fd7d353b28"
+    },
+    {
+      "path": "csv/zec.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "318791046dcf267ce7e9934083f8dba1b58f8b7e",
+      "size": 1111969,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/318791046dcf267ce7e9934083f8dba1b58f8b7e"
+    },
+    {
+      "path": "csv/zrx.csv",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1e2657e21989a7615cea1b7bbabb5b406e5aba0d",
+      "size": 583712,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/1e2657e21989a7615cea1b7bbabb5b406e5aba0d"
+    },
+    {
+      "path": "scripts",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "15a433cefb47ac5f2a07077840f4caaa38d24d0d",
+      "url": "https://api.github.com/repos/coinmetrics/data/git/trees/15a433cefb47ac5f2a07077840f4caaa38d24d0d"
+    },
+    {
+      "path": "scripts/generate.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "70cbdc1f394bc26e22fa423e8e70a591685924d5",
+      "size": 2096,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/70cbdc1f394bc26e22fa423e8e70a591685924d5"
+    },
+    {
+      "path": "scripts/package.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e1f98a36e6dd95723a0644a2fc05fa72baab02d2",
+      "size": 154,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/e1f98a36e6dd95723a0644a2fc05fa72baab02d2"
+    },
+    {
+      "path": "scripts/yarn.lock",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "03eae770e22aaba0b5663c7227ff815ac199b371",
+      "size": 348,
+      "url": "https://api.github.com/repos/coinmetrics/data/git/blobs/03eae770e22aaba0b5663c7227ff815ac199b371"
+    }
+  ],
+  "truncated": false
+}
