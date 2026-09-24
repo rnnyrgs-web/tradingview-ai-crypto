@@ -10,7 +10,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 RUNNER_PATH = ROOT / "orchestration" / "external_replication" / "eth_tuesday_drift_runner.py"
 CONTRACT_PATH = ROOT / "orchestration" / "external_replication" / "ext_eth_tuesday_drift_001_stage1_execution.json"
-EXPECTED_CONTRACT_SHA256 = "165f719aedf49c48d0418f70d437ebb60a921c1bdeaec456e840f0aca86e216f"
+EXPECTED_CONTRACT_SHA256 = "650814758fb010504c40717d152bffb8c291e30c4d6dc00f2f4a20cf834cce15"
 
 
 def _load_runner():
@@ -56,6 +56,7 @@ def test_execution_contract_is_self_bound_and_binds_runner_bytes():
     assert hashlib.sha256(_canonical_json(contract)).hexdigest() == EXPECTED_CONTRACT_SHA256
     assert contract["parent_artifact_sha256"] == "6ddab16cbfbb846d0690dced9e2128244e2bc9ec6221243a02cb48fea4b5c98b"
     assert contract["dataset_sha256"] == "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f"
+    assert contract["dataset_git_blob_sha1"] == "3a93beb4b1b4ef7f5d32b2936bf3119c692e7c15"
     assert contract["runner_git_blob_sha1"] == _git_blob_sha1(RUNNER_PATH.read_bytes())
     assert contract["result_authority"]["runner_result_can_mint_stage2_authority"] is False
 

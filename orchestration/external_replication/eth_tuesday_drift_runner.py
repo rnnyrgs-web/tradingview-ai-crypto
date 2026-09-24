@@ -22,6 +22,7 @@ DATASET_PATH = ROOT / "orchestration" / "evidence" / "liquidity_meanrev_001_cach
 REPLICATION_ID = "EXT-ETH-TUESDAY-DRIFT-001-v1"
 PARENT_ARTIFACT_SHA256 = "6ddab16cbfbb846d0690dced9e2128244e2bc9ec6221243a02cb48fea4b5c98b"
 DATASET_SHA256 = "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f"
+DATASET_GIT_BLOB_SHA1 = "3a93beb4b1b4ef7f5d32b2936bf3119c692e7c15"
 INSTRUMENT = "ETH-USDT-SWAP"
 PROTECTED_OOS_START = datetime(2026, 9, 1, tzinfo=UTC)
 SCREEN_START = datetime(2025, 5, 12, tzinfo=UTC)
@@ -341,6 +342,10 @@ def load_frozen_eth_rows(dataset_path: Path = DATASET_PATH) -> tuple[dict, ...]:
 
     if dataset_path.resolve() != DATASET_PATH.resolve():
         raise RuntimeError("fresh-history or alternate dataset substitution is forbidden")
+    raw = dataset_path.read_bytes()
+    raw_git_blob = hashlib.sha1(f"blob {len(raw)}\0".encode() + raw).hexdigest()
+    if raw_git_blob != DATASET_GIT_BLOB_SHA1:
+        raise RuntimeError("frozen compressed dataset git-blob identity mismatch")
     _, dataset = _load_frozen_cache(dataset_path.parent)
     histories = dataset.get("histories")
     if not isinstance(histories, Mapping):

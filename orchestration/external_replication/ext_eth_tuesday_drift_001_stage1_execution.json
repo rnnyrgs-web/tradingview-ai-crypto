@@ -10,7 +10,7 @@
   "dataset_path": "orchestration/evidence/liquidity_meanrev_001_cache/dataset.json.gz",
   "instrument": "ETH-USDT-SWAP",
   "runner_path": "orchestration/external_replication/eth_tuesday_drift_runner.py",
-  "runner_git_blob_sha1": "0429134abe8fafab5dd997175647ba37fa95bee4",
+  "runner_git_blob_sha1": "1fd1e7c7811fd6c9c49a992528a26cb1408eb9ad",
   "schedule": {
     "week_start_utc": "MONDAY_00:00",
     "entry": "TUESDAY_00:00_UTC_OPEN",
@@ -25,11 +25,7 @@
   },
   "economics": {
     "gross_return": "(wednesday_00_open / tuesday_00_open - 1) * 10000_bps",
-    "round_trip_cost_bps": [
-      24.0,
-      48.0,
-      72.0
-    ],
+    "round_trip_cost_bps": [24.0, 48.0, 72.0],
     "primary_cost_bps": 48.0,
     "stress_cost_bps": 72.0,
     "cost_application": "ONE_FULL_ROUND_TRIP_COST_PER_SCORED_TUESDAY_SESSION"
@@ -70,5 +66,5 @@
     "runner_result_can_mint_stage2_authority": false,
     "runner_result_can_mint_profitability_or_promotion": false
   },
-  "artifact_sha256": "165f719aedf49c48d0418f70d437ebb60a921c1bdeaec456e840f0aca86e216f"
+  "artifact_sha256": "650814758fb010504c40717d152bffb8c291e30c4d6dc00f2f4a20cf834cce15"
 }
