@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from orchestration.external_replication import eth_tuesday_drift_runner as base_runner
 from orchestration.external_replication import eth_tuesday_drift_stage1_authorized_runner as authorized
 from orchestration.external_replication import eth_tuesday_drift_stage1_frozen_runner as legacy_frozen
 
@@ -15,10 +16,13 @@ ANCHOR_PATH = (
     ROOT
     / "orchestration"
     / "external_replication"
-    / "ext_eth_tuesday_drift_001_stage1_authority_anchor_v2.json"
+    / "ext_eth_tuesday_drift_001_stage1_authority_anchor_v3.json"
 )
-EXPECTED_ANCHOR_SHA256 = "8bada39aacc7f988d90b418a2a15337e97ed750b7674f2d68a7be96daa080d58"
+EXPECTED_ANCHOR_SHA256 = "bd6a3fd88ca1fd713046f4a9c63f7e6df650d44b34261b80ef3f0421c575626f"
+EXPECTED_PARENT_ANCHOR_V2_SHA256 = "8bada39aacc7f988d90b418a2a15337e97ed750b7674f2d68a7be96daa080d58"
 EXPECTED_PARENT_ANCHOR_SHA256 = "51dc12aa867d54c357c82df970b3d48aa8d04e90f6f661d75dab54ad5d8137a8"
+EXPECTED_PARENT_BASE_RUNNER_BLOB = "2073a40c8ebf16dad1f2dacdc8783877aac7a7b5"
+EXPECTED_BASE_RUNNER_BLOB = "8a3418ea41001fa7cf6b34c23ebd7c65033abbd5"
 EXPECTED_V2_SHA256 = "e452f5b55971854e7df40eee5c03b5a68c6c250fefd5ef9536733790a317a66d"
 
 
@@ -42,6 +46,7 @@ def _rehash_artifact(path: Path, mutate) -> None:
 def _copy_closure(tmp_path: Path) -> Path:
     target_root = tmp_path / "repo"
     relative_paths = [
+        "orchestration/external_replication/ext_eth_tuesday_drift_001_stage1_authority_anchor_v3.json",
         "orchestration/external_replication/ext_eth_tuesday_drift_001_stage1_authority_anchor_v2.json",
         "orchestration/external_replication/ext_eth_tuesday_drift_001_stage1_authority_anchor_v1.json",
         "orchestration/external_replication/ext_eth_tuesday_drift_001_stage1_execution_provenance_v2.json",
@@ -69,11 +74,14 @@ def test_authority_anchor_is_independently_pinned_and_pre_outcome() -> None:
     assert document["formed_pre_outcome"] is True
     assert document["outcomes_read_to_form_anchor"] is False
     assert (
-        document["parent_authority_anchor_v1"]["artifact_sha256"]
-        == EXPECTED_PARENT_ANCHOR_SHA256
-        == authorized.EXPECTED_PARENT_AUTHORITY_ANCHOR_V1_SHA256
+        document["parent_authority_anchor_v2"]["artifact_sha256"]
+        == EXPECTED_PARENT_ANCHOR_V2_SHA256
+        == authorized.EXPECTED_PARENT_AUTHORITY_ANCHOR_V2_SHA256
     )
-    assert document["legacy_v2_final_runner_replacement"]["direct_stage1_entry_allowed"] is False
+    replacement = document["base_stage1_runner_replacement"]
+    assert replacement["parent_git_blob_sha1"] == EXPECTED_PARENT_BASE_RUNNER_BLOB
+    assert replacement["git_blob_sha1"] == EXPECTED_BASE_RUNNER_BLOB
+    assert replacement["direct_stage1_entry_allowed"] is False
     assert document["admission_policy"]["stage1_execution_admitted"] is False
     assert document["admission_policy"]["integrated_admission_artifact_sha256"] is None
     assert document["admission_policy"]["read_only_review_receipt_is_execution_token"] is False
@@ -118,6 +126,18 @@ def test_legacy_frozen_runner_cannot_bypass_authorized_admission(
 
     with pytest.raises(RuntimeError, match="legacy Stage-1 runner is non-authoritative"):
         legacy_frozen.run_canonical_stage1_frozen()
+
+
+def test_base_runner_cannot_bypass_authorized_admission(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def forbidden_dataset_load() -> None:
+        pytest.fail("base runner must not reach the frozen dataset")
+
+    monkeypatch.setattr(base_runner, "load_frozen_eth_rows", forbidden_dataset_load)
+
+    with pytest.raises(RuntimeError, match="base Stage-1 runner direct execution is non-authoritative"):
+        base_runner.run_canonical_stage1()
 
 
 def test_tampered_behavior_is_rejected_before_import_time_sentinel_executes(tmp_path: Path) -> None:
@@ -196,7 +216,7 @@ def test_self_rehashed_rewritten_anchor_cannot_replace_compiled_root(tmp_path: P
         root
         / "orchestration"
         / "external_replication"
-        / "ext_eth_tuesday_drift_001_stage1_authority_anchor_v2.json"
+        / "ext_eth_tuesday_drift_001_stage1_authority_anchor_v3.json"
     )
     _rehash_artifact(
         anchor_path,

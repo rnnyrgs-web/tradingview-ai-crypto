@@ -28,7 +28,7 @@ AUTHORITY_ANCHOR_PATH = (
     ROOT
     / "orchestration"
     / "external_replication"
-    / "ext_eth_tuesday_drift_001_stage1_authority_anchor_v2.json"
+    / "ext_eth_tuesday_drift_001_stage1_authority_anchor_v3.json"
 )
 BASE_EXECUTION_CONTRACT_RELATIVE_PATH = (
     "orchestration/external_replication/ext_eth_tuesday_drift_001_stage1_execution.json"
@@ -38,7 +38,10 @@ RISK_AMENDMENT_RELATIVE_PATH = (
 )
 
 REPLICATION_ID = "EXT-ETH-TUESDAY-DRIFT-001-v1"
-EXPECTED_AUTHORITY_ANCHOR_SHA256 = "8bada39aacc7f988d90b418a2a15337e97ed750b7674f2d68a7be96daa080d58"
+EXPECTED_AUTHORITY_ANCHOR_SHA256 = "bd6a3fd88ca1fd713046f4a9c63f7e6df650d44b34261b80ef3f0421c575626f"
+EXPECTED_PARENT_AUTHORITY_ANCHOR_V2_SHA256 = (
+    "8bada39aacc7f988d90b418a2a15337e97ed750b7674f2d68a7be96daa080d58"
+)
 EXPECTED_PARENT_AUTHORITY_ANCHOR_V1_SHA256 = (
     "51dc12aa867d54c357c82df970b3d48aa8d04e90f6f661d75dab54ad5d8137a8"
 )
@@ -133,7 +136,7 @@ def verify_execution_closure(
             root
             / "orchestration"
             / "external_replication"
-            / "ext_eth_tuesday_drift_001_stage1_authority_anchor_v2.json"
+            / "ext_eth_tuesday_drift_001_stage1_authority_anchor_v3.json"
         )
 
     anchor = _load_exact_artifact(
@@ -148,7 +151,32 @@ def verify_execution_closure(
     if anchor.get("outcomes_read_to_form_anchor") is not False:
         raise RuntimeError("authority-anchor outcome chronology drift")
 
-    parent_anchor_ref = anchor.get("parent_authority_anchor_v1")
+    parent_anchor_v2_ref = anchor.get("parent_authority_anchor_v2")
+    if not isinstance(parent_anchor_v2_ref, Mapping):
+        raise RuntimeError("authority-anchor v2 parent missing")
+    if parent_anchor_v2_ref.get("artifact_sha256") != EXPECTED_PARENT_AUTHORITY_ANCHOR_V2_SHA256:
+        raise RuntimeError("authority-anchor v2 parent digest drift")
+    parent_anchor_v2_path_value = parent_anchor_v2_ref.get("path")
+    if not isinstance(parent_anchor_v2_path_value, str) or not parent_anchor_v2_path_value:
+        raise RuntimeError("authority-anchor v2 parent path missing")
+    parent_anchor_v2_path = _verified_repo_file(
+        root,
+        parent_anchor_v2_path_value,
+        label="authority-anchor v2 parent",
+    )
+    parent_anchor_v2 = _load_exact_artifact(
+        parent_anchor_v2_path,
+        expected_sha256=EXPECTED_PARENT_AUTHORITY_ANCHOR_V2_SHA256,
+        label="authority anchor v2 parent",
+    )
+    if parent_anchor_v2.get("replication_id") != REPLICATION_ID:
+        raise RuntimeError("authority-anchor v2 replication mismatch")
+    if parent_anchor_v2.get("formed_pre_outcome") is not True:
+        raise RuntimeError("authority-anchor v2 must be frozen pre-outcome")
+    if parent_anchor_v2.get("outcomes_read_to_form_anchor") is not False:
+        raise RuntimeError("authority-anchor v2 outcome chronology drift")
+
+    parent_anchor_ref = parent_anchor_v2.get("parent_authority_anchor_v1")
     if not isinstance(parent_anchor_ref, Mapping):
         raise RuntimeError("authority-anchor v1 parent missing")
     if parent_anchor_ref.get("artifact_sha256") != EXPECTED_PARENT_AUTHORITY_ANCHOR_V1_SHA256:
@@ -238,7 +266,19 @@ def verify_execution_closure(
     parent_anchor_bindings = parent_anchor.get("behavior_bindings")
     if not isinstance(parent_anchor_bindings, Mapping):
         raise RuntimeError("authority-anchor behavior bindings missing")
-    legacy_replacement = anchor.get("legacy_v2_final_runner_replacement")
+
+    base_replacement = anchor.get("base_stage1_runner_replacement")
+    if not isinstance(base_replacement, Mapping):
+        raise RuntimeError("base Stage-1 runner replacement binding missing")
+    parent_base = parent_anchor_bindings.get("base_stage1_runner")
+    if not isinstance(parent_base, Mapping):
+        raise RuntimeError("parent base Stage-1 runner binding missing")
+    if base_replacement.get("parent_git_blob_sha1") != parent_base.get("git_blob_sha1"):
+        raise RuntimeError("base Stage-1 runner replacement parent mismatch")
+    if base_replacement.get("direct_stage1_entry_allowed") is not False:
+        raise RuntimeError("base Stage-1 runner must remain non-authoritative")
+
+    legacy_replacement = parent_anchor_v2.get("legacy_v2_final_runner_replacement")
     if not isinstance(legacy_replacement, Mapping):
         raise RuntimeError("legacy final-runner replacement binding missing")
     parent_legacy = parent_anchor_bindings.get("legacy_v2_final_runner")
@@ -248,7 +288,9 @@ def verify_execution_closure(
         raise RuntimeError("legacy final-runner replacement parent mismatch")
     if legacy_replacement.get("direct_stage1_entry_allowed") is not False:
         raise RuntimeError("legacy final runner must remain non-authoritative")
+
     anchor_bindings = dict(parent_anchor_bindings)
+    anchor_bindings["base_stage1_runner"] = base_replacement
     anchor_bindings["legacy_v2_final_runner"] = legacy_replacement
 
     required = {
@@ -281,7 +323,11 @@ def verify_execution_closure(
         ):
             raise RuntimeError(f"authority-anchor/{v2_key} identity disagreement")
 
-    for locks in (parent_anchor.get("authority_locks", {}), anchor.get("authority_locks", {})):
+    for locks in (
+        parent_anchor.get("authority_locks", {}),
+        parent_anchor_v2.get("authority_locks", {}),
+        anchor.get("authority_locks", {}),
+    ):
         if any(
             locks.get(key) is not False
             for key in (

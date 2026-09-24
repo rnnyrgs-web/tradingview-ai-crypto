@@ -1,0 +1,49 @@
+{
+  "schema_version": 3,
+  "artifact_type": "external_replication_stage1_authority_anchor",
+  "anchor_id": "EXT-ETH-TUESDAY-DRIFT-001-v1-STAGE1-AUTHORITY-ANCHOR-v3",
+  "replication_id": "EXT-ETH-TUESDAY-DRIFT-001-v1",
+  "status": "FROZEN_PRE_OUTCOME_BASE_DIRECT_ENTRY_CLOSURE",
+  "formed_at_utc": "2026-09-24T21:59:51Z",
+  "formed_pre_outcome": true,
+  "outcomes_read_to_form_anchor": false,
+  "parent_authority_anchor_v2": {
+    "path": "orchestration/external_replication/ext_eth_tuesday_drift_001_stage1_authority_anchor_v2.json",
+    "artifact_sha256": "8bada39aacc7f988d90b418a2a15337e97ed750b7674f2d68a7be96daa080d58",
+    "status": "IMMUTABLE_PARENT_AUTHORITY_ANCHOR"
+  },
+  "base_stage1_runner_replacement": {
+    "path": "orchestration/external_replication/eth_tuesday_drift_runner.py",
+    "parent_git_blob_sha1": "2073a40c8ebf16dad1f2dacdc8783877aac7a7b5",
+    "git_blob_sha1": "8a3418ea41001fa7cf6b34c23ebd7c65033abbd5",
+    "direct_stage1_entry_allowed": false,
+    "behavior": "UNCONDITIONAL_NON_AUTHORITATIVE_CANONICAL_FAILURE"
+  },
+  "admission_policy": {
+    "stage1_execution_admitted": false,
+    "integrated_admission_artifact_sha256": null,
+    "read_only_review_receipt_is_execution_token": false,
+    "required_transition": "A separate independently reviewed integration patch must bind a durable repository admission artifact to the exact approved implementation before Stage-1 execution can be enabled."
+  },
+  "scientific_reason": {
+    "classification": "BASE_CANONICAL_STAGE1_DIRECT_ENTRY_BYPASS",
+    "finding": "The base Stage-1 runner still exposed run_canonical_stage1(), which could load the frozen development dataset and score the real 68-week outcome without consulting the independent-review admission gate.",
+    "resolution": "Replace only the base runner's canonical frozen-data entry with an unconditional non-authoritative failure while preserving evaluate_stage1 as the pure caller-row deterministic evaluator. Bind the replacement append-only to the prior authority anchor.",
+    "prior_artifacts_mutated": false,
+    "hypothesis_or_outcome_rules_changed": false,
+    "evidence_authority_increased": false
+  },
+  "authority_locks": {
+    "stage1_started": false,
+    "stage1_pnl_opened": false,
+    "baseline_pnl_opened": false,
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false,
+    "profitability_claim_allowed": false,
+    "promotion_authority": false,
+    "broker_connected": false,
+    "trade_authority": false
+  },
+  "next_transition": "After exact-head CI and legitimate independent review of this closure, integrate it into the #790 lineage before creating any admission-enabling patch or opening Stage-1 results.",
+  "artifact_sha256": "bd6a3fd88ca1fd713046f4a9c63f7e6df650d44b34261b80ef3f0421c575626f"
+}
