@@ -9,10 +9,16 @@ from datetime import datetime, timezone
 from threading import Lock
 
 
-RECENT_ERROR_WINDOW_SECONDS = max(
-    60,
-    min(int(os.getenv("OPERATIONAL_RECENT_ERROR_WINDOW_SECONDS", "900")), 3600),
-)
+def _configured_recent_error_window_seconds() -> int:
+    raw = os.getenv("OPERATIONAL_RECENT_ERROR_WINDOW_SECONDS", "900")
+    try:
+        seconds = int(raw)
+    except (TypeError, ValueError):
+        seconds = 900
+    return max(60, min(seconds, 3600))
+
+
+RECENT_ERROR_WINDOW_SECONDS = _configured_recent_error_window_seconds()
 
 _lock = Lock()
 _errors = deque(maxlen=50)
