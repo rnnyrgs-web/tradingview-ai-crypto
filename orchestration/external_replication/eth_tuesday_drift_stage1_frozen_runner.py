@@ -2,10 +2,10 @@ from __future__ import annotations
 
 """Only authority-bearing Stage-1 entry for EXT-ETH-TUESDAY-DRIFT-001-v1.
 
-The original predeclaration, base execution contract, and append-only risk amendment
-remain immutable. This final wrapper adds one more pre-outcome execution-provenance
-layer: it authenticates a stdlib-only protected-safe loader plus the exact already-
-frozen risk evaluator, then supplies development-only rows to that evaluator.
+The original predeclaration, base execution contract, append-only risk amendment,
+and v1 execution-provenance binding remain immutable. This v2 wrapper closes the
+remaining transitive code-identity gap by authenticating the exact base evaluator
+as well as the protected-safe loader, risk evaluator, and this final wrapper.
 
 No protected OHLCV, baseline, Stage-2, promotion, broker, or trading authority is
 opened here. Independent exact-head scientific review remains external authority.
@@ -25,13 +25,14 @@ PROVENANCE_BINDING_PATH = (
     ROOT
     / "orchestration"
     / "external_replication"
-    / "ext_eth_tuesday_drift_001_stage1_execution_provenance.json"
+    / "ext_eth_tuesday_drift_001_stage1_execution_provenance_v2.json"
 )
 
 REPLICATION_ID = base.REPLICATION_ID
 PARENT_ARTIFACT_SHA256 = base.PARENT_ARTIFACT_SHA256
 BASE_EXECUTION_CONTRACT_SHA256 = "823d7bbfbd411056358721dfb1e7f3764c7a445306f62aaa156945a6cd2ca46c"
 RISK_AMENDMENT_SHA256 = "8e13286cd6c586c98f6ade79409a243efde266b55e7f4ee57492affd97c4c2c0"
+PARENT_EXECUTION_PROVENANCE_SHA256 = "4499df212a3fef33ef3382b42f8cac552f95595c79f92f9cfbd72ccb3d7c4bc9"
 
 
 def _canonical_json(value: object) -> bytes:
@@ -84,11 +85,17 @@ def load_and_validate_execution_provenance(
         raise RuntimeError("execution provenance base-contract mismatch")
     if binding.get("risk_amendment_sha256") != RISK_AMENDMENT_SHA256:
         raise RuntimeError("execution provenance risk-amendment mismatch")
+    if binding.get("parent_execution_provenance_sha256") != PARENT_EXECUTION_PROVENANCE_SHA256:
+        raise RuntimeError("execution provenance v1-parent mismatch")
     if binding.get("formed_pre_outcome") is not True:
         raise RuntimeError("execution provenance must be frozen pre-outcome")
     if binding.get("outcomes_read_to_form_binding") is not False:
         raise RuntimeError("execution provenance outcome chronology drift")
 
+    base_runner_path = _verified_bound_path(
+        binding.get("base_stage1_runner", {}),
+        label="base Stage-1 evaluator",
+    )
     loader_path = _verified_bound_path(
         binding.get("protected_safe_loader", {}),
         label="protected-safe loader",
@@ -102,6 +109,8 @@ def load_and_validate_execution_provenance(
         label="final Stage-1 runner",
     )
 
+    if base_runner_path != Path(base.__file__).resolve():
+        raise RuntimeError("imported base evaluator path differs from frozen binding")
     if loader_path != Path(protected_loader.__file__).resolve():
         raise RuntimeError("imported protected-safe loader path differs from frozen binding")
     if risk_runner_path != Path(risk_guard.__file__).resolve():
@@ -137,7 +146,7 @@ def run_canonical_stage1_frozen() -> dict:
     rows = protected_loader.load_frozen_eth_development_rows()
     result = risk_guard.evaluate_stage1_guarded(rows)
     result["evidence_authority"] = (
-        "FROZEN_DATASET_BOUND_PROTECTED_SAFE_LOADER_REVIEW_AUTHORITY_EXTERNAL_RISK_OVERLAY"
+        "FROZEN_DATASET_BOUND_TRANSITIVE_CODE_IDENTITY_REVIEW_AUTHORITY_EXTERNAL_RISK_OVERLAY"
     )
     result["authority"]["stage2_baseline_execution_allowed"] = False
     result["authority"]["profitability_claim_allowed"] = False
