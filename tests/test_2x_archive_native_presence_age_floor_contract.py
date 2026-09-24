@@ -2,6 +2,8 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
+from big_move_cohort_preflight import EXACT_DERIVED_SOURCE, LISTING_AGE_PARAMS
+
 
 CONTRACT_PATH = (
     Path(__file__).resolve().parents[1]
@@ -107,6 +109,19 @@ def test_sparse_positive_rows_cannot_be_reinterpreted_as_listing_age():
     assert "SPARSE_ROWS_REINTERPRETED_AS_CONTINUOUS_LISTING_AGE" in contract["falsifiers"]
     assert contract["forbidden_authority"]["listing_age_ge_180d"] is False
     assert contract["forbidden_authority"]["continuous_listing"] is False
+
+
+def test_observed_history_span_cannot_satisfy_current_cohort_listing_age_gate():
+    contract = _contract()
+    boundary = contract["versioned_consumer_boundary"]
+
+    assert EXACT_DERIVED_SOURCE["listing_age_days"] == "DERIVED_BINANCE_LISTING_AGE_DAYS_V1"
+    assert LISTING_AGE_PARAMS == {
+        "basis": "first_verified_venue_trade",
+        "rounding": "floor_elapsed_days",
+    }
+    assert boundary["new_observed_history_transform"] != EXACT_DERIVED_SOURCE["listing_age_days"]
+    assert boundary["cohort_listing_age_gate_authority"] == "NONE_REQUIRES_TRUSTED_LISTING_START_OR_CONTINUITY_EVIDENCE"
 
 
 def test_legacy_exact_listing_age_semantics_are_not_reinterpreted():
