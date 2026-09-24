@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "artifact_type": "external_source_chronology_attestation",
+  "replication_id": "EXT-ETH-TUESDAY-DRIFT-001-v1",
+  "parent_artifact_sha256": "6ddab16cbfbb846d0690dced9e2128244e2bc9ec6221243a02cb48fea4b5c98b",
+  "formed_at_utc": "2026-09-24T17:08:06Z",
+  "formed_pre_outcome": true,
+  "outcomes_read_to_form_attestation": false,
+  "source_evidence": {
+    "publisher": {
+      "platform": "MDPI",
+      "article_url": "https://www.mdpi.com/1911-8074/17/8/351",
+      "versions_notes_url": "https://www.mdpi.com/1911-8074/17/8/351/notes",
+      "published_at": "2024-08-12",
+      "version_history_observation": "MDPI reports Version-of-Record PDF and XML uploaded 2024-08-12 16:58 CEST and original HTML uploaded 2024-08-12 17:00 CEST.",
+      "independent_of_authors": false
+    },
+    "independent_platform": {
+      "platform": "ResearchGate",
+      "record_id": "383054374",
+      "record_url": "https://www.researchgate.net/publication/383054374_Exploring_Calendar_Anomalies_and_Volatility_Dynamics_in_Cryptocurrencies_A_Comparative_Analysis_of_Day-of-the-Week_Effects_before_and_during_the_COVID-19_Pandemic",
+      "platform_upload_statement": "All content in this area was uploaded by Jong-Min Kim on Aug 12, 2024.",
+      "uploader": "Jong-Min Kim",
+      "upload_date": "2024-08-12",
+      "content_observed_on_record": {
+        "table": "Table 12, during-COVID day-of-week effects",
+        "ethereum_tuesday_coefficient": 0.79,
+        "ethereum_tuesday_p_value": 0.002,
+        "prose_summary": "Ethereum exhibits a day-of-the-week effect with positive coefficients on Tuesday and Friday."
+      },
+      "independent_platform_timestamp_predates_project_screen": true,
+      "exact_historical_bytes_sha256_pinned": false,
+      "platform_history_cryptographically_immutable_claimed": false
+    }
+  },
+  "chronology_assessment": {
+    "project_screen_start_utc": "2025-05-12T00:00:00Z",
+    "source_signal_content_timestamped_before_project_screen": true,
+    "publisher_version_record_predates_project_screen": true,
+    "independent_platform_record_predates_project_screen": true,
+    "source_rule_existence_pre_screen_authenticated_by_independent_platform_timestamp": true,
+    "byte_level_immutability_proven": false,
+    "classification": "POST_PUBLICATION_PRE_SCREEN_SOURCE_CONTENT_INDEPENDENTLY_TIMESTAMPED_BYTES_UNHASHED"
+  },
+  "scientific_interpretation": {
+    "finding": "An independent ResearchGate publication record timestamps author-uploaded full article content containing the same Ethereum Tuesday coefficient and p-value to 2024-08-12, before the project's frozen 2025-05-12 screen start. This closes the prior source-rule existence chronology gap without claiming cryptographic immutability of the historical bytes.",
+    "published_result_is_project_evidence": false,
+    "hypothesis_or_threshold_changed": false,
+    "weekday_or_boundary_changed": false,
+    "cost_model_changed": false,
+    "stage1_survival_gates_changed": false,
+    "multiple_testing_family_changed": false,
+    "source_chronology_authority_increased": true,
+    "positive_stage1_interpretation": "If the frozen Stage-1 screen survives, it may be described as post-publication cross-instrument replication/translation survivor evidence; it is not an exact-instrument reproduction and is not authenticated profitability.",
+    "negative_stage1_interpretation": "Failure may falsify the exact frozen project fingerprint under the existing rules.",
+    "profitability_claim_allowed_from_stage1": false,
+    "deep_promotion_allowed_from_stage1_alone": false,
+    "protected_or_forward_evidence_requirement_changed": false
+  },
+  "authority_locks": {
+    "stage1_started": false,
+    "stage1_pnl_opened": false,
+    "baseline_pnl_opened": false,
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false,
+    "profitability_claim_allowed": false,
+    "promotion_authority": false,
+    "broker_connected": false,
+    "trade_authority": false
+  },
+  "artifact_sha256": "573bf9136e87f92054bf3488d4b585c7eb3345d996668a6af2182ca1b1f4d7fc"
+}
