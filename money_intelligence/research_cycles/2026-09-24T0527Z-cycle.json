@@ -1,0 +1,236 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-24T0527Z",
+  "information_cutoff": "2026-09-24T05:27:35Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_observed_before_write": "2a624bc2d4eae9a7ee9e788e01bf48aca87bc155",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles": true,
+    "searched_prediction_artifacts": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten",
+    "prediction_store_note": "Repository artifacts show no frozen Money Intelligence forecasts. Supabase persistence code was inspected; no direct production prediction-table read action was exposed in the available connector path, so no database row count is inferred."
+  },
+  "verifiable_execution": {
+    "last_owner_report_cycle": "2026-09-22T0616Z",
+    "run_start_utc": "2026-09-24T05:12:38Z",
+    "artifact_cutoff_utc": "2026-09-24T05:27:35Z",
+    "seconds_this_run_minimum": 897,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 505,
+    "minimum_cumulative_seconds_since_last_owner_report": 1402,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "owner_report_status": "SUPPRESSED_CUMULATIVE_DILIGENCE_GATE_NOT_MET",
+    "method": "Only directly measured active research/execution time is counted. Schedule gaps, idle time, publication timestamps and background time are excluded."
+  },
+  "regime_update": {
+    "state": "RESTRICTIVE POLICY / SELECTIVE CAPITAL ALLOCATION / EXPECTATION-SENSITIVE PRICING / RISING DURATION-ABSORPTION UNCERTAINTY",
+    "material_change": "The September 23 U.S. rates move adds auction/intermediation and net-duration absorption as a high-priority causal state variable. Hot growth/inflation data repriced policy first; an unusually weak 5-year auction then required an additional yield concession despite the large pre-auction selloff, amplifying the cross-asset discount-rate shock.",
+    "promotion_status": "CANDIDATE, not yet promoted to canonical learning ledger or dashboard. The September 24 7-year auction is an important out-of-sample falsifier/control."
+  },
+  "daily_big_move_scan": {
+    "selected_moves": [
+      "U.S. Treasury yields rose roughly 11-16 bp across major maturities on September 23; the 5-year moved from about 4.83% to 4.99% and the 10-year from about 4.96% to 5.11% on Treasury's daily curve.",
+      "The September 23 $70B 5-year Treasury auction stopped at 5.033%, roughly 3.1 bp above the when-issued level near 5.002%, with a 2.21 bid-to-cover and dealer take-down near 15.8%, despite a substantial pre-auction yield concession.",
+      "U.S. risk assets sold off: S&P 500 about -0.75%, Nasdaq about -1.13%, Russell 2000 about -1.8%; the dollar strengthened and gold fell roughly 1.5%-1.7% while oil rose.",
+      "Japan's 10-year JGB yield rose about 8 bp to roughly 3.055% after Tokyo reopened, the highest since 1996; the 30-year rose to roughly 4.125%.",
+      "Brent reversed sharply higher after the prior day's decline as political/diplomatic expectations around Middle-East route normalization worsened even though Saudi pipeline restart progress remained physically real.",
+      "BTC/ETH and major alts declined with a long-liquidation wave despite strong completed September 21-22 U.S. BTC ETF inflows, creating a clean control showing voluntary ETF demand can be overwhelmed by a large real/risk-free-yield shock.",
+      "Bitcoin Cash rose roughly 30%-35% while broader crypto weakened after CME Group announced BCH and Micro BCH futures for October 19 pending regulatory review; rising open interest and short liquidations plausibly amplified the idiosyncratic access catalyst."
+    ],
+    "selection_logic": "Selected for cross-asset abnormality and causal information value using asset-specific significance rather than one fixed percentage threshold."
+  },
+  "highest_information_question": "When heavy sovereign duration supply meets a macro-driven bond selloff, which auction/intermediation variables distinguish a transient technical tail from a persistent increase in the term premium and cross-asset discount rate?",
+  "fresh_research": [
+    {
+      "topic": "September 23 U.S. Treasury selloff plus weak 5-year auction: macro repricing first, then auction absorption amplified the move",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / UST / AUCTION / DEALER CAPACITY / TERM PREMIUM / CROSS-ASSET",
+      "observed_facts": [
+        "S&P Global's September 23 U.S. flash PMI reported a 58.4 composite reading versus 56.0 in August, the fastest expansion in more than five years; employment growth was the fastest in more than four years and input-cost inflation remained elevated, with energy and capacity constraints prominent.",
+        "Federal Reserve communication remained restrictive: officials continued to characterize growth/labor conditions as strong and inflation as above target, reinforcing the possibility of further tightening.",
+        "Treasury's official daily curve moved materially higher from September 22 to September 23: 2-year 4.71% to 4.85%, 5-year 4.83% to 4.99%, 10-year 4.96% to 5.11%, 20-year 5.33% to 5.45% and 30-year 5.29% to 5.40%.",
+        "Contemporaneous auction data show the $70B 5-year note auction stopped at 5.033% versus a when-issued level near 5.002%, a roughly 3.1 bp tail. Bid-to-cover was about 2.21, below the recent average, and primary dealers were left with about 15.8%.",
+        "The weak auction occurred after the 5-year sector had already cheapened materially during the session. The failure of a large pre-auction concession to produce strong clearing demand is higher-information than the high yield level by itself.",
+        "Cross-asset confirmation was broad: U.S. equities fell, smaller-cap equities underperformed, the dollar strengthened, gold fell and crypto weakened with long liquidations."
+      ],
+      "matched_controls": [
+        "The September 22 2-year auction was much more orderly: roughly 0.2 bp tail, 2.63 bid-to-cover and dealer take-down near 13.2%, and it did not generate a comparable auction-specific shock.",
+        "The February 25, 2021 7-year auction is a historical stress control. A very weak auction accelerated an existing reflation selloff, with the Federal Reserve later documenting poor market depth and heavy seller order flow as important amplifiers.",
+        "New York Fed long-sample research finds a typical pre-auction yield concession that often reverses after auctions; pressure is stronger when dealer risk-bearing constraints are tighter and weaker when investor demand is more elastic. That makes failure to reverse after a large concession a potentially useful state variable, not a standalone structural conclusion."
+      ],
+      "inference": "The defensible chain is hot growth/inflation information plus hawkish policy expectations -> higher expected short-rate path and real/risk-free yields -> pre-auction Treasury cheapening -> large 5-year supply arrives -> weak marginal demand relative to the concession -> dealers/intermediaries absorb a larger residual at a higher stop-out yield -> additional term-premium/duration-pressure signal -> higher discount rates transmit to equities, gold, FX and leveraged crypto. The auction is therefore best treated as an amplifier/absorption test, not the sole catalyst for the day's selloff.",
+      "source_destination_chain": "Treasury financing need -> primary auction supply -> real-money/direct/indirect bidder demand plus dealer residual balance sheet -> clearing yield/concession -> dealer inventory and secondary-market distribution -> global portfolio required-return reset -> capital leaves duration/high-valuation/leveraged exposures toward higher-yielding risk-free USD assets or cash equivalents.",
+      "negative_findings": [
+        "Do not call a high auction yield itself weak demand; yield level is heavily endogenous to the pre-auction market selloff.",
+        "Do not label Treasury 'indirect bidder' share as foreign demand. Treasury's own Auction FAQ says indirect bidders can include domestic and foreign customers and FIMA participation; domicile is not identified by the category.",
+        "Do not infer one weak 5-year auction proves structural foreign abandonment of Treasuries, a fiscal crisis, or permanent term-premium repricing.",
+        "Do not attribute the full cross-asset move to the auction because hot PMI, oil and Fed-path repricing had already pushed yields materially higher before the auction."
+      ],
+      "pre_move_predictors_to_test": [
+        "Pre-auction yield concession versus recent auction norms",
+        "Stop-out versus when-issued tail/stop-through",
+        "Bid-to-cover and bidder mix after controlling for auction size/maturity",
+        "Dealer residual take-down and post-auction inventory absorption",
+        "Dealer balance-sheet cost / quarter-end constraints",
+        "Treasury net duration issuance and concurrent coupon settlement",
+        "Real-yield and inflation-breakeven decomposition",
+        "Post-auction 30-minute, close and 1-5 day yield reversal versus continuation"
+      ],
+      "learning_candidate": {
+        "id": "MI-H-20260924-AUCTION-ABSORPTION-CONDITIONAL",
+        "status": "SUPPORTED_PROVISIONAL_WITH_MATCHED_CONTROLS",
+        "claim": "Coupon-auction price impact is conditional: auction size or high yield alone is not enough. The information-rich variables are the pre-auction concession, stop-out versus when-issued result, demand elasticity/bidder participation, dealer residual take-down and subsequent inventory absorption. A weak auction after a large concession can independently amplify macro-driven duration repricing, but persistence requires repeated weak absorption or post-auction non-reversal."
+      },
+      "decision_support": {
+        "instrument": "U.S. Treasury duration / duration-sensitive risk assets",
+        "action": "WAIT / NO EDGE pending out-of-sample auction follow-through",
+        "horizon": "days to weeks",
+        "confidence": "MODERATE-HIGH on mechanism; LOW on immediate direction",
+        "confirmations": [
+          "September 24 7-year auction also shows a large tail/weak demand after a meaningful concession",
+          "Dealer residual take-down and secondary inventory pressure remain elevated",
+          "Long/real yields fail to retrace despite normalization in data/oil",
+          "Credit and duration-sensitive equity breadth weaken alongside yields"
+        ],
+        "invalidation": "A strong 7-year auction and/or rapid post-auction yield reversal would support a transient positioning/technical explanation rather than a persistent duration-demand problem.",
+        "cost_capacity": "Deep market, but event timing and convexity create large mark-to-market risk; no trade is authorized."
+      },
+      "sources": [
+        "U.S. Treasury daily yield curve: https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?field_tdr_date_value=2026&type=daily_treasury_yield_curve",
+        "U.S. Treasury Auction FAQ: https://treasurydirect.services.treasury.gov/help-center/faqs/auction-faqs/",
+        "S&P Global U.S. Flash PMI September 2026: https://www.spglobal.com/market-intelligence/en/news-insights/research/2026/09/us-flash-pmi-signals-fastest-growth-for-over-five-years-in-september",
+        "New York Fed Staff Report 1188, Treasury auction cycle: https://www.newyorkfed.org/research/staff_reports/sr1188",
+        "Federal Reserve FEDS Notes, Feb. 25 2021 Treasury flash event: https://www.federalreserve.gov/econres/notes/feds-notes/the-treasury-market-flash-event-of-february-25-2021-20210514.html",
+        "MarketScreener/Dow Jones Sep. 23 2026 auction report: https://www.marketscreener.com/news/u-s-treasury-pays-highest-five-year-yield-in-auction-in-two-decades-ce785ad9d08ff12d"
+      ]
+    },
+    {
+      "topic": "Gold September 23 negative control: geopolitical stress did not dominate a large real-yield/USD shock",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / GOLD / REAL YIELDS / USD / GEOPOLITICS",
+      "observed_facts": [
+        "Gold fell roughly 1.5%-1.7% on September 23 while geopolitical risk and oil prices increased.",
+        "The U.S. Treasury curve repriced sharply higher and the dollar strengthened about 0.5%, raising the opportunity cost of non-yielding gold.",
+        "This move directly contradicts a deterministic same-day rule that geopolitical escalation should make gold rise."
+      ],
+      "inference": "Geopolitical/fiscal demand remains a structural input to gold, but short-horizon price is conditional on real/risk-free yields, USD, positioning and the surprise already embedded in the gold price. On September 23 the rates/USD channel dominated the geopolitical channel.",
+      "negative_findings": [
+        "Do not attribute gold's daily direction to geopolitical headlines without measuring real yields and USD.",
+        "Do not treat prior gold relative strength against high yields as permanent regime independence."
+      ],
+      "decision_support": {
+        "instrument": "Gold",
+        "action": "WAIT near term; prior structural bullish thesis is weakened at the margin but not invalidated",
+        "horizon": "days to months",
+        "confidence": "MODERATE",
+        "invalidation": "Prior structural thesis would be more materially impaired by sustained trading below the previously identified roughly $4,200-$4,250 zone while real yields and USD continue rising and geopolitical/fiscal hedge demand fades."
+      }
+    },
+    {
+      "topic": "Oil: effective deliverability must be expectation-weighted across future route states, not measured only from current barrels",
+      "label": "OIL / PHYSICAL SUPPLY / EXPECTATIONS / GEOPOLITICS",
+      "observed_facts": [
+        "Saudi Arabia's East-West pipeline restart at reduced capacity materially improved current physical bypass capability and helped Brent fall on September 22.",
+        "Brent then rose sharply on September 23 as political rhetoric hardened and expectations of broader route normalization/de-escalation deteriorated, even though the physical Saudi restart had not disappeared."
+      ],
+      "inference": "The existing effective-deliverable-supply model should include the probability-weighted future path of routes/outage duration. Current barrels can improve while futures rise if news lowers the probability of near-term normalization or raises the probability of renewed disruption.",
+      "negative_findings": [
+        "Political rhetoric is not current lost barrels and must not be counted as physical supply loss without loading/export evidence.",
+        "Current pipeline restart is not sufficient to forecast lower futures if the expected future route distribution worsens materially."
+      ],
+      "decision_support": "Crude WAIT / high event risk; no directional upgrade."
+    },
+    {
+      "topic": "BTC September 23 control: strong ETF demand can coexist with macro-driven deleveraging",
+      "label": "CRYPTO / BTC / ETF / REAL YIELDS / LIQUIDATIONS",
+      "observed_facts": [
+        "Farside records completed U.S. spot BTC ETF net inflows of +$999.0M on September 21 and +$714.7M on September 22, both broad across major products.",
+        "BTC nevertheless fell on September 23 as U.S. real/risk-free yields and the dollar jumped, while long liquidations amplified the move.",
+        "The September 23 Farside row was incomplete at this cutoff and must not be treated as a finalized daily flow total."
+      ],
+      "inference": "Large regulated-product demand is genuine voluntary absorption evidence but not a sufficient one-factor price predictor. Macro discount-rate/liquidity shocks and leveraged positioning can overwhelm even strong prior ETF demand at the margin.",
+      "negative_findings": [
+        "Do not use completed prior-day ETF inflow as an unconditional next-day BUY signal.",
+        "Do not call the incomplete September 23 ETF row a final flow result.",
+        "Do not equate ETF creation with same-timestamp exchange buying because AP inventory/in-kind/hedging mechanics remain relevant."
+      ],
+      "decision_support": {
+        "instrument": "BTC",
+        "action": "WAIT / tactical-confirmation candidate",
+        "horizon": "days to weeks",
+        "confidence": "MODERATE",
+        "confirmations": ["Finalized flow breadth persists after the macro shock", "Prior breakout region holds", "Open interest/funding remain controlled relative to spot", "Spot/on-chain absorption remains visible"],
+        "invalidation": "Breakout failure with renewed ETF redemptions and elevated leverage."
+      },
+      "sources": ["Farside BTC ETF table: https://farside.co.uk/btc/"]
+    },
+    {
+      "topic": "Bitcoin Cash September 23: regulated-access catalyst plus leverage/short-cover reflexivity",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / BCH / CME / ACCESS / DERIVATIVES",
+      "observed_facts": [
+        "CME Group announced on September 22 that it plans to launch Bitcoin Cash and Micro Bitcoin Cash futures on October 19, pending regulatory review. CME explicitly cited client demand for institutional-grade risk-management tools and described the contracts as a regulated way to manage price risk and gain exposure.",
+        "BCH rose roughly 30%-35% while BTC/ETH/major alts weakened, rejecting broad crypto beta as the sufficient explanation.",
+        "Derivatives data reported a large rise in BCH open interest and a short-liquidation imbalance, consistent with leverage and forced covering amplifying the move.",
+        "A Grayscale BCH ETF-conversion filing existed before this 24-hour move; it is a pre-existing condition rather than a fresh timestamp-defensible catalyst for the full September 23 acceleration."
+      ],
+      "inference": "The most defensible chain is regulated-derivatives-access announcement -> higher expected institutional trading/hedging capacity and attention -> voluntary spot/speculative demand -> breakout -> short liquidation and fresh open-interest reflexivity. The access catalyst changes who can express views efficiently, but futures also increase the ability to short/hedge and do not guarantee sustained spot inflow.",
+      "negative_findings": [
+        "Do not infer futures listing is mechanically bullish after launch; the product adds both long and short risk-transfer capacity.",
+        "Do not treat rising open interest as pure cash demand; it is gross leverage.",
+        "Do not chase an already vertical move without evidence that voluntary spot demand persists after forced short buyers disappear.",
+        "Launch remains pending regulatory review."
+      ],
+      "decision_support": {
+        "instrument": "BCH",
+        "action": "WAIT / AVOID CHASING",
+        "horizon": "days to weeks",
+        "confidence": "MODERATE on causal catalyst; LOW on forward direction",
+        "confirmations": ["Spot demand/volume persists as liquidations normalize", "Price holds after OI/funding stabilize", "CME launch proceeds and later develops meaningful open interest/liquidity"],
+        "invalidation": "Rapid retracement once forced covering fades or regulatory/product launch is delayed/cancelled."
+      },
+      "sources": [
+        "CME Group Sep. 22 announcement: https://www.cmegroup.com/media-room/press-releases/2026/9/22/cme_group_to_expandcryptoderivativessuitewithbitcoincashandunisw.html",
+        "CME product page: https://www.cmegroup.com/markets/cryptocurrencies/crypto-launch"
+      ]
+    },
+    {
+      "topic": "Japan JGB September 24 catch-up: global duration shock transmits through benchmark substitution but local inflation/FX/policy regime determines magnitude",
+      "label": "JAPAN / JGB / GLOBAL RATES / FX / BOJ",
+      "observed_facts": [
+        "Japan's 10-year JGB yield rose about 8 bp to roughly 3.055% and the 30-year about 5.5 bp to roughly 4.125% after Tokyo reopened following a multi-day holiday, catching up to the U.S. Treasury selloff.",
+        "The yen remained weak, adding imported-inflation pressure.",
+        "S&P Global's September Japan flash PMI showed continued expansion and elevated output-price pressure, leaving domestic BOJ tightening expectations relevant in addition to the U.S. spillover."
+      ],
+      "inference": "Global sovereign-duration repricing can transmit through relative required returns and benchmark substitution, but local inflation, FX, policy expectations and market-closure catch-up determine the amplitude. The move should not be labeled a pure U.S. spillover.",
+      "negative_findings": ["Do not attribute the entire JGB move to Treasuries; domestic inflation/BOJ and holiday catch-up are active confounders."],
+      "decision_support": "JGB duration WAIT; use as cross-market confirmation of higher global required returns, not as an isolated forecast."
+    }
+  ],
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No new immutable directional asset forecast clears the evidence bar. The September 24 U.S. 7-year auction is deliberately preserved as an out-of-sample test rather than pre-labeled with a directional prediction."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. The auction-absorption mechanism is materially promising but requires the September 24 7-year auction and broader historical sample before promotion to canonical learning_ledger/dashboard. Gold, oil, BTC and BCH updates refine existing mechanisms but do not justify noisy dashboard rewrites or new immutable predictions.",
+  "next_high_information_tests": [
+    "September 24 U.S. 7-year auction: pre-auction concession, stop-out versus when-issued, bid-to-cover, bidder categories, dealer residual and post-auction yield reversal/continuation.",
+    "Finalized September 23 BTC/ETH ETF flows and whether BTC holds the breakout region after the real-yield shock.",
+    "Gold behavior if U.S. real yields and DXY remain elevated versus if they retrace.",
+    "Saudi/Yanbu actual export/loadings, freight and physical differentials versus political headlines.",
+    "BCH spot/derivatives state after short liquidations normalize; distinguish durable access demand from event squeeze.",
+    "JGB yield persistence after holiday catch-up and domestic BOJ-path repricing."
+  ],
+  "lane_integrity": {
+    "signal_tables_changed": false,
+    "signal_confidence_changed": false,
+    "paper_trades_changed": false,
+    "promotion_gates_changed": false,
+    "broker_state_changed": false,
+    "real_money_trades_authorized_or_executed": false
+  }
+}
