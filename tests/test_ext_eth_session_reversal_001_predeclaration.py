@@ -36,7 +36,7 @@ def test_predeclaration_self_digest_is_immutable() -> None:
     contract = _contract()
     assert contract["artifact_sha256"] == _self_digest(contract)
     assert contract["artifact_sha256"] == (
-        "5eedde6e11d325ce1557a6ee27c3e91a2c03f83267c7dbdcb0f5d151ce990d91"
+        "fee604ea0e2f993cd109cadcc6717deedbb7bd02e044cf380de2ef80e91afcc3"
     )
 
 
@@ -75,7 +75,9 @@ def test_replication_uses_only_2026_incrementals_and_future_evidence_is_sealed()
         "https://assets.kraken.com/marketing/institutions/Kraken_OHLCVT_2026Q1.zip",
         "https://assets.kraken.com/marketing/institutions/Kraken_OHLCVT_2026Q2.zip",
     ]
-    assert data["required_data_start_utc"] == "2026-01-01T05:00:00Z"
+    assert data["required_data_start_utc"] == "2026-01-01T04:00:00Z"
+    assert "close.pct_change()" in data["incremental_archive_reason"]
+    assert "context-only" in data["warmup_context_authority"]
     assert data["scored_trading_date_start"] == "2026-01-02"
     assert data["scored_trading_date_end"] == "2026-06-30"
     assert data["validation_half_1_trading_dates"] == (
