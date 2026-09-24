@@ -1,10 +1,9 @@
 from pathlib import Path
 
 
-MIGRATION = (
-    Path(__file__).parents[1]
-    / "supabase/migrations/20260924071500_big_move_prospective_function_boundary_guard.sql"
-)
+ROOT = Path(__file__).parents[1]
+MIGRATIONS = ROOT / "supabase/migrations"
+MIGRATION = MIGRATIONS / "20260924071500_big_move_prospective_function_boundary_guard.sql"
 
 
 def _sql() -> str:
@@ -17,6 +16,21 @@ def _body(signature: str) -> str:
     body_start = sql.index("as $$", start) + len("as $$")
     body_end = sql.index("$$;", body_start)
     return sql[body_start:body_end]
+
+
+def _latest_migration_body(signature: str) -> str:
+    """Return the body of the latest migration that defines an exact function."""
+    latest_sql = None
+    latest_start = None
+    for path in sorted(MIGRATIONS.glob("*.sql")):
+        sql = path.read_text(encoding="utf-8")
+        if signature in sql:
+            latest_sql = sql
+            latest_start = sql.rindex(signature)
+    assert latest_sql is not None and latest_start is not None, signature
+    body_start = latest_sql.index("as $$", latest_start) + len("as $$")
+    body_end = latest_sql.index("$$;", body_start)
+    return latest_sql[body_start:body_end]
 
 
 def test_function_boundary_requires_exact_empty_search_path_and_common_owner():
@@ -92,6 +106,34 @@ def test_wrappers_order_relation_lock_then_both_preflights_then_delegate():
         )
         delegate_at = body.index(delegate)
         assert lock_at < structural_at < function_at < delegate_at
+
+
+def test_reference_append_is_guarded_before_minting_prospective_evidence():
+    body = _latest_migration_body(
+        "create or replace function public.append_big_move_reference_observation_v1("
+    ).lower()
+
+    lock_at = body.index(
+        "perform public.acquire_big_move_prospective_relation_locks_v1();"
+    )
+    structural_at = body.index(
+        "perform public.assert_big_move_prospective_schema_contract_v1();"
+    )
+    function_at = body.index(
+        "perform public.assert_big_move_prospective_function_boundary_v1();"
+    )
+
+    authority_writes = [
+        marker
+        for marker in (
+            "insert into public.big_move_reference_observations",
+            "append_big_move_reference_observation_v1_unguarded",
+        )
+        if marker in body
+    ]
+    assert authority_writes, "reference append must have a concrete guarded write/delegate"
+    write_at = min(body.index(marker) for marker in authority_writes)
+    assert lock_at < structural_at < function_at < write_at
 
 
 def test_helper_itself_is_not_an_application_callable_bypass():
