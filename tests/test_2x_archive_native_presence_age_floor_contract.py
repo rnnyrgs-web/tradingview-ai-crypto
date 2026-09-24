@@ -43,9 +43,11 @@ def test_canary_is_outcome_blind_and_chronologically_exact():
     assert age["required_row_date"] == "2020-07-31"
     assert age["required_open_time_ms"] == 1596153600000
     assert age["required_close_time_ms"] == 1596239999999
-    assert age["full_days_before_decision"] == 185
-    age_close_day = datetime.fromtimestamp((age["required_close_time_ms"] + 1) / 1000, tz=timezone.utc)
-    assert (_utc(canary["decision_at"]) - age_close_day).days >= 180
+    age_end_exclusive = datetime.fromtimestamp((age["required_close_time_ms"] + 1) / 1000, tz=timezone.utc)
+    elapsed_full_days = (_utc(canary["decision_at"]) - age_end_exclusive).days
+    assert elapsed_full_days == 184
+    assert age["minimum_elapsed_full_days_from_completed_row_end"] == elapsed_full_days
+    assert elapsed_full_days >= 180
 
 
 def test_trusted_inputs_require_external_identity_not_caller_clocks():
