@@ -47,3 +47,17 @@ def test_new_error_after_expiry_remains_fail_closed(monkeypatch):
         "old_component": 1,
         "new_component": 1,
     }
+
+
+def test_recent_error_window_config_is_bounded_and_malformed_values_fall_back(monkeypatch):
+    monkeypatch.setenv("OPERATIONAL_RECENT_ERROR_WINDOW_SECONDS", "not-an-int")
+    assert monitor._configured_recent_error_window_seconds() == 900
+
+    monkeypatch.setenv("OPERATIONAL_RECENT_ERROR_WINDOW_SECONDS", "5")
+    assert monitor._configured_recent_error_window_seconds() == 60
+
+    monkeypatch.setenv("OPERATIONAL_RECENT_ERROR_WINDOW_SECONDS", "99999")
+    assert monitor._configured_recent_error_window_seconds() == 3600
+
+    monkeypatch.setenv("OPERATIONAL_RECENT_ERROR_WINDOW_SECONDS", "1200")
+    assert monitor._configured_recent_error_window_seconds() == 1200
