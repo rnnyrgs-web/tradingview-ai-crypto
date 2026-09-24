@@ -135,9 +135,12 @@ def test_baselines_falsify_incremental_reversal_value() -> None:
     assert "night-only" in controls["complexity_rule"]
     assert "daytime MOMENTUM" in controls["sign_flip_falsifier"]
     assert "two trading dates earlier" in controls["one_session_delay"]
-    assert "randomized-timing/volatility-matched" in controls[
-        "randomized_timing_and_volatility_match"
-    ]
+    stage_two_controls = controls["randomized_timing_and_volatility_match"]
+    assert "Stage-1 survivor" in stage_two_controls
+    assert "randomized-timing" in contract["successive_halving"]["stage_2"]
+    assert "volatility-matched" in contract["successive_halving"]["stage_2"]
+    assert "frozen" in stage_two_controls
+    assert "independently reviewed" in stage_two_controls
 
 
 def test_authority_remains_fail_closed_before_data_and_review() -> None:
