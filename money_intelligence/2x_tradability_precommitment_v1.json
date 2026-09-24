@@ -1,0 +1,113 @@
+{
+  "schema": "two_x_tradability_precommitment.v1",
+  "artifact_id": "2X-TRADABILITY-001-v1",
+  "frozen_at": "2026-09-21T07:30:55Z",
+  "parent_issue": 505,
+  "cohort_issue": 514,
+  "tradability_issue": 519,
+  "data_enabler_issue": 520,
+  "outcome_access_at_freeze": "SEALED",
+  "prospective_candidate_authority": false,
+  "objective": "Distinguish genuinely executable <=90d 2x events from illiquid chart doublers without using future outcomes to choose liquidity thresholds or data coverage.",
+  "principles": {
+    "baseline_universe_effect": "NONE",
+    "baseline_liquidity_gate_is_not_execution_proof": true,
+    "adv_only_cannot_establish_strict_tradability": true,
+    "missing_microstructure_policy": "UNKNOWN_TRADABILITY",
+    "illiquid_2x_preservation": "PRESERVE_AS_RESEARCH_ONLY_NOT_EQUIVALENT_TRADABLE_POSITIVE",
+    "no_post_outcome_threshold_changes": true,
+    "no_today_survivor_reconstruction": true
+  },
+  "execution_bands_usd": [1000, 10000, 50000, 100000],
+  "strict_microstructure_window": {
+    "lookback_hours": 6,
+    "minimum_independent_snapshots": 6,
+    "maximum_snapshot_age_minutes": 60,
+    "maximum_missing_fraction": 0.2,
+    "snapshot_clock_rule": "snapshots must be timestamped at or before the frozen decision cutoff; no post-cutoff interpolation",
+    "required_raw_fields": [
+      "timestamp",
+      "best_bid",
+      "best_ask",
+      "bid_depth_ladder",
+      "ask_depth_ladder",
+      "venue",
+      "symbol"
+    ]
+  },
+  "strict_band_rules": {
+    "spread_statistic": "median_midpoint_relative_spread_bps_over_predecision_window",
+    "maximum_median_spread_bps": 50,
+    "entry_side": "buy",
+    "maximum_entry_vwap_slippage_bps": 100,
+    "depth_horizon_bps": 100,
+    "minimum_depth_coverage_ratio": 1.0,
+    "rule": "A notional band is STRICT_TRADABLE only when PIT spread and executable ask-side depth/VWAP evidence satisfy every strict threshold across the frozen window."
+  },
+  "proxy_liquidity_tag": {
+    "name": "PROXY_LIQUID_NOT_STRICT",
+    "eligible_input": "PIT trailing-30d median spot quote volume",
+    "minimum_median_quote_volume_usd": 10000000,
+    "maximum_band_to_median_daily_quote_volume_fraction": 0.001,
+    "authority": "DESCRIPTIVE_ONLY",
+    "warning": "This proxy may prioritize data collection but may not be promoted to STRICT_TRADABLE or used as proof that a historical 2x was realistically executable."
+  },
+  "labels": {
+    "strict_positive": "TRADABLE_2X_AT_BAND",
+    "price_only_positive": "PRICE_2X_TRADABILITY_UNKNOWN",
+    "illiquid_positive": "ILLIQUID_2X_RESEARCH_ONLY",
+    "nonwinner": "NO_2X_WITHIN_HORIZON",
+    "censored": "CENSORED_DELISTED_OR_DATA_LOSS"
+  },
+  "data_provenance_contract": {
+    "allowed_without_new_user_spend": true,
+    "requirements": [
+      "exact provider/venue identity",
+      "raw capture or archive bytes retained",
+      "provider-native or independently verifiable timestamps",
+      "dataset and raw-artifact hashes",
+      "explicit symbol/contract normalization",
+      "gap/outage/staleness masks",
+      "PIT historical venue membership",
+      "no silent proxy substitution"
+    ],
+    "data_520_priority": [
+      "historical spot bid/ask spread and order-book depth",
+      "spot trade/aggressive-volume evidence",
+      "perpetual funding/open-interest/basis for leverage decomposition",
+      "cross-venue spot liquidity for venue-migration sensitivity"
+    ],
+    "collection_rule": "Collect a feature family only when it serves this frozen tradability contract or another separately predeclared precursor hypothesis."
+  },
+  "evaluation_precommitment": {
+    "primary_metrics": [
+      "precision_at_k",
+      "tradable_precision_at_k_by_notional_band",
+      "lift_over_matched_base_rate",
+      "pr_auc",
+      "prospective_return_path",
+      "drawdown_path"
+    ],
+    "raw_accuracy_is_primary": false,
+    "matched_control_requirement": "same PIT eligible universe and decision clock; matching pool frozen before outcome reveal",
+    "minimum_independent_2x_events_for_inferential_claim": 20,
+    "below_minimum_policy": "DESCRIPTIVE_ONLY",
+    "multiple_testing_family": "2X-COHORT-001-TRADABILITY",
+    "coverage_mask_must_be_frozen_before_outcomes": true
+  },
+  "hypothesis": {
+    "hypothesis_id": "2X-H-SPOT-LIQUIDITY-TRADABILITY-001",
+    "status": "PREDECLARED_UNTESTED",
+    "claim": "Among PIT-eligible large-move cases, 2x paths preceded by broad spot participation and sufficient executable spot depth are more likely to remain realistically tradable than 2x paths dominated by thin books or leverage-only price discovery.",
+    "fact": "PIT daily quote volume is available in the current Cohort 001 design but does not prove executable depth or spread.",
+    "inference": "Microstructure evidence can separate market-cap/chart moves from realizable position entry at explicit notionals.",
+    "hypothesis_only": "Spot-led versus leverage-led decomposition may improve precision for durable 2x candidates, but no such lift is currently established.",
+    "unknown": "Historical PIT order-book/depth coverage may be too sparse for powered inference; if so the result remains UNKNOWN rather than substituting current or post-move liquidity."
+  },
+  "authority": {
+    "prediction_authority": false,
+    "promotion_authority": false,
+    "broker_connected": false,
+    "live_trading": false
+  }
+}

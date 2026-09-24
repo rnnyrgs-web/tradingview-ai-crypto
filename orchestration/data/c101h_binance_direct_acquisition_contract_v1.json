@@ -1,0 +1,47 @@
+{
+  "artifact_id": "C101H-BINANCE-DIRECT-ACQUISITION-001-v1",
+  "authority": "PROVENANCE_ONLY_NO_STRATEGY_PROMOTION_OR_TRADE_AUTHORITY",
+  "consumer": "#529 C101-H delta-neutral funding carry",
+  "development_cutoff_month": "2026-08",
+  "protected_month_gte": "2026-09",
+  "schema": "c101h_binance_direct_acquisition_contract.v1",
+  "source_kinds": {
+    "BINANCE_C101H_ARCHIVE": {
+      "host": "data.binance.vision",
+      "method": "GET",
+      "max_response_bytes": 67108864,
+      "allowed_symbols": [
+        "BTCUSDT",
+        "ETHUSDT",
+        "SOLUSDT"
+      ],
+      "allowed_paths": [
+        "data/spot/monthly/klines/{symbol}/1h/{symbol}-1h-{yyyy_mm}.zip",
+        "data/futures/um/monthly/klines/{symbol}/1h/{symbol}-1h-{yyyy_mm}.zip",
+        "data/futures/um/monthly/fundingRate/{symbol}/{symbol}-fundingRate-{yyyy_mm}.zip"
+      ]
+    },
+    "BINANCE_C101H_CHECKSUM": {
+      "host": "data.binance.vision",
+      "method": "GET",
+      "max_response_bytes": 4096,
+      "path_rule": "exact accepted BINANCE_C101H_ARCHIVE path plus .CHECKSUM"
+    }
+  },
+  "forbidden": [
+    "arbitrary_url_input",
+    "arbitrary_binance_object_path",
+    "path_traversal",
+    "unsupported_symbol_or_timeframe",
+    "protected_month_acquisition",
+    "redirect_following",
+    "local_file_fallback",
+    "unattested_bundle_as_authority"
+  ],
+  "trusted_runtime": {
+    "repository": "rnnyrgs-web/tradingview-ai-crypto",
+    "ref": "refs/heads/main",
+    "event_name": "workflow_dispatch",
+    "workflow_ref": "rnnyrgs-web/tradingview-ai-crypto/.github/workflows/pit-trusted-remote-acquisition.yml@refs/heads/main"
+  }
+}

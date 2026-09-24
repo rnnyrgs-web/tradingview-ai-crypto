@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-20T1937Z",
+  "information_cutoff": "2026-09-20T19:36:48Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "independence": "Money Intelligence only; no signal-engine, signal-confidence, paper-trade, promotion-gate, broker or real-money trading state changed.",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_observed_before_write": "cf299d1ce441f28b8a65552561957113635e8ebd",
+  "context_integrity": {
+    "read_current_default_branch_spec_first": true,
+    "read_dashboard_state": true,
+    "read_learning_ledger": true,
+    "read_big_move_lab": true,
+    "inspected_latest_research_cycles": true,
+    "searched_prediction_artifacts": true,
+    "prediction_scorecard": "frozen=0; resolved=0; no immutable forecast rewritten"
+  },
+  "verifiable_execution": {
+    "last_owner_report_cycle": "2026-09-20T1630Z",
+    "run_start_utc": "2026-09-20T19:30:42Z",
+    "artifact_cutoff_utc": "2026-09-20T19:36:48Z",
+    "seconds_this_run_minimum": 366,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 720,
+    "minimum_cumulative_seconds_since_last_owner_report": 1086,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false,
+    "method": "Only directly measured active runtime is counted. Schedule gaps, idle time, publication timestamps and background time are excluded."
+  },
+  "highest_information_question": "Can current high-beta crypto outliers be decomposed into durable product/value-capture demand versus temporary incentive, narrative and leverage amplification, and can cross-asset forced-flow episodes improve the system's distinction between system liquidity and asset-level liquidity?",
+  "fresh_research": [
+    {
+      "topic": "NEAR surge combines real confidential-activity/revenue growth with price-conditioned incentives and leverage; reward quantity is too small to explain the move mechanically",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / NEAR / CRYPTO / INCENTIVES / VALUE CAPTURE / LEVERAGE",
+      "observed_facts": [
+        "CoinMarketCap at roughly 19:30 UTC showed NEAR around $4.05, +15.0%/24h, +73.5%/7d and +114.7%/30d, with turnover about 35.6% of market capitalization. BTC and ETH were both roughly -0.3%/24h, so broad crypto beta is insufficient to explain the latest NEAR outperformance.",
+        "Historical daily closes show the acceleration began before the September 17 10:00 ET announcement: NEAR rose about 12.2% on September 16, then about 20.1% on September 17 and about 19.6% on September 18.",
+        "NEAR's September 17 issuer announcement said confidential TVL crossed $70M and automatically triggered a snapshot for Drop 1 of the NEAR@3.33 milestone program. The reward pool is 333,333 milestone tokens; rewards remain locked until NEAR's 3-day VWAP is at least $3.33. Eligibility requires a confidential balance above $100 plus active swap history, with a 2% per-wallet cap.",
+        "The live NEAR revenue dashboard showed about $5.52M of 30-day gross fees, $1.87M of 30-day net revenue and roughly $97.9M confidential TVL, up more than 200% over 90 days. This is real product/revenue evidence, not merely a token-price narrative.",
+        "At roughly 1.307B circulating NEAR, 333,333 milestone tokens are only about 0.026% of circulating supply and, at the current price, roughly $1.35M versus about $1.89B of 24-hour NEAR trading volume. The reward quantity is therefore too small to mechanically account for a >70% weekly repricing.",
+        "Derivatives evidence around September 19 showed substantial open interest and positive funding, consistent with leverage/momentum amplification and remaining short-squeeze capacity; the exact cross-venue spot-versus-derivative contribution is not fully reconciled.",
+        "NEAR governance currently describes 2.5% annual issuance, recently reduced from 5%. A September 16 nearcore release candidate contains a protocol change removing a 30% burnt-gas reward, but an RC/testnet release is not proof that the change is already live on mainnet."
+      ],
+      "inference": "The most defensible causal chain is real confidential-usage and revenue growth + an approaching/then-triggered TVL milestone + price-conditioned reward coordination -> attention and discretionary buying -> rising price/TVL reflexivity -> leverage and momentum amplify the move. The incentive acts more plausibly as a coordination/narrative catalyst than as enough direct token demand to explain the magnitude. Current protocol revenue/value capture is improving, but it is not yet large enough or sufficiently verified to label the move a mechanically revenue-funded buyback/deflation trade.",
+      "catalyst_transmission_amplifier": {
+        "catalysts": [
+          "Approach to and September 17 crossing of the $70M confidential-TVL milestone",
+          "NEAR@3.33 snapshot and price-conditioned reward unlock",
+          "Rapid growth in confidential execution/Intents activity and protocol revenue"
+        ],
+        "transmission": "More confidential liquidity and usage -> higher perceived utility/revenue potential -> milestone/price threshold coordinates attention and holdings -> spot demand and reduced willingness to sell -> price rises.",
+        "amplifiers": [
+          "High turnover and positive funding",
+          "Derivatives open interest and short-cover potential",
+          "Broader high-beta altcoin rotation",
+          "Reflexive TVL measured in token/dollar value and social attention"
+        ],
+        "dampeners": [
+          "Reward pool is tiny relative to circulating supply and turnover",
+          "Revenue remains modest relative to token market capitalization and approximate issuance",
+          "Mainnet activation of the prospective burn/reward change is unverified",
+          "High funding/turnover raises reversal risk"
+        ]
+      },
+      "matched_controls": [
+        "BTC/ETH were flat to down while NEAR rose sharply, rejecting broad beta as a sufficient explanation.",
+        "AVAX and ENA were also large outliers, showing a broader high-beta/narrative rotation exists and NEAR-specific evidence cannot explain the full move.",
+        "The rally began September 16, before the September 17 issuer announcement, so the press release itself is a post-start amplifier/confirmation rather than the sole initiating catalyst."
+      ],
+      "negative_findings": [
+        "Do not label the rally as direct airdrop demand; the 333,333-token reward is far too small relative to circulating supply and turnover to explain the price move mechanically.",
+        "Do not label the rally as active mainnet deflation/buyback flow without independent transaction-level verification.",
+        "Do not infer durable fundamental value capture from TVL alone; incentive-driven deposits and dollar-denominated TVL can reverse after the reward condition is satisfied.",
+        "Do not freeze a near-term BUY after a >70% weekly move while leverage/funding are elevated and spot-versus-derivative flow is incompletely reconciled."
+      ],
+      "decision_support": {
+        "view": "WAIT / AVOID CHASING; RESEARCH FOR BUY if post-incentive usage/revenue persists",
+        "horizon": "days to months",
+        "confidence": "MODERATE-HIGH on causal decomposition; LOW-MODERATE on forward price edge",
+        "confirmations": [
+          "Confidential TVL and price-normalized usage remain elevated after the milestone/reward unlock",
+          "Protocol fees/net revenue continue rising without requiring increasingly large incentives",
+          "Spot-led demand persists while open interest/funding cool",
+          "Actual buyback/burn/mainnet tokenomic flows are independently verified"
+        ],
+        "invalidation": "Confidential TVL/revenue retrace after incentive conditions, leverage remains crowded, reward/unlock selling dominates, or outperformance collapses as broad alt momentum fades.",
+        "liquidity_cost_capacity": "NEAR is liquid enough for research, but current turnover and leverage indicate high slippage/volatility risk around momentum reversal. No real-money execution authority."
+      },
+      "sources": [
+        "CoinMarketCap connected quote snapshot captured 2026-09-20T19:30Z",
+        "https://revenue.near.org/",
+        "https://www.prnewswire.com/news-releases/nearcoms-confidential-tvl-reaches-70-million-triggering-the-near3-33-snapshot-amid-industry-wide-privacy-wave-302881903.html",
+        "https://www.near.org/blog/milestone-incentive-program",
+        "https://gov.near.org/t/proposal-gradual-transition-from-emission-funded-to-revenue-funded-network-security/42568",
+        "https://github.com/near/nearcore/releases"
+      ]
+    },
+    {
+      "topic": "Turkey fund crisis is a clean forced-flow control separating system liquidity from asset liquidity and solvency",
+      "label": "DAILY BIG-PRICE-MOVE CAUSAL LAB / EQUITIES / FUNDS / MARGIN / FORCED FLOW / CENTRAL-BANK LIQUIDITY",
+      "observed_facts": [
+        "Turkey's main equity index fell more than 5% during a fund-liquidity shock after regulatory/accounting changes exposed funds concentrated in thinly traded or related securities and redemptions forced sales of liquid holdings.",
+        "Authorities ordered liquidation/suspension actions across roughly 130-131 funds managed by seven firms; contemporaneous reporting cited about 891B lira of portfolio assets and roughly 353,000 investors, while later official/public figures differed as valuation and scope changed.",
+        "The CBRT increased one-week repo funding to about 300B lira from 1B, raised interbank borrowing limits and reduced collateral haircuts. Regulators temporarily cut the maintenance-margin requirement from 35% to 20%. The BIST subsequently rebounded roughly 2.6%-3%.",
+        "Official Turkish regulatory material says July/August changes moved certain exchange-traded fund participation-unit valuations toward market prices and sought to prevent systemic risk from unsecured related-party borrowing and abnormal price practices.",
+        "The Financial Stability Committee characterized the problems as concentrated in a limited group of funds with credit/liquidity issues rather than broad banking-system insolvency."
+      ],
+      "inference": "The reusable mechanism is valuation/asset-liquidity mismatch -> redemptions/margin calls -> forced sales of the most liquid assets -> broad price decline -> collateral/margin feedback -> central-bank/system liquidity and margin relief reduce secondary forced sales. System liquidity can arrest propagation without repairing an overmarked illiquid asset, bad credit or fund solvency problem. This is complementary to the U.S. TGA/repo learning: aggregate cash conditions and asset-level marketability are distinct state variables.",
+      "causal_chain": "regulatory/accounting change + concentrated thin-float holdings -> marks become less defensible / redemption pressure rises -> funds sell liquid core holdings -> BIST falls and margin pressure rises -> CBRT repo/liquidity + higher borrowing limits + lower haircuts/margins + regulatory quarantine -> fire-sale loop weakens -> partial rebound; underlying illiquid-fund losses remain.",
+      "pre_move_predictors": [
+        "Known regulatory changes affecting valuation/related-party funding before the selloff",
+        "Concentration in thin-float or affiliated securities",
+        "Large discrepancy between reported NAV/returns and executable market depth",
+        "Redemption-liquidity mismatch and leverage",
+        "Dependence on unsecured/related-party funding"
+      ],
+      "negative_findings": [
+        "Do not equate central-bank liquidity support with repaired fund solvency or true NAV.",
+        "Do not interpret the rebound after policy support as proof that pre-crisis asset marks were economically valid.",
+        "Do not infer a broad banking crisis from fund-specific forced-flow contagion without bank funding/credit evidence."
+      ],
+      "learning_candidate": {
+        "status": "SUPPORTED_REGIME_SPECIFIC_CANDIDATE",
+        "claim": "System liquidity and asset liquidity/solvency must be modeled separately. Central-bank funding can stop second-order fire sales while leaving the original illiquid-asset valuation loss unresolved."
+      },
+      "decision_support": "No standalone Turkey trade promoted. Preserve as a high-information forced-flow control and cluster with UK LDI, March 2020 and crypto liquidation cascades.",
+      "sources": [
+        "https://www.reuters.com/world/middle-east/turkey-steps-support-markets-after-fund-liquidity-crunch-sparks-selloff-2026-09-17/",
+        "https://www.tcmb.gov.tr/wps/wcm/connect/EN/TCMB%2BEN/Main%2BMenu/Announcements/Press%2BReleases/2026/ANO2026-41",
+        "https://www.spk.gov.tr/duyurular/basin-duyurulari/2026/yatirim-fonlarina-iliskin-rehber-duzenlemesine-dair-aciklama",
+        "https://www.hmb.gov.tr/duyuru/finansal-istikrar-komitesi-toplantisina-iliskin-basin-duyurusu-17-09-2026"
+      ]
+    },
+    {
+      "topic": "Fresh Moscow refinery drone damage has lower incremental supply information than the 11.6Mt/y nameplate suggests because the refinery was already expected to remain offline",
+      "label": "ENERGY / RUSSIA / REFINING / INCREMENTAL SUPPLY / MATCHED BASELINE",
+      "observed_facts": [
+        "Reuters reported on September 20 that a large Ukrainian drone attack damaged the Moscow oil refinery. The current extent of additional damage was not immediately known.",
+        "The same refinery had already suffered major June drone damage. Reuters reported June 24 that it was unlikely to resume production that year and was expected to remain offline for at least six months.",
+        "The refinery processed about 11.6M tonnes of crude in 2024 and produced roughly 2.9M tonnes of gasoline and 3.2M tonnes of diesel.",
+        "Separate September reporting says half of Russia's top diesel-producing refineries have cut output after repeated drone attacks, while Russia has used product-export restrictions to protect domestic fuel supply."
+      ],
+      "inference": "The September 20 headline cannot be treated as a fresh loss equal to full refinery nameplate capacity because much of that capacity was already absent from the market baseline. Incremental price impact depends on whether the new strike extends repair time, damages storage/logistics or destroys partially restored units. Refinery damage is more directly bullish refined-product cracks and local fuel scarcity than crude: reduced crude runs can leave feedstock available for storage/export.",
+      "causal_chain": "already-offline refinery + fresh attack -> only incremental repair/storage/logistics damage changes effective product supply -> gasoline/diesel scarcity/export restrictions can tighten products -> crude impact can be smaller or opposite locally because refinery crude demand falls.",
+      "negative_findings": [
+        "Do not multiply refinery nameplate capacity by the new attack headline and call it new lost supply.",
+        "Do not map refinery outages one-for-one into higher crude prices; product and crude balances can move in opposite directions.",
+        "Wait for repair-status, run-rate, product-export and crack-spread confirmation."
+      ],
+      "decision_support": "Crude remains WAIT / high tail risk; product-market scarcity is the more direct transmission channel.",
+      "sources": [
+        "https://www.reuters.com/world/europe/two-dead-moscow-region-drones-hit-oil-refinery-russian-capital-2026-09-20/",
+        "https://www.reuters.com/business/energy/moscow-oil-refinery-hit-by-drone-attacks-is-unlikely-resume-production-this-year-2026-06-24/",
+        "https://www.reuters.com/business/energy/half-russias-top-diesel-producing-refineries-cut-back-output-after-drone-strikes-2026-09-15/"
+      ]
+    },
+    {
+      "topic": "Current China benchmark-rate hold is an expected non-event; constrained bank margins and weak credit demand keep support skewed toward targeted/fiscal measures rather than a broad liquidity flood",
+      "label": "CHINA / MONETARY POLICY / EXPECTATIONS / CREDIT",
+      "observed_facts": [
+        "China held the one-year and five-year loan prime rates at 3.00% and 3.50% for a 16th month on September 20.",
+        "All 21 respondents in a Reuters survey had expected no change, so the decision itself contained little marginal information.",
+        "Contemporaneous reporting points to weak loan demand, property/local-government balance-sheet repair and pressure on bank net interest margins as constraints on broad rate cuts."
+      ],
+      "inference": "The expected LPR hold is a useful non-move control for the expectation-adjusted policy rule. Near-term China support is more likely to be read through fiscal/targeted credit/balance-sheet repair and U.S.-China policy outcomes than through a surprise broad LPR easing cycle.",
+      "decision_support": "WAIT / NO EDGE from the headline LPR decision alone.",
+      "sources": [
+        "https://www.reuters.com/business/finance/china-keeps-benchmark-lending-rates-unchanged-16th-month-september-2026-09-20/"
+      ]
+    }
+  ],
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0,
+    "status": "No immutable directional forecast added. NEAR is preserved as a causal case but not promoted after a >70% weekly move; Turkey/Moscow are matched-control learnings rather than trade predictions."
+  },
+  "canonical_update_decision": "Persist this append-only research cycle only. The system-liquidity-versus-asset-liquidity distinction and NEAR incentive/value-capture decomposition are high-information candidates, but neither is promoted to dashboard/learning-ledger canonical state in the same pass. Retest against historical forced-flow controls and post-incentive NEAR data first. No code or signal-system state changed.",
+  "next_research": [
+    "Build a matched forced-flow sample: Turkey Sep 2026, UK LDI Sep-Oct 2022, March 2020 Treasury/fund stress, meme-stock squeezes and major crypto liquidation cascades; separate system liquidity, asset market depth, solvency and policy backstop effects.",
+    "For NEAR, obtain transaction-level or issuer-grade evidence of buybacks/burns, price-normalized confidential usage and fees, bridge/stablecoin net flows, plus venue-grade spot versus derivatives decomposition. Retest after the $3.33 reward condition is satisfied and rewards can become transferable NEAR.",
+    "Measure NEAR post-event persistence at 1d/5d/20d against AVAX/ENA/ARB/UNI/NEAR peers to separate token-specific adoption from broad high-beta rotation.",
+    "When oil/product markets reopen, compare Brent, diesel/gasoil cracks and Russian product-export indicators; treat fresh refinery headlines relative to already-offline baseline capacity.",
+    "After U.S. ETF markets reopen, reconcile finalized BTC/ETH ETF flows with price, OI/funding and spot/exchange/on-chain absorption before changing BTC WAIT.",
+    "At the next Korean/U.S. cash-equity open, resolve the timestamped CXMT G5 pre-move study using Samsung/SK hynix/Micron relative returns and any fresh qualified-yield/customer evidence.",
+    "Track actual deliverables from the ongoing Bessent-He U.S.-China talks rather than trading tariff/AI/rare-earth headlines before agreement terms are known."
+  ]
+}

@@ -360,6 +360,61 @@ def test_legacy_unsigned_acceptance_state_is_quarantined_then_resigned(
     assert adapter.load().events[ids["support"]].confirmatory is False
 
 
+def test_marker_free_cover_cannot_launder_legacy_unsigned_rollback(
+    supabase, monkeypatch
+):
+    monkeypatch.setenv("CAUSAL_ACCEPTANCE_ATTESTATION_KEY", "ab" * 32)
+    ids = acceptance._ids("4" * 40)
+    base = datetime(2026, 9, 20, tzinfo=timezone.utc)
+    legacy = CausalRepricingMemory()
+    acceptance._seed_support(legacy, ids, base)
+    legacy.reject_hypothesis(ids["hypothesis"])
+    event = legacy.events[ids["support"]]
+    legacy.events[ids["support"]] = replace(
+        event,
+        note="causal-acceptance-support-v1:" + "0" * 64,
+        confirmatory=False,
+    )
+    unsigned_v1 = legacy.to_document()
+    unsigned_v1.pop("authority_attestation", None)
+    unsigned_v1.pop("content_digest")
+    unsigned_v1["content_digest"] = causal_memory._sha256(unsigned_v1)
+    supabase.inject(unsigned_v1)
+    monkeypatch.delenv("CAUSAL_ACCEPTANCE_ATTESTATION_KEY")
+
+    rollback = deepcopy(unsigned_v1)
+    rollback["events"] = []
+    rollback["event_order"] = []
+    rollback["registration_log"] = [
+        row for row in rollback["registration_log"] if row["kind"] != "event"
+    ]
+    rollback["rejected_fingerprints"] = []
+    rollback["half_life_days"] = 999.0
+    rollback.pop("content_digest")
+    rollback["content_digest"] = causal_memory._sha256(rollback)
+    supabase.inject(rollback)
+
+    cover = deepcopy(rollback)
+    cover["attacker_nonce"] = "marker-free-cover"
+    cover.pop("content_digest")
+    cover["content_digest"] = causal_memory._sha256(cover)
+    supabase.inject(cover)
+
+    adapter = SupabaseCausalMemory()
+    with pytest.raises(
+        CausalMemoryError, match="durable causal-memory history is immutable"
+    ):
+        adapter.load()
+    with pytest.raises(
+        CausalMemoryError, match="durable causal-memory history is immutable"
+    ):
+        adapter.transact(
+            lambda current: current.register_observation(
+                _observation("trusted-mutation-after-cover")
+            )
+        )
+
+
 def test_document_attestation_cannot_be_removed_after_legacy_migration(
     supabase, monkeypatch
 ):

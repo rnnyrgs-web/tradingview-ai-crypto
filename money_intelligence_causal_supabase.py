@@ -246,18 +246,17 @@ class SupabaseCausalMemory:
             return None
         head_payload = rows[0].get("payload") if isinstance(rows[0], dict) else None
         head_sequence = rows[0].get("sequence") if isinstance(rows[0], dict) else None
-        if (
+        unattested_head = (
             isinstance(head_payload, dict)
             and "authority_attestation" not in head_payload
             and type(head_sequence) is int
-            and self._prior_attested_boundary_exists(head_sequence)
-        ):
+        )
+        if unattested_head and self._prior_attested_boundary_exists(head_sequence):
             raise CausalMemoryError(
                 "authenticated durable causal-memory attested boundary cannot be removed"
             )
 
         validated: list[dict[str, object]] = []
-        legacy_unsigned_head = False
         for row in rows:
             if not isinstance(row, dict):
                 raise CausalMemoryError("Supabase causal memory integrity failure")
@@ -289,8 +288,6 @@ class SupabaseCausalMemory:
                 raise CausalMemoryError("Supabase causal memory integrity failure") from exc
             self.document_to_memory(payload)
             validated.append(row)
-            if len(validated) == 1:
-                legacy_unsigned_head = legacy_unsigned
 
         if len(validated) == 2:
             newest, previous = validated
@@ -307,7 +304,12 @@ class SupabaseCausalMemory:
                 self.document_to_memory(previous["payload"]),
                 self.document_to_memory(newest["payload"]),
             )
-        if legacy_unsigned_head:
+        # Until the first authenticated boundary exists, the latest two rows
+        # cannot prove that an older v1 acceptance marker was removed and then
+        # hidden by a marker-free cover version. Replay the complete bounded
+        # append-only history for every unattested head, not only a head that
+        # still advertises its legacy marker.
+        if unattested_head:
             self._validate_legacy_unsigned_history(validated[0])
         return validated[0]
 

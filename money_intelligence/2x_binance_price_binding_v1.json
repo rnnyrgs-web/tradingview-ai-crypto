@@ -1,0 +1,33 @@
+{
+  "schema": "two_x_binance_price_binding.v1",
+  "artifact_id": "2X-BINANCE-PRICE-BINDING-001-v1",
+  "frozen_at": "2026-09-21T09:08:00Z",
+  "parent_issue": 514,
+  "consumer_pr": 516,
+  "source_id": "BINANCE_PUBLIC_DATA_SPOT_RAW",
+  "venue": "BINANCE_SPOT",
+  "quote_asset": "USDT",
+  "archive_family": "spot_1d_klines",
+  "claimed_price_semantics": "The historical decision price is the close of the latest completed UTC 1d Binance spot kline whose close_time is strictly before decision_at.",
+  "binding_requirements": {
+    "retained_archive_bytes": true,
+    "retained_checksum_sidecar": true,
+    "checksum_must_authenticate_archive": true,
+    "official_host": "data.binance.vision",
+    "locator_must_bind_venue_symbol_and_1d_interval": true,
+    "single_csv_member": true,
+    "claimed_value_must_equal_parsed_close_exact_decimal": true,
+    "claimed_observed_at_must_equal_parsed_close_time": true,
+    "proof_event_time_max_must_equal_latest_parsed_close_time": true,
+    "post_decision_bars_ignored": true,
+    "missing_or_ambiguous_source": "COVERAGE_BLOCKED"
+  },
+  "authority": {
+    "opens_outcomes": false,
+    "forms_forward_candidate": false,
+    "prediction_authority": false,
+    "trade_authority": false,
+    "broker_connected": false,
+    "live_trading": false
+  }
+}

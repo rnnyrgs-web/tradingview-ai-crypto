@@ -1,0 +1,67 @@
+{
+  "schema": "two_x_source_feasibility.v2",
+  "artifact_id": "2X-COHORT-001-SOURCE-FEASIBILITY-COINMETRICS-GIT-v2",
+  "supersedes": "2X-COHORT-001-SOURCE-FEASIBILITY-COINMETRICS-GIT-v1",
+  "observed_date": "2026-09-21",
+  "cohort_issue": 514,
+  "source": {
+    "provider": "Coin Metrics",
+    "upstream_repository": "coinmetrics/data",
+    "historical_index_repository": "croque-m/coinmetrics-data",
+    "upstream_default_branch": "master"
+  },
+  "facts": [
+    {
+      "classification": "FACT",
+      "claim": "The current upstream default-branch traversal does not expose the old 2021-2025 history through an `until` query, but historical Coin Metrics commit SHAs found through a preserved fork can still resolve directly in the original upstream `coinmetrics/data` repository."
+    },
+    {
+      "classification": "FACT",
+      "claim": "Historical SHA 25e3b1d90ffddef11c1663f8fa43696f60bc8061 resolves under original upstream `coinmetrics/data`; GitHub reports CoinMetrics Bot commit time 2021-01-03T13:09:06Z and tree c0c58a48402cb33032c6c3f00402cb50e1923fd8."
+    },
+    {
+      "classification": "FACT",
+      "claim": "Historical SHA 028cc389e272a99ebf408f31cd92087a2e300653 resolves under original upstream `coinmetrics/data`; GitHub reports CoinMetrics Bot commit time 2023-12-31T13:27:49Z and tree 6d147e6e0ea65003a569c91922e335c4ecc3483a."
+    },
+    {
+      "classification": "FACT",
+      "claim": "The upstream `csv/btc.csv` blob at historical SHA 028cc389e272a99ebf408f31cd92087a2e300653 contains `CapMrktCurUSD` and `SplyCur` columns and rows through the historical cutoff, demonstrating that exact historical upstream blobs can carry market-cap and supply values as they existed in the repository at that time."
+    }
+  ],
+  "inference": {
+    "classification": "INFERENCE",
+    "claim": "A revision-safe PIT evidence lane is likely feasible without a paid data provider: use the preserved fork only to discover historical SHAs, require that each SHA resolves in original upstream `coinmetrics/data`, retain the upstream commit/tree/blob attestation, and parse the exact upstream CSV blob at that immutable SHA. The third-party fork must never be accepted as the evidence source itself."
+  },
+  "limitations": [
+    "Historical Coin Metrics commits are unsigned GitHub commits, so provenance is repository-object identity and upstream resolution rather than cryptographic publisher signatures.",
+    "A fork-discovered SHA is only an index hint; acceptance requires resolution in original upstream `coinmetrics/data` plus exact retained upstream blob binding.",
+    "Metric presence and nonblank values must be checked asset-by-asset and decision-by-decision; no coverage should be assumed.",
+    "The latest row in a daily snapshot may be incomplete, so only rows strictly before the historical decision date should be eligible unless completeness is separately proven.",
+    "This does not solve sector or stable-identity evidence by itself."
+  ],
+  "required_acceptance_contract": [
+    "historical commit SHA resolves in original `coinmetrics/data`",
+    "commit timestamp is strictly before decision cutoff",
+    "retained upstream commit metadata binds commit SHA, tree SHA and expected repository",
+    "retained CSV bytes recompute to the exact upstream Git blob SHA",
+    "metric column is exact and predeclared",
+    "selected CSV row date is strictly before decision date",
+    "selected metric value is finite and positive where required",
+    "no fork file contents are used as evidence"
+  ],
+  "candidate_metrics": [
+    "CapMrktCurUSD",
+    "SplyCur"
+  ],
+  "next_actions": [
+    "implement deterministic upstream Git-snapshot attestation and CSV parser",
+    "probe PIT metric coverage on a narrow set of historically Binance-liquid assets without opening 2x labels",
+    "persist exact missingness by asset/date/metric and retain COVERAGE_BLOCKED where evidence is absent",
+    "only after authentic PIT coverage passes should outcomes and matched non-mover labels be opened"
+  ],
+  "outcomes_opened": false,
+  "candidate_formed": false,
+  "prediction_authority": false,
+  "trade_authority": false,
+  "broker_connected": false
+}
