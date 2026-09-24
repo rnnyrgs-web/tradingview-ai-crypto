@@ -6,9 +6,59 @@ from pathlib import Path
 import pytest
 
 from orchestration import exact_head_review as review
+from orchestration import review_scope_policy as policy
 
 
 HEAD_SHA = "a" * 40
+RUNTIME_SHA = "c" * 40
+WORKFLOW_REPOSITORY = "rnnyrgs-web/tradingview-ai-crypto"
+WORKFLOW_REF = (
+    "rnnyrgs-web/tradingview-ai-crypto/.github/workflows/"
+    "exact_head_independent_review.yml@refs/heads/main"
+)
+WORKFLOW_BLOB_SHA = "b" * 40
+WORKFLOW_SHA256 = "d" * 64
+
+
+def _legacy_provenance() -> dict[str, object]:
+    return {
+        "repository": WORKFLOW_REPOSITORY,
+        "run_id": 123456789,
+        "workflow_ref": WORKFLOW_REF,
+        "runtime_git_sha": RUNTIME_SHA,
+    }
+
+
+def _trust_context() -> dict[str, object]:
+    return {
+        "repository": WORKFLOW_REPOSITORY,
+        "run_id": 123456789,
+        "run_attempt": 1,
+        "event_name": "issues",
+        "workflow_ref": WORKFLOW_REF,
+        "workflow_sha": RUNTIME_SHA,
+        "runtime_git_sha": RUNTIME_SHA,
+        "github_sha": RUNTIME_SHA,
+        "server_run_head_sha": RUNTIME_SHA,
+        "server_run_event": "issues",
+        "server_run_attempt": 1,
+        "server_run_path": ".github/workflows/exact_head_independent_review.yml",
+        "server_main_sha": RUNTIME_SHA,
+        "local_workflow_blob_sha": WORKFLOW_BLOB_SHA,
+        "local_workflow_sha256": WORKFLOW_SHA256,
+        "server_workflow_blob_sha": WORKFLOW_BLOB_SHA,
+        "server_workflow_sha256": WORKFLOW_SHA256,
+        "server_observation_auth": "PUBLIC_UNAUTHENTICATED_GITHUB_API",
+    }
+
+
+@pytest.fixture(autouse=True)
+def _trusted_workflow_provenance(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        review,
+        "_trusted_context_for_review",
+        lambda: (_legacy_provenance(), _trust_context()),
+    )
 
 
 def _diff() -> str:
@@ -44,8 +94,18 @@ def test_protected_diff_is_reviewed_not_rejected(tmp_path: Path, monkeypatch: py
     assert verdict["protected_paths"] == ["orchestration/strategy_predeclaration.py"]
     assert verdict["integration_authority"] == "NONE"
     assert verdict["exact_head_sha"] == HEAD_SHA
+    assert verdict["workflow_provenance"]["runtime_git_sha"] == RUNTIME_SHA
+    assert verdict["workflow_trust_context"]["server_main_sha"] == RUNTIME_SHA
+    assert verdict["workflow_trust_context"]["local_workflow_blob_sha"] == WORKFLOW_BLOB_SHA
+    assert verdict["workflow_trust_context"]["server_observation_auth"] == "PUBLIC_UNAUTHENTICATED_GITHUB_API"
+    assert verdict["review_trust_binding_version"] == 2
+    assert verdict["approval_consumption"]["approve_true_required"] is True
     prompt = str(captured["input"])
     assert "PROTECTED_PATH_CONTEXT: orchestration/strategy_predeclaration.py" in prompt
+    assert f"WORKFLOW_RUNTIME_GIT_SHA: {RUNTIME_SHA}" in prompt
+    assert "REVIEWER_TRUST_ROOT_SHA256:" in prompt
+    assert "WORKFLOW_RUN_ATTEMPT: 1" in prompt
+    assert "SERVER_MAIN_SHA:" in prompt
     assert "INTEGRATION_AUTHORITY: NONE" in prompt
     assert "Protected scientific paths are NOT a reason to" in prompt
 
@@ -54,7 +114,6 @@ def test_claude_receives_same_protected_context(tmp_path: Path, monkeypatch: pyt
     diff_path = tmp_path / "candidate.diff"
     output = tmp_path / "review.json"
     diff_path.write_text(_diff(), encoding="utf-8")
-    monkeypatch.setattr(review, "_protected_context", lambda _diff_text: ["protected/file.py"])
     captured: dict[str, str] = {}
 
     def fake_claude(review_input: str, raw_output: Path) -> int:
@@ -76,11 +135,46 @@ def test_claude_receives_same_protected_context(tmp_path: Path, monkeypatch: pyt
     assert review.review_exact_head(
         "claude-adversarial", diff_path, output, pr_number=507, head_sha=HEAD_SHA
     ) == 0
-    assert "PROTECTED_PATH_CONTEXT: protected/file.py" in captured["input"]
+    assert "PROTECTED_PATH_CONTEXT: orchestration/strategy_predeclaration.py" in captured["input"]
+    assert f"WORKFLOW_RUNTIME_GIT_SHA: {RUNTIME_SHA}" in captured["input"]
+    assert "WORKFLOW_RUN_ATTEMPT: 1" in captured["input"]
     assert "INTEGRATION_AUTHORITY: NONE" in captured["input"]
     verdict = json.loads(output.read_text(encoding="utf-8"))
     assert verdict["integration_authority"] == "NONE"
-    assert verdict["protected_paths"] == ["protected/file.py"]
+    assert verdict["protected_paths"] == ["orchestration/strategy_predeclaration.py"]
+    assert verdict["workflow_provenance"]["runtime_git_sha"] == RUNTIME_SHA
+    assert verdict["workflow_trust_context"]["server_run_attempt"] == 1
+    assert verdict["workflow_trust_context"]["server_workflow_sha256"] == WORKFLOW_SHA256
+
+
+def test_runtime_git_sha_is_bound_from_checked_out_reviewer_runtime(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.undo()
+    monkeypatch.setenv("GITHUB_REPOSITORY", WORKFLOW_REPOSITORY)
+    monkeypatch.setenv("GITHUB_RUN_ID", "123")
+    monkeypatch.setenv("GITHUB_WORKFLOW_REF", WORKFLOW_REF)
+
+    class _Result:
+        stdout = RUNTIME_SHA + "\n"
+
+    monkeypatch.setattr(review.subprocess, "run", lambda *args, **kwargs: _Result())
+    provenance = review._workflow_provenance_from_env()
+    assert provenance["runtime_git_sha"] == RUNTIME_SHA
+
+
+def test_invalid_runtime_git_sha_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.undo()
+    monkeypatch.setenv("GITHUB_REPOSITORY", WORKFLOW_REPOSITORY)
+    monkeypatch.setenv("GITHUB_RUN_ID", "123")
+    monkeypatch.setenv("GITHUB_WORKFLOW_REF", WORKFLOW_REF)
+
+    class _Result:
+        stdout = "not-a-sha\n"
+
+    monkeypatch.setattr(review.subprocess, "run", lambda *args, **kwargs: _Result())
+    with pytest.raises(RuntimeError, match="invalid reviewer-runtime git SHA"):
+        review._workflow_provenance_from_env()
 
 
 def test_invalid_exact_head_fails_before_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -121,4 +215,25 @@ def test_invalid_reviewer_verdict_fails_closed(tmp_path: Path, monkeypatch: pyte
     with pytest.raises(RuntimeError, match="invalid approval"):
         review.review_exact_head(
             "security", diff_path, tmp_path / "out.json", pr_number=507, head_sha=HEAD_SHA
+        )
+
+
+def test_active_registry_drift_fails_before_any_reviewer_provider(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    diff_path = tmp_path / "candidate.diff"
+    diff_path.write_text(_diff(), encoding="utf-8")
+    monkeypatch.setattr(
+        policy,
+        "protected_path_registry_identity",
+        lambda: {"version": 1, "sha256": "0" * 64},
+    )
+    monkeypatch.setattr(
+        review,
+        "post_response",
+        lambda _payload: pytest.fail("provider must not run after registry drift"),
+    )
+    with pytest.raises(RuntimeError, match="registry identity drifted"):
+        review.review_exact_head(
+            "security", diff_path, tmp_path / "out.json", pr_number=579, head_sha=HEAD_SHA
         )
