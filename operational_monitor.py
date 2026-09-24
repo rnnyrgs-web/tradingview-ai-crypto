@@ -2,10 +2,17 @@
 
 from __future__ import annotations
 
+import os
+import time
 from collections import Counter, deque
 from datetime import datetime, timezone
 from threading import Lock
 
+
+RECENT_ERROR_WINDOW_SECONDS = max(
+    60,
+    min(int(os.getenv("OPERATIONAL_RECENT_ERROR_WINDOW_SECONDS", "900")), 3600),
+)
 
 _lock = Lock()
 _errors = deque(maxlen=50)
@@ -17,13 +24,21 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _prune_recent_errors(now_monotonic: float) -> None:
+    cutoff = float(now_monotonic) - RECENT_ERROR_WINDOW_SECONDS
+    while _errors and float(_errors[0]["recorded_monotonic"]) < cutoff:
+        _errors.popleft()
+
+
 def record_error(component: str, exc: BaseException) -> None:
     event = {
         "at": _now(),
         "component": str(component)[:80],
         "error_type": type(exc).__name__,
+        "recorded_monotonic": time.monotonic(),
     }
     with _lock:
+        _prune_recent_errors(event["recorded_monotonic"])
         _errors.append(event)
         _counts[event["component"]] += 1
 
@@ -47,9 +62,15 @@ def record_scan(result: dict) -> None:
 
 def health_snapshot() -> dict:
     with _lock:
+        _prune_recent_errors(time.monotonic())
+        recent_errors = [
+            {key: value for key, value in event.items() if key != "recorded_monotonic"}
+            for event in list(_errors)[-10:]
+        ]
         return {
             "last_scan": dict(_last_scan) if _last_scan else None,
+            "recent_error_window_seconds": RECENT_ERROR_WINDOW_SECONDS,
             "recent_error_count": len(_errors),
             "error_counts_by_component": dict(_counts),
-            "recent_errors": list(_errors)[-10:],
+            "recent_errors": recent_errors,
         }
