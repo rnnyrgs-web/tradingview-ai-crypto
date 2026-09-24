@@ -1,0 +1,77 @@
+name: Big Move Prospective Relation TOCTOU Runtime
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "supabase/migrations/20260924065000_big_move_prospective_relation_lock_guard.sql"
+      - "tests/test_big_move_prospective_relation_lock_runtime.py"
+      - ".github/workflows/big_move_prospective_relation_toctou.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: big-move-relation-toctou-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  runtime-falsifier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: toctou
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d toctou"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      TOCTOU_PG_DSN: postgresql://postgres:postgres@127.0.0.1:5432/toctou
+    steps:
+      - name: Checkout exact pull-request head
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Checkout exact non-PR triggering commit
+        if: github.event_name != 'pull_request'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Verify exact subject SHA
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+          ACTUAL_SHA="$(git rev-parse HEAD)"
+          test "$ACTUAL_SHA" = "$EXPECTED_SHA" || {
+            echo "TOCTOU checkout mismatch: expected=$EXPECTED_SHA actual=$ACTUAL_SHA" >&2
+            exit 1
+          }
+          echo "Verified TOCTOU runtime subject SHA: $ACTUAL_SHA"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pinned runtime test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install "pytest==8.3.5" "psycopg[binary]==3.2.10"
+
+      - name: Run two-session relation-lock falsifier
+        run: |
+          pytest -q tests/test_big_move_prospective_relation_lock_runtime.py
