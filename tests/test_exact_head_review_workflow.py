@@ -144,3 +144,14 @@ def test_positive_status_is_emitted_only_after_source_attempt_and_receipt_reread
     assert edit_attempt < create_approval < verified_reread < status_post
     assert "Source attempt issue: #$ATTEMPT_ISSUE" in text
     assert "Source workflow run: \\`$GITHUB_RUN_ID\\`" in text
+
+
+def test_reviewer_runtime_is_pinned_to_dispatch_event_sha_not_moving_main() -> None:
+    text = _text()
+    assert "ref: ${{ github.sha }}" in text
+    assert "ref: main" not in text
+    assert "git fetch --no-tags origin main" not in text
+    assert 'MAIN_SHA="$(git rev-parse HEAD)"' in text
+    assert "origin/main" not in text
+    assert 'git merge-base "$MAIN_SHA" "$REVIEW_REF"' in text
+    assert 'git diff --binary "$MAIN_SHA"..."$REVIEW_REF"' in text
