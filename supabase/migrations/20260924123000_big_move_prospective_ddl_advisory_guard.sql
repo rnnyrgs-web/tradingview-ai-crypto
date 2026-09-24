@@ -8,27 +8,34 @@
 --   * intentional owner/admin DDL that ignores the protocol is a trusted-root /
 --     control-plane compromise and is not claimed to be self-defendable by SQL.
 --
--- Bootstrap safety: old wrappers do not yet take the advisory shared lock, so this
--- migration first takes relation locks that conflict with authority-bearing writes,
--- then takes the fixed exclusive advisory xact lock before replacing any existing
--- authority-bearing function. After this migration, every public prospective write
--- wrapper takes the shared advisory lock before the existing relation/schema/function
--- barriers. Future reviewed migrations that touch this authority surface must take
--- acquire_big_move_prospective_ddl_write_lock_v1() before DDL.
+-- Bootstrap safety: new-protocol wrappers take shared advisory -> relation locks, so
+-- this migration MUST take the fixed exclusive advisory xact lock first. It then
+-- takes relation locks to drain pre-protocol writers that know nothing about the
+-- advisory protocol. This globally consistent order prevents a bootstrap deadlock
+-- between a new writer already holding shared advisory and a migration holding the
+-- relation locks while waiting for exclusive advisory. After this migration, every
+-- public prospective write wrapper takes shared advisory before the existing
+-- relation/schema/function barriers. Future reviewed migrations that touch this
+-- authority surface must take acquire_big_move_prospective_ddl_write_lock_v1()
+-- before DDL.
 --
 -- Frozen advisory key:
 --   int64(first 8 bytes SHA256("big_move_prospective_authority_v1"))
 --   = 6628152387724455858
 
+-- Acquire the future protocol first so no new-protocol writer can enter behind us.
+-- The lock is transaction-scoped. Pre-protocol writers do not take this lock, so
+-- they continue until the relation-lock drain below reaches them.
+select pg_catalog.pg_advisory_xact_lock(6628152387724455858);
+
+-- Drain any pre-protocol authority writer that may already hold relation-level write
+-- locks. With exclusive advisory already held, new-protocol writers wait before they
+-- can acquire relation locks, eliminating the inverse lock-order cycle.
 lock table
   public.big_move_reference_observations,
   public.big_move_forward_formations,
   public.big_move_forward_outcome_observations
 in share row exclusive mode;
-
--- Bootstrap the future protocol only after pre-protocol writers have been drained by
--- the relation locks above. The lock is transaction-scoped.
-select pg_catalog.pg_advisory_xact_lock(6628152387724455858);
 
 create or replace function public.acquire_big_move_prospective_ddl_read_lock_v1()
 returns void
