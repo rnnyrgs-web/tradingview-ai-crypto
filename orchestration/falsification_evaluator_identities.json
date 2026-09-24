@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "description": "Exact-byte bindings between legacy frozen falsification contracts and their behavior-driving local evaluator sources. A changed contract or source bundle is a new scientific/executable fingerprint and cannot inherit earlier evidence under the same display id.",
+  "historical_evidence_boundary": "These current-repository bindings do not retroactively attest which evaluator bytes produced legacy results unless an older independently durable execution receipt says so. They fail closed for any future replay or new evidence.",
+  "records": {
+    "DATA-BASIS-001": {
+      "contract_path": "orchestration/coord_data_002_basis_candidate.json",
+      "contract_sha256": "efbaa3ea47b396fd4f6641d91e81b60f6fac820ca31c624c8b073fcfd931bac4",
+      "source_paths": [
+        "basis_falsification_research.py",
+        "config.py",
+        "falsification_evaluator_identity.py"
+      ],
+      "source_sha256": {
+        "basis_falsification_research.py": "8f62b50a209027e4199cf2a20006d656eb6977dc3c508677e1100b75df4ca7ab",
+        "config.py": "9779af8b656d15712942e4a47b31f0f5a956a4d2031151a2e8d5469e2c4ac87d",
+        "falsification_evaluator_identity.py": "4db650ca630bc8bc59fc5c6c40d8c1afd5f5bcb9e290e576e75f2e6e78c43123"
+      },
+      "source_bundle_sha256": "b89af29643768f4875a20cf2040fde0a23765d10df2bb92f8f618e6da8890fc0",
+      "falsification_fingerprint_sha256": "ad07df73fbb9b451af62223f55e40a13367271ad337b66b629d2d3fa7d9592cf"
+    },
+    "DATA-BREADTH-001": {
+      "contract_path": "orchestration/data_breadth_001_candidate.json",
+      "contract_sha256": "441967910a4e9f7bdfbb0b4e1a7db0f6e49baf6014f0a9263a2998e1ff73af65",
+      "source_paths": [
+        "breadth_falsification_research.py",
+        "config.py",
+        "falsification_evaluator_identity.py",
+        "point_in_time_universe.py"
+      ],
+      "source_sha256": {
+        "breadth_falsification_research.py": "6594934699ec283642dfc6e80942d73cef71ae1e43c735c1ea8925d4b0353744",
+        "config.py": "9779af8b656d15712942e4a47b31f0f5a956a4d2031151a2e8d5469e2c4ac87d",
+        "falsification_evaluator_identity.py": "4db650ca630bc8bc59fc5c6c40d8c1afd5f5bcb9e290e576e75f2e6e78c43123",
+        "point_in_time_universe.py": "a45a1cfce0243c3b3d574ceca5ccb823aa112d5fb5af899a88eeab83a84373eb"
+      },
+      "source_bundle_sha256": "fee076bc3153b393ae6116d82a39ad56950a694f49d62803b3d24381a89d5688",
+      "falsification_fingerprint_sha256": "e3aff9a6c1321dc38b43423b1c0090e981e3fd4ccb967d902a059465843f828f"
+    },
+    "DATA-FUNDING-001": {
+      "contract_path": "orchestration/data_funding_001_candidate.json",
+      "contract_sha256": "8b37d73c6f3afa574f66086981a797dca04f3072b956b7ed29178d779a5f9c81",
+      "source_paths": [
+        "config.py",
+        "falsification_evaluator_identity.py",
+        "funding_falsification_research.py"
+      ],
+      "source_sha256": {
+        "config.py": "9779af8b656d15712942e4a47b31f0f5a956a4d2031151a2e8d5469e2c4ac87d",
+        "falsification_evaluator_identity.py": "4db650ca630bc8bc59fc5c6c40d8c1afd5f5bcb9e290e576e75f2e6e78c43123",
+        "funding_falsification_research.py": "c858506dc7ca0ad15ea1c260133369284a0e3585147c133514829225cfc6866a"
+      },
+      "source_bundle_sha256": "d05ff34507b60fc1b6a1f6d22c8976091c8f4b710b5d1a6296882b71b077b2c5",
+      "falsification_fingerprint_sha256": "e0b0451e4db316d2b0ebaec0856e43c3e4d843469fbfc678886f9c6a0f8f5ff7"
+    }
+  }
+}

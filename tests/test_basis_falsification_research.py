@@ -64,6 +64,8 @@ def test_training_association_can_score_later_oos_without_threshold_search():
     assert out["oos_samples"] >= bfr.DEFAULT_MIN_OOS_SAMPLES
     assert out["minimum_oos_samples"] == bfr.DEFAULT_MIN_OOS_SAMPLES
     assert out["promotion_authority"] is False
+    assert out["falsification_identity"]["candidate_id"] == "DATA-BASIS-001"
+    assert out["falsification_identity"]["verified"] is True
 
 
 def test_small_oos_segment_fails_closed_before_scoring():
@@ -104,4 +106,7 @@ def test_unavailable_collection_fails_closed():
     data["reason"] = "source_error"
     out = bfr.evaluate_basis_horizon(data, 24)
 
-    assert out == {"research_only": True, "available": False, "reason": "source_error"}
+    assert out["research_only"] is True
+    assert out["available"] is False
+    assert out["reason"] == "source_error"
+    assert out["falsification_identity"]["candidate_id"] == "DATA-BASIS-001"

@@ -7,6 +7,7 @@ before OOS scoring. No OOS threshold search is performed.
 """
 
 from config import BACKTEST_COST_BPS
+from falsification_evaluator_identity import verify_falsification_identity
 
 HOUR_MS = 60 * 60 * 1000
 WINDOW_MS = 24 * HOUR_MS
@@ -75,9 +76,9 @@ def _avg(values):
     return sum(values) / len(values) if values else None
 
 
-def evaluate_funding_horizon(dataset, horizon_hours, cost_bps=BACKTEST_COST_BPS,
-                             train_fraction=0.6,
-                             min_oos_samples=DEFAULT_MIN_OOS_SAMPLES):
+def _evaluate_funding_horizon_unbound(dataset, horizon_hours, cost_bps=BACKTEST_COST_BPS,
+                                      train_fraction=0.6,
+                                      min_oos_samples=DEFAULT_MIN_OOS_SAMPLES):
     if not dataset.get("research_only") or dataset.get("candidate_id") != "DATA-FUNDING-001":
         return {"research_only": True, "available": False, "reason": "invalid_research_dataset"}
     if not dataset.get("available"):
@@ -189,7 +190,23 @@ def evaluate_funding_horizon(dataset, horizon_hours, cost_bps=BACKTEST_COST_BPS,
     }
 
 
+def evaluate_funding_horizon(dataset, horizon_hours, cost_bps=BACKTEST_COST_BPS,
+                             train_fraction=0.6,
+                             min_oos_samples=DEFAULT_MIN_OOS_SAMPLES):
+    """Evaluate only when the exact frozen contract/code identity is intact."""
+    identity = verify_falsification_identity("DATA-FUNDING-001")
+    result = _evaluate_funding_horizon_unbound(
+        dataset,
+        horizon_hours,
+        cost_bps=cost_bps,
+        train_fraction=train_fraction,
+        min_oos_samples=min_oos_samples,
+    )
+    return {**result, "falsification_identity": identity}
+
+
 def evaluate_primary_horizons(dataset, cost_bps=BACKTEST_COST_BPS):
+    identity = verify_falsification_identity("DATA-FUNDING-001")
     return {
         "research_only": True,
         "candidate_id": "DATA-FUNDING-001",
@@ -199,4 +216,5 @@ def evaluate_primary_horizons(dataset, cost_bps=BACKTEST_COST_BPS):
         },
         "promotion_authority": False,
         "production_authority": False,
+        "falsification_identity": identity,
     }

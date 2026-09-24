@@ -86,6 +86,8 @@ def test_chronological_breadth_scoring_exposes_profitability_metrics_without_aut
     assert result["point_in_time_universe"]["survivorship_safe"] is True
     assert result["promotion_authority"] is False
     assert result["production_authority"] is False
+    assert result["falsification_identity"]["candidate_id"] == "DATA-BREADTH-001"
+    assert result["falsification_identity"]["verified"] is True
     canonical = result["cost_stress"]["1x"]
     assert canonical["avg_net_bps"] is not None
     assert canonical["profit_factor"] is not None

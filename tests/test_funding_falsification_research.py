@@ -94,3 +94,5 @@ def test_funding_evaluation_reports_cost_stress_baseline_and_no_authority():
     assert len(result["oos_half_avg_net_bps"]) == 2
     assert result["promotion_authority"] is False
     assert result["production_authority"] is False
+    assert result["falsification_identity"]["candidate_id"] == "DATA-FUNDING-001"
+    assert result["falsification_identity"]["verified"] is True
