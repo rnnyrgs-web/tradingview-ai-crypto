@@ -40,7 +40,7 @@
       "required_row_date": "2020-07-31",
       "required_open_time_ms": 1596153600000,
       "required_close_time_ms": 1596239999999,
-      "full_days_before_decision": 185
+      "minimum_elapsed_full_days_from_completed_row_end": 184
     }
   },
   "trusted_input_contract": {
