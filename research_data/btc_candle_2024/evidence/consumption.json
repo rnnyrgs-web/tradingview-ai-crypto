@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "fingerprint": "EXT-BTC-CANDLE-CLOCK-001-v1",
+  "recorded_at": "2026-09-25T00:49:48Z",
+  "classification": "UNADMITTED_EMPIRICAL_NEGATIVE_EVIDENCE",
+  "computed_screen_decision": "REJECTED_STAGE1",
+  "canonical_admission": false,
+  "canonical_rejection_registry_updated": false,
+  "already_opened_intervals": [
+    {"start_inclusive": "2024-01-01T00:00:00Z", "end_exclusive": "2024-07-01T00:00:00Z", "use": "TRAINING"},
+    {"start_inclusive": "2024-07-01T00:00:00Z", "end_exclusive": "2025-01-01T00:00:00Z", "use": "CHRONOLOGICAL_DEVELOPMENT_VALIDATION"}
+  ],
+  "outcome_execution_head": "1d0a415a4ce4921f178dac36e9eebcc1b55c6920",
+  "base_main": "1860f917c829ee5db4f4cd36404bf9702b6b680a",
+  "original_result_file_sha256": "a4c430940826a4b1fcaa2e7d8e8e6cecf4c4f1f73f9957dd20580a8f63ff67d4",
+  "compressed_events_file_sha256": "260596fbd5070aadbca7b32c37c478b719418e2e194a00ad56d2b3390337d940",
+  "decompressed_events_sha256": "a5c3ebe8e5799af419bb2f95411ad29c8fde406887680ee55ed2b3ec90d6ee91",
+  "restrictions": [
+    "No retroactive pre-outcome admission or fresh/untouched status for these opened intervals.",
+    "No subset rescue, post-outcome tuning, or new confirmatory significance allowance.",
+    "No canonical Stage-1 eligibility, PIT-vintage certification, causal identification, protected-OOS release, forward, profitability, promotion, broker or trading authority.",
+    "Retain the original frozen protocols and once-executed result unchanged.",
+    "Lead must reconcile standalone-screen admission scope before another independent screen."
+  ],
+  "policy_review": {
+    "main_sha": "1860f917c829ee5db4f4cd36404bf9702b6b680a",
+    "canonical_contract_not_satisfied": true,
+    "universal_standalone_screen_prohibition_established": false,
+    "scope_unresolved": true,
+    "references": ["orchestration/strategy_predeclaration.py:276", "orchestration/strategy_behavior_schema.py:66", "docs/ASTRA_BACKGROUND_WORKER.md:52", "https://github.com/rnnyrgs-web/tradingview-ai-crypto/issues/814#issuecomment-5824520840"]
+  }
+}
