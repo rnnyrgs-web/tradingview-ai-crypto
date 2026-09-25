@@ -6,6 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "exact_head_independent_review.yml"
 REVIEWER = ROOT / "orchestration" / "exact_head_review.py"
+TRUST = ROOT / "orchestration" / "reviewer_trust_root.py"
 
 
 def _text() -> str:
@@ -38,6 +39,16 @@ def test_paid_review_requests_are_repository_owner_authorized() -> None:
     assert "jq --arg title \"$APPROVED_TITLE\"" in text
 
 
+def test_owner_authorized_draft_candidate_can_be_reviewed_without_opening_merge_window() -> None:
+    text = _text()
+    assert 'PR_DRAFT="$(printf \'%s\' "$PR_JSON" | jq -r \'.isDraft\')"' in text
+    assert '[ "$PR_STATE" != "OPEN" ] || [ "$BASE_REF" != "main" ]' in text
+    assert '[ "$PR_DRAFT" = "true" ] || [ "$BASE_REF" != "main" ]' not in text
+    assert 'is DRAFT; exact-head review is allowed without changing draft or integration state.' in text
+    assert "gh pr ready" not in text
+    assert "gh pr edit --ready" not in text
+
+
 def test_full_scientific_diff_has_one_consistent_hard_context_bound() -> None:
     workflow = _text()
     reviewer = REVIEWER.read_text(encoding="utf-8")
@@ -48,6 +59,7 @@ def test_full_scientific_diff_has_one_consistent_hard_context_bound() -> None:
 
 def test_protected_paths_are_reviewed_but_never_auto_integrated() -> None:
     text = _text()
+    trust = TRUST.read_text(encoding="utf-8")
     assert 'contents: read' in text
     assert 'contents: write' not in text
     assert 'AUTONOMOUS_MERGE_ENABLED: "false"' in text
@@ -55,15 +67,21 @@ def test_protected_paths_are_reviewed_but_never_auto_integrated() -> None:
     assert "Run independent exact-head reviewers with bounded transient WAIT" in text
     assert "gh pr merge" not in text
     assert "merge_pull_request" not in text
-    assert "integration_authority == \"NONE\"" in text
+    assert "verify-current-receipt" in text
+    assert "verify-current-approval" in text
+    assert '"integration_authority": "NONE"' in trust
+    assert "review receipt must not grant integration authority" in trust
 
 
-def test_failed_attempts_are_bounded_but_not_permanent_blacklist() -> None:
+def test_retryable_wait_is_bounded_but_valid_rejection_is_terminal() -> None:
     text = _text()
-    assert "closed to prevent unbounded paid retries" in text
-    assert "FAILED/REJECTED does not permanently blacklist the exact SHA" in text
-    # Only durable approval blocks a duplicate request; failed attempts are not searched
-    # as an exclusion condition by the selector.
+    assert "Bounded reviewer retry limit reached" in text
+    assert "WAIT_RETRYABLE" in text
+    assert "REJECTED is terminal for the exact SHA" in text
+    assert "do not retry the same {pr, sha}" in text
+    assert "FAILED/REJECTED does not permanently blacklist the exact SHA" not in text
+    # Durable approval still blocks duplicate requests; rejection is enforced by
+    # the review outcome path and may only be superseded by a materially new SHA.
     assert "exact-head-review-approved: pr=$PR_NUMBER sha=$REQUESTED_SHA" in text
     assert "autonomous-review-attempt" not in text
 
@@ -85,6 +103,7 @@ def test_transient_reviewer_capacity_is_controlled_wait_not_approval() -> None:
     assert "Bounded reviewer retry limit reached" in text
     assert "Candidate remains **unapproved** and **unmerged**" in text
     assert "steps.review_models.outputs.wait != 'true'" in text
+    assert "steps.review_models.outputs.rejected != 'true'" in text
 
 
 def test_openai_reviewers_are_serial_while_claude_can_run_in_parallel() -> None:
