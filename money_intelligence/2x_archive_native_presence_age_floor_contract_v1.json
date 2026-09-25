@@ -1,0 +1,141 @@
+{
+  "schema": "two_x_archive_native_presence_history_span_contract.v1",
+  "artifact_id": "2X-ARCHIVE-NATIVE-PRESENCE-HISTORY-SPAN-001-v1",
+  "status": "PREDECLARED_BLOCKED_TRUSTED_ATTESTED_ROWS_NOT_YET_CONSUMABLE",
+  "purpose": "Freeze an outcome-blind provider-native proof that an exact Binance Spot/USDT market traded immediately before a historical decision and that provider-native trading was observed at least 180 days earlier, without claiming continuous listing age, exact listing time, delisting, strict tradability, or any 2x outcome.",
+  "parents": [
+    505,
+    514,
+    516,
+    519,
+    520,
+    757,
+    777
+  ],
+  "reuse_only": {
+    "trusted_acquisition": [710, 715],
+    "trusted_attestation_positive_path": [746, 756],
+    "survivorship_membership_guard": [757, 766],
+    "quote_native_liquidity": [711, 714, 725]
+  },
+  "frozen_canary": {
+    "venue": "BINANCE_SPOT",
+    "symbol": "BTCUSDT",
+    "base_asset": "BTC",
+    "quote_asset": "USDT",
+    "cadence": "1d",
+    "decision_at": "2021-02-01T00:00:00Z",
+    "decision_grid": "MONDAY_00_UTC_WEEKLY",
+    "presence_archive": {
+      "path": "data/spot/monthly/klines/BTCUSDT/1d/BTCUSDT-1d-2021-01.zip",
+      "checksum_path": "data/spot/monthly/klines/BTCUSDT/1d/BTCUSDT-1d-2021-01.zip.CHECKSUM",
+      "required_row_date": "2021-01-31",
+      "required_open_time_ms": 1612051200000,
+      "required_close_time_ms": 1612137599999,
+      "required_relation_to_decision": "IMMEDIATELY_PRECEDING_COMPLETED_UTC_DAY"
+    },
+    "history_span_anchor_archive": {
+      "path": "data/spot/monthly/klines/BTCUSDT/1d/BTCUSDT-1d-2020-07.zip",
+      "checksum_path": "data/spot/monthly/klines/BTCUSDT/1d/BTCUSDT-1d-2020-07.zip.CHECKSUM",
+      "required_row_date": "2020-07-31",
+      "required_open_time_ms": 1596153600000,
+      "required_close_time_ms": 1596239999999,
+      "minimum_elapsed_full_days_from_completed_row_end": 184
+    }
+  },
+  "trusted_input_contract": {
+    "archive_and_checksum_each_require_independent_trusted_attestation": true,
+    "required_identity_bindings": [
+      "repository",
+      "trusted_acquisition_workflow",
+      "canonical_main_ref_and_source_sha",
+      "workflow_run_and_artifact",
+      "attested_subject_digest",
+      "trusted_acquisition_receipt_bytes_and_digest",
+      "provider_url",
+      "provider_response_sha256",
+      "provider_response_byte_count"
+    ],
+    "checksum_semantics": "EXACT_ARCHIVE_FILENAME_AND_SHA256",
+    "zip_semantics": "SAFE_SINGLE_EXPECTED_MEMBER_ONLY",
+    "provider_row_time_authority": "SOURCE_NATIVE_OPEN_AND_CLOSE_TIME_ONLY",
+    "caller_event_time_authority": "NONE",
+    "local_file_time_authority": "NONE",
+    "issue_or_comment_time_authority": "NONE"
+  },
+  "presence_rule": {
+    "output_schema": "binance_market_presence_from_attested_kline.v1",
+    "decision_relation": "LAST_COMPLETED_UTC_1D_BAR_ENDS_IMMEDIATELY_BEFORE_DECISION",
+    "require_exact_symbol_market_quote_asset_cadence_month": true,
+    "require_trade_count_gt_zero": true,
+    "require_base_asset_volume_gt_zero": true,
+    "require_quote_asset_volume_gt_zero": true,
+    "require_finite_nonnegative_prices_and_volumes": true,
+    "positive_authority": "PROVIDER_NATIVE_PIT_MARKET_PRESENCE_ONLY",
+    "missing_or_untrusted_evidence_state": "UNKNOWN",
+    "missing_evidence_is_false_membership": false,
+    "archive_object_existence_alone_has_presence_authority": false
+  },
+  "observed_history_span_rule": {
+    "output_schema": "binance_observed_trading_history_span_from_attested_kline.v1",
+    "threshold_days": 180,
+    "claim": "TRADING_OBSERVED_AT_LEAST_180D_BEFORE_DECISION",
+    "require_same_exact_symbol_market_quote_asset_cadence": true,
+    "require_authenticated_trade_row_at_or_before_cutoff": true,
+    "require_trade_count_gt_zero": true,
+    "require_base_asset_volume_gt_zero": true,
+    "require_quote_asset_volume_gt_zero": true,
+    "continuous_listing_authority": "NONE",
+    "listing_age_ge_180d_authority": "NONE",
+    "exact_first_trade_or_listing_time_authority": "NONE",
+    "missing_or_untrusted_evidence_state": "UNKNOWN",
+    "archive_absence_has_delisting_authority": false,
+    "archive_absence_has_negative_control_authority": false,
+    "scientific_reason": "Two authenticated positive trading observations separated by >=180 days prove an observed trading-history span, but do not by themselves prove uninterrupted listing continuity; delist/relist or symbol-reuse histories remain possible without separate identity/continuity evidence."
+  },
+  "versioned_consumer_boundary": {
+    "legacy_exact_age_transform": "DERIVED_BINANCE_LISTING_AGE_DAYS_V1",
+    "legacy_basis": "first_verified_venue_trade",
+    "legacy_transform_must_not_be_reinterpreted": true,
+    "new_observed_history_transform": "DERIVED_BINANCE_OBSERVED_TRADING_HISTORY_GE_180D_V1",
+    "cohort_listing_age_gate_authority": "NONE_REQUIRES_TRUSTED_LISTING_START_OR_CONTINUITY_EVIDENCE",
+    "membership_provenance_target": "binance_market_presence_provenance.v1",
+    "current_preflight_authority": "NONE_UNTIL_SEPARATELY_REVIEWED_VERSIONED_CONSUMER"
+  },
+  "falsifiers": [
+    "UNATTESTED_LOCAL_ARCHIVE_AND_CHECKSUM",
+    "ARCHIVE_CHECKSUM_CROSS_SUBSTITUTION",
+    "WRONG_SYMBOL_MARKET_QUOTE_ASSET_CADENCE_OR_MONTH",
+    "UNSAFE_OR_MULTI_MEMBER_ZIP",
+    "WRONG_CHECKSUM_FILENAME_OR_DIGEST",
+    "PRESENCE_ROW_NOT_IMMEDIATELY_PREDECISION",
+    "PRESENCE_ROW_POSTDECISION",
+    "ZERO_OR_NONFINITE_TRADING_EVIDENCE",
+    "HISTORY_ANCHOR_ROW_AFTER_180D_CUTOFF",
+    "SPARSE_ROWS_REINTERPRETED_AS_CONTINUOUS_LISTING_AGE",
+    "TARDIS_ENUMERATION_OR_QUEUE_LINEAGE_AS_MEMBERSHIP_PROOF",
+    "CALLER_TIMESTAMP_OVERRIDES_NATIVE_ROW_TIME",
+    "ARCHIVE_OBJECT_EXISTENCE_WITHOUT_AUTHENTICATED_ROW_CONTENT"
+  ],
+  "forbidden_authority": {
+    "exact_listing_time": false,
+    "listing_age_ge_180d": false,
+    "continuous_listing": false,
+    "delisting_time": false,
+    "matched_nonwinner": false,
+    "historical_2x_label": false,
+    "usd_liquidity": false,
+    "strict_tradability": false,
+    "precursor_or_archetype_effect": false,
+    "relationship_graph_effect": false,
+    "competing_risk_model": false,
+    "prospective_candidate": false,
+    "promotion": false,
+    "spend": false,
+    "broker_connection": false,
+    "live_trading": false
+  },
+  "strict_tradability_dependency": "PIT_EVENT_TIME_DEPTH_SPREAD_SLIPPAGE_REQUIRED_UNDER_519",
+  "outcome_access": "SEALED",
+  "broker_live_trading": "OFF"
+}
