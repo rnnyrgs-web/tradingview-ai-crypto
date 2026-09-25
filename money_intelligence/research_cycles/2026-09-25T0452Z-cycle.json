@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "cycle_id": "2026-09-25T0452Z",
+  "information_cutoff": "2026-09-25T04:52:18Z",
+  "status": "RESEARCH_IN_PROGRESS_NO_OWNER_REPORT",
+  "canonical_spec_sha": "cd8a1ca752f0df8fd85ece9856f9c8ed9687e505",
+  "default_branch_head_observed_before_write": "1860f917c829ee5db4f4cd36404bf9702b6b680a",
+  "verifiable_execution": {
+    "last_owner_report_cycle": "2026-09-22T0616Z",
+    "seconds_this_run_minimum": 354,
+    "prior_minimum_cumulative_seconds_since_last_owner_report": 505,
+    "minimum_cumulative_seconds_since_last_owner_report": 859,
+    "reporting_gate_seconds": 3600,
+    "reporting_gate_met": false
+  },
+  "research_checkpoint": [
+    "U.S. September flash PMI showed strongest composite growth since July 2021 alongside near-four-year input-cost growth; September 24 long Treasury yields rose materially more than the 2-year while 5-year/7-year auction demand was soft. Candidate mechanism: policy-path repricing plus competition for duration capital; requires real-yield/breakeven and auction decomposition before promotion.",
+    "Oracle Project Jupiter force-majeure reporting and the Texas data-center permit halt provide independent evidence that power, interconnection and permitting are first-order AI project-finance constraints; tenant demand alone does not remove execution or cash-flow-timing risk.",
+    "Farside records four consecutive completed U.S. spot BTC ETF inflow sessions from September 21-24 totaling about $2.251B. BTC remained near $84.3k at the latest connected quote while long yields and USD rose. ETF demand is persistent but not sufficient for price direction; exact connected open-interest levels conflict across endpoints, so only qualitative leverage cooling is retained.",
+    "Brent-WTI basis widened sharply while Reuters linked the divergence to prospective U.S. diesel-export policy risk. Treat as a candidate refinery-demand/policy transmission mechanism until a primary policy action and crack/run data validate it."
+  ],
+  "prediction_ledger": {
+    "frozen_new": 0,
+    "resolved": 0,
+    "rewritten": 0
+  },
+  "canonical_update_decision": "Append-only checkpoint only; no dashboard or learning-ledger promotion yet."
+}
