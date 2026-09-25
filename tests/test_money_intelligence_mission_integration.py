@@ -307,6 +307,41 @@ def test_imported_nonfinite_priority_cannot_enter_causal_mission_surfaces(nonfin
     ]
 
 
+@pytest.mark.parametrize("nonfinite", [float("nan"), float("inf"), float("-inf")])
+def test_unavailable_causal_memory_cannot_bypass_imported_priority_validation(nonfinite):
+    def broken_loader():
+        raise CausalMemoryError("backend unavailable")
+
+    base = {
+        "missions": [
+            {"mission_id": "malformed-import", "priority": nonfinite},
+            {"mission_id": "finite-import", "priority": 0.25},
+        ],
+        "next_missions": [
+            {"mission_id": "malformed-import", "priority": nonfinite},
+            {"mission_id": "finite-import", "priority": 0.25},
+        ],
+        "daily_lead_report": {"highest_priority_next_missions": []},
+    }
+
+    result = apply_causal_feedback(
+        base,
+        loader=broken_loader,
+        as_of="2026-09-02T03:00:00Z",
+    )
+
+    assert "malformed-import" not in {
+        row["mission_id"] for row in result["missions"]
+    }
+    assert result["next_missions"] == []
+    assert result["money_intelligence_causal"]["status"] == (
+        "WAIT_INVALID_IMPORTED_MISSION_PRIORITY"
+    )
+    assert result["money_intelligence_causal"]["upstream_status"] == (
+        "WAIT_CAUSAL_MEMORY_UNAVAILABLE"
+    )
+
+
 def test_invalid_loader_type_fails_closed():
     feedback = causal_feedback(loader=lambda: object(), as_of="2026-09-02T03:00:00Z")
     assert feedback["status"] == "WAIT_CAUSAL_MEMORY_UNAVAILABLE"

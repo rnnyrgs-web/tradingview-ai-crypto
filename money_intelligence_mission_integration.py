@@ -157,8 +157,6 @@ def apply_causal_feedback(state: dict[str, Any], *, loader: Callable[[], CausalR
     result = deepcopy(state)
     feedback = causal_feedback(loader=loader, as_of=as_of)
     result["money_intelligence_causal"] = feedback
-    if feedback["status"] != "AVAILABLE":
-        return result
     imported_missions = (
         result.get("missions") if isinstance(result.get("missions"), list) else []
     )
@@ -186,6 +184,7 @@ def apply_causal_feedback(state: dict[str, Any], *, loader: Callable[[], CausalR
         feedback = {
             **feedback,
             "status": "WAIT_INVALID_IMPORTED_MISSION_PRIORITY",
+            "upstream_status": feedback["status"],
             "invalid_priority_mission_ids": invalid_ids,
             "structured_evidence_consumed": False,
         }
@@ -195,6 +194,8 @@ def apply_causal_feedback(state: dict[str, Any], *, loader: Callable[[], CausalR
         if isinstance(report, dict):
             report["highest_priority_next_missions"] = []
             report["money_intelligence_causal"] = deepcopy(feedback)
+        return result
+    if feedback["status"] != "AVAILABLE":
         return result
     known = {str(row.get("mission_id")) for row in missions if isinstance(row, dict)}
     causal_rows = [deepcopy(row) for row in feedback["missions"]]

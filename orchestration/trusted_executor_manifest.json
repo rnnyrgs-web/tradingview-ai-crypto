@@ -1,8 +1,24 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "implementations": {
     "restrictive_group_abstention_v1": {
-      "bundle_sha256": "041a4e363604f58c7cf4d92287d0ca33b4d7e8a4d0b8dc01ee5d7acaa33e55d7"
+      "bundle_sha256": "289e9491d9353a80b4dd1ee6eec1a837043e69cf5437ea1674ae3ab6b1176083",
+      "change_receipt": {
+        "change_id": "pr-811-nonfinite-priority-v1",
+        "prior_bundle_sha256": "de7a1c4208372620f2310d025087b45bbe65fd8a565272d19421fd561b6db8b7",
+        "changed_behavior_paths": [
+          "signal_development.py"
+        ],
+        "reason": "Reject non-finite research task ranking inputs before they can receive bounded or heavy execution priority.",
+        "safety_invariants": [
+          "No protected OOS or forward evidence is opened.",
+          "No promotion, broker, or trading authority is added.",
+          "Existing finite task scoring and executor behavior remain unchanged."
+        ],
+        "review_required": true,
+        "oos_or_forward_access_changed": false,
+        "trading_authority_changed": false
+      }
     }
   }
 }

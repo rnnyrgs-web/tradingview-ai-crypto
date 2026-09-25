@@ -55,12 +55,55 @@ def _registered_executor_digest(execution_rule):
         )
     except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         raise ValueError("trusted executor manifest is unreadable") from exc
-    if (not isinstance(manifest, dict) or manifest.get("schema_version") != 1
+    schema_version = manifest.get("schema_version") if isinstance(manifest, dict) else None
+    if (not isinstance(manifest, dict) or schema_version not in {1, 2}
             or not isinstance(manifest.get("implementations"), dict)):
         raise ValueError("invalid trusted executor manifest")
     entry = manifest["implementations"].get(execution_rule)
-    if not isinstance(entry, dict) or set(entry) != {"bundle_sha256"}:
+    expected_fields = (
+        {"bundle_sha256"}
+        if schema_version == 1
+        else {"bundle_sha256", "change_receipt"}
+    )
+    if not isinstance(entry, dict) or set(entry) != expected_fields:
         raise ValueError("unregistered research executor digest")
+    if schema_version == 2:
+        receipt = entry["change_receipt"]
+        required_receipt_fields = {
+            "change_id",
+            "prior_bundle_sha256",
+            "changed_behavior_paths",
+            "reason",
+            "safety_invariants",
+            "review_required",
+            "oos_or_forward_access_changed",
+            "trading_authority_changed",
+        }
+        if (not isinstance(receipt, dict)
+                or set(receipt) != required_receipt_fields
+                or not isinstance(receipt.get("change_id"), str)
+                or not receipt["change_id"].strip()
+                or not isinstance(receipt.get("reason"), str)
+                or not receipt["reason"].strip()
+                or not isinstance(receipt.get("changed_behavior_paths"), list)
+                or not receipt["changed_behavior_paths"]
+                or any(not isinstance(path, str) or not path.endswith(".py")
+                       for path in receipt["changed_behavior_paths"])
+                or receipt["changed_behavior_paths"] != sorted(
+                    set(receipt["changed_behavior_paths"])
+                )
+                or not isinstance(receipt.get("safety_invariants"), list)
+                or not receipt["safety_invariants"]
+                or any(not isinstance(item, str) or not item.strip()
+                       for item in receipt["safety_invariants"])
+                or receipt.get("review_required") is not True
+                or not isinstance(receipt.get("oos_or_forward_access_changed"), bool)
+                or not isinstance(receipt.get("trading_authority_changed"), bool)):
+            raise ValueError("invalid trusted executor change receipt")
+        prior_digest = receipt["prior_bundle_sha256"]
+        if (not isinstance(prior_digest, str) or len(prior_digest) != 64
+                or any(char not in "0123456789abcdef" for char in prior_digest)):
+            raise ValueError("invalid trusted executor change receipt")
     digest = entry["bundle_sha256"]
     if (not isinstance(digest, str) or len(digest) != 64
             or any(char not in "0123456789abcdef" for char in digest)):
