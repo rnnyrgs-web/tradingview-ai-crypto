@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta, timezone
 
+import pytest
+
+import forward_proof
 from forward_proof import assess_forward_proof
 
 
@@ -25,11 +28,12 @@ def _rows(count, horizon="24h", return_pct=2.0, spacing_hours=24, fingerprint=FP
     return rows
 
 
-def test_forward_proof_passes_with_production_ledger_shape_and_enough_independent_evidence():
+def test_forward_proof_preserves_production_ledger_diagnostics_without_cost_authority():
     rows = _rows(20)
     assert all("created_at" not in row for row in rows)
     result = assess_forward_proof({"fingerprint": FP}, "24h", rows)
-    assert result["passed"] is True
+    assert result["passed"] is False
+    assert result["reason"] == "insufficient_authenticated_execution_cost_evidence"
     assert result["independent_samples"] == 20
     assert result["raw_matching_rows"] == 20
     assert result["policy"]["chronology_source"] == "due_at_minus_horizon"
@@ -71,5 +75,37 @@ def test_conservative_costs_can_turn_apparent_edge_into_rejection():
 
 def test_seven_day_gate_uses_nonoverlapping_weekly_samples():
     result = assess_forward_proof({"fingerprint": FP}, "7d", _rows(12, horizon="7d", spacing_hours=24 * 7))
-    assert result["passed"] is True
+    assert result["passed"] is False
+    assert result["reason"] == "insufficient_authenticated_execution_cost_evidence"
     assert result["minimum_independent_samples"] == 12
+
+
+@pytest.mark.parametrize("execution_claim", [
+    {},
+    {"venue": "generic", "product": "spot", "verified": True},
+    {
+        "venue": "Kraken", "product": "spot", "notional_usd": 10000,
+        "round_trip_cost_bps": 160, "execution_cost_verified": True,
+        "execution_cost_evidence": {"verified": True, "status": "AUTHENTICATED"},
+    },
+])
+def test_proxy_cost_false_proof_stays_blocked_despite_execution_labels(monkeypatch, execution_claim):
+    # Frozen Work-audit witness: twenty daily +0.50% gross forecasts.
+    monkeypatch.setattr(forward_proof, "BACKTEST_COST_BPS", 12.0)
+    rows = _rows(20, return_pct=0.50)
+    for row in rows:
+        row.update(execution_claim)
+        row["strategy_identity"].update(execution_claim)
+    result = assess_forward_proof({"fingerprint": FP, **execution_claim}, "24h", rows)
+    assert result["independent_samples"] == 20
+    assert result["modeled_round_trip_cost_bps"] == 36.0
+    assert result["after_cost_expectancy_pct"] == pytest.approx(0.14)
+    assert result["after_cost_successes"] == 20
+    assert result["after_cost_precision_95pct_lower"] >= 0.50
+    assert result["max_forward_drawdown_pct"] == 0.0
+    assert result["deterioration"]["deteriorating"] is False
+    assert result["passed"] is False
+    assert result["status"] == "FORWARD_PROOF_BLOCKED"
+    assert result["reason"] == "insufficient_authenticated_execution_cost_evidence"
+    assert result["execution_cost_evidence"] == "PROXY_ONLY"
+    assert result["proxy_diagnostics_passed"] is True

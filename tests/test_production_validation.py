@@ -1,3 +1,8 @@
+from datetime import datetime, timedelta, timezone
+
+import pytest
+
+import forward_proof
 import production_validation as pv
 
 
@@ -64,3 +69,28 @@ def test_unknown_horizon_fails_closed_without_fingerprint():
     assert decision.identity["timeframes"] == []
     assert decision.identity["identity_complete"] is False
     assert decision.identity["fingerprint"] == ""
+
+
+def test_verified_promotion_cannot_authorize_proxy_only_forward_profitability(monkeypatch):
+    # Only the independent promotion prerequisite is stubbed; exercise the real
+    # identity builder, forward gate, and production-validation decision.
+    monkeypatch.setattr(pv, "find_verified_promotion", lambda identity: (True, "verified"))
+    monkeypatch.setattr(forward_proof, "BACKTEST_COST_BPS", 12.0)
+    identity = pv.build_strategy_identity("ETH-USDT", "24h", "trend")
+    start = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    rows = [{
+        "strategy_identity": identity,
+        "horizon": "24h",
+        "due_at": (start + timedelta(days=i + 1)).isoformat(),
+        "resolved_at": (start + timedelta(days=i + 1, minutes=1)).isoformat(),
+        "directional_return_pct": 0.50,
+        "venue": "Kraken",
+        "product": "spot",
+        "execution_cost_verified": True,
+    } for i in range(20)]
+    decision = pv.validate_live_strategy("ETH-USDT", "24h", "trend", rows)
+    assert decision.approved is False
+    assert decision.status == "FORWARD_PROOF_REQUIRED"
+    assert decision.forward_proof["passed"] is False
+    assert decision.forward_proof["reason"] == "insufficient_authenticated_execution_cost_evidence"
+    assert decision.forward_proof["after_cost_expectancy_pct"] == pytest.approx(0.14)
