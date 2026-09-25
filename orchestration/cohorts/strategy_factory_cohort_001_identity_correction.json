@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "cohort_id": "STRATEGY-FACTORY-COHORT-001-SEED",
+  "status": "HISTORICAL_DRAFT_IDENTITIES_SUPERSEDED",
+  "reason": "Historical self-audit of the initial draft; the identities and definitions below are retained only as superseded history and grant no authority. Current identities are recomputed by freeze_predeclaration, asserted by the corrected seed, and recorded in strategy_factory_cohort_001_canonical_admission.json. Admission fails closed on missing or conflicting seed identities. PR #507 is integrated; canonical Cohort-001 admission and separately reviewed Stage-1 execution remain required before any outcome read.",
+  "scientific_design_definition": "SHA256 of canonical UTF-8 JSON over resolved target_markets,target_timeframes,data_contract,signal_rules,execution_rules,cost_model,validation_plan with sorted keys and compact separators; labels and prose excluded.",
+  "contract_definition": "SHA256 of canonical UTF-8 JSON over the full resolved candidate excluding scientific_design_sha256 and contract_sha256.",
+  "identities": {
+    "DISC-BREADTH-PERSIST-001-v1": {"scientific_design_sha256": "5bcf3d7a15b005a8567612ee53dd709a6d9aa1e6df0a0ef21c1570f90da22f38", "contract_sha256": "663bb83af3f87eb8c082abdb5413978c338c5f838139d5438565ef174a09de89"},
+    "DISC-RESIDUAL-REV-001-v1": {"scientific_design_sha256": "815f1ace8ded937853d09a681f20b67d61ed2878d8f58f6bbe7a97b27aae6c89", "contract_sha256": "02e99abcf8c0530814be8709bca8b3216d0743b80ce03e19d5f930c936f688c2"},
+    "DISC-SIGNED-VOLUME-DRIFT-001-v1": {"scientific_design_sha256": "4961e05ab9b698b5c50da9e4720d70d03121a5dc04f403e1d04505cc7538ab4b", "contract_sha256": "8a06da4c54275a23e9d629c282362a100d91cb70f9a395757400abb50cda1505"},
+    "DISC-LOWVOL-DRIFT-REV-001-v1": {"scientific_design_sha256": "a384b7a9272af261aa3a14a7964e4d10f5013b434c122d3277cee4a26c8dcc74", "contract_sha256": "7697c6bdb5ac0678110da2834bafa10c0b530e39b0be9cf822e0e57490314123"},
+    "DISC-WEEKEND-NORMALIZE-001-v1": {"scientific_design_sha256": "b00da50fa8a976ab2d7d41ff7c86eece7cd076392aa1a5664a2c71a2ac9a921d", "contract_sha256": "e38dacf634ba2046b006e7c88372a6d1de8c41e0bdfd7be7e3f39312f790b4aa"},
+    "DISC-MODERATEVOL-AUTOCORR-001-v1": {"scientific_design_sha256": "235749d7a7481e17704ad0e201919eb9e94990136f25806f67c5e59f766639a4", "contract_sha256": "0a4d55433df7ebf9dad36fafcb8c10109b5605350be4808626150123f98d2cf8"},
+    "DISC-RANGE-AUCTION-REV-001-v1": {"scientific_design_sha256": "fad36fb8083018a98969bd712692bde31b3a0f1f257bd0b52e867ad74ce33a1a", "contract_sha256": "ed63ef68ce35ad3356968a22bda0378c2000436146b6f9a856686346b549e16f"},
+    "DISC-DELTA-CARRY-001-v1": {"scientific_design_sha256": "fbab2f7b4bb8887063ff2abe3bd5073f5c57a0902f5862826849411b43461670", "contract_sha256": "2b2fa35be833a4864781b47a8d1537f9858f10edce97d0515043859c481552bf"}
+  },
+  "screening_authority": false,
+  "protected_oos_opened": false,
+  "genuine_forward_opened": false,
+  "trade_authority": false
+}

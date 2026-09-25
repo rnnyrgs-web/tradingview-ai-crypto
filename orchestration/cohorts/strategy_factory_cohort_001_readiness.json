@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "artifact_type": "strategy_factory_cohort_readiness",
+  "cohort_id": "STRATEGY-FACTORY-COHORT-001-SEED",
+  "formed_at": "2026-09-21T04:58:27+00:00",
+  "main_sha_observed": "5e720e8adbd3e0bcf539d97fdaa5a0c71428dbca",
+  "purpose": "Remove post-gate execution ambiguity without inspecting strategy outcomes. This artifact freezes the exact input/readiness and batch-execution plan to use after the repaired label-invariant #507 admission contract is independently integrated.",
+  "blocking_gate": {
+    "pr": 507,
+    "state": "INTEGRATED_CANONICAL_SEMANTIC_ADMISSION",
+    "merge_commit_sha": "fb95239413988b2d7c76ee1ba8fb3d0bca76313d",
+    "verified_ancestor_of_main_sha": "ae548bf12d85ea9bf84018f7f8f457c30c1c0791",
+    "screening_authority": false,
+    "reason": "Original formation prerequisite is resolved. Current admission recomputes canonical label-invariant rejection checks for every candidate. Execution remains closed pending separately reviewed Stage-1 machinery."
+  },
+  "blocking_gate_at_formation": {
+    "pr": 507,
+    "state": "WAIT_LABEL_INVARIANT_REJECTED_DESIGN_MEMORY",
+    "reason": "Exact-label rejection can still be bypassed by a renamed scientifically identical design. No Cohort 001 cheap screen may execute until canonical semantic admission is repaired, independently reviewed and integrated.",
+    "screening_authority": false
+  },
+  "common_selection_boundary": {
+    "dataset_sha256": "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f",
+    "fixed_instruments": [
+      "BTC-USDT-SWAP",
+      "ETH-USDT-SWAP",
+      "SOL-USDT-SWAP"
+    ],
+    "bar": "1H",
+    "train_start_utc": "2025-05-07T05:00:00+00:00",
+    "train_end_utc": "2026-04-30T23:00:00+00:00",
+    "validation_start_utc": "2026-05-01T00:00:00+00:00",
+    "validation_end_utc": "2026-08-31T23:00:00+00:00",
+    "protected_oos_start_utc": "2026-09-01T00:00:00+00:00",
+    "protected_oos_end_utc": "2026-09-19T03:00:00+00:00",
+    "protected_oos_read_allowed": false,
+    "genuine_forward_read_allowed": false,
+    "required_schema_preflight": [
+      "timestamp monotonic per instrument",
+      "one completed 1H bar per expected timestamp or explicit missingness",
+      "open/high/low/close finite and positive",
+      "high >= max(open,close) and low <= min(open,close)",
+      "quote_volume finite and non-negative",
+      "no duplicate instrument/timestamp rows",
+      "dataset bytes/hash exactly match the certified selection artifact before outcome computation"
+    ]
+  },
+  "batch_policy": {
+    "semantic_admission_before_any_outcome_read": true,
+    "regenerate_identity_with_canonical_507_implementation": true,
+    "reject_semantic_collision_without_rename_or_rescue": true,
+    "execute_data_ready_screens_in_parallel": true,
+    "parallel_screen_limit": 7,
+    "expensive_deep_candidate_limit": 1,
+    "all_failure_or_inconclusive_results_feed_issue_510": true,
+    "post_outcome_parameter_changes_forbidden": true,
+    "family_search_breadth": 8
+  },
+  "candidates": [
+    {
+      "fingerprint_id": "DISC-BREADTH-PERSIST-001-v1",
+      "mechanism_family": "synchronized_market_breadth_continuation",
+      "readiness": "READY_FOR_SCHEMA_PREFLIGHT_AFTER_507",
+      "required_fields": ["timestamp", "instrument", "open", "close"],
+      "cross_asset_alignment_required": true,
+      "warmup_hours": 720,
+      "selection_data_source": "certified fixed BTC/ETH/SOL 1H OKX dataset",
+      "outcome_inspected": false
+    },
+    {
+      "fingerprint_id": "DISC-RESIDUAL-REV-001-v1",
+      "mechanism_family": "market_neutral_residual_mean_reversion",
+      "readiness": "READY_FOR_SCHEMA_PREFLIGHT_AFTER_507",
+      "required_fields": ["timestamp", "instrument", "open", "close"],
+      "cross_asset_alignment_required": true,
+      "warmup_hours": 720,
+      "special_preflight": "rolling beta and follower/BTC correlation must use only rows ending at or before each decision timestamp",
+      "selection_data_source": "certified fixed BTC/ETH/SOL 1H OKX dataset",
+      "outcome_inspected": false
+    },
+    {
+      "fingerprint_id": "DISC-SIGNED-VOLUME-DRIFT-001-v1",
+      "mechanism_family": "signed_volume_pressure_continuation",
+      "readiness": "READY_FOR_SCHEMA_PREFLIGHT_AFTER_507",
+      "required_fields": ["timestamp", "instrument", "open", "high", "low", "close", "quote_volume"],
+      "warmup_hours": 720,
+      "special_preflight": "quote_volume units must be stable within each instrument over the certified dataset; no inferred trade-side data may be substituted",
+      "selection_data_source": "certified fixed BTC/ETH/SOL 1H OKX dataset",
+      "outcome_inspected": false
+    },
+    {
+      "fingerprint_id": "DISC-LOWVOL-DRIFT-REV-001-v1",
+      "mechanism_family": "low_participation_drift_reversion",
+      "readiness": "READY_FOR_SCHEMA_PREFLIGHT_AFTER_507",
+      "required_fields": ["timestamp", "instrument", "open", "high", "low", "close", "quote_volume"],
+      "warmup_hours": 720,
+      "special_preflight": "true-range and volume percentiles must be computed strictly from trailing completed bars",
+      "selection_data_source": "certified fixed BTC/ETH/SOL 1H OKX dataset",
+      "outcome_inspected": false
+    },
+    {
+      "fingerprint_id": "DISC-WEEKEND-NORMALIZE-001-v1",
+      "mechanism_family": "weekend_liquidity_normalization_reversal",
+      "readiness": "READY_FOR_SCHEMA_PREFLIGHT_AFTER_507_POWER_RISK",
+      "required_fields": ["timestamp", "instrument", "open", "close", "quote_volume"],
+      "warmup_hours": 720,
+      "special_preflight": "UTC calendar conversion must be deterministic; likely low independent sample count must be classified UNDERPOWERED rather than rescued with wider thresholds",
+      "selection_data_source": "certified fixed BTC/ETH/SOL 1H OKX dataset",
+      "outcome_inspected": false
+    },
+    {
+      "fingerprint_id": "DISC-MODERATEVOL-AUTOCORR-001-v1",
+      "mechanism_family": "moderate_volatility_time_series_continuation",
+      "readiness": "READY_FOR_SCHEMA_PREFLIGHT_AFTER_507",
+      "required_fields": ["timestamp", "instrument", "open", "close", "quote_volume"],
+      "warmup_hours": 2160,
+      "special_preflight": "90-day volatility reference percentiles must use trailing completed observations only and never protected-OOS rows",
+      "selection_data_source": "certified fixed BTC/ETH/SOL 1H OKX dataset",
+      "outcome_inspected": false
+    },
+    {
+      "fingerprint_id": "DISC-RANGE-AUCTION-REV-001-v1",
+      "mechanism_family": "range_edge_auction_reversion",
+      "readiness": "READY_FOR_SCHEMA_PREFLIGHT_AFTER_507",
+      "required_fields": ["timestamp", "instrument", "open", "high", "low", "close", "quote_volume"],
+      "warmup_hours": 720,
+      "special_preflight": "prior 48h range must exclude the decision bar; ATR/efficiency inputs must use completed trailing bars only",
+      "selection_data_source": "certified fixed BTC/ETH/SOL 1H OKX dataset",
+      "outcome_inspected": false
+    },
+    {
+      "fingerprint_id": "DISC-DELTA-CARRY-001-v1",
+      "mechanism_family": "delta_neutral_funding_carry",
+      "readiness": "BLOCKED_DATA_PREFLIGHT",
+      "required_fields": ["timestamp", "base_asset", "spot_open", "spot_close", "perp_open", "perp_close", "realized_funding_rate", "funding_available_at"],
+      "warmup_hours": 0,
+      "special_preflight": "freeze exact shared-timestamp spot/perp panel, realized funding rows with publication/availability timestamps, missingness report, coverage bounds and normalized dataset SHA256 before semantic admission can authorize screening",
+      "selection_data_source": "not yet frozen",
+      "outcome_inspected": false
+    }
+  ],
+  "post_gate_execution_order": [
+    "1. Rebase/regenerate Cohort 001 identities with the integrated #507 canonical implementation.",
+    "2. Run label-invariant semantic admission for all eight seeds against exact and semantic rejected memory.",
+    "3. Permanently remove semantic collisions; do not rename or threshold-tune them.",
+    "4. Run the common dataset schema/hash preflight and persist its exact manifest digest.",
+    "5. Execute all admitted OHLCV-ready cheap screens deterministically and in parallel using only train+validation through 2026-08-31T23:00Z.",
+    "6. Classify every failure/inconclusive result through #510 and persist durable negative/component learning.",
+    "7. Rank genuine survivors under the predeclared family/search breadth; at most one may enter expensive deep validation.",
+    "8. Keep protected OOS and genuine-forward evidence closed until the canonical promotion gate independently authorizes access."
+  ],
+  "screen_results_present": false,
+  "protected_oos_opened": false,
+  "genuine_forward_opened": false,
+  "deep_candidate_promoted": false,
+  "broker_connected": false,
+  "trade_authority": false
+}

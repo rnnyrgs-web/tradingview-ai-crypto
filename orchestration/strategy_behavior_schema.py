@@ -35,6 +35,14 @@ COMMON_PREDECLARATION_COST = _fields(
     "stress_multipliers",
 )
 
+COMMON_COHORT_OHLCV_COST = _fields(
+    "fees_bps",
+    "spread_bps",
+    "slippage_bps",
+    "adverse_funding_allowance_bps_per_trade",
+    "stress_multipliers",
+)
+
 COMMON_COHORT_OHLCV_DATA = _fields(
     "source",
     "bar",
@@ -203,7 +211,7 @@ BEHAVIOR_SCHEMAS: dict[str, dict[str, frozenset[str]]] = {
             "overlap",
             "stop",
         ),
-        cost_model=COMMON_PREDECLARATION_COST,
+        cost_model=COMMON_COHORT_OHLCV_COST,
     ),
     "C101_RESIDUAL_REV_V1": _schema(
         data_contract=COMMON_COHORT_OHLCV_DATA,
@@ -225,7 +233,7 @@ BEHAVIOR_SCHEMAS: dict[str, dict[str, frozenset[str]]] = {
             "overlap",
             "gross_notional",
         ),
-        cost_model=COMMON_PREDECLARATION_COST,
+        cost_model=COMMON_COHORT_OHLCV_COST,
     ),
     "C101_SIGNED_VOLUME_DRIFT_V1": _schema(
         data_contract=COMMON_COHORT_OHLCV_DATA,
@@ -240,7 +248,7 @@ BEHAVIOR_SCHEMAS: dict[str, dict[str, frozenset[str]]] = {
             "warmup_hours",
         ),
         execution_rules=_fields("entry", "direction", "hold_hours", "exit", "overlap"),
-        cost_model=COMMON_PREDECLARATION_COST,
+        cost_model=COMMON_COHORT_OHLCV_COST,
     ),
     "C101_LOWVOL_DRIFT_REV_V1": _schema(
         data_contract=COMMON_COHORT_OHLCV_DATA,
@@ -253,7 +261,7 @@ BEHAVIOR_SCHEMAS: dict[str, dict[str, frozenset[str]]] = {
             "warmup_hours",
         ),
         execution_rules=_fields("entry", "direction", "hold_hours", "exit", "overlap"),
-        cost_model=COMMON_PREDECLARATION_COST,
+        cost_model=COMMON_COHORT_OHLCV_COST,
     ),
     "C101_WEEKEND_NORMALIZE_V1": _schema(
         data_contract=COMMON_COHORT_OHLCV_DATA,
@@ -266,7 +274,7 @@ BEHAVIOR_SCHEMAS: dict[str, dict[str, frozenset[str]]] = {
             "decision_time",
         ),
         execution_rules=_fields("entry", "direction", "hold_hours", "exit", "overlap"),
-        cost_model=COMMON_PREDECLARATION_COST,
+        cost_model=COMMON_COHORT_OHLCV_COST,
     ),
     "C101_MODERATEVOL_AUTOCORR_V1": _schema(
         data_contract=COMMON_COHORT_OHLCV_DATA,
@@ -280,7 +288,7 @@ BEHAVIOR_SCHEMAS: dict[str, dict[str, frozenset[str]]] = {
             "warmup_hours",
         ),
         execution_rules=_fields("entry", "direction", "hold_hours", "exit", "overlap"),
-        cost_model=COMMON_PREDECLARATION_COST,
+        cost_model=COMMON_COHORT_OHLCV_COST,
     ),
     "C101_RANGE_AUCTION_REV_V1": _schema(
         data_contract=COMMON_COHORT_OHLCV_DATA,
@@ -303,7 +311,7 @@ BEHAVIOR_SCHEMAS: dict[str, dict[str, frozenset[str]]] = {
             "max_hold_hours",
             "overlap",
         ),
-        cost_model=COMMON_PREDECLARATION_COST,
+        cost_model=COMMON_COHORT_OHLCV_COST,
     ),
     "C101_DELTA_CARRY_V1": _schema(
         data_contract=_fields(

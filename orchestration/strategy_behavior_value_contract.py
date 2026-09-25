@@ -101,6 +101,14 @@ COMMON_COST = _section(
     stress_multipliers=number_list(),
 )
 
+COMMON_COHORT_OHLCV_COST = _section(
+    fees_bps=number(),
+    spread_bps=number(),
+    slippage_bps=number(),
+    adverse_funding_allowance_bps_per_trade=number(),
+    stress_multipliers=number_list(),
+)
+
 COMMON_COHORT_DATA = _section(
     source=token("OKX /api/v5/market/history-candles"),
     bar=token("1H"),
@@ -260,7 +268,7 @@ BEHAVIOR_VALUE_CONTRACTS: dict[str, dict[str, dict[str, ValueRule]]] = {
             overlap=token("ignore new signals while basket position is open"),
             stop=token("none in cheap screen; fixed-hold falsification only"),
         ),
-        "cost_model": COMMON_COST,
+        "cost_model": COMMON_COHORT_OHLCV_COST,
     },
     "C101_RESIDUAL_REV_V1": {
         "data_contract": COMMON_COHORT_DATA,
@@ -282,7 +290,7 @@ BEHAVIOR_VALUE_CONTRACTS: dict[str, dict[str, dict[str, ValueRule]]] = {
             overlap=token("one open pair per follower; same-follower signals ignored until flat"),
             gross_notional=token("1.0 follower leg plus abs(beta) BTC hedge leg"),
         ),
-        "cost_model": COMMON_COST,
+        "cost_model": COMMON_COHORT_OHLCV_COST,
     },
     "C101_SIGNED_VOLUME_DRIFT_V1": {
         "data_contract": COMMON_COHORT_DATA,
@@ -303,7 +311,7 @@ BEHAVIOR_VALUE_CONTRACTS: dict[str, dict[str, dict[str, ValueRule]]] = {
             exit=token("fixed 3h hold"),
             overlap=token("one position per asset; ignore overlapping same-asset signals"),
         ),
-        "cost_model": COMMON_COST,
+        "cost_model": COMMON_COHORT_OHLCV_COST,
     },
     "C101_LOWVOL_DRIFT_REV_V1": {
         "data_contract": COMMON_COHORT_DATA,
@@ -322,7 +330,7 @@ BEHAVIOR_VALUE_CONTRACTS: dict[str, dict[str, dict[str, ValueRule]]] = {
             exit=token("fixed 6h hold"),
             overlap=token("one position per asset; ignore overlapping same-asset signals"),
         ),
-        "cost_model": COMMON_COST,
+        "cost_model": COMMON_COHORT_OHLCV_COST,
     },
     "C101_WEEKEND_NORMALIZE_V1": {
         "data_contract": COMMON_COHORT_DATA,
@@ -341,7 +349,7 @@ BEHAVIOR_VALUE_CONTRACTS: dict[str, dict[str, dict[str, ValueRule]]] = {
             exit=token("fixed 12h hold"),
             overlap=token("maximum one position per asset per calendar week"),
         ),
-        "cost_model": COMMON_COST,
+        "cost_model": COMMON_COHORT_OHLCV_COST,
     },
     "C101_MODERATEVOL_AUTOCORR_V1": {
         "data_contract": COMMON_COHORT_DATA,
@@ -361,7 +369,7 @@ BEHAVIOR_VALUE_CONTRACTS: dict[str, dict[str, dict[str, ValueRule]]] = {
             exit=token("fixed 3h hold"),
             overlap=token("one position per asset; ignore overlapping same-asset signals"),
         ),
-        "cost_model": COMMON_COST,
+        "cost_model": COMMON_COHORT_OHLCV_COST,
     },
     "C101_RANGE_AUCTION_REV_V1": {
         "data_contract": COMMON_COHORT_DATA,
@@ -384,7 +392,7 @@ BEHAVIOR_VALUE_CONTRACTS: dict[str, dict[str, dict[str, ValueRule]]] = {
             max_hold_hours=number(),
             overlap=token("one position per asset; ignore overlapping same-asset signals"),
         ),
-        "cost_model": COMMON_COST,
+        "cost_model": COMMON_COHORT_OHLCV_COST,
     },
     "C101_DELTA_CARRY_V1": {
         "data_contract": _section(

@@ -1,0 +1,89 @@
+{
+  "artifact_type": "strategy_factory_cohort_001_multiplicity_and_screening_authority_contract",
+  "confirmatory_familywise_error_budget": {
+    "allocation_method": "BONFERRONI_FIXED_EQUAL_ACROSS_ALL_8_ORIGINAL_HYPOTHESES",
+    "alpha_reallocation_after_results": false,
+    "alpha_recycling_after_failure_block_or_underpower": false,
+    "confirmatory_test_method_must_be_frozen_before_any_protected_oos_or_genuine_forward_read": true,
+    "familywise_alpha": "0.05",
+    "no_inferential_claim_until_exact_confirmatory_method_is_frozen": true,
+    "optional_stopping_or_repeated_peeking_allowed": false,
+    "per_hypothesis_alpha": "0.00625",
+    "protected_oos_may_be_opened_to_choose_test_method": false,
+    "successor_rule": "Any materially distinct successor proposed after observing Cohort-001 development outcomes must retain Cohort-001 ancestry/search breadth and receive a newly frozen multiplicity contract before any new outcome read. It may not inherit or recycle unused alpha from this family."
+  },
+  "contract_id": "STRATEGY-FACTORY-COHORT-001-MULTIPLICITY-AUTHORITY-v1",
+  "contract_sha256": "2f914f33a437ae1f2ee61742f9a881f3c8a88ef945ce152150077677fb587c3b",
+  "cost_authority": {
+    "a_72bps_stage1_pass_cannot_substitute_for_later_authenticated_cost_evidence": true,
+    "delta_carry_candidate_is_not_covered_by_the_non_carry_stage1_cost_proxy": true,
+    "delta_carry_screening_remains_data_blocked_until_its_separate_trusted_spot_perpetual_funding_contract_clears": true,
+    "generic_spread_slippage_and_adverse_funding_allowance_are_not_venue_notional_time_specific_evidence": true,
+    "non_carry_ohlcv_candidate_survival_requires_pit_venue_execution_cost_and_funding_evidence_before_deep_validation_or_profitability_claim": true,
+    "stage1_cost_totals_bps": [
+      "24",
+      "48",
+      "72"
+    ],
+    "stage1_costs_are_screening_falsifiers_not_empirical_execution_cost_proof": true
+  },
+  "evidence_locks": {
+    "broker_connected": false,
+    "genuine_forward_opened": false,
+    "post_outcome_alpha_or_cost_semantics_changes_allowed": false,
+    "protected_oos_opened": false,
+    "strategy_outcomes_read_to_form_contract": false,
+    "trade_authority": false
+  },
+  "execution_authority": {
+    "broker_or_trade_authority": false,
+    "canonical_admission_eligible_means": "eligibility for a separately frozen, exact-head-reviewed Stage-1 execution binding; admission itself grants no outcome-read or execution authority",
+    "canonical_admission_screening_authority": false,
+    "may_execute_real_stage1_from_pr_515_alone": false,
+    "promotion_authority": false,
+    "protected_oos_or_genuine_forward_authority": false,
+    "required_before_any_real_stage1_outcome_read": [
+      "PR #515 integrates after exact-head CI and legitimate independent review",
+      "Stage-1 execution/binding branch is reconciled onto that canonical main",
+      "Stage-1 frozen execution semantics, structural-power allocation, multiplicity authority, and source identities are mutually bound",
+      "fresh exact-head CI passes",
+      "fresh legitimate independent review approves that execution head"
+    ]
+  },
+  "family": {
+    "failed_blocked_or_underpowered_members_remain_counted": true,
+    "family_id": "STRATEGY-FACTORY-COHORT-001-20260921",
+    "family_membership_is_fixed_before_outcomes": true,
+    "members": [
+      "DISC-BREADTH-PERSIST-001-v1",
+      "DISC-RESIDUAL-REV-001-v1",
+      "DISC-SIGNED-VOLUME-DRIFT-001-v1",
+      "DISC-LOWVOL-DRIFT-REV-001-v1",
+      "DISC-WEEKEND-NORMALIZE-001-v1",
+      "DISC-MODERATEVOL-AUTOCORR-001-v1",
+      "DISC-RANGE-AUCTION-REV-001-v1",
+      "DISC-DELTA-CARRY-001-v1"
+    ],
+    "planned_hypothesis_count": 8,
+    "renaming_or_cosmetic_variants_cannot_reset_family": true
+  },
+  "formed_at": "2026-09-23T18:20:00Z",
+  "review_scope_and_future_evidence": {
+    "absence_of_future_screen_results_is_not_success_evidence": true,
+    "admission_grants_no_claim_that_those_future_gates_will_pass": true,
+    "future_screen_results_must_satisfy_predeclared_sample_stability_and_cost_gates": true,
+    "sample_size_regime_and_return_evidence_are_deliberately_unopened_at_admission": true
+  },
+  "schema_version": 1,
+  "stage1_multiplicity_semantics": {
+    "selection_rule": "Only candidates passing every frozen Stage-1 economic/robustness gate may enter the already-frozen #517 baseline/placebo/ablation gauntlet. At most one candidate may later enter expensive deep validation. No winner is manufactured if zero survive.",
+    "single_expensive_deep_candidate_max": 1,
+    "stage1_is_economic_falsification_screen": true,
+    "stage1_is_inferential_significance_test": false,
+    "stage1_pass_grants_oos_or_forward_authority": false,
+    "stage1_pass_grants_profitability_authentication": false,
+    "stage1_pass_grants_promotion_or_trading_authority": false,
+    "stage1_pass_grants_statistical_significance": false
+  },
+  "status": "OUTCOME_BLIND_FROZEN"
+}
