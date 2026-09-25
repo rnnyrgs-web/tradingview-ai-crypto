@@ -1,0 +1,80 @@
+{
+  "source_commit": "07a7912344a97e7e6369f3df9c78f5e0e65a2ace",
+  "events_sha256": "a5c3ebe8e5799af419bb2f95411ad29c8fde406887680ee55ed2b3ec90d6ee91",
+  "classification": "REPRODUCED_UNADMITTED_EMPIRICAL_NEGATIVE_EVIDENCE",
+  "new_outcomes_opened": false,
+  "admission_or_promotion_authority": false,
+  "fingerprint": "EXT-BTC-CANDLE-CLOCK-001-v1",
+  "halves": {
+    "training": {
+      "opportunities": 17471,
+      "utc_days": 182,
+      "mean_gross_bps": -0.03393225412065653,
+      "costs_bps": {
+        "24": {
+          "mean_net_bps": -24.033932254120657,
+          "profit_factor": 0.0055958757899523615,
+          "wins": 175,
+          "losses": 17296,
+          "worst_trade_bps": -276.2506352494303,
+          "best_trade_bps": 136.37641523305444,
+          "max_positive_return_share": 0.057715375414471845
+        },
+        "48": {
+          "mean_net_bps": -48.03393225412066,
+          "profit_factor": 0.000740056556123843,
+          "wins": 31,
+          "losses": 17440,
+          "worst_trade_bps": -300.2506352494303,
+          "best_trade_bps": 112.37641523305444,
+          "max_positive_return_share": 0.18081016286313795
+        },
+        "72": {
+          "mean_net_bps": -72.03393225412066,
+          "profit_factor": 0.00020057918783670855,
+          "wins": 9,
+          "losses": 17462,
+          "worst_trade_bps": -324.2506352494303,
+          "best_trade_bps": 88.37641523305444,
+          "max_positive_return_share": 0.3500326106131797
+        }
+      },
+      "gross_target_minus_clock_bps": 0.07754082037963787
+    },
+    "validation": {
+      "opportunities": 17664,
+      "utc_days": 184,
+      "mean_gross_bps": 0.05579925360449833,
+      "costs_bps": {
+        "24": {
+          "mean_net_bps": -23.944200746395502,
+          "profit_factor": 0.004947514888264152,
+          "wins": 126,
+          "losses": 17538,
+          "worst_trade_bps": -141.15968450046188,
+          "best_trade_bps": 266.85863778201883,
+          "max_positive_return_share": 0.12689682109862788
+        },
+        "48": {
+          "mean_net_bps": -47.9442007463955,
+          "profit_factor": 0.0010158153369842157,
+          "wins": 20,
+          "losses": 17644,
+          "worst_trade_bps": -165.15968450046188,
+          "best_trade_bps": 242.85863778201883,
+          "max_positive_return_share": 0.28201503520729176
+        },
+        "72": {
+          "mean_net_bps": -71.9442007463955,
+          "profit_factor": 0.0004155592312013311,
+          "wins": 10,
+          "losses": 17654,
+          "worst_trade_bps": -189.15968450046188,
+          "best_trade_bps": 218.85863778201883,
+          "max_positive_return_share": 0.41425274677184054
+        }
+      },
+      "gross_target_minus_clock_bps": -0.03776954120889735
+    }
+  }
+}
