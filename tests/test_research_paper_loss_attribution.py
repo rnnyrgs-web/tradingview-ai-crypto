@@ -97,3 +97,13 @@ def test_merge_paper_priorities_rejects_nonfinite_imported_ranking_values(invali
     )
 
     assert [row["group"] for row in merged["research_priorities"]] == ["VALID"]
+    assert merged["invalid_priority_rows"] == [
+        {
+            "source": "diagnostics",
+            "source_index": 0,
+            "dimension": "paper_direction",
+            "group": "MALFORMED",
+            "invalid_fields": ["economic_harm_usd"],
+            "reason": "nonfinite_ranking_value",
+        }
+    ]
