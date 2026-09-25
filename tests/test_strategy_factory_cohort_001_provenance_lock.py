@@ -356,3 +356,35 @@ def test_multiplicity_contract_digest_is_recomputed_even_with_rebound_source_and
     with pytest.raises(RuntimeError, match="multiplicity authority contract digest mismatch"):
         verify_admission_provenance_lock(repo_root=tmp_path)
 
+def test_every_bound_source_has_independent_sha256_binding() -> None:
+    lock = json.loads((ROOT / LOCK_RELATIVE_PATH).read_text(encoding="utf-8"))
+    actual = {
+        relative: hashlib.sha256((ROOT / relative).read_bytes()).hexdigest()
+        for relative in sorted(REQUIRED_SOURCE_PATHS)
+    }
+    assert lock.get("bound_source_sha256") == actual, (
+        "ACTUAL_SOURCE_SHA256=" + json.dumps(actual, sort_keys=True)
+    )
+
+
+def test_source_sha256_cannot_be_bypassed_by_rebinding_git_blob_and_outer_lock(
+    tmp_path: Path,
+) -> None:
+    from orchestration import strategy_factory_cohort_001_provenance as provenance
+
+    lock_path = _copy_lock_fixture(tmp_path)
+    relative = "orchestration/cohorts/strategy_factory_cohort_001_seed.json"
+    target = tmp_path / relative
+    target.write_bytes(target.read_bytes() + b"\n")
+
+    lock = json.loads(lock_path.read_text(encoding="utf-8"))
+    lock["bound_source_git_blobs"][relative] = provenance.git_blob_sha1(target)
+    lock["contract_sha256"] = _recompute_contract_digest(lock)
+    lock_path.write_text(
+        json.dumps(lock, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RuntimeError, match="source SHA-256 drift"):
+        verify_admission_provenance_lock(repo_root=tmp_path)
+
