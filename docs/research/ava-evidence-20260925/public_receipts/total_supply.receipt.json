@@ -1,0 +1,42 @@
+{
+  "url": "https://api.avafoundation.org/ava/total-supply",
+  "method": "GET",
+  "request_body": null,
+  "collection_start": "2026-09-25T07:10:50.468753+00:00",
+  "provider_event_time": "See original payload; not inferred from HTTP Date",
+  "status": 200,
+  "headers": {
+    "Date": "Fri, 25 Sep 2026 07:10:52 GMT",
+    "Content-Type": "application/json; charset=utf-8",
+    "Content-Length": "8",
+    "Connection": "close",
+    "access-control-allow-origin": "*",
+    "etag": "W/\"8-oMTsSTl0HeTAGldJaHuavsQhjBk\"",
+    "x-envoy-upstream-service-time": "49",
+    "server": "cloudflare",
+    "cf-cache-status": "DYNAMIC",
+    "X-Permitted-Cross-Domain-Policies": "none",
+    "Strict-Transport-Security": "max-age=0; includeSubDomains",
+    "x-content-type-options": "nosniff",
+    "Server-Timing": "cfEdge;dur=57,cfOrigin;dur=715",
+    "Report-To": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=lf%2BfWLdq0w2tuxdebbfUpqhWFnyb%2B%2BMWfI%2Fqid4%2BEXmLZr34WkeyMUalKnC7HHJsGf6PPzMMlyUyvHqxtxYiwGS9XFyceJw%2BBDToP4B3crCY7mfu59w%2B538J4acpniLQLifouSuQ4A%3D%3D\"}]}",
+    "Nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+    "expect-ct": "max-age=86400, enforce",
+    "referrer-policy": "same-origin",
+    "Referrer-Policy": "strict-origin-when-cross-origin, no-referrer-when-downgrade, strict-origin",
+    "X-Frame-Options": "ALLOW",
+    "x-xss-protection": "1; mode=block",
+    "Feature-Policy": "camera 'self';",
+    "CF-RAY": "a4083626894a7339-BUD"
+  },
+  "final_url": "https://api.avafoundation.org/ava/total-supply",
+  "collection_end": "2026-09-25T07:10:52.054242+00:00",
+  "bytes": 8,
+  "sha256": "cb53338d4310ef0befb380dd9dac5f12cb2f4db99accec6ae0e7b243e80ecebb",
+  "local_write_time": "2026-09-25T07:10:52.063927+00:00",
+  "publication_redaction": {
+    "original_receipt_sha256": "c1e2e8eecf5fdea4db52d1354e5ab78c5ea180e5bc76c26feaa6e945c9fecdab",
+    "redacted_header_keys": [],
+    "acquisition_fields_unchanged": true
+  }
+}

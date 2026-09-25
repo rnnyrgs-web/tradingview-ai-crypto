@@ -1,0 +1,31 @@
+{
+  "url": "https://api.bithumb.com/public/orderbook/AVA_KRW?count=30",
+  "method": "GET",
+  "request_body": null,
+  "collection_start": "2026-09-25T07:10:48.907417+00:00",
+  "provider_event_time": "See original payload; not inferred from HTTP Date",
+  "status": 200,
+  "headers": {
+    "Date": "Fri, 25 Sep 2026 07:10:50 GMT",
+    "Content-Type": "application/json",
+    "Content-Length": "2459",
+    "Connection": "close",
+    "Server": "nginx",
+    "Vary": "Access-Control-Request-Headers",
+    "X-RateLimit-Remaining": "149",
+    "X-RateLimit-Requested-Tokens": "1",
+    "X-RateLimit-Burst-Capacity": "150",
+    "X-RateLimit-Replenish-Rate": "150",
+    "mtid": "-4733535577162890996"
+  },
+  "final_url": "https://api.bithumb.com/public/orderbook/AVA_KRW?count=30",
+  "collection_end": "2026-09-25T07:10:50.457985+00:00",
+  "bytes": 2459,
+  "sha256": "05017e7bf6d591033ef5a7357c29d38326140a5ace03cc9db538d14931c4df7d",
+  "local_write_time": "2026-09-25T07:10:50.465724+00:00",
+  "publication_redaction": {
+    "original_receipt_sha256": "7a8647e11fc351d1358d478549764926568d28977e74eed547fa26ef68b49e0f",
+    "redacted_header_keys": [],
+    "acquisition_fields_unchanged": true
+  }
+}

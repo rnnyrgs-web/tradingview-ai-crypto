@@ -1,0 +1,2 @@
+# Preserve byte hashes across Windows/Linux checkouts for this frozen evidence bundle.
+* -text

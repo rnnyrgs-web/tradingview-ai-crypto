@@ -1,0 +1,41 @@
+{
+  "url": "https://eth.blockscout.com/api/v2/addresses/0x7bed1889c21d9eb3560463c14cd74fe29f2d03b6/token-transfers?token=0xa6c0c097741d55ecd9a3a7def3a8253fd022ceb9",
+  "method": "GET",
+  "request_body": null,
+  "collection_start": "2026-09-25T07:10:52.916044+00:00",
+  "provider_event_time": "See original payload; not inferred from HTTP Date",
+  "status": 200,
+  "headers": {
+    "Date": "Fri, 25 Sep 2026 07:10:54 GMT",
+    "Content-Type": "application/json; charset=utf-8",
+    "Content-Length": "4725",
+    "Connection": "close",
+    "access-control-allow-credentials": "true",
+    "access-control-allow-origin": "*",
+    "access-control-expose-headers": "bypass-429-option,x-ratelimit-reset,x-ratelimit-limit,x-ratelimit-remaining,api-v2-temp-token",
+    "bypass-429-option": "temporary_token",
+    "Cache-Control": "max-age=0, private, must-revalidate",
+    "x-ratelimit-limit": "180",
+    "x-ratelimit-remaining": "179",
+    "x-ratelimit-reset": "5613",
+    "x-request-id": "3ec2100553704a82e2dcc8c1b4baa963",
+    "strict-transport-security": "max-age=31536000; includeSubDomains",
+    "cf-cache-status": "DYNAMIC",
+    "Nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+    "Server-Timing": "cfEdge;dur=11,cfOrigin;dur=164",
+    "Report-To": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=tPf%2BRrfkHj167lhu3Q7jVwxjMStuecE23vsjiO7HaCIyXuSarhqAYzHehYFdmjw%2FBcjAgCzvZ1akP2Fbi5OhzHwkGe4Qh865XELp0ktcveFTB887us4l%2B9qRsB5W9SNf45g7%2BQ%3D%3D\"}]}",
+    "Server": "cloudflare",
+    "CF-RAY": "a4083635ca099b13-BUD",
+    "alt-svc": "h3=\":443\"; ma=86400"
+  },
+  "final_url": "https://eth.blockscout.com/api/v2/addresses/0x7bed1889c21d9eb3560463c14cd74fe29f2d03b6/token-transfers?token=0xa6c0c097741d55ecd9a3a7def3a8253fd022ceb9",
+  "collection_end": "2026-09-25T07:10:53.913775+00:00",
+  "bytes": 4725,
+  "sha256": "c5bbb44fdd016e10d85a2687fd96a60fa03e933081c33f6bdb058f0e06ba5442",
+  "local_write_time": "2026-09-25T07:10:53.914792+00:00",
+  "publication_redaction": {
+    "original_receipt_sha256": "6d3018622c7ca954bbea3d38ece9664bc49bb70c2bddb03ff8d3b4670db5cf18",
+    "redacted_header_keys": [],
+    "acquisition_fields_unchanged": true
+  }
+}

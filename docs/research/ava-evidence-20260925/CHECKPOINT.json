@@ -1,0 +1,13 @@
+{
+  "checkpoint_time_utc": "2026-09-25T07:56:33.926608+00:00",
+  "offline_analysis": "FINISHED_FOR_SAVED_RESPONSES",
+  "broader_investigation": "IN_PROGRESS",
+  "original_response_hashes": "8/8 unchanged",
+  "report_local_links": "all exist",
+  "network_requests_during_recovery": 0,
+  "new_commit": null,
+  "new_pr": null,
+  "findings_sha256": "6fc6d76dc77944f3c414d042e71f629a1de2680d7778c9d7ae7470ce0bc54a85",
+  "analysis_sha256": "d470e9703252106f5cb2a8b293791a3ac01b4346c19ecb23659d50b2e10051c8",
+  "report_bytes": 18110
+}

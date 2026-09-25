@@ -1,0 +1,11 @@
+{
+  "verified_at": "2026-09-25T07:52:43.977639+00:00",
+  "mode": "OFFLINE",
+  "independent_method": "Exact fractions from original response bytes; Decimal results agree to absolute 1e-24",
+  "checks": 192,
+  "result": "PASS",
+  "raw_hashes_verified": 8,
+  "scenarios_verified": 9,
+  "source_files_unchanged": true,
+  "limitations": "No network, full-node verification, live execution, venue fees or protected outcomes checked."
+}

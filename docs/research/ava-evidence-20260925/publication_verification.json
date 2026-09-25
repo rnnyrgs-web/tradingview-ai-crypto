@@ -1,0 +1,16 @@
+{
+  "checked_at": "2026-09-25T08:10:32.437062+00:00",
+  "milestone": "COMPLETED_SAVED_EVIDENCE_ANALYSIS",
+  "conclusion": "RESEARCH_ONLY",
+  "staged_paths_before_this_receipt": 28,
+  "original_bodies_verified": 8,
+  "original_receipts_unchanged": 8,
+  "public_receipt_only_changes": "Kraken Set-Cookie values; documented redaction metadata",
+  "fresh_checkout_reproduction": "PASS",
+  "independent_fraction_checks": 192,
+  "secret_scan": "PASS: staged bytes checked with repository and GitHub/AWS/private-key/bearer patterns; receipt redaction and unchanged acquisition fields verified separately",
+  "diff_check": "PASS using core.whitespace=trailing-space,space-before-tab,cr-at-eol to preserve original CRLF evidence bytes",
+  "git_bytes_equal_working_files": true,
+  "network_acquisition_requests": 0,
+  "application_tests": "Not run locally: research-only artifacts; exact-head Security and Reliability pending PR CI"
+}

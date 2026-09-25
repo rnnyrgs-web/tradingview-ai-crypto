@@ -1,0 +1,41 @@
+{
+  "url": "https://data-api.binance.vision/api/v3/depth?symbol=AVAUSDT&limit=1000",
+  "method": "GET",
+  "request_body": null,
+  "collection_start": "2026-09-25T07:10:46.539388+00:00",
+  "provider_event_time": "See original payload; not inferred from HTTP Date",
+  "status": 200,
+  "headers": {
+    "Date": "Fri, 25 Sep 2026 07:10:49 GMT",
+    "Content-Type": "application/json;charset=UTF-8",
+    "Content-Length": "39487",
+    "Connection": "close",
+    "Server": "nginx",
+    "Vary": "Accept-Encoding",
+    "x-mbx-uuid": "093b8a86-5c5d-45ea-a36d-303b80812a0c",
+    "x-mbx-used-weight": "50",
+    "x-mbx-used-weight-1m": "50",
+    "Strict-Transport-Security": "max-age=31536000; includeSubdomains",
+    "X-Frame-Options": "SAMEORIGIN",
+    "X-Xss-Protection": "1; mode=block",
+    "X-Content-Type-Options": "nosniff",
+    "Content-Security-Policy": "default-src 'self'",
+    "X-Content-Security-Policy": "default-src 'self'",
+    "X-WebKit-CSP": "default-src 'self'",
+    "Cache-Control": "no-cache, no-store, must-revalidate",
+    "Pragma": "no-cache",
+    "Expires": "0",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS"
+  },
+  "final_url": "https://data-api.binance.vision/api/v3/depth?symbol=AVAUSDT&limit=1000",
+  "collection_end": "2026-09-25T07:10:48.887558+00:00",
+  "bytes": 39487,
+  "sha256": "7f4847eeffc1266e1de52579e7e9003f688ea3da227361505f1febf8aa1ea668",
+  "local_write_time": "2026-09-25T07:10:48.898783+00:00",
+  "publication_redaction": {
+    "original_receipt_sha256": "b9d7b0efbb18c558df3a18dbf8b9b121b0f1495f1f57310240ba85c9587b0f2c",
+    "redacted_header_keys": [],
+    "acquisition_fields_unchanged": true
+  }
+}
