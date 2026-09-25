@@ -3,6 +3,8 @@
 Historical/OOS evidence and signed promotion are necessary but not sufficient.
 This module requires independent resolved forward forecasts for the exact
 strategy fingerprint before production validation may approve a live action.
+The current forecast-return path applies generic proxy costs only: its
+``after_cost_*`` statistics are diagnostics, not authenticated profitability.
 """
 
 from __future__ import annotations
@@ -93,11 +95,14 @@ def assess_forward_proof(identity, horizon, resolved_rows):
     deterioration=deterioration_assessment(deterioration_rows)
     sample_ready=sample_count>=minimum; positive_expectancy=expectancy is not None and expectancy>0; precision_pass=sample_ready and lower>=MIN_FORWARD_PRECISION_LOWER
     drawdown_pass=drawdown is not None and drawdown<=MAX_FORWARD_DRAWDOWN_PCT; deterioration_pass=not deterioration.get("deteriorating",False)
-    passed=bool(sample_ready and positive_expectancy and precision_pass and drawdown_pass and deterioration_pass)
+    proxy_diagnostics_passed=bool(sample_ready and positive_expectancy and precision_pass and drawdown_pass and deterioration_pass)
     if not sample_ready: reason="insufficient_independent_forward_samples"
     elif not positive_expectancy: reason="non_positive_after_cost_forward_expectancy"
     elif not precision_pass: reason="forward_precision_confidence_too_weak"
     elif not drawdown_pass: reason="forward_drawdown_too_high"
     elif not deterioration_pass: reason="recent_forward_deterioration"
-    else: reason="forward_proof_passed"
-    return {"passed":passed,"status":"FORWARD_PROOF_PASSED" if passed else "FORWARD_PROOF_BLOCKED","reason":reason,"horizon":horizon,"raw_matching_rows":len(matching),"independent_samples":sample_count,"minimum_independent_samples":minimum,"sample_sufficiency_basis":"non_overlapping_full_horizon_forecasts_reconstructed_from_due_at","after_cost_successes":successes,"after_cost_precision":round(precision,4) if sample_count else None,"after_cost_precision_95pct_lower":round(lower,4) if sample_count else None,"after_cost_expectancy_pct":round(expectancy,6) if expectancy is not None else None,"max_forward_drawdown_pct":round(drawdown,4) if drawdown is not None else None,"modeled_round_trip_cost_bps":BACKTEST_COST_BPS*FORWARD_COST_MULTIPLIER,"deterioration":deterioration,"policy":{"non_overlapping_samples_only":True,"chronology_source":"due_at_minus_horizon","precision_95pct_lower_gte":MIN_FORWARD_PRECISION_LOWER,"expectancy_after_cost_gt_pct":0.0,"max_drawdown_lte_pct":MAX_FORWARD_DRAWDOWN_PCT,"no_active_deterioration":True,"can_authorize_by_itself":False}}
+    else: reason="insufficient_authenticated_execution_cost_evidence"
+    # No trusted venue/product/size/holding-cost evidence is consumed here.
+    # A generic cost stress or caller-supplied venue/verified label cannot prove
+    # executable profitability, even when every proxy diagnostic passes.
+    return {"passed":False,"status":"FORWARD_PROOF_BLOCKED","execution_cost_evidence":"PROXY_ONLY","proxy_diagnostics_passed":proxy_diagnostics_passed,"reason":reason,"horizon":horizon,"raw_matching_rows":len(matching),"independent_samples":sample_count,"minimum_independent_samples":minimum,"sample_sufficiency_basis":"non_overlapping_full_horizon_forecasts_reconstructed_from_due_at","after_cost_successes":successes,"after_cost_precision":round(precision,4) if sample_count else None,"after_cost_precision_95pct_lower":round(lower,4) if sample_count else None,"after_cost_expectancy_pct":round(expectancy,6) if expectancy is not None else None,"max_forward_drawdown_pct":round(drawdown,4) if drawdown is not None else None,"modeled_round_trip_cost_bps":BACKTEST_COST_BPS*FORWARD_COST_MULTIPLIER,"deterioration":deterioration,"policy":{"non_overlapping_samples_only":True,"chronology_source":"due_at_minus_horizon","precision_95pct_lower_gte":MIN_FORWARD_PRECISION_LOWER,"expectancy_after_cost_gt_pct":0.0,"max_drawdown_lte_pct":MAX_FORWARD_DRAWDOWN_PCT,"no_active_deterioration":True,"can_authorize_by_itself":False}}
