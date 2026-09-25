@@ -121,6 +121,8 @@ def verify_admission_provenance_lock(
     admission = _load_json(
         root / "orchestration/cohorts/strategy_factory_cohort_001_canonical_admission.json"
     )
+    if _canonical_sha256_without(admission, "receipt_sha256") != admission["receipt_sha256"]:
+        raise RuntimeError("canonical admission receipt digest mismatch")
     if admission.get("receipt_sha256") != payload.get("bound_admission_receipt_sha256"):
         raise RuntimeError("canonical admission receipt identity drift")
     if admission.get("outcomes_read") is not False:

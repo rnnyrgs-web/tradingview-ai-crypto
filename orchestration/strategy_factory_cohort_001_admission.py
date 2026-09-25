@@ -354,6 +354,9 @@ def build_canonical_admission_receipt() -> dict[str, Any]:
         payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
     ).encode("utf-8")
     payload["receipt_sha256"] = hashlib.sha256(canonical).hexdigest()
+    committed = _load_json(_ROOT / "cohorts" / "strategy_factory_cohort_001_canonical_admission.json")
+    if committed != payload:
+        raise RuntimeError("canonical admission receipt regeneration mismatch")
     return payload
 
 

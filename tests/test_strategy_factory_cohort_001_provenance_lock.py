@@ -288,3 +288,35 @@ def test_every_admission_workflow_python_process_is_isolated():
     invocations = re.findall(r'\bpython\s+([^\n]+)', workflow)
     assert invocations
     assert all(command.startswith('-I ') for command in invocations)
+
+
+@pytest.mark.parametrize('self_consistent_receipt', (False, True))
+def test_production_rejects_corrupt_or_unsupported_receipt_even_with_rebound_lock(
+    monkeypatch, tmp_path, self_consistent_receipt
+):
+    from orchestration import strategy_factory_cohort_001_admission as admission
+    from orchestration import strategy_factory_cohort_001_provenance as provenance
+    lock_path = _copy_lock_fixture(tmp_path)
+    relative = 'orchestration/cohorts/strategy_factory_cohort_001_canonical_admission.json'
+    target = tmp_path / relative
+    receipt = json.loads(target.read_text())
+    receipt['stage1_cost_contract']['stress_totals_bps']['3x'] = 1.0
+    if self_consistent_receipt:
+        body = dict(receipt)
+        body.pop('receipt_sha256')
+        receipt['receipt_sha256'] = hashlib.sha256(json.dumps(body,sort_keys=True,separators=(',',':'),ensure_ascii=False).encode()).hexdigest()
+    target.write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
+    lock = json.loads(lock_path.read_text())
+    lock['bound_source_git_blobs'][relative] = provenance.git_blob_sha1(target)
+    lock['bound_admission_receipt_sha256'] = receipt['receipt_sha256']
+    lock['contract_sha256'] = _recompute_contract_digest(lock)
+    lock_path.write_text(json.dumps(lock))
+    monkeypatch.setattr(provenance, 'REPO_ROOT', tmp_path)
+    original = admission._load_json
+    monkeypatch.setattr(admission, '_load_json', lambda path: receipt if path.name == target.name else original(path))
+    if self_consistent_receipt:
+        with pytest.raises(RuntimeError, match='regeneration'):
+            admission.build_canonical_admission_receipt()
+    else:
+        with pytest.raises(RuntimeError, match='receipt digest'):
+            provenance.verify_admission_provenance_lock()
