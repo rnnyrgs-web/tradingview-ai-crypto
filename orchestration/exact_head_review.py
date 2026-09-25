@@ -294,6 +294,8 @@ def _openai_exact_head_verdict(prompt: str) -> dict[str, Any]:
             "temporarily unavailable: OpenAI reviewer returned malformed or incomplete JSON"
         ) from exc
     _validate_verdict_schema(verdict)
+    if verdict["approve"] and response.get("status") != "completed":
+        raise RuntimeError("temporarily unavailable: OpenAI reviewer response incomplete; approval withheld")
     return verdict
 
 
