@@ -61,8 +61,11 @@ def _pair_correlation(key_a, key_b, correlation_matrix):
     reverse = correlation_matrix.get((key_b, key_a))
     value = direct if direct is not None else reverse
     if value is None:
-        return 0.0
-    return max(-1.0, min(1.0, _num(value)))
+        return None
+    correlation = _num(value, None)
+    if correlation is None or not -1.0 <= correlation <= 1.0:
+        return None
+    return correlation
 
 
 def build_champion_challenger(candidates, run_history, correlation_matrix=None, max_weight=0.45):
@@ -102,9 +105,15 @@ def build_champion_challenger(candidates, run_history, correlation_matrix=None, 
     selected = []
     for row in scored:
         correlation_penalty = 1.0
+        unknown_correlation_pairs = 0
         structural_penalty = 1.0
         for chosen in selected:
-            corr = abs(_pair_correlation(row["key"], chosen["key"], correlation_matrix))
+            measured_correlation = _pair_correlation(row["key"], chosen["key"], correlation_matrix)
+            if measured_correlation is None:
+                unknown_correlation_pairs += 1
+                corr = 1.0
+            else:
+                corr = abs(measured_correlation)
             if corr >= 0.80:
                 correlation_penalty *= 0.35
             elif corr >= 0.60:
@@ -114,6 +123,8 @@ def build_champion_challenger(candidates, run_history, correlation_matrix=None, 
             if row["strategy_family"] == chosen["strategy_family"]:
                 structural_penalty *= 0.90
         row["correlation_penalty"] = max(0.15, correlation_penalty)
+        row["correlation_evidence_complete"] = unknown_correlation_pairs == 0
+        row["unknown_correlation_pairs"] = unknown_correlation_pairs
         row["structural_overlap_penalty"] = max(0.40, structural_penalty)
         row["adjusted_score"] = row["raw_score"] * row["correlation_penalty"] * row["structural_overlap_penalty"]
         selected.append(row)
