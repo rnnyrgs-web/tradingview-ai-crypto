@@ -79,12 +79,12 @@ def audit_inventory(
 ):
     """Audit one exact-prefix listing without touching prices or returns.
 
-    ``listing_complete`` must be backed by an exhaustive provider listing, not
-    a collection of successful guessed URLs.  ``receipt_semantics_verified``
-    means historical decision time can use collector receipt/public
-    availability rather than event timestamps or an estimated publication
-    delay.  ``contract_units_verified`` covers instrument and liquidation
-    quantity/notional semantics.
+    The three capability flags are structural assertions supplied by the
+    caller.  They can expose whether this inventory is internally ready for a
+    later authority check, but they cannot themselves authorize feature use.
+    Authorization requires a separately trusted, durable source-resolution
+    receipt that proves the provider listing, receipt semantics, and contract
+    units without relying on the caller's assertions.
     """
     start = _normalize_hour(start, "start")
     end = _normalize_hour(end, "end")
@@ -149,9 +149,17 @@ def audit_inventory(
     if not contract_units_verified:
         blockers.append("contract_and_notional_units_unverified")
 
+    structure_ready = not blockers
+    if structure_ready:
+        blockers.append("trusted_source_authority_required")
+
     return {
         "schema_version": 1,
-        "status": "READY_FOR_PREOUTCOME_QUANT" if not blockers else "TERMINAL_DATA_BLOCKER",
+        "status": (
+            "WAIT_TRUSTED_SOURCE_AUTHORITY"
+            if structure_ready
+            else "TERMINAL_DATA_BLOCKER"
+        ),
         "frozen_interval": {
             "start_inclusive": start.isoformat().replace("+00:00", "Z"),
             "end_exclusive": end.isoformat().replace("+00:00", "Z"),
@@ -159,6 +167,13 @@ def audit_inventory(
         "symbols": list(symbols),
         "families": list(FAMILIES),
         "listing_complete": bool(listing_complete),
+        "caller_asserted_capabilities": {
+            "listing_complete": bool(listing_complete),
+            "receipt_semantics_verified": bool(receipt_semantics_verified),
+            "contract_units_verified": bool(contract_units_verified),
+        },
+        "structure_ready": structure_ready,
+        "authorization_scope": "STRUCTURE_ONLY",
         "valid_objects": len(valid_keys),
         "invalid_objects": sum(invalid.values()),
         "invalid_reasons": dict(sorted(invalid.items())),
@@ -175,6 +190,6 @@ def audit_inventory(
         "estimated_hour_plus_15m_used_as_availability": False,
         "outcomes_inspected": False,
         "untouched_oos_opened": False,
-        "feature_authorized": not blockers,
+        "feature_authorized": False,
         "blockers": blockers,
     }

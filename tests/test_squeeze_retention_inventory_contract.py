@@ -52,8 +52,10 @@ def audit(entries, **overrides):
 def test_complete_inventory_allows_sparse_liquidation_files_without_calling_them_zero():
     report = audit(complete_two_hour_inventory())
 
-    assert report["status"] == "READY_FOR_PREOUTCOME_QUANT"
-    assert report["blockers"] == []
+    assert report["status"] == "WAIT_TRUSTED_SOURCE_AUTHORITY"
+    assert report["structure_ready"] is True
+    assert report["feature_authorized"] is False
+    assert report["blockers"] == ["trusted_source_authority_required"]
     assert report["dense_expected"] == 12
     assert report["dense_verified"] == 12
     assert report["liquidation_files_verified"] == 3
@@ -61,6 +63,27 @@ def test_complete_inventory_allows_sparse_liquidation_files_without_calling_them
     assert report["collection_unknown_liquidation_hours"] == 0
     assert report["missing_liquidation_means_zero_notional"] is False
     assert report["outcomes_inspected"] is False
+
+
+def test_caller_asserted_capabilities_cannot_self_authorize_feature_use():
+    report = audit_inventory(
+        complete_two_hour_inventory(),
+        start=START,
+        end=END,
+        symbols=SYMBOLS,
+        listing_complete=True,
+        receipt_semantics_verified=True,
+        contract_units_verified=True,
+    )
+
+    assert report["caller_asserted_capabilities"] == {
+        "listing_complete": True,
+        "receipt_semantics_verified": True,
+        "contract_units_verified": True,
+    }
+    assert report["structure_ready"] is True
+    assert report["feature_authorized"] is False
+    assert report["status"] == "WAIT_TRUSTED_SOURCE_AUTHORITY"
 
 
 def test_dense_gap_prevents_absent_liquidation_from_being_called_no_publication():

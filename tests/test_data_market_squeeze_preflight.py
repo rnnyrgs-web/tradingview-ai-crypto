@@ -57,6 +57,17 @@ def test_missing_fields_and_empty_file_are_not_zero_liquidation_evidence():
     assert "empty_file" in audit_rows([], "BTCUSDT", "liquidations")["errors"]
 
 
+@pytest.mark.parametrize("non_json", [float("nan"), float("inf"), float("-inf")])
+def test_non_json_nonfinite_row_fails_closed_without_crashing_audit(non_json):
+    report = audit_rows(
+        [row(quantity=non_json)], "BTCUSDT", "liquidations"
+    )
+
+    assert report["feature_authorized"] is False
+    assert report["errors"]["non_json_value"] == 1
+    assert report["errors"]["invalid_numeric"] == 1
+
+
 def test_oi_repeats_and_old_snapshots_are_reported_without_backdating_availability():
     old = row("open_interest", timestamp=(START_NS - 48 * HOUR_NS) // 1_000_000)
     newer_receipt = dict(old, received_time=old["received_time"] + 1_000_000_000)
