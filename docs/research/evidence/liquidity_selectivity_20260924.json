@@ -1,0 +1,355 @@
+{
+  "schema_version": 1,
+  "analysis_type": "POST_SELECTION_DESCRIPTIVE_NO_INDEPENDENT_CONFIRMATION",
+  "fingerprint_id": "DISC-LIQUIDITY-MEANREV-001-v1",
+  "contract_sha256": "19252de4464fc997632b0500fded857bc58d5bdad49d6f72e3660eba75a28b57",
+  "source_payload_sha256": "8630b22e7c2a8e0ef0e44fad2ea0fcd30395c9e2b2ef99bc08c98afb6e968f4e",
+  "source_run_id": 35420353644,
+  "strategy_status": "REJECTED_UNCHANGED",
+  "research_only": true,
+  "promotion_authority": false,
+  "trade_authority": false,
+  "untouched_oos_opened": false,
+  "genuine_forward_opened": false,
+  "score": "abs(shock_return) / trailing_sigma; formation-time intensity, not calibrated confidence",
+  "cutoff_method": "Top ceil(train_count * percent / 100) training scores; include all ties; apply same cutoff to validation. 100% means all labels.",
+  "limitations": [
+    "Both original training and validation outcomes were observed before this diagnostic; no new hypothesis test or survival gate.",
+    "Buckets are nested and dependent. No best bucket is selected and no multiplicity-adjusted significance is claimed.",
+    "Holding-interval clusters use half-open [entry, exit) intervals across assets; even disjoint clusters are not proven independent.",
+    "Equal-weight trade-label bps are not portfolio returns. Frozen cost proxies are not observed execution costs.",
+    "Subsets contain only originally executed labels. Filtering could change subsequent entry eligibility; no selective strategy is replayed.",
+    "Small and empty buckets cannot establish reliable selectivity; null means unavailable, not zero.",
+    "A stronger shock is not necessarily a stronger edge. No expected-return, uncertainty, liquidity or capacity model is fitted."
+  ],
+  "selection_intervals": {
+    "train": {
+      "start_inclusive_ms": 1746594000000,
+      "end_exclusive_ms": 1772424000000
+    },
+    "validation": {
+      "start_inclusive_ms": 1772596800000,
+      "end_exclusive_ms": 1781064000000
+    }
+  },
+  "buckets": {
+    "1": {
+      "training_score_cutoff": 9.238976735437001,
+      "train": {
+        "trade_labels": 5,
+        "coverage_fraction": 0.011764705882352941,
+        "distinct_signal_hours": 3,
+        "holding_interval_clusters": 3,
+        "mean_gross_bps": -134.17815176629566,
+        "costs_bps": {
+          "20": {
+            "mean_net_bps": -154.17815176629566,
+            "win_fraction": 0.0
+          },
+          "30": {
+            "mean_net_bps": -164.17815176629566,
+            "win_fraction": 0.0
+          },
+          "40": {
+            "mean_net_bps": -174.17815176629566,
+            "win_fraction": 0.0
+          },
+          "60": {
+            "mean_net_bps": -194.17815176629566,
+            "win_fraction": 0.0
+          }
+        }
+      },
+      "validation": {
+        "trade_labels": 0,
+        "coverage_fraction": 0.0,
+        "distinct_signal_hours": 0,
+        "holding_interval_clusters": 0,
+        "mean_gross_bps": null,
+        "costs_bps": {
+          "20": {
+            "mean_net_bps": null,
+            "win_fraction": null
+          },
+          "30": {
+            "mean_net_bps": null,
+            "win_fraction": null
+          },
+          "40": {
+            "mean_net_bps": null,
+            "win_fraction": null
+          },
+          "60": {
+            "mean_net_bps": null,
+            "win_fraction": null
+          }
+        }
+      }
+    },
+    "5": {
+      "training_score_cutoff": 6.416331373961906,
+      "train": {
+        "trade_labels": 22,
+        "coverage_fraction": 0.05176470588235294,
+        "distinct_signal_hours": 16,
+        "holding_interval_clusters": 16,
+        "mean_gross_bps": -30.36313722307363,
+        "costs_bps": {
+          "20": {
+            "mean_net_bps": -50.36313722307363,
+            "win_fraction": 0.3181818181818182
+          },
+          "30": {
+            "mean_net_bps": -60.36313722307363,
+            "win_fraction": 0.3181818181818182
+          },
+          "40": {
+            "mean_net_bps": -70.36313722307364,
+            "win_fraction": 0.3181818181818182
+          },
+          "60": {
+            "mean_net_bps": -90.36313722307364,
+            "win_fraction": 0.2727272727272727
+          }
+        }
+      },
+      "validation": {
+        "trade_labels": 2,
+        "coverage_fraction": 0.016260162601626018,
+        "distinct_signal_hours": 2,
+        "holding_interval_clusters": 2,
+        "mean_gross_bps": 8.101311347393228,
+        "costs_bps": {
+          "20": {
+            "mean_net_bps": -11.898688652606772,
+            "win_fraction": 0.5
+          },
+          "30": {
+            "mean_net_bps": -21.898688652606772,
+            "win_fraction": 0.5
+          },
+          "40": {
+            "mean_net_bps": -31.898688652606772,
+            "win_fraction": 0.5
+          },
+          "60": {
+            "mean_net_bps": -51.89868865260677,
+            "win_fraction": 0.5
+          }
+        }
+      }
+    },
+    "10": {
+      "training_score_cutoff": 5.562154224732223,
+      "train": {
+        "trade_labels": 43,
+        "coverage_fraction": 0.1011764705882353,
+        "distinct_signal_hours": 28,
+        "holding_interval_clusters": 28,
+        "mean_gross_bps": -14.1389225775882,
+        "costs_bps": {
+          "20": {
+            "mean_net_bps": -34.138922577588204,
+            "win_fraction": 0.4883720930232558
+          },
+          "30": {
+            "mean_net_bps": -44.138922577588204,
+            "win_fraction": 0.46511627906976744
+          },
+          "40": {
+            "mean_net_bps": -54.138922577588204,
+            "win_fraction": 0.3953488372093023
+          },
+          "60": {
+            "mean_net_bps": -74.1389225775882,
+            "win_fraction": 0.32558139534883723
+          }
+        }
+      },
+      "validation": {
+        "trade_labels": 9,
+        "coverage_fraction": 0.07317073170731707,
+        "distinct_signal_hours": 7,
+        "holding_interval_clusters": 7,
+        "mean_gross_bps": -4.0657283501712955,
+        "costs_bps": {
+          "20": {
+            "mean_net_bps": -24.065728350171295,
+            "win_fraction": 0.3333333333333333
+          },
+          "30": {
+            "mean_net_bps": -34.0657283501713,
+            "win_fraction": 0.3333333333333333
+          },
+          "40": {
+            "mean_net_bps": -44.0657283501713,
+            "win_fraction": 0.3333333333333333
+          },
+          "60": {
+            "mean_net_bps": -64.0657283501713,
+            "win_fraction": 0.2222222222222222
+          }
+        }
+      }
+    },
+    "20": {
+      "training_score_cutoff": 4.3942333671678675,
+      "train": {
+        "trade_labels": 85,
+        "coverage_fraction": 0.2,
+        "distinct_signal_hours": 55,
+        "holding_interval_clusters": 52,
+        "mean_gross_bps": 5.201319469421542,
+        "costs_bps": {
+          "20": {
+            "mean_net_bps": -14.798680530578459,
+            "win_fraction": 0.5176470588235295
+          },
+          "30": {
+            "mean_net_bps": -24.79868053057846,
+            "win_fraction": 0.47058823529411764
+          },
+          "40": {
+            "mean_net_bps": -34.79868053057846,
+            "win_fraction": 0.4
+          },
+          "60": {
+            "mean_net_bps": -54.79868053057846,
+            "win_fraction": 0.32941176470588235
+          }
+        }
+      },
+      "validation": {
+        "trade_labels": 35,
+        "coverage_fraction": 0.2845528455284553,
+        "distinct_signal_hours": 25,
+        "holding_interval_clusters": 25,
+        "mean_gross_bps": 14.769536731769,
+        "costs_bps": {
+          "20": {
+            "mean_net_bps": -5.230463268231,
+            "win_fraction": 0.4857142857142857
+          },
+          "30": {
+            "mean_net_bps": -15.230463268231,
+            "win_fraction": 0.45714285714285713
+          },
+          "40": {
+            "mean_net_bps": -25.230463268231,
+            "win_fraction": 0.34285714285714286
+          },
+          "60": {
+            "mean_net_bps": -45.230463268231,
+            "win_fraction": 0.2857142857142857
+          }
+        }
+      }
+    },
+    "50": {
+      "training_score_cutoff": 3.056413708758014,
+      "train": {
+        "trade_labels": 213,
+        "coverage_fraction": 0.5011764705882353,
+        "distinct_signal_hours": 140,
+        "holding_interval_clusters": 126,
+        "mean_gross_bps": -28.07932849713249,
+        "costs_bps": {
+          "20": {
+            "mean_net_bps": -48.079328497132494,
+            "win_fraction": 0.4413145539906103
+          },
+          "30": {
+            "mean_net_bps": -58.079328497132494,
+            "win_fraction": 0.4084507042253521
+          },
+          "40": {
+            "mean_net_bps": -68.0793284971325,
+            "win_fraction": 0.3568075117370892
+          },
+          "60": {
+            "mean_net_bps": -88.0793284971325,
+            "win_fraction": 0.2863849765258216
+          }
+        }
+      },
+      "validation": {
+        "trade_labels": 88,
+        "coverage_fraction": 0.7154471544715447,
+        "distinct_signal_hours": 55,
+        "holding_interval_clusters": 49,
+        "mean_gross_bps": 1.8308957610193757,
+        "costs_bps": {
+          "20": {
+            "mean_net_bps": -18.169104238980623,
+            "win_fraction": 0.4659090909090909
+          },
+          "30": {
+            "mean_net_bps": -28.169104238980623,
+            "win_fraction": 0.45454545454545453
+          },
+          "40": {
+            "mean_net_bps": -38.16910423898062,
+            "win_fraction": 0.36363636363636365
+          },
+          "60": {
+            "mean_net_bps": -58.16910423898062,
+            "win_fraction": 0.2840909090909091
+          }
+        }
+      }
+    },
+    "100": {
+      "training_score_cutoff": null,
+      "train": {
+        "trade_labels": 425,
+        "coverage_fraction": 1.0,
+        "distinct_signal_hours": 275,
+        "holding_interval_clusters": 232,
+        "mean_gross_bps": -28.870175724647293,
+        "costs_bps": {
+          "20": {
+            "mean_net_bps": -48.8701757246473,
+            "win_fraction": 0.4329411764705882
+          },
+          "30": {
+            "mean_net_bps": -58.8701757246473,
+            "win_fraction": 0.40941176470588236
+          },
+          "40": {
+            "mean_net_bps": -68.8701757246473,
+            "win_fraction": 0.37176470588235294
+          },
+          "60": {
+            "mean_net_bps": -88.8701757246473,
+            "win_fraction": 0.31058823529411766
+          }
+        }
+      },
+      "validation": {
+        "trade_labels": 123,
+        "coverage_fraction": 1.0,
+        "distinct_signal_hours": 77,
+        "holding_interval_clusters": 66,
+        "mean_gross_bps": 14.524373670662936,
+        "costs_bps": {
+          "20": {
+            "mean_net_bps": -5.475626329337064,
+            "win_fraction": 0.4634146341463415
+          },
+          "30": {
+            "mean_net_bps": -15.475626329337064,
+            "win_fraction": 0.44715447154471544
+          },
+          "40": {
+            "mean_net_bps": -25.475626329337064,
+            "win_fraction": 0.3821138211382114
+          },
+          "60": {
+            "mean_net_bps": -45.47562632933706,
+            "win_fraction": 0.3170731707317073
+          }
+        }
+      }
+    }
+  }
+}
