@@ -1,0 +1,32 @@
+{
+  "artifact_id": "2X-SURVIVORSHIP-IDENTITY-RESOLUTION-QUEUE-001-v1",
+  "parent_artifact_id": "2X-SURVIVORSHIP-METADATA-ENUMERATION-001-v1",
+  "purpose": "Convert inactive/stopped Binance Spot USDT enumeration into an unresolved identity-resolution work queue that is structurally non-authoritative for historical membership, delisting, matched controls, labels, models or prospective candidates.",
+  "frozen_semantics": {
+    "only_allowed_consumer": "IDENTITY_RESOLUTION_WORK_QUEUE_ONLY",
+    "manifest_binding": "Every work item binds the exact enumeration manifest fingerprint, retained provider-response SHA-256 and venue symbol.",
+    "collection_bounds": "Tardis availableSince/availableTo remain provider collection bounds with authority NONE and cannot become listing/delisting or decision-time membership evidence.",
+    "current_active": "Current active state has zero historical-membership authority and is not consumed.",
+    "duplicate_or_reused_symbol": "Remain unresolved until a separate timestamp-safe external identity interval is proven.",
+    "membership_boundary": "Cohort-001 member/tradable evidence must come from a separate provider-native PIT market-presence lineage bound to authenticated source proof; enumeration or queue lineage is forbidden and omitted membership provenance is not a bypass.",
+    "outcomes": "Remain sealed until a genuinely survivor-safe event/control cohort exists."
+  },
+  "authority": {
+    "identity_resolution_work_queue": true,
+    "historical_membership": false,
+    "delisting_time": false,
+    "matched_negative_control": false,
+    "label": false,
+    "cohort_snapshot": false,
+    "model": false,
+    "prospective_candidate": false,
+    "broker_trading": false,
+    "spend": false
+  },
+  "required_next_evidence": [
+    "timestamp-safe stable identity interval",
+    "provider-native PIT market-presence proof at the historical decision time",
+    "independent source-authenticity validation of the exact retained proof bytes"
+  ],
+  "broker_live_trading": "OFF"
+}

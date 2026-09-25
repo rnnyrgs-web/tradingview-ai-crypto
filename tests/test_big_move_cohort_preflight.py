@@ -244,17 +244,30 @@ def _listing_age(root, prefix, decision_at, days=500):
     )
 
 
-def _presence_pair(root, prefix, decision_at, member=True, tradable=True):
-    inp = _binance_input(
+def _presence_pair(root, prefix, decision_at, venue_symbol, member=True, tradable=True):
+    proof = _binance_proof(root, f"{prefix}/market_presence-proof", decision_at)
+    inp = _write_json(
         root,
         f"{prefix}/market_presence.json",
         {
             "schema": "binance_market_presence.v1",
+            "venue": "BINANCE_SPOT",
+            "venue_symbol": venue_symbol,
             "decision_at": decision_at,
             "member": member,
             "tradable": tradable,
+            "source_id": BINANCE,
+            "source_proof": proof,
+            "membership_provenance": {
+                "schema": "binance_market_presence_provenance.v1",
+                "source_kind": "BINANCE_PROVIDER_NATIVE_PIT_MARKET_PRESENCE",
+                "venue": "BINANCE_SPOT",
+                "venue_symbol": venue_symbol,
+                "decision_at": decision_at,
+                "source_proof_sha256": proof["sha256"],
+                "enumeration_used_as_membership_evidence": False,
+            },
         },
-        decision_at,
     )
     derivation = {
         "transform_id": "DERIVED_BINANCE_HISTORICAL_MEMBERSHIP_V1",
@@ -311,7 +324,8 @@ def _sector(root, prefix, decision_at, value="L1"):
 
 def _snapshot(root, asset, decision_at, *, liquidity_days=30):
     prefix = f"{asset}-{decision_at[:10]}"
-    member, tradable = _presence_pair(root, prefix, decision_at)
+    venue_symbol = f"{asset.upper()}USDT"
+    member, tradable = _presence_pair(root, prefix, decision_at, venue_symbol)
     identity_value = f"{asset}-identity"
     identity_proof = _primary_proof(root, f"{prefix}/identity-doc", PRIMARY, identity_value, "2020-01-01T00:00:00Z")
     price_proof = _binance_proof(root, f"{prefix}/price-proof", decision_at)
@@ -322,7 +336,7 @@ def _snapshot(root, asset, decision_at, *, liquidity_days=30):
     return {
         "stable_asset_id": asset,
         "venue": "BINANCE_SPOT",
-        "venue_symbol": f"{asset.upper()}USDT",
+        "venue_symbol": venue_symbol,
         "decision_at": decision_at,
         "identity": {
             "valid_from": "2020-01-01T00:00:00Z",
