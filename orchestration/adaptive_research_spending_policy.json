@@ -1,18 +1,23 @@
 {
-  "version": 1,
+  "version": 2,
   "purpose": "Minimize time-to-valid-alpha while preventing waste. Spend only when a measured research bottleneck cannot be solved adequately with already-owned/free resources.",
   "authority": {
     "policy_can_recommend_spend": true,
     "policy_can_purchase_or_subscribe": false,
     "user_approval_required_for_new_recurring_charge": true,
-    "user_approval_required_for_single_purchase_over_usd": 50
+    "user_approval_required_for_single_purchase_over_usd": 50,
+    "chatgpt_total_monthly_ceiling_usd": 250,
+    "chatgpt_auto_reload_allowed": false,
+    "chatgpt_automatic_plan_upgrade_allowed": false
   },
   "existing_paid_stack": {
     "chatgpt_pro": "existing_fixed_subscription",
     "supabase_pro": "existing_fixed_subscription",
     "claude": "existing_fixed_subscription",
     "openai_api_monthly_budget_usd": 30,
-    "rule": "Treat existing subscriptions as sunk baseline for routing decisions. Do not add overlapping AI subscriptions unless a measured capacity bottleneck persists after routing optimization."
+    "rule": "Treat existing subscriptions as sunk baseline for routing decisions. Do not add overlapping AI subscriptions unless a measured capacity bottleneck persists after routing optimization.",
+    "chatgpt_budget_rule": "Keep total ChatGPT subscription plus usage-credit spend <= USD 250 per month. Use included allowance first; no automatic credit reload or plan upgrade.",
+    "chatgpt_high_power_routing": "Prefer GPT-6 Astra High in Work/Codex for hard execution and GPT-6 Pro/Astra for high-value scientific adjudication, while using deterministic compute for mechanical work."
   },
   "optimization_target": [
     "validated positive after-cost expectancy",
@@ -159,9 +164,11 @@
       "identify unused or overlapping subscriptions",
       "compare actual utilization with caps",
       "downgrade/cancel resources that failed renewal criteria",
-      "reallocate freed budget to the highest-priority proven bottleneck"
+      "reallocate freed budget to the highest-priority proven bottleneck",
+      "verify total ChatGPT subscription + credit spend remains <= USD 250",
+      "verify Work Astra High, Codex Astra High and GPT-6 Pro/Astra are being used on distinct high-value tasks rather than duplicated low-value work"
     ],
-    "rule": "Never preserve a subscription solely because it may become useful later."
+    "rule": "Never preserve a subscription solely because it may become useful later. Hard constraint: do not exceed USD 250/month in total ChatGPT-related spend without a new explicit owner decision."
   },
   "reporting": {
     "lead_must_report": [
