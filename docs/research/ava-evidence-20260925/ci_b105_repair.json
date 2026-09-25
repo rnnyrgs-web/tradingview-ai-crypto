@@ -1,0 +1,59 @@
+{
+  "checked_at": "2026-09-25T08:32:31.788120+00:00",
+  "task": "AVA-DEMAND-SUPPLY-LIQUIDITY-001",
+  "pr": 866,
+  "diagnosis_comment": 5829326853,
+  "parent_head": "ed7cae271b4029a53af4c6694ab8b4e4788cdbe4",
+  "original_ci_run": 36111634073,
+  "bandit_version": "1.9.4",
+  "reproduction_time": "2026-09-25T08:31:12.231909+00:00",
+  "before_exit_code": 1,
+  "before_findings": [
+    {
+      "code": "13          'circulating_supply', 'reserve_transfers', 'reserve_balances', 'token_info']\n14 TOKEN = '0xa6c0c097741d55ecd9a3a7def3a8253fd022ceb9'\n15 RESERVE = '0x7bed1889c21d9eb3560463c14cd74fe29f2d03b6'\n",
+      "col_offset": 8,
+      "end_col_offset": 52,
+      "filename": ".\\docs\\research\\ava-evidence-20260925\\analyze_offline.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: '0xa6c0c097741d55ecd9a3a7def3a8253fd022ceb9'",
+      "line_number": 14,
+      "line_range": [
+        14
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    }
+  ],
+  "after_exit_code": 0,
+  "after_findings": [],
+  "identifier_change": "TOKEN -> AVA_CONTRACT_ADDRESS; five occurrences; exact address and identity checks unchanged",
+  "only_rename_verified_by_reverse_byte_comparison": true,
+  "code_sha256": "be1e7d9113ad587a4c14003de3bb3d9b1546e0b71d000afb6321cccf016dc095",
+  "offline_checks": {
+    "analyze_offline.py": {
+      "exit_code": 0,
+      "output_summary": "Frozen analysis reproduced without modifying evidence or results."
+    },
+    "verify_offline.py": {
+      "exit_code": 0,
+      "output_summary": "{\"mode\": \"OFFLINE_READ_ONLY\", \"checks\": 192, \"result\": \"PASS\", \"raw_hashes_verified\": 8, \"scenarios_verified\": 9, \"recovery_checkpoint_hashes_verified\": 2}"
+    }
+  },
+  "independent_checks": 192,
+  "unchanged_existing_files": 38,
+  "raw_responses_unchanged": 8,
+  "original_local_receipts_unchanged": 8,
+  "public_receipts_unchanged": 8,
+  "secret_scan": {
+    "exit_code": 0,
+    "output": "No obvious committed secrets detected."
+  },
+  "conclusion": "RESEARCH_ONLY unchanged",
+  "ci_status_at_local_validation": "Fresh exact-head CI required after push; no success asserted here"
+}

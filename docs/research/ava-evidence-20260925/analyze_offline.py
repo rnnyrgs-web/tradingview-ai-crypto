@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parent
 RAW = ROOT / 'raw'
 NAMES = ['kraken_book', 'binance_book', 'bithumb_book', 'total_supply',
          'circulating_supply', 'reserve_transfers', 'reserve_balances', 'token_info']
-TOKEN = '0xa6c0c097741d55ecd9a3a7def3a8253fd022ceb9'
+AVA_CONTRACT_ADDRESS = '0xa6c0c097741d55ecd9a3a7def3a8253fd022ceb9'
 RESERVE = '0x7bed1889c21d9eb3560463c14cd74fe29f2d03b6'
 
 def iso(seconds):
@@ -54,9 +54,9 @@ def main():
     transfers = data['reserve_transfers']
     seen, rows, inflow, outflow = set(), [], D(0), D(0)
     for item in sorted(transfers['items'], key=lambda t: (t['block_number'], t['log_index'])):
-        if not (item['token']['address_hash'].lower() == TOKEN):
+        if not (item['token']['address_hash'].lower() == AVA_CONTRACT_ADDRESS):
             raise ValueError('Invalid frozen evidence at original check line 54')
-        key = (1, TOKEN, item['transaction_hash'], item['log_index'])
+        key = (1, AVA_CONTRACT_ADDRESS, item['transaction_hash'], item['log_index'])
         if not (key not in seen):
             raise ValueError('Invalid frozen evidence at original check line 56')
         seen.add(key)
@@ -73,11 +73,11 @@ def main():
                          sender=sender, recipient=recipient, amount_ava=amount,
                          sender_labels=[t['name'] for t in (item['from'].get('metadata') or {}).get('tags', [])],
                          method=item.get('method'), reserve_contract_metadata=item['to'].get('implementations')))
-    matching = [x for x in data['reserve_balances'] if x['token']['address_hash'].lower() == TOKEN]
+    matching = [x for x in data['reserve_balances'] if x['token']['address_hash'].lower() == AVA_CONTRACT_ADDRESS]
     if not (len(matching) == 1):
         raise ValueError('Invalid frozen evidence at original check line 71')
     reserve = D(matching[0]['value']) / D(10)**int(matching[0]['token']['decimals'])
-    if not (data['token_info']['address_hash'].lower() == TOKEN):
+    if not (data['token_info']['address_hash'].lower() == AVA_CONTRACT_ADDRESS):
         raise ValueError('Invalid frozen evidence at original check line 73')
     token_supply = D(data['token_info']['total_supply']) / D(10)**int(data['token_info']['decimals'])
     total, circulating = D(data['total_supply']), D(data['circulating_supply'])
