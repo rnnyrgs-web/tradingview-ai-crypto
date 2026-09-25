@@ -34,6 +34,9 @@ def test_executor_manifest_audit_proves_current_bundle_and_change_provenance():
             "continuous_specialist_factory.py": (
                 "277fc43859f4fefb87cfb45d3cd1a1fed63b19435cbac8aaa06a4972c4c34612"
             ),
+            "money_intelligence_mission_integration.py": (
+                "ef74053c94642b7d3c3cc95d5723863e5d83c51960742c65034ce9527fe8dede"
+            ),
             "orchestration/profitability_priority.py": (
                 "508a5cf055b6cccf51141ed4c49a375cd01c721a0a0c2fe4d725580e457461fa"
             ),
@@ -51,10 +54,10 @@ def test_executor_manifest_audit_proves_current_bundle_and_change_provenance():
             ),
         },
         "change_reason": (
-            "Reject non-finite ranking inputs across mission admission, specialist "
-            "cohorts, durable queue feedback, paper-loss prioritization, and the "
-            "trusted signal-development executor; only signal_development.py changes "
-            "that executor bundle."
+            "Reject non-finite ranking inputs across mission admission, Money "
+            "Intelligence mission import, specialist cohorts, durable queue feedback, "
+            "paper-loss prioritization, and the trusted signal-development executor; "
+            "only signal_development.py changes that executor bundle."
         ),
         "dependency_paths": [
             "calibration.py",

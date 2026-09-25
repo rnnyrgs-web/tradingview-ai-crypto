@@ -274,6 +274,38 @@ def test_supported_causal_evidence_changes_actual_next_mission_ranking_surface()
     assert result["daily_lead_report"]["highest_priority_next_missions"] == result["next_missions"]
 
 
+@pytest.mark.parametrize("nonfinite", [float("nan"), float("inf"), float("-inf")])
+def test_imported_nonfinite_priority_cannot_enter_causal_mission_surfaces(nonfinite):
+    memory = _supported_memory(lanes=("big_move",))
+    base = {
+        "missions": [
+            {"mission_id": "malformed-import", "priority": nonfinite},
+            {"mission_id": "finite-import", "priority": 0.25},
+        ],
+        "next_missions": [
+            {"mission_id": "malformed-import", "priority": nonfinite},
+            {"mission_id": "finite-import", "priority": 0.25},
+        ],
+        "daily_lead_report": {"highest_priority_next_missions": []},
+    }
+
+    result = apply_causal_feedback(
+        base,
+        loader=lambda: memory,
+        as_of="2026-09-02T03:00:00Z",
+    )
+
+    assert "malformed-import" not in {
+        row["mission_id"] for row in result["missions"]
+    }
+    assert "malformed-import" not in {
+        row["mission_id"] for row in result["next_missions"]
+    }
+    assert "finite-import" in {
+        row["mission_id"] for row in result["next_missions"]
+    }
+
+
 def test_invalid_loader_type_fails_closed():
     feedback = causal_feedback(loader=lambda: object(), as_of="2026-09-02T03:00:00Z")
     assert feedback["status"] == "WAIT_CAUSAL_MEMORY_UNAVAILABLE"
