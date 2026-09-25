@@ -13,6 +13,7 @@ import asyncio
 import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from math import isfinite
 from threading import Lock
 from typing import Callable
 
@@ -82,6 +83,8 @@ def _score_band(low: float | None, high: float | None) -> Callable[[dict], bool]
         try:
             score = float(row.get("score"))
         except (TypeError, ValueError):
+            return False
+        if not isfinite(score):
             return False
         if low is not None and score < low:
             return False

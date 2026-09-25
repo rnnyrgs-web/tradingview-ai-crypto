@@ -59,3 +59,20 @@ def test_empty_ledger_fails_closed_to_awaiting_evidence():
     assert reports
     assert all(report["status"] == "awaiting_resolved_evidence" for report in reports.values())
     assert all(report["top_falsifiable_hypothesis"] is None for report in reports.values())
+
+
+def test_nonfinite_score_cannot_enter_any_mutually_exclusive_score_band():
+    row = _rows(1)[0]
+    row["score"] = float("nan")
+
+    reports = build_specialist_snapshot([row])
+
+    score_workers = (
+        "score-90-plus",
+        "score-80-89",
+        "score-70-79",
+        "score-60-69",
+        "score-below-60",
+    )
+    assert all(reports[name]["resolved_rows"] == 0 for name in score_workers)
+    assert all(reports[name]["status"] == "awaiting_resolved_evidence" for name in score_workers)
