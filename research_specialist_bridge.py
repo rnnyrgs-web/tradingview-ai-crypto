@@ -10,6 +10,7 @@ lost just to make a hypothesis dispatchable.
 from __future__ import annotations
 
 from copy import deepcopy
+from math import isfinite
 
 from continuous_specialist_factory import build_specialist_snapshot
 from research_quant_science_factory import METHOD_BY_DIMENSION
@@ -49,6 +50,33 @@ def _identity(item: dict) -> tuple[str, str, str]:
     )
 
 
+def _numeric_issue(value) -> str | None:
+    if isinstance(value, bool):
+        return "malformed"
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return "malformed"
+    return None if isfinite(number) else "nonfinite"
+
+
+def _invalid_priority_fields(item: dict) -> tuple[list[str], str | None]:
+    issues = {
+        field: _numeric_issue(item[field])
+        for field in ("priority_score", "independent_samples")
+        if field in item
+    }
+    invalid = sorted(field for field, issue in issues.items() if issue is not None)
+    if not invalid:
+        return [], None
+    reason = (
+        "nonfinite_numeric_priority"
+        if any(issues[field] == "nonfinite" for field in invalid)
+        else "malformed_numeric_priority"
+    )
+    return invalid, reason
+
+
 def enrich_diagnostics_with_specialists(rows: list[dict], diagnostics: dict) -> tuple[dict, dict]:
     """Merge safe specialist hypotheses into diagnostics without weakening scope.
 
@@ -57,7 +85,23 @@ def enrich_diagnostics_with_specialists(rows: list[dict], diagnostics: dict) -> 
     """
     enriched = deepcopy(diagnostics)
     workers = build_specialist_snapshot(rows)
-    base_priorities = [dict(item) for item in (enriched.get("research_priorities") or []) if isinstance(item, dict)]
+    base_priorities = []
+    invalid_priority_candidates: list[dict] = []
+    for index, item in enumerate(enriched.get("research_priorities") or []):
+        if not isinstance(item, dict):
+            continue
+        invalid_fields, reason = _invalid_priority_fields(item)
+        if invalid_fields:
+            invalid_priority_candidates.append({
+                "source": "diagnostics.research_priorities",
+                "source_index": index,
+                "dimension": item.get("dimension"),
+                "group": item.get("group"),
+                "invalid_fields": invalid_fields,
+                "reason": reason,
+            })
+            continue
+        base_priorities.append(dict(item))
     by_identity = {_identity(item): item for item in base_priorities}
     accepted: list[dict] = []
     deferred: list[dict] = []
@@ -74,6 +118,17 @@ def enrich_diagnostics_with_specialists(rows: list[dict], diagnostics: dict) -> 
             reason = "unsupported_experiment_dimension"
         elif candidate.get("requires_new_validation") is not True:
             reason = "not_a_fresh_validation_hypothesis"
+        invalid_fields, invalid_reason = _invalid_priority_fields(candidate)
+        if invalid_fields:
+            invalid_priority_candidates.append({
+                "source": "logical_specialist",
+                "specialist": name,
+                "dimension": dimension or None,
+                "group": candidate.get("group"),
+                "invalid_fields": invalid_fields,
+                "reason": invalid_reason,
+            })
+            reason = invalid_reason
 
         if reason:
             deferred.append({
@@ -128,8 +183,10 @@ def enrich_diagnostics_with_specialists(rows: list[dict], diagnostics: dict) -> 
         "logical_specialists_seen": len(workers),
         "accepted_candidate_count": len(accepted),
         "deferred_candidate_count": len(deferred),
+        "invalid_priority_candidate_count": len(invalid_priority_candidates),
         "accepted_candidates": accepted[:20],
         "deferred_candidates": deferred[:20],
+        "invalid_priority_candidates": invalid_priority_candidates[:20],
         "scope_loss_allowed": False,
         "automatic_strategy_mutation": False,
         "trade_authority": False,
