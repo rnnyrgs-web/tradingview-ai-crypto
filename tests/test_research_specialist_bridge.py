@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta, timezone
+import json
 
 import pytest
 
 from research_learning import learning_diagnostics
 from research_quant_science_factory import build_quant_science_queue
+import research_specialist_bridge as specialist_bridge
 from research_specialist_bridge import enrich_diagnostics_with_specialists
 
 
@@ -96,3 +98,42 @@ def test_bridge_quarantines_nonfinite_imported_priority_with_audit(nonfinite):
             "reason": "nonfinite_numeric_priority",
         }
     ]
+    json.dumps(enriched, allow_nan=False)
+    json.dumps(audit, allow_nan=False)
+
+    queue = build_quant_science_queue(enriched, {"lessons": []})
+    assert all(
+        experiment.get("group") != "INVALID"
+        for experiment in queue["experiments"]
+    )
+
+
+def test_bridge_quarantines_nonfinite_logical_specialist_before_queue(monkeypatch):
+    monkeypatch.setattr(
+        specialist_bridge,
+        "build_specialist_snapshot",
+        lambda _rows: {
+            "direction-priority": {
+                "top_falsifiable_hypothesis": {
+                    "dimension": "direction",
+                    "group": "LONG",
+                    "target_horizon": "24h",
+                    "priority_score": float("nan"),
+                    "independent_samples": 20,
+                    "requires_new_validation": True,
+                }
+            }
+        },
+    )
+
+    enriched, audit = enrich_diagnostics_with_specialists(
+        [], {"research_priorities": []}
+    )
+
+    assert enriched["research_priorities"] == []
+    assert audit["accepted_candidate_count"] == 0
+    assert audit["deferred_candidate_count"] == 1
+    assert audit["invalid_priority_candidate_count"] == 1
+    assert audit["invalid_priority_candidates"][0]["source"] == "logical_specialist"
+    assert build_quant_science_queue(enriched, {"lessons": []})["experiments"] == []
+    json.dumps(audit, allow_nan=False)
