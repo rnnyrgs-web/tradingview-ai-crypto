@@ -2,11 +2,28 @@
 
 > Legacy filename: `ASTRA_BACKGROUND_WORKER.md`. The file remains at this path so existing automation/handoff references do not break. The routing contract is now model-capability based rather than pinned to a legacy Work model name.
 
-For substantive scheduled reasoning, **prefer subscription-backed GPT-5.6 Sol with High reasoning whenever the automation runtime actually exposes that model and effort**. Do not intentionally downgrade substantive reasoning merely for speed or to consume metered API capacity.
+For substantive scheduled reasoning, **prefer the strongest appropriate subscription-backed route; for hard Work/Codex execution prefer GPT-6 Astra High when actually selectable**. Do not intentionally downgrade substantive reasoning merely for speed or to consume metered API capacity.
 
 When a task becomes a substantial multi-step research/engineering milestone, repository implementation/debugging effort, browser/computer workflow, or other job that materially benefits from a persistent cloud workspace, **route or hand off to ChatGPT Work** and continue there when available and appropriate.
 
-Mechanical/reproducible work remains deterministic. Use **Codex** for code-dominant implementation/refactor/test-debug loops when it is materially better than Work. Escalate the rare highest-stakes one-off scientific adjudication or adversarial audit to **GPT-6 Pro (powered by GPT-6 Astra)** when available. If the runtime cannot actually select the requested model/mode, use the strongest appropriate available path, checkpoint the limitation honestly in GitHub, and never claim a model/effort/Work/Codex/Pro execution that did not occur.
+Mechanical/reproducible work remains deterministic. Use **Codex** for code-dominant implementation/refactor/test-debug loops when it is materially better than Work. Use **GPT-6 Pro (powered by GPT-6 Astra)** as an active scientific/adversarial lane after meaningful evidence changes and for high-stakes hypothesis or validation decisions when available. If the runtime cannot actually select the requested model/mode, use the strongest appropriate available path, checkpoint the limitation honestly in GitHub, and never claim a model/effort/Work/Codex/Pro execution that did not occur.
+
+
+## Continuous High-Power Fleet
+
+The Lead must continuously maintain non-overlapping high-value assignments for three subscription-backed lanes whenever scientifically useful work exists:
+
+- **ChatGPT Work — GPT-6 Astra High:** substantial coherent research/engineering, deep current 2x research, multi-file implementation, backtesting milestones, browser/computer work and long CI/debug loops.
+- **Codex — GPT-6 Astra High:** code-dominant implementation, difficult debugging, scientific-data plumbing, refactors, tests and CI loops.
+- **GPT-6 Pro / Astra:** active scientific-director/adversarial lane for interpreting meaningful results, choosing materially distinct next hypotheses, resolving contradictory evidence, red-teaming strong strategy/2x claims and deciding whether expensive validation is justified.
+
+After every meaningful completion, rejection, evidence-gate transition or blocker, the Lead immediately refreshes the next assignment for the freed lane. Normal-chat suggestions do not count as successful orchestration.
+
+If the current runtime cannot directly launch one of these surfaces, it must persist an exact GitHub handoff containing the target surface, task, DONE criteria, dependencies, ownership and next action. It must never claim that Work, Codex, Pro, Astra or High reasoning ran unless they actually did.
+
+Use deterministic Python/GitHub Actions for mechanical/reproducible computation. Target >=80% of useful capacity at empirical research/results and direct blockers to those results; generic infrastructure should normally remain <=20%.
+
+**Budget:** total ChatGPT-related spend must remain <= USD 250/month. Use included subscription allowance first. Never auto-buy credits, enable auto-reload or upgrade a plan.
 
 ## Mission
 
