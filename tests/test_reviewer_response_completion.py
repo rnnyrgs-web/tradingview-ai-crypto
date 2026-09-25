@@ -17,10 +17,14 @@ def verdict(approve=True):
     }
 
 
-@pytest.mark.parametrize("stop", ["max_tokens", "model_context_window_exceeded", None, "tool_use"])
-def test_incomplete_claude_cannot_write_an_approval(tmp_path, monkeypatch, stop):
+@pytest.mark.parametrize("approve", [True, False])
+@pytest.mark.parametrize("stop", [
+    "max_tokens", "model_context_window_exceeded", "tool_use", "pause_turn",
+    "refusal", "stop_sequence", "unknown", "", None,
+])
+def test_nonterminal_claude_cannot_write_a_verdict(tmp_path, monkeypatch, stop, approve):
     monkeypatch.setattr(agent, "post_anthropic_message", lambda *a, **k: {
-        "stop_reason": stop, "content": [{"type": "text", "text": json.dumps(verdict())}],
+        "stop_reason": stop, "content": [{"type": "text", "text": json.dumps(verdict(approve))}],
     })
     output = tmp_path / "receipt.json"
     with pytest.raises(RuntimeError, match="temporarily unavailable.*incomplete"):
@@ -39,32 +43,68 @@ def test_complete_claude_verdict_preserves_all_findings(tmp_path, monkeypatch, a
     assert json.loads(output.read_text()) == expected
 
 
-def test_incomplete_but_valid_claude_rejection_is_not_erased(tmp_path, monkeypatch):
-    expected = verdict(False)
+@pytest.mark.parametrize("approve", [True, False])
+def test_missing_claude_stop_reason_cannot_write_a_verdict(tmp_path, monkeypatch, approve):
     monkeypatch.setattr(agent, "post_anthropic_message", lambda *a, **k: {
-        "stop_reason": "max_tokens", "content": [{"type": "text", "text": json.dumps(expected)}],
+        "content": [{"type": "text", "text": json.dumps(verdict(approve))}],
     })
     output = tmp_path / "receipt.json"
-    agent._review_diff_claude_adversarial("unchanged complete diff", output)
-    assert json.loads(output.read_text())["approve"] is False
+    with pytest.raises(RuntimeError, match="temporarily unavailable.*incomplete"):
+        agent._review_diff_claude_adversarial("unchanged complete diff", output)
+    assert not output.exists()
 
 
-@pytest.mark.parametrize("status", ["incomplete", "failed", "in_progress", None])
-def test_incomplete_openai_cannot_return_approval(monkeypatch, status):
+@pytest.mark.parametrize("approve", [True, False])
+@pytest.mark.parametrize("status", [
+    "incomplete", "failed", "in_progress", "queued", "cancelled", "unknown", "", None,
+])
+def test_nonterminal_openai_cannot_return_a_verdict(monkeypatch, status, approve):
     monkeypatch.setattr(review, "model_name", lambda: "test")
     monkeypatch.setattr(review, "post_response", lambda p: {
-        "status": status, "output_text": json.dumps(verdict()),
+        "status": status, "output_text": json.dumps(verdict(approve)),
     })
     with pytest.raises(RuntimeError, match="temporarily unavailable.*incomplete"):
         review._openai_exact_head_verdict("complete diff")
 
 
-def test_incomplete_but_valid_openai_rejection_is_not_erased(monkeypatch):
+@pytest.mark.parametrize("approve", [True, False])
+def test_missing_openai_status_cannot_return_a_verdict(monkeypatch, approve):
     monkeypatch.setattr(review, "model_name", lambda: "test")
     monkeypatch.setattr(review, "post_response", lambda p: {
-        "status": "incomplete", "output_text": json.dumps(verdict(False)),
+        "output_text": json.dumps(verdict(approve)),
     })
-    assert review._openai_exact_head_verdict("complete diff")["approve"] is False
+    with pytest.raises(RuntimeError, match="temporarily unavailable.*incomplete"):
+        review._openai_exact_head_verdict("complete diff")
+
+
+@pytest.mark.parametrize("approve", [True, False])
+def test_completed_openai_preserves_verdict(monkeypatch, approve):
+    expected = verdict(approve)
+    monkeypatch.setattr(review, "model_name", lambda: "test")
+    monkeypatch.setattr(review, "post_response", lambda p: {
+        "status": "completed", "output_text": json.dumps(expected),
+    })
+    assert review._openai_exact_head_verdict("complete diff") == expected
+
+
+@pytest.mark.parametrize("provider", ["openai", "claude"])
+def test_nonterminal_response_is_withheld_before_parsing(tmp_path, monkeypatch, provider):
+    output = tmp_path / "receipt.json"
+    if provider == "openai":
+        monkeypatch.setattr(review, "model_name", lambda: "test")
+        monkeypatch.setattr(review, "post_response", lambda p: {
+            "status": "failed", "output_text": '{"approve": false',
+        })
+        call = lambda: review._openai_exact_head_verdict("complete diff")
+    else:
+        monkeypatch.setattr(agent, "post_anthropic_message", lambda *a, **k: {
+            "stop_reason": "max_tokens",
+            "content": [{"type": "text", "text": '{"approve": false'}],
+        })
+        call = lambda: agent._review_diff_claude_adversarial("complete diff", output)
+    with pytest.raises(RuntimeError, match="temporarily unavailable.*response incomplete"):
+        call()
+    assert not output.exists()
 
 
 @pytest.mark.parametrize("error", [

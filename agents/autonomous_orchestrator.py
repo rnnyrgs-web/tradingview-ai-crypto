@@ -532,6 +532,9 @@ This is a writing budget, not permission to omit findings, skip analysis, or app
 an unresolved concern. Do not truncate JSON or use ellipses in place of evidence.
 """
     response = post_anthropic_message(system, user, max_tokens=2000)
+    # Provider termination is not a scientific verdict, regardless of polarity.
+    if response.get("stop_reason") != "end_turn":
+        raise RuntimeError("temporarily unavailable: Claude reviewer response incomplete; verdict withheld")
     verdict = extract_json(anthropic_response_text(response))
     if not isinstance(verdict.get("approve"), bool):
         raise RuntimeError("reviewer returned invalid approval")
@@ -540,11 +543,6 @@ an unresolved concern. Do not truncate JSON or use ellipses in place of evidence
     findings = verdict.get("falsification_findings")
     if not isinstance(findings, dict) or set(REQUIRED_FALSIFICATION_FINDINGS) - set(findings):
         raise RuntimeError("claude-adversarial reviewer omitted required falsification findings")
-    # Preserve any schema-valid rejection; never retry away a negative verdict.
-    # Approval additionally needs affirmative provider completion, even when a
-    # cut-off response happens to contain a parseable JSON object.
-    if verdict["approve"] and response.get("stop_reason") != "end_turn":
-        raise RuntimeError("temporarily unavailable: Claude reviewer response incomplete; approval withheld")
     output.write_text(json.dumps(verdict, indent=2) + "\n", encoding="utf-8")
     return 0
 
