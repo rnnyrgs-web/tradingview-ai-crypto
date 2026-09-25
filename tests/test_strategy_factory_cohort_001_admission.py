@@ -248,3 +248,21 @@ def test_public_admission_reconciles_frozen_multiplicity_membership(monkeypatch,
     monkeypatch.setattr(admission, '_qualify_common_selection_dataset', forbidden_qualification)
     with pytest.raises(RuntimeError, match='membership'):
         build_canonical_admission_receipt()
+
+@pytest.mark.parametrize(
+    "raw",
+    (
+        '{"protected": 1, "protected": 2}',
+        '{"protected": NaN}',
+        '{"protected": Infinity}',
+        '{"protected": -Infinity}',
+    ),
+)
+def test_admission_json_loader_rejects_ambiguous_or_nonstandard_json(
+    tmp_path: Path, raw: str
+) -> None:
+    path = tmp_path / "protected.json"
+    path.write_text(raw, encoding="utf-8")
+    with pytest.raises(RuntimeError):
+        admission._load_json(path)
+
