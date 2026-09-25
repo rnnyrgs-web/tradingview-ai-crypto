@@ -1,0 +1,127 @@
+{
+  "fingerprint": "EXT-BTC-WEEKLY-PERSISTENCE-001-v1",
+  "formed_at": "2026-09-25T00:13:16.079026+00:00",
+  "classification": "NEW_SOURCE_INSPIRED_RESEARCH_ONLY_HISTORICAL_SCREEN",
+  "source": {
+    "authors": "Yukun Liu and Aleh Tsyvinski",
+    "url": "https://www.nber.org/papers/w24877",
+    "doi": "10.3386/w24877",
+    "publication": "August 2018",
+    "use": "Economic motivation: own-return persistence; no published performance imported; not an exact rule replication"
+  },
+  "mechanism": "Gradual adjustment and persistent investor demand can make the sign of BTC own weekly return predict the following week. This is slow own-asset persistence, not cross-asset diffusion, relative-strength ranking, volatility breakout, liquidation reversal, or calendar-day drift.",
+  "data": {
+    "venue": "Binance",
+    "instrument": "BTCUSDT",
+    "market": "spot",
+    "interval": "1d",
+    "first_month": "2018-09",
+    "last_month": "2024-12",
+    "url_template": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1d/BTCUSDT-1d-{month}.zip",
+    "checksums": "SHA256 with exact basename; retain original zip and checksum bytes",
+    "missing": "Any missing date, malformed/duplicate/nonfinite/nonpositive price or bad checksum fails whole acquisition; no fill or interval substitution",
+    "vintage": "Presently served historical archive; historical publication/revisions and executable bid/ask not authenticated; no PIT-vintage or actual-fill claim",
+    "allowed_dates": "2018-09-01 through 2024-12-31 inclusive; never fetch 2025+"
+  },
+  "rule": {
+    "entry_first": "2019-01-07",
+    "entry_last": "2024-12-23",
+    "weekday": "Monday UTC",
+    "decision": "Sunday 00:00 UTC opening price, with a full 24-hour latency to entry",
+    "signal": "open[entry-1day] / open[entry-8days] - 1 > 0",
+    "entry": "Monday 00:00 daily open",
+    "exit": "following Monday 00:00 daily open",
+    "position": "1x long spot if signal positive, otherwise cash at zero yield",
+    "weekly_close_reopen": true,
+    "signal_parameters_searched": 1,
+    "substitution_or_tuning": false,
+    "funding_or_borrowing": false
+  },
+  "chronology": {
+    "training": "entries before 2022-01-01",
+    "validation": "entries from 2022-01-01",
+    "validation_half_boundary": "2023-07-01",
+    "unopened": "All 2025+ market data, all existing protected project datasets/OOS/forward",
+    "new_oos_authority": false,
+    "exclude_cross_boundary_entries": [
+      "2021-12-27",
+      "2023-06-26"
+    ],
+    "boundary_rule": "Every holding interval must end within its declared partition; crossing weeks excluded by calendar only before outcomes."
+  },
+  "costs": {
+    "round_trip_bps": [
+      24,
+      48,
+      72
+    ],
+    "primary": 48,
+    "base_components_bps": {
+      "taker_fees": 20,
+      "spread_slippage_allowance": 4
+    },
+    "fee_reference": "https://www.binance.com/en/fee/trading",
+    "formula": "net return = (exit_open/entry_open)*(1-c/2)/(1+c/2)-1; c=round_trip_bps/10000",
+    "notional_reference_usdt": 1000,
+    "historical_cost_validation": "Scenario model, not authenticated historical spreads/capacity; fee discounts/promotions ignored; deeper validation required"
+  },
+  "controls": {
+    "cash": "zero",
+    "always_long": "long every scheduled week at same round-trip costs",
+    "fixed_beta": "weight=training candidate active weeks/training scheduled weeks, fixed in validation; each week weight times always-long weekly net",
+    "reversal": "long if lagged weekly return <=0 on the same Monday windows",
+    "one_week_delayed": "same sign rule evaluated exactly seven days earlier, same Monday entry/exit",
+    "random_timing": "long iff int(SHA256(fingerprint|entry_date|random)[:16],16) modulo 2 == 0; fixed outcome-blind schedule"
+  },
+  "metrics": [
+    "active nonoverlapping weeks, not asserted IID",
+    "gross and net mean bps",
+    "profit factor",
+    "win fraction and quantiles",
+    "weekly-marked compounded NAV and maximum drawdown; intraday drawdown unknown",
+    "calendar-week net mean",
+    "both chronological stages and validation halves",
+    "prior 90-day own-return sign regimes, known before entry",
+    "top-one/top-five positive contribution concentration",
+    "mean excluding best event",
+    "worst-loss / positive-return-pool",
+    "4-week circular moving-block bootstrap 5000 draws seed 24877, descriptive 95% intervals for calendar net and fixed-beta excess"
+  ],
+  "gates": {
+    "min_active_training": 40,
+    "min_active_validation": 40,
+    "min_active_each_validation_half": 20,
+    "primary_48bps": "mean net>0 and PF>1 in training, validation and each validation half",
+    "72bps": "mean net>0 in training and validation",
+    "winner_veto": "48bps mean excluding best event>0 in training, validation and both validation halves",
+    "tail_veto": "48bps abs(worst loss)<=0.5*sum positive returns in each of those partitions",
+    "concentration": "top five positive returns <=0.5*sum positive returns in training and validation",
+    "incremental": "candidate calendar-week net mean > fixed_beta, reversal, random_timing in both training and validation at 48bps",
+    "delay": "reject if one_week_delayed equals/exceeds candidate calendar mean in BOTH training and validation",
+    "missing_or_underpower": "INCONCLUSIVE unless an economic falsifier independently fails; never a survivor",
+    "uncertainty": "Intervals descriptive only; no confirmatory significance/alpha grant from one retrospective screen",
+    "compounded_nav": "Net compounded return >0 at48bps in training, validation and both validation halves"
+  },
+  "multiple_testing": {
+    "new_economic_rules": 1,
+    "controls_are_not_candidates": true,
+    "prior_project_tests": "All prior tested fingerprints remain in family history; do not pretend this is first search",
+    "alpha_claim": "None; full canonical project-family admission mandatory before any formal confirmation or deep/OOS release",
+    "related_active_family": "C101_MODERATEVOL_AUTOCORR_V1 / DISC-MODERATEVOL-AUTOCORR-001-v1 already studies own-return persistence: preserve shared momentum/autocorrelation ancestry; weekly horizon, unfiltered volatility and long/cash execution differ but do not create an independent statistical family."
+  },
+  "authority": {
+    "independent_preoutcome_review_required": true,
+    "canonical_admission": false,
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false,
+    "promotion": false,
+    "broker_connected": false,
+    "trade": false,
+    "negative_result": "Preserve exact fingerprint as failed in immutable study evidence; Lead reconciliation to canonical rejected registry separately",
+    "positive_result": "Only a canonically admitted historical cheap-screen survivor; stop broad searching and seek single deep-candidate transition, fresh OOS design and actual cost qualification; do not call profitable",
+    "canonical_admission_required_before_screen": true,
+    "canonical_admission_blocker": "No registered production behavior schema, value/target contract or data-field projection for this weekly spot rule. Requires reviewed canonical support and independent execution-scope admission before acquisition/evaluation. Do not use TEST or existing incompatible schemas."
+  },
+  "next_on_failure": "No rule tuning; return to the existing ETH #790 admission path or a separately source-frozen materially different mechanism; do not reinterpret controls as discovered candidates.",
+  "status": "BLOCKED_CANONICAL_ADMISSION_NO_OUTCOMES"
+}
