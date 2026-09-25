@@ -22,6 +22,19 @@ def _finite(value):
     return number if isfinite(number) else None
 
 
+def _finite_ranking_values(row):
+    fields = (
+        "economic_harm_usd",
+        "economic_harm_score_pct",
+        "priority_score",
+        "independent_samples",
+    )
+    return all(
+        field not in row or row.get(field) is None or _finite(row.get(field)) is not None
+        for field in fields
+    )
+
+
 def _closed(rows):
     return [row for row in (rows or []) if str(row.get("status") or "").upper() == "CLOSED" and _finite(row.get("pnl_usd")) is not None]
 
@@ -142,8 +155,16 @@ def build_paper_loss_attribution(rows, *, minimum_samples=MIN_PAPER_GROUP_SAMPLE
 
 def merge_paper_priorities(diagnostics, paper_report, *, limit=20):
     merged = dict(diagnostics or {})
-    priorities = [dict(row) for row in (merged.get("research_priorities") or []) if isinstance(row, dict)]
-    priorities.extend(dict(row) for row in (paper_report.get("research_priorities") or []) if isinstance(row, dict))
+    priorities = [
+        dict(row)
+        for row in (merged.get("research_priorities") or [])
+        if isinstance(row, dict) and _finite_ranking_values(row)
+    ]
+    priorities.extend(
+        dict(row)
+        for row in (paper_report.get("research_priorities") or [])
+        if isinstance(row, dict) and _finite_ranking_values(row)
+    )
     priorities.sort(
         key=lambda row: (
             -float(row.get("economic_harm_usd") or 0.0),
