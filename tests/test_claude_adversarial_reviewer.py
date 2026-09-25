@@ -78,7 +78,7 @@ def test_claude_adversarial_review_approves_with_complete_findings(tmp_path, mon
     complete = {"approve": True, "reason": "all findings avoided", "risk": "low", "falsification_findings": FULL_FINDINGS}
 
     def fake_post(system, user, max_tokens=2000):
-        return {"content": [{"type": "text", "text": json.dumps(complete)}]}
+        return {"stop_reason": "end_turn", "content": [{"type": "text", "text": json.dumps(complete)}]}
 
     monkeypatch.setattr("agents.autonomous_orchestrator.post_anthropic_message", fake_post)
     review_diff("claude-adversarial", diff_path, output_path)

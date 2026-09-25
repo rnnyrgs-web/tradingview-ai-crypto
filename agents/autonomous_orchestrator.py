@@ -203,6 +203,23 @@ def post_response(payload: dict[str, Any]) -> dict[str, Any]:
             response: httpx.Response | None = None
             try:
                 response = client.post("https://api.openai.com/v1/responses", headers=api_headers(), json=payload)
+                if response.status_code == 429:
+                    try:
+                        body = response.json()
+                    except ValueError:
+                        body = None
+                    error = body.get("error") if isinstance(body, dict) else None
+                    if isinstance(error, dict) and (
+                        error.get("type") == "insufficient_quota"
+                        or error.get("code") in (
+                            "insufficient_quota", "credit_balance_exhausted",
+                            "organization_usage_limit_exceeded",
+                            "organization_spend_limit_exceeded", "project_spend_limit_exceeded",
+                        )
+                    ):
+                        # Do not echo provider bodies or label a spend limit as
+                        # transient capacity: retries cannot restore this access.
+                        raise RuntimeError("OpenAI quota exhausted: account/budget action required; no automatic retry")
                 if response.status_code not in retryable_statuses:
                     response.raise_for_status()
                     return response.json()
@@ -507,6 +524,12 @@ stated reason, the diff is bounded and internally coherent, it does not weaken a
 validation gate, and it makes no unsupported live-trading or promotion claim. Reject when
 evidence for any finding is insufficient to rule the problem out -- do not give the benefit of
 the doubt.
+
+Response budget: aim for at most 45 words per finding and 80 words for reason,
+within the existing 2000-token output allowance. Include every required finding;
+cite the decisive code location/evidence concisely instead of repeating the diff.
+This is a writing budget, not permission to omit findings, skip analysis, or approve
+an unresolved concern. Do not truncate JSON or use ellipses in place of evidence.
 """
     response = post_anthropic_message(system, user, max_tokens=2000)
     verdict = extract_json(anthropic_response_text(response))
@@ -517,6 +540,11 @@ the doubt.
     findings = verdict.get("falsification_findings")
     if not isinstance(findings, dict) or set(REQUIRED_FALSIFICATION_FINDINGS) - set(findings):
         raise RuntimeError("claude-adversarial reviewer omitted required falsification findings")
+    # Preserve any schema-valid rejection; never retry away a negative verdict.
+    # Approval additionally needs affirmative provider completion, even when a
+    # cut-off response happens to contain a parseable JSON object.
+    if verdict["approve"] and response.get("stop_reason") != "end_turn":
+        raise RuntimeError("temporarily unavailable: Claude reviewer response incomplete; approval withheld")
     output.write_text(json.dumps(verdict, indent=2) + "\n", encoding="utf-8")
     return 0
 

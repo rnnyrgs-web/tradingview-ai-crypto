@@ -83,7 +83,7 @@ def test_protected_diff_is_reviewed_not_rejected(tmp_path: Path, monkeypatch: py
 
     def fake_post(payload: dict[str, object]) -> dict[str, object]:
         captured.update(payload)
-        return {"output_text": '{"approve": true, "reason": "bounded", "risk": "low"}'}
+        return {"status": "completed", "output_text": '{"approve": true, "reason": "bounded", "risk": "low"}'}
 
     monkeypatch.setattr(review, "post_response", fake_post)
     monkeypatch.setattr(review, "response_text", lambda payload: str(payload["output_text"]))
