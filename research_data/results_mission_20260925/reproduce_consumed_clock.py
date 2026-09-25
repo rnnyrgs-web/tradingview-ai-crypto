@@ -1,20 +1,22 @@
 """Reproduce descriptive economics from already-consumed #815 evidence only.
 
 No archive acquisition, model fitting, new variant, admission, or OOS access.
-Run from a checkout containing the pinned PR815 commit (fetch that PR if absent).
+Supply the retained events.json.gz from the pinned PR815 commit.
 """
 import gzip
+import argparse
 import hashlib
 import json
 import statistics
-import subprocess
 from datetime import datetime, timezone
+from pathlib import Path
 
 SOURCE_SHA = '07a7912344a97e7e6369f3df9c78f5e0e65a2ace'
 EVENTS_SHA256 = 'a5c3ebe8e5799af419bb2f95411ad29c8fde406887680ee55ed2b3ec90d6ee91'
-raw = gzip.decompress(subprocess.check_output([
-    'git', 'show', SOURCE_SHA + ':research_data/btc_candle_2024/evidence/events.json.gz'
-]))
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('events_archive', type=Path)
+args = parser.parse_args()
+raw = gzip.decompress(args.events_archive.read_bytes())
 if hashlib.sha256(raw).hexdigest() != EVENTS_SHA256:
     raise ValueError('Consumed evidence identity mismatch')
 events = json.loads(raw)

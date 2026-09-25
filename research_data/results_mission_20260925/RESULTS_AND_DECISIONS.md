@@ -36,7 +36,8 @@ Reproduction command, in a repository that has the pinned source commit:
 
 ```sh
 git fetch origin refs/pull/815/head
-python research_data/results_mission_20260925/reproduce_consumed_clock.py
+git show 07a7912344a97e7e6369f3df9c78f5e0e65a2ace:research_data/btc_candle_2024/evidence/events.json.gz > /tmp/consumed-clock-events.json.gz
+python research_data/results_mission_20260925/reproduce_consumed_clock.py /tmp/consumed-clock-events.json.gz
 ```
 
 The script hard-pins the event-content SHA256 `a5c3ebe8e5799af419bb2f95411ad29c8fde406887680ee55ed2b3ec90d6ee91`. `reproduced_economics.json` retains this run's exact descriptive output. If the source commit is unavailable or bytes differ, stop; do not substitute another dataset.
