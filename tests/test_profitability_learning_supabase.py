@@ -5,6 +5,7 @@ import db
 import pytest
 
 from profitability_learning.contracts import fingerprint
+from profitability_learning.evolution import propose_successor
 from profitability_learning.memory import Memory
 from profitability_learning.runtime import (
     apply_queue_feedback,
@@ -14,7 +15,7 @@ from profitability_learning.runtime import (
 from profitability_learning.supabase_memory import SupabaseMemory
 from research_experiment_factory_runner import build_heavy_dispatch_plan
 from test_profitability_learning import experiment
-from test_profitability_learning_memory import later
+from test_profitability_learning_memory import later, successor_contract
 
 
 class Response:
@@ -169,6 +170,45 @@ def test_transport_exception_fails_closed(supabase):
 
     supabase.get = fail
     assert factory_feedback()["status"] == "WAIT_MEMORY_UNAVAILABLE"
+
+
+def test_archive_proposal_identity_is_validated_before_any_remote_append(supabase, tmp_path):
+    source = Memory(tmp_path / "source.sqlite")
+    parent = experiment([-10, -10, -10])
+    completed = source.complete(parent)
+    proposal = propose_successor(
+        source.snapshot(),
+        completed["experiment_id"],
+        successor_contract(parent),
+        economic_reason="Fresh exit mechanism with fixed predeclared evidence.",
+        falsifier="Reject when fresh after-cost replication is non-positive.",
+    )
+    source.save_proposal(proposal)
+    valid_archive = source.export()
+    forged_archive = deepcopy(valid_archive)
+    proposal_event = next(
+        row for row in forged_archive["events"] if row["kind"] == "proposal"
+    )
+    proposal_event["payload"]["ancestry"]["failure_lesson"] = "SUCCESS_LEARN"
+    proposal_event["digest"] = fingerprint(proposal_event["payload"])
+    forged_archive["sha256"] = fingerprint(forged_archive["events"])
+
+    with pytest.raises(ValueError, match="proposal identity"):
+        SupabaseMemory().import_archive(forged_archive)
+
+    assert supabase.rows == []
+    SupabaseMemory().import_archive(valid_archive)
+    SupabaseMemory().import_archive(valid_archive)
+    assert len(supabase.rows) == 2
+    assert SupabaseMemory().snapshot()["proposals"] == [proposal]
+
+    followup = later(experiment([-10, -10, -10]), 60)
+    followup["contract"] = successor_contract(parent)
+    source.complete(followup)
+    archive_with_successor = source.export()
+    SupabaseMemory().import_archive(archive_with_successor)
+    SupabaseMemory().import_archive(archive_with_successor)
+    assert len(supabase.rows) == 3
 
 
 def test_migration_is_private_append_only_and_bounded():

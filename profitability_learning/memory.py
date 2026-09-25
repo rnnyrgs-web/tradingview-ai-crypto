@@ -298,6 +298,33 @@ def _legacy_event(lesson):
     return event_id, payload
 
 
+def _validated_archive_events(archive, prior_events):
+    events = archive.get("events")
+    if archive.get("schema_version") != 1 or archive.get("sha256") != fingerprint(events):
+        raise ValueError("archive integrity mismatch")
+    from .evolution import validate_proposal
+    combined = {event["id"]: event for event in prior_events}
+    validated = []
+    for raw_event in events:
+        event = deepcopy(raw_event)
+        if (not isinstance(event, dict)
+                or event.get("digest") != fingerprint(event.get("payload"))
+                or event.get("kind") not in {"experiment", "proposal", "legacy"}):
+            raise ValueError("archive event integrity mismatch")
+        _validate_event(event.get("id"), event["kind"], event["payload"])
+        existing = combined.get(event["id"])
+        if existing is not None and (
+                existing["kind"] != event["kind"]
+                or existing["digest"] != event["digest"]):
+            raise ValueError("immutable learning artifact conflict")
+        if existing is None and event["kind"] == "proposal":
+            validate_proposal(event["payload"], _snapshot(list(combined.values())))
+        if existing is None:
+            combined[event["id"]] = event
+        validated.append(event)
+    return validated
+
+
 class Memory:
     def __init__(self, path, *, create=True):
         self.path = Path(path)
@@ -386,12 +413,8 @@ class Memory:
         return {"schema_version": 1, "events": events, "sha256": fingerprint(events), **SAFE}
 
     def import_archive(self, archive):
-        if archive.get("schema_version") != 1 or archive.get("sha256") != fingerprint(archive.get("events")):
-            raise ValueError("archive integrity mismatch")
         with self._connect() as conn:
             conn.execute("BEGIN IMMEDIATE")
-            self._read(conn)
-            for e in archive["events"]:
-                if e["digest"] != fingerprint(e["payload"]) or e["kind"] not in {"experiment", "proposal", "legacy"}:
-                    raise ValueError("archive event integrity mismatch")
+            current = self._read(conn)
+            for e in _validated_archive_events(archive, current):
                 self._insert(conn, e["id"], e["kind"], e["payload"])
