@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "objective": "Continuously maximize scientifically credible progress toward (A) finding liquid assets with unusually strong evidence of very large upside over ~90 days, especially potential 2x+ moves, and (B) discovering at least one genuinely profitable after-cost algorithmic trading strategy.",
   "invariants": {
     "github_is_source_of_truth": true,
@@ -13,7 +13,10 @@
     "adaptive_spending_policy_required": true,
     "subscription_first_for_substantive_model_work": true,
     "never_claim_unavailable_model_or_work": true,
-    "pro_escalation_for_highest_stakes_reasoning": true
+    "pro_escalation_for_highest_stakes_reasoning": true,
+    "continuous_high_power_fleet": true,
+    "chatgpt_total_monthly_ceiling_usd": 250,
+    "no_automatic_credit_purchase": true
   },
   "routes": {
     "deterministic": {
@@ -49,8 +52,8 @@
     },
     "work": {
       "executor": "chatgpt_work",
-      "model": "platform_available_strongest_appropriate",
-      "reasoning": "high_or_xhigh_when_selectable_and_justified",
+      "model": "GPT-6 Astra",
+      "reasoning": "High",
       "use_for": [
         "substantial multi-file implementation",
         "repository exploration",
@@ -61,21 +64,21 @@
         "persistent cloud workspace tasks"
       ],
       "cost_priority": 2,
-      "setup": "Route to ChatGPT Work when a persistent multi-step workspace materially improves completion quality or throughput. For the hardest scientifically important Work runs, prefer GPT-6 Astra with High/XHigh when actually selectable and justified; otherwise use the strongest appropriate available Work model. Never claim a specific Work model or effort if the runtime did not expose/select it.",
-      "preferred_model_for_hardest_jobs": "GPT-6 Astra"
+      "setup": "Active 24/7 assignment lane for substantial coherent research/engineering. Prefer GPT-6 Astra High when actually selectable. Keep one highest-value non-duplicative Work assignment ready whenever scientifically useful Work exists. If runtime cannot launch Work, persist an exact GitHub handoff instead of pretending execution.",
+      "preferred_model_for_hardest_jobs": "GPT-6 Astra High"
     },
     "codex": {
       "executor": "codex",
-      "model": "platform_available_strongest_appropriate",
-      "reasoning": "high_or_xhigh_when_selectable_and_justified",
+      "model": "GPT-6 Astra",
+      "reasoning": "High",
       "use_for": [
         "pure heavy repository coding",
         "large refactors",
         "test and debug loops"
       ],
-      "cost_priority": 3,
-      "setup": "Use Codex for code-dominant implementation/refactor/test-debug loops when materially better than Work and non-duplicative. For the hardest code/debug milestones, prefer GPT-6 Astra with High/XHigh when actually selectable and justified. Keep GitHub handoff canonical and never claim a model/effort that did not actually run.",
-      "preferred_model_for_hardest_jobs": "GPT-6 Astra"
+      "cost_priority": 2,
+      "setup": "Active 24/7 engineering lane for code-dominant implementation/debug/test loops. Prefer GPT-6 Astra High when actually selectable. Keep one highest-value non-duplicative Codex assignment ready whenever suitable work exists. If runtime cannot launch Codex, persist an exact GitHub handoff instead of pretending execution.",
+      "preferred_model_for_hardest_jobs": "GPT-6 Astra High"
     },
     "api_luna_fallback": {
       "executor": "openai_api",
@@ -129,14 +132,15 @@
       "underlying_model": "GPT-6 Astra",
       "reasoning": "pro",
       "use_for": [
-        "highest-stakes one-off scientific adjudication",
-        "final adversarial audit of a strategy before a major evidence-gate transition",
+        "active scientific-director review after meaningful strategy or 2x evidence batches",
+        "choosing among materially distinct next hypotheses when validation capacity is scarce",
+        "adversarial review of unusually strong backtest, causal, or 2x evidence",
         "resolving contradictory statistical evidence or ambiguous causal interpretation",
-        "independent red-team review of unusually strong backtest or 2x evidence",
-        "hard research-director decisions where a wrong conclusion would waste substantial validation effort"
+        "designing or falsifying the next highest-information experiment",
+        "deciding whether a candidate deserves expensive validation"
       ],
-      "cost_priority": 3,
-      "constraint": "Escalation route, not a default worker. Use only when deeper one-off reasoning is materially more valuable than another execution run. If the current runtime cannot actually invoke GPT-6 Pro, create an exact bounded Pro handoff and checkpoint that limitation; never claim Pro ran when it did not."
+      "cost_priority": 2,
+      "constraint": "Active scientific/adversarial lane, not merely a normal-chat suggestion. Keep a current bounded Pro-grade assignment ready after meaningful evidence changes. If the runtime cannot actually invoke GPT-6 Pro, persist the exact Pro handoff in GitHub and report the capability limitation only when it blocks critical-path progress; never claim Pro ran when it did not."
     }
   },
   "routing_rules": [
@@ -145,34 +149,34 @@
       "then": "deterministic"
     },
     {
-      "if": "task is mostly pure heavy coding/refactor/testing and Codex is materially better than Work for that bounded milestone",
+      "if": "task is code-dominant implementation, difficult debugging, scientific-data plumbing, refactor or repeated test/CI loop",
       "then": "codex"
     },
     {
-      "if": "task is a substantial multi-step research, engineering, repository, CI/debugging, browser/computer, or persistent-workspace milestone",
+      "if": "task is a substantial coherent multi-step research/engineering/backtesting/browser/computer/repository milestone",
       "then": "work"
     },
     {
-      "if": "task is a highest-stakes one-off scientific adjudication, adversarial audit, contradictory-evidence resolution, or major evidence-gate decision and does not primarily require a persistent execution workspace",
+      "if": "meaningful evidence has changed the scientific decision, experiments compete for scarce validation, evidence is unusually strong/contradictory, or an expensive evidence-gate decision is next",
       "then": "chatgpt_pro_astra"
     },
     {
-      "if": "task requires substantive model judgment and is not better served by Work, Codex, or Pro escalation",
+      "if": "task requires substantive model judgment and is not better served by Work, Codex or Pro",
       "then": "subscription_sol_high"
     },
     {
-      "if": "the preferred subscription-backed route is unavailable/capacity-limited, or the execution path explicitly requires API access",
-      "then": "use the least expensive sufficient API fallback, checkpoint the limitation honestly, and never imply that Work, Codex, GPT-6 Pro, Astra, or a specific reasoning effort ran when it did not"
+      "if": "preferred surface is unavailable or capacity-limited",
+      "then": "persist the exact bounded handoff in GitHub, continue non-duplicative deterministic/included work, and never pretend the requested surface/model ran"
     },
     {
-      "if": "a preferred strong route is temporarily unavailable",
-      "then": "continue non-duplicative deterministic or justified fallback work rather than stalling; preserve an exact durable handoff in GitHub"
+      "if": "a Work, Codex or Pro assignment completes or blocks",
+      "then": "Lead immediately refills that lane with the highest-value eligible non-duplicative task if one exists"
     }
   ],
   "task_selection": {
     "strategy_lane": "Follow current strategy_discovery_queue and specialist coordination. Reject->learn->record->pivot. Exactly one expensive deep candidate.",
-    "big_move_lane": "Study historical 2x+ events reached within 90 days and matched controls; convert recurring pre-move precursors into predeclared tests. Rank current liquid assets only from timestamp-defensible evidence, reporting base rates, lift and uncertainty.",
-    "arbitration": "Choose the single action with highest expected information gain/economic value that does not duplicate active work. If one lane is waiting on future evidence, advance the other lane. Before recommending paid resources, apply the adaptive spending policy and prefer the lowest-incremental-cost option that resolves the measured bottleneck while still using already-paid subscription capability fully."
+    "big_move_lane": "Study historical 2x+ events reached within 90 days and matched controls; use larger historical moves only as 2x+ cases, not separate 3x/5x/10x targets. Rank current liquid assets only from timestamp-defensible evidence, reporting base rates, lift, tradability and uncertainty.",
+    "arbitration": "Maintain non-overlapping parallel progress: one best eligible Work Astra High assignment, one best eligible Codex Astra High assignment, and one current Pro-grade scientific/adversarial assignment whenever useful work exists, plus deterministic compute. Strategy and <=90-day 2x lanes may progress concurrently. If one lane waits on review/future evidence, refill with independent work rather than idle."
   },
   "reporting": {
     "quiet_by_default": true,
@@ -186,5 +190,32 @@
       "highest-stakes Pro escalation is warranted but the active runtime cannot invoke it"
     ]
   },
-  "spending_policy": "orchestration/adaptive_research_spending_policy.json"
+  "spending_policy": "orchestration/adaptive_research_spending_policy.json",
+  "fleet_policy": {
+    "mode": "continuous_non_overlapping_refill",
+    "desired_ready_assignments_when_scientifically_useful": {
+      "work_astra_high": 1,
+      "codex_astra_high": 1,
+      "gpt6_pro_astra": 1
+    },
+    "lead_duties": [
+      "refresh assignments after every meaningful completion, rejection, evidence-gate transition, or blocker",
+      "keep Work focused on substantial coherent research/engineering",
+      "keep Codex focused on code-dominant implementation/debug/testing",
+      "keep GPT-6 Pro focused on scientific direction, adversarial interpretation, hypothesis selection and expensive-gate decisions",
+      "use deterministic compute for reproducible bulk calculations",
+      "never duplicate healthy active ownership",
+      "if a target execution surface is unavailable, persist a precise GitHub handoff rather than counting a normal chat suggestion as completed orchestration"
+    ],
+    "results_first_capacity_target": ">=80% of useful capacity on experiments, empirical evidence, falsification, current 2x research, data needed by named hypotheses, and direct blockers to those results",
+    "generic_infrastructure_target": "<=20% unless directly blocking research throughput, integrity, security or worker utilization"
+  },
+  "budget_guard": {
+    "chatgpt_total_monthly_ceiling_usd": 250,
+    "use_included_subscription_allowance_first": true,
+    "automatic_credit_reload_allowed": false,
+    "automatic_plan_upgrade_allowed": false,
+    "high_reasoning_policy": "Use Astra High/Pro on high-value reasoning or execution; use deterministic execution for mechanical work.",
+    "over_ceiling_behavior": "Do not incur extra ChatGPT spend. Checkpoint durable handoffs and continue included/free/deterministic work."
+  }
 }
