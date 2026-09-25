@@ -1,0 +1,232 @@
+name: 2x Binance Bootstrap Positive Verify
+
+on:
+  workflow_dispatch:
+    inputs:
+      archive_run_id:
+        description: "Successful canonical PIT acquisition run containing the frozen archive"
+        required: true
+        type: string
+      checksum_run_id:
+        description: "Successful canonical PIT acquisition run containing the frozen .CHECKSUM"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: 2x-binance-bootstrap-positive-verify-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  verify-positive-canary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_REPOSITORY: rnnyrgs-web/tradingview-ai-crypto
+      EXPECTED_REF: refs/heads/main
+      ACQUISITION_WORKFLOW_PATH: .github/workflows/pit-trusted-remote-acquisition.yml
+      ACQUISITION_SIGNER_WORKFLOW: rnnyrgs-web/tradingview-ai-crypto/.github/workflows/pit-trusted-remote-acquisition.yml
+      EXPECTED_VERIFIER_WORKFLOW_REF: rnnyrgs-web/tradingview-ai-crypto/.github/workflows/2x-binance-bootstrap-positive-verify.yml@refs/heads/main
+    steps:
+      - name: Refuse non-canonical verifier execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "$EXPECTED_REPOSITORY"
+          test "$GITHUB_REF" = "$EXPECTED_REF"
+          test "$GITHUB_EVENT_NAME" = "workflow_dispatch"
+          test "$GITHUB_WORKFLOW_REF" = "$EXPECTED_VERIFIER_WORKFLOW_REF"
+          [[ "${{ inputs.archive_run_id }}" =~ ^[1-9][0-9]*$ ]]
+          [[ "${{ inputs.checksum_run_id }}" =~ ^[1-9][0-9]*$ ]]
+          test "${{ inputs.archive_run_id }}" != "${{ inputs.checksum_run_id }}"
+
+      - name: Checkout exact canonical verifier source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Resolve and validate acquisition runs
+        id: runs
+        shell: bash
+        env:
+          ARCHIVE_RUN_ID: ${{ inputs.archive_run_id }}
+          CHECKSUM_RUN_ID: ${{ inputs.checksum_run_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p positive-control/archive positive-control/checksum
+
+          validate_run() {
+            local label="$1"
+            local run_id="$2"
+            local out="positive-control/$label/run.json"
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" > "$out"
+            test "$(jq -r '.id' "$out")" = "$run_id"
+            test "$(jq -r '.repository.full_name' "$out")" = "$EXPECTED_REPOSITORY"
+            test "$(jq -r '.event' "$out")" = "workflow_dispatch"
+            test "$(jq -r '.head_branch' "$out")" = "main"
+            test "$(jq -r '.path' "$out")" = "$ACQUISITION_WORKFLOW_PATH"
+            test "$(jq -r '.status' "$out")" = "completed"
+            test "$(jq -r '.conclusion' "$out")" = "success"
+            local sha attempt
+            sha="$(jq -r '.head_sha' "$out")"
+            attempt="$(jq -r '.run_attempt' "$out")"
+            [[ "$sha" =~ ^[0-9a-f]{40}$ ]]
+            [[ "$attempt" =~ ^[1-9][0-9]*$ ]]
+            printf '%s\t%s\n' "$sha" "$attempt"
+          }
+
+          read -r ARCHIVE_SHA ARCHIVE_ATTEMPT < <(validate_run archive "$ARCHIVE_RUN_ID")
+          read -r CHECKSUM_SHA CHECKSUM_ATTEMPT < <(validate_run checksum "$CHECKSUM_RUN_ID")
+          test "$ARCHIVE_SHA" = "$CHECKSUM_SHA"
+
+          echo "archive_sha=$ARCHIVE_SHA" >> "$GITHUB_OUTPUT"
+          echo "archive_attempt=$ARCHIVE_ATTEMPT" >> "$GITHUB_OUTPUT"
+          echo "checksum_sha=$CHECKSUM_SHA" >> "$GITHUB_OUTPUT"
+          echo "checksum_attempt=$CHECKSUM_ATTEMPT" >> "$GITHUB_OUTPUT"
+
+      - name: Download exact acquisition artifacts
+        shell: bash
+        env:
+          ARCHIVE_RUN_ID: ${{ inputs.archive_run_id }}
+          CHECKSUM_RUN_ID: ${{ inputs.checksum_run_id }}
+          ARCHIVE_ATTEMPT: ${{ steps.runs.outputs.archive_attempt }}
+          CHECKSUM_ATTEMPT: ${{ steps.runs.outputs.checksum_attempt }}
+        run: |
+          set -euo pipefail
+          download_exact() {
+            local label="$1"
+            local run_id="$2"
+            local attempt="$3"
+            local artifact_name="trusted-remote-acquisition-$run_id-$attempt"
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id/artifacts?per_page=100" > "positive-control/$label/artifacts.json"
+            local count
+            count="$(jq --arg name "$artifact_name" '[.artifacts[] | select(.name == $name and .expired == false)] | length' "positive-control/$label/artifacts.json")"
+            test "$count" = "1"
+            mkdir -p "positive-control/$label/download"
+            gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name "$artifact_name" --dir "positive-control/$label/download"
+            test -f "positive-control/$label/download/trusted-acquisition.tar"
+          }
+          download_exact archive "$ARCHIVE_RUN_ID" "$ARCHIVE_ATTEMPT"
+          download_exact checksum "$CHECKSUM_RUN_ID" "$CHECKSUM_ATTEMPT"
+
+      - name: Cryptographically verify GitHub artifact attestations
+        shell: bash
+        env:
+          ARCHIVE_SHA: ${{ steps.runs.outputs.archive_sha }}
+          CHECKSUM_SHA: ${{ steps.runs.outputs.checksum_sha }}
+        run: |
+          set -euo pipefail
+          verify_one() {
+            local label="$1"
+            local source_sha="$2"
+            local bundle="positive-control/$label/download/trusted-acquisition.tar"
+            gh attestation verify "$bundle" \
+              --repo "$EXPECTED_REPOSITORY" \
+              --signer-workflow "$ACQUISITION_SIGNER_WORKFLOW" \
+              --source-ref "$EXPECTED_REF" \
+              --source-digest "$source_sha" \
+              --deny-self-hosted-runners \
+              --format json > "positive-control/$label/gh-attestation-raw.json"
+            python - "$label" <<'PY'
+          import json
+          import pathlib
+          import sys
+
+          label = sys.argv[1]
+          path = pathlib.Path("positive-control") / label
+          raw = json.loads((path / "gh-attestation-raw.json").read_text(encoding="utf-8"))
+          if not isinstance(raw, list) or not raw:
+              raise SystemExit("gh attestation verify returned no verified results")
+          wrapped = {"schema": "gh_attestation_verify_output.v1", "results": raw}
+          (path / "gh-attestation-verification.json").write_text(
+              json.dumps(wrapped, sort_keys=True, separators=(",", ":")) + "\n",
+              encoding="utf-8",
+          )
+          PY
+          }
+          verify_one archive "$ARCHIVE_SHA"
+          verify_one checksum "$CHECKSUM_SHA"
+
+      - name: Build identity-bound control-plane receipts
+        shell: bash
+        env:
+          ARCHIVE_RUN_ID: ${{ inputs.archive_run_id }}
+          CHECKSUM_RUN_ID: ${{ inputs.checksum_run_id }}
+          ARCHIVE_ATTEMPT: ${{ steps.runs.outputs.archive_attempt }}
+          CHECKSUM_ATTEMPT: ${{ steps.runs.outputs.checksum_attempt }}
+          ARCHIVE_SHA: ${{ steps.runs.outputs.archive_sha }}
+          CHECKSUM_SHA: ${{ steps.runs.outputs.checksum_sha }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path("positive-control")
+          for label in ("archive", "checksum"):
+              run_id = int(os.environ[f"{label.upper()}_RUN_ID"])
+              attempt = int(os.environ[f"{label.upper()}_ATTEMPT"])
+              source_digest = os.environ[f"{label.upper()}_SHA"]
+              bundle = (root / label / "download" / "trusted-acquisition.tar").read_bytes()
+              verification = (root / label / "gh-attestation-verification.json").read_bytes()
+              payload = {
+                  "schema": "two_x_github_attestation_control_plane.v1",
+                  "repository": "rnnyrgs-web/tradingview-ai-crypto",
+                  "signer_workflow": "rnnyrgs-web/tradingview-ai-crypto/.github/workflows/pit-trusted-remote-acquisition.yml",
+                  "source_ref": "refs/heads/main",
+                  "source_digest": source_digest,
+                  "run_id": run_id,
+                  "run_attempt": attempt,
+                  "artifact_name": f"trusted-remote-acquisition-{run_id}-{attempt}",
+                  "bundle_sha256": hashlib.sha256(bundle).hexdigest(),
+                  "gh_attestation_verification_sha256": hashlib.sha256(verification).hexdigest(),
+                  "gh_attestation_verify_exit_code": 0,
+                  "deny_self_hosted_runners": True,
+              }
+              (root / label / "control-plane.json").write_text(
+                  json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n",
+                  encoding="utf-8",
+              )
+          PY
+
+      - name: Validate source-native pair and derive price-only canary
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p positive-control/result
+          python3 two_x_binance_bootstrap_positive_acceptance.py \
+            --archive-bundle positive-control/archive/download/trusted-acquisition.tar \
+            --checksum-bundle positive-control/checksum/download/trusted-acquisition.tar \
+            --archive-control-plane positive-control/archive/control-plane.json \
+            --checksum-control-plane positive-control/checksum/control-plane.json \
+            --archive-verification positive-control/archive/gh-attestation-verification.json \
+            --checksum-verification positive-control/checksum/gh-attestation-verification.json \
+            --output positive-control/result/positive-control-result.json
+          test "$(jq -r '.status' positive-control/result/positive-control-result.json)" = "PROVENANCE_BOOTSTRAP_SLICE_AUTHENTICATED_PRICE_ONLY"
+          test "$(jq -r '.scientific_authority.decision_price' positive-control/result/positive-control-result.json)" = "true"
+          test "$(jq -r '.scientific_authority.historical_universe_membership' positive-control/result/positive-control-result.json)" = "false"
+          test "$(jq -r '.scientific_authority.usd_liquidity' positive-control/result/positive-control-result.json)" = "false"
+          test "$(jq -r '.scientific_authority.strict_tradability' positive-control/result/positive-control-result.json)" = "false"
+          test "$(jq -r '.scientific_authority.prospective_candidate' positive-control/result/positive-control-result.json)" = "false"
+          test "$(jq -r '.scientific_authority.live_trading' positive-control/result/positive-control-result.json)" = "false"
+
+      - name: Attest exact positive-control result
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: positive-control/result/positive-control-result.json
+
+      - name: Upload positive-control result
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: 2x-binance-positive-control-${{ github.run_id }}-${{ github.run_attempt }}
+          path: positive-control/result/positive-control-result.json
+          if-no-files-found: error
+          retention-days: 30
