@@ -14,7 +14,7 @@
   "bound_admission_receipt_sha256": "fc7c237e67600390cca369965161ccfc555dd2bc9bebbabc83d774fafd57182a",
   "bound_multiplicity_contract_sha256": "9a7c32f8f8ea5959fbcd9b5c55707cb8a46d0a066a43a7d2db854b45c9b68e65",
   "bound_source_git_blobs": {
-    ".github/workflows/strategy_factory_cohort_001_admission.yml": "cdb0d0b52899e39293f57bce73a859d7346fd20c",
+    ".github/workflows/strategy_factory_cohort_001_admission.yml": "a80068a6b0c97a13a80bd04e449fbf1a12ad11c4",
     "orchestration/cohorts/strategy_factory_cohort_001_canonical_admission.json": "282102a44e2e02b8eece644304c3913a7412fb33",
     "orchestration/cohorts/strategy_factory_cohort_001_multiplicity_authority.json": "acda04916df05b22a063bb7682674dd2529ddb77",
     "orchestration/cohorts/strategy_factory_cohort_001_ownership_correction.json": "19e50c9a00675698968645378f6aacdd13ae2b06",
@@ -25,13 +25,14 @@
     "orchestration/strategy_behavior_schema.py": "abc0b13876645980116c333a6a2d2b2fb57f247c",
     "orchestration/strategy_behavior_value_contract.py": "24192d05110c95787108f4a3043733b18d350341",
     "orchestration/strategy_factory_cohort_001_admission.py": "841b00654b6e8591a80e47a929cc70446a0a3b94",
-    "orchestration/strategy_factory_cohort_001_provenance.py": "d2e5845fd3e231c703e4f7b48960c3aa79308601",
+    "orchestration/strategy_factory_cohort_001_provenance.py": "8d3d381fd54db8f63d6dc0b45e3ea67ca4b57fa4",
     "orchestration/strategy_predeclaration.py": "acc45aebb5ef9c9730504591da98e048ba8052de",
+    "requirements-cohort001-admission.txt": "0f82593e2f62d0ce7994a59207d9e386141e7af6",
     "strategy_dataset_preflight.py": "4e60bb186570bdb7d9aeb8ae00b60760ec0c784b"
   },
   "cohort_id": "STRATEGY-FACTORY-COHORT-001-SEED",
   "contract_id": "STRATEGY-FACTORY-COHORT-001-ADMISSION-PROVENANCE-LOCK-v1",
-  "contract_sha256": "d68c95277713b63bcc184acee0acf5f642dffadb71b5bca2e2a5d5d169d06981",
+  "contract_sha256": "d5d5e9fb31998b5765b819d57383d212e96d62052ff7cf07d6f3b5cf9366928d",
   "review_phase_closure": {
     "empirical_execution_cost": "REQUIRED_BEFORE_DEEP_VALIDATION_OR_ANY_AUTHENTICATED_PROFITABILITY_CLAIM",
     "point_in_time_dataset_provenance": "BOUND_NOW_TO_EXACT_DATASET_PREFLIGHT_RUNTIME_AND_ADMISSION_RECEIPT",
@@ -39,6 +40,6 @@
     "sample_size_and_overlap": "DEFERRED_TO_SEPARATELY_FROZEN_STAGE1_EXECUTION_AND_POWER_PREFLIGHT_BEFORE_ANY_ECONOMIC_READ"
   },
   "schema_version": 1,
-  "supersedes_terminal_reviewed_head_sha": "0e0c94ff63ac30fc6fc55a5cba57663f30f7f5d9",
-  "terminal_review_attempt_issue": 879
+  "supersedes_terminal_reviewed_head_sha": "96e00e5014b3db86ffbeb109f9826485221ec13e",
+  "terminal_review_attempt_issue": 881
 }

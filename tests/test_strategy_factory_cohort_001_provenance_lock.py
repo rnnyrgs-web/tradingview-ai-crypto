@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import fnmatch
 import json
+import re
 import shutil
 from pathlib import Path
 
@@ -29,6 +30,30 @@ SCIENTIFIC_SOURCE_PATHS = {
     "orchestration/strategy_factory_cohort_001_provenance.py",
     "strategy_dataset_preflight.py",
 }
+
+
+def test_admission_workflow_does_not_persist_checkout_credentials() -> None:
+    workflow = (ROOT / ".github/workflows/strategy_factory_cohort_001_admission.yml").read_text()
+    checkout = workflow.split("uses: actions/checkout@", 1)[1].split("- name:", 1)[0]
+    assert "persist-credentials: false" in checkout
+
+
+def test_admission_workflow_pins_action_code_and_test_dependencies() -> None:
+    workflow = (ROOT / ".github/workflows/strategy_factory_cohort_001_admission.yml").read_text()
+    actions = re.findall(r"uses:\s*([^\s]+)", workflow)
+    assert actions
+    assert all(re.fullmatch(r"[^@]+@[0-9a-f]{40}", action) for action in actions)
+    assert "--require-hashes -r requirements-cohort001-admission.txt" in workflow
+    lock = ROOT / "requirements-cohort001-admission.txt"
+    requirements = [line.strip() for line in lock.read_text().splitlines() if line.strip() and not line.startswith("#")]
+    assert requirements
+    assert all(re.fullmatch(r"[\w-]+==[\d.]+ --hash=sha256:[0-9a-f]{64}", line) for line in requirements)
+    assert lock.name in REQUIRED_SOURCE_PATHS
+
+
+def test_admission_workflow_runs_existing_protected_dataset_regressions() -> None:
+    workflow = (ROOT / ".github/workflows/strategy_factory_cohort_001_admission.yml").read_text()
+    assert "tests/test_strategy_dataset_preflight.py" in workflow.split("python -m pytest -q", 1)[1]
 
 
 def test_scientific_identity_sources_are_bound_and_trigger_focused_ci() -> None:
