@@ -17,6 +17,10 @@ HORIZON_MAP = {
 }
 PREDICTION_OUTCOME_BAR = "1H"
 MAX_PREDICTION_OUTCOME_LAG_MS = int(timedelta(hours=2).total_seconds() * 1000)
+MAX_SIGNAL_OUTCOME_LAG_MS_BY_BAR = {
+    "5m": int(timedelta(minutes=10).total_seconds() * 1000),
+    "1H": int(timedelta(hours=2).total_seconds() * 1000),
+}
 
 
 def directional_return(entry,future,direction):
@@ -24,11 +28,8 @@ def directional_return(entry,future,direction):
     return raw if direction=="LONG" else -raw
 
 
-def nearest_close(candles,target_ms):
-    for c in candles:
-        if c["ts"]>=target_ms:
-            return c["close"]
-    return candles[-1]["close"] if candles else None
+def nearest_close(candles,target_ms,max_lag_ms):
+    return close_at_or_after(candles,target_ms,max_lag_ms=max_lag_ms)
 
 
 def close_at_or_after(candles,target_ms,max_lag_ms=None):
@@ -69,7 +70,11 @@ def run_evaluation():
             ]
             for delta,pcol,rcol in checks:
                 if age>=delta and sig.get(pcol) is None:
-                    p=nearest_close(candles,int((created+delta).timestamp()*1000))
+                    p=nearest_close(
+                        candles,
+                        int((created+delta).timestamp()*1000),
+                        max_lag_ms=MAX_SIGNAL_OUTCOME_LAG_MS_BY_BAR[bar],
+                    )
                     if p is not None:
                         fields[pcol]=p
                         fields[rcol]=directional_return(entry,p,direction)
