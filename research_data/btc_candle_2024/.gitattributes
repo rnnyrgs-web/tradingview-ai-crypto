@@ -1,0 +1,2 @@
+# Preserve the original once-executed result bytes bound in consumption.json.
+evidence/result.json -text
