@@ -11,6 +11,8 @@ on:
           - BINANCE_LISTOBJECTS_V2
           - BINANCE_C101H_ARCHIVE
           - BINANCE_C101H_CHECKSUM
+          - BINANCE_2X_COHORT_BOOTSTRAP_ARCHIVE
+          - BINANCE_2X_COHORT_BOOTSTRAP_CHECKSUM
           - COMMONCRAWL_INDEX
           - COMMONCRAWL_WARC_RANGE
       prefix:
@@ -18,7 +20,7 @@ on:
         required: false
         type: string
       object_path:
-        description: "Exact frozen Binance C101-H archive/.CHECKSUM path"
+        description: "Exact frozen Binance direct-object archive/.CHECKSUM path"
         required: false
         type: string
       continuation_token:
@@ -97,6 +99,12 @@ jobs:
           if [[ "$SOURCE_KIND" == "BINANCE_C101H_ARCHIVE" || "$SOURCE_KIND" == "BINANCE_C101H_CHECKSUM" ]]; then
             test -n "$OBJECT_PATH"
             python3 c101h_binance_direct_acquisition.py \
+              --source-kind "$SOURCE_KIND" \
+              --object-path "$OBJECT_PATH" \
+              --output-dir trusted-acquisition-output
+          elif [[ "$SOURCE_KIND" == "BINANCE_2X_COHORT_BOOTSTRAP_ARCHIVE" || "$SOURCE_KIND" == "BINANCE_2X_COHORT_BOOTSTRAP_CHECKSUM" ]]; then
+            test -n "$OBJECT_PATH"
+            python3 two_x_binance_bootstrap_direct_acquisition.py \
               --source-kind "$SOURCE_KIND" \
               --object-path "$OBJECT_PATH" \
               --output-dir trusted-acquisition-output
