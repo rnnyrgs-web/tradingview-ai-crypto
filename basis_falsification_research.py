@@ -12,6 +12,7 @@ mandatory under COORD-DATA-003.
 """
 
 from config import BACKTEST_COST_BPS
+from falsification_evaluator_identity import verify_falsification_identity
 
 HOUR_MS = 60 * 60 * 1000
 PRIMARY_HORIZONS = (24, 24 * 7)
@@ -56,9 +57,9 @@ def _training_direction(examples):
     return 1 if covariance > 0 else -1
 
 
-def evaluate_basis_horizon(dataset, horizon_hours, cost_bps=BACKTEST_COST_BPS,
-                           train_fraction=0.6, min_total_samples=8,
-                           min_oos_samples=DEFAULT_MIN_OOS_SAMPLES):
+def _evaluate_basis_horizon_unbound(dataset, horizon_hours, cost_bps=BACKTEST_COST_BPS,
+                                    train_fraction=0.6, min_total_samples=8,
+                                    min_oos_samples=DEFAULT_MIN_OOS_SAMPLES):
     """Score one frozen horizon without tuning on the OOS segment.
 
     A result is not exposed as available unless the frozen chronological split
@@ -159,7 +160,24 @@ def evaluate_basis_horizon(dataset, horizon_hours, cost_bps=BACKTEST_COST_BPS,
     }
 
 
+def evaluate_basis_horizon(dataset, horizon_hours, cost_bps=BACKTEST_COST_BPS,
+                           train_fraction=0.6, min_total_samples=8,
+                           min_oos_samples=DEFAULT_MIN_OOS_SAMPLES):
+    """Evaluate only when the exact frozen contract/code identity is intact."""
+    identity = verify_falsification_identity("DATA-BASIS-001")
+    result = _evaluate_basis_horizon_unbound(
+        dataset,
+        horizon_hours,
+        cost_bps=cost_bps,
+        train_fraction=train_fraction,
+        min_total_samples=min_total_samples,
+        min_oos_samples=min_oos_samples,
+    )
+    return {**result, "falsification_identity": identity}
+
+
 def evaluate_primary_horizons(dataset, cost_bps=BACKTEST_COST_BPS):
+    identity = verify_falsification_identity("DATA-BASIS-001")
     return {
         "research_only": True,
         "candidate_id": "DATA-BASIS-001",
@@ -169,4 +187,5 @@ def evaluate_primary_horizons(dataset, cost_bps=BACKTEST_COST_BPS):
         },
         "promotion_authority": False,
         "production_authority": False,
+        "falsification_identity": identity,
     }
