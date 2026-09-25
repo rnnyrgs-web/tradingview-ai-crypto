@@ -1,0 +1,12 @@
+{
+  "research_id":"CURRENT-2X-20260925-052000Z",
+  "information_cutoff_utc":"2026-09-25T05:20:00Z",
+  "reference_horizon_end_utc":"2026-12-24T05:20:00Z",
+  "status":"NON_AUTHORITATIVE_RESEARCH_ONLY",
+  "base_main_sha":"1860f917c829ee5db4f4cd36404bf9702b6b680a",
+  "target_multiple":2,
+  "maximum_horizon_days":90,
+  "selection":"Broad current liquid crypto discovery; investigate no more than 10 and surface no more than 5. No historical outcome access. No calibrated probabilities.",
+  "clock_policy":"Cutoff fixed before current-market retrieval. Record provider as-of and actual retrieval time separately. Post-cutoff observations excluded from cutoff claims. Undated or stale quotes cannot become frozen current reference prices. This file is a local precommitment, not trusted prospective formation.",
+  "authority":{"prediction":false,"promotion":false,"paper":false,"broker":false,"live_trading":false}
+}

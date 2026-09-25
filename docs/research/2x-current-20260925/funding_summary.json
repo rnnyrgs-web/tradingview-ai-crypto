@@ -1,0 +1,83 @@
+[
+  {
+    "coin": "AAVE",
+    "n": 336,
+    "last_time": 1790312400040,
+    "last_rate_decimal": "0.0000125",
+    "last_premium_decimal": "0.0000166832",
+    "last7_sum_pct": 0.27441888000000003,
+    "prior7_sum_pct": 0.16487713
+  },
+  {
+    "coin": "ENA",
+    "n": 336,
+    "last_time": 1790312400040,
+    "last_rate_decimal": "0.0000125",
+    "last_premium_decimal": "0.0000637458",
+    "last7_sum_pct": 0.46642414,
+    "prior7_sum_pct": 0.19629024
+  },
+  {
+    "coin": "HYPE",
+    "n": 336,
+    "last_time": 1790312400040,
+    "last_rate_decimal": "0.0000125",
+    "last_premium_decimal": "0.0001868509",
+    "last7_sum_pct": 0.26890212999999996,
+    "prior7_sum_pct": 0.14144472000000002
+  },
+  {
+    "coin": "ONDO",
+    "n": 336,
+    "last_time": 1790312400040,
+    "last_rate_decimal": "0.0000388506",
+    "last_premium_decimal": "0.000810805",
+    "last7_sum_pct": 0.68299051,
+    "prior7_sum_pct": 0.20722099
+  },
+  {
+    "coin": "TAO",
+    "n": 336,
+    "last_time": 1790312400040,
+    "last_rate_decimal": "0.0000125",
+    "last_premium_decimal": "0.0005353077",
+    "last7_sum_pct": 0.70915211,
+    "prior7_sum_pct": 0.17105276
+  },
+  {
+    "coin": "SUI",
+    "n": 336,
+    "last_time": 1790312400040,
+    "last_rate_decimal": "0.0000125",
+    "last_premium_decimal": "0.0005506741",
+    "last7_sum_pct": 0.43102054,
+    "prior7_sum_pct": 0.18096587
+  },
+  {
+    "coin": "AVAX",
+    "n": 336,
+    "last_time": 1790312400040,
+    "last_rate_decimal": "0.0000125",
+    "last_premium_decimal": "0.0000622882",
+    "last7_sum_pct": 0.35808775000000004,
+    "prior7_sum_pct": -0.07886497
+  },
+  {
+    "coin": "NEAR",
+    "n": 336,
+    "last_time": 1790312400040,
+    "last_rate_decimal": "0.0000125",
+    "last_premium_decimal": "-0.0003287172",
+    "last7_sum_pct": 0.64642104,
+    "prior7_sum_pct": 0.22271822
+  },
+  {
+    "coin": "ETHFI",
+    "n": 336,
+    "last_time": 1790312400040,
+    "last_rate_decimal": "0.0000125",
+    "last_premium_decimal": "0.0002761557",
+    "last7_sum_pct": 0.34311219,
+    "prior7_sum_pct": 0.21303127
+  }
+]

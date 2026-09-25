@@ -1,0 +1,833 @@
+{
+  "research_id": "CURRENT-2X-20260925-052000Z",
+  "status": "NON_AUTHORITATIVE_RESEARCH_ONLY",
+  "counts": {
+    "investigated": 10,
+    "discovery_pool": 10,
+    "potential_2x": 0,
+    "strong_candidate": 0,
+    "promotion_grade": 0,
+    "validated_prediction": 0
+  },
+  "candidates": [
+    {
+      "asset": "AVA",
+      "information_cutoff_utc": "2026-09-25T05:20:00Z",
+      "reference": {
+        "provider": "Kraken AVAUSD five-minute completed candle close",
+        "source_as_of_utc": "2026-09-25T05:20:00Z",
+        "usd": 0.2596
+      },
+      "reference_target_2x_usd": 0.5192,
+      "tier": "DISCOVERY_POOL",
+      "calibrated_probability": null,
+      "probability_status": "CALIBRATED PROBABILITY UNAVAILABLE",
+      "valuation": {
+        "reported_market_cap_usd": null,
+        "scheduled_gross_supply_tokens": 74373863,
+        "scheduled_supply_value_proxy_usd": 19307454.8348,
+        "same_supply_2x_incremental_value_proxy_usd": 19307454.8348,
+        "circulating_supply_tokens": null,
+        "max_supply_tokens": 100000000,
+        "fdv_usd": 25960000.0
+      },
+      "market_structure": {
+        "reference_completed_day_close": 0.2556,
+        "returns_pct": {
+          "7": -2.850627137970352,
+          "30": 22.063037249283667,
+          "60": 57.389162561576356,
+          "90": 47.66031195840554
+        },
+        "rv30_annualized_pct": 216.75915867579965,
+        "rv7_over_rv30": 0.5403394313927675,
+        "atr14_pct": 20.081600715403535,
+        "kraken_adv30_usd": 146050.34690484783,
+        "kraken_median_dv30_usd": 43284.938188322994,
+        "kraken_mean_volume7_over_prior23": 1.3736778758676893,
+        "prior20_day_high_excluding_latest_day": 0.4899,
+        "prior20_day_low_excluding_latest_day": 0.1467,
+        "latest_day_high": 0.2659,
+        "latest_day_low": 0.2494,
+        "range7_pct": 29.733959311424115,
+        "range30_pct": 134.27230046948358,
+        "distance_from_90d_low_pct": 74.23312883435582,
+        "excess_return_percentage_points": {
+          "XBT": {
+            "7": -13.361033818362422,
+            "30": 14.585461315701174,
+            "60": 28.24255866728127,
+            "90": 7.0485390969109645
+          },
+          "ETH": {
+            "7": -12.742912055405121,
+            "30": 12.045227992564266,
+            "60": 19.826773581965718,
+            "90": -22.801167948981288
+          }
+        },
+        "ninety_day_daily_log_return_correlation": {
+          "XBT": 0.2014157572127222,
+          "ETH": 0.20826808183554438
+        }
+      },
+      "hyperliquid_funding": null,
+      "rejection_reason": "New discretionary buyback, but three repeated monthly matches barely exceed scheduled November issuance; available float and executable depth unverified; prior listing spike already happened.",
+      "authority": {
+        "prediction": false,
+        "promotion": false,
+        "paper": false,
+        "broker": false,
+        "live_trading": false
+      }
+    },
+    {
+      "asset": "AAVE",
+      "information_cutoff_utc": "2026-09-25T05:20:00Z",
+      "reference": {
+        "provider": "CoinMarketCap quote tool",
+        "source_as_of_utc": "2026-09-25T05:19:00.000Z",
+        "usd": 145.0739433253982
+      },
+      "reference_target_2x_usd": 290.1478866507964,
+      "tier": "DISCOVERY_POOL",
+      "calibrated_probability": null,
+      "probability_status": "CALIBRATED PROBABILITY UNAVAILABLE",
+      "valuation": {
+        "reported_market_cap_usd": 2238352802.66,
+        "same_supply_2x_incremental_market_value_usd": 2238352802.66,
+        "circulating_supply_tokens": 15429047.77628887,
+        "total_supply_tokens": 16000000.0,
+        "max_supply_tokens": null,
+        "fdv_usd": 2321183093.21,
+        "reported_aggregate_volume24h_usd": 322467767.2084037
+      },
+      "market_structure": {
+        "reference_completed_day_close": 146.85,
+        "returns_pct": {
+          "7": 14.306842064295155,
+          "30": 16.436726926736434,
+          "60": 44.87963693764798,
+          "90": 54.6440606571188
+        },
+        "rv30_annualized_pct": 72.4686657513807,
+        "rv7_over_rv30": 1.3579345752003855,
+        "atr14_pct": 6.738654603823144,
+        "kraken_adv30_usd": 2490421.211068373,
+        "kraken_median_dv30_usd": 1981367.376835565,
+        "kraken_mean_volume7_over_prior23": 2.0533723143229703,
+        "prior20_day_high_excluding_latest_day": 155.15,
+        "prior20_day_low_excluding_latest_day": 113.16,
+        "latest_day_high": 147.65,
+        "latest_day_low": 134.69,
+        "range7_pct": 18.99897854954035,
+        "range30_pct": 28.59380320054478,
+        "distance_from_90d_low_pct": 82.0379323168464,
+        "excess_return_percentage_points": {
+          "XBT": {
+            "7": 3.796435383903086,
+            "30": 8.95915099315394,
+            "60": 15.733033043352894,
+            "90": 14.032287795624221
+          },
+          "ETH": {
+            "7": 4.414557146860387,
+            "30": 6.4189176700170325,
+            "60": 7.317247958037342,
+            "90": -15.817419250268031
+          }
+        },
+        "ninety_day_daily_log_return_correlation": {
+          "XBT": 0.7058594314444683,
+          "ETH": 0.6686732423085974
+        }
+      },
+      "hyperliquid_funding": {
+        "coin": "AAVE",
+        "n": 336,
+        "last_time": 1790312400040,
+        "last_rate_decimal": "0.0000125",
+        "last_premium_decimal": "0.0000166832",
+        "last7_sum_pct": 0.27441888000000003,
+        "prior7_sum_pct": 0.16487713
+      },
+      "rejection_reason": "Verified business growth is insufficient evidence for a new doubling; executed current buyback rate and incremental value capture require reconciliation.",
+      "authority": {
+        "prediction": false,
+        "promotion": false,
+        "paper": false,
+        "broker": false,
+        "live_trading": false
+      }
+    },
+    {
+      "asset": "HYPE",
+      "information_cutoff_utc": "2026-09-25T05:20:00Z",
+      "reference": {
+        "provider": "CoinMarketCap quote tool",
+        "source_as_of_utc": "2026-09-25T05:19:00.000Z",
+        "usd": 91.65117311110296
+      },
+      "reference_target_2x_usd": 183.30234622220593,
+      "tier": "DISCOVERY_POOL",
+      "calibrated_probability": null,
+      "probability_status": "CALIBRATED PROBABILITY UNAVAILABLE",
+      "valuation": {
+        "reported_market_cap_usd": 23026124394.17,
+        "same_supply_2x_incremental_market_value_usd": 23026124394.17,
+        "circulating_supply_tokens": 251236548.45378295,
+        "total_supply_tokens": 951428762.4114996,
+        "max_supply_tokens": 951428762.4114996,
+        "fdv_usd": 87199562206.66,
+        "reported_aggregate_volume24h_usd": 1260258254.049398
+      },
+      "market_structure": {
+        "reference_completed_day_close": 92.14,
+        "returns_pct": {
+          "7": 8.298072402444756,
+          "30": 15.69563033651431,
+          "60": 54.57138064083207,
+          "90": 43.29704510108865
+        },
+        "rv30_annualized_pct": 72.91051959281019,
+        "rv7_over_rv30": 1.0238940159528276,
+        "atr14_pct": 5.427300071320038,
+        "kraken_adv30_usd": 16909077.10482144,
+        "kraken_median_dv30_usd": 17734947.539500393,
+        "kraken_mean_volume7_over_prior23": 1.393935923564367,
+        "prior20_day_high_excluding_latest_day": 98.02,
+        "prior20_day_low_excluding_latest_day": 75.11,
+        "latest_day_high": 94.87,
+        "latest_day_low": 89.88,
+        "range7_pct": 14.163229867592792,
+        "range30_pct": 24.8643368786629,
+        "distance_from_90d_low_pct": 80.31311154598826,
+        "excess_return_percentage_points": {
+          "XBT": {
+            "7": -2.2123342779473134,
+            "30": 8.218054402931816,
+            "60": 25.42477674653698,
+            "90": 2.6852722395940702
+          },
+          "ETH": {
+            "7": -1.5942125149900122,
+            "30": 5.677821079794908,
+            "60": 17.00899166122143,
+            "90": -27.164434806298182
+          }
+        },
+        "ninety_day_daily_log_return_correlation": {
+          "XBT": 0.635290499367569,
+          "ETH": 0.7151057541504459
+        }
+      },
+      "hyperliquid_funding": {
+        "coin": "HYPE",
+        "n": 336,
+        "last_time": 1790312400040,
+        "last_rate_decimal": "0.0000125",
+        "last_premium_decimal": "0.0001868509",
+        "last7_sum_pct": 0.26890212999999996,
+        "prior7_sum_pct": 0.14144472000000002
+      },
+      "rejection_reason": "Strongest measured fee-to-token mechanism, but $23.03bn incremental valuation and uncertain float/unlocks overwhelm a mechanical 90-day buyback-only explanation.",
+      "authority": {
+        "prediction": false,
+        "promotion": false,
+        "paper": false,
+        "broker": false,
+        "live_trading": false
+      }
+    },
+    {
+      "asset": "ENA",
+      "information_cutoff_utc": "2026-09-25T05:20:00Z",
+      "reference": {
+        "provider": "CoinMarketCap quote tool",
+        "source_as_of_utc": "2026-09-25T05:20:00.000Z",
+        "usd": 0.2203220638356124
+      },
+      "reference_target_2x_usd": 0.4406441276712248,
+      "tier": "DISCOVERY_POOL",
+      "calibrated_probability": null,
+      "probability_status": "CALIBRATED PROBABILITY UNAVAILABLE",
+      "valuation": {
+        "reported_market_cap_usd": 2224220085.07,
+        "same_supply_2x_incremental_market_value_usd": 2224220085.07,
+        "circulating_supply_tokens": 10095312500.0,
+        "total_supply_tokens": 15000000000.0,
+        "max_supply_tokens": 15000000000.0,
+        "fdv_usd": 3304830957.53,
+        "reported_aggregate_volume24h_usd": 657626340.1700503
+      },
+      "market_structure": {
+        "reference_completed_day_close": 0.2245,
+        "returns_pct": {
+          "7": 45.30744336569579,
+          "30": 56.773743016759795,
+          "60": 148.3407079646018,
+          "90": 183.10214375788146
+        },
+        "rv30_annualized_pct": 128.9138115924833,
+        "rv7_over_rv30": 1.1879459436209425,
+        "atr14_pct": 8.717785555202036,
+        "kraken_adv30_usd": 4401119.782753183,
+        "kraken_median_dv30_usd": 3475110.660588122,
+        "kraken_mean_volume7_over_prior23": 1.98061383623273,
+        "prior20_day_high_excluding_latest_day": 0.2305,
+        "prior20_day_low_excluding_latest_day": 0.1348,
+        "latest_day_high": 0.2267,
+        "latest_day_low": 0.1994,
+        "range7_pct": 34.69933184855234,
+        "range30_pct": 42.628062360801785,
+        "distance_from_90d_low_pct": 219.80056980056983,
+        "excess_return_percentage_points": {
+          "XBT": {
+            "7": 34.79703668530372,
+            "30": 49.2961670831773,
+            "60": 119.19410407030671,
+            "90": 142.49037089638688
+          },
+          "ETH": {
+            "7": 35.415158448261025,
+            "30": 46.75593376004039,
+            "60": 110.77831898499116,
+            "90": 112.64066385049463
+          }
+        },
+        "ninety_day_daily_log_return_correlation": {
+          "XBT": 0.6024765182067272,
+          "ETH": 0.5444653408204801
+        }
+      },
+      "hyperliquid_funding": {
+        "coin": "ENA",
+        "n": 336,
+        "last_time": 1790312400040,
+        "last_rate_decimal": "0.0000125",
+        "last_premium_decimal": "0.0000637458",
+        "last7_sum_pct": 0.46642414,
+        "prior7_sum_pct": 0.19629024
+      },
+      "rejection_reason": "USDe supply is below proposed fee-switch activation; unlock disclosures conflict; price has already more than doubled over 90 days.",
+      "authority": {
+        "prediction": false,
+        "promotion": false,
+        "paper": false,
+        "broker": false,
+        "live_trading": false
+      }
+    },
+    {
+      "asset": "ONDO",
+      "information_cutoff_utc": "2026-09-25T05:20:00Z",
+      "reference": {
+        "provider": "CoinMarketCap quote tool",
+        "source_as_of_utc": "2026-09-25T05:20:00.000Z",
+        "usd": 0.5351879411421486
+      },
+      "reference_target_2x_usd": 1.0703758822842973,
+      "tier": "DISCOVERY_POOL",
+      "calibrated_probability": null,
+      "probability_status": "CALIBRATED PROBABILITY UNAVAILABLE",
+      "valuation": {
+        "reported_market_cap_usd": 2606007043.71,
+        "same_supply_2x_incremental_market_value_usd": 2606007043.71,
+        "circulating_supply_tokens": 4869330647.0,
+        "total_supply_tokens": 10000000000.0,
+        "max_supply_tokens": 10000000000.0,
+        "fdv_usd": 5351879411.42,
+        "reported_aggregate_volume24h_usd": 978964783.4067738
+      },
+      "market_structure": {
+        "reference_completed_day_close": 0.52189,
+        "returns_pct": {
+          "7": 40.228927640594335,
+          "30": 43.415773564165974,
+          "60": 28.887187592610886,
+          "90": 64.72760558045579
+        },
+        "rv30_annualized_pct": 112.16131617363484,
+        "rv7_over_rv30": 1.6519652467868513,
+        "atr14_pct": 7.19253920503226,
+        "kraken_adv30_usd": 2593266.28205646,
+        "kraken_median_dv30_usd": 1391238.343007611,
+        "kraken_mean_volume7_over_prior23": 5.242041402549651,
+        "prior20_day_high_excluding_latest_day": 0.46363,
+        "prior20_day_low_excluding_latest_day": 0.32305,
+        "latest_day_high": 0.52914,
+        "latest_day_low": 0.40727,
+        "range7_pct": 30.094464350725257,
+        "range30_pct": 39.489164383299176,
+        "distance_from_90d_low_pct": 73.0806221603157,
+        "excess_return_percentage_points": {
+          "XBT": {
+            "7": 29.718520960202266,
+            "30": 35.93819763058348,
+            "60": -0.25941630168420104,
+            "90": 24.115832718961208
+          },
+          "ETH": {
+            "7": 30.336642723159567,
+            "30": 33.39796430744657,
+            "60": -8.675201386999753,
+            "90": -5.733874326931044
+          }
+        },
+        "ninety_day_daily_log_return_correlation": {
+          "XBT": 0.5295708290798825,
+          "ETH": 0.5342901809351197
+        }
+      },
+      "hyperliquid_funding": {
+        "coin": "ONDO",
+        "n": 336,
+        "last_time": 1790312400040,
+        "last_rate_decimal": "0.0000388506",
+        "last_premium_decimal": "0.000810805",
+        "last7_sum_pct": 0.68299051,
+        "prior7_sum_pct": 0.20722099
+      },
+      "rejection_reason": "New portfolio product buys underlying securities; required direct ONDO token demand is not established; launch rally already occurred.",
+      "authority": {
+        "prediction": false,
+        "promotion": false,
+        "paper": false,
+        "broker": false,
+        "live_trading": false
+      }
+    },
+    {
+      "asset": "ETHFI",
+      "information_cutoff_utc": "2026-09-25T05:20:00Z",
+      "reference": {
+        "provider": "CoinMarketCap quote tool",
+        "source_as_of_utc": "2026-09-25T05:19:00.000Z",
+        "usd": 0.6722127750558464
+      },
+      "reference_target_2x_usd": 1.3444255501116928,
+      "tier": "DISCOVERY_POOL",
+      "calibrated_probability": null,
+      "probability_status": "CALIBRATED PROBABILITY UNAVAILABLE",
+      "valuation": {
+        "reported_market_cap_usd": 648920602.4,
+        "same_supply_2x_incremental_market_value_usd": 648920602.4,
+        "circulating_supply_tokens": 965350000.0,
+        "total_supply_tokens": 1000000000.0,
+        "max_supply_tokens": 1000000000.0,
+        "fdv_usd": 672212775.06,
+        "reported_aggregate_volume24h_usd": 37276580.96807308
+      },
+      "market_structure": {
+        "reference_completed_day_close": 0.6788,
+        "returns_pct": {
+          "7": 8.573256557901466,
+          "30": 21.86714542190302,
+          "60": 58.33916491719149,
+          "90": 90.88863892013497
+        },
+        "rv30_annualized_pct": 104.67817903763307,
+        "rv7_over_rv30": 1.355381779928936,
+        "atr14_pct": 10.738488088222914,
+        "kraken_adv30_usd": 317873.5812204981,
+        "kraken_median_dv30_usd": 232952.75990049602,
+        "kraken_mean_volume7_over_prior23": 1.2816724231401917,
+        "prior20_day_high_excluding_latest_day": 0.7792,
+        "prior20_day_low_excluding_latest_day": 0.5535,
+        "latest_day_high": 0.6846,
+        "latest_day_low": 0.6434,
+        "range7_pct": 22.95226870948734,
+        "range30_pct": 38.715380082498534,
+        "distance_from_90d_low_pct": 119.17985146916372,
+        "excess_return_percentage_points": {
+          "XBT": {
+            "7": -1.9371501224906034,
+            "30": 14.389569488320529,
+            "60": 29.192561022896403,
+            "90": 50.27686605864039
+          },
+          "ETH": {
+            "7": -1.319028359533302,
+            "30": 11.84933616518362,
+            "60": 20.77677593758085,
+            "90": 20.427159012748135
+          }
+        },
+        "ninety_day_daily_log_return_correlation": {
+          "XBT": 0.48157835198383075,
+          "ETH": 0.5407152933649673
+        }
+      },
+      "hyperliquid_funding": {
+        "coin": "ETHFI",
+        "n": 336,
+        "last_time": 1790312400040,
+        "last_rate_decimal": "0.0000125",
+        "last_premium_decimal": "0.0002761557",
+        "last7_sum_pct": 0.34311219,
+        "prior7_sum_pct": 0.21303127
+      },
+      "rejection_reason": "Smaller valuation and growing revenue, but fee routing, actual buybacks and circulation/vesting disclosures conflict.",
+      "authority": {
+        "prediction": false,
+        "promotion": false,
+        "paper": false,
+        "broker": false,
+        "live_trading": false
+      }
+    },
+    {
+      "asset": "TAO",
+      "information_cutoff_utc": "2026-09-25T05:20:00Z",
+      "reference": {
+        "provider": "CoinMarketCap quote tool",
+        "source_as_of_utc": "2026-09-25T05:19:00.000Z",
+        "usd": 298.4165512227716
+      },
+      "reference_target_2x_usd": 596.8331024455432,
+      "tier": "DISCOVERY_POOL",
+      "calibrated_probability": null,
+      "probability_status": "CALIBRATED PROBABILITY UNAVAILABLE",
+      "valuation": {
+        "reported_market_cap_usd": 3446698953.16,
+        "same_supply_2x_incremental_market_value_usd": 3446698953.16,
+        "circulating_supply_tokens": 11549959.07244083,
+        "total_supply_tokens": 21000000.0,
+        "max_supply_tokens": 21000000.0,
+        "fdv_usd": 6266747575.68,
+        "reported_aggregate_volume24h_usd": 371649767.2459628
+      },
+      "market_structure": {
+        "reference_completed_day_close": 296.6109,
+        "returns_pct": {
+          "7": 27.73472977948699,
+          "30": 29.437534720146363,
+          "60": 48.8793800099383,
+          "90": 38.5379043245498
+        },
+        "rv30_annualized_pct": 113.67179473377354,
+        "rv7_over_rv30": 1.519993959846111,
+        "atr14_pct": 7.533185732553995,
+        "kraken_adv30_usd": 10217113.53893143,
+        "kraken_median_dv30_usd": 7658268.39825843,
+        "kraken_mean_volume7_over_prior23": 2.6004363347127915,
+        "prior20_day_high_excluding_latest_day": 342.0,
+        "prior20_day_low_excluding_latest_day": 213.2597,
+        "latest_day_high": 304.1262,
+        "latest_day_low": 278.1605,
+        "range7_pct": 37.363293122403796,
+        "range30_pct": 43.40376567415425,
+        "distance_from_90d_low_pct": 61.709114203546456,
+        "excess_return_percentage_points": {
+          "XBT": {
+            "7": 17.22432309909492,
+            "30": 21.95995878656387,
+            "60": 19.732776115643215,
+            "90": -2.0738685369447794
+          },
+          "ETH": {
+            "7": 17.842444862052222,
+            "30": 19.419725463426964,
+            "60": 11.316991030327664,
+            "90": -31.92357558283703
+          }
+        },
+        "ninety_day_daily_log_return_correlation": {
+          "XBT": 0.7209783219936694,
+          "ETH": 0.6251276007937089
+        }
+      },
+      "hyperliquid_funding": {
+        "coin": "TAO",
+        "n": 336,
+        "last_time": 1790312400040,
+        "last_rate_decimal": "0.0000125",
+        "last_premium_decimal": "0.0005353077",
+        "last7_sum_pct": 0.70915211,
+        "prior7_sum_pct": 0.17105276
+      },
+      "rejection_reason": "AI narrative and momentum lack verified incremental paid-usage-to-token-demand evidence; no upcoming halving established in this horizon.",
+      "authority": {
+        "prediction": false,
+        "promotion": false,
+        "paper": false,
+        "broker": false,
+        "live_trading": false
+      }
+    },
+    {
+      "asset": "SUI",
+      "information_cutoff_utc": "2026-09-25T05:20:00Z",
+      "reference": {
+        "provider": "CoinMarketCap quote tool",
+        "source_as_of_utc": "2026-09-25T05:19:00.000Z",
+        "usd": 1.0122066129831773
+      },
+      "reference_target_2x_usd": 2.0244132259663545,
+      "tier": "DISCOVERY_POOL",
+      "calibrated_probability": null,
+      "probability_status": "CALIBRATED PROBABILITY UNAVAILABLE",
+      "valuation": {
+        "reported_market_cap_usd": 4146541990.06,
+        "same_supply_2x_incremental_market_value_usd": 4146541990.06,
+        "circulating_supply_tokens": 4096537146.5409594,
+        "total_supply_tokens": 10000000000.0,
+        "max_supply_tokens": 10000000000.0,
+        "fdv_usd": 10122066129.83,
+        "reported_aggregate_volume24h_usd": 915163111.2916691
+      },
+      "market_structure": {
+        "reference_completed_day_close": 1.0143,
+        "returns_pct": {
+          "7": 36.93803159173754,
+          "30": 33.95404120443739,
+          "60": 40.46530951391774,
+          "90": 45.44020648121594
+        },
+        "rv30_annualized_pct": 91.99692317882894,
+        "rv7_over_rv30": 1.4625960107408464,
+        "atr14_pct": 7.159758313263194,
+        "kraken_adv30_usd": 10218238.2880573,
+        "kraken_median_dv30_usd": 7679165.32329291,
+        "kraken_mean_volume7_over_prior23": 2.910012829179533,
+        "prior20_day_high_excluding_latest_day": 1.0821,
+        "prior20_day_low_excluding_latest_day": 0.673,
+        "latest_day_high": 1.0308,
+        "latest_day_low": 0.9356,
+        "range7_pct": 34.082618554668244,
+        "range30_pct": 40.33323474317264,
+        "distance_from_90d_low_pct": 59.55639452571966,
+        "excess_return_percentage_points": {
+          "XBT": {
+            "7": 26.42762491134547,
+            "30": 26.476465270854895,
+            "60": 11.318705619622651,
+            "90": 4.828433619721359
+          },
+          "ETH": {
+            "7": 27.045746674302773,
+            "30": 23.936231947717985,
+            "60": 2.9029205343071,
+            "90": -25.021273426170893
+          }
+        },
+        "ninety_day_daily_log_return_correlation": {
+          "XBT": 0.7839839975593179,
+          "ETH": 0.7279391081976181
+        }
+      },
+      "hyperliquid_funding": {
+        "coin": "SUI",
+        "n": 336,
+        "last_time": 1790312400040,
+        "last_rate_decimal": "0.0000125",
+        "last_premium_decimal": "0.0005506741",
+        "last7_sum_pct": 0.43102054,
+        "prior7_sum_pct": 0.18096587
+      },
+      "rejection_reason": "Large remaining supply, discretionary releases and a documented wallet distribution headwind; no verified exceptional paid-usage catalyst.",
+      "authority": {
+        "prediction": false,
+        "promotion": false,
+        "paper": false,
+        "broker": false,
+        "live_trading": false
+      }
+    },
+    {
+      "asset": "AVAX",
+      "information_cutoff_utc": "2026-09-25T05:20:00Z",
+      "reference": {
+        "provider": "CoinMarketCap quote tool",
+        "source_as_of_utc": "2026-09-25T05:19:00.000Z",
+        "usd": 10.203703428686504
+      },
+      "reference_target_2x_usd": 20.407406857373008,
+      "tier": "DISCOVERY_POOL",
+      "calibrated_probability": null,
+      "probability_status": "CALIBRATED PROBABILITY UNAVAILABLE",
+      "valuation": {
+        "reported_market_cap_usd": 4520822032.11,
+        "same_supply_2x_incremental_market_value_usd": 4520822032.11,
+        "circulating_supply_tokens": 443056980.6052376,
+        "total_supply_tokens": 469725780.6052376,
+        "max_supply_tokens": 715748719.0,
+        "fdv_usd": 7303287658.14,
+        "reported_aggregate_volume24h_usd": 574341332.8204294
+      },
+      "market_structure": {
+        "reference_completed_day_close": 10.206,
+        "returns_pct": {
+          "7": 34.16589982910476,
+          "30": 39.2740174672489,
+          "60": 51.559251559251564,
+          "90": 54.28571428571427
+        },
+        "rv30_annualized_pct": 101.92807357501475,
+        "rv7_over_rv30": 1.8572731807987728,
+        "atr14_pct": 7.71394977744184,
+        "kraken_adv30_usd": 4302926.537491834,
+        "kraken_median_dv30_usd": 1576347.823899046,
+        "kraken_mean_volume7_over_prior23": 9.642526787150894,
+        "prior20_day_high_excluding_latest_day": 11.791,
+        "prior20_day_low_excluding_latest_day": 7.171,
+        "latest_day_high": 10.693,
+        "latest_day_low": 9.975,
+        "range7_pct": 41.485400744660005,
+        "range30_pct": 46.74701156182638,
+        "distance_from_90d_low_pct": 71.32784958871916,
+        "excess_return_percentage_points": {
+          "XBT": {
+            "7": 23.65549314871269,
+            "30": 31.79644153366641,
+            "60": 22.412647664956477,
+            "90": 13.673941424219691
+          },
+          "ETH": {
+            "7": 24.27361491166999,
+            "30": 29.2562082105295,
+            "60": 13.996862579640926,
+            "90": -16.17576562167256
+          }
+        },
+        "ninety_day_daily_log_return_correlation": {
+          "XBT": 0.5239696402636203,
+          "ETH": 0.5310597555921933
+        }
+      },
+      "hyperliquid_funding": {
+        "coin": "AVAX",
+        "n": 336,
+        "last_time": 1790312400040,
+        "last_rate_decimal": "0.0000125",
+        "last_premium_decimal": "0.0000622882",
+        "last7_sum_pct": 0.35808775000000004,
+        "prior7_sum_pct": -0.07886497
+      },
+      "rejection_reason": "Extreme recent volume acceleration with rising volatility; network adoption does not translate one-for-one into AVAX demand.",
+      "authority": {
+        "prediction": false,
+        "promotion": false,
+        "paper": false,
+        "broker": false,
+        "live_trading": false
+      }
+    },
+    {
+      "asset": "NEAR",
+      "information_cutoff_utc": "2026-09-25T05:20:00Z",
+      "reference": {
+        "provider": "CoinMarketCap quote tool",
+        "source_as_of_utc": "2026-09-25T05:19:00.000Z",
+        "usd": 4.496138236352841
+      },
+      "reference_target_2x_usd": 8.992276472705681,
+      "tier": "DISCOVERY_POOL",
+      "calibrated_probability": null,
+      "probability_status": "CALIBRATED PROBABILITY UNAVAILABLE",
+      "valuation": {
+        "reported_market_cap_usd": 5877541405.79,
+        "same_supply_2x_incremental_market_value_usd": 5877541405.79,
+        "circulating_supply_tokens": 1307242148.0,
+        "total_supply_tokens": 1307242148.0,
+        "max_supply_tokens": null,
+        "fdv_usd": 5877541405.79,
+        "reported_aggregate_volume24h_usd": 1656040261.3626244
+      },
+      "market_structure": {
+        "reference_completed_day_close": 4.5879,
+        "returns_pct": {
+          "7": 45.962713158564526,
+          "30": 146.84708920692998,
+          "60": 149.66804527644757,
+          "90": 155.13847180513847
+        },
+        "rv30_annualized_pct": 129.62377998430827,
+        "rv7_over_rv30": 1.2396929135737684,
+        "atr14_pct": 10.36982372887689,
+        "kraken_adv30_usd": 12851505.02025834,
+        "kraken_median_dv30_usd": 8172379.141460294,
+        "kraken_mean_volume7_over_prior23": 5.056239091595807,
+        "prior20_day_high_excluding_latest_day": 4.8017,
+        "prior20_day_low_excluding_latest_day": 1.9052,
+        "latest_day_high": 4.8118,
+        "latest_day_low": 4.0929,
+        "range7_pct": 37.96072277076658,
+        "range30_pct": 66.09124000087185,
+        "distance_from_90d_low_pct": 198.76921073196146,
+        "excess_return_percentage_points": {
+          "XBT": {
+            "7": 35.45230647817246,
+            "30": 139.36951327334748,
+            "60": 120.52144138215249,
+            "90": 114.52669894364388
+          },
+          "ETH": {
+            "7": 36.07042824112976,
+            "30": 136.82927995021058,
+            "60": 112.10565629683694,
+            "90": 84.67699189775163
+          }
+        },
+        "ninety_day_daily_log_return_correlation": {
+          "XBT": 0.49287631242665436,
+          "ETH": 0.5097421331008272
+        }
+      },
+      "hyperliquid_funding": {
+        "coin": "NEAR",
+        "n": 336,
+        "last_time": 1790312400040,
+        "last_rate_decimal": "0.0000125",
+        "last_premium_decimal": "-0.0003287172",
+        "last7_sum_pct": 0.64642104,
+        "prior7_sum_pct": 0.22271822
+      },
+      "rejection_reason": "Already more than doubled over 30 days; new integration has no quantified incremental token demand sufficient for another doubling.",
+      "authority": {
+        "prediction": false,
+        "promotion": false,
+        "paper": false,
+        "broker": false,
+        "live_trading": false
+      }
+    }
+  ],
+  "revenue_comparison": {
+    "aave": {
+      "last30_revenue_usd": 5016103,
+      "prior30_revenue_usd": 4294337,
+      "change_pct": 16.807390756710518,
+      "last30_holders_revenue_as_reported_usd": 0,
+      "last_day_start_utc": "2026-09-24T00:00:00+00:00"
+    },
+    "hyperliquid": {
+      "last30_revenue_usd": 58712784,
+      "prior30_revenue_usd": 46610303,
+      "change_pct": 25.965248498813654,
+      "last30_holders_revenue_as_reported_usd": 58712784,
+      "last_day_start_utc": "2026-09-24T00:00:00+00:00"
+    },
+    "ether.fi": {
+      "last30_revenue_usd": 3744511,
+      "prior30_revenue_usd": 3078798,
+      "change_pct": 21.622496831555683,
+      "last30_holders_revenue_as_reported_usd": 0,
+      "last_day_start_utc": "2026-09-24T00:00:00+00:00"
+    }
+  },
+  "USDe": {
+    "latest_supply_usd": 4898864964.289968,
+    "source_as_of_unix": 1790294400,
+    "thirty_day_growth_pct": 20.21225488223717,
+    "growth_required_to_7_5bn_pct": 53.09668779749752
+  },
+  "AVA_scenario": {
+    "monthly_incremental_tokens_if_initial_pace_repeats": 369881.04,
+    "three_month_scenario_tokens": 1109643.1199999999,
+    "november_1_scheduled_issuance_tokens": 1083073,
+    "scenario_excess_buybacks_over_issuance_tokens": 26570.11999999988,
+    "scenario_excess_as_gross_supply_pct": 0.03572507723580242,
+    "warning": "Scenario, not committed demand or verified free-float contraction; issuer-controlled release schedule and custody promises are not cryptographic locks."
+  }
+}

@@ -1,0 +1,2034 @@
+{
+  "receipt": {
+    "provider_url": "https://api.hyperliquid.xyz/info",
+    "request": {
+      "type": "fundingHistory",
+      "coin": "ETHFI",
+      "startTime": 1789104000000,
+      "endTime": 1790313600000
+    },
+    "retrieval_started_at": "2026-09-25T05:26:20.784140+00:00",
+    "status": 200,
+    "server_date": "Fri, 25 Sep 2026 05:26:22 GMT",
+    "retrieval_completed_at": "2026-09-25T05:26:21.876342+00:00",
+    "sha256": "939e55998d7a0b12c58e7b9367aa47f24845c9072c9099bd85017b1000e8b9de"
+  },
+  "rows": [
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002451399",
+      "time": 1789106400042
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003432962",
+      "time": 1789110000124
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002612255",
+      "time": 1789113600085
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001511502",
+      "time": 1789117200037
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001524871",
+      "time": 1789120800021
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000654913",
+      "time": 1789124400046
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000860993",
+      "time": 1789128000006
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000888276",
+      "time": 1789131600057
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001974708",
+      "time": 1789135200020
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001511368",
+      "time": 1789138800047
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000998995",
+      "time": 1789142400047
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000040515",
+      "time": 1789146000028
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003384395",
+      "time": 1789149600021
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000115972",
+      "time": 1789153200011
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000879022",
+      "time": 1789156800017
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000565846",
+      "time": 1789160400000
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000306874",
+      "time": 1789164000041
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000891764",
+      "time": 1789167600007
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000136563",
+      "time": 1789171200064
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000302229",
+      "time": 1789174800041
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000264949",
+      "time": 1789178400023
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000946428",
+      "time": 1789182000036
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000215019",
+      "time": 1789185600037
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000938292",
+      "time": 1789189200028
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.000045496",
+      "time": 1789192800003
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000001399",
+      "time": 1789196400009
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000143337",
+      "time": 1789200000039
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000167991",
+      "time": 1789203600059
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000337227",
+      "time": 1789207200014
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000012342",
+      "time": 1789210800059
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000631575",
+      "time": 1789214400037
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000546182",
+      "time": 1789218000041
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000085006",
+      "time": 1789221600000
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000399331",
+      "time": 1789225200104
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000355666",
+      "time": 1789228800001
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000001273",
+      "time": 1789232400043
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000052797",
+      "time": 1789236000008
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000084115",
+      "time": 1789239600008
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000720108",
+      "time": 1789243200022
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000244249",
+      "time": 1789246800010
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000339101",
+      "time": 1789250400013
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000024074",
+      "time": 1789254000043
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000074199",
+      "time": 1789257600049
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000002123",
+      "time": 1789261200026
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001353493",
+      "time": 1789264800029
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003608295",
+      "time": 1789268400061
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000151912",
+      "time": 1789272000042
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000140282",
+      "time": 1789275600117
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000044526",
+      "time": 1789279200007
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000037242",
+      "time": 1789282800041
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000469554",
+      "time": 1789286400020
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000796818",
+      "time": 1789290000029
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001933186",
+      "time": 1789293600008
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "-0.0000102812",
+      "premium": "-0.0005822498",
+      "time": 1789297200026
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000105266",
+      "time": 1789300800053
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000361851",
+      "time": 1789304400019
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000346387",
+      "time": 1789308000107
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000113635",
+      "time": 1789311600038
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000061702",
+      "time": 1789315200070
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000454266",
+      "time": 1789318800040
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000041639",
+      "time": 1789322400042
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000050857",
+      "time": 1789326000020
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000624017",
+      "time": 1789329600000
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000090644",
+      "time": 1789333200020
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000351863",
+      "time": 1789336800010
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000117524",
+      "premium": "-0.0004059808",
+      "time": 1789340400023
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000145074",
+      "time": 1789344000068
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001230266",
+      "time": 1789347600018
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001267799",
+      "time": 1789351200022
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001231827",
+      "time": 1789354800024
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000781737",
+      "time": 1789358400022
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000737151",
+      "time": 1789362000040
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001781276",
+      "time": 1789365600057
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001058316",
+      "time": 1789369200040
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000011058",
+      "time": 1789372800034
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000082939",
+      "time": 1789376400007
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000173776",
+      "time": 1789380000021
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000001293",
+      "time": 1789383600121
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000113494",
+      "time": 1789387200046
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000003008",
+      "time": 1789390800014
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000013516",
+      "time": 1789394400028
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001054884",
+      "time": 1789398000030
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001191719",
+      "time": 1789401600030
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000407622",
+      "time": 1789405200041
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000577423",
+      "time": 1789408800060
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000090488",
+      "time": 1789412400016
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000433713",
+      "time": 1789416000079
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.00014303",
+      "time": 1789419600027
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.000193376",
+      "time": 1789423200047
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.00003735",
+      "time": 1789426800132
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000093372",
+      "time": 1789430400024
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000055321",
+      "time": 1789434000042
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000638306",
+      "time": 1789437600052
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002534736",
+      "time": 1789441200097
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000814916",
+      "time": 1789444800037
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001164995",
+      "time": 1789448400016
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002147553",
+      "time": 1789452000003
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000981613",
+      "time": 1789455600083
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002437624",
+      "time": 1789459200008
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003959131",
+      "time": 1789462800049
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002478106",
+      "time": 1789466400030
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000409777",
+      "time": 1789470000036
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000259333",
+      "time": 1789473600039
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000134686",
+      "time": 1789477200117
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000586026",
+      "time": 1789480800005
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001766241",
+      "time": 1789484400050
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000206667",
+      "time": 1789488000014
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000600306",
+      "time": 1789491600014
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000652704",
+      "time": 1789495200017
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.00032579",
+      "time": 1789498800047
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000128716",
+      "time": 1789502400033
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000240707",
+      "time": 1789506000077
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000130404",
+      "time": 1789509600043
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000063923",
+      "time": 1789513200062
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000352198",
+      "time": 1789516800021
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000210294",
+      "time": 1789520400024
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000198649",
+      "time": 1789524000058
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000112043",
+      "time": 1789527600035
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000068688",
+      "time": 1789531200018
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000152008",
+      "time": 1789534800004
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000078349",
+      "time": 1789538400081
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000930688",
+      "time": 1789542000026
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000131657",
+      "time": 1789545600035
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002169455",
+      "time": 1789549200091
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000282886",
+      "time": 1789552800004
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000171406",
+      "time": 1789556400029
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000039316",
+      "time": 1789560000079
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000340852",
+      "time": 1789563600018
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.000007535",
+      "time": 1789567200013
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000100317",
+      "time": 1789570800012
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000070064",
+      "time": 1789574400037
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000065537",
+      "time": 1789578000112
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000151607",
+      "time": 1789581600011
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000933175",
+      "time": 1789585200054
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000416203",
+      "time": 1789588800091
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000159941",
+      "time": 1789592400031
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000113123",
+      "time": 1789596000002
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001144198",
+      "time": 1789599600022
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001821401",
+      "time": 1789603200048
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001157877",
+      "time": 1789606800065
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001523323",
+      "time": 1789610400031
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000120538",
+      "time": 1789614000045
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001508866",
+      "time": 1789617600038
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000766187",
+      "time": 1789621200068
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000010101",
+      "time": 1789624800010
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000538109",
+      "time": 1789628400016
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000234805",
+      "time": 1789632000011
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000294471",
+      "time": 1789635600001
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000408574",
+      "time": 1789639200041
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000024219",
+      "time": 1789642800058
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000033137",
+      "time": 1789646400058
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000563479",
+      "time": 1789650000018
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000489477",
+      "time": 1789653600029
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.000006222",
+      "time": 1789657200000
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000804041",
+      "time": 1789660800021
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002380348",
+      "time": 1789664400089
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000858139",
+      "time": 1789668000043
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001533285",
+      "time": 1789671600007
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000259045",
+      "time": 1789675200068
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000505885",
+      "time": 1789678800016
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000089361",
+      "time": 1789682400006
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000009223",
+      "time": 1789686000018
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000657989",
+      "time": 1789689600005
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001673526",
+      "time": 1789693200106
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.00005599",
+      "premium": "0.0009479201",
+      "time": 1789696800015
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000228515",
+      "premium": "0.0006828119",
+      "time": 1789700400050
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005263794",
+      "time": 1789704000030
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003526873",
+      "time": 1789707600009
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000742143",
+      "time": 1789711200035
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001168545",
+      "time": 1789714800058
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001399772",
+      "time": 1789718400019
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001334831",
+      "time": 1789722000028
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000765197",
+      "time": 1789725600041
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003550241",
+      "time": 1789729200059
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.000131569",
+      "time": 1789732800005
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001691718",
+      "time": 1789736400054
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000458292",
+      "premium": "0.0008666337",
+      "time": 1789740000014
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002891134",
+      "time": 1789743600019
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003612546",
+      "time": 1789747200023
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.000312731",
+      "time": 1789750800033
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002188594",
+      "time": 1789754400069
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002310819",
+      "time": 1789758000083
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001959253",
+      "time": 1789761600036
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002170912",
+      "time": 1789765200033
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.00009535",
+      "time": 1789768800024
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002696317",
+      "time": 1789772400009
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003283714",
+      "time": 1789776000048
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004906579",
+      "time": 1789779600049
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005244963",
+      "time": 1789783200035
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005627934",
+      "time": 1789786800051
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004823994",
+      "time": 1789790400012
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003214463",
+      "time": 1789794000045
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003564282",
+      "time": 1789797600067
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003230441",
+      "time": 1789801200050
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003838165",
+      "time": 1789804800095
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005966138",
+      "time": 1789808400016
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000496944",
+      "premium": "0.0008975555",
+      "time": 1789812000053
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000807458",
+      "premium": "0.0011459667",
+      "time": 1789815600055
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000288991",
+      "premium": "0.0007311926",
+      "time": 1789819200053
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000347849",
+      "premium": "0.0007782794",
+      "time": 1789822800026
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000661963",
+      "premium": "0.0010295707",
+      "time": 1789826400022
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.000062682",
+      "premium": "0.001001456",
+      "time": 1789830000035
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000586275",
+      "premium": "0.0009690202",
+      "time": 1789833600032
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000461421",
+      "premium": "0.0008691364",
+      "time": 1789837200015
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000301999",
+      "premium": "0.0007415994",
+      "time": 1789840800037
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005238792",
+      "time": 1789844400030
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.000474683",
+      "time": 1789848000021
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005206765",
+      "time": 1789851600054
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003798119",
+      "time": 1789855200034
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000126132",
+      "premium": "0.0006009053",
+      "time": 1789858800052
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005626021",
+      "time": 1789862400057
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005891351",
+      "time": 1789866000055
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005042001",
+      "time": 1789869600005
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002808829",
+      "time": 1789873200039
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000743303",
+      "time": 1789876800051
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000342063",
+      "time": 1789880400014
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000739917",
+      "time": 1789884000017
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000372155",
+      "time": 1789887600013
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000475593",
+      "time": 1789891200021
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000334995",
+      "time": 1789894800064
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000394078",
+      "time": 1789898400052
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000176603",
+      "time": 1789902000044
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000163754",
+      "time": 1789905600043
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000605131",
+      "time": 1789909200064
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000248417",
+      "time": 1789912800025
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000368318",
+      "time": 1789916400037
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000251431",
+      "time": 1789920000035
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000940731",
+      "time": 1789923600004
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000556016",
+      "time": 1789927200038
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000177446",
+      "time": 1789930800013
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000243759",
+      "time": 1789934400046
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000554351",
+      "time": 1789938000056
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001099747",
+      "time": 1789941600032
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003060226",
+      "time": 1789945200033
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.000312536",
+      "time": 1789948800072
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.000375713",
+      "time": 1789952400054
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005797336",
+      "time": 1789956000032
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.000179655",
+      "time": 1789959600007
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000602027",
+      "premium": "0.0009816213",
+      "time": 1789963200070
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003780784",
+      "time": 1789966800008
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003788377",
+      "time": 1789970400040
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004851678",
+      "time": 1789974000047
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000336259",
+      "premium": "0.0007690074",
+      "time": 1789977600069
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000415835",
+      "premium": "0.0008326682",
+      "time": 1789981200073
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000632443",
+      "premium": "0.0010059544",
+      "time": 1789984800022
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004273548",
+      "time": 1789988400040
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000238783",
+      "premium": "0.0006910263",
+      "time": 1789992000012
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000178516",
+      "premium": "0.0006428125",
+      "time": 1789995600016
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003747055",
+      "time": 1789999200050
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001522292",
+      "time": 1790002800016
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003571044",
+      "time": 1790006400108
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000173073",
+      "premium": "0.0006384588",
+      "time": 1790010000083
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000952641",
+      "time": 1790013600013
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002436704",
+      "time": 1790017200031
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002792376",
+      "time": 1790020800056
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004843144",
+      "time": 1790024400050
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000033337",
+      "time": 1790028000000
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000308384",
+      "time": 1790031600034
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000765515",
+      "time": 1790035200028
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.000008998",
+      "time": 1790038800043
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000421402",
+      "time": 1790042400020
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000139372",
+      "time": 1790046000012
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000809854",
+      "time": 1790049600050
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001933137",
+      "time": 1790053200001
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001656644",
+      "time": 1790056800032
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002043699",
+      "time": 1790060400019
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001256404",
+      "time": 1790064000012
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000718983",
+      "time": 1790067600013
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000003572",
+      "time": 1790071200001
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000188382",
+      "time": 1790074800014
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000409632",
+      "time": 1790078400053
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002346893",
+      "time": 1790082000080
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002923912",
+      "time": 1790085600059
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000595002",
+      "time": 1790089200000
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001222958",
+      "time": 1790092800071
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000202531",
+      "time": 1790096400085
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003937199",
+      "time": 1790100000057
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000317372",
+      "premium": "0.0007538979",
+      "time": 1790103600072
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000273219",
+      "premium": "0.0007185756",
+      "time": 1790107200040
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005451898",
+      "time": 1790110800004
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003594851",
+      "time": 1790114400062
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000927196",
+      "premium": "0.0012417572",
+      "time": 1790118000027
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0001603427",
+      "premium": "0.0017827414",
+      "time": 1790121600031
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000827815",
+      "premium": "0.0011622516",
+      "time": 1790125200061
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004299954",
+      "time": 1790128800025
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000678232",
+      "premium": "0.0010425857",
+      "time": 1790132400051
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0001260434",
+      "premium": "0.0015083471",
+      "time": 1790136000024
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000711404",
+      "premium": "0.0010691233",
+      "time": 1790139600009
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004220862",
+      "time": 1790143200005
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005601404",
+      "time": 1790146800002
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000239893",
+      "premium": "0.0006919148",
+      "time": 1790150400033
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002859489",
+      "time": 1790154000065
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000341745",
+      "premium": "0.000773396",
+      "time": 1790157600062
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000269954",
+      "premium": "0.0007159635",
+      "time": 1790161200047
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000463099",
+      "premium": "0.0008704795",
+      "time": 1790164800030
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000266018",
+      "premium": "0.0007128143",
+      "time": 1790168400050
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004700524",
+      "time": 1790172000043
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003036531",
+      "time": 1790175600003
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001977281",
+      "time": 1790179200048
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.000126762",
+      "time": 1790182800005
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002048168",
+      "time": 1790186400074
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002451439",
+      "time": 1790190000015
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002614581",
+      "time": 1790193600071
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003166928",
+      "time": 1790197200118
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002783128",
+      "time": 1790200800015
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002918717",
+      "time": 1790204400039
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000664219",
+      "time": 1790208000045
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001405892",
+      "time": 1790211600025
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.000072957",
+      "time": 1790215200029
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001982491",
+      "time": 1790218800001
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001410507",
+      "time": 1790222400038
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000738654",
+      "time": 1790226000007
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001948067",
+      "time": 1790229600061
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.000291626",
+      "time": 1790233200056
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003904795",
+      "time": 1790236800017
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001056454",
+      "time": 1790240400034
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000962909",
+      "time": 1790244000011
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000836978",
+      "time": 1790247600045
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000885872",
+      "time": 1790251200065
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001736089",
+      "time": 1790254800003
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002091964",
+      "time": 1790258400035
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.00026222",
+      "time": 1790262000014
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003757586",
+      "time": 1790265600030
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005433471",
+      "time": 1790269200058
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005368269",
+      "time": 1790272800058
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003014854",
+      "time": 1790276400018
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004318255",
+      "time": 1790280000054
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004384295",
+      "time": 1790283600088
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005856328",
+      "time": 1790287200013
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000665807",
+      "premium": "0.0010326453",
+      "time": 1790290800038
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000744779",
+      "premium": "0.0010958235",
+      "time": 1790294400076
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000229745",
+      "premium": "0.0006837959",
+      "time": 1790298000027
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004777579",
+      "time": 1790301600059
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001813925",
+      "time": 1790305200086
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004161518",
+      "time": 1790308800036
+    },
+    {
+      "coin": "ETHFI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002761557",
+      "time": 1790312400040
+    }
+  ]
+}

@@ -1,0 +1,2034 @@
+{
+  "receipt": {
+    "provider_url": "https://api.hyperliquid.xyz/info",
+    "request": {
+      "type": "fundingHistory",
+      "coin": "ONDO",
+      "startTime": 1789104000000,
+      "endTime": 1790313600000
+    },
+    "retrieval_started_at": "2026-09-25T05:26:19.590831+00:00",
+    "status": 200,
+    "server_date": "Fri, 25 Sep 2026 05:26:20 GMT",
+    "retrieval_completed_at": "2026-09-25T05:26:20.776635+00:00",
+    "sha256": "3f77b043770afabf061244c8b1092f15e41a99110c6f0be3d94e2a7a6ea261ec"
+  },
+  "rows": [
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000017857",
+      "time": 1789106400042
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000858677",
+      "time": 1789110000124
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001829873",
+      "time": 1789113600085
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003723582",
+      "time": 1789117200037
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003200322",
+      "time": 1789120800021
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000741403",
+      "time": 1789124400046
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000607472",
+      "time": 1789128000006
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001144702",
+      "time": 1789131600057
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000395736",
+      "time": 1789135200020
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001794506",
+      "time": 1789138800047
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001762528",
+      "time": 1789142400047
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000977974",
+      "time": 1789146000028
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001548561",
+      "time": 1789149600021
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000274787",
+      "time": 1789153200011
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001753459",
+      "time": 1789156800017
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000258349",
+      "time": 1789160400000
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003413444",
+      "time": 1789164000041
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000069733",
+      "premium": "-0.0004442138",
+      "time": 1789167600007
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001576303",
+      "time": 1789171200064
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001807313",
+      "time": 1789174800041
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003310966",
+      "time": 1789178400023
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003956046",
+      "time": 1789182000036
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002309519",
+      "time": 1789185600037
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002470181",
+      "time": 1789189200028
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000073115",
+      "premium": "-0.0004415082",
+      "time": 1789192800003
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000069494",
+      "premium": "-0.000444405",
+      "time": 1789196400009
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000827527",
+      "time": 1789200000039
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001355934",
+      "time": 1789203600059
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000174267",
+      "time": 1789207200014
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002466042",
+      "time": 1789210800059
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002548036",
+      "time": 1789214400037
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000035138",
+      "time": 1789218000041
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000721562",
+      "time": 1789221600000
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000082919",
+      "time": 1789225200104
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000529785",
+      "time": 1789228800001
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000920911",
+      "time": 1789232400043
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000106798",
+      "time": 1789236000008
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000315859",
+      "time": 1789239600008
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001052718",
+      "time": 1789243200022
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002424993",
+      "time": 1789246800010
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003237516",
+      "time": 1789250400013
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003789595",
+      "time": 1789254000043
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003762212",
+      "time": 1789257600049
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002982033",
+      "time": 1789261200026
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003696144",
+      "time": 1789264800029
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000784504",
+      "time": 1789268400061
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001831151",
+      "time": 1789272000042
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000490699",
+      "time": 1789275600117
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000608141",
+      "time": 1789279200007
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002924029",
+      "time": 1789282800041
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002718999",
+      "time": 1789286400020
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001896846",
+      "time": 1789290000029
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003851066",
+      "time": 1789293600008
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003929318",
+      "time": 1789297200026
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002322672",
+      "time": 1789300800053
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001935422",
+      "time": 1789304400019
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003169288",
+      "time": 1789308000107
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002487778",
+      "time": 1789311600038
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000872706",
+      "time": 1789315200070
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000263715",
+      "time": 1789318800040
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000232865",
+      "time": 1789322400042
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000483366",
+      "time": 1789326000020
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000050628",
+      "time": 1789329600000
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000659404",
+      "time": 1789333200020
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000401614",
+      "time": 1789336800010
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001728647",
+      "time": 1789340400023
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002378247",
+      "time": 1789344000068
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003777038",
+      "time": 1789347600018
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002356654",
+      "time": 1789351200022
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001299499",
+      "time": 1789354800024
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000588094",
+      "time": 1789358400022
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000236596",
+      "time": 1789362000040
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000486901",
+      "time": 1789365600057
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000389372",
+      "time": 1789369200040
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000039338",
+      "time": 1789372800034
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000142561",
+      "time": 1789376400007
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000244935",
+      "time": 1789380000021
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000623627",
+      "time": 1789383600121
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000021025",
+      "time": 1789387200046
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000102251",
+      "time": 1789390800014
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000114192",
+      "time": 1789394400028
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000115544",
+      "time": 1789398000030
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000035663",
+      "time": 1789401600030
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000247027",
+      "time": 1789405200041
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000495705",
+      "time": 1789408800060
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000785534",
+      "time": 1789412400016
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000483292",
+      "time": 1789416000079
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000329706",
+      "time": 1789419600027
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000681791",
+      "time": 1789423200047
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000266719",
+      "time": 1789426800132
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000051037",
+      "time": 1789430400024
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000316415",
+      "time": 1789434000042
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000501134",
+      "time": 1789437600052
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000676199",
+      "time": 1789441200097
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000255508",
+      "time": 1789444800037
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000168391",
+      "time": 1789448400016
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000186476",
+      "time": 1789452000003
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000312337",
+      "time": 1789455600083
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002840512",
+      "time": 1789459200008
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003570982",
+      "time": 1789462800049
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000117536",
+      "premium": "-0.0004059712",
+      "time": 1789466400030
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001566236",
+      "time": 1789470000036
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003778467",
+      "time": 1789473600039
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003137573",
+      "time": 1789477200117
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003719092",
+      "time": 1789480800005
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "-0.0000111074",
+      "premium": "-0.0005888595",
+      "time": 1789484400050
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002546545",
+      "time": 1789488000014
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002863377",
+      "time": 1789491600014
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002392893",
+      "time": 1789495200017
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003322046",
+      "time": 1789498800047
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001464846",
+      "time": 1789502400033
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001465324",
+      "time": 1789506000077
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003653223",
+      "time": 1789509600043
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.000007113",
+      "premium": "-0.000443096",
+      "time": 1789513200062
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000090623",
+      "premium": "-0.0004275013",
+      "time": 1789516800021
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "-0.0000040911",
+      "premium": "-0.0005327289",
+      "time": 1789520400024
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "-0.0000030207",
+      "premium": "-0.0005241656",
+      "time": 1789524000058
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "-0.0000163443",
+      "premium": "-0.0006307546",
+      "time": 1789527600035
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003706596",
+      "time": 1789531200018
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003687711",
+      "time": 1789534800004
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003158095",
+      "time": 1789538400081
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003756554",
+      "time": 1789542000026
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.00037463",
+      "time": 1789545600035
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003858001",
+      "time": 1789549200091
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000044007",
+      "premium": "-0.0004647945",
+      "time": 1789552800004
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000052284",
+      "premium": "-0.0004581727",
+      "time": 1789556400029
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003502504",
+      "time": 1789560000079
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.00029817",
+      "time": 1789563600018
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003939159",
+      "time": 1789567200013
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003214616",
+      "time": 1789570800012
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000097685",
+      "time": 1789574400037
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000569657",
+      "time": 1789578000112
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000503976",
+      "time": 1789581600011
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000050474",
+      "time": 1789585200054
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001924715",
+      "time": 1789588800091
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001127359",
+      "time": 1789592400031
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000513247",
+      "time": 1789596000002
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000796035",
+      "time": 1789599600022
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000930871",
+      "time": 1789603200048
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000167919",
+      "time": 1789606800065
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000053909",
+      "time": 1789610400031
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000057559",
+      "time": 1789614000045
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000410521",
+      "time": 1789617600038
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000665824",
+      "time": 1789621200068
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000883759",
+      "time": 1789624800010
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001350804",
+      "time": 1789628400016
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000025695",
+      "time": 1789632000011
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002219312",
+      "time": 1789635600001
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000055332",
+      "time": 1789639200041
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000410235",
+      "time": 1789642800058
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000394349",
+      "time": 1789646400058
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000777083",
+      "time": 1789650000018
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003984744",
+      "time": 1789653600029
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004465471",
+      "time": 1789657200000
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002392074",
+      "time": 1789660800021
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000822631",
+      "time": 1789664400089
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001091795",
+      "time": 1789668000043
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001187383",
+      "time": 1789671600007
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001288983",
+      "time": 1789675200068
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005251396",
+      "time": 1789678800016
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001615114",
+      "time": 1789682400006
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001172085",
+      "time": 1789686000018
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002803981",
+      "time": 1789689600005
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000139296",
+      "premium": "0.0006114365",
+      "time": 1789693200106
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000189856",
+      "premium": "0.0006518848",
+      "time": 1789696800015
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000310853",
+      "premium": "0.0007486828",
+      "time": 1789700400050
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000413731",
+      "premium": "0.0008309846",
+      "time": 1789704000030
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000551076",
+      "premium": "0.0009408608",
+      "time": 1789707600009
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.000026657",
+      "premium": "0.0007132561",
+      "time": 1789711200035
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005197919",
+      "time": 1789714800058
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000221732",
+      "premium": "0.0006773852",
+      "time": 1789718400019
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000577149",
+      "premium": "0.0009617192",
+      "time": 1789722000028
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004410504",
+      "time": 1789725600041
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000323952",
+      "premium": "0.0007591616",
+      "time": 1789729200059
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000540412",
+      "premium": "0.0009323297",
+      "time": 1789732800005
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000795365",
+      "premium": "0.0011362923",
+      "time": 1789736400054
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000776358",
+      "premium": "0.0011210865",
+      "time": 1789740000014
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000529927",
+      "premium": "0.0009239418",
+      "time": 1789743600019
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000389694",
+      "premium": "0.0008117551",
+      "time": 1789747200023
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000847632",
+      "premium": "0.0011781053",
+      "time": 1789750800033
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000635383",
+      "premium": "0.001008306",
+      "time": 1789754400069
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005213072",
+      "time": 1789758000083
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000597751",
+      "premium": "0.0009782004",
+      "time": 1789761600036
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000852238",
+      "premium": "0.0011817905",
+      "time": 1789765200033
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000819512",
+      "premium": "0.0011556093",
+      "time": 1789768800024
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000627179",
+      "premium": "0.0010017432",
+      "time": 1789772400009
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000796616",
+      "premium": "0.0011372926",
+      "time": 1789776000048
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000674218",
+      "premium": "0.0010393747",
+      "time": 1789779600049
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000626852",
+      "premium": "0.0010014813",
+      "time": 1789783200035
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0001450333",
+      "premium": "0.0016602665",
+      "time": 1789786800051
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000817037",
+      "premium": "0.0011536298",
+      "time": 1789790400012
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000510866",
+      "premium": "0.0009086928",
+      "time": 1789794000045
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000463388",
+      "premium": "0.0008707107",
+      "time": 1789797600067
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000447251",
+      "premium": "0.0008578008",
+      "time": 1789801200050
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000285199",
+      "premium": "0.0007281591",
+      "time": 1789804800095
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.000068988",
+      "premium": "0.0010519044",
+      "time": 1789808400016
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000618365",
+      "premium": "0.0009946918",
+      "time": 1789812000053
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000609559",
+      "premium": "0.0009876469",
+      "time": 1789815600055
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000550161",
+      "premium": "0.0009401291",
+      "time": 1789819200053
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.000095366",
+      "premium": "0.0012629283",
+      "time": 1789822800026
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000638319",
+      "premium": "0.0010106555",
+      "time": 1789826400022
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000811248",
+      "premium": "0.0011489986",
+      "time": 1789830000035
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000781049",
+      "premium": "0.0011248389",
+      "time": 1789833600032
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000671722",
+      "premium": "0.001037378",
+      "time": 1789837200015
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000317216",
+      "premium": "0.0007537727",
+      "time": 1789840800037
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005709708",
+      "time": 1789844400030
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005812505",
+      "time": 1789848000021
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000299712",
+      "premium": "0.0007397697",
+      "time": 1789851600054
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000331538",
+      "premium": "0.0007652307",
+      "time": 1789855200034
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000183881",
+      "premium": "0.000647105",
+      "time": 1789858800052
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000328878",
+      "premium": "0.0007631025",
+      "time": 1789862400057
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000176602",
+      "premium": "0.0006412816",
+      "time": 1789866000055
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005114726",
+      "time": 1789869600005
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004628278",
+      "time": 1789873200039
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003751697",
+      "time": 1789876800051
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005894598",
+      "time": 1789880400014
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002796899",
+      "time": 1789884000017
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003424299",
+      "time": 1789887600013
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002649579",
+      "time": 1789891200021
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004295961",
+      "time": 1789894800064
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003281597",
+      "time": 1789898400052
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002850968",
+      "time": 1789902000044
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003527675",
+      "time": 1789905600043
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003115649",
+      "time": 1789909200064
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000113893",
+      "time": 1789912800025
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000267268",
+      "time": 1789916400037
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004037503",
+      "time": 1789920000035
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000306854",
+      "premium": "0.0007454836",
+      "time": 1789923600004
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000298586",
+      "premium": "0.000738869",
+      "time": 1789927200038
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000192144",
+      "premium": "0.0006537154",
+      "time": 1789930800013
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005924856",
+      "time": 1789934400046
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000556998",
+      "premium": "0.0009455984",
+      "time": 1789938000056
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000504694",
+      "premium": "0.000903755",
+      "time": 1789941600032
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0001325823",
+      "premium": "0.0015606587",
+      "time": 1789945200033
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.000112569",
+      "premium": "0.0014005521",
+      "time": 1789948800072
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.000107311",
+      "premium": "0.0013584881",
+      "time": 1789952400054
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000486519",
+      "premium": "0.0008892153",
+      "time": 1789956000032
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000186247",
+      "premium": "0.0006489976",
+      "time": 1789959600007
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005728143",
+      "time": 1789963200070
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.000012849",
+      "premium": "0.0006027917",
+      "time": 1789966800008
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000440795",
+      "premium": "0.0008526361",
+      "time": 1789970400040
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000557671",
+      "premium": "0.0009461369",
+      "time": 1789974000047
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000361889",
+      "premium": "0.0007895111",
+      "time": 1789977600069
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000463349",
+      "premium": "0.0008706794",
+      "time": 1789981200073
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000549149",
+      "premium": "0.0009393191",
+      "time": 1789984800022
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000660552",
+      "premium": "0.0010284416",
+      "time": 1789988400040
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.000098747",
+      "premium": "0.0012899758",
+      "time": 1789992000012
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0001036053",
+      "premium": "0.001328842",
+      "time": 1789995600016
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000559711",
+      "premium": "0.0009477686",
+      "time": 1789999200050
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000529268",
+      "premium": "0.0009234144",
+      "time": 1790002800016
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000349581",
+      "premium": "0.0007796646",
+      "time": 1790006400108
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000570743",
+      "time": 1790010000083
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005237867",
+      "time": 1790013600013
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000146348",
+      "premium": "0.0006170781",
+      "time": 1790017200031
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000273505",
+      "premium": "0.0007188044",
+      "time": 1790020800056
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000335126",
+      "premium": "0.0007681011",
+      "time": 1790024400050
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000378744",
+      "premium": "0.0008029953",
+      "time": 1790028000000
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000449678",
+      "premium": "0.0008597423",
+      "time": 1790031600034
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005765525",
+      "time": 1790035200028
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000452031",
+      "premium": "0.000861625",
+      "time": 1790038800043
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000278166",
+      "premium": "0.0007225329",
+      "time": 1790042400020
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000128035",
+      "premium": "0.0006024284",
+      "time": 1790046000012
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000189692",
+      "premium": "0.0006517536",
+      "time": 1790049600050
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005477958",
+      "time": 1790053200001
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004831655",
+      "time": 1790056800032
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.000034247",
+      "premium": "0.0007739757",
+      "time": 1790060400019
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000545931",
+      "premium": "0.0009367447",
+      "time": 1790064000012
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000456965",
+      "premium": "0.0008655719",
+      "time": 1790067600013
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000160089",
+      "premium": "0.0006280714",
+      "time": 1790071200001
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004641395",
+      "time": 1790074800014
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003936031",
+      "time": 1790078400053
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004533336",
+      "time": 1790082000080
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000565974",
+      "time": 1790085600059
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003953265",
+      "time": 1790089200000
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000426499",
+      "time": 1790092800071
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004477288",
+      "time": 1790096400085
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004674455",
+      "time": 1790100000057
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000211745",
+      "premium": "0.0006693961",
+      "time": 1790103600072
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000260173",
+      "premium": "0.0007081386",
+      "time": 1790107200040
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000562263",
+      "time": 1790110800004
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000176914",
+      "time": 1790114400062
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005805252",
+      "time": 1790118000027
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000417607",
+      "premium": "0.0008340856",
+      "time": 1790121600031
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000421423",
+      "premium": "0.0008371383",
+      "time": 1790125200061
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000479339",
+      "premium": "0.0008834711",
+      "time": 1790128800025
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000608856",
+      "premium": "0.0009870852",
+      "time": 1790132400051
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000545791",
+      "premium": "0.0009366332",
+      "time": 1790136000024
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003750571",
+      "time": 1790139600009
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004477634",
+      "time": 1790143200005
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002924098",
+      "time": 1790146800002
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001608778",
+      "time": 1790150400033
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002310383",
+      "time": 1790154000065
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001334293",
+      "time": 1790157600062
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002467331",
+      "time": 1790161200047
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002591049",
+      "time": 1790164800030
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003694141",
+      "time": 1790168400050
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002806236",
+      "time": 1790172000043
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000600122",
+      "time": 1790175600003
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000164316",
+      "time": 1790179200048
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000081535",
+      "time": 1790182800005
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000051938",
+      "time": 1790186400074
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000368346",
+      "time": 1790190000015
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001656139",
+      "time": 1790193600071
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001042329",
+      "time": 1790197200118
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001137978",
+      "time": 1790200800015
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002040618",
+      "time": 1790204400039
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000325972",
+      "time": 1790208000045
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001510112",
+      "time": 1790211600025
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001912029",
+      "time": 1790215200029
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001943092",
+      "time": 1790218800001
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004203268",
+      "time": 1790222400038
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000373125",
+      "time": 1790226000007
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000165224",
+      "premium": "0.0006321791",
+      "time": 1790229600061
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005910699",
+      "time": 1790233200056
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000472405",
+      "premium": "0.0008779237",
+      "time": 1790236800017
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.000032022",
+      "premium": "0.0007561758",
+      "time": 1790240400034
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000157362",
+      "premium": "0.0006258899",
+      "time": 1790244000011
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003124428",
+      "time": 1790247600045
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004729855",
+      "time": 1790251200065
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000564382",
+      "premium": "0.0009515055",
+      "time": 1790254800003
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000989505",
+      "premium": "0.0012916037",
+      "time": 1790258400035
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0001317741",
+      "premium": "0.0015541928",
+      "time": 1790262000014
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0001108966",
+      "premium": "0.001387173",
+      "time": 1790265600030
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.000161059",
+      "premium": "0.0017884721",
+      "time": 1790269200058
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0001772899",
+      "premium": "0.001918319",
+      "time": 1790272800058
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0001210627",
+      "premium": "0.0014685012",
+      "time": 1790276400018
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0001521875",
+      "premium": "0.0017174999",
+      "time": 1790280000054
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0001164455",
+      "premium": "0.0014315637",
+      "time": 1790283600088
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0001152941",
+      "premium": "0.001422353",
+      "time": 1790287200013
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000570846",
+      "premium": "0.0009566767",
+      "time": 1790290800038
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000705201",
+      "premium": "0.0010641607",
+      "time": 1790294400076
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000824006",
+      "premium": "0.001159205",
+      "time": 1790298000027
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000622468",
+      "premium": "0.0009979744",
+      "time": 1790301600059
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000463976",
+      "premium": "0.0008711808",
+      "time": 1790305200086
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000348095",
+      "premium": "0.0007784757",
+      "time": 1790308800036
+    },
+    {
+      "coin": "ONDO",
+      "fundingRate": "0.0000388506",
+      "premium": "0.000810805",
+      "time": 1790312400040
+    }
+  ]
+}
