@@ -320,3 +320,39 @@ def test_production_rejects_corrupt_or_unsupported_receipt_even_with_rebound_loc
     else:
         with pytest.raises(RuntimeError, match='receipt digest'):
             provenance.verify_admission_provenance_lock()
+
+@pytest.mark.parametrize(
+    "field",
+    (
+        "optional_stopping_or_repeated_peeking_allowed",
+        "alpha_recycling_after_failure_block_or_underpower",
+    ),
+)
+def test_multiplicity_contract_digest_is_recomputed_even_with_rebound_source_and_lock(
+    tmp_path: Path, field: str
+) -> None:
+    from orchestration import strategy_factory_cohort_001_provenance as provenance
+
+    lock_path = _copy_lock_fixture(tmp_path)
+    relative = "orchestration/cohorts/strategy_factory_cohort_001_multiplicity_authority.json"
+    target = tmp_path / relative
+    multiplicity = json.loads(target.read_text(encoding="utf-8"))
+    controls = multiplicity["confirmatory_familywise_error_budget"]
+    assert controls[field] is False
+    controls[field] = True
+    target.write_text(
+        json.dumps(multiplicity, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    lock = json.loads(lock_path.read_text(encoding="utf-8"))
+    lock["bound_source_git_blobs"][relative] = provenance.git_blob_sha1(target)
+    lock["contract_sha256"] = _recompute_contract_digest(lock)
+    lock_path.write_text(
+        json.dumps(lock, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RuntimeError, match="multiplicity authority contract digest mismatch"):
+        verify_admission_provenance_lock(repo_root=tmp_path)
+
