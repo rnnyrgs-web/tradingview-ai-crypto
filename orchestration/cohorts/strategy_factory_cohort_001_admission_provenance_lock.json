@@ -1,0 +1,43 @@
+{
+  "artifact_type": "strategy_factory_cohort_001_admission_provenance_lock",
+  "authority": {
+    "any_source_or_receipt_change_requires_new_lock_new_head_ci_and_new_independent_review": true,
+    "broker_connected": false,
+    "genuine_forward_opened": false,
+    "integration_authority": "NONE",
+    "outcomes_read": false,
+    "promotion_authority": false,
+    "protected_oos_opened": false,
+    "receipt_is_not_claimed_immutable_against_repository_admin": true,
+    "trade_authority": false
+  },
+  "bound_admission_receipt_sha256": "fc7c237e67600390cca369965161ccfc555dd2bc9bebbabc83d774fafd57182a",
+  "bound_multiplicity_contract_sha256": "9a7c32f8f8ea5959fbcd9b5c55707cb8a46d0a066a43a7d2db854b45c9b68e65",
+  "bound_source_git_blobs": {
+    ".github/workflows/strategy_factory_cohort_001_admission.yml": "2b360a2bd3a689c25394eceddb6f97073baadcac",
+    "orchestration/cohorts/strategy_factory_cohort_001_canonical_admission.json": "282102a44e2e02b8eece644304c3913a7412fb33",
+    "orchestration/cohorts/strategy_factory_cohort_001_multiplicity_authority.json": "acda04916df05b22a063bb7682674dd2529ddb77",
+    "orchestration/cohorts/strategy_factory_cohort_001_ownership_correction.json": "19e50c9a00675698968645378f6aacdd13ae2b06",
+    "orchestration/cohorts/strategy_factory_cohort_001_readiness.json": "857621548fd6295c67bed9b1d77bab956ea63c0a",
+    "orchestration/cohorts/strategy_factory_cohort_001_seed.json": "7c692498f7d3df962448553e33af13e31212c3e7",
+    "orchestration/scientific_design_identity.py": "57164aaee8e1f97dc73de101f13a8d5d86a69024",
+    "orchestration/strategy_behavior_schema.py": "abc0b13876645980116c333a6a2d2b2fb57f247c",
+    "orchestration/strategy_behavior_value_contract.py": "24192d05110c95787108f4a3043733b18d350341",
+    "orchestration/strategy_factory_cohort_001_admission.py": "97d521678e904625882a1950d205278e1537a094",
+    "orchestration/strategy_factory_cohort_001_provenance.py": "df28a80e5eba5dd652f448534a6410c097a2dd72",
+    "orchestration/strategy_predeclaration.py": "acc45aebb5ef9c9730504591da98e048ba8052de",
+    "strategy_dataset_preflight.py": "4e60bb186570bdb7d9aeb8ae00b60760ec0c784b"
+  },
+  "cohort_id": "STRATEGY-FACTORY-COHORT-001-SEED",
+  "contract_id": "STRATEGY-FACTORY-COHORT-001-ADMISSION-PROVENANCE-LOCK-v1",
+  "contract_sha256": "6d7d135e4eeaa3029f33f022e9aa54e0e69958b4df753dea27e6fdc9288b72c2",
+  "review_phase_closure": {
+    "empirical_execution_cost": "REQUIRED_BEFORE_DEEP_VALIDATION_OR_ANY_AUTHENTICATED_PROFITABILITY_CLAIM",
+    "point_in_time_dataset_provenance": "BOUND_NOW_TO_EXACT_DATASET_PREFLIGHT_RUNTIME_AND_ADMISSION_RECEIPT",
+    "regime_stability": "DEFERRED_TO_PREDECLARED_STAGE1_VALIDATION_STABILITY_AND_LATER_SURVIVOR_CONTROLS",
+    "sample_size_and_overlap": "DEFERRED_TO_SEPARATELY_FROZEN_STAGE1_EXECUTION_AND_POWER_PREFLIGHT_BEFORE_ANY_ECONOMIC_READ"
+  },
+  "schema_version": 1,
+  "supersedes_terminal_reviewed_head_sha": "e7f5f531cdd98a107d82e77aacb8f737a71de09c",
+  "terminal_review_attempt_issue": 751
+}

@@ -1,0 +1,96 @@
+name: Strategy Factory Cohort 001 Canonical Admission
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "orchestration/strategy_factory_cohort_001_admission.py"
+      - "orchestration/strategy_factory_cohort_001_provenance.py"
+      - "orchestration/cohorts/strategy_factory_cohort_001_*.json"
+      - "tests/test_strategy_factory_cohort_001_admission.py"
+      - "tests/test_strategy_factory_cohort_001_receipt_lock.py"
+      - "tests/test_strategy_factory_cohort_001_multiplicity_authority.py"
+      - "tests/test_strategy_factory_cohort_001_provenance_lock.py"
+      - ".github/workflows/strategy_factory_cohort_001_admission.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: strategy-factory-cohort-001-admission-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  canonical-admission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      RESEARCH_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RESEARCH_COMMIT_SHA }}
+      - name: Prove exact research head checkout
+        run: |
+          test "$(git rev-parse HEAD)" = "$RESEARCH_COMMIT_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install focused test dependency
+        run: python -m pip install pytest
+      - name: Verify canonical admission, immutable receipt, multiplicity and provenance authority
+        run: >-
+          python -m pytest -q
+          tests/test_strategy_factory_cohort_001_admission.py
+          tests/test_strategy_factory_cohort_001_receipt_lock.py
+          tests/test_strategy_factory_cohort_001_multiplicity_authority.py
+          tests/test_strategy_factory_cohort_001_provenance_lock.py
+      - name: Emit deterministic canonical admission receipt
+        run: python -m orchestration.strategy_factory_cohort_001_admission > strategy_factory_cohort_001_canonical_admission.json
+      - name: Assert research-only authority and exact execution holds
+        run: |
+          python - <<'PY'
+          import json
+          from orchestration.strategy_factory_cohort_001_provenance import verify_admission_provenance_lock
+
+          payload = json.load(open("strategy_factory_cohort_001_canonical_admission.json", encoding="utf-8"))
+          multiplicity = json.load(open("orchestration/cohorts/strategy_factory_cohort_001_multiplicity_authority.json", encoding="utf-8"))
+          provenance = verify_admission_provenance_lock()
+          statuses = {row["fingerprint_id"]: row["status"] for row in payload["candidates"]}
+          dataset = payload["selection_dataset_qualification"]
+          assert payload["schema_version"] == 3
+          assert dataset["status"] == "QUALIFIED_DEVELOPMENT_ONLY"
+          assert dataset["protected_ohlcv_json_decoded"] is False
+          assert dataset["economic_outcomes_computed"] is False
+          assert dataset["strategy_signals_computed"] is False
+          assert len(statuses) == 8
+          assert all(row["status"] != "REJECTED_CANONICAL_ADMISSION" for row in payload["candidates"])
+          authorized = [row for row in payload["candidates"] if row["screening_authority"] is True]
+          assert len(authorized) == 6
+          assert all(row["selection_dataset_receipt_sha256"] == dataset["receipt_sha256"] for row in authorized)
+          assert statuses["DISC-BREADTH-PERSIST-001-v1"] == "HOLD_ACTIVE_OWNERSHIP_COLLISION"
+          assert statuses["DISC-DELTA-CARRY-001-v1"] == "DATA_BLOCKED"
+          assert multiplicity["family"]["family_id"] == payload["multiple_testing_family_id"]
+          assert multiplicity["family"]["planned_hypothesis_count"] == payload["planned_hypothesis_count"] == 8
+          assert multiplicity["confirmatory_familywise_error_budget"]["familywise_alpha"] == "0.05"
+          assert multiplicity["confirmatory_familywise_error_budget"]["per_hypothesis_alpha"] == "0.00625"
+          assert multiplicity["stage1_multiplicity_semantics"]["stage1_pass_grants_statistical_significance"] is False
+          assert multiplicity["stage1_multiplicity_semantics"]["stage1_pass_grants_profitability_authentication"] is False
+          assert multiplicity["cost_authority"]["a_72bps_stage1_pass_cannot_substitute_for_later_authenticated_cost_evidence"] is True
+          assert provenance["status"] == "VERIFIED_OUTCOME_BLIND_ADMISSION_PROVENANCE"
+          assert provenance["integration_authority"] == "NONE"
+          assert payload["outcomes_read"] is False
+          assert payload["protected_oos_opened"] is False
+          assert payload["genuine_forward_opened"] is False
+          assert payload["deep_candidate_promoted"] is False
+          assert payload["broker_connected"] is False
+          assert payload["trade_authority"] is False
+          PY
+      - name: Upload immutable admission receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: strategy-factory-cohort-001-admission-${{ env.RESEARCH_COMMIT_SHA }}
+          path: strategy_factory_cohort_001_canonical_admission.json
+          if-no-files-found: error
+          retention-days: 90
