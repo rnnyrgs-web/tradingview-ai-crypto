@@ -14,25 +14,40 @@
   "bound_admission_receipt_sha256": "fc7c237e67600390cca369965161ccfc555dd2bc9bebbabc83d774fafd57182a",
   "bound_multiplicity_contract_sha256": "9a7c32f8f8ea5959fbcd9b5c55707cb8a46d0a066a43a7d2db854b45c9b68e65",
   "bound_source_git_blobs": {
-    ".github/workflows/strategy_factory_cohort_001_admission.yml": "a80068a6b0c97a13a80bd04e449fbf1a12ad11c4",
+    ".github/workflows/strategy_factory_cohort_001_admission.yml": "72a7f8622f167ca698c307a20a695adc3072259c",
+    "btc_leadlag_selection.py": "5b907bcfae7edcfed4f1428ca55fb5fd84fc5f1a",
     "orchestration/cohorts/strategy_factory_cohort_001_canonical_admission.json": "282102a44e2e02b8eece644304c3913a7412fb33",
     "orchestration/cohorts/strategy_factory_cohort_001_multiplicity_authority.json": "acda04916df05b22a063bb7682674dd2529ddb77",
     "orchestration/cohorts/strategy_factory_cohort_001_ownership_correction.json": "19e50c9a00675698968645378f6aacdd13ae2b06",
     "orchestration/cohorts/strategy_factory_cohort_001_readiness.json": "857621548fd6295c67bed9b1d77bab956ea63c0a",
     "orchestration/cohorts/strategy_factory_cohort_001_seed.json": "4063a7ccc8940b3e3a4b5763f080e8f78bf01061",
+    "orchestration/disc_btc_leadlag_001.json": "0be7879d2e8127e3bb6d859f18a43c8e4e871dc8",
+    "orchestration/disc_liquidity_meanrev_001.json": "359815d912df394606b8831991296d9fcc3768e0",
+    "orchestration/disc_vol_breakout_001.json": "15e6aa34d432e868fe1b998ffb27a7dddbad79d4",
+    "orchestration/evidence/liquidity_meanrev_001_cache/dataset.json.gz": "3a93beb4b1b4ef7f5d32b2936bf3119c692e7c15",
+    "orchestration/rejected_fingerprints.json": "b0d9ee062130f37a61da25cfc890fa2357604f4b",
+    "orchestration/rejected_fingerprints.py": "ff212c9296892cb3c12eec1dfd2526c0098bc5c1",
+    "orchestration/rejected_semantic_designs.json": "0f63daf9f971d88a3502096690f1ec00beb2e2d2",
     "orchestration/scientific_design_identity.py": "57164aaee8e1f97dc73de101f13a8d5d86a69024",
+    "orchestration/strategy_behavior_data_projection.py": "9c8f9108cd73b125e390c8f731d0149dd29b85bb",
     "orchestration/strategy_behavior_revision.py": "ddff74933fd2472dfa19405395be8983ecf922cd",
     "orchestration/strategy_behavior_schema.py": "abc0b13876645980116c333a6a2d2b2fb57f247c",
     "orchestration/strategy_behavior_value_contract.py": "24192d05110c95787108f4a3043733b18d350341",
     "orchestration/strategy_factory_cohort_001_admission.py": "841b00654b6e8591a80e47a929cc70446a0a3b94",
-    "orchestration/strategy_factory_cohort_001_provenance.py": "8d3d381fd54db8f63d6dc0b45e3ea67ca4b57fa4",
+    "orchestration/strategy_factory_cohort_001_provenance.py": "40876b378875bebfeb2e700342d21d04d094e73d",
     "orchestration/strategy_predeclaration.py": "acc45aebb5ef9c9730504591da98e048ba8052de",
+    "profitability_learning/__init__.py": "47cea0f4843787ee44d80c9a87fa442b4f080f8f",
+    "profitability_learning/analytics.py": "f7438f451a9d098116299feb6a94b6013da0e5a9",
+    "profitability_learning/contracts.py": "965e805bb37280fb30ff4cbb6c9fb98d8518d16c",
     "requirements-cohort001-admission.txt": "70fdb5c90bcbe57fa071668f221e0f4ef0318838",
-    "strategy_dataset_preflight.py": "4e60bb186570bdb7d9aeb8ae00b60760ec0c784b"
+    "research_artifact.py": "e215856b4b1db1ebdb7060cf0af89f0f1d83e1e8",
+    "signal_development.py": "73d27bb77892a3a89e273d438544d929e40bf9f3",
+    "strategy_dataset_preflight.py": "4e60bb186570bdb7d9aeb8ae00b60760ec0c784b",
+    "volatility_breakout_selection.py": "fb5792835b9fe5ca205dcf8c2d198aecadadad3b"
   },
   "cohort_id": "STRATEGY-FACTORY-COHORT-001-SEED",
   "contract_id": "STRATEGY-FACTORY-COHORT-001-ADMISSION-PROVENANCE-LOCK-v1",
-  "contract_sha256": "08d9a106fbea2b6df41b0431f4408c748baee674bd1d59adb28b6ace51ae34fb",
+  "contract_sha256": "f32f28fc9c4bbfee96796d0cdfe36aa88e42ba11e8a15c78890b8038da4efddd",
   "review_phase_closure": {
     "empirical_execution_cost": "REQUIRED_BEFORE_DEEP_VALIDATION_OR_ANY_AUTHENTICATED_PROFITABILITY_CLAIM",
     "point_in_time_dataset_provenance": "BOUND_NOW_TO_EXACT_DATASET_PREFLIGHT_RUNTIME_AND_ADMISSION_RECEIPT",
@@ -40,6 +55,6 @@
     "sample_size_and_overlap": "DEFERRED_TO_SEPARATELY_FROZEN_STAGE1_EXECUTION_AND_POWER_PREFLIGHT_BEFORE_ANY_ECONOMIC_READ"
   },
   "schema_version": 1,
-  "supersedes_terminal_reviewed_head_sha": "96e00e5014b3db86ffbeb109f9826485221ec13e",
-  "terminal_review_attempt_issue": 881
+  "supersedes_terminal_reviewed_head_sha": "9a4b5b08aa2fce3291f576bd34e44ccfdea40762",
+  "terminal_review_attempt_issue": 883
 }

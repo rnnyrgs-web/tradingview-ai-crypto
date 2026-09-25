@@ -5,6 +5,8 @@ import fnmatch
 import json
 import re
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -20,7 +22,22 @@ ROOT = Path(__file__).resolve().parents[1]
 
 # Explicit scientific dependencies: do not derive coverage from the verifier's
 # own registry, because an omitted dependency must itself fail this regression.
-SCIENTIFIC_SOURCE_PATHS = {
+ADMISSION_INPUT_PATHS = {
+    "btc_leadlag_selection.py",
+    "research_artifact.py",
+    "signal_development.py",
+    "volatility_breakout_selection.py",
+    "profitability_learning/__init__.py",
+    "profitability_learning/analytics.py",
+    "profitability_learning/contracts.py",
+    "orchestration/rejected_fingerprints.py",
+    "orchestration/rejected_fingerprints.json",
+    "orchestration/rejected_semantic_designs.json",
+    "orchestration/disc_btc_leadlag_001.json",
+    "orchestration/disc_liquidity_meanrev_001.json",
+    "orchestration/disc_vol_breakout_001.json",
+    "orchestration/evidence/liquidity_meanrev_001_cache/dataset.json.gz",
+    "orchestration/strategy_behavior_data_projection.py",
     "orchestration/scientific_design_identity.py",
     "orchestration/strategy_predeclaration.py",
     "orchestration/strategy_behavior_revision.py",
@@ -57,15 +74,67 @@ def test_admission_workflow_runs_existing_protected_dataset_regressions() -> Non
 
 
 def test_scientific_identity_sources_are_bound_and_trigger_focused_ci() -> None:
-    assert SCIENTIFIC_SOURCE_PATHS <= REQUIRED_SOURCE_PATHS
+    assert ADMISSION_INPUT_PATHS <= REQUIRED_SOURCE_PATHS
     workflow = (ROOT / ".github/workflows/strategy_factory_cohort_001_admission.yml").read_text()
     path_section = workflow.split("    paths:\n", 1)[1].split("  workflow_dispatch:", 1)[0]
     patterns = [line.strip()[2:].strip('"') for line in path_section.splitlines() if line.strip().startswith("- ")]
-    for source in SCIENTIFIC_SOURCE_PATHS:
+    for source in REQUIRED_SOURCE_PATHS | ADMISSION_INPUT_PATHS:
         assert any(fnmatch.fnmatchcase(source, pattern) for pattern in patterns), source
     revision_test = "tests/test_strategy_behavior_contract_revision.py"
     assert any(fnmatch.fnmatchcase(revision_test, pattern) for pattern in patterns)
     assert revision_test in workflow.split("python -m pytest -q", 1)[1]
+
+
+def test_actual_outcome_blind_admission_inputs_are_all_bound() -> None:
+    # A fresh interpreter traces names only, using the existing protected-safe
+    # qualifier. This catches dependencies omitted from BOTH explicit lists.
+    script = """
+import json, sys
+from pathlib import Path
+root = Path.cwd()
+opened = set()
+def audit(event, args):
+    if event == 'open' and isinstance(args[0], str):
+        path = Path(args[0]).resolve()
+        if path.is_relative_to(root) and '__pycache__' not in path.parts:
+            opened.add(path.relative_to(root).as_posix())
+sys.addaudithook(audit)
+from orchestration.strategy_factory_cohort_001_admission import build_canonical_admission_receipt
+receipt = build_canonical_admission_receipt()
+assert receipt['outcomes_read'] is False
+assert receipt['protected_oos_opened'] is False
+for module in list(sys.modules.values()):
+    filename = getattr(module, '__file__', None)
+    if filename:
+        path = Path(filename).resolve()
+        if path.is_relative_to(root) and path.is_file():
+            opened.add(path.relative_to(root).as_posix())
+print(json.dumps(sorted(opened)))
+"""
+    result = subprocess.run(
+        [sys.executable, "-B", "-c", script], cwd=ROOT,
+        capture_output=True, text=True, check=True,
+    )
+    assert set(json.loads(result.stdout)) <= REQUIRED_SOURCE_PATHS
+
+
+@pytest.mark.parametrize("relative", (
+    "orchestration/rejected_fingerprints.py",
+    "orchestration/rejected_fingerprints.json",
+    "orchestration/rejected_semantic_designs.json",
+    "orchestration/strategy_behavior_data_projection.py",
+    "orchestration/disc_btc_leadlag_001.json",
+    "orchestration/disc_liquidity_meanrev_001.json",
+    "orchestration/disc_vol_breakout_001.json",
+    "btc_leadlag_selection.py",
+))
+def test_rejection_and_data_input_drift_fails_closed(tmp_path: Path, relative: str) -> None:
+    _copy_lock_fixture(tmp_path)
+    target = tmp_path / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes((ROOT / relative).read_bytes() + b"\n")
+    with pytest.raises(RuntimeError, match="source drift"):
+        verify_admission_provenance_lock(repo_root=tmp_path)
 
 
 def test_identity_revision_semantic_drift_fails_closed(tmp_path: Path) -> None:

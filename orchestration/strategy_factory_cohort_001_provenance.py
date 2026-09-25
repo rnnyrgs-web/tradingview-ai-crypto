@@ -11,6 +11,21 @@ LOCK_RELATIVE_PATH = Path(
     "orchestration/cohorts/strategy_factory_cohort_001_admission_provenance_lock.json"
 )
 REQUIRED_SOURCE_PATHS = {
+    "btc_leadlag_selection.py",
+    "research_artifact.py",
+    "signal_development.py",
+    "volatility_breakout_selection.py",
+    "profitability_learning/__init__.py",
+    "profitability_learning/analytics.py",
+    "profitability_learning/contracts.py",
+    "orchestration/rejected_fingerprints.py",
+    "orchestration/rejected_fingerprints.json",
+    "orchestration/rejected_semantic_designs.json",
+    "orchestration/disc_btc_leadlag_001.json",
+    "orchestration/disc_liquidity_meanrev_001.json",
+    "orchestration/disc_vol_breakout_001.json",
+    "orchestration/evidence/liquidity_meanrev_001_cache/dataset.json.gz",
+    "orchestration/strategy_behavior_data_projection.py",
     "requirements-cohort001-admission.txt",
     ".github/workflows/strategy_factory_cohort_001_admission.yml",
     "orchestration/cohorts/strategy_factory_cohort_001_seed.json",

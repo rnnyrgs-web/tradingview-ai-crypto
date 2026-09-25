@@ -4,6 +4,22 @@ on:
   pull_request:
     branches: [main]
     paths:
+      - "btc_leadlag_selection.py"
+      - "research_artifact.py"
+      - "signal_development.py"
+      - "volatility_breakout_selection.py"
+      - "profitability_learning/__init__.py"
+      - "profitability_learning/analytics.py"
+      - "profitability_learning/contracts.py"
+      - "orchestration/rejected_fingerprints.py"
+      - "orchestration/rejected_fingerprints.json"
+      - "orchestration/rejected_semantic_designs.json"
+      - "orchestration/disc_btc_leadlag_001.json"
+      - "orchestration/disc_liquidity_meanrev_001.json"
+      - "orchestration/disc_vol_breakout_001.json"
+      - "orchestration/evidence/liquidity_meanrev_001_cache/dataset.json.gz"
+      - "orchestration/strategy_behavior_data_projection.py"
+      - "tests/test_rejected_fingerprints.py"
       - "orchestration/strategy_factory_cohort_001_admission.py"
       - "orchestration/strategy_factory_cohort_001_provenance.py"
       - "orchestration/scientific_design_identity.py"
@@ -58,6 +74,7 @@ jobs:
           tests/test_strategy_factory_cohort_001_provenance_lock.py
           tests/test_strategy_behavior_contract_revision.py
           tests/test_strategy_dataset_preflight.py
+          tests/test_rejected_fingerprints.py
       - name: Emit deterministic canonical admission receipt
         run: python -m orchestration.strategy_factory_cohort_001_admission > strategy_factory_cohort_001_canonical_admission.json
       - name: Assert research-only authority and exact execution holds
