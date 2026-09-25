@@ -1,0 +1,275 @@
+{
+  "fingerprint": "EXT-BTC-CANDLE-CLOCK-001-v1",
+  "contracts": {
+    "protocol": "e5ed40c277e213c9d604a573a6b18b6f949c812c9e4b98727dca57fdbe6a8911",
+    "inference_amendment": "2e9bb89ccf4d370fa2717f64f71aeab6b8c30a0a90926ab82c521f0696fe873c",
+    "tail_amendment": "7cc5bb27c8f3cb4d669d350b8013087fc99d0a226503f8add1d694290facd616"
+  },
+  "objects": [
+    {
+      "month": "2024-01",
+      "filename": "BTCUSDT-1m-2024-01.zip",
+      "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2024-01.zip",
+      "retrieved_at": "2026-09-25T00:39:27.693198+00:00",
+      "sha256": "40b78258091a468f8756843f207f5913eafc1d6e756c40a78711320d93fa5e75",
+      "checksum_sha256": "58937db8d3f1d6aa0f5d8e7b8d091bb3db240b8198416f7527ba7590510bf760",
+      "bytes": 2169570,
+      "rows": 44640,
+      "headers": {
+        "Date": "Fri, 25 Sep 2026 00:39:24 GMT",
+        "Last-Modified": "Mon, 05 Feb 2024 12:06:55 GMT",
+        "ETag": "\"6071234472eec511eaf4e5629348c73a\"",
+        "Content-Length": "2169570"
+      },
+      "checksum_headers": {
+        "Date": "Fri, 25 Sep 2026 00:39:28 GMT",
+        "Last-Modified": "Mon, 05 Feb 2024 12:06:55 GMT",
+        "ETag": "\"7a422ce183acb7952fc05507f7a26ddd\"",
+        "Content-Length": "88"
+      }
+    },
+    {
+      "month": "2024-02",
+      "filename": "BTCUSDT-1m-2024-02.zip",
+      "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2024-02.zip",
+      "retrieved_at": "2026-09-25T00:39:33.194162+00:00",
+      "sha256": "431132e0db8b9fe6e5c93c8e9ba3ae37dbcfa0edcdd57618b1b78ac18d14be79",
+      "checksum_sha256": "e91c7f4bfca6258f4cd4fb637d3af87438f97be8866ec6d12ca46b6336c2e69e",
+      "bytes": 2013843,
+      "rows": 41760,
+      "headers": {
+        "Date": "Fri, 25 Sep 2026 00:39:30 GMT",
+        "Last-Modified": "Tue, 12 Mar 2024 10:29:52 GMT",
+        "ETag": "\"5cdb4a6dc897371c741f6bf5cf102c92\"",
+        "Content-Length": "2013843"
+      },
+      "checksum_headers": {
+        "Date": "Fri, 25 Sep 2026 00:39:34 GMT",
+        "Last-Modified": "Tue, 12 Mar 2024 10:29:52 GMT",
+        "ETag": "\"f79dba135a486a05a59ebeae81ff8cf4\"",
+        "Content-Length": "88"
+      }
+    },
+    {
+      "month": "2024-03",
+      "filename": "BTCUSDT-1m-2024-03.zip",
+      "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2024-03.zip",
+      "retrieved_at": "2026-09-25T00:39:38.512859+00:00",
+      "sha256": "a9af86295eae839f1d072643c67eed7fcc47bb1d82c12ef312d041eec9511e7b",
+      "checksum_sha256": "15b6a2de2d2455b2541ef8fe60c4130c11a032e7b1175f4e76621415f7e229d0",
+      "bytes": 2221094,
+      "rows": 44640,
+      "headers": {
+        "Date": "Fri, 25 Sep 2026 00:39:36 GMT",
+        "Last-Modified": "Thu, 11 Apr 2024 13:40:01 GMT",
+        "ETag": "\"89997f70cae24cbc8f210c3a8be0c50d\"",
+        "Content-Length": "2221094"
+      },
+      "checksum_headers": {
+        "Date": "Fri, 25 Sep 2026 00:39:39 GMT",
+        "Last-Modified": "Thu, 11 Apr 2024 13:40:01 GMT",
+        "ETag": "\"c5e33345bc30d6fd5f862f5d9fa79990\"",
+        "Content-Length": "88"
+      }
+    },
+    {
+      "month": "2024-04",
+      "filename": "BTCUSDT-1m-2024-04.zip",
+      "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2024-04.zip",
+      "retrieved_at": "2026-09-25T00:39:44.914728+00:00",
+      "sha256": "753040cbfaa72bf9b1fdc6253a3b521a9a174a664dfd0929a556be327b016bc6",
+      "checksum_sha256": "b4c9a93eb29100151d112262aa16d98e3a76e4b1df82a6816750978cfa9704db",
+      "bytes": 2120723,
+      "rows": 43200,
+      "headers": {
+        "Date": "Fri, 25 Sep 2026 00:39:41 GMT",
+        "Last-Modified": "Sat, 11 May 2024 14:46:42 GMT",
+        "ETag": "\"a8698945e2871831f419cb524b4692c8\"",
+        "Content-Length": "2120723"
+      },
+      "checksum_headers": {
+        "Date": "Fri, 25 Sep 2026 00:39:44 GMT",
+        "Last-Modified": "Sat, 11 May 2024 14:46:42 GMT",
+        "ETag": "\"18a00cbb87137e8008811cf8b0fbe455\"",
+        "Content-Length": "88"
+      }
+    },
+    {
+      "month": "2024-05",
+      "filename": "BTCUSDT-1m-2024-05.zip",
+      "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2024-05.zip",
+      "retrieved_at": "2026-09-25T00:39:50.994693+00:00",
+      "sha256": "0f709143f66a09acc430d24a5f27f9accd52689c23ce10f2c0b6ea26997bfa8a",
+      "checksum_sha256": "20af4b32e12ce08e075bebd03c9f43785210ef365d52f8f41c271566cfdf4bcf",
+      "bytes": 2144250,
+      "rows": 44640,
+      "headers": {
+        "Date": "Fri, 25 Sep 2026 00:39:47 GMT",
+        "Last-Modified": "Thu, 06 Jun 2024 02:54:15 GMT",
+        "ETag": "\"91d0a2cc33d81c9485e4eb0579c0584a\"",
+        "Content-Length": "2144250"
+      },
+      "checksum_headers": {
+        "Date": "Fri, 25 Sep 2026 00:39:51 GMT",
+        "Last-Modified": "Thu, 06 Jun 2024 02:54:15 GMT",
+        "ETag": "\"33aaa61bcc7cd77118a5e0419252a54f\"",
+        "Content-Length": "88"
+      }
+    },
+    {
+      "month": "2024-06",
+      "filename": "BTCUSDT-1m-2024-06.zip",
+      "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2024-06.zip",
+      "retrieved_at": "2026-09-25T00:39:56.656840+00:00",
+      "sha256": "90f4fc3f55918787848c71f4cd0f2f1a5851bbffaf6392e76e9ab555b7479d2b",
+      "checksum_sha256": "ac279400992d5b462e365b4b2a446fe1875828236dfc9a5baaf4b94e6c5e265f",
+      "bytes": 2018857,
+      "rows": 43200,
+      "headers": {
+        "Date": "Fri, 25 Sep 2026 00:39:53 GMT",
+        "Last-Modified": "Tue, 09 Jul 2024 03:58:16 GMT",
+        "ETag": "\"cac2e00368357770297de1606adf6934\"",
+        "Content-Length": "2018857"
+      },
+      "checksum_headers": {
+        "Date": "Fri, 25 Sep 2026 00:39:57 GMT",
+        "Last-Modified": "Tue, 09 Jul 2024 03:58:16 GMT",
+        "ETag": "\"e3e0c6f7787beb86b41974bfed01c43e\"",
+        "Content-Length": "88"
+      }
+    },
+    {
+      "month": "2024-07",
+      "filename": "BTCUSDT-1m-2024-07.zip",
+      "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2024-07.zip",
+      "retrieved_at": "2026-09-25T00:40:02.259095+00:00",
+      "sha256": "9cfd749fd2027a0c6f261bed607b49dd1256369fb41b784934544a3676f8162e",
+      "checksum_sha256": "469a5311cc7501550dcf8be19171f4497a29ea05c68aa0663719e2ca496c125a",
+      "bytes": 2141506,
+      "rows": 44640,
+      "headers": {
+        "Date": "Fri, 25 Sep 2026 00:39:59 GMT",
+        "Last-Modified": "Thu, 08 Aug 2024 09:34:04 GMT",
+        "ETag": "\"cf15fe91deb89b06b0967530c7aa121e\"",
+        "Content-Length": "2141506"
+      },
+      "checksum_headers": {
+        "Date": "Fri, 25 Sep 2026 00:40:02 GMT",
+        "Last-Modified": "Thu, 08 Aug 2024 09:34:04 GMT",
+        "ETag": "\"74948a14f888232a95253bfaaccc421e\"",
+        "Content-Length": "88"
+      }
+    },
+    {
+      "month": "2024-08",
+      "filename": "BTCUSDT-1m-2024-08.zip",
+      "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2024-08.zip",
+      "retrieved_at": "2026-09-25T00:40:08.166066+00:00",
+      "sha256": "6a1cac2a5482132dc5a030534aa028e2becc560877f2b93b7add90194f576c42",
+      "checksum_sha256": "11bf30d52752d4379c59936d2def177a3e3a4177d992baea8eab357afe904275",
+      "bytes": 2164472,
+      "rows": 44640,
+      "headers": {
+        "Date": "Fri, 25 Sep 2026 00:40:05 GMT",
+        "Last-Modified": "Tue, 10 Sep 2024 11:16:19 GMT",
+        "ETag": "\"010ce8f47a590bdb90237fcfc707d415\"",
+        "Content-Length": "2164472"
+      },
+      "checksum_headers": {
+        "Date": "Fri, 25 Sep 2026 00:40:08 GMT",
+        "Last-Modified": "Tue, 10 Sep 2024 11:16:19 GMT",
+        "ETag": "\"ae10d02cfffcd73d7f358924d84f581b\"",
+        "Content-Length": "88"
+      }
+    },
+    {
+      "month": "2024-09",
+      "filename": "BTCUSDT-1m-2024-09.zip",
+      "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2024-09.zip",
+      "retrieved_at": "2026-09-25T00:40:13.712212+00:00",
+      "sha256": "1e30f6091b05eeb7b0449735d749354b81ab429ab1449bae82a21e316db8eac3",
+      "checksum_sha256": "c5b1dd7d721d16e8553793f36d2e739452a94fa337d862cd02bf782ad50dc13c",
+      "bytes": 2049758,
+      "rows": 43200,
+      "headers": {
+        "Date": "Fri, 25 Sep 2026 00:40:11 GMT",
+        "Last-Modified": "Tue, 15 Oct 2024 12:35:02 GMT",
+        "ETag": "\"0bd824791ac18cfe8ddd23acfa03ccfc\"",
+        "Content-Length": "2049758"
+      },
+      "checksum_headers": {
+        "Date": "Fri, 25 Sep 2026 00:40:14 GMT",
+        "Last-Modified": "Tue, 15 Oct 2024 12:35:02 GMT",
+        "ETag": "\"b1dc925e561fc4871f1f8b4084bb1468\"",
+        "Content-Length": "88"
+      }
+    },
+    {
+      "month": "2024-10",
+      "filename": "BTCUSDT-1m-2024-10.zip",
+      "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2024-10.zip",
+      "retrieved_at": "2026-09-25T00:40:19.369060+00:00",
+      "sha256": "13f7f9f9bed652fd152422246cfbcaefa6223692c5c37fb3ca4e72f45501e607",
+      "checksum_sha256": "6033dcdca22fe73c764c7794d2f42ef5e55230bee26f4ed7d8c7fef0149e744d",
+      "bytes": 2121607,
+      "rows": 44640,
+      "headers": {
+        "Date": "Fri, 25 Sep 2026 00:40:16 GMT",
+        "Last-Modified": "Wed, 06 Nov 2024 10:31:47 GMT",
+        "ETag": "\"af18358f704c6dc73bc18bdffea78144\"",
+        "Content-Length": "2121607"
+      },
+      "checksum_headers": {
+        "Date": "Fri, 25 Sep 2026 00:40:19 GMT",
+        "Last-Modified": "Wed, 06 Nov 2024 10:31:47 GMT",
+        "ETag": "\"8b4992c3da7ed8f042396d9db220ef73\"",
+        "Content-Length": "88"
+      }
+    },
+    {
+      "month": "2024-11",
+      "filename": "BTCUSDT-1m-2024-11.zip",
+      "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2024-11.zip",
+      "retrieved_at": "2026-09-25T00:40:25.315232+00:00",
+      "sha256": "c30a63bd0e8a77f2d18a2a019272b907f29a84fd5378796cf9333b041edcb12b",
+      "checksum_sha256": "f6cd2b7576d32f2775b620c241fb300c7f5c3b306c572447ce87f6489b8b3c89",
+      "bytes": 2146495,
+      "rows": 43200,
+      "headers": {
+        "Date": "Fri, 25 Sep 2026 00:40:22 GMT",
+        "Last-Modified": "Mon, 02 Dec 2024 18:21:12 GMT",
+        "ETag": "\"206bd4bf9572c963c5cb0d731895f4b5\"",
+        "Content-Length": "2146495"
+      },
+      "checksum_headers": {
+        "Date": "Fri, 25 Sep 2026 00:40:26 GMT",
+        "Last-Modified": "Mon, 02 Dec 2024 18:21:12 GMT",
+        "ETag": "\"771bf78102f71cdb5935850dd302f1e2\"",
+        "Content-Length": "88"
+      }
+    },
+    {
+      "month": "2024-12",
+      "filename": "BTCUSDT-1m-2024-12.zip",
+      "url": "https://data.binance.vision/data/spot/monthly/klines/BTCUSDT/1m/BTCUSDT-1m-2024-12.zip",
+      "retrieved_at": "2026-09-25T00:40:30.847166+00:00",
+      "sha256": "58fef0b7c7abce7a0201efd04ed3732f236f607f3fcecf228fb8384cad1ae2c1",
+      "checksum_sha256": "4beffd1c8c2ba68a487b26bf67e155fb5b01ce68944aa488b91a27f1105ab28c",
+      "bytes": 2218893,
+      "rows": 44640,
+      "headers": {
+        "Date": "Fri, 25 Sep 2026 00:40:28 GMT",
+        "Last-Modified": "Wed, 08 Jan 2025 00:50:27 GMT",
+        "ETag": "\"3ad5c05ab63fc668f09bb9b485eec376\"",
+        "Content-Length": "2218893"
+      },
+      "checksum_headers": {
+        "Date": "Fri, 25 Sep 2026 00:40:31 GMT",
+        "Last-Modified": "Wed, 08 Jan 2025 00:50:27 GMT",
+        "ETag": "\"0b3e90e7a07b817f4fe192f5ab20d8a3\"",
+        "Content-Length": "88"
+      }
+    }
+  ],
+  "provenance_grade": "PUBLIC_HTTPS_PROVIDER_ARCHIVES_NOT_CANONICAL_PIT_VINTAGE_ATTESTATION"
+}

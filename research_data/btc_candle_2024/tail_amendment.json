@@ -1,0 +1,6 @@
+{
+  "amendment_id": "EXT-BTC-CANDLE-CLOCK-001-v1-TAIL-v1",
+  "parent_protocol_sha256": "e5ed40c277e213c9d604a573a6b18b6f949c812c9e4b98727dca57fdbe6a8911",
+  "outcomes_opened_at_amendment": false,
+  "rule": "The best-calendar-day removal and worst-calendar-day loss concentration gates apply separately to training and validation at24bps base cost. Removing each half's best net day must leave strictly positive mean net per remaining trade. Worst negative-day absolute net sum must not exceed half the sum of positive-day net sums. No positive-day pool fails the gate. Other cost levels and diagnostic buckets may report the same statistics but do not create alternative survivor gates."
+}

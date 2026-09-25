@@ -1,0 +1,1184 @@
+{
+  "fingerprint": "EXT-BTC-CANDLE-CLOCK-001-v1",
+  "contracts": {
+    "protocol": "e5ed40c277e213c9d604a573a6b18b6f949c812c9e4b98727dca57fdbe6a8911",
+    "inference_amendment": "2e9bb89ccf4d370fa2717f64f71aeab6b8c30a0a90926ab82c521f0696fe873c",
+    "tail_amendment": "7cc5bb27c8f3cb4d669d350b8013087fc99d0a226503f8add1d694290facd616"
+  },
+  "manifest_sha256": "8fdc4140ce20dfba70bcbbd84312fb91154c1c2535b5e90d9a8b6c17628ccae6",
+  "decision": "REJECTED_STAGE1",
+  "inconclusive_reasons": [],
+  "failed_gates": [
+    "train:nonpositive_after_cost",
+    "train:profit_factor",
+    "train:day_tail_or_winner_dependence",
+    "train:timing_placebo_not_beaten",
+    "train:price_baseline_not_beaten",
+    "train:weak_adjusted_block_sign_evidence",
+    "validation:nonpositive_after_cost",
+    "validation:profit_factor",
+    "validation:day_tail_or_winner_dependence",
+    "validation:timing_placebo_not_beaten",
+    "validation:price_baseline_not_beaten",
+    "validation:weak_adjusted_block_sign_evidence",
+    "validation:nonpositive_stress",
+    "Q3:nonpositive_after_cost",
+    "Q4:nonpositive_after_cost"
+  ],
+  "validation_quarters": {
+    "Q3": {
+      "n": 8832,
+      "coverage": 0.5,
+      "mean_gross_bps": 0.11403476345080561,
+      "cash_per_opportunity_bps": 0,
+      "costs": {
+        "24": {
+          "mean_net_bps": -23.885965236549193,
+          "profit_factor": 0.0077024692637718,
+          "profit_factor_unbounded": false,
+          "win_fraction": 0.008491847826086956,
+          "day_count": 92,
+          "worst_day_net_sum_bps": -2498.5834907573544,
+          "winner_day_removed_mean_bps": -23.970793061588346,
+          "tail_veto": true,
+          "target_per_opportunity_bps": -11.942982618274597,
+          "price_baseline_per_opportunity_bps": -6.012658983217956,
+          "controls_per_opportunity_bps": {
+            "delayed": -11.986851044971345,
+            "clock": -11.920633915349544,
+            "random": -12.006198350831593
+          },
+          "controls_mean_net_bps": {
+            "delayed": -23.97370208994269,
+            "clock": -23.84126783069909,
+            "random": -24.012396701663185
+          }
+        },
+        "48": {
+          "mean_net_bps": -47.8859652365492,
+          "profit_factor": 0.0019024417607573047,
+          "profit_factor_unbounded": false,
+          "win_fraction": 0.0020380434782608695,
+          "day_count": 92,
+          "worst_day_net_sum_bps": -4802.583490757355,
+          "winner_day_removed_mean_bps": -47.970793061588346,
+          "tail_veto": true,
+          "target_per_opportunity_bps": -23.942982618274595,
+          "price_baseline_per_opportunity_bps": -12.052061157131,
+          "controls_per_opportunity_bps": {
+            "delayed": -23.986851044971345,
+            "clock": -23.920633915349544,
+            "random": -24.006198350831593
+          },
+          "controls_mean_net_bps": {
+            "delayed": -47.97370208994269,
+            "clock": -47.84126783069909,
+            "random": -48.012396701663185
+          }
+        },
+        "72": {
+          "mean_net_bps": -71.8859652365492,
+          "profit_factor": 0.0007852717096714572,
+          "profit_factor_unbounded": false,
+          "win_fraction": 0.0010190217391304348,
+          "day_count": 92,
+          "worst_day_net_sum_bps": -7106.583490757356,
+          "winner_day_removed_mean_bps": -71.97079306158835,
+          "tail_veto": true,
+          "target_per_opportunity_bps": -35.9429826182746,
+          "price_baseline_per_opportunity_bps": -18.091463331044043,
+          "controls_per_opportunity_bps": {
+            "delayed": -35.986851044971345,
+            "clock": -35.92063391534954,
+            "random": -36.00619835083159
+          },
+          "controls_mean_net_bps": {
+            "delayed": -71.97370208994269,
+            "clock": -71.84126783069908,
+            "random": -72.01239670166318
+          }
+        }
+      }
+    },
+    "Q4": {
+      "n": 8832,
+      "coverage": 0.5,
+      "mean_gross_bps": -0.002436256241808953,
+      "cash_per_opportunity_bps": 0,
+      "costs": {
+        "24": {
+          "mean_net_bps": -24.002436256241808,
+          "profit_factor": 0.002190700553181642,
+          "profit_factor_unbounded": false,
+          "win_fraction": 0.00577445652173913,
+          "day_count": 92,
+          "worst_day_net_sum_bps": -2501.7636651045927,
+          "winner_day_removed_mean_bps": -24.02644950516352,
+          "tail_veto": true,
+          "target_per_opportunity_bps": -12.001218128120906,
+          "price_baseline_per_opportunity_bps": -6.083059877460904,
+          "controls_per_opportunity_bps": {
+            "delayed": -12.037788622665547,
+            "clock": -11.985797289837059,
+            "random": -11.9361775259006
+          },
+          "controls_mean_net_bps": {
+            "delayed": -24.075577245331093,
+            "clock": -23.97159457967412,
+            "random": -23.8723550518012
+          }
+        },
+        "48": {
+          "mean_net_bps": -48.00243625624181,
+          "profit_factor": 0.0001297693117035073,
+          "profit_factor_unbounded": false,
+          "win_fraction": 0.00022644927536231884,
+          "day_count": 92,
+          "worst_day_net_sum_bps": -4805.763665104595,
+          "winner_day_removed_mean_bps": -48.02644950516352,
+          "tail_veto": true,
+          "target_per_opportunity_bps": -24.001218128120904,
+          "price_baseline_per_opportunity_bps": -12.13061422528699,
+          "controls_per_opportunity_bps": {
+            "delayed": -24.03778862266555,
+            "clock": -23.985797289837063,
+            "random": -23.9361775259006
+          },
+          "controls_mean_net_bps": {
+            "delayed": -48.0755772453311,
+            "clock": -47.97159457967412,
+            "random": -47.8723550518012
+          }
+        },
+        "72": {
+          "mean_net_bps": -72.00243625624181,
+          "profit_factor": 4.6171772160044674e-05,
+          "profit_factor_unbounded": false,
+          "win_fraction": 0.00011322463768115942,
+          "day_count": 92,
+          "worst_day_net_sum_bps": -7109.763665104595,
+          "winner_day_removed_mean_bps": -72.02644950516353,
+          "tail_veto": true,
+          "target_per_opportunity_bps": -36.001218128120904,
+          "price_baseline_per_opportunity_bps": -18.178168573113076,
+          "controls_per_opportunity_bps": {
+            "delayed": -36.037788622665545,
+            "clock": -35.98579728983706,
+            "random": -35.9361775259006
+          },
+          "controls_mean_net_bps": {
+            "delayed": -72.07557724533109,
+            "clock": -71.97159457967412,
+            "random": -71.87235505180121
+          }
+        }
+      }
+    }
+  },
+  "data_qa": {
+    "missing_blocks": 0,
+    "missing_block_times": [],
+    "zero_volume_blocks": 0,
+    "zero_volume_block_times": [],
+    "expected_blocks": 35135,
+    "eligible_blocks": 35135
+  },
+  "rows": 527040,
+  "buckets": {
+    "1": {
+      "cutoff": 0.5819219221508389,
+      "train": {
+        "n": 175,
+        "coverage": 0.010016598935378627,
+        "mean_gross_bps": -0.3061131209676279,
+        "cash_per_opportunity_bps": 0,
+        "costs": {
+          "24": {
+            "mean_net_bps": -24.306113120967627,
+            "profit_factor": 0.001154886893121289,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.005714285714285714,
+            "day_count": 87,
+            "worst_day_net_sum_bps": -168.0817382911411,
+            "winner_day_removed_mean_bps": -24.383520082059064,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -0.24346458681067684,
+            "price_baseline_per_opportunity_bps": -0.23505109742623911,
+            "controls_per_opportunity_bps": {
+              "delayed": -0.24312896039024026,
+              "clock": -0.2411233881995294,
+              "random": -0.24322516784846665
+            },
+            "controls_mean_net_bps": {
+              "delayed": -24.2726060970165,
+              "clock": -24.072381229908444,
+              "random": -24.28221089988892
+            }
+          },
+          "48": {
+            "mean_net_bps": -48.30611312096763,
+            "profit_factor": 0.0,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.0,
+            "day_count": 87,
+            "worst_day_net_sum_bps": -336.0817382911411,
+            "winner_day_removed_mean_bps": -48.38352008205906,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -0.4838629612597639,
+            "price_baseline_per_opportunity_bps": -0.4672072418942146,
+            "controls_per_opportunity_bps": {
+              "delayed": -0.4835273348393273,
+              "clock": -0.48152176264861646,
+              "random": -0.4836235422975537
+            },
+            "controls_mean_net_bps": {
+              "delayed": -48.2726060970165,
+              "clock": -48.072381229908444,
+              "random": -48.282210899888916
+            }
+          },
+          "72": {
+            "mean_net_bps": -72.30611312096762,
+            "profit_factor": 0.0,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.0,
+            "day_count": 87,
+            "worst_day_net_sum_bps": -504.08173829114116,
+            "winner_day_removed_mean_bps": -72.38352008205906,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -0.724261335708851,
+            "price_baseline_per_opportunity_bps": -0.6993633863621901,
+            "controls_per_opportunity_bps": {
+              "delayed": -0.7239257092884144,
+              "clock": -0.7219201370977035,
+              "random": -0.7240219167466407
+            },
+            "controls_mean_net_bps": {
+              "delayed": -72.27260609701649,
+              "clock": -72.07238122990844,
+              "random": -72.28221089988892
+            }
+          }
+        },
+        "paired_clock_inference": {
+          "informative_complete_weeks": 25,
+          "positive_weeks": 14,
+          "one_sided_p": 0.34501898288726807,
+          "bonferroni_p": 1.0
+        }
+      },
+      "validation": {
+        "n": 293,
+        "coverage": 0.016587409420289856,
+        "mean_gross_bps": 0.2232760527921074,
+        "cash_per_opportunity_bps": 0,
+        "costs": {
+          "24": {
+            "mean_net_bps": -23.77672394720789,
+            "profit_factor": 0.0003956375889438524,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.0034129692832764505,
+            "day_count": 118,
+            "worst_day_net_sum_bps": -275.7522630646327,
+            "winner_day_removed_mean_bps": -23.84021033807359,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -0.39439425478554757,
+            "price_baseline_per_opportunity_bps": -0.3655077582096738,
+            "controls_per_opportunity_bps": {
+              "delayed": -0.40258018366256765,
+              "clock": -0.4070231968121477,
+              "random": -0.4024444588125956
+            },
+            "controls_mean_net_bps": {
+              "delayed": -24.270226499029334,
+              "clock": -24.538081052866133,
+              "random": -24.262044097152522
+            }
+          },
+          "48": {
+            "mean_net_bps": -47.77672394720789,
+            "profit_factor": 0.0,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.0,
+            "day_count": 118,
+            "worst_day_net_sum_bps": -539.7522630646326,
+            "winner_day_removed_mean_bps": -47.84021033807358,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -0.7924920808725041,
+            "price_baseline_per_opportunity_bps": -0.7364316712531521,
+            "controls_per_opportunity_bps": {
+              "delayed": -0.8006780097495242,
+              "clock": -0.8051210228991043,
+              "random": -0.8005422848995521
+            },
+            "controls_mean_net_bps": {
+              "delayed": -48.270226499029334,
+              "clock": -48.53808105286613,
+              "random": -48.26204409715252
+            }
+          },
+          "72": {
+            "mean_net_bps": -71.7767239472079,
+            "profit_factor": 0.0,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.0,
+            "day_count": 118,
+            "worst_day_net_sum_bps": -803.7522630646328,
+            "winner_day_removed_mean_bps": -71.84021033807359,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -1.1905899069594608,
+            "price_baseline_per_opportunity_bps": -1.1073555842966303,
+            "controls_per_opportunity_bps": {
+              "delayed": -1.1987758358364808,
+              "clock": -1.2032188489860607,
+              "random": -1.1986401109865086
+            },
+            "controls_mean_net_bps": {
+              "delayed": -72.27022649902933,
+              "clock": -72.53808105286613,
+              "random": -72.26204409715253
+            }
+          }
+        },
+        "paired_clock_inference": {
+          "informative_complete_weeks": 26,
+          "positive_weeks": 18,
+          "one_sided_p": 0.03775934875011444,
+          "bonferroni_p": 0.4531121850013733
+        }
+      }
+    },
+    "5": {
+      "cutoff": 0.4139201734573543,
+      "train": {
+        "n": 874,
+        "coverage": 0.05002575696869097,
+        "mean_gross_bps": -0.28192492697644933,
+        "cash_per_opportunity_bps": 0,
+        "costs": {
+          "24": {
+            "mean_net_bps": -24.281924926976448,
+            "profit_factor": 0.006722549735559055,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.011441647597254004,
+            "day_count": 171,
+            "worst_day_net_sum_bps": -450.68749566829405,
+            "winner_day_removed_mean_bps": -24.405152375671484,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -1.2147216751289234,
+            "price_baseline_per_opportunity_bps": -1.1598522573434942,
+            "controls_per_opportunity_bps": {
+              "delayed": -1.2052759110023763,
+              "clock": -1.2203545912510831,
+              "random": -1.1962395877868488
+            },
+            "controls_mean_net_bps": {
+              "delayed": -24.093106912039495,
+              "clock": -24.39452524456255,
+              "random": -23.912473499112167
+            }
+          },
+          "48": {
+            "mean_net_bps": -48.28192492697645,
+            "profit_factor": 0.0012407428013589078,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.002288329519450801,
+            "day_count": 171,
+            "worst_day_net_sum_bps": -906.6874956682941,
+            "winner_day_removed_mean_bps": -48.295087435735496,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -2.4153398423775068,
+            "price_baseline_per_opportunity_bps": -2.302774814724297,
+            "controls_per_opportunity_bps": {
+              "delayed": -2.4058940782509595,
+              "clock": -2.4209727584996665,
+              "random": -2.396857755035432
+            },
+            "controls_mean_net_bps": {
+              "delayed": -48.093106912039495,
+              "clock": -48.39452524456255,
+              "random": -47.91247349911217
+            }
+          },
+          "72": {
+            "mean_net_bps": -72.28192492697644,
+            "profit_factor": 6.999824273010551e-05,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.002288329519450801,
+            "day_count": 171,
+            "worst_day_net_sum_bps": -1362.687495668294,
+            "winner_day_removed_mean_bps": -72.2950874357355,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -3.61595800962609,
+            "price_baseline_per_opportunity_bps": -3.4456973721050996,
+            "controls_per_opportunity_bps": {
+              "delayed": -3.606512245499543,
+              "clock": -3.62159092574825,
+              "random": -3.5974759222840156
+            },
+            "controls_mean_net_bps": {
+              "delayed": -72.09310691203949,
+              "clock": -72.39452524456256,
+              "random": -71.91247349911217
+            }
+          }
+        },
+        "paired_clock_inference": {
+          "informative_complete_weeks": 26,
+          "positive_weeks": 12,
+          "one_sided_p": 0.7214014530181885,
+          "bonferroni_p": 1.0
+        }
+      },
+      "validation": {
+        "n": 1058,
+        "coverage": 0.059895833333333336,
+        "mean_gross_bps": -0.20335726479332245,
+        "cash_per_opportunity_bps": 0,
+        "costs": {
+          "24": {
+            "mean_net_bps": -24.203357264793322,
+            "profit_factor": 0.0064189582765412775,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.005671077504725898,
+            "day_count": 179,
+            "worst_day_net_sum_bps": -492.2313847591726,
+            "winner_day_removed_mean_bps": -24.224484865102113,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -1.4496802528391832,
+            "price_baseline_per_opportunity_bps": -1.315796583921894,
+            "controls_per_opportunity_bps": {
+              "delayed": -1.4556625564670662,
+              "clock": -1.4535075381871376,
+              "random": -1.4368113204673478
+            },
+            "controls_mean_net_bps": {
+              "delayed": -24.303235725363194,
+              "clock": -24.267256289733076,
+              "random": -23.988502046063545
+            }
+          },
+          "48": {
+            "mean_net_bps": -48.203357264793325,
+            "profit_factor": 0.0015914429712030776,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.001890359168241966,
+            "day_count": 179,
+            "worst_day_net_sum_bps": -972.2313847591726,
+            "winner_day_removed_mean_bps": -48.22448486510211,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -2.8871802528391837,
+            "price_baseline_per_opportunity_bps": -2.6255791926175465,
+            "controls_per_opportunity_bps": {
+              "delayed": -2.8931625564670664,
+              "clock": -2.8910075381871376,
+              "random": -2.874311320467348
+            },
+            "controls_mean_net_bps": {
+              "delayed": -48.303235725363194,
+              "clock": -48.267256289733076,
+              "random": -47.988502046063545
+            }
+          },
+          "72": {
+            "mean_net_bps": -72.20335726479333,
+            "profit_factor": 0.0004495564060654504,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.000945179584120983,
+            "day_count": 179,
+            "worst_day_net_sum_bps": -1452.2313847591722,
+            "winner_day_removed_mean_bps": -72.22448486510211,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -4.324680252839183,
+            "price_baseline_per_opportunity_bps": -3.935361801313198,
+            "controls_per_opportunity_bps": {
+              "delayed": -4.330662556467066,
+              "clock": -4.328507538187138,
+              "random": -4.311811320467347
+            },
+            "controls_mean_net_bps": {
+              "delayed": -72.3032357253632,
+              "clock": -72.26725628973308,
+              "random": -71.98850204606354
+            }
+          }
+        },
+        "paired_clock_inference": {
+          "informative_complete_weeks": 26,
+          "positive_weeks": 12,
+          "one_sided_p": 0.7214014530181885,
+          "bonferroni_p": 1.0
+        }
+      }
+    },
+    "10": {
+      "cutoff": 0.3151867847680465,
+      "train": {
+        "n": 1748,
+        "coverage": 0.10005151393738194,
+        "mean_gross_bps": -0.6583527352339142,
+        "cash_per_opportunity_bps": 0,
+        "costs": {
+          "24": {
+            "mean_net_bps": -24.658352735233915,
+            "profit_factor": 0.005702118726033348,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.008581235697940504,
+            "day_count": 179,
+            "worst_day_net_sum_bps": -573.4022591869383,
+            "winner_day_removed_mean_bps": -24.66514569342218,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -2.4671055223621363,
+            "price_baseline_per_opportunity_bps": -2.324875860040008,
+            "controls_per_opportunity_bps": {
+              "delayed": -2.3995899155649796,
+              "clock": -2.4318668274842308,
+              "random": -2.386314135962585
+            },
+            "controls_mean_net_bps": {
+              "delayed": -23.983544287663477,
+              "clock": -24.306147221382723,
+              "random": -23.850854845195837
+            }
+          },
+          "48": {
+            "mean_net_bps": -48.65835273523391,
+            "profit_factor": 0.001235028441970741,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.0017162471395881006,
+            "day_count": 179,
+            "worst_day_net_sum_bps": -1149.4022591869382,
+            "winner_day_removed_mean_bps": -48.66514569342218,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -4.8683418568593035,
+            "price_baseline_per_opportunity_bps": -4.584620579861427,
+            "controls_per_opportunity_bps": {
+              "delayed": -4.800826250062146,
+              "clock": -4.833103161981398,
+              "random": -4.787550470459752
+            },
+            "controls_mean_net_bps": {
+              "delayed": -47.98354428766348,
+              "clock": -48.30614722138272,
+              "random": -47.85085484519583
+            }
+          },
+          "72": {
+            "mean_net_bps": -72.65835273523392,
+            "profit_factor": 0.0002611382110291817,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.0017162471395881006,
+            "day_count": 179,
+            "worst_day_net_sum_bps": -1725.4022591869384,
+            "winner_day_removed_mean_bps": -72.66514569342219,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -7.26957819135647,
+            "price_baseline_per_opportunity_bps": -6.844365299682845,
+            "controls_per_opportunity_bps": {
+              "delayed": -7.202062584559313,
+              "clock": -7.234339496478564,
+              "random": -7.188786804956918
+            },
+            "controls_mean_net_bps": {
+              "delayed": -71.98354428766348,
+              "clock": -72.30614722138272,
+              "random": -71.85085484519584
+            }
+          }
+        },
+        "paired_clock_inference": {
+          "informative_complete_weeks": 26,
+          "positive_weeks": 11,
+          "one_sided_p": 0.8365302085876465,
+          "bonferroni_p": 1.0
+        }
+      },
+      "validation": {
+        "n": 2079,
+        "coverage": 0.11769701086956522,
+        "mean_gross_bps": -0.06176016478205425,
+        "cash_per_opportunity_bps": 0,
+        "costs": {
+          "24": {
+            "mean_net_bps": -24.061760164782054,
+            "profit_factor": 0.004394346980405678,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.006253006253006253,
+            "day_count": 184,
+            "worst_day_net_sum_bps": -657.991265762907,
+            "winner_day_removed_mean_bps": -24.07643376664266,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -2.8319972476552246,
+            "price_baseline_per_opportunity_bps": -2.526777064977884,
+            "controls_per_opportunity_bps": {
+              "delayed": -2.8515338995911144,
+              "clock": -2.84938080939459,
+              "random": -2.8089851999822093
+            },
+            "controls_mean_net_bps": {
+              "delayed": -24.227751227694775,
+              "clock": -24.209457728304976,
+              "random": -23.866240775606418
+            }
+          },
+          "48": {
+            "mean_net_bps": -48.06176016478205,
+            "profit_factor": 0.0008129023831741299,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.000962000962000962,
+            "day_count": 184,
+            "worst_day_net_sum_bps": -1281.9912657629072,
+            "winner_day_removed_mean_bps": -48.07643376664266,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -5.65672550852479,
+            "price_baseline_per_opportunity_bps": -5.05666836932571,
+            "controls_per_opportunity_bps": {
+              "delayed": -5.676262160460679,
+              "clock": -5.674109070264155,
+              "random": -5.633713460851775
+            },
+            "controls_mean_net_bps": {
+              "delayed": -48.227751227694775,
+              "clock": -48.209457728304976,
+              "random": -47.86624077560642
+            }
+          },
+          "72": {
+            "mean_net_bps": -72.06176016478206,
+            "profit_factor": 0.00022927863768007917,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.000481000481000481,
+            "day_count": 184,
+            "worst_day_net_sum_bps": -1905.9912657629075,
+            "winner_day_removed_mean_bps": -72.07643376664265,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -8.481453769394355,
+            "price_baseline_per_opportunity_bps": -7.586559673673536,
+            "controls_per_opportunity_bps": {
+              "delayed": -8.500990421330245,
+              "clock": -8.498837331133721,
+              "random": -8.45844172172134
+            },
+            "controls_mean_net_bps": {
+              "delayed": -72.22775122769478,
+              "clock": -72.20945772830497,
+              "random": -71.86624077560641
+            }
+          }
+        },
+        "paired_clock_inference": {
+          "informative_complete_weeks": 26,
+          "positive_weeks": 10,
+          "one_sided_p": 0.9156812280416489,
+          "bonferroni_p": 1.0
+        }
+      }
+    },
+    "20": {
+      "cutoff": 0.2076222500022511,
+      "train": {
+        "n": 3495,
+        "coverage": 0.20004579016656174,
+        "mean_gross_bps": -0.45103356788142335,
+        "cash_per_opportunity_bps": 0,
+        "costs": {
+          "24": {
+            "mean_net_bps": -24.451033567881424,
+            "profit_factor": 0.004687549121745534,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.00715307582260372,
+            "day_count": 182,
+            "worst_day_net_sum_bps": -867.5078627603467,
+            "winner_day_removed_mean_bps": -24.460039097850874,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -4.891326330475964,
+            "price_baseline_per_opportunity_bps": -4.449993937647507,
+            "controls_per_opportunity_bps": {
+              "delayed": -4.82820730053634,
+              "clock": -4.8302422150739455,
+              "random": -4.775086746621269
+            },
+            "controls_mean_net_bps": {
+              "delayed": -24.13551065741642,
+              "clock": -24.145682901160775,
+              "random": -23.86996868389705
+            }
+          },
+          "48": {
+            "mean_net_bps": -48.451033567881424,
+            "profit_factor": 0.0008463639858493201,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.001430615164520744,
+            "day_count": 182,
+            "worst_day_net_sum_bps": -1659.5078627603468,
+            "winner_day_removed_mean_bps": -48.43368125626753,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -9.692425294473447,
+            "price_baseline_per_opportunity_bps": -8.808759892658669,
+            "controls_per_opportunity_bps": {
+              "delayed": -9.62930626453382,
+              "clock": -9.631341179071427,
+              "random": -9.576185710618752
+            },
+            "controls_mean_net_bps": {
+              "delayed": -48.13551065741642,
+              "clock": -48.145682901160775,
+              "random": -47.86996868389705
+            }
+          },
+          "72": {
+            "mean_net_bps": -72.45103356788142,
+            "profit_factor": 0.00016373176021472214,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.0011444921316165952,
+            "day_count": 182,
+            "worst_day_net_sum_bps": -2451.5078627603466,
+            "winner_day_removed_mean_bps": -72.43368125626753,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -14.493524258470929,
+            "price_baseline_per_opportunity_bps": -13.16752584766983,
+            "controls_per_opportunity_bps": {
+              "delayed": -14.430405228531303,
+              "clock": -14.43244014306891,
+              "random": -14.377284674616233
+            },
+            "controls_mean_net_bps": {
+              "delayed": -72.13551065741642,
+              "clock": -72.14568290116077,
+              "random": -71.86996868389706
+            }
+          }
+        },
+        "paired_clock_inference": {
+          "informative_complete_weeks": 26,
+          "positive_weeks": 12,
+          "one_sided_p": 0.7214014530181885,
+          "bonferroni_p": 1.0
+        }
+      },
+      "validation": {
+        "n": 3663,
+        "coverage": 0.2073709239130435,
+        "mean_gross_bps": -0.07652491465982524,
+        "cash_per_opportunity_bps": 0,
+        "costs": {
+          "24": {
+            "mean_net_bps": -24.076524914659824,
+            "profit_factor": 0.0038715948473751136,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.007371007371007371,
+            "day_count": 184,
+            "worst_day_net_sum_bps": -960.7706853086815,
+            "winner_day_removed_mean_bps": -24.079299745016762,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -4.992771216168418,
+            "price_baseline_per_opportunity_bps": -4.348977699996295,
+            "controls_per_opportunity_bps": {
+              "delayed": -4.991665535661846,
+              "clock": -5.013804825991102,
+              "random": -4.958115350786367
+            },
+            "controls_mean_net_bps": {
+              "delayed": -24.071193017180136,
+              "clock": -24.177954803796563,
+              "random": -23.909404738272013
+            }
+          },
+          "48": {
+            "mean_net_bps": -48.07652491465983,
+            "profit_factor": 0.00047081873713261766,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.000819000819000819,
+            "day_count": 184,
+            "worst_day_net_sum_bps": -1896.7706853086815,
+            "winner_day_removed_mean_bps": -48.07929974501676,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -9.96967339008146,
+            "price_baseline_per_opportunity_bps": -8.691369004344121,
+            "controls_per_opportunity_bps": {
+              "delayed": -9.96856770957489,
+              "clock": -9.990706999904145,
+              "random": -9.935017524699411
+            },
+            "controls_mean_net_bps": {
+              "delayed": -48.071193017180136,
+              "clock": -48.17795480379656,
+              "random": -47.909404738272016
+            }
+          },
+          "72": {
+            "mean_net_bps": -72.07652491465983,
+            "profit_factor": 0.00013011736583412337,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.000273000273000273,
+            "day_count": 184,
+            "worst_day_net_sum_bps": -2832.770685308681,
+            "winner_day_removed_mean_bps": -72.07929974501677,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -14.946575563994505,
+            "price_baseline_per_opportunity_bps": -13.033760308691948,
+            "controls_per_opportunity_bps": {
+              "delayed": -14.945469883487931,
+              "clock": -14.96760917381719,
+              "random": -14.911919698612452
+            },
+            "controls_mean_net_bps": {
+              "delayed": -72.07119301718014,
+              "clock": -72.17795480379657,
+              "random": -71.90940473827202
+            }
+          }
+        },
+        "paired_clock_inference": {
+          "informative_complete_weeks": 26,
+          "positive_weeks": 14,
+          "one_sided_p": 0.42250949144363403,
+          "bonferroni_p": 1.0
+        }
+      }
+    },
+    "50": {
+      "cutoff": -0.0045893172324180664,
+      "train": {
+        "n": 8736,
+        "coverage": 0.5000286188541011,
+        "mean_gross_bps": -0.21627657233358433,
+        "cash_per_opportunity_bps": 0,
+        "costs": {
+          "24": {
+            "mean_net_bps": -24.216276572333584,
+            "profit_factor": 0.005603834934726235,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.009615384615384616,
+            "day_count": 182,
+            "worst_day_net_sum_bps": -1714.1241871072082,
+            "winner_day_removed_mean_bps": -24.23527784252466,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -12.108831328252887,
+            "price_baseline_per_opportunity_bps": -9.330226737017504,
+            "controls_per_opportunity_bps": {
+              "delayed": -12.049849355930617,
+              "clock": -12.029698610663447,
+              "random": -11.97671186586433
+            },
+            "controls_mean_net_bps": {
+              "delayed": -24.09831937928844,
+              "clock": -24.058020195387027,
+              "random": -23.952052771121302
+            }
+          },
+          "48": {
+            "mean_net_bps": -48.216276572333584,
+            "profit_factor": 0.0008427765253683577,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.001717032967032967,
+            "day_count": 182,
+            "worst_day_net_sum_bps": -3322.124187107207,
+            "winner_day_removed_mean_bps": -48.209879075875676,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -24.109518180751316,
+            "price_baseline_per_opportunity_bps": -18.5628980208593,
+            "controls_per_opportunity_bps": {
+              "delayed": -24.050536208429044,
+              "clock": -24.030385463161874,
+              "random": -23.977398718362757
+            },
+            "controls_mean_net_bps": {
+              "delayed": -48.09831937928844,
+              "clock": -48.05802019538703,
+              "random": -47.9520527711213
+            }
+          },
+          "72": {
+            "mean_net_bps": -72.21627657233358,
+            "profit_factor": 0.0002280555033114706,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.0006868131868131869,
+            "day_count": 182,
+            "worst_day_net_sum_bps": -4930.124187107205,
+            "winner_day_removed_mean_bps": -72.20987907587566,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -36.110205033249734,
+            "price_baseline_per_opportunity_bps": -27.795569304701097,
+            "controls_per_opportunity_bps": {
+              "delayed": -36.05122306092747,
+              "clock": -36.0310723156603,
+              "random": -35.97808557086118
+            },
+            "controls_mean_net_bps": {
+              "delayed": -72.09831937928844,
+              "clock": -72.05802019538703,
+              "random": -71.9520527711213
+            }
+          }
+        },
+        "paired_clock_inference": {
+          "informative_complete_weeks": 26,
+          "positive_weeks": 11,
+          "one_sided_p": 0.8365302085876465,
+          "bonferroni_p": 1.0
+        }
+      },
+      "validation": {
+        "n": 8030,
+        "coverage": 0.4545969202898551,
+        "mean_gross_bps": -0.1299960361691077,
+        "cash_per_opportunity_bps": 0,
+        "costs": {
+          "24": {
+            "mean_net_bps": -24.129996036169107,
+            "profit_factor": 0.0034060989661649763,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.007222914072229141,
+            "day_count": 184,
+            "worst_day_net_sum_bps": -1484.3087093954846,
+            "winner_day_removed_mean_bps": -24.137063931075783,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -10.969421884648886,
+            "price_baseline_per_opportunity_bps": -8.389020216802061,
+            "controls_per_opportunity_bps": {
+              "delayed": -10.990606193144856,
+              "clock": -11.002960526919823,
+              "random": -10.886466802602024
+            },
+            "controls_mean_net_bps": {
+              "delayed": -24.17659623856921,
+              "clock": -24.20377269582961,
+              "random": -23.947515516956685
+            }
+          },
+          "48": {
+            "mean_net_bps": -48.12999603616911,
+            "profit_factor": 0.0004321614309177652,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.0006226650062266501,
+            "day_count": 184,
+            "worst_day_net_sum_bps": -2900.308709395485,
+            "winner_day_removed_mean_bps": -48.13706393107579,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -21.879747971605408,
+            "price_baseline_per_opportunity_bps": -16.73005282549771,
+            "controls_per_opportunity_bps": {
+              "delayed": -21.90093228010138,
+              "clock": -21.913286613876345,
+              "random": -21.79679288955855
+            },
+            "controls_mean_net_bps": {
+              "delayed": -48.17659623856921,
+              "clock": -48.203772695829606,
+              "random": -47.947515516956685
+            }
+          },
+          "72": {
+            "mean_net_bps": -72.1299960361691,
+            "profit_factor": 0.0001321792751895398,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.00024906600249066,
+            "day_count": 184,
+            "worst_day_net_sum_bps": -4316.308709395484,
+            "winner_day_removed_mean_bps": -72.13706393107579,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -32.790074058561935,
+            "price_baseline_per_opportunity_bps": -25.071085434193364,
+            "controls_per_opportunity_bps": {
+              "delayed": -32.8112583670579,
+              "clock": -32.82361270083287,
+              "random": -32.70711897651507
+            },
+            "controls_mean_net_bps": {
+              "delayed": -72.1765962385692,
+              "clock": -72.20377269582961,
+              "random": -71.94751551695668
+            }
+          }
+        },
+        "paired_clock_inference": {
+          "informative_complete_weeks": 26,
+          "positive_weeks": 14,
+          "one_sided_p": 0.42250949144363403,
+          "bonferroni_p": 1.0
+        }
+      }
+    },
+    "100": {
+      "cutoff": null,
+      "train": {
+        "n": 17471,
+        "coverage": 1.0,
+        "mean_gross_bps": -0.03393225412065653,
+        "cash_per_opportunity_bps": 0,
+        "costs": {
+          "24": {
+            "mean_net_bps": -24.033932254120657,
+            "profit_factor": 0.0055958757899523615,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.010016598935378627,
+            "day_count": 182,
+            "worst_day_net_sum_bps": -2555.994664541323,
+            "winner_day_removed_mean_bps": -24.050098725347024,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -24.033932254120657,
+            "price_baseline_per_opportunity_bps": -12.377303820042414,
+            "controls_per_opportunity_bps": {
+              "delayed": -24.088947283938435,
+              "clock": -24.111473074500292,
+              "random": -23.917590169871435
+            },
+            "controls_mean_net_bps": {
+              "delayed": -24.088947283938435,
+              "clock": -24.111473074500296,
+              "random": -23.917590169871435
+            }
+          },
+          "48": {
+            "mean_net_bps": -48.03393225412066,
+            "profit_factor": 0.000740056556123843,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.001774368954267071,
+            "day_count": 182,
+            "worst_day_net_sum_bps": -4859.994664541322,
+            "winner_day_removed_mean_bps": -48.05009872534702,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -48.03393225412066,
+            "price_baseline_per_opportunity_bps": -24.62663127697104,
+            "controls_per_opportunity_bps": {
+              "delayed": -48.08894728393843,
+              "clock": -48.111473074500296,
+              "random": -47.91759016987143
+            },
+            "controls_mean_net_bps": {
+              "delayed": -48.08894728393844,
+              "clock": -48.111473074500296,
+              "random": -47.91759016987143
+            }
+          },
+          "72": {
+            "mean_net_bps": -72.03393225412066,
+            "profit_factor": 0.00020057918783670855,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.0005151393738194723,
+            "day_count": 182,
+            "worst_day_net_sum_bps": -7163.994664541319,
+            "winner_day_removed_mean_bps": -72.05009872534703,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -72.03393225412066,
+            "price_baseline_per_opportunity_bps": -36.87595873389966,
+            "controls_per_opportunity_bps": {
+              "delayed": -72.08894728393844,
+              "clock": -72.1114730745003,
+              "random": -71.91759016987145
+            },
+            "controls_mean_net_bps": {
+              "delayed": -72.08894728393844,
+              "clock": -72.1114730745003,
+              "random": -71.91759016987143
+            }
+          }
+        },
+        "paired_clock_inference": {
+          "informative_complete_weeks": 26,
+          "positive_weeks": 12,
+          "one_sided_p": 0.7214014530181885,
+          "bonferroni_p": 1.0
+        }
+      },
+      "validation": {
+        "n": 17664,
+        "coverage": 1.0,
+        "mean_gross_bps": 0.05579925360449833,
+        "cash_per_opportunity_bps": 0,
+        "costs": {
+          "24": {
+            "mean_net_bps": -23.944200746395502,
+            "profit_factor": 0.004947514888264152,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.007133152173913043,
+            "day_count": 184,
+            "worst_day_net_sum_bps": -2501.7636651045927,
+            "winner_day_removed_mean_bps": -23.98670111573107,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -23.9442007463955,
+            "price_baseline_per_opportunity_bps": -12.09571886067886,
+            "controls_per_opportunity_bps": {
+              "delayed": -24.024639667636894,
+              "clock": -23.906431205186603,
+              "random": -23.942375876732193
+            },
+            "controls_mean_net_bps": {
+              "delayed": -24.024639667636894,
+              "clock": -23.906431205186603,
+              "random": -23.942375876732193
+            }
+          },
+          "48": {
+            "mean_net_bps": -47.9442007463955,
+            "profit_factor": 0.0010158153369842157,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.0011322463768115942,
+            "day_count": 184,
+            "worst_day_net_sum_bps": -4805.763665104595,
+            "winner_day_removed_mean_bps": -47.98670111573107,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -47.9442007463955,
+            "price_baseline_per_opportunity_bps": -24.18267538241799,
+            "controls_per_opportunity_bps": {
+              "delayed": -48.02463966763689,
+              "clock": -47.90643120518661,
+              "random": -47.94237587673219
+            },
+            "controls_mean_net_bps": {
+              "delayed": -48.02463966763689,
+              "clock": -47.90643120518661,
+              "random": -47.94237587673219
+            }
+          },
+          "72": {
+            "mean_net_bps": -71.9442007463955,
+            "profit_factor": 0.0004155592312013311,
+            "profit_factor_unbounded": false,
+            "win_fraction": 0.0005661231884057971,
+            "day_count": 184,
+            "worst_day_net_sum_bps": -7109.763665104595,
+            "winner_day_removed_mean_bps": -71.98670111573108,
+            "tail_veto": true,
+            "target_per_opportunity_bps": -71.94420074639551,
+            "price_baseline_per_opportunity_bps": -36.26963190415712,
+            "controls_per_opportunity_bps": {
+              "delayed": -72.02463966763689,
+              "clock": -71.9064312051866,
+              "random": -71.9423758767322
+            },
+            "controls_mean_net_bps": {
+              "delayed": -72.02463966763689,
+              "clock": -71.9064312051866,
+              "random": -71.9423758767322
+            }
+          }
+        },
+        "paired_clock_inference": {
+          "informative_complete_weeks": 26,
+          "positive_weeks": 13,
+          "one_sided_p": 0.577490508556366,
+          "bonferroni_p": 1.0
+        }
+      }
+    }
+  },
+  "authority": {
+    "canonical_admission": false,
+    "profitability": false,
+    "causal": false,
+    "protected_oos": false,
+    "forward": false,
+    "broker": false,
+    "trading": false
+  },
+  "limitations": [
+    "Historical provider revisions/publication vintage are not independently certified; no canonical acquisition attestation.",
+    "Trade-open proxies omit execution detail; fee/spread/slippage values are assumptions. No rebate, maker fill or funding model.",
+    "Nested diagnostic buckets cannot rescue primary. No project-wide confirmatory budget is created.",
+    "Weekly sign test assumes independent block signs; non-overlapping minutes do not establish independent observations.",
+    "Calendar predictability cannot identify algorithmic intent, initiating cause, whales, news or macro liquidity."
+  ],
+  "events_sha256": "a5c3ebe8e5799af419bb2f95411ad29c8fde406887680ee55ed2b3ec90d6ee91"
+}

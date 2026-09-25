@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "fingerprint": "EXT-BTC-CANDLE-CLOCK-001-v1",
+  "stage": "PREDECLARED_CHEAP_SCREEN",
+  "source": {
+    "title": "Turn-of-the-candle effect in bitcoin returns",
+    "doi": "10.1016/j.heliyon.2023.e14236",
+    "published": "2023-03-02",
+    "primary_url": "https://doi.org/10.1016/j.heliyon.2023.e14236",
+    "abstract_and_methods_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10015199/",
+    "claim_tested": "Positive Bitcoin minute returns concentrate at minutes 0/15/30/45, potentially associated with scheduled algorithmic demand.",
+    "translation": "Post-publication Binance BTCUSDT spot 2024 open-to-next-open returns. Not an exact replication of Bitfinex execution/fee-tier simulations or the paper's statistical model. Original-vintage paper bytes are not independently timestamp-authenticated."
+  },
+  "hypothesis": "A long position during the first minute of each quarter hour has positive after-cost expectancy and incremental returns versus matched off-boundary minutes.",
+  "mechanism": {
+    "initiating_driver_hypothesis": "Scheduled processing of newly closed 15-minute candles creates asymmetric buying demand.",
+    "amplifier_hypothesis": "Prior aggressive buying imbalance may amplify a boundary price move.",
+    "consequence": "Same-minute taker imbalance is contemporaneous and is not used as a predictive feature.",
+    "alternative": "Clock-time drift, serial dependence, random variation, or trading costs can explain/remove apparent edge.",
+    "causal_authority": "NONE: timing/placebos can falsify implications but cannot identify trader intent or causality; no macro/whale/news/liquidity-depth attribution."
+  },
+  "data": {
+    "provider": "https://data.binance.vision",
+    "market": "spot",
+    "symbol": "BTCUSDT",
+    "interval": "1m",
+    "months": ["2024-01", "2024-02", "2024-03", "2024-04", "2024-05", "2024-06", "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12"],
+    "train_start": "2024-01-01T00:00:00+00:00",
+    "validation_start": "2024-07-01T00:00:00+00:00",
+    "end_exclusive": "2025-01-01T00:00:00+00:00",
+    "timestamp_unit": "milliseconds",
+    "quote_volume_unit": "USDT, never relabelled USD",
+    "data_checks": "Exact official URL per month, separate filename-bound provider SHA256 CHECKSUM, bounded ZIP and single expected CSV member, 12 fields, finite valid OHLCV, taker<=total volume, trade count integer, exact close time, sorted unique minute timestamps inside exact month. Missing minutes excluded by complete 15-minute matched blocks; never impute. Report coverage and fail screening if less than 99% eligible blocks.",
+    "archive_revision_limit": "Official historical archives acquired now may contain revisions. Capture retrieval UTC, response metadata, raw hashes and provider checksums. This is not a canonical GitHub acquisition attestation or historical publication-vintage certificate. Positive results remain unadmitted research-only until independent provenance and execution qualification.",
+    "protected_data": "Do not download/read 2025+, project protected datasets, OOS or forward evidence. Fixed BTC market only; no cross-sectional survivor-universe claim."
+  },
+  "execution": {
+    "side": "LONG_ONLY_FULLY_COLLATERALIZED_SPOT",
+    "target": "At UTC minute divisible by15: enter its OPEN, exit next minute OPEN, one-minute hold. No leverage, stop, target or alternate boundary search.",
+    "latency": "Predictive inputs finish at least one minute before entry. Open prices are optimistic execution proxies; the 1-minute delayed control tests timing fragility. No historical order-book or fills are claimed.",
+    "flow_score": "For five completed minutes [t-6min,t-1min), 2*sum(taker_buy_quote_volume)/sum(quote_volume)-1. Require positive denominator; higher signed aggressive-buy imbalance is the fixed screening score, not calibrated confidence.",
+    "price_baseline": "Long only when the same five-minute pre-entry close/open return is positive; otherwise cash. Compare on all eligible target opportunities; charge costs only on trades.",
+    "cost_bps": [24,48,72],
+    "base_cost_decomposition": "20bps round-trip fees plus4bps combined spread/slippage. Stress doubles/triples all costs; no rebates or fee-tier bootstrapping. Assumptions, not historical fill evidence.",
+    "no_trade": "No predictive trading authority unless all downstream gates later pass. Missing/invalid features cause exclusion/NO_TRADE; no negative-flow short leg."
+  },
+  "controls": {
+    "cash": "Zero return, zero costs.",
+    "delayed": "Same direction at t+1min -> t+2min; full cost.",
+    "clock_placebo": "Same direction at t+5min -> t+6min; full cost.",
+    "random_placebo": "Same direction at t+o -> t+o+1min, o=3+int(SHA256(fingerprint+'|'+str(t_ms))[:8],16)%10. Offsets3..12, fixed before outcomes, no parameter search.",
+    "ablation": "All-boundary long primary versus fixed past-price baseline and predeclared aggressive-flow score subsets. Never choose a best subset after outcomes."
+  },
+  "selectivity": {
+    "percentages": [1,5,10,20,50,100],
+    "fit": "Descending score rank ceil(n_train*p/100), inclusive ties; thresholds depend only on training predictors. Apply unchanged to validation.100% means every eligible event.",
+    "authority": "Five non-primary buckets are diagnostic only, cannot rescue a failed primary; a survivor requires genuinely fresh predeclared evidence. Report counts, actual coverage and cost results separately."
+  },
+  "gates": {
+    "primary": "All eligible boundary events only. Both train and validation must have positive24bps mean, validation positive72bps mean, both validation quarters positive24bps mean, PF>1 at24bps, no single-winner dependence or catastrophic-tail veto. Must beat clock/random placebos and price-only baseline per opportunity in both halves.",
+    "minimum_events_per_half": 200,
+    "minimum_week_blocks_per_half": 20,
+    "minimum_complete_block_fraction": 0.99,
+    "winner_tail": "Remove best calendar-day aggregate: remaining mean net must remain positive. Absolute worst net calendar-day loss must be <=50% of total positive-day net pool.",
+    "inference": "Within each half, aggregate target-minus-clock-placebo gross differences by fixed7-day blocks anchored to that half's start. Exact one-sided sign test on nonzero block sums, no trade-row independence claim. Compute primary plus5 bucket contrasts; Bonferroni over12 planned half/bucket contrasts at family alpha0.05. Zero/tiny blocks reported; sign test assumes independent block signs and is supportive only, not causal or promotion proof.",
+    "decision": "Negative/weak Stage1 -> reject exact candidate, no tuning or expensive validation. Missing data/power -> INCONCLUSIVE. Positive -> SURVIVOR_REQUIRES_CANONICAL_ADMISSION_AND_FRESH_EVIDENCE, never profitable/promoted. No protected OOS release here.",
+    "multiplicity": "One new clock-demand family, one primary, five diagnostic subsets, three timing controls and one price baseline. No clock/asset/holding-period searches. Project-wide prior search history persists; no confirmatory budget is minted."
+  },
+  "authority": {"broker": false, "trading": false, "promotion": false, "protected_oos": false, "causal": false, "canonical_admission": false}
+}

@@ -1,0 +1,9 @@
+{
+  "amendment_id": "EXT-BTC-CANDLE-CLOCK-001-v1-INFERENCE-v1",
+  "parent_protocol_sha256": "e5ed40c277e213c9d604a573a6b18b6f949c812c9e4b98727dca57fdbe6a8911",
+  "reason": "Independent pre-outcome review requested unambiguous sign-test/power and partial-week gate semantics.",
+  "outcomes_opened_at_amendment": false,
+  "rule": "Primary100% bucket must have Bonferroni-adjusted one-sided paired block-sign p<=0.05 in BOTH train and validation, in addition to every original economic gate. Adjustment factor12 covers six bucket contrasts across two halves. Diagnostic bucket positives cannot rescue primary.",
+  "blocks": "Count only complete7-day calendar blocks anchored at each half's UTC start, with nonzero summed target-minus-clock gross contrast. Require at least20 such informative blocks per half for primary. Exclude validation's final2-day partial block from inference/power only, while retaining those days in economic/coverage metrics. H1 has26 complete weeks; H2 has26 complete weeks plus2days.",
+  "decision": "Incomplete coverage or inadequate primary sample/block power -> INCONCLUSIVE_DATA_OR_POWER. With adequate data/power, failure of any economic or inferential gate -> REJECTED_STAGE1. Passing every gate -> SURVIVOR_REQUIRES_CANONICAL_ADMISSION_AND_FRESH_EVIDENCE, with all original authority restrictions retained."
+}
