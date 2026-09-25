@@ -1,0 +1,2034 @@
+{
+  "receipt": {
+    "provider_url": "https://api.hyperliquid.xyz/info",
+    "request": {
+      "type": "fundingHistory",
+      "coin": "TAO",
+      "startTime": 1789104000000,
+      "endTime": 1790313600000
+    },
+    "retrieval_started_at": "2026-09-25T05:26:19.591831+00:00",
+    "status": 200,
+    "server_date": "Fri, 25 Sep 2026 05:26:20 GMT",
+    "retrieval_completed_at": "2026-09-25T05:26:20.780253+00:00",
+    "sha256": "09e8fe6dbb922ccdeb07224f43b375b404109e4e1e5f265650708de12941c4a6"
+  },
+  "rows": [
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003486548",
+      "time": 1789106400042
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002298435",
+      "time": 1789110000124
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003990489",
+      "time": 1789113600085
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003998154",
+      "time": 1789117200037
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000067995",
+      "time": 1789120800021
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001570271",
+      "time": 1789124400046
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000718043",
+      "time": 1789128000006
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001519732",
+      "time": 1789131600057
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001550845",
+      "time": 1789135200020
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000260951",
+      "time": 1789138800047
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001408142",
+      "time": 1789142400047
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002851596",
+      "time": 1789146000028
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003076883",
+      "time": 1789149600021
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.000011969",
+      "premium": "-0.000404248",
+      "time": 1789153200011
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "-0.000018905",
+      "premium": "-0.00065124",
+      "time": 1789156800017
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003883835",
+      "time": 1789160400000
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "-0.00001336",
+      "premium": "-0.0006068801",
+      "time": 1789164000041
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "-0.0000464044",
+      "premium": "-0.0008712352",
+      "time": 1789167600007
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "-0.0000165782",
+      "premium": "-0.0006326253",
+      "time": 1789171200064
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "-0.0000067629",
+      "premium": "-0.0005541036",
+      "time": 1789174800041
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "-0.0000027762",
+      "premium": "-0.0005222097",
+      "time": 1789178400023
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002335854",
+      "time": 1789182000036
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001054878",
+      "time": 1789185600037
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002374258",
+      "time": 1789189200028
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003143068",
+      "time": 1789192800003
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000045364",
+      "premium": "-0.0004637091",
+      "time": 1789196400009
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "-0.0000096775",
+      "premium": "-0.0005774196",
+      "time": 1789200000039
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002479428",
+      "time": 1789203600059
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003458493",
+      "time": 1789207200014
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002736203",
+      "time": 1789210800059
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003111371",
+      "time": 1789214400037
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001763879",
+      "time": 1789218000041
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000335446",
+      "time": 1789221600000
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000282532",
+      "time": 1789225200104
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000366247",
+      "time": 1789228800001
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000079022",
+      "time": 1789232400043
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000400912",
+      "time": 1789236000008
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001423711",
+      "time": 1789239600008
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002437325",
+      "time": 1789243200022
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001005429",
+      "time": 1789246800010
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000531825",
+      "time": 1789250400013
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000476867",
+      "time": 1789254000043
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000528225",
+      "time": 1789257600049
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003860655",
+      "time": 1789261200026
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000061968",
+      "premium": "-0.0004504257",
+      "time": 1789264800029
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002013095",
+      "time": 1789268400061
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000202824",
+      "time": 1789272000042
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000594057",
+      "time": 1789275600117
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001033614",
+      "time": 1789279200007
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001590357",
+      "time": 1789282800041
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002108816",
+      "time": 1789286400020
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001634999",
+      "time": 1789290000029
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002510764",
+      "time": 1789293600008
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003234592",
+      "time": 1789297200026
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001098657",
+      "time": 1789300800053
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002991953",
+      "time": 1789304400019
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000117463",
+      "premium": "-0.0004060297",
+      "time": 1789308000107
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001590597",
+      "time": 1789311600038
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002134298",
+      "time": 1789315200070
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.00008328",
+      "time": 1789318800040
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002151979",
+      "time": 1789322400042
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002484873",
+      "time": 1789326000020
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000877854",
+      "time": 1789329600000
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002635463",
+      "time": 1789333200020
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000031177",
+      "time": 1789336800010
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000319745",
+      "time": 1789340400023
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "-0.0000002304",
+      "premium": "-0.0005018433",
+      "time": 1789344000068
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "-0.0000165528",
+      "premium": "-0.0006324228",
+      "time": 1789347600018
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "-0.0000158933",
+      "premium": "-0.0006271468",
+      "time": 1789351200022
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002730268",
+      "time": 1789354800024
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000723912",
+      "time": 1789358400022
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000346006",
+      "time": 1789362000040
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001565224",
+      "time": 1789365600057
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001070887",
+      "time": 1789369200040
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000234039",
+      "time": 1789372800034
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000031238",
+      "time": 1789376400007
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001011234",
+      "time": 1789380000021
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000014768",
+      "time": 1789383600121
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000645742",
+      "time": 1789387200046
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001738023",
+      "time": 1789390800014
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001339024",
+      "time": 1789394400028
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002273392",
+      "time": 1789398000030
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001677229",
+      "time": 1789401600030
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000193747",
+      "time": 1789405200041
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000251465",
+      "time": 1789408800060
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000526199",
+      "time": 1789412400016
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000912784",
+      "time": 1789416000079
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000179287",
+      "time": 1789419600027
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001537819",
+      "time": 1789423200047
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002788634",
+      "time": 1789426800132
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003739666",
+      "time": 1789430400024
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000003039",
+      "premium": "-0.0004975688",
+      "time": 1789434000042
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "-0.0000062454",
+      "premium": "-0.0005499633",
+      "time": 1789437600052
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "-0.0000099404",
+      "premium": "-0.0005795232",
+      "time": 1789441200097
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000022703",
+      "premium": "-0.0004818374",
+      "time": 1789444800037
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "-0.0000129045",
+      "premium": "-0.0006032356",
+      "time": 1789448400016
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "-0.0000118294",
+      "premium": "-0.0005946354",
+      "time": 1789452000003
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000338125",
+      "time": 1789455600083
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002204468",
+      "time": 1789459200008
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000289368",
+      "time": 1789462800049
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003759942",
+      "time": 1789466400030
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000266156",
+      "time": 1789470000036
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003024975",
+      "time": 1789473600039
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001327028",
+      "time": 1789477200117
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002495485",
+      "time": 1789480800005
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003259079",
+      "time": 1789484400050
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003695602",
+      "time": 1789488000014
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001067172",
+      "time": 1789491600014
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001595274",
+      "time": 1789495200017
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003028589",
+      "time": 1789498800047
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000124892",
+      "premium": "-0.0004000864",
+      "time": 1789502400033
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002350443",
+      "time": 1789506000077
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002682337",
+      "time": 1789509600043
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001697874",
+      "time": 1789513200062
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002468214",
+      "time": 1789516800021
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003080689",
+      "time": 1789520400024
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003258423",
+      "time": 1789524000058
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001104591",
+      "time": 1789527600035
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000771638",
+      "time": 1789531200018
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001991953",
+      "time": 1789534800004
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003154689",
+      "time": 1789538400081
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002875773",
+      "time": 1789542000026
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000522508",
+      "time": 1789545600035
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001663384",
+      "time": 1789549200091
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003301553",
+      "time": 1789552800004
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000124882",
+      "premium": "-0.0004000941",
+      "time": 1789556400029
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001206266",
+      "time": 1789560000079
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001885322",
+      "time": 1789563600018
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002469653",
+      "time": 1789567200013
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001203962",
+      "time": 1789570800012
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001687156",
+      "time": 1789574400037
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000781166",
+      "time": 1789578000112
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000934356",
+      "time": 1789581600011
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000904999",
+      "time": 1789585200054
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002679184",
+      "time": 1789588800091
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001710552",
+      "time": 1789592400031
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000027528",
+      "time": 1789596000002
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003434376",
+      "time": 1789599600022
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001748917",
+      "time": 1789603200048
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001221778",
+      "time": 1789606800065
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003978635",
+      "time": 1789610400031
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001780113",
+      "time": 1789614000045
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000449223",
+      "time": 1789617600038
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000087872",
+      "time": 1789621200068
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000214899",
+      "time": 1789624800010
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000041752",
+      "time": 1789628400016
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003217569",
+      "time": 1789632000011
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000688918",
+      "time": 1789635600001
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001157111",
+      "time": 1789639200041
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002184001",
+      "time": 1789642800058
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001155072",
+      "time": 1789646400058
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000772117",
+      "time": 1789650000018
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000612037",
+      "time": 1789653600029
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000174893",
+      "time": 1789657200000
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000088901",
+      "time": 1789660800021
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000025532",
+      "time": 1789664400089
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001891636",
+      "time": 1789668000043
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000302686",
+      "time": 1789671600007
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000443619",
+      "time": 1789675200068
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000587457",
+      "time": 1789678800016
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002541326",
+      "time": 1789682400006
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002376997",
+      "time": 1789686000018
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005482613",
+      "time": 1789689600005
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002978848",
+      "time": 1789693200106
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004553512",
+      "time": 1789696800015
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005496036",
+      "time": 1789700400050
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.000019126",
+      "premium": "0.0006530082",
+      "time": 1789704000030
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000174619",
+      "premium": "0.0006396956",
+      "time": 1789707600009
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004861263",
+      "time": 1789711200035
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004749233",
+      "time": 1789714800058
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000154818",
+      "premium": "0.0006238543",
+      "time": 1789718400019
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.000029439",
+      "premium": "0.0007355119",
+      "time": 1789722000028
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000330125",
+      "premium": "0.0007640999",
+      "time": 1789725600041
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000354561",
+      "premium": "0.0007836484",
+      "time": 1789729200059
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000186147",
+      "premium": "0.000648918",
+      "time": 1789732800005
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000163175",
+      "premium": "0.0006305397",
+      "time": 1789736400054
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000499892",
+      "premium": "0.0008999138",
+      "time": 1789740000014
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000418782",
+      "premium": "0.0008350252",
+      "time": 1789743600019
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000438656",
+      "premium": "0.0008509247",
+      "time": 1789747200023
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000226342",
+      "premium": "0.0006810736",
+      "time": 1789750800033
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000205704",
+      "premium": "0.0006645632",
+      "time": 1789754400069
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000227635",
+      "premium": "0.0006821079",
+      "time": 1789758000083
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000409017",
+      "premium": "0.0008272134",
+      "time": 1789761600036
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000270038",
+      "premium": "0.0007160301",
+      "time": 1789765200033
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000345807",
+      "premium": "0.0007766452",
+      "time": 1789768800024
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.00003047",
+      "premium": "0.0007437598",
+      "time": 1789772400009
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000392545",
+      "premium": "0.0008140363",
+      "time": 1789776000048
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000595451",
+      "premium": "0.0009763607",
+      "time": 1789779600049
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000799333",
+      "premium": "0.0011394661",
+      "time": 1789783200035
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000753544",
+      "premium": "0.0011028349",
+      "time": 1789786800051
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000840665",
+      "premium": "0.0011725324",
+      "time": 1789790400012
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000547306",
+      "premium": "0.0009378446",
+      "time": 1789794000045
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000486209",
+      "premium": "0.0008889674",
+      "time": 1789797600067
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000247363",
+      "premium": "0.0006978903",
+      "time": 1789801200050
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.000029101",
+      "premium": "0.0007328078",
+      "time": 1789804800095
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000454283",
+      "premium": "0.0008634261",
+      "time": 1789808400016
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000868314",
+      "premium": "0.0011946512",
+      "time": 1789812000053
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000707913",
+      "premium": "0.00106633",
+      "time": 1789815600055
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000585773",
+      "premium": "0.0009686181",
+      "time": 1789819200053
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000482219",
+      "premium": "0.0008857748",
+      "time": 1789822800026
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000370228",
+      "premium": "0.0007961825",
+      "time": 1789826400022
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000296951",
+      "premium": "0.0007375606",
+      "time": 1789830000035
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000310173",
+      "premium": "0.0007481384",
+      "time": 1789833600032
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000424546",
+      "premium": "0.0008396367",
+      "time": 1789837200015
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005853369",
+      "time": 1789840800037
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000339217",
+      "premium": "0.0007713738",
+      "time": 1789844400030
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000457426",
+      "premium": "0.000865941",
+      "time": 1789848000021
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000412316",
+      "premium": "0.0008298527",
+      "time": 1789851600054
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000242471",
+      "premium": "0.0006939766",
+      "time": 1789855200034
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000238906",
+      "premium": "0.0006911249",
+      "time": 1789858800052
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000636702",
+      "premium": "0.0010093617",
+      "time": 1789862400057
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0001004959",
+      "premium": "0.0013039671",
+      "time": 1789866000055
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000516491",
+      "premium": "0.0009131925",
+      "time": 1789869600005
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000128847",
+      "premium": "0.0006030778",
+      "time": 1789873200039
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005671425",
+      "time": 1789876800051
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005442141",
+      "time": 1789880400014
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004289139",
+      "time": 1789884000017
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004144892",
+      "time": 1789887600013
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000223764",
+      "time": 1789891200021
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000856994",
+      "time": 1789894800064
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000982972",
+      "time": 1789898400052
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000464312",
+      "time": 1789902000044
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001160761",
+      "time": 1789905600043
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000703959",
+      "time": 1789909200064
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000296008",
+      "time": 1789912800025
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000775469",
+      "time": 1789916400037
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000242266",
+      "time": 1789920000035
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000263618",
+      "premium": "0.0007108945",
+      "time": 1789923600004
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005467177",
+      "time": 1789927200038
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000171631",
+      "premium": "0.0006373047",
+      "time": 1789930800013
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005725957",
+      "time": 1789934400046
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000590019",
+      "time": 1789938000056
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000504346",
+      "premium": "0.0009034769",
+      "time": 1789941600032
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000324035",
+      "premium": "0.0007592276",
+      "time": 1789945200033
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000306961",
+      "premium": "0.0007455691",
+      "time": 1789948800072
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000490402",
+      "premium": "0.0008923215",
+      "time": 1789952400054
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000556474",
+      "premium": "0.0009451791",
+      "time": 1789956000032
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000476065",
+      "premium": "0.0008808517",
+      "time": 1789959600007
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000542573",
+      "premium": "0.0009340587",
+      "time": 1789963200070
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000555359",
+      "premium": "0.0009442874",
+      "time": 1789966800008
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000756715",
+      "premium": "0.001105372",
+      "time": 1789970400040
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000948262",
+      "premium": "0.0012586094",
+      "time": 1789974000047
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000580254",
+      "premium": "0.0009642033",
+      "time": 1789977600069
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000800243",
+      "premium": "0.0011401948",
+      "time": 1789981200073
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000607238",
+      "premium": "0.00098579",
+      "time": 1789984800022
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000911262",
+      "premium": "0.0012290095",
+      "time": 1789988400040
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.000096171",
+      "premium": "0.001269368",
+      "time": 1789992000012
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000674097",
+      "premium": "0.0010392778",
+      "time": 1789995600016
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000757577",
+      "premium": "0.001106062",
+      "time": 1789999200050
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000394844",
+      "premium": "0.0008158753",
+      "time": 1790002800016
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000839812",
+      "premium": "0.0011718492",
+      "time": 1790006400108
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0001001893",
+      "premium": "0.0013015148",
+      "time": 1790010000083
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000842878",
+      "premium": "0.0011743024",
+      "time": 1790013600013
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000614634",
+      "premium": "0.0009917072",
+      "time": 1790017200031
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0001555157",
+      "premium": "0.0017441258",
+      "time": 1790020800056
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0001960635",
+      "premium": "0.002068508",
+      "time": 1790024400050
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0002345582",
+      "premium": "0.0023764659",
+      "time": 1790028000000
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0001574762",
+      "premium": "0.0017598097",
+      "time": 1790031600034
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0002012525",
+      "premium": "0.00211002",
+      "time": 1790035200028
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0002126328",
+      "premium": "0.0022010627",
+      "time": 1790038800043
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0001668916",
+      "premium": "0.0018351329",
+      "time": 1790042400020
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0001080872",
+      "premium": "0.0013646973",
+      "time": 1790046000012
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.000036137",
+      "premium": "0.0007890957",
+      "time": 1790049600050
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000588945",
+      "premium": "0.0009711561",
+      "time": 1790053200001
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000997344",
+      "premium": "0.0012978753",
+      "time": 1790056800032
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000727285",
+      "premium": "0.0010818277",
+      "time": 1790060400019
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000833044",
+      "premium": "0.0011664349",
+      "time": 1790064000012
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000877265",
+      "premium": "0.001201812",
+      "time": 1790067600013
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000906631",
+      "premium": "0.0012253045",
+      "time": 1790071200001
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000694505",
+      "premium": "0.0010556039",
+      "time": 1790074800014
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000681478",
+      "premium": "0.0010451825",
+      "time": 1790078400053
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000363368",
+      "premium": "0.0007906946",
+      "time": 1790082000080
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.00006679",
+      "premium": "0.0010343203",
+      "time": 1790085600059
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000490102",
+      "premium": "0.0008920819",
+      "time": 1790089200000
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000139689",
+      "premium": "0.0006117515",
+      "time": 1790092800071
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000160106",
+      "premium": "0.0006280852",
+      "time": 1790096400085
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005179984",
+      "time": 1790100000057
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000524226",
+      "time": 1790103600072
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.000016024",
+      "premium": "0.0006281919",
+      "time": 1790107200040
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000595898",
+      "time": 1790110800004
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000445016",
+      "premium": "0.0008560125",
+      "time": 1790114400062
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000758626",
+      "premium": "0.0011069009",
+      "time": 1790118000027
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000920027",
+      "premium": "0.0012360217",
+      "time": 1790121600031
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000384796",
+      "premium": "0.0008078366",
+      "time": 1790125200061
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000363035",
+      "premium": "0.000790428",
+      "time": 1790128800025
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000361471",
+      "premium": "0.0007891764",
+      "time": 1790132400051
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000198438",
+      "premium": "0.00065875",
+      "time": 1790136000024
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004352742",
+      "time": 1790139600009
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004697147",
+      "time": 1790143200005
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000618503",
+      "premium": "0.0009948023",
+      "time": 1790146800002
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000366821",
+      "premium": "0.0007934566",
+      "time": 1790150400033
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000343659",
+      "premium": "0.000774927",
+      "time": 1790154000065
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005692326",
+      "time": 1790157600062
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000267129",
+      "premium": "0.0007137028",
+      "time": 1790161200047
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004988425",
+      "time": 1790164800030
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000227828",
+      "premium": "0.0006822624",
+      "time": 1790168400050
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000531306",
+      "premium": "0.0009250446",
+      "time": 1790172000043
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000379552",
+      "premium": "0.0008036413",
+      "time": 1790175600003
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005561023",
+      "time": 1790179200048
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005714676",
+      "time": 1790182800005
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000163968",
+      "premium": "0.0006311746",
+      "time": 1790186400074
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005015874",
+      "time": 1790190000015
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004870304",
+      "time": 1790193600071
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001976368",
+      "time": 1790197200118
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004781363",
+      "time": 1790200800015
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004584329",
+      "time": 1790204400039
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003377039",
+      "time": 1790208000045
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003630747",
+      "time": 1790211600025
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003190015",
+      "time": 1790215200029
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004146767",
+      "time": 1790218800001
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004550077",
+      "time": 1790222400038
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003980449",
+      "time": 1790226000007
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000131194",
+      "premium": "0.0006049551",
+      "time": 1790229600061
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002912836",
+      "time": 1790233200056
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003976481",
+      "time": 1790236800017
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003176219",
+      "time": 1790240400034
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002228755",
+      "time": 1790244000011
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002893853",
+      "time": 1790247600045
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.000426011",
+      "time": 1790251200065
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002402615",
+      "time": 1790254800003
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004719198",
+      "time": 1790258400035
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003687556",
+      "time": 1790262000014
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004959097",
+      "time": 1790265600030
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000126935",
+      "premium": "0.0006015483",
+      "time": 1790269200058
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000229321",
+      "premium": "0.0006834568",
+      "time": 1790272800058
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000373267",
+      "premium": "0.0007986133",
+      "time": 1790276400018
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000356437",
+      "premium": "0.0007851494",
+      "time": 1790280000054
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000999922",
+      "time": 1790283600088
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005410461",
+      "time": 1790287200013
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004108357",
+      "time": 1790290800038
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002182467",
+      "time": 1790294400076
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000114097",
+      "time": 1790298000027
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001727202",
+      "time": 1790301600059
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002615932",
+      "time": 1790305200086
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002759879",
+      "time": 1790308800036
+    },
+    {
+      "coin": "TAO",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005353077",
+      "time": 1790312400040
+    }
+  ]
+}

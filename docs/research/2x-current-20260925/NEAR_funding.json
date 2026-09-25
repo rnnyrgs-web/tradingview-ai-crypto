@@ -1,0 +1,2034 @@
+{
+  "receipt": {
+    "provider_url": "https://api.hyperliquid.xyz/info",
+    "request": {
+      "type": "fundingHistory",
+      "coin": "NEAR",
+      "startTime": 1789104000000,
+      "endTime": 1790313600000
+    },
+    "retrieval_started_at": "2026-09-25T05:26:20.784140+00:00",
+    "status": 200,
+    "server_date": "Fri, 25 Sep 2026 05:26:22 GMT",
+    "retrieval_completed_at": "2026-09-25T05:26:21.858905+00:00",
+    "sha256": "f4901c23b4ba60d7bf6c92160070f335e90f3f227ee737b0d154f659ab665295"
+  },
+  "rows": [
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002832707",
+      "time": 1789106400042
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002052297",
+      "time": 1789110000124
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002793774",
+      "time": 1789113600085
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000776303",
+      "time": 1789117200037
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001032732",
+      "time": 1789120800021
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000729239",
+      "time": 1789124400046
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000682169",
+      "time": 1789128000006
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000282549",
+      "time": 1789131600057
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000240715",
+      "premium": "0.0006925721",
+      "time": 1789135200020
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004890773",
+      "time": 1789138800047
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002832029",
+      "time": 1789142400047
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000114259",
+      "time": 1789146000028
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000523111",
+      "time": 1789149600021
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003906496",
+      "time": 1789153200011
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "-0.000005231",
+      "premium": "-0.0005418477",
+      "time": 1789156800017
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003753302",
+      "time": 1789160400000
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003372891",
+      "time": 1789164000041
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003040137",
+      "time": 1789167600007
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000077188",
+      "premium": "-0.0004382494",
+      "time": 1789171200064
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000015252",
+      "premium": "-0.0004877981",
+      "time": 1789174800041
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001779062",
+      "time": 1789178400023
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000161211",
+      "time": 1789182000036
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002323737",
+      "time": 1789185600037
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003873964",
+      "time": 1789189200028
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002738218",
+      "time": 1789192800003
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000099788",
+      "time": 1789196400009
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000077468",
+      "time": 1789200000039
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000067493",
+      "time": 1789203600059
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000320578",
+      "time": 1789207200014
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000443041",
+      "time": 1789210800059
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000503024",
+      "time": 1789214400037
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000028226",
+      "time": 1789218000041
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000124244",
+      "time": 1789221600000
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000288609",
+      "time": 1789225200104
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000418112",
+      "time": 1789228800001
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000578899",
+      "time": 1789232400043
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000617664",
+      "time": 1789236000008
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000779495",
+      "time": 1789239600008
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003579812",
+      "time": 1789243200022
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000045015",
+      "premium": "-0.0004639882",
+      "time": 1789246800010
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003493588",
+      "time": 1789250400013
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003059886",
+      "time": 1789254000043
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000092413",
+      "premium": "-0.0004260699",
+      "time": 1789257600049
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000083124",
+      "premium": "-0.0004335009",
+      "time": 1789261200026
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003044709",
+      "time": 1789264800029
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003075723",
+      "time": 1789268400061
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003718862",
+      "time": 1789272000042
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002628466",
+      "time": 1789275600117
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003973584",
+      "time": 1789279200007
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002552994",
+      "time": 1789282800041
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000116309",
+      "premium": "-0.000406953",
+      "time": 1789286400020
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "-0.0000152941",
+      "premium": "-0.0006223524",
+      "time": 1789290000029
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "-0.0000101245",
+      "premium": "-0.0005809959",
+      "time": 1789293600008
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000056359",
+      "premium": "-0.000454913",
+      "time": 1789297200026
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003145938",
+      "time": 1789300800053
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003179694",
+      "time": 1789304400019
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003583923",
+      "time": 1789308000107
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003081347",
+      "time": 1789311600038
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002724624",
+      "time": 1789315200070
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000053167",
+      "time": 1789318800040
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000457475",
+      "time": 1789322400042
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000085098",
+      "time": 1789326000020
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002828916",
+      "time": 1789329600000
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002979575",
+      "time": 1789333200020
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003400405",
+      "time": 1789336800010
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002651695",
+      "time": 1789340400023
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001567604",
+      "time": 1789344000068
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002789735",
+      "time": 1789347600018
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002904582",
+      "time": 1789351200022
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000441692",
+      "time": 1789354800024
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000679951",
+      "time": 1789358400022
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000040695",
+      "time": 1789362000040
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000670164",
+      "time": 1789365600057
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000609463",
+      "time": 1789369200040
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000008187",
+      "time": 1789372800034
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000241395",
+      "time": 1789376400007
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.000016545",
+      "time": 1789380000021
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000298349",
+      "time": 1789383600121
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000082082",
+      "time": 1789387200046
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000763042",
+      "time": 1789390800014
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002338896",
+      "time": 1789394400028
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003243118",
+      "time": 1789398000030
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002636559",
+      "time": 1789401600030
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000163145",
+      "time": 1789405200041
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001754791",
+      "time": 1789408800060
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001911944",
+      "time": 1789412400016
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003117077",
+      "time": 1789416000079
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003885813",
+      "time": 1789419600027
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002131671",
+      "time": 1789423200047
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001700722",
+      "time": 1789426800132
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003630341",
+      "time": 1789430400024
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000108493",
+      "premium": "-0.0004132056",
+      "time": 1789434000042
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "-0.0000060217",
+      "premium": "-0.0005481739",
+      "time": 1789437600052
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000061313",
+      "premium": "-0.0004509499",
+      "time": 1789441200097
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003928056",
+      "time": 1789444800037
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.000010521",
+      "premium": "-0.0004158318",
+      "time": 1789448400016
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "-0.0000053927",
+      "premium": "-0.0005431417",
+      "time": 1789452000003
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000082107",
+      "premium": "-0.0004343144",
+      "time": 1789455600083
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000042153",
+      "premium": "-0.0004662773",
+      "time": 1789459200008
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000109407",
+      "premium": "-0.0004124743",
+      "time": 1789462800049
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003016057",
+      "time": 1789466400030
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002795269",
+      "time": 1789470000036
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000014061",
+      "premium": "-0.0004887515",
+      "time": 1789473600039
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "-0.000008702",
+      "premium": "-0.0005696164",
+      "time": 1789477200117
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002610113",
+      "time": 1789480800005
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003900319",
+      "time": 1789484400050
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001675923",
+      "time": 1789488000014
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002245855",
+      "time": 1789491600014
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001651162",
+      "time": 1789495200017
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003330516",
+      "time": 1789498800047
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000388918",
+      "time": 1789502400033
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000088586",
+      "premium": "-0.0004291309",
+      "time": 1789506000077
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003755294",
+      "time": 1789509600043
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.000007996",
+      "premium": "-0.0004360316",
+      "time": 1789513200062
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000005882",
+      "premium": "-0.0004952943",
+      "time": 1789516800021
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000111958",
+      "premium": "-0.0004104335",
+      "time": 1789520400024
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000063182",
+      "premium": "-0.0004494544",
+      "time": 1789524000058
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000100459",
+      "premium": "-0.0004196327",
+      "time": 1789527600035
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000059684",
+      "premium": "-0.000452253",
+      "time": 1789531200018
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "-0.0000015941",
+      "premium": "-0.0005127525",
+      "time": 1789534800004
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003394",
+      "time": 1789538400081
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003609773",
+      "time": 1789542000026
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002578264",
+      "time": 1789545600035
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001814614",
+      "time": 1789549200091
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000170403",
+      "time": 1789552800004
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000946815",
+      "time": 1789556400029
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000853919",
+      "time": 1789560000079
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000029312",
+      "time": 1789563600018
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000061949",
+      "time": 1789567200013
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001858801",
+      "time": 1789570800012
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000712476",
+      "time": 1789574400037
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000897741",
+      "time": 1789578000112
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003462855",
+      "time": 1789581600011
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000073938",
+      "time": 1789585200054
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000404966",
+      "time": 1789588800091
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003045013",
+      "time": 1789592400031
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003647551",
+      "time": 1789596000002
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002234833",
+      "time": 1789599600022
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003545086",
+      "time": 1789603200048
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000172835",
+      "premium": "0.0006382676",
+      "time": 1789606800065
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.000430014",
+      "time": 1789610400031
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001479977",
+      "time": 1789614000045
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003691677",
+      "time": 1789617600038
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003181338",
+      "time": 1789621200068
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003012811",
+      "time": 1789624800010
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004234092",
+      "time": 1789628400016
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003234032",
+      "time": 1789632000011
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004909847",
+      "time": 1789635600001
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000276016",
+      "premium": "0.0007208127",
+      "time": 1789639200041
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004625323",
+      "time": 1789642800058
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000171951",
+      "premium": "0.0006375611",
+      "time": 1789646400058
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.000476871",
+      "time": 1789650000018
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003275714",
+      "time": 1789653600029
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.000018329",
+      "premium": "0.0006466324",
+      "time": 1789657200000
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005812814",
+      "time": 1789660800021
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000315569",
+      "premium": "0.0007524549",
+      "time": 1789664400089
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000259067",
+      "premium": "0.0007072532",
+      "time": 1789668000043
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002218656",
+      "time": 1789671600007
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000127303",
+      "premium": "0.0006018427",
+      "time": 1789675200068
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005472809",
+      "time": 1789678800016
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004673616",
+      "time": 1789682400006
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000357366",
+      "premium": "0.0007858924",
+      "time": 1789686000018
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000252901",
+      "premium": "0.0007023211",
+      "time": 1789689600005
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002455798",
+      "time": 1789693200106
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000629391",
+      "premium": "0.0010035125",
+      "time": 1789696800015
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000834649",
+      "premium": "0.0011677188",
+      "time": 1789700400050
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000854639",
+      "premium": "0.0011837112",
+      "time": 1789704000030
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000851616",
+      "premium": "0.0011812925",
+      "time": 1789707600009
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000356043",
+      "premium": "0.000784834",
+      "time": 1789711200035
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000460591",
+      "premium": "0.0008684725",
+      "time": 1789714800058
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000405512",
+      "premium": "0.0008244099",
+      "time": 1789718400019
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005566643",
+      "time": 1789722000028
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000355216",
+      "premium": "0.000784173",
+      "time": 1789725600041
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000563002",
+      "premium": "0.0009504015",
+      "time": 1789729200059
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004235393",
+      "time": 1789732800005
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005793593",
+      "time": 1789736400054
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.000046296",
+      "premium": "0.0008703679",
+      "time": 1789740000014
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000337346",
+      "premium": "0.000769877",
+      "time": 1789743600019
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000155037",
+      "premium": "0.00062403",
+      "time": 1789747200023
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000271487",
+      "premium": "0.0007171896",
+      "time": 1789750800033
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.000018251",
+      "premium": "0.0006460077",
+      "time": 1789754400069
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000358164",
+      "premium": "0.0007865312",
+      "time": 1789758000083
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000385354",
+      "premium": "0.000808283",
+      "time": 1789761600036
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000146118",
+      "premium": "0.0006168942",
+      "time": 1789765200033
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000274449",
+      "premium": "0.0007195596",
+      "time": 1789768800024
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000562343",
+      "premium": "0.0009498747",
+      "time": 1789772400009
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000306955",
+      "premium": "0.000745564",
+      "time": 1789776000048
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001337435",
+      "time": 1789779600049
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003627542",
+      "time": 1789783200035
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000345665",
+      "premium": "0.0007765318",
+      "time": 1789786800051
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000232364",
+      "premium": "0.0006858909",
+      "time": 1789790400012
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002688927",
+      "time": 1789794000045
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000261415",
+      "premium": "0.0007091319",
+      "time": 1789797600067
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000335764",
+      "premium": "0.0007686114",
+      "time": 1789801200050
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000412255",
+      "premium": "0.0008298037",
+      "time": 1789804800095
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000326046",
+      "premium": "0.0007608367",
+      "time": 1789808400016
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003532486",
+      "time": 1789812000053
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000322834",
+      "premium": "0.0007582671",
+      "time": 1789815600055
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000443258",
+      "premium": "0.0008546065",
+      "time": 1789819200053
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000425156",
+      "premium": "0.0008401245",
+      "time": 1789822800026
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000348106",
+      "premium": "0.0007784849",
+      "time": 1789826400022
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000651211",
+      "premium": "0.0010209684",
+      "time": 1789830000035
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.000061345",
+      "premium": "0.0009907601",
+      "time": 1789833600032
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000557267",
+      "premium": "0.0009458137",
+      "time": 1789837200015
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000733235",
+      "premium": "0.0010865881",
+      "time": 1789840800037
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000477499",
+      "premium": "0.000881999",
+      "time": 1789844400030
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000581164",
+      "premium": "0.000964931",
+      "time": 1789848000021
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000547167",
+      "premium": "0.000937734",
+      "time": 1789851600054
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000462632",
+      "premium": "0.0008701055",
+      "time": 1789855200034
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000373257",
+      "premium": "0.0007986058",
+      "time": 1789858800052
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000495246",
+      "premium": "0.000896197",
+      "time": 1789862400057
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000506469",
+      "premium": "0.0009051755",
+      "time": 1789866000055
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005523343",
+      "time": 1789869600005
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001197696",
+      "time": 1789873200039
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001765731",
+      "time": 1789876800051
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001544089",
+      "time": 1789880400014
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001425726",
+      "time": 1789884000017
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001525673",
+      "time": 1789887600013
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004713969",
+      "time": 1789891200021
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003791345",
+      "time": 1789894800064
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004760638",
+      "time": 1789898400052
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002049105",
+      "time": 1789902000044
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000249001",
+      "premium": "0.0006992006",
+      "time": 1789905600043
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.000041278",
+      "premium": "0.0008302244",
+      "time": 1789909200064
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000301893",
+      "premium": "0.0007415145",
+      "time": 1789912800025
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.000014041",
+      "premium": "0.0006123278",
+      "time": 1789916400037
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000252176",
+      "premium": "0.0007017406",
+      "time": 1789920000035
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000464281",
+      "premium": "0.0008714248",
+      "time": 1789923600004
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000297526",
+      "premium": "0.0007380211",
+      "time": 1789927200038
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005810526",
+      "time": 1789930800013
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000753392",
+      "premium": "0.001102714",
+      "time": 1789934400046
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.000095431",
+      "premium": "0.0012634477",
+      "time": 1789938000056
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000910253",
+      "premium": "0.0012282021",
+      "time": 1789941600032
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000856843",
+      "premium": "0.0011854742",
+      "time": 1789945200033
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000865312",
+      "premium": "0.0011922496",
+      "time": 1789948800072
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000797611",
+      "premium": "0.0011380891",
+      "time": 1789952400054
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000526865",
+      "premium": "0.0009214917",
+      "time": 1789956000032
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000588597",
+      "premium": "0.0009708778",
+      "time": 1789959600007
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000863507",
+      "premium": "0.0011908056",
+      "time": 1789963200070
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000758106",
+      "premium": "0.0011064849",
+      "time": 1789966800008
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000886394",
+      "premium": "0.0012091153",
+      "time": 1789970400040
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000778807",
+      "premium": "0.0011230455",
+      "time": 1789974000047
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000405463",
+      "premium": "0.0008243706",
+      "time": 1789977600069
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.000093568",
+      "premium": "0.0012485442",
+      "time": 1789981200073
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0001297478",
+      "premium": "0.0015379823",
+      "time": 1789984800022
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.000104906",
+      "premium": "0.001339248",
+      "time": 1789988400040
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0001396983",
+      "premium": "0.0016175864",
+      "time": 1789992000012
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.00010003",
+      "premium": "0.0013002402",
+      "time": 1789995600016
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000639717",
+      "premium": "0.0010117734",
+      "time": 1789999200050
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000706183",
+      "premium": "0.0010649464",
+      "time": 1790002800016
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000591382",
+      "premium": "0.0009731058",
+      "time": 1790006400108
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000914209",
+      "premium": "0.0012313674",
+      "time": 1790010000083
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004108847",
+      "time": 1790013600013
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000910349",
+      "premium": "0.0012282793",
+      "time": 1790017200031
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0001299765",
+      "premium": "0.0015398119",
+      "time": 1790020800056
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0001578179",
+      "premium": "0.0017625432",
+      "time": 1790024400050
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0001031215",
+      "premium": "0.0013249721",
+      "time": 1790028000000
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.000096335",
+      "premium": "0.00127068",
+      "time": 1790031600034
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000708654",
+      "premium": "0.0010669228",
+      "time": 1790035200028
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000593109",
+      "premium": "0.0009744872",
+      "time": 1790038800043
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0001075437",
+      "premium": "0.0013603493",
+      "time": 1790042400020
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000947013",
+      "premium": "0.0012576103",
+      "time": 1790046000012
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000516884",
+      "premium": "0.0009135072",
+      "time": 1790049600050
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000669799",
+      "premium": "0.0010358393",
+      "time": 1790053200001
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000857244",
+      "premium": "0.0011857948",
+      "time": 1790056800032
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000523807",
+      "premium": "0.0009190453",
+      "time": 1790060400019
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.000016122",
+      "premium": "0.000628976",
+      "time": 1790064000012
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000620829",
+      "premium": "0.0009966628",
+      "time": 1790067600013
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000389714",
+      "premium": "0.000811771",
+      "time": 1790071200001
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000138913",
+      "premium": "0.0006111307",
+      "time": 1790074800014
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000244495",
+      "premium": "0.0006955956",
+      "time": 1790078400053
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003656678",
+      "time": 1790082000080
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.000325997",
+      "time": 1790085600059
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003728405",
+      "time": 1790089200000
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000299761",
+      "premium": "0.0007398091",
+      "time": 1790092800071
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000152657",
+      "premium": "0.0006221252",
+      "time": 1790096400085
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000145573",
+      "premium": "0.0006164586",
+      "time": 1790100000057
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002811639",
+      "time": 1790103600072
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.000570569",
+      "time": 1790107200040
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001539775",
+      "time": 1790110800004
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002014119",
+      "time": 1790114400062
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005274306",
+      "time": 1790118000027
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000379531",
+      "premium": "0.0008036246",
+      "time": 1790121600031
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005710561",
+      "time": 1790125200061
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.00051876",
+      "time": 1790128800025
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001609096",
+      "time": 1790132400051
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002673941",
+      "time": 1790136000024
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000248868",
+      "premium": "0.0006990947",
+      "time": 1790139600009
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000750749",
+      "premium": "0.0011005994",
+      "time": 1790143200005
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000398333",
+      "premium": "0.0008186667",
+      "time": 1790146800002
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000169912",
+      "premium": "0.0006359296",
+      "time": 1790150400033
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000481478",
+      "premium": "0.0008851825",
+      "time": 1790154000065
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000529461",
+      "premium": "0.0009235685",
+      "time": 1790157600062
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000313451",
+      "premium": "0.0007507606",
+      "time": 1790161200047
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000453084",
+      "premium": "0.0008624672",
+      "time": 1790164800030
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000750166",
+      "premium": "0.0011001331",
+      "time": 1790168400050
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000331578",
+      "premium": "0.0007652623",
+      "time": 1790172000043
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000235218",
+      "premium": "0.0006881744",
+      "time": 1790175600003
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003363997",
+      "time": 1790179200048
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003087383",
+      "time": 1790182800005
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004777028",
+      "time": 1790186400074
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.000047235",
+      "premium": "0.0008778802",
+      "time": 1790190000015
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005607226",
+      "time": 1790193600071
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003493089",
+      "time": 1790197200118
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000332307",
+      "time": 1790200800015
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000519345",
+      "time": 1790204400039
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000716186",
+      "time": 1790208000045
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003604095",
+      "time": 1790211600025
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001625518",
+      "time": 1790215200029
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003722692",
+      "time": 1790218800001
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003738684",
+      "time": 1790222400038
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001866775",
+      "time": 1790226000007
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000997699",
+      "time": 1790229600061
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000834719",
+      "time": 1790233200056
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000683354",
+      "time": 1790236800017
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001621523",
+      "time": 1790240400034
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.000167315",
+      "time": 1790244000011
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000139995",
+      "premium": "0.0006119959",
+      "time": 1790247600045
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.000032758",
+      "premium": "0.0007620637",
+      "time": 1790251200065
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000266557",
+      "premium": "0.0007132456",
+      "time": 1790254800003
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000349179",
+      "premium": "0.0007793434",
+      "time": 1790258400035
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000140331",
+      "premium": "0.0006122645",
+      "time": 1790262000014
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005497551",
+      "time": 1790265600030
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000569385",
+      "premium": "0.0009555076",
+      "time": 1790269200058
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.000427549",
+      "time": 1790272800058
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002776907",
+      "time": 1790276400018
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000225644",
+      "premium": "0.0006805154",
+      "time": 1790280000054
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003621273",
+      "time": 1790283600088
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000152221",
+      "premium": "0.0006217765",
+      "time": 1790287200013
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000271173",
+      "time": 1790290800038
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002865358",
+      "time": 1790294400076
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000762874",
+      "time": 1790298000027
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000054415",
+      "time": 1790301600059
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000068797",
+      "time": 1790305200086
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000324409",
+      "time": 1790308800036
+    },
+    {
+      "coin": "NEAR",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003287172",
+      "time": 1790312400040
+    }
+  ]
+}

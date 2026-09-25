@@ -1,0 +1,2034 @@
+{
+  "receipt": {
+    "provider_url": "https://api.hyperliquid.xyz/info",
+    "request": {
+      "type": "fundingHistory",
+      "coin": "SUI",
+      "startTime": 1789104000000,
+      "endTime": 1790313600000
+    },
+    "retrieval_started_at": "2026-09-25T05:26:19.635877+00:00",
+    "status": 200,
+    "server_date": "Fri, 25 Sep 2026 05:26:20 GMT",
+    "retrieval_completed_at": "2026-09-25T05:26:20.760714+00:00",
+    "sha256": "b7255052cc9900fc74b0929afa647346c85856b7e6f1c249fee14cf5ae0787e0"
+  },
+  "rows": [
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002423065",
+      "time": 1789106400042
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001253685",
+      "time": 1789110000124
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000871232",
+      "time": 1789113600085
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000912751",
+      "time": 1789117200037
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000655223",
+      "time": 1789120800021
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001513765",
+      "time": 1789124400046
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001508066",
+      "time": 1789128000006
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001403765",
+      "time": 1789131600057
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000262726",
+      "time": 1789135200020
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000057767",
+      "time": 1789138800047
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000069095",
+      "time": 1789142400047
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000834805",
+      "time": 1789146000028
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000213769",
+      "time": 1789149600021
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000878934",
+      "time": 1789153200011
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002575904",
+      "time": 1789156800017
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002618631",
+      "time": 1789160400000
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001239665",
+      "time": 1789164000041
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002087658",
+      "time": 1789167600007
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001701649",
+      "time": 1789171200064
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000965092",
+      "time": 1789174800041
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000276914",
+      "time": 1789178400023
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.000007871",
+      "time": 1789182000036
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000113823",
+      "time": 1789185600037
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000538424",
+      "time": 1789189200028
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000959093",
+      "time": 1789192800003
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000414745",
+      "time": 1789196400009
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000066205",
+      "time": 1789200000039
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000003068",
+      "time": 1789203600059
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000152028",
+      "time": 1789207200014
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000196755",
+      "time": 1789210800059
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000033395",
+      "time": 1789214400037
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000081674",
+      "time": 1789218000041
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000384958",
+      "time": 1789221600000
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000000014",
+      "time": 1789225200104
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000171483",
+      "time": 1789228800001
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000476088",
+      "time": 1789232400043
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000204057",
+      "time": 1789236000008
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000092944",
+      "time": 1789239600008
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000031641",
+      "time": 1789243200022
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000189298",
+      "time": 1789246800010
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000133311",
+      "time": 1789250400013
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000034035",
+      "time": 1789254000043
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000166131",
+      "time": 1789257600049
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000739973",
+      "time": 1789261200026
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000657278",
+      "time": 1789264800029
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000419482",
+      "time": 1789268400061
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.00001405",
+      "time": 1789272000042
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000125436",
+      "time": 1789275600117
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000193818",
+      "time": 1789279200007
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000746359",
+      "time": 1789282800041
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003736293",
+      "time": 1789286400020
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001578529",
+      "time": 1789290000029
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000383319",
+      "time": 1789293600008
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001510863",
+      "time": 1789297200026
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000038143",
+      "premium": "-0.0004694853",
+      "time": 1789300800053
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "-0.0000089458",
+      "premium": "-0.0005715663",
+      "time": 1789304400019
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003845754",
+      "time": 1789308000107
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000099157",
+      "premium": "-0.0004206742",
+      "time": 1789311600038
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003876401",
+      "time": 1789315200070
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002567915",
+      "time": 1789318800040
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000242265",
+      "time": 1789322400042
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003142812",
+      "time": 1789326000020
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000343886",
+      "time": 1789329600000
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000324346",
+      "time": 1789333200020
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000044511",
+      "time": 1789336800010
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000118388",
+      "premium": "-0.0004052892",
+      "time": 1789340400023
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "-0.0000005525",
+      "premium": "-0.0005044203",
+      "time": 1789344000068
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000074419",
+      "premium": "-0.0004404648",
+      "time": 1789347600018
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "-0.0000066186",
+      "premium": "-0.0005529492",
+      "time": 1789351200022
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003836215",
+      "time": 1789354800024
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003239246",
+      "time": 1789358400022
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000073089",
+      "premium": "-0.0004415288",
+      "time": 1789362000040
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003221414",
+      "time": 1789365600057
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003272464",
+      "time": 1789369200040
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002252814",
+      "time": 1789372800034
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002003331",
+      "time": 1789376400007
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000113767",
+      "premium": "-0.0004089865",
+      "time": 1789380000021
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003369211",
+      "time": 1789383600121
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000303917",
+      "time": 1789387200046
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003437405",
+      "time": 1789390800014
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "-0.0000023114",
+      "premium": "-0.0005184914",
+      "time": 1789394400028
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000027481",
+      "premium": "-0.0004780152",
+      "time": 1789398000030
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000085712",
+      "premium": "-0.0004314302",
+      "time": 1789401600030
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003242851",
+      "time": 1789405200041
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001215187",
+      "time": 1789408800060
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001056782",
+      "time": 1789412400016
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000943126",
+      "time": 1789416000079
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000504096",
+      "time": 1789419600027
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001685677",
+      "time": 1789423200047
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000757977",
+      "time": 1789426800132
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001923325",
+      "time": 1789430400024
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002870934",
+      "time": 1789434000042
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003578685",
+      "time": 1789437600052
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003970856",
+      "time": 1789441200097
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002689283",
+      "time": 1789444800037
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000185105",
+      "time": 1789448400016
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001689746",
+      "time": 1789452000003
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000944951",
+      "time": 1789455600083
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002458599",
+      "time": 1789459200008
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002234384",
+      "time": 1789462800049
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002885005",
+      "time": 1789466400030
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001484978",
+      "time": 1789470000036
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001776901",
+      "time": 1789473600039
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001575039",
+      "time": 1789477200117
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.00025383",
+      "time": 1789480800005
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000041025",
+      "premium": "-0.0004671797",
+      "time": 1789484400050
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003446706",
+      "time": 1789488000014
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000113545",
+      "premium": "-0.0004091637",
+      "time": 1789491600014
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003138037",
+      "time": 1789495200017
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003062857",
+      "time": 1789498800047
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001717431",
+      "time": 1789502400033
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001546125",
+      "time": 1789506000077
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002027445",
+      "time": 1789509600043
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002933605",
+      "time": 1789513200062
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000052458",
+      "premium": "-0.000458034",
+      "time": 1789516800021
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000033346",
+      "premium": "-0.0004733236",
+      "time": 1789520400024
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000061224",
+      "premium": "-0.0004510206",
+      "time": 1789524000058
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002025651",
+      "time": 1789527600035
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000255117",
+      "time": 1789531200018
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002100324",
+      "time": 1789534800004
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002463345",
+      "time": 1789538400081
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003813088",
+      "time": 1789542000026
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002935071",
+      "time": 1789545600035
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001918163",
+      "time": 1789549200091
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003987548",
+      "time": 1789552800004
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000044864",
+      "premium": "-0.0004641086",
+      "time": 1789556400029
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001348034",
+      "time": 1789560000079
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002429915",
+      "time": 1789563600018
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000088224",
+      "premium": "-0.0004294205",
+      "time": 1789567200013
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.000000236",
+      "premium": "-0.0004981118",
+      "time": 1789570800012
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "-0.0000044776",
+      "premium": "-0.0005358209",
+      "time": 1789574400037
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000122175",
+      "premium": "-0.0004022597",
+      "time": 1789578000112
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000075681",
+      "premium": "-0.0004394553",
+      "time": 1789581600011
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003762366",
+      "time": 1789585200054
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "-0.0000202803",
+      "premium": "-0.0006622423",
+      "time": 1789588800091
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "-0.0000111785",
+      "premium": "-0.0005894277",
+      "time": 1789592400031
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000041469",
+      "premium": "-0.0004668244",
+      "time": 1789596000002
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "-0.0000133745",
+      "premium": "-0.0006069963",
+      "time": 1789599600022
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000030701",
+      "premium": "-0.0004754389",
+      "time": 1789603200048
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000114086",
+      "premium": "-0.0004087311",
+      "time": 1789606800065
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000032329",
+      "premium": "-0.0004741365",
+      "time": 1789610400031
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000031411",
+      "premium": "-0.0004748714",
+      "time": 1789614000045
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000092731",
+      "premium": "-0.0004258154",
+      "time": 1789617600038
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003557796",
+      "time": 1789621200068
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002051776",
+      "time": 1789624800010
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001977577",
+      "time": 1789628400016
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003007766",
+      "time": 1789632000011
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003224036",
+      "time": 1789635600001
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003009853",
+      "time": 1789639200041
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002038156",
+      "time": 1789642800058
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002491936",
+      "time": 1789646400058
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001582594",
+      "time": 1789650000018
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001738874",
+      "time": 1789653600029
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001237027",
+      "time": 1789657200000
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000422341",
+      "time": 1789660800021
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000103925",
+      "time": 1789664400089
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000019914",
+      "time": 1789668000043
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000056179",
+      "time": 1789671600007
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000998386",
+      "time": 1789675200068
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004900971",
+      "time": 1789678800016
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000291194",
+      "premium": "0.0007329555",
+      "time": 1789682400006
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003489997",
+      "time": 1789686000018
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004601836",
+      "time": 1789689600005
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003158421",
+      "time": 1789693200106
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003764864",
+      "time": 1789696800015
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003842638",
+      "time": 1789700400050
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005630179",
+      "time": 1789704000030
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004823937",
+      "time": 1789707600009
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000191714",
+      "premium": "0.0006533709",
+      "time": 1789711200035
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000146404",
+      "premium": "0.0006171232",
+      "time": 1789714800058
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005700835",
+      "time": 1789718400019
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000230698",
+      "premium": "0.000684558",
+      "time": 1789722000028
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000154229",
+      "premium": "0.0006233836",
+      "time": 1789725600041
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005763319",
+      "time": 1789729200059
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004985569",
+      "time": 1789732800005
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004934113",
+      "time": 1789736400054
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.000496216",
+      "time": 1789740000014
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000130724",
+      "premium": "0.0006045792",
+      "time": 1789743600019
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005164117",
+      "time": 1789747200023
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004774569",
+      "time": 1789750800033
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004750371",
+      "time": 1789754400069
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004332316",
+      "time": 1789758000083
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000235052",
+      "premium": "0.0006880414",
+      "time": 1789761600036
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004741337",
+      "time": 1789765200033
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000342046",
+      "premium": "0.0007736366",
+      "time": 1789768800024
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000234619",
+      "premium": "0.000687695",
+      "time": 1789772400009
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005763309",
+      "time": 1789776000048
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.000028099",
+      "premium": "0.0007247916",
+      "time": 1789779600049
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000347857",
+      "premium": "0.0007782853",
+      "time": 1789783200035
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000537968",
+      "premium": "0.0009303746",
+      "time": 1789786800051
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000511829",
+      "premium": "0.0009094635",
+      "time": 1789790400012
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.000013802",
+      "premium": "0.000610416",
+      "time": 1789794000045
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000259839",
+      "premium": "0.0007078715",
+      "time": 1789797600067
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000257228",
+      "premium": "0.0007057821",
+      "time": 1789801200050
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000327095",
+      "premium": "0.0007616762",
+      "time": 1789804800095
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000450976",
+      "premium": "0.0008607811",
+      "time": 1789808400016
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000392188",
+      "premium": "0.0008137504",
+      "time": 1789812000053
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000446894",
+      "premium": "0.0008575151",
+      "time": 1789815600055
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000220064",
+      "premium": "0.0006760511",
+      "time": 1789819200053
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000264005",
+      "premium": "0.0007112039",
+      "time": 1789822800026
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000314058",
+      "premium": "0.0007512465",
+      "time": 1789826400022
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000332331",
+      "premium": "0.0007658646",
+      "time": 1789830000035
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000268663",
+      "premium": "0.0007149305",
+      "time": 1789833600032
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000279369",
+      "premium": "0.0007234952",
+      "time": 1789837200015
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005299054",
+      "time": 1789840800037
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005616473",
+      "time": 1789844400030
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000128221",
+      "premium": "0.0006025769",
+      "time": 1789848000021
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005360815",
+      "time": 1789851600054
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003546877",
+      "time": 1789855200034
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004830801",
+      "time": 1789858800052
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000152542",
+      "premium": "0.0006220336",
+      "time": 1789862400057
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000265987",
+      "premium": "0.0007127896",
+      "time": 1789866000055
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000143122",
+      "premium": "0.0006144975",
+      "time": 1789869600005
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003693541",
+      "time": 1789873200039
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004065152",
+      "time": 1789876800051
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004187533",
+      "time": 1789880400014
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003554433",
+      "time": 1789884000017
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000233319",
+      "premium": "0.0006866554",
+      "time": 1789887600013
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000205968",
+      "premium": "0.0006647746",
+      "time": 1789891200021
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000185414",
+      "premium": "0.000648331",
+      "time": 1789894800064
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000434076",
+      "premium": "0.0008472608",
+      "time": 1789898400052
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004243212",
+      "time": 1789902000044
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003158638",
+      "time": 1789905600043
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004075773",
+      "time": 1789909200064
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002967436",
+      "time": 1789912800025
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003656804",
+      "time": 1789916400037
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003542693",
+      "time": 1789920000035
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000132969",
+      "premium": "0.0006063754",
+      "time": 1789923600004
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000400125",
+      "premium": "0.0008200998",
+      "time": 1789927200038
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000166357",
+      "premium": "0.0006330858",
+      "time": 1789930800013
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000347328",
+      "premium": "0.0007778625",
+      "time": 1789934400046
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000364088",
+      "premium": "0.0007912702",
+      "time": 1789938000056
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000220307",
+      "premium": "0.0006762454",
+      "time": 1789941600032
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000593241",
+      "premium": "0.000974593",
+      "time": 1789945200033
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000581892",
+      "premium": "0.000965514",
+      "time": 1789948800072
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000670396",
+      "premium": "0.001036317",
+      "time": 1789952400054
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000630576",
+      "premium": "0.0010044608",
+      "time": 1789956000032
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.000062725",
+      "premium": "0.0010018",
+      "time": 1789959600007
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000705789",
+      "premium": "0.001064631",
+      "time": 1789963200070
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.00006893",
+      "premium": "0.0010514399",
+      "time": 1789966800008
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000683715",
+      "premium": "0.0010469719",
+      "time": 1789970400040
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000899887",
+      "premium": "0.0012199094",
+      "time": 1789974000047
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000520468",
+      "premium": "0.0009163748",
+      "time": 1789977600069
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.000051768",
+      "premium": "0.0009141441",
+      "time": 1789981200073
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0001103487",
+      "premium": "0.0013827898",
+      "time": 1789984800022
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0001134847",
+      "premium": "0.0014078777",
+      "time": 1789988400040
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0001262016",
+      "premium": "0.0015096127",
+      "time": 1789992000012
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0001001722",
+      "premium": "0.0013013775",
+      "time": 1789995600016
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000340705",
+      "premium": "0.0007725641",
+      "time": 1789999200050
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000139994",
+      "premium": "0.0006119952",
+      "time": 1790002800016
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000303997",
+      "premium": "0.0007431974",
+      "time": 1790006400108
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000190212",
+      "premium": "0.0006521697",
+      "time": 1790010000083
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004951046",
+      "time": 1790013600013
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000314916",
+      "premium": "0.0007519325",
+      "time": 1790017200031
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000270953",
+      "premium": "0.0007167621",
+      "time": 1790020800056
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.000576414",
+      "time": 1790024400050
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000140472",
+      "premium": "0.0006123772",
+      "time": 1790028000000
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000655444",
+      "premium": "0.0010243552",
+      "time": 1790031600034
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000764983",
+      "premium": "0.0011119867",
+      "time": 1790035200028
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000508754",
+      "premium": "0.0009070032",
+      "time": 1790038800043
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000402036",
+      "premium": "0.0008216289",
+      "time": 1790042400020
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000732195",
+      "premium": "0.0010857559",
+      "time": 1790046000012
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000466172",
+      "premium": "0.0008729375",
+      "time": 1790049600050
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000415803",
+      "premium": "0.0008326423",
+      "time": 1790053200001
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000489231",
+      "premium": "0.0008913848",
+      "time": 1790056800032
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000431063",
+      "premium": "0.0008448507",
+      "time": 1790060400019
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000159761",
+      "premium": "0.0006278086",
+      "time": 1790064000012
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000236746",
+      "premium": "0.0006893968",
+      "time": 1790067600013
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004329319",
+      "time": 1790071200001
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005744233",
+      "time": 1790074800014
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000151693",
+      "premium": "0.0006213545",
+      "time": 1790078400053
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005877789",
+      "time": 1790082000080
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000155754",
+      "premium": "0.0006246035",
+      "time": 1790085600059
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005905646",
+      "time": 1790089200000
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000233885",
+      "premium": "0.0006871077",
+      "time": 1790092800071
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004586643",
+      "time": 1790096400085
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004699736",
+      "time": 1790100000057
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005370537",
+      "time": 1790103600072
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005570948",
+      "time": 1790107200040
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000128004",
+      "premium": "0.0006024035",
+      "time": 1790110800004
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005625132",
+      "time": 1790114400062
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000274871",
+      "premium": "0.0007198967",
+      "time": 1790118000027
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000389875",
+      "premium": "0.0008118997",
+      "time": 1790121600031
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000364329",
+      "premium": "0.0007914631",
+      "time": 1790125200061
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000169839",
+      "premium": "0.000635871",
+      "time": 1790128800025
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004749556",
+      "time": 1790132400051
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000367838",
+      "premium": "0.00079427",
+      "time": 1790136000024
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004953582",
+      "time": 1790139600009
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004768511",
+      "time": 1790143200005
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005571959",
+      "time": 1790146800002
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000161622",
+      "premium": "0.0006292973",
+      "time": 1790150400033
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005102629",
+      "time": 1790154000065
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.000513788",
+      "time": 1790157600062
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004125004",
+      "time": 1790161200047
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004463574",
+      "time": 1790164800030
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004310056",
+      "time": 1790168400050
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004139534",
+      "time": 1790172000043
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002972723",
+      "time": 1790175600003
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.000266978",
+      "time": 1790179200048
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003206796",
+      "time": 1790182800005
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.000252029",
+      "time": 1790186400074
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001764563",
+      "time": 1790190000015
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002024412",
+      "time": 1790193600071
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003472787",
+      "time": 1790197200118
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003562771",
+      "time": 1790200800015
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002334823",
+      "time": 1790204400039
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002235717",
+      "time": 1790208000045
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001700875",
+      "time": 1790211600025
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002257041",
+      "time": 1790215200029
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002566243",
+      "time": 1790218800001
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002610626",
+      "time": 1790222400038
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002536015",
+      "time": 1790226000007
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002750621",
+      "time": 1790229600061
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004342847",
+      "time": 1790233200056
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003586598",
+      "time": 1790236800017
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001816384",
+      "time": 1790240400034
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002177523",
+      "time": 1790244000011
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001168482",
+      "time": 1790247600045
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001051478",
+      "time": 1790251200065
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001594996",
+      "time": 1790254800003
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003255439",
+      "time": 1790258400035
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004428877",
+      "time": 1790262000014
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005120151",
+      "time": 1790265600030
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000150984",
+      "premium": "0.0006207871",
+      "time": 1790269200058
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004791388",
+      "time": 1790272800058
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000146334",
+      "premium": "0.000617067",
+      "time": 1790276400018
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005715418",
+      "time": 1790280000054
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000129673",
+      "premium": "0.0006037383",
+      "time": 1790283600088
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000206276",
+      "premium": "0.0006650211",
+      "time": 1790287200013
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005451376",
+      "time": 1790290800038
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005990048",
+      "time": 1790294400076
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000569867",
+      "premium": "0.000955894",
+      "time": 1790298000027
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000240824",
+      "premium": "0.0006926595",
+      "time": 1790301600059
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003689185",
+      "time": 1790305200086
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004603052",
+      "time": 1790308800036
+    },
+    {
+      "coin": "SUI",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005506741",
+      "time": 1790312400040
+    }
+  ]
+}

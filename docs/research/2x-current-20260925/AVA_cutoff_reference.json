@@ -1,0 +1,14 @@
+{
+  "url": "https://api.kraken.com/0/public/OHLC?pair=AVAUSD&interval=5",
+  "retrieved_at": "2026-09-25T05:26:22.894590+00:00",
+  "last_pre_cutoff_bar": [
+    1790313300,
+    "0.2581",
+    "0.2596",
+    "0.2581",
+    "0.2596",
+    "0.2591",
+    "4613.74181",
+    4
+  ]
+}

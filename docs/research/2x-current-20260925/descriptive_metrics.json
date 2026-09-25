@@ -1,0 +1,482 @@
+{
+  "AAVE": {
+    "reference_completed_day_close": 146.85,
+    "returns_pct": {
+      "7": 14.306842064295155,
+      "30": 16.436726926736434,
+      "60": 44.87963693764798,
+      "90": 54.6440606571188
+    },
+    "rv30_annualized_pct": 72.4686657513807,
+    "rv7_over_rv30": 1.3579345752003855,
+    "atr14_pct": 6.738654603823144,
+    "kraken_adv30_usd": 2490421.211068373,
+    "kraken_median_dv30_usd": 1981367.376835565,
+    "kraken_mean_volume7_over_prior23": 2.0533723143229703,
+    "prior20_day_high_excluding_latest_day": 155.15,
+    "prior20_day_low_excluding_latest_day": 113.16,
+    "latest_day_high": 147.65,
+    "latest_day_low": 134.69,
+    "range7_pct": 18.99897854954035,
+    "range30_pct": 28.59380320054478,
+    "distance_from_90d_low_pct": 82.0379323168464,
+    "excess_return_percentage_points": {
+      "XBT": {
+        "7": 3.796435383903086,
+        "30": 8.95915099315394,
+        "60": 15.733033043352894,
+        "90": 14.032287795624221
+      },
+      "ETH": {
+        "7": 4.414557146860387,
+        "30": 6.4189176700170325,
+        "60": 7.317247958037342,
+        "90": -15.817419250268031
+      }
+    },
+    "ninety_day_daily_log_return_correlation": {
+      "XBT": 0.7058594314444683,
+      "ETH": 0.6686732423085974
+    }
+  },
+  "AVAX": {
+    "reference_completed_day_close": 10.206,
+    "returns_pct": {
+      "7": 34.16589982910476,
+      "30": 39.2740174672489,
+      "60": 51.559251559251564,
+      "90": 54.28571428571427
+    },
+    "rv30_annualized_pct": 101.92807357501475,
+    "rv7_over_rv30": 1.8572731807987728,
+    "atr14_pct": 7.71394977744184,
+    "kraken_adv30_usd": 4302926.537491834,
+    "kraken_median_dv30_usd": 1576347.823899046,
+    "kraken_mean_volume7_over_prior23": 9.642526787150894,
+    "prior20_day_high_excluding_latest_day": 11.791,
+    "prior20_day_low_excluding_latest_day": 7.171,
+    "latest_day_high": 10.693,
+    "latest_day_low": 9.975,
+    "range7_pct": 41.485400744660005,
+    "range30_pct": 46.74701156182638,
+    "distance_from_90d_low_pct": 71.32784958871916,
+    "excess_return_percentage_points": {
+      "XBT": {
+        "7": 23.65549314871269,
+        "30": 31.79644153366641,
+        "60": 22.412647664956477,
+        "90": 13.673941424219691
+      },
+      "ETH": {
+        "7": 24.27361491166999,
+        "30": 29.2562082105295,
+        "60": 13.996862579640926,
+        "90": -16.17576562167256
+      }
+    },
+    "ninety_day_daily_log_return_correlation": {
+      "XBT": 0.5239696402636203,
+      "ETH": 0.5310597555921933
+    }
+  },
+  "AVA": {
+    "reference_completed_day_close": 0.2556,
+    "returns_pct": {
+      "7": -2.850627137970352,
+      "30": 22.063037249283667,
+      "60": 57.389162561576356,
+      "90": 47.66031195840554
+    },
+    "rv30_annualized_pct": 216.75915867579965,
+    "rv7_over_rv30": 0.5403394313927675,
+    "atr14_pct": 20.081600715403535,
+    "kraken_adv30_usd": 146050.34690484783,
+    "kraken_median_dv30_usd": 43284.938188322994,
+    "kraken_mean_volume7_over_prior23": 1.3736778758676893,
+    "prior20_day_high_excluding_latest_day": 0.4899,
+    "prior20_day_low_excluding_latest_day": 0.1467,
+    "latest_day_high": 0.2659,
+    "latest_day_low": 0.2494,
+    "range7_pct": 29.733959311424115,
+    "range30_pct": 134.27230046948358,
+    "distance_from_90d_low_pct": 74.23312883435582,
+    "excess_return_percentage_points": {
+      "XBT": {
+        "7": -13.361033818362422,
+        "30": 14.585461315701174,
+        "60": 28.24255866728127,
+        "90": 7.0485390969109645
+      },
+      "ETH": {
+        "7": -12.742912055405121,
+        "30": 12.045227992564266,
+        "60": 19.826773581965718,
+        "90": -22.801167948981288
+      }
+    },
+    "ninety_day_daily_log_return_correlation": {
+      "XBT": 0.2014157572127222,
+      "ETH": 0.20826808183554438
+    }
+  },
+  "ENA": {
+    "reference_completed_day_close": 0.2245,
+    "returns_pct": {
+      "7": 45.30744336569579,
+      "30": 56.773743016759795,
+      "60": 148.3407079646018,
+      "90": 183.10214375788146
+    },
+    "rv30_annualized_pct": 128.9138115924833,
+    "rv7_over_rv30": 1.1879459436209425,
+    "atr14_pct": 8.717785555202036,
+    "kraken_adv30_usd": 4401119.782753183,
+    "kraken_median_dv30_usd": 3475110.660588122,
+    "kraken_mean_volume7_over_prior23": 1.98061383623273,
+    "prior20_day_high_excluding_latest_day": 0.2305,
+    "prior20_day_low_excluding_latest_day": 0.1348,
+    "latest_day_high": 0.2267,
+    "latest_day_low": 0.1994,
+    "range7_pct": 34.69933184855234,
+    "range30_pct": 42.628062360801785,
+    "distance_from_90d_low_pct": 219.80056980056983,
+    "excess_return_percentage_points": {
+      "XBT": {
+        "7": 34.79703668530372,
+        "30": 49.2961670831773,
+        "60": 119.19410407030671,
+        "90": 142.49037089638688
+      },
+      "ETH": {
+        "7": 35.415158448261025,
+        "30": 46.75593376004039,
+        "60": 110.77831898499116,
+        "90": 112.64066385049463
+      }
+    },
+    "ninety_day_daily_log_return_correlation": {
+      "XBT": 0.6024765182067272,
+      "ETH": 0.5444653408204801
+    }
+  },
+  "ETHFI": {
+    "reference_completed_day_close": 0.6788,
+    "returns_pct": {
+      "7": 8.573256557901466,
+      "30": 21.86714542190302,
+      "60": 58.33916491719149,
+      "90": 90.88863892013497
+    },
+    "rv30_annualized_pct": 104.67817903763307,
+    "rv7_over_rv30": 1.355381779928936,
+    "atr14_pct": 10.738488088222914,
+    "kraken_adv30_usd": 317873.5812204981,
+    "kraken_median_dv30_usd": 232952.75990049602,
+    "kraken_mean_volume7_over_prior23": 1.2816724231401917,
+    "prior20_day_high_excluding_latest_day": 0.7792,
+    "prior20_day_low_excluding_latest_day": 0.5535,
+    "latest_day_high": 0.6846,
+    "latest_day_low": 0.6434,
+    "range7_pct": 22.95226870948734,
+    "range30_pct": 38.715380082498534,
+    "distance_from_90d_low_pct": 119.17985146916372,
+    "excess_return_percentage_points": {
+      "XBT": {
+        "7": -1.9371501224906034,
+        "30": 14.389569488320529,
+        "60": 29.192561022896403,
+        "90": 50.27686605864039
+      },
+      "ETH": {
+        "7": -1.319028359533302,
+        "30": 11.84933616518362,
+        "60": 20.77677593758085,
+        "90": 20.427159012748135
+      }
+    },
+    "ninety_day_daily_log_return_correlation": {
+      "XBT": 0.48157835198383075,
+      "ETH": 0.5407152933649673
+    }
+  },
+  "ETH": {
+    "reference_completed_day_close": 2687.24,
+    "returns_pct": {
+      "7": 9.892284917434768,
+      "30": 10.017809256719401,
+      "60": 37.56238897961064,
+      "90": 70.46147990738683
+    },
+    "rv30_annualized_pct": 46.764627848144094,
+    "rv7_over_rv30": 1.3104673004449876,
+    "atr14_pct": 4.245354234934622,
+    "kraken_adv30_usd": 83865377.98811254,
+    "kraken_median_dv30_usd": 73098812.69613956,
+    "kraken_mean_volume7_over_prior23": 1.6309759101815973,
+    "prior20_day_high_excluding_latest_day": 2806.69,
+    "prior20_day_low_excluding_latest_day": 2356.45,
+    "latest_day_high": 2704.82,
+    "latest_day_low": 2627.68,
+    "range7_pct": 13.83724564981171,
+    "range30_pct": 16.79083371786666,
+    "distance_from_90d_low_pct": 77.96291390728476,
+    "excess_return_percentage_points": {
+      "XBT": {
+        "7": -0.6181217629573013,
+        "30": 2.540233323136909,
+        "60": 8.415785085315552,
+        "90": 29.849707045892252
+      },
+      "ETH": {
+        "7": 0.0,
+        "30": 0.0,
+        "60": 0.0,
+        "90": 0.0
+      }
+    },
+    "ninety_day_daily_log_return_correlation": {
+      "XBT": 0.8816540597753066,
+      "ETH": 1.0
+    }
+  },
+  "HYPE": {
+    "reference_completed_day_close": 92.14,
+    "returns_pct": {
+      "7": 8.298072402444756,
+      "30": 15.69563033651431,
+      "60": 54.57138064083207,
+      "90": 43.29704510108865
+    },
+    "rv30_annualized_pct": 72.91051959281019,
+    "rv7_over_rv30": 1.0238940159528276,
+    "atr14_pct": 5.427300071320038,
+    "kraken_adv30_usd": 16909077.10482144,
+    "kraken_median_dv30_usd": 17734947.539500393,
+    "kraken_mean_volume7_over_prior23": 1.393935923564367,
+    "prior20_day_high_excluding_latest_day": 98.02,
+    "prior20_day_low_excluding_latest_day": 75.11,
+    "latest_day_high": 94.87,
+    "latest_day_low": 89.88,
+    "range7_pct": 14.163229867592792,
+    "range30_pct": 24.8643368786629,
+    "distance_from_90d_low_pct": 80.31311154598826,
+    "excess_return_percentage_points": {
+      "XBT": {
+        "7": -2.2123342779473134,
+        "30": 8.218054402931816,
+        "60": 25.42477674653698,
+        "90": 2.6852722395940702
+      },
+      "ETH": {
+        "7": -1.5942125149900122,
+        "30": 5.677821079794908,
+        "60": 17.00899166122143,
+        "90": -27.164434806298182
+      }
+    },
+    "ninety_day_daily_log_return_correlation": {
+      "XBT": 0.635290499367569,
+      "ETH": 0.7151057541504459
+    }
+  },
+  "NEAR": {
+    "reference_completed_day_close": 4.5879,
+    "returns_pct": {
+      "7": 45.962713158564526,
+      "30": 146.84708920692998,
+      "60": 149.66804527644757,
+      "90": 155.13847180513847
+    },
+    "rv30_annualized_pct": 129.62377998430827,
+    "rv7_over_rv30": 1.2396929135737684,
+    "atr14_pct": 10.36982372887689,
+    "kraken_adv30_usd": 12851505.02025834,
+    "kraken_median_dv30_usd": 8172379.141460294,
+    "kraken_mean_volume7_over_prior23": 5.056239091595807,
+    "prior20_day_high_excluding_latest_day": 4.8017,
+    "prior20_day_low_excluding_latest_day": 1.9052,
+    "latest_day_high": 4.8118,
+    "latest_day_low": 4.0929,
+    "range7_pct": 37.96072277076658,
+    "range30_pct": 66.09124000087185,
+    "distance_from_90d_low_pct": 198.76921073196146,
+    "excess_return_percentage_points": {
+      "XBT": {
+        "7": 35.45230647817246,
+        "30": 139.36951327334748,
+        "60": 120.52144138215249,
+        "90": 114.52669894364388
+      },
+      "ETH": {
+        "7": 36.07042824112976,
+        "30": 136.82927995021058,
+        "60": 112.10565629683694,
+        "90": 84.67699189775163
+      }
+    },
+    "ninety_day_daily_log_return_correlation": {
+      "XBT": 0.49287631242665436,
+      "ETH": 0.5097421331008272
+    }
+  },
+  "ONDO": {
+    "reference_completed_day_close": 0.52189,
+    "returns_pct": {
+      "7": 40.228927640594335,
+      "30": 43.415773564165974,
+      "60": 28.887187592610886,
+      "90": 64.72760558045579
+    },
+    "rv30_annualized_pct": 112.16131617363484,
+    "rv7_over_rv30": 1.6519652467868513,
+    "atr14_pct": 7.19253920503226,
+    "kraken_adv30_usd": 2593266.28205646,
+    "kraken_median_dv30_usd": 1391238.343007611,
+    "kraken_mean_volume7_over_prior23": 5.242041402549651,
+    "prior20_day_high_excluding_latest_day": 0.46363,
+    "prior20_day_low_excluding_latest_day": 0.32305,
+    "latest_day_high": 0.52914,
+    "latest_day_low": 0.40727,
+    "range7_pct": 30.094464350725257,
+    "range30_pct": 39.489164383299176,
+    "distance_from_90d_low_pct": 73.0806221603157,
+    "excess_return_percentage_points": {
+      "XBT": {
+        "7": 29.718520960202266,
+        "30": 35.93819763058348,
+        "60": -0.25941630168420104,
+        "90": 24.115832718961208
+      },
+      "ETH": {
+        "7": 30.336642723159567,
+        "30": 33.39796430744657,
+        "60": -8.675201386999753,
+        "90": -5.733874326931044
+      }
+    },
+    "ninety_day_daily_log_return_correlation": {
+      "XBT": 0.5295708290798825,
+      "ETH": 0.5342901809351197
+    }
+  },
+  "SUI": {
+    "reference_completed_day_close": 1.0143,
+    "returns_pct": {
+      "7": 36.93803159173754,
+      "30": 33.95404120443739,
+      "60": 40.46530951391774,
+      "90": 45.44020648121594
+    },
+    "rv30_annualized_pct": 91.99692317882894,
+    "rv7_over_rv30": 1.4625960107408464,
+    "atr14_pct": 7.159758313263194,
+    "kraken_adv30_usd": 10218238.2880573,
+    "kraken_median_dv30_usd": 7679165.32329291,
+    "kraken_mean_volume7_over_prior23": 2.910012829179533,
+    "prior20_day_high_excluding_latest_day": 1.0821,
+    "prior20_day_low_excluding_latest_day": 0.673,
+    "latest_day_high": 1.0308,
+    "latest_day_low": 0.9356,
+    "range7_pct": 34.082618554668244,
+    "range30_pct": 40.33323474317264,
+    "distance_from_90d_low_pct": 59.55639452571966,
+    "excess_return_percentage_points": {
+      "XBT": {
+        "7": 26.42762491134547,
+        "30": 26.476465270854895,
+        "60": 11.318705619622651,
+        "90": 4.828433619721359
+      },
+      "ETH": {
+        "7": 27.045746674302773,
+        "30": 23.936231947717985,
+        "60": 2.9029205343071,
+        "90": -25.021273426170893
+      }
+    },
+    "ninety_day_daily_log_return_correlation": {
+      "XBT": 0.7839839975593179,
+      "ETH": 0.7279391081976181
+    }
+  },
+  "TAO": {
+    "reference_completed_day_close": 296.6109,
+    "returns_pct": {
+      "7": 27.73472977948699,
+      "30": 29.437534720146363,
+      "60": 48.8793800099383,
+      "90": 38.5379043245498
+    },
+    "rv30_annualized_pct": 113.67179473377354,
+    "rv7_over_rv30": 1.519993959846111,
+    "atr14_pct": 7.533185732553995,
+    "kraken_adv30_usd": 10217113.53893143,
+    "kraken_median_dv30_usd": 7658268.39825843,
+    "kraken_mean_volume7_over_prior23": 2.6004363347127915,
+    "prior20_day_high_excluding_latest_day": 342.0,
+    "prior20_day_low_excluding_latest_day": 213.2597,
+    "latest_day_high": 304.1262,
+    "latest_day_low": 278.1605,
+    "range7_pct": 37.363293122403796,
+    "range30_pct": 43.40376567415425,
+    "distance_from_90d_low_pct": 61.709114203546456,
+    "excess_return_percentage_points": {
+      "XBT": {
+        "7": 17.22432309909492,
+        "30": 21.95995878656387,
+        "60": 19.732776115643215,
+        "90": -2.0738685369447794
+      },
+      "ETH": {
+        "7": 17.842444862052222,
+        "30": 19.419725463426964,
+        "60": 11.316991030327664,
+        "90": -31.92357558283703
+      }
+    },
+    "ninety_day_daily_log_return_correlation": {
+      "XBT": 0.7209783219936694,
+      "ETH": 0.6251276007937089
+    }
+  },
+  "XBT": {
+    "reference_completed_day_close": 84380.0,
+    "returns_pct": {
+      "7": 10.51040668039207,
+      "30": 7.477575933582492,
+      "60": 29.146603894295087,
+      "90": 40.61177286149458
+    },
+    "rv30_annualized_pct": 43.306424002787914,
+    "rv7_over_rv30": 1.4598747645630155,
+    "atr14_pct": 3.0585362137270176,
+    "kraken_adv30_usd": 206504476.58862892,
+    "kraken_median_dv30_usd": 189588888.87450075,
+    "kraken_mean_volume7_over_prior23": 1.4588236722534735,
+    "prior20_day_high_excluding_latest_day": 87446.7,
+    "prior20_day_low_excluding_latest_day": 74891.5,
+    "latest_day_high": 84914.8,
+    "latest_day_low": 82832.3,
+    "range7_pct": 13.291893813699927,
+    "range30_pct": 14.879355297463851,
+    "distance_from_90d_low_pct": 46.13785936958781,
+    "excess_return_percentage_points": {
+      "XBT": {
+        "7": 0.0,
+        "30": 0.0,
+        "60": 0.0,
+        "90": 0.0
+      },
+      "ETH": {
+        "7": 0.6181217629573013,
+        "30": -2.540233323136909,
+        "60": -8.415785085315552,
+        "90": -29.849707045892252
+      }
+    },
+    "ninety_day_daily_log_return_correlation": {
+      "XBT": 1.0,
+      "ETH": 0.8816540597753066
+    }
+  }
+}

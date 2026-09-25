@@ -1,0 +1,2034 @@
+{
+  "receipt": {
+    "provider_url": "https://api.hyperliquid.xyz/info",
+    "request": {
+      "type": "fundingHistory",
+      "coin": "AVAX",
+      "startTime": 1789104000000,
+      "endTime": 1790313600000
+    },
+    "retrieval_started_at": "2026-09-25T05:26:20.764503+00:00",
+    "status": 200,
+    "server_date": "Fri, 25 Sep 2026 05:26:22 GMT",
+    "retrieval_completed_at": "2026-09-25T05:26:21.843943+00:00",
+    "sha256": "f46f00ecef46deb7500478cdfe18fbff6143cdb03b8d58ccb56ef6db9fe83364"
+  },
+  "rows": [
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000067283",
+      "premium": "-0.0004461737",
+      "time": 1789106400042
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003574879",
+      "time": 1789110000124
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000009104",
+      "premium": "-0.0004927169",
+      "time": 1789113600085
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.000019268",
+      "premium": "-0.0006541442",
+      "time": 1789117200037
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000152722",
+      "premium": "-0.0006221773",
+      "time": 1789120800021
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000024055",
+      "premium": "-0.0005192437",
+      "time": 1789124400046
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.000003119",
+      "premium": "-0.0004750477",
+      "time": 1789128000006
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003529615",
+      "time": 1789131600057
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000061722",
+      "premium": "-0.000549378",
+      "time": 1789135200020
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000074614",
+      "premium": "-0.0005596909",
+      "time": 1789138800047
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000096109",
+      "premium": "-0.0005768871",
+      "time": 1789142400047
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000054907",
+      "premium": "-0.0004560743",
+      "time": 1789146000028
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000119151",
+      "premium": "-0.0005953208",
+      "time": 1789149600021
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.00002462",
+      "premium": "-0.0006969598",
+      "time": 1789153200011
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000310475",
+      "premium": "-0.0007483802",
+      "time": 1789156800017
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000142439",
+      "premium": "-0.0006139509",
+      "time": 1789160400000
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000218178",
+      "premium": "-0.0006745422",
+      "time": 1789164000041
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000265189",
+      "premium": "-0.0007121508",
+      "time": 1789167600007
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000299594",
+      "premium": "-0.000739675",
+      "time": 1789171200064
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000257088",
+      "premium": "-0.0007056707",
+      "time": 1789174800041
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000489434",
+      "premium": "-0.0008915472",
+      "time": 1789178400023
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000377279",
+      "premium": "-0.0008018231",
+      "time": 1789182000036
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000072542",
+      "premium": "-0.0005580338",
+      "time": 1789185600037
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000094337",
+      "premium": "-0.0005754697",
+      "time": 1789189200028
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000157238",
+      "premium": "-0.0006257902",
+      "time": 1789192800003
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000214554",
+      "premium": "-0.0006716433",
+      "time": 1789196400009
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000359544",
+      "premium": "-0.0007876356",
+      "time": 1789200000039
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000314852",
+      "premium": "-0.0007518815",
+      "time": 1789203600059
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000198777",
+      "premium": "-0.0006590218",
+      "time": 1789207200014
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000120571",
+      "premium": "-0.0005964565",
+      "time": 1789210800059
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000118475",
+      "premium": "-0.0005947802",
+      "time": 1789214400037
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000050357",
+      "premium": "-0.0005402858",
+      "time": 1789218000041
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000023441",
+      "premium": "-0.0005187526",
+      "time": 1789221600000
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000039211",
+      "premium": "-0.0004686313",
+      "time": 1789225200104
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.000000167",
+      "premium": "-0.0004986641",
+      "time": 1789228800001
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000003476",
+      "premium": "-0.0004972194",
+      "time": 1789232400043
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000022466",
+      "premium": "-0.000517973",
+      "time": 1789236000008
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000095535",
+      "premium": "-0.000576428",
+      "time": 1789239600008
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000265024",
+      "premium": "-0.000712019",
+      "time": 1789243200022
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000092641",
+      "premium": "-0.0005741128",
+      "time": 1789246800010
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000006658",
+      "premium": "-0.0004946735",
+      "time": 1789250400013
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000041261",
+      "premium": "-0.0005330087",
+      "time": 1789254000043
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000020452",
+      "premium": "-0.0005163615",
+      "time": 1789257600049
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000156455",
+      "premium": "-0.0006251638",
+      "time": 1789261200026
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000023192",
+      "premium": "-0.0005185535",
+      "time": 1789264800029
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000023988",
+      "premium": "-0.0004808098",
+      "time": 1789268400061
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000052433",
+      "premium": "-0.0005419462",
+      "time": 1789272000042
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000126573",
+      "premium": "-0.0006012585",
+      "time": 1789275600117
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000005503",
+      "premium": "-0.000504402",
+      "time": 1789279200007
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000054587",
+      "premium": "-0.0004563306",
+      "time": 1789282800041
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.000004008",
+      "premium": "-0.0005320643",
+      "time": 1789286400020
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000172121",
+      "premium": "-0.0006376968",
+      "time": 1789290000029
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000243076",
+      "premium": "-0.0006944612",
+      "time": 1789293600008
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000231498",
+      "premium": "-0.0006851981",
+      "time": 1789297200026
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000090525",
+      "premium": "-0.0005724199",
+      "time": 1789300800053
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000028566",
+      "premium": "-0.0005228527",
+      "time": 1789304400019
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000015247",
+      "premium": "-0.0005121978",
+      "time": 1789308000107
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000190771",
+      "premium": "-0.0006526166",
+      "time": 1789311600038
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000243645",
+      "premium": "-0.0006949158",
+      "time": 1789315200070
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000172511",
+      "premium": "-0.0006380087",
+      "time": 1789318800040
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000024914",
+      "premium": "-0.0005199314",
+      "time": 1789322400042
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.000008858",
+      "premium": "-0.0004291361",
+      "time": 1789326000020
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000034477",
+      "premium": "-0.0005275814",
+      "time": 1789329600000
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000069793",
+      "premium": "-0.0004441657",
+      "time": 1789333200020
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000011046",
+      "premium": "-0.0004911634",
+      "time": 1789336800010
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000220186",
+      "premium": "-0.0006761489",
+      "time": 1789340400023
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000189546",
+      "premium": "-0.0006516369",
+      "time": 1789344000068
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000047115",
+      "premium": "-0.0004623083",
+      "time": 1789347600018
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000007159",
+      "premium": "-0.0005057274",
+      "time": 1789351200022
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000042014",
+      "premium": "-0.0004663886",
+      "time": 1789354800024
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000040403",
+      "premium": "-0.0005323228",
+      "time": 1789358400022
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000152177",
+      "premium": "-0.0006217419",
+      "time": 1789362000040
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000152135",
+      "premium": "-0.0006217083",
+      "time": 1789365600057
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000167308",
+      "premium": "-0.0006338464",
+      "time": 1789369200040
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000199162",
+      "premium": "-0.0006593299",
+      "time": 1789372800034
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000178046",
+      "premium": "-0.0006424366",
+      "time": 1789376400007
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000451605",
+      "premium": "-0.0008612843",
+      "time": 1789380000021
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000272837",
+      "premium": "-0.0007182692",
+      "time": 1789383600121
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000056684",
+      "premium": "-0.0005453469",
+      "time": 1789387200046
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000042512",
+      "premium": "-0.0004659907",
+      "time": 1789390800014
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000097806",
+      "premium": "-0.000421755",
+      "time": 1789394400028
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000012126",
+      "premium": "-0.0004902993",
+      "time": 1789398000030
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000100711",
+      "premium": "-0.0004194312",
+      "time": 1789401600030
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000340668",
+      "time": 1789405200041
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002749341",
+      "time": 1789408800060
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000132583",
+      "time": 1789412400016
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003377964",
+      "time": 1789416000079
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003106767",
+      "time": 1789419600027
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000068353",
+      "premium": "-0.0004453179",
+      "time": 1789423200047
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000073822",
+      "premium": "-0.0004409422",
+      "time": 1789426800132
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.00000217",
+      "premium": "-0.0004826397",
+      "time": 1789430400024
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003982426",
+      "time": 1789434000042
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000105769",
+      "premium": "-0.0004153844",
+      "time": 1789437600052
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000028135",
+      "premium": "-0.000477492",
+      "time": 1789441200097
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000014127",
+      "premium": "-0.0005113019",
+      "time": 1789444800037
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000021547",
+      "premium": "-0.0005172375",
+      "time": 1789448400016
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000228332",
+      "premium": "-0.0006826658",
+      "time": 1789452000003
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000170886",
+      "premium": "-0.0006367092",
+      "time": 1789455600083
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000113222",
+      "premium": "-0.000590578",
+      "time": 1789459200008
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000025217",
+      "premium": "-0.0004798267",
+      "time": 1789462800049
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003987578",
+      "time": 1789466400030
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000030231",
+      "premium": "-0.000524185",
+      "time": 1789470000036
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000212651",
+      "premium": "-0.0006701208",
+      "time": 1789473600039
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000059672",
+      "premium": "-0.0004522628",
+      "time": 1789477200117
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003528295",
+      "time": 1789480800005
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000238271",
+      "premium": "-0.0006906166",
+      "time": 1789484400050
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000062572",
+      "premium": "-0.0005500573",
+      "time": 1789488000014
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000129672",
+      "premium": "-0.0006037379",
+      "time": 1789491600014
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000042441",
+      "premium": "-0.0005339527",
+      "time": 1789495200017
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000067089",
+      "premium": "-0.0005536713",
+      "time": 1789498800047
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000052254",
+      "premium": "-0.0005418035",
+      "time": 1789502400033
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000113681",
+      "premium": "-0.0005909445",
+      "time": 1789506000077
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000247003",
+      "premium": "-0.0006976025",
+      "time": 1789509600043
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.00001901",
+      "premium": "-0.00065208",
+      "time": 1789513200062
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.000019401",
+      "premium": "-0.000655208",
+      "time": 1789516800021
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000153386",
+      "premium": "-0.0006227087",
+      "time": 1789520400024
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000142372",
+      "premium": "-0.0006138973",
+      "time": 1789524000058
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000084105",
+      "premium": "-0.0005672841",
+      "time": 1789527600035
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000100218",
+      "premium": "-0.0005801747",
+      "time": 1789531200018
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000181932",
+      "premium": "-0.0006455456",
+      "time": 1789534800004
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000243211",
+      "premium": "-0.0006945687",
+      "time": 1789538400081
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000279715",
+      "premium": "-0.000723772",
+      "time": 1789542000026
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000135495",
+      "premium": "-0.0006083961",
+      "time": 1789545600035
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000242781",
+      "premium": "-0.0006942245",
+      "time": 1789549200091
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000049957",
+      "premium": "-0.0005399655",
+      "time": 1789552800004
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000132233",
+      "premium": "-0.0006057868",
+      "time": 1789556400029
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000071839",
+      "premium": "-0.0005574712",
+      "time": 1789560000079
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000044018",
+      "premium": "-0.0005352145",
+      "time": 1789563600018
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000053274",
+      "premium": "-0.0004573811",
+      "time": 1789567200013
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000085805",
+      "premium": "-0.0005686437",
+      "time": 1789570800012
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000153967",
+      "premium": "-0.0006231733",
+      "time": 1789574400037
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000081213",
+      "premium": "-0.0005649703",
+      "time": 1789578000112
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000164124",
+      "premium": "-0.0006312994",
+      "time": 1789581600011
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000049419",
+      "premium": "-0.0004604644",
+      "time": 1789585200054
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000069556",
+      "premium": "-0.0004443553",
+      "time": 1789588800091
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.00001207",
+      "premium": "-0.0004034397",
+      "time": 1789592400031
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000061361",
+      "premium": "-0.0004509115",
+      "time": 1789596000002
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000030727",
+      "premium": "-0.000524582",
+      "time": 1789599600022
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003812377",
+      "time": 1789603200048
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003502901",
+      "time": 1789606800065
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000314033",
+      "time": 1789610400031
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000093191",
+      "premium": "-0.0004254471",
+      "time": 1789614000045
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000121961",
+      "premium": "-0.0004024312",
+      "time": 1789617600038
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003652077",
+      "time": 1789621200068
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003943287",
+      "time": 1789624800010
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003430719",
+      "time": 1789628400016
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003822826",
+      "time": 1789632000011
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002742848",
+      "time": 1789635600001
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001927797",
+      "time": 1789639200041
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003230963",
+      "time": 1789642800058
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003966577",
+      "time": 1789646400058
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002169375",
+      "time": 1789650000018
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003190251",
+      "time": 1789653600029
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002332365",
+      "time": 1789657200000
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003382069",
+      "time": 1789660800021
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003762624",
+      "time": 1789664400089
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000076205",
+      "premium": "-0.0004390362",
+      "time": 1789668000043
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "-0.0000083435",
+      "premium": "-0.0005667477",
+      "time": 1789671600007
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000050556",
+      "premium": "-0.0004595555",
+      "time": 1789675200068
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003071116",
+      "time": 1789678800016
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003074847",
+      "time": 1789682400006
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003774691",
+      "time": 1789686000018
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002613453",
+      "time": 1789689600005
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000097288",
+      "premium": "-0.0004221698",
+      "time": 1789693200106
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003521219",
+      "time": 1789696800015
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001963406",
+      "time": 1789700400050
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001254073",
+      "time": 1789704000030
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002304343",
+      "time": 1789707600009
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001923276",
+      "time": 1789711200035
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001343152",
+      "time": 1789714800058
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000146613",
+      "time": 1789718400019
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001696742",
+      "time": 1789722000028
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000021477",
+      "time": 1789725600041
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000655441",
+      "time": 1789729200059
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000083885",
+      "time": 1789732800005
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000382946",
+      "time": 1789736400054
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000839549",
+      "time": 1789740000014
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000563396",
+      "time": 1789743600019
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000128221",
+      "time": 1789747200023
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000232206",
+      "time": 1789750800033
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000245835",
+      "time": 1789754400069
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001021107",
+      "time": 1789758000083
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003612538",
+      "time": 1789761600036
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003241895",
+      "time": 1789765200033
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004605499",
+      "time": 1789768800024
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005541444",
+      "time": 1789772400009
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005993538",
+      "time": 1789776000048
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000160137",
+      "premium": "0.0006281093",
+      "time": 1789779600049
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005289764",
+      "time": 1789783200035
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004650784",
+      "time": 1789786800051
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002754533",
+      "time": 1789790400012
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003550335",
+      "time": 1789794000045
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003740477",
+      "time": 1789797600067
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004958334",
+      "time": 1789801200050
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125511",
+      "premium": "0.0006004087",
+      "time": 1789804800095
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000357245",
+      "premium": "0.0007857959",
+      "time": 1789808400016
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.000533587",
+      "time": 1789812000053
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004556771",
+      "time": 1789815600055
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.00059079",
+      "time": 1789819200053
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004509528",
+      "time": 1789822800026
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004446129",
+      "time": 1789826400022
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004229775",
+      "time": 1789830000035
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005316262",
+      "time": 1789833600032
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000237431",
+      "premium": "0.0006899449",
+      "time": 1789837200015
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002361386",
+      "time": 1789840800037
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002564064",
+      "time": 1789844400030
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001449062",
+      "time": 1789848000021
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001916289",
+      "time": 1789851600054
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.000092597",
+      "time": 1789855200034
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000146965",
+      "time": 1789858800052
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003479423",
+      "time": 1789862400057
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005452457",
+      "time": 1789866000055
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004283438",
+      "time": 1789869600005
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003586954",
+      "time": 1789873200039
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003260755",
+      "time": 1789876800051
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001234422",
+      "time": 1789880400014
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000346366",
+      "time": 1789884000017
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000092792",
+      "time": 1789887600013
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002007916",
+      "time": 1789891200021
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001831291",
+      "time": 1789894800064
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000703957",
+      "time": 1789898400052
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001638381",
+      "time": 1789902000044
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001562843",
+      "time": 1789905600043
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001945076",
+      "time": 1789909200064
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000996292",
+      "time": 1789912800025
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002084436",
+      "time": 1789916400037
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001416304",
+      "time": 1789920000035
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.000525653",
+      "time": 1789923600004
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000130963",
+      "premium": "0.0006047707",
+      "time": 1789927200038
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005231891",
+      "time": 1789930800013
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000169149",
+      "premium": "0.0006353195",
+      "time": 1789934400046
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000220019",
+      "premium": "0.0006760151",
+      "time": 1789938000056
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004161681",
+      "time": 1789941600032
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000207915",
+      "premium": "0.0006663322",
+      "time": 1789945200033
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000499102",
+      "premium": "0.0008992816",
+      "time": 1789948800072
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000710667",
+      "premium": "0.0010685334",
+      "time": 1789952400054
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000318378",
+      "premium": "0.0007547026",
+      "time": 1789956000032
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000262005",
+      "premium": "0.0007096036",
+      "time": 1789959600007
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000336408",
+      "premium": "0.0007691263",
+      "time": 1789963200070
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000523404",
+      "premium": "0.0009187231",
+      "time": 1789966800008
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000132645",
+      "premium": "0.0006061162",
+      "time": 1789970400040
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004525642",
+      "time": 1789974000047
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000210254",
+      "premium": "0.0006682036",
+      "time": 1789977600069
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000778399",
+      "time": 1789981200073
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000414085",
+      "premium": "0.0008312677",
+      "time": 1789984800022
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000515476",
+      "premium": "0.0009123807",
+      "time": 1789988400040
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0001023716",
+      "premium": "0.0013189724",
+      "time": 1789992000012
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000872974",
+      "premium": "0.0011983794",
+      "time": 1789995600016
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000579606",
+      "premium": "0.0009636848",
+      "time": 1789999200050
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.000022405",
+      "premium": "0.0006792403",
+      "time": 1790002800016
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000156273",
+      "premium": "0.0006250182",
+      "time": 1790006400108
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000133314",
+      "premium": "0.0006066509",
+      "time": 1790010000083
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003640425",
+      "time": 1790013600013
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000161301",
+      "premium": "0.0006290407",
+      "time": 1790017200031
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000327586",
+      "premium": "0.0007620687",
+      "time": 1790020800056
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000530271",
+      "premium": "0.0009242165",
+      "time": 1790024400050
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000852711",
+      "premium": "0.0011821689",
+      "time": 1790028000000
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000718689",
+      "premium": "0.0010749512",
+      "time": 1790031600034
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000941001",
+      "premium": "0.0012528006",
+      "time": 1790035200028
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000812895",
+      "premium": "0.0011503163",
+      "time": 1790038800043
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000481459",
+      "premium": "0.0008851676",
+      "time": 1790042400020
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.000077244",
+      "premium": "0.0011179523",
+      "time": 1790046000012
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000575346",
+      "premium": "0.000960277",
+      "time": 1790049600050
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000208803",
+      "premium": "0.0006670425",
+      "time": 1790053200001
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002104695",
+      "time": 1790056800032
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001876946",
+      "time": 1790060400019
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002845098",
+      "time": 1790064000012
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005743514",
+      "time": 1790067600013
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000267002",
+      "premium": "0.0007136013",
+      "time": 1790071200001
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004184514",
+      "time": 1790074800014
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000252732",
+      "premium": "0.0007021857",
+      "time": 1790078400053
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003272646",
+      "time": 1790082000080
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000234286",
+      "premium": "0.0006874292",
+      "time": 1790085600059
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000270889",
+      "premium": "0.0007167111",
+      "time": 1790089200000
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000508572",
+      "premium": "0.0009068578",
+      "time": 1790092800071
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.000014665",
+      "premium": "0.0006173197",
+      "time": 1790096400085
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005231482",
+      "time": 1790100000057
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004243607",
+      "time": 1790103600072
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004186587",
+      "time": 1790107200040
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005720247",
+      "time": 1790110800004
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000243611",
+      "premium": "0.0006948888",
+      "time": 1790114400062
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.000062668",
+      "premium": "0.0010013439",
+      "time": 1790118000027
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000879554",
+      "premium": "0.0012036434",
+      "time": 1790121600031
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000623916",
+      "premium": "0.0009991331",
+      "time": 1790125200061
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000631671",
+      "premium": "0.0010053369",
+      "time": 1790128800025
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000730337",
+      "premium": "0.0010842698",
+      "time": 1790132400051
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000445641",
+      "premium": "0.0008565126",
+      "time": 1790136000024
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005773214",
+      "time": 1790139600009
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000169005",
+      "premium": "0.0006352042",
+      "time": 1790143200005
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005834562",
+      "time": 1790146800002
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003157034",
+      "time": 1790150400033
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003241415",
+      "time": 1790154000065
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002942323",
+      "time": 1790157600062
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003149207",
+      "time": 1790161200047
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002357213",
+      "time": 1790164800030
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000077558",
+      "time": 1790168400050
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000081713",
+      "time": 1790172000043
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000360433",
+      "time": 1790175600003
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000935804",
+      "time": 1790179200048
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003097717",
+      "time": 1790182800005
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.000079004",
+      "time": 1790186400074
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000376511",
+      "time": 1790190000015
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000031862",
+      "time": 1790193600071
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000343533",
+      "time": 1790197200118
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001044244",
+      "time": 1790200800015
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000703197",
+      "time": 1790204400039
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.000059405",
+      "time": 1790208000045
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000230893",
+      "time": 1790211600025
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001289311",
+      "time": 1790215200029
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001541158",
+      "time": 1790218800001
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000160527",
+      "time": 1790222400038
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001609821",
+      "time": 1790226000007
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002022617",
+      "time": 1790229600061
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001804209",
+      "time": 1790233200056
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001437346",
+      "time": 1790236800017
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002621893",
+      "time": 1790240400034
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002884646",
+      "time": 1790244000011
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002488995",
+      "time": 1790247600045
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000049241",
+      "time": 1790251200065
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000751231",
+      "time": 1790254800003
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001139998",
+      "time": 1790258400035
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001208441",
+      "time": 1790262000014
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000566696",
+      "time": 1790265600030
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000197524",
+      "time": 1790269200058
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000481261",
+      "time": 1790272800058
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000034234",
+      "time": 1790276400018
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000022383",
+      "time": 1790280000054
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000438316",
+      "time": 1790283600088
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000687731",
+      "time": 1790287200013
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001306351",
+      "time": 1790290800038
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001314657",
+      "time": 1790294400076
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000060106",
+      "time": 1790298000027
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000103108",
+      "time": 1790301600059
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.000007394",
+      "time": 1790305200086
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000249837",
+      "time": 1790308800036
+    },
+    {
+      "coin": "AVAX",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000622882",
+      "time": 1790312400040
+    }
+  ]
+}

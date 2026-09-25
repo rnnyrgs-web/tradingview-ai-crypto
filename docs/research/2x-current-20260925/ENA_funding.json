@@ -1,0 +1,2034 @@
+{
+  "receipt": {
+    "provider_url": "https://api.hyperliquid.xyz/info",
+    "request": {
+      "type": "fundingHistory",
+      "coin": "ENA",
+      "startTime": 1789104000000,
+      "endTime": 1790313600000
+    },
+    "retrieval_started_at": "2026-09-25T05:26:18.109377+00:00",
+    "status": 200,
+    "server_date": "Fri, 25 Sep 2026 05:26:19 GMT",
+    "retrieval_completed_at": "2026-09-25T05:26:19.628893+00:00",
+    "sha256": "e3b28dd643f2310ca1c49e6f254cff081ed1b197acaf76900f6f219f1202f061"
+  },
+  "rows": [
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000235508",
+      "time": 1789106400042
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000025094",
+      "time": 1789110000124
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000056453",
+      "time": 1789113600085
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000081159",
+      "time": 1789117200037
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001044817",
+      "time": 1789120800021
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001331823",
+      "time": 1789124400046
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000646605",
+      "time": 1789128000006
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000817622",
+      "time": 1789131600057
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000428167",
+      "time": 1789135200020
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000222542",
+      "time": 1789138800047
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000710657",
+      "time": 1789142400047
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002194991",
+      "time": 1789146000028
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.00013169",
+      "time": 1789149600021
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002231262",
+      "time": 1789153200011
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003225751",
+      "time": 1789156800017
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000050849",
+      "premium": "-0.0004593206",
+      "time": 1789160400000
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000043533",
+      "premium": "-0.0004651739",
+      "time": 1789164000041
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000086308",
+      "premium": "-0.0004309537",
+      "time": 1789167600007
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001578496",
+      "time": 1789171200064
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002519969",
+      "time": 1789174800041
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000093318",
+      "premium": "-0.0004253453",
+      "time": 1789178400023
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "-0.0000066146",
+      "premium": "-0.0005529168",
+      "time": 1789182000036
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "-0.00002339",
+      "premium": "-0.00068712",
+      "time": 1789185600037
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000068698",
+      "premium": "-0.0004450413",
+      "time": 1789189200028
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000027066",
+      "premium": "-0.0004783474",
+      "time": 1789192800003
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.000005907",
+      "premium": "-0.0004527444",
+      "time": 1789196400009
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000086352",
+      "premium": "-0.0004309187",
+      "time": 1789200000039
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000114684",
+      "premium": "-0.0004082526",
+      "time": 1789203600059
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003119437",
+      "time": 1789207200014
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001047052",
+      "time": 1789210800059
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003513333",
+      "time": 1789214400037
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001506638",
+      "time": 1789218000041
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002147684",
+      "time": 1789221600000
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001597923",
+      "time": 1789225200104
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000156035",
+      "time": 1789228800001
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000065073",
+      "premium": "-0.0004479416",
+      "time": 1789232400043
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003005835",
+      "time": 1789236000008
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003576037",
+      "time": 1789239600008
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003193849",
+      "time": 1789243200022
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001223724",
+      "time": 1789246800010
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001697958",
+      "time": 1789250400013
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000532759",
+      "time": 1789254000043
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000207481",
+      "time": 1789257600049
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001237497",
+      "time": 1789261200026
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001504495",
+      "time": 1789264800029
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001014841",
+      "time": 1789268400061
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002508933",
+      "time": 1789272000042
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000882146",
+      "time": 1789275600117
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001980701",
+      "time": 1789279200007
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003652279",
+      "time": 1789282800041
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "-0.0000053734",
+      "premium": "-0.0005429875",
+      "time": 1789286400020
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.000005539",
+      "premium": "-0.000455688",
+      "time": 1789290000029
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003509422",
+      "time": 1789293600008
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002817769",
+      "time": 1789297200026
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000967784",
+      "time": 1789300800053
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001605484",
+      "time": 1789304400019
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002404221",
+      "time": 1789308000107
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001252662",
+      "time": 1789311600038
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003225228",
+      "time": 1789315200070
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002135971",
+      "time": 1789318800040
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001879905",
+      "time": 1789322400042
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001849334",
+      "time": 1789326000020
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003149668",
+      "time": 1789329600000
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000913928",
+      "time": 1789333200020
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000871464",
+      "time": 1789336800010
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002274773",
+      "time": 1789340400023
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001676993",
+      "time": 1789344000068
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001440797",
+      "time": 1789347600018
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000594947",
+      "time": 1789351200022
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000094361",
+      "time": 1789354800024
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000962843",
+      "time": 1789358400022
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001404271",
+      "time": 1789362000040
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002487611",
+      "time": 1789365600057
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001526296",
+      "time": 1789369200040
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001146063",
+      "time": 1789372800034
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000448732",
+      "time": 1789376400007
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001846199",
+      "time": 1789380000021
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000934061",
+      "time": 1789383600121
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001143706",
+      "time": 1789387200046
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000299885",
+      "time": 1789390800014
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002657465",
+      "time": 1789394400028
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002021033",
+      "time": 1789398000030
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001706714",
+      "time": 1789401600030
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000563899",
+      "time": 1789405200041
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000014238",
+      "time": 1789408800060
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001839839",
+      "time": 1789412400016
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001042245",
+      "time": 1789416000079
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001758909",
+      "time": 1789419600027
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000045912",
+      "time": 1789423200047
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001443285",
+      "time": 1789426800132
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002946277",
+      "time": 1789430400024
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000157391",
+      "time": 1789434000042
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000628624",
+      "time": 1789437600052
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001456132",
+      "time": 1789441200097
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002689199",
+      "time": 1789444800037
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002038455",
+      "time": 1789448400016
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003364779",
+      "time": 1789452000003
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002845137",
+      "time": 1789455600083
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000341451",
+      "time": 1789459200008
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000715685",
+      "time": 1789462800049
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000318338",
+      "time": 1789466400030
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000432441",
+      "time": 1789470000036
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000252524",
+      "time": 1789473600039
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001419542",
+      "time": 1789477200117
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001409752",
+      "time": 1789480800005
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000146107",
+      "time": 1789484400050
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001108312",
+      "time": 1789488000014
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001443349",
+      "time": 1789491600014
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001108148",
+      "time": 1789495200017
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002359373",
+      "time": 1789498800047
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001624968",
+      "time": 1789502400033
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002932008",
+      "time": 1789506000077
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002662176",
+      "time": 1789509600043
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000207737",
+      "time": 1789513200062
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000928543",
+      "time": 1789516800021
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002078253",
+      "time": 1789520400024
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001863979",
+      "time": 1789524000058
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001084414",
+      "time": 1789527600035
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000588112",
+      "time": 1789531200018
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000490464",
+      "time": 1789534800004
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000480637",
+      "time": 1789538400081
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001882405",
+      "time": 1789542000026
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002173954",
+      "time": 1789545600035
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001792163",
+      "time": 1789549200091
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000351549",
+      "time": 1789552800004
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000557613",
+      "time": 1789556400029
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000308745",
+      "time": 1789560000079
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000594153",
+      "time": 1789563600018
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000861205",
+      "time": 1789567200013
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003590375",
+      "time": 1789570800012
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003290741",
+      "time": 1789574400037
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002660363",
+      "time": 1789578000112
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.000006364",
+      "premium": "-0.0004490884",
+      "time": 1789581600011
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002104315",
+      "time": 1789585200054
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003538086",
+      "time": 1789588800091
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003108132",
+      "time": 1789592400031
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000013178",
+      "premium": "-0.0004894579",
+      "time": 1789596000002
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000028476",
+      "premium": "-0.0004772188",
+      "time": 1789599600022
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002930687",
+      "time": 1789603200048
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000566589",
+      "time": 1789606800065
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000102826",
+      "time": 1789610400031
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000182346",
+      "time": 1789614000045
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000082717",
+      "time": 1789617600038
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000389244",
+      "time": 1789621200068
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000036969",
+      "time": 1789624800010
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000102165",
+      "time": 1789628400016
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000811094",
+      "time": 1789632000011
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000047299",
+      "time": 1789635600001
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001051891",
+      "time": 1789639200041
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001542657",
+      "time": 1789642800058
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000042822",
+      "time": 1789646400058
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000255527",
+      "time": 1789650000018
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000044768",
+      "time": 1789653600029
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002643509",
+      "time": 1789657200000
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001372334",
+      "time": 1789660800021
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003317766",
+      "time": 1789664400089
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004902689",
+      "time": 1789668000043
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002609428",
+      "time": 1789671600007
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000160252",
+      "time": 1789675200068
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002006741",
+      "time": 1789678800016
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.00004527",
+      "time": 1789682400006
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000600576",
+      "time": 1789686000018
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002295154",
+      "time": 1789689600005
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001124126",
+      "time": 1789693200106
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005090013",
+      "time": 1789696800015
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000192424",
+      "premium": "0.0006539391",
+      "time": 1789700400050
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000309745",
+      "premium": "0.0007477958",
+      "time": 1789704000030
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005209311",
+      "time": 1789707600009
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004590469",
+      "time": 1789711200035
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000219145",
+      "premium": "0.0006753164",
+      "time": 1789714800058
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000348046",
+      "premium": "0.0007784365",
+      "time": 1789718400019
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004700806",
+      "time": 1789722000028
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003856616",
+      "time": 1789725600041
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.00033896",
+      "time": 1789729200059
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003142088",
+      "time": 1789732800005
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003181083",
+      "time": 1789736400054
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005438571",
+      "time": 1789740000014
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.000256336",
+      "time": 1789743600019
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003554506",
+      "time": 1789747200023
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004362095",
+      "time": 1789750800033
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004639022",
+      "time": 1789754400069
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000477855",
+      "premium": "0.0008822838",
+      "time": 1789758000083
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000705862",
+      "premium": "0.00106469",
+      "time": 1789761600036
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000591713",
+      "premium": "0.0009733708",
+      "time": 1789765200033
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000540623",
+      "premium": "0.0009324986",
+      "time": 1789768800024
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004497112",
+      "time": 1789772400009
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000325045",
+      "premium": "0.0007600359",
+      "time": 1789776000048
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000497549",
+      "premium": "0.0008980394",
+      "time": 1789779600049
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.000056192",
+      "premium": "0.0009495357",
+      "time": 1789783200035
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000900674",
+      "premium": "0.0012205393",
+      "time": 1789786800051
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0001675127",
+      "premium": "0.0018401017",
+      "time": 1789790400012
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000732047",
+      "premium": "0.0010856373",
+      "time": 1789794000045
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000862092",
+      "premium": "0.0011896733",
+      "time": 1789797600067
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0001039579",
+      "premium": "0.0013316629",
+      "time": 1789801200050
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0001217532",
+      "premium": "0.001474026",
+      "time": 1789804800095
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000747496",
+      "premium": "0.0010979965",
+      "time": 1789808400016
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000752767",
+      "premium": "0.0011022139",
+      "time": 1789812000053
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000722925",
+      "premium": "0.0010783399",
+      "time": 1789815600055
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000663589",
+      "premium": "0.0010308711",
+      "time": 1789819200053
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000448952",
+      "premium": "0.0008591618",
+      "time": 1789822800026
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000307701",
+      "premium": "0.000746161",
+      "time": 1789826400022
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000389853",
+      "premium": "0.0008118824",
+      "time": 1789830000035
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.000022917",
+      "premium": "0.0006833363",
+      "time": 1789833600032
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000398096",
+      "premium": "0.0008184771",
+      "time": 1789837200015
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.000467098",
+      "time": 1789840800037
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003590979",
+      "time": 1789844400030
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005332522",
+      "time": 1789848000021
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005106658",
+      "time": 1789851600054
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003909992",
+      "time": 1789855200034
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003554298",
+      "time": 1789858800052
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005487497",
+      "time": 1789862400057
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000412725",
+      "premium": "0.00083018",
+      "time": 1789866000055
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000312533",
+      "premium": "0.0007500267",
+      "time": 1789869600005
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005432444",
+      "time": 1789873200039
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004844063",
+      "time": 1789876800051
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004892879",
+      "time": 1789880400014
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001841758",
+      "time": 1789884000017
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002403483",
+      "time": 1789887600013
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002063167",
+      "time": 1789891200021
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003092763",
+      "time": 1789894800064
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003756768",
+      "time": 1789898400052
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003322607",
+      "time": 1789902000044
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000140924",
+      "premium": "0.0006127389",
+      "time": 1789905600043
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004575817",
+      "time": 1789909200064
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002922624",
+      "time": 1789912800025
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003641625",
+      "time": 1789916400037
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000274936",
+      "premium": "0.0007199487",
+      "time": 1789920000035
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000449954",
+      "premium": "0.0008599632",
+      "time": 1789923600004
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.000026942",
+      "premium": "0.0007155358",
+      "time": 1789927200038
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003594684",
+      "time": 1789930800013
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004975499",
+      "time": 1789934400046
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.000456635",
+      "time": 1789938000056
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004805684",
+      "time": 1789941600032
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005636589",
+      "time": 1789945200033
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000250513",
+      "premium": "0.0007004105",
+      "time": 1789948800072
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000867404",
+      "premium": "0.001193923",
+      "time": 1789952400054
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000586301",
+      "premium": "0.000969041",
+      "time": 1789956000032
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000362578",
+      "premium": "0.000790062",
+      "time": 1789959600007
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000343505",
+      "premium": "0.0007748038",
+      "time": 1789963200070
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000447299",
+      "premium": "0.0008578394",
+      "time": 1789966800008
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000344955",
+      "premium": "0.0007759641",
+      "time": 1789970400040
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000609733",
+      "premium": "0.0009877867",
+      "time": 1789974000047
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000168746",
+      "premium": "0.0006349971",
+      "time": 1789977600069
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000414279",
+      "premium": "0.0008314233",
+      "time": 1789981200073
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.000077228",
+      "premium": "0.0011178242",
+      "time": 1789984800022
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0001127038",
+      "premium": "0.0014016305",
+      "time": 1789988400040
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000812864",
+      "premium": "0.001150291",
+      "time": 1789992000012
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000979365",
+      "premium": "0.0012834921",
+      "time": 1789995600016
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000602368",
+      "premium": "0.0009818944",
+      "time": 1789999200050
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000375328",
+      "premium": "0.0008002627",
+      "time": 1790002800016
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004219836",
+      "time": 1790006400108
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.000158262",
+      "time": 1790010000083
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001222141",
+      "time": 1790013600013
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000214315",
+      "premium": "0.0006714522",
+      "time": 1790017200031
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000318423",
+      "premium": "0.0007547385",
+      "time": 1790020800056
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000742466",
+      "premium": "0.0010939732",
+      "time": 1790024400050
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000430151",
+      "premium": "0.0008441212",
+      "time": 1790028000000
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000732096",
+      "premium": "0.0010856769",
+      "time": 1790031600034
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000927717",
+      "premium": "0.0012421735",
+      "time": 1790035200028
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000904699",
+      "premium": "0.0012237591",
+      "time": 1790038800043
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000573077",
+      "premium": "0.0009584617",
+      "time": 1790042400020
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005262165",
+      "time": 1790046000012
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.000027087",
+      "premium": "0.0007166958",
+      "time": 1790049600050
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005606045",
+      "time": 1790053200001
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004640932",
+      "time": 1790056800032
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004418748",
+      "time": 1790060400019
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004369479",
+      "time": 1790064000012
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003121446",
+      "time": 1790067600013
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000762973",
+      "time": 1790071200001
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000184644",
+      "time": 1790074800014
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001840961",
+      "time": 1790078400053
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003218209",
+      "time": 1790082000080
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000131951",
+      "premium": "0.0006055609",
+      "time": 1790085600059
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.00050781",
+      "time": 1790089200000
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001579588",
+      "time": 1790092800071
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002385888",
+      "time": 1790096400085
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.000314372",
+      "time": 1790100000057
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001509422",
+      "time": 1790103600072
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002702871",
+      "time": 1790107200040
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.00043183",
+      "time": 1790110800004
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005455462",
+      "time": 1790114400062
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000569558",
+      "premium": "0.0009556465",
+      "time": 1790118000027
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000357422",
+      "premium": "0.0007859373",
+      "time": 1790121600031
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005736294",
+      "time": 1790125200061
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005500452",
+      "time": 1790128800025
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000134526",
+      "premium": "0.000607621",
+      "time": 1790132400051
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000373542",
+      "premium": "0.000798834",
+      "time": 1790136000024
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005251393",
+      "time": 1790139600009
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000308385",
+      "premium": "0.0007467081",
+      "time": 1790143200005
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003266438",
+      "time": 1790146800002
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001741922",
+      "time": 1790150400033
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000466975",
+      "time": 1790154000065
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000231443",
+      "time": 1790157600062
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000208515",
+      "time": 1790161200047
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000666743",
+      "time": 1790164800030
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000214364",
+      "time": 1790168400050
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000358308",
+      "time": 1790172000043
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001939371",
+      "time": 1790175600003
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000376726",
+      "time": 1790179200048
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000644517",
+      "time": 1790182800005
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000329144",
+      "time": 1790186400074
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002033275",
+      "time": 1790190000015
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000543301",
+      "time": 1790193600071
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001349957",
+      "time": 1790197200118
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000719077",
+      "time": 1790200800015
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001308109",
+      "time": 1790204400039
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000245953",
+      "time": 1790208000045
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000965342",
+      "time": 1790211600025
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001258291",
+      "time": 1790215200029
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000601724",
+      "time": 1790218800001
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000437011",
+      "time": 1790222400038
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000001259",
+      "time": 1790226000007
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000926056",
+      "time": 1790229600061
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000374994",
+      "time": 1790233200056
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001529358",
+      "time": 1790236800017
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003137327",
+      "time": 1790240400034
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000397865",
+      "time": 1790244000011
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000110789",
+      "premium": "-0.0004113687",
+      "time": 1790247600045
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002889867",
+      "time": 1790251200065
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002982083",
+      "time": 1790254800003
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001186184",
+      "time": 1790258400035
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001800332",
+      "time": 1790262000014
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000555515",
+      "time": 1790265600030
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001661943",
+      "time": 1790269200058
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000866769",
+      "time": 1790272800058
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001568864",
+      "time": 1790276400018
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003281205",
+      "time": 1790280000054
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000790993",
+      "time": 1790283600088
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.000061487",
+      "time": 1790287200013
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000396797",
+      "time": 1790290800038
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003181173",
+      "time": 1790294400076
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.000597026",
+      "time": 1790298000027
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005448487",
+      "time": 1790301600059
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000137021",
+      "premium": "0.0006096168",
+      "time": 1790305200086
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000361191",
+      "time": 1790308800036
+    },
+    {
+      "coin": "ENA",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000637458",
+      "time": 1790312400040
+    }
+  ]
+}

@@ -1,0 +1,2034 @@
+{
+  "receipt": {
+    "provider_url": "https://api.hyperliquid.xyz/info",
+    "request": {
+      "type": "fundingHistory",
+      "coin": "AAVE",
+      "startTime": 1789104000000,
+      "endTime": 1790313600000
+    },
+    "retrieval_started_at": "2026-09-25T05:26:18.108381+00:00",
+    "status": 200,
+    "server_date": "Fri, 25 Sep 2026 05:26:19 GMT",
+    "retrieval_completed_at": "2026-09-25T05:26:19.582206+00:00",
+    "sha256": "cc58c8ad86e8eed0fef93785aceb088a2f6086a20cc99a3703d2a93156911aff"
+  },
+  "rows": [
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002685992",
+      "time": 1789106400042
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000202683",
+      "time": 1789110000124
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003085827",
+      "time": 1789113600085
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001347952",
+      "time": 1789117200037
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003124413",
+      "time": 1789120800021
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003563533",
+      "time": 1789124400046
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003552454",
+      "time": 1789128000006
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002182509",
+      "time": 1789131600057
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002390616",
+      "time": 1789135200020
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000116326",
+      "time": 1789138800047
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001871322",
+      "time": 1789142400047
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001204969",
+      "time": 1789146000028
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002272754",
+      "time": 1789149600021
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002510839",
+      "time": 1789153200011
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000918536",
+      "time": 1789156800017
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000765273",
+      "time": 1789160400000
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000821056",
+      "time": 1789164000041
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002112078",
+      "time": 1789167600007
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002990318",
+      "time": 1789171200064
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000941409",
+      "time": 1789174800041
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000556541",
+      "time": 1789178400023
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000848243",
+      "time": 1789182000036
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001740977",
+      "time": 1789185600037
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000900584",
+      "time": 1789189200028
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000894128",
+      "time": 1789192800003
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001562034",
+      "time": 1789196400009
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001356459",
+      "time": 1789200000039
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001777391",
+      "time": 1789203600059
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000569174",
+      "time": 1789207200014
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000292924",
+      "time": 1789210800059
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000186483",
+      "time": 1789214400037
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001316998",
+      "time": 1789218000041
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003242501",
+      "time": 1789221600000
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000091986",
+      "premium": "-0.0004264116",
+      "time": 1789225200104
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002170985",
+      "time": 1789228800001
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001853964",
+      "time": 1789232400043
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000319362",
+      "time": 1789236000008
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002498814",
+      "time": 1789239600008
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000175462",
+      "time": 1789243200022
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002067331",
+      "time": 1789246800010
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003196834",
+      "time": 1789250400013
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000056624",
+      "premium": "-0.000454701",
+      "time": 1789254000043
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003991561",
+      "time": 1789257600049
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.000009164",
+      "premium": "-0.000426688",
+      "time": 1789261200026
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003538947",
+      "time": 1789264800029
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001127956",
+      "time": 1789268400061
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001500375",
+      "time": 1789272000042
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002351527",
+      "time": 1789275600117
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001102375",
+      "time": 1789279200007
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001817427",
+      "time": 1789282800041
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002380532",
+      "time": 1789286400020
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001899448",
+      "time": 1789290000029
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003701629",
+      "time": 1789293600008
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003960774",
+      "time": 1789297200026
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "-0.0000113811",
+      "premium": "-0.0005910486",
+      "time": 1789300800053
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003804987",
+      "time": 1789304400019
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003065738",
+      "time": 1789308000107
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003641277",
+      "time": 1789311600038
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003687962",
+      "time": 1789315200070
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000044462",
+      "premium": "-0.0004644304",
+      "time": 1789318800040
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.000009834",
+      "premium": "-0.0004213278",
+      "time": 1789322400042
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.000007025",
+      "premium": "-0.0004438001",
+      "time": 1789326000020
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000081416",
+      "premium": "-0.0004348669",
+      "time": 1789329600000
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003194994",
+      "time": 1789333200020
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003579398",
+      "time": 1789336800010
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000095712",
+      "premium": "-0.0004234303",
+      "time": 1789340400023
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.000011447",
+      "premium": "-0.0004084244",
+      "time": 1789344000068
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000112195",
+      "premium": "-0.0004102439",
+      "time": 1789347600018
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000101154",
+      "premium": "-0.0004190766",
+      "time": 1789351200022
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003428746",
+      "time": 1789354800024
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003848802",
+      "time": 1789358400022
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001995158",
+      "time": 1789362000040
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003901458",
+      "time": 1789365600057
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000108073",
+      "premium": "-0.0004135419",
+      "time": 1789369200040
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000100143",
+      "premium": "-0.0004198855",
+      "time": 1789372800034
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000361247",
+      "time": 1789376400007
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003139706",
+      "time": 1789380000021
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000185216",
+      "time": 1789383600121
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000892392",
+      "time": 1789387200046
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002119489",
+      "time": 1789390800014
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003497116",
+      "time": 1789394400028
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.00000901",
+      "premium": "-0.00042792",
+      "time": 1789398000030
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003349071",
+      "time": 1789401600030
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000264956",
+      "time": 1789405200041
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002752159",
+      "time": 1789408800060
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000033016",
+      "premium": "-0.0004735869",
+      "time": 1789412400016
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000036707",
+      "premium": "-0.0004706347",
+      "time": 1789416000079
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002557659",
+      "time": 1789419600027
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003411511",
+      "time": 1789423200047
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000121512",
+      "premium": "-0.0004027906",
+      "time": 1789426800132
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000008136",
+      "premium": "-0.0004934913",
+      "time": 1789430400024
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003056073",
+      "time": 1789434000042
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002465039",
+      "time": 1789437600052
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003547061",
+      "time": 1789441200097
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.000004981",
+      "premium": "-0.0004601521",
+      "time": 1789444800037
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000085589",
+      "premium": "-0.0004315288",
+      "time": 1789448400016
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000102668",
+      "premium": "-0.0004178653",
+      "time": 1789452000003
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000078333",
+      "premium": "-0.0004373338",
+      "time": 1789455600083
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000062607",
+      "premium": "-0.0004499142",
+      "time": 1789459200008
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002668312",
+      "time": 1789462800049
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000164639",
+      "time": 1789466400030
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002247794",
+      "time": 1789470000036
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002715627",
+      "time": 1789473600039
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002728061",
+      "time": 1789477200117
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003134659",
+      "time": 1789480800005
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000117771",
+      "premium": "-0.0004057835",
+      "time": 1789484400050
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003205779",
+      "time": 1789488000014
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003060943",
+      "time": 1789491600014
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003165516",
+      "time": 1789495200017
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000108764",
+      "premium": "-0.0004129888",
+      "time": 1789498800047
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003230832",
+      "time": 1789502400033
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001785885",
+      "time": 1789506000077
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002400476",
+      "time": 1789509600043
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002746684",
+      "time": 1789513200062
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003962736",
+      "time": 1789516800021
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000028998",
+      "premium": "-0.0004768016",
+      "time": 1789520400024
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000122429",
+      "premium": "-0.0004020568",
+      "time": 1789524000058
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003961936",
+      "time": 1789527600035
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "-0.0000022617",
+      "premium": "-0.000518094",
+      "time": 1789531200018
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "-0.0000012408",
+      "premium": "-0.0005099264",
+      "time": 1789534800004
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "-0.0000126854",
+      "premium": "-0.0006014829",
+      "time": 1789538400081
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "-0.0000008811",
+      "premium": "-0.0005070488",
+      "time": 1789542000026
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "-0.000001581",
+      "premium": "-0.0005126484",
+      "time": 1789545600035
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "-0.0000103834",
+      "premium": "-0.0005830675",
+      "time": 1789549200091
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000081886",
+      "premium": "-0.0004344909",
+      "time": 1789552800004
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "-0.0000058568",
+      "premium": "-0.0005468541",
+      "time": 1789556400029
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "-0.0000010893",
+      "premium": "-0.000508714",
+      "time": 1789560000079
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "-0.0000042213",
+      "premium": "-0.0005337703",
+      "time": 1789563600018
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "-0.0000310108",
+      "premium": "-0.0007480867",
+      "time": 1789567200013
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "-0.0000157273",
+      "premium": "-0.0006258184",
+      "time": 1789570800012
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000001792",
+      "premium": "-0.000498566",
+      "time": 1789574400037
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003716654",
+      "time": 1789578000112
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000037236",
+      "premium": "-0.000470211",
+      "time": 1789581600011
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000086225",
+      "premium": "-0.0004310199",
+      "time": 1789585200054
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003782097",
+      "time": 1789588800091
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003535637",
+      "time": 1789592400031
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003097806",
+      "time": 1789596000002
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003867739",
+      "time": 1789599600022
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003923556",
+      "time": 1789603200048
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "-0.0000097729",
+      "premium": "-0.0005781833",
+      "time": 1789606800065
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002876235",
+      "time": 1789610400031
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001557591",
+      "time": 1789614000045
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001151864",
+      "time": 1789617600038
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000250923",
+      "time": 1789621200068
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002783118",
+      "time": 1789624800010
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002492485",
+      "time": 1789628400016
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000383528",
+      "time": 1789632000011
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000084304",
+      "time": 1789635600001
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000862692",
+      "time": 1789639200041
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000182752",
+      "time": 1789642800058
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000304939",
+      "time": 1789646400058
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002103947",
+      "time": 1789650000018
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002074916",
+      "time": 1789653600029
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000638559",
+      "time": 1789657200000
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000786104",
+      "time": 1789660800021
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000168811",
+      "time": 1789664400089
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000289861",
+      "time": 1789668000043
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003178645",
+      "time": 1789671600007
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "-0.0000047169",
+      "premium": "-0.0005377355",
+      "time": 1789675200068
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003357925",
+      "time": 1789678800016
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000011501",
+      "premium": "-0.0004907991",
+      "time": 1789682400006
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000059266",
+      "premium": "-0.0004525874",
+      "time": 1789686000018
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002718667",
+      "time": 1789689600005
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001594476",
+      "time": 1789693200106
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001493164",
+      "time": 1789696800015
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001386113",
+      "time": 1789700400050
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000255126",
+      "time": 1789704000030
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000039856",
+      "time": 1789707600009
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000271182",
+      "time": 1789711200035
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.00003525",
+      "time": 1789714800058
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000341534",
+      "time": 1789718400019
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000101556",
+      "time": 1789722000028
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000336418",
+      "time": 1789725600041
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002229496",
+      "time": 1789729200059
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000883504",
+      "time": 1789732800005
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001927895",
+      "time": 1789736400054
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003614647",
+      "time": 1789740000014
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002672387",
+      "time": 1789743600019
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001098544",
+      "time": 1789747200023
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001758791",
+      "time": 1789750800033
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001012989",
+      "time": 1789754400069
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000716508",
+      "time": 1789758000083
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001075025",
+      "time": 1789761600036
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005054503",
+      "time": 1789765200033
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005088198",
+      "time": 1789768800024
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003618579",
+      "time": 1789772400009
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004942759",
+      "time": 1789776000048
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.000034288",
+      "premium": "0.0007743041",
+      "time": 1789779600049
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000207087",
+      "premium": "0.0006656695",
+      "time": 1789783200035
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000256073",
+      "premium": "0.0007048587",
+      "time": 1789786800051
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005386413",
+      "time": 1789790400012
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004358067",
+      "time": 1789794000045
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003817074",
+      "time": 1789797600067
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004150093",
+      "time": 1789801200050
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004048297",
+      "time": 1789804800095
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005782108",
+      "time": 1789808400016
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005428787",
+      "time": 1789812000053
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003952918",
+      "time": 1789815600055
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005495204",
+      "time": 1789819200053
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005446737",
+      "time": 1789822800026
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004525605",
+      "time": 1789826400022
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005654839",
+      "time": 1789830000035
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002453464",
+      "time": 1789833600032
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003515375",
+      "time": 1789837200015
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.000235628",
+      "time": 1789840800037
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002648761",
+      "time": 1789844400030
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.000415315",
+      "time": 1789848000021
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002813057",
+      "time": 1789851600054
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002030253",
+      "time": 1789855200034
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001693489",
+      "time": 1789858800052
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004329139",
+      "time": 1789862400057
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002651521",
+      "time": 1789866000055
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004033209",
+      "time": 1789869600005
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003637068",
+      "time": 1789873200039
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001750574",
+      "time": 1789876800051
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002833083",
+      "time": 1789880400014
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002296478",
+      "time": 1789884000017
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001975611",
+      "time": 1789887600013
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.000175255",
+      "time": 1789891200021
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001081947",
+      "time": 1789894800064
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000626716",
+      "time": 1789898400052
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000769838",
+      "time": 1789902000044
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000273434",
+      "time": 1789905600043
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000801979",
+      "time": 1789909200064
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000626537",
+      "time": 1789912800025
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000168303",
+      "time": 1789916400037
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000127595",
+      "time": 1789920000035
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001060424",
+      "time": 1789923600004
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000391425",
+      "time": 1789927200038
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000573087",
+      "time": 1789930800013
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001590196",
+      "time": 1789934400046
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002628354",
+      "time": 1789938000056
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001790425",
+      "time": 1789941600032
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004393268",
+      "time": 1789945200033
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004473507",
+      "time": 1789948800072
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004387713",
+      "time": 1789952400054
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004438148",
+      "time": 1789956000032
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001985201",
+      "time": 1789959600007
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001965282",
+      "time": 1789963200070
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002317806",
+      "time": 1789966800008
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002111199",
+      "time": 1789970400040
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001940124",
+      "time": 1789974000047
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003031872",
+      "time": 1789977600069
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005137131",
+      "time": 1789981200073
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000682571",
+      "premium": "0.0010460571",
+      "time": 1789984800022
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000365062",
+      "premium": "0.0007920496",
+      "time": 1789988400040
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000340608",
+      "premium": "0.0007724862",
+      "time": 1789992000012
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.000070794",
+      "premium": "0.0010663523",
+      "time": 1789995600016
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000420221",
+      "premium": "0.0008361772",
+      "time": 1789999200050
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004446267",
+      "time": 1790002800016
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004495812",
+      "time": 1790006400108
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004199752",
+      "time": 1790010000083
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003144404",
+      "time": 1790013600013
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004089692",
+      "time": 1790017200031
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000251257",
+      "premium": "0.0007010054",
+      "time": 1790020800056
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.000062966",
+      "premium": "0.001003728",
+      "time": 1790024400050
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001826485",
+      "time": 1790028000000
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001875528",
+      "time": 1790031600034
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004029223",
+      "time": 1790035200028
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000976986",
+      "time": 1790038800043
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002101451",
+      "time": 1790042400020
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002327559",
+      "time": 1790046000012
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002391805",
+      "time": 1790049600050
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005713311",
+      "time": 1790053200001
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000209669",
+      "premium": "0.0006677352",
+      "time": 1790056800032
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000187764",
+      "premium": "0.000650211",
+      "time": 1790060400019
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004602976",
+      "time": 1790064000012
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004388075",
+      "time": 1790067600013
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.000508412",
+      "time": 1790071200001
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004978228",
+      "time": 1790074800014
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003608648",
+      "time": 1790078400053
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000135644",
+      "premium": "0.0006085152",
+      "time": 1790082000080
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003943641",
+      "time": 1790085600059
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005006748",
+      "time": 1790089200000
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000160622",
+      "premium": "0.0006284973",
+      "time": 1790092800071
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004939443",
+      "time": 1790096400085
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.000029618",
+      "premium": "0.0007369442",
+      "time": 1790100000057
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004969948",
+      "time": 1790103600072
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004468529",
+      "time": 1790107200040
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000140539",
+      "premium": "0.0006124311",
+      "time": 1790110800004
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.000040633",
+      "premium": "0.0008250638",
+      "time": 1790114400062
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000529042",
+      "premium": "0.0009232339",
+      "time": 1790118000027
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.000069616",
+      "premium": "0.0010569283",
+      "time": 1790121600031
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.000483905",
+      "time": 1790125200061
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.000061631",
+      "premium": "0.0009930481",
+      "time": 1790128800025
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000623486",
+      "premium": "0.0009987887",
+      "time": 1790132400051
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000275836",
+      "premium": "0.0007206689",
+      "time": 1790136000024
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000273419",
+      "premium": "0.0007187349",
+      "time": 1790139600009
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000281778",
+      "premium": "0.0007254226",
+      "time": 1790143200005
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.000053075",
+      "premium": "0.0009245998",
+      "time": 1790146800002
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0005532905",
+      "time": 1790150400033
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0004116876",
+      "time": 1790154000065
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002826081",
+      "time": 1790157600062
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.000281991",
+      "time": 1790161200047
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003717533",
+      "time": 1790164800030
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003040718",
+      "time": 1790168400050
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003406253",
+      "time": 1790172000043
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0003581524",
+      "time": 1790175600003
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0002582074",
+      "time": 1790179200048
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000539327",
+      "time": 1790182800005
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000457379",
+      "time": 1790186400074
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000704923",
+      "time": 1790190000015
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000450247",
+      "time": 1790193600071
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000494607",
+      "time": 1790197200118
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000009241",
+      "time": 1790200800015
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000020863",
+      "time": 1790204400039
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000036177",
+      "time": 1790208000045
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000356749",
+      "time": 1790211600025
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000721564",
+      "time": 1790215200029
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000103057",
+      "time": 1790218800001
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.000042544",
+      "time": 1790222400038
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.00019113",
+      "time": 1790226000007
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000967178",
+      "time": 1790229600061
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000537638",
+      "time": 1790233200056
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000547451",
+      "time": 1790236800017
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002468399",
+      "time": 1790240400034
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0003475971",
+      "time": 1790244000011
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001564634",
+      "time": 1790247600045
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0002354802",
+      "time": 1790251200065
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0001104637",
+      "time": 1790254800003
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001020417",
+      "time": 1790258400035
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000192167",
+      "time": 1790262000014
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000147674",
+      "time": 1790265600030
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0001237423",
+      "time": 1790269200058
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000203367",
+      "time": 1790272800058
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000356867",
+      "time": 1790276400018
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000949154",
+      "time": 1790280000054
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000168972",
+      "time": 1790283600088
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000351799",
+      "time": 1790287200013
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000004938",
+      "time": 1790290800038
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000533559",
+      "time": 1790294400076
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000530526",
+      "time": 1790298000027
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000279015",
+      "time": 1790301600059
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "-0.0000212312",
+      "time": 1790305200086
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000195901",
+      "time": 1790308800036
+    },
+    {
+      "coin": "AAVE",
+      "fundingRate": "0.0000125",
+      "premium": "0.0000166832",
+      "time": 1790312400040
+    }
+  ]
+}
