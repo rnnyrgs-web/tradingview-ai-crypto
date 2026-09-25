@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "artifact_type": "external_source_semantics_attestation",
+  "replication_id": "EXT-ETH-TUESDAY-DRIFT-001-v1",
+  "parent_artifact_sha256": "6ddab16cbfbb846d0690dced9e2128244e2bc9ec6221243a02cb48fea4b5c98b",
+  "formed_at_utc": "2026-09-24T12:03:45Z",
+  "formed_pre_outcome": true,
+  "outcomes_read_to_form_attestation": false,
+  "source": {
+    "title": "Exploring Calendar Anomalies and Volatility Dynamics in Cryptocurrencies: A Comparative Analysis of Day-of-the-Week Effects before and during the COVID-19 Pandemic",
+    "doi": "10.3390/jrfm17080351",
+    "published_at": "2024-08-12",
+    "data_provider": "CoinMarketCap daily USD closing prices",
+    "paper_data_accessed_at": "2024-02-16",
+    "source_data_start": "2017-01-01",
+    "source_data_end": "2023-05-05",
+    "paper_daily_close_semantics": "The paper describes crypto daily closing prices as based on a specific point in time each day, usually the end of the UTC day; CoinMarketCap aggregates across exchanges.",
+    "paper_return_definition": "R_n = ln(CP_n) - ln(CP_(n-1)), multiplied by 100; CP_n is the closing price on day n and CP_(n-1) the previous day's close.",
+    "weekday_result_used_for_hypothesis": "Ethereum Tuesday positive return coefficient",
+    "published_results_are_project_evidence": false
+  },
+  "boundary_translation": {
+    "source_weekday": "TUESDAY",
+    "source_return_interval_interpretation": "previous UTC-day close -> Tuesday UTC-day close",
+    "equivalent_utc_interval": "Tuesday 00:00 UTC -> Wednesday 00:00 UTC",
+    "project_entry_boundary": "Tuesday 00:00 UTC",
+    "project_exit_boundary": "Wednesday 00:00 UTC",
+    "project_price_proxy": "OKX ETH-USDT-SWAP 1H bar open at each exact UTC boundary",
+    "off_by_one_day_shift_allowed": false,
+    "alternative_monday_to_tuesday_translation_allowed": false,
+    "post_outcome_boundary_reinterpretation_allowed": false,
+    "translation_classification": "SOURCE_SEMANTICS_ALIGNED_CROSS_INSTRUMENT_TRANSLATION"
+  },
+  "scientific_interpretation": {
+    "finding": "The already-frozen Tuesday 00:00 -> Wednesday 00:00 project interval is aligned with the paper's end-of-UTC-day close-to-close definition of a Tuesday return; no one-day boundary correction is warranted.",
+    "hypothesis_or_threshold_changed": false,
+    "screen_schedule_changed": false,
+    "cost_model_changed": false,
+    "survival_gates_changed": false,
+    "multiple_testing_family_changed": false,
+    "evidence_authority_increased": false,
+    "profitability_claim_allowed": false
+  },
+  "authority_locks": {
+    "stage1_started": false,
+    "stage1_pnl_opened": false,
+    "baseline_pnl_opened": false,
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false,
+    "profitability_claim_allowed": false,
+    "promotion_authority": false,
+    "broker_connected": false,
+    "trade_authority": false
+  },
+  "artifact_sha256": "0d5d5b5a82c790464aa3718b1fef2e0d889734e607408e0e7678d99ed7df50dc"
+}

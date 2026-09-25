@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "artifact_type": "external_replication_stage1_risk_amendment",
+  "amendment_id": "EXT-ETH-TUESDAY-DRIFT-001-v1-STAGE1-RISK-v1",
+  "replication_id": "EXT-ETH-TUESDAY-DRIFT-001-v1",
+  "status": "FROZEN_PRE_OUTCOME_STAGE1_RISK_OVERLAY",
+  "formed_at_utc": "2026-09-24T11:02:33Z",
+  "formed_pre_outcome": true,
+  "outcomes_read_to_form_amendment": false,
+  "parent_artifact_sha256": "6ddab16cbfbb846d0690dced9e2128244e2bc9ec6221243a02cb48fea4b5c98b",
+  "parent_predeclaration_mutated": false,
+  "base_execution_contract_sha256": "823d7bbfbd411056358721dfb1e7f3764c7a445306f62aaa156945a6cd2ca46c",
+  "base_runner_path": "orchestration/external_replication/eth_tuesday_drift_runner.py",
+  "base_runner_git_blob_sha1": "2073a40c8ebf16dad1f2dacdc8783877aac7a7b5",
+  "guarded_runner_path": "orchestration/external_replication/eth_tuesday_drift_stage1_guarded_runner.py",
+  "guarded_runner_git_blob_sha1": "f39e0b03064036fd7cb66174d744ec789ecd6e28",
+  "scientific_defect": {
+    "classification": "PRE_OUTCOME_CATASTROPHIC_TAIL_AND_HALF_WINNER_DEPENDENCE_GAP",
+    "description": "The frozen base Tuesday Stage-1 screen constrained full-window winner concentration but lacked the project-standard catastrophic-tail veto and did not test whether each chronological half stayed positive after removing its single best scored session. A candidate could therefore pass while one half depended on one winner or contained an economically catastrophic loss."
+  },
+  "project_alignment": {
+    "failure_learning_reference": "PR #511",
+    "cohort_admission_reference": "PR #515",
+    "cohort_stage1_reference": "PR #602",
+    "principle": "Apply stricter pre-outcome project risk vetoes without changing the source hypothesis, weekday, asset, execution boundaries, cost ladder, sample schedule, minimum-power floor, or protected-evidence boundary."
+  },
+  "risk_overlay": {
+    "primary_cost_bps": 48.0,
+    "independent_event_unit": "one scored Tuesday 00:00 UTC to Wednesday 00:00 UTC session",
+    "required_partitions": [
+      "half_1",
+      "half_2"
+    ],
+    "catastrophic_tail_veto": {
+      "positive_return_pool_required": true,
+      "rule": "absolute worst 48-bps net session loss <= 50% of the sum of positive 48-bps net session returns",
+      "threshold_fraction": 0.5,
+      "must_pass_each_required_partition": true
+    },
+    "single_winner_dependence_veto": {
+      "rule": "remove the single best 48-bps net session; remaining mean net bps must stay strictly positive",
+      "must_pass_each_required_partition": true
+    },
+    "failure_category": "CATASTROPHIC_TAIL_OR_WINNER_CONCENTRATION",
+    "observed_failure_precedence": "An actually observed catastrophic-tail or single-winner-dependence failure is rejecting even if the remaining sample would otherwise be underpowered; data/PIT violations remain fail-closed."
+  },
+  "unchanged_scientific_degrees": [
+    "Tuesday weekday selector",
+    "ETH-USDT-SWAP asset",
+    "LONG direction",
+    "Tuesday 00:00 UTC entry",
+    "Wednesday 00:00 UTC exit",
+    "68-week frozen schedule",
+    "34/34 chronological split",
+    "24/48/72 bps round-trip cost ladder",
+    "25-session minimum per half",
+    "2026-09-01 protected-evidence boundary",
+    "#517 survivor baseline/placebo/ablation gauntlet"
+  ],
+  "authority_locks": {
+    "base_runner_survivor_authority_without_overlay": false,
+    "baseline_pnl_opened": false,
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false,
+    "profitability_claim_allowed": false,
+    "promotion_authority": false,
+    "broker_connected": false,
+    "trade_authority": false
+  },
+  "next_transition": "After exact-head CI and legitimate independent scientific/review admission, the guarded runner—not the base runner alone—is the only allowed Stage-1 execution path for this replication. It still cannot mint Stage-2, profitability, promotion, broker, or trade authority.",
+  "artifact_sha256": "8e13286cd6c586c98f6ade79409a243efde266b55e7f4ee57492affd97c4c2c0"
+}

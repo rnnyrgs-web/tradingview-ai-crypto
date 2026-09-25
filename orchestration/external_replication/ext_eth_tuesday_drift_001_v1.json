@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "artifact_type": "external_edge_replication_predeclaration",
+  "replication_id": "EXT-ETH-TUESDAY-DRIFT-001-v1",
+  "status": "FROZEN_PRE_OUTCOME_WAIT_ADMISSION_REVIEW",
+  "formed_at_utc": "2026-09-24T08:03:45Z",
+  "related_issues": [
+    504,
+    510,
+    513,
+    517,
+    518
+  ],
+  "source_research": {
+    "title": "Exploring Calendar Anomalies and Volatility Dynamics in Cryptocurrencies: A Comparative Analysis of Day-of-the-Week Effects before and during the COVID-19 Pandemic",
+    "authors": [
+      "Sonal Sahu",
+      "Alejandro Fonseca Ramírez",
+      "Jong-Min Kim"
+    ],
+    "venue": "Journal of Risk and Financial Management",
+    "doi": "10.3390/jrfm17080351",
+    "source_url": "https://www.mdpi.com/1911-8074/17/8/351",
+    "published_at": "2024-08-12",
+    "source_data_start": "2017-01-01",
+    "source_data_end": "2023-05-05",
+    "source_data_provider": "CoinMarketCap daily USD closing prices",
+    "source_daily_boundary": "provider daily close, usually end-of-UTC-day per paper methodology",
+    "published_results_are_project_evidence": false,
+    "mechanism_only": true,
+    "source_search_breadth_note": "The source analyzes 10 cryptocurrencies across seven weekday coefficients and multiple volatility-model specifications. Published significance is hypothesis-generation context only and is not imported as project evidence.",
+    "source_internal_consistency_note": "The prose says Ethereum has positive Tuesday and Friday effects, while Table 12 numerically reports positive Ethereum coefficients for Tuesday, Thursday and Friday, with Tuesday and Thursday below the stated 5% significance threshold and Friday not below it. To avoid choosing among conflicting source claims, this project freezes only Tuesday, the positive day supported by both the prose and Table 12's significance evidence.",
+    "selected_source_signal": "Ethereum Tuesday positive day-of-week drift",
+    "selection_rule": "INTERSECTION_OF_SOURCE_PROSE_AND_NUMERICAL_TABLE_SUPPORT",
+    "source_outcome_values_used_for_project_thresholds": false
+  },
+  "scientific_hypothesis": {
+    "family": "calendar_weekday_drift",
+    "economic_mechanism": "Persistent weekly differences in crypto liquidity, participant mix, settlement/work-week flows and sentiment can create a repeatable UTC weekday risk premium even in a 24/7 market.",
+    "falsifiable_claim": "Without tuning weekday, asset, boundary, hold, direction or cost assumptions, long ETH during each UTC Tuesday has positive after-cost expectancy in a post-publication 2025-2026 window, remains positive across both frozen chronological halves, and adds economic value over relevant exposure-matched and timing/placebo controls.",
+    "materially_distinct_from_rejected_families": [
+      "not basis/funding positioning",
+      "not volatility breakout/compression",
+      "not liquidity-shock mean reversion",
+      "not BTC lead/lag",
+      "not cross-sectional residual momentum"
+    ]
+  },
+  "data_contract": {
+    "source_dataset": "canonical Cohort-001 certified OKX 1H dataset from PR #528",
+    "dataset_path": "orchestration/evidence/liquidity_meanrev_001_cache/dataset.json.gz",
+    "compressed_git_blob_sha1": "3a93beb4b1b4ef7f5d32b2936bf3119c692e7c15",
+    "normalized_dataset_sha256": "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f",
+    "venue": "OKX",
+    "instrument": "ETH-USDT-SWAP",
+    "bar_interval": "1H",
+    "timezone": "UTC",
+    "completed_bars_only": true,
+    "asset_substitution_allowed": false,
+    "missing_hour_policy": "Any selected UTC day missing one or more required hourly boundary/open observations is DATA/PIT_INCONCLUSIVE for that day; no forward fill, interpolation, venue substitution or inferred price.",
+    "screen_start_utc": "2025-05-12T00:00:00Z",
+    "screen_end_utc": "2026-08-31T23:00:00Z",
+    "chronological_half_1": "2025-05-12T00:00:00Z through 2026-01-04T23:00:00Z",
+    "chronological_half_2": "2026-01-05T00:00:00Z through 2026-08-30T23:00:00Z",
+    "expected_complete_weeks_total": 68,
+    "expected_tuesday_sessions_total_before_data_missingness": 68,
+    "expected_tuesday_sessions_per_half_before_data_missingness": 34,
+    "protected_oos_start_utc": "2026-09-01T00:00:00Z",
+    "screen_may_read_protected_oos": false,
+    "genuine_forward_required_for_final_authentication": true
+  },
+  "signal_rules": {
+    "parameter_variants": 1,
+    "selected_weekdays_utc": [
+      "TUESDAY"
+    ],
+    "direction": "LONG",
+    "entry_boundary": "Tuesday 00:00 UTC",
+    "exit_boundary": "Wednesday 00:00 UTC",
+    "holding_period_hours": 24,
+    "schedule_known_ex_ante": true,
+    "entry_price": "ETH-USDT-SWAP 1H bar open at Tuesday 00:00 UTC",
+    "exit_price": "ETH-USDT-SWAP 1H bar open at Wednesday 00:00 UTC",
+    "day_selection_search_allowed": false,
+    "boundary_search_allowed": false,
+    "asset_search_allowed": false,
+    "direction_search_allowed": false,
+    "post_outcome_parameter_changes_allowed": false
+  },
+  "execution_rules": {
+    "leverage": 1.0,
+    "gross_exposure_during_selected_session": 1.0,
+    "gross_exposure_other_times": 0.0,
+    "one_position_at_a_time": true,
+    "entry_order_model": "boundary marketable execution represented by frozen hourly open; screen-only until authenticated execution-cost evidence exists",
+    "exit_order_model": "boundary marketable execution represented by frozen hourly open; screen-only until authenticated execution-cost evidence exists",
+    "shorting_required": false,
+    "broker_connected": false,
+    "paper_trading": false,
+    "live_trading": false
+  },
+  "cost_model": {
+    "stage_1_screen_only": true,
+    "round_trip_cost_bps_ladder": [
+      24.0,
+      48.0,
+      72.0
+    ],
+    "application": "deduct one full round-trip cost from each completed Tuesday position",
+    "funding_proxy_included": true,
+    "authenticated_execution_cost_claim_allowed": false,
+    "survivor_requirement": "Before any profitability/deep-validation claim, bind trustworthy point-in-time OKX fee, spread, slippage and perpetual-funding evidence; if authenticated all-in costs exceed the screening ladder, rerun only at the newly bound higher frozen costs without tuning any strategy rule."
+  },
+  "stage_1_screen": {
+    "primary_cost_bps": 48.0,
+    "stress_cost_bps": 72.0,
+    "minimum_scored_sessions_per_half": 25,
+    "survival_requires_all": [
+      "full-window mean net bps > 0 at 48 bps round trip",
+      "chronological half 1 mean net bps > 0 at 48 bps round trip",
+      "chronological half 2 mean net bps > 0 at 48 bps round trip",
+      "full-window profit factor > 1 at 48 bps round trip",
+      "full-window mean net bps > 0 at 72 bps round trip",
+      "no single scored Tuesday contributes more than 50% of total positive 48-bps net P&L",
+      "no data/PIT contract violation"
+    ],
+    "if_fail": "REJECT exact fingerprint; write deterministic failure classification to #510 and rejected memory as appropriate; do not rescue by switching weekday or dropping a half.",
+    "if_pass": "SURVIVOR_ONLY; execute frozen #517 baseline/placebo/ablation gauntlet before any medium/deep promotion. Stage-1 positivity alone is not authenticated profitability."
+  },
+  "survivor_baseline_gauntlet": {
+    "execute_only_if_stage_1_survives": true,
+    "market_beta": {
+      "name": "CONTINUOUS_ONE_SEVENTH_ETH_BETA",
+      "rule": "Hold constant +1/7 ETH exposure continuously over the identical evaluation interval so gross exposure-time matches one full day per week; apply its actual start/end turnover under the same cost model.",
+      "incremental_gate": "candidate 48-bps cumulative net P&L must exceed the exposure-matched beta baseline in the full window and both frozen halves"
+    },
+    "simple_trend": {
+      "rule": "At each Tuesday 00:00 UTC boundary, position for Tuesday in the sign of the immediately prior completed 24h ETH open-to-open return; exact zero => cash."
+    },
+    "simple_reversal": {
+      "rule": "At each Tuesday 00:00 UTC boundary, position for Tuesday opposite the sign of the immediately prior completed 24h ETH open-to-open return; exact zero => cash."
+    },
+    "randomized_timing_placebo": {
+      "rule": "For each Monday-start UTC week, deterministically choose exactly one non-Tuesday weekday from Monday,Wednesday,Thursday,Friday,Saturday,Sunday using SHA256('EXT-ETH-TUESDAY-DRIFT-001-v1|'+week_start_iso) modulo 6; trade long for that chosen 00:00-to-00:00 session. No redraw or post-result seed change."
+    },
+    "one_period_delay": {
+      "rule": "Long Wednesday 00:00 UTC to Thursday 00:00 UTC every week; all other rules and costs unchanged."
+    },
+    "volatility_matched": {
+      "rule": "Within each frozen half, match every Tuesday without replacement to one non-Tuesday session from the same ISO week minimizing absolute log difference in trailing 24 completed hourly-return sample volatility measured strictly before each candidate/control 00:00 boundary; ties broken by UTC date then SHA256. If a week has no complete non-Tuesday control, mark that pair DATA/PIT_INCONCLUSIVE rather than widening the pool."
+    },
+    "ablation": {
+      "rule": "Remove the weekday selector by replacing Tuesday-only +1 exposure with continuous +1/7 exposure; this is intentionally identical to the exposure-matched beta ablation, avoiding an invented extra parameterized control."
+    },
+    "complexity_rule": "Because the candidate has only one calendar selector and one fixed long leg, no added filter or condition may be introduced after Stage 1. If simple controls explain the result or the candidate lacks incremental after-cost value, reject rather than complicate it."
+  },
+  "multiple_testing": {
+    "project_replication_family": "EXT-CALENDAR-DOW-001",
+    "project_primary_hypotheses_frozen_now": 1,
+    "project_parameter_variants": 1,
+    "source_search_breadth_recorded": true,
+    "source_search_breadth_description": "10 crypto assets x 7 weekdays plus multiple GARCH-family specifications in the source research",
+    "published_p_values_imported_as_project_evidence": false,
+    "no_other_weekday_or_asset_may_be_promoted_from_this_screen": true,
+    "failed_exact_fingerprint_may_not_be_renamed_or_retuned": true
+  },
+  "evidence_chronology": {
+    "source_sample_ends_before_publication": true,
+    "publication_precedes_project_screen": true,
+    "screen_is_post_publication": true,
+    "project_has_not_read_this_strategy_outcome_before_freeze": true,
+    "classification": "POST_PUBLICATION_PROJECT_UNREAD_REPLICATION",
+    "positive_stage1_authority": "CHEAP_REPLICATION_SURVIVOR_ONLY",
+    "negative_stage1_authority": "FALSIFICATION_OF_EXACT_FINGERPRINT_ALLOWED",
+    "profitability_claim_allowed_from_stage1": false,
+    "deep_promotion_allowed_from_stage1_alone": false
+  },
+  "failure_learning": {
+    "on_no_gross_edge": "NO_GROSS_EDGE",
+    "on_cost_erase": "COST_ERASED_EDGE",
+    "on_half_instability": "REGIME_OR_CHRONOLOGY_INSTABILITY",
+    "on_insufficient_sessions": "INCONCLUSIVE_POWER",
+    "on_data_contract_failure": "PIT_DATA_CONTRACT_WEAKNESS",
+    "successor_rule": "Any successor must change a materially causal economic mechanism or independently sourced pre-outcome hypothesis; changing Tuesday to another weekday because of this screen is forbidden."
+  },
+  "authority_locks": {
+    "stage1_started": false,
+    "stage1_pnl_opened": false,
+    "baseline_pnl_opened": false,
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false,
+    "broker_connected": false,
+    "trade_authority": false,
+    "promotion_authority": false
+  },
+  "artifact_sha256": "6ddab16cbfbb846d0690dced9e2128244e2bc9ec6221243a02cb48fea4b5c98b"
+}

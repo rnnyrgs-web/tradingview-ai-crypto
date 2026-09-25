@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "artifact_type": "external_replication_stage1_execution_provenance",
+  "binding_id": "EXT-ETH-TUESDAY-DRIFT-001-v1-STAGE1-EXECUTION-PROVENANCE-v1",
+  "replication_id": "EXT-ETH-TUESDAY-DRIFT-001-v1",
+  "status": "FROZEN_PRE_OUTCOME_STAGE1_EXECUTION_PROVENANCE",
+  "formed_at_utc": "2026-09-24T12:33:44Z",
+  "formed_pre_outcome": true,
+  "outcomes_read_to_form_binding": false,
+  "parent_artifact_sha256": "6ddab16cbfbb846d0690dced9e2128244e2bc9ec6221243a02cb48fea4b5c98b",
+  "base_execution_contract_sha256": "823d7bbfbd411056358721dfb1e7f3764c7a445306f62aaa156945a6cd2ca46c",
+  "risk_amendment_sha256": "8e13286cd6c586c98f6ade79409a243efde266b55e7f4ee57492affd97c4c2c0",
+  "protected_safe_loader": {
+    "path": "orchestration/external_replication/eth_tuesday_protected_safe_loader.py",
+    "git_blob_sha1": "791358a1a48993e3ffbbee42c8a561313d8f60ae",
+    "dependency_policy": "STDLIB_ONLY_NO_PROJECT_MODULE_IMPORTS",
+    "protected_tail_policy": "TIMESTAMP_ONLY_NO_OHLCV_JSON_DECODE",
+    "development_end_utc": "2026-08-31T23:00:00+00:00",
+    "protected_start_utc": "2026-09-01T00:00:00+00:00"
+  },
+  "risk_guarded_runner": {
+    "path": "orchestration/external_replication/eth_tuesday_drift_stage1_guarded_runner.py",
+    "git_blob_sha1": "f39e0b03064036fd7cb66174d744ec789ecd6e28",
+    "authority": "PURE_RISK_EVALUATOR_ON_SUPPLIED_DEVELOPMENT_ROWS_ONLY",
+    "canonical_loader_entry_allowed": false
+  },
+  "final_stage1_runner": {
+    "path": "orchestration/external_replication/eth_tuesday_drift_stage1_frozen_runner.py",
+    "git_blob_sha1": "f8440fbf543e6d534cd497b4dd9d251055679784",
+    "only_allowed_real_stage1_entry": true
+  },
+  "scientific_reason": {
+    "classification": "PROTECTED_SAFE_LOADER_TRANSITIVE_DEPENDENCY_CLOSURE_NOT_FROZEN",
+    "resolution": "Vendor one stdlib-only protected-safe loader, content-address it, and compose the already-frozen risk evaluator through a new final runner without rewriting prior artifacts.",
+    "prior_artifacts_mutated": false
+  },
+  "authority_locks": {
+    "stage1_started": false,
+    "stage1_pnl_opened": false,
+    "baseline_pnl_opened": false,
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false,
+    "profitability_claim_allowed": false,
+    "promotion_authority": false,
+    "broker_connected": false,
+    "trade_authority": false
+  },
+  "next_transition": "Only after exact-head CI plus legitimate independent scientific/review admission may the final Stage-1 runner open the frozen 68-week development screen. Source-byte chronology remains separately fail-closed.",
+  "artifact_sha256": "4499df212a3fef33ef3382b42f8cac552f95595c79f92f9cfbd72ccb3d7c4bc9"
+}

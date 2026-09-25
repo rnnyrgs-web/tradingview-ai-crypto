@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "artifact_type": "external_replication_stage1_authority_anchor",
+  "anchor_id": "EXT-ETH-TUESDAY-DRIFT-001-v1-STAGE1-AUTHORITY-ANCHOR-v1",
+  "replication_id": "EXT-ETH-TUESDAY-DRIFT-001-v1",
+  "status": "FROZEN_PRE_OUTCOME_IMPORT_BEFORE_AUTH_AND_PROVENANCE_ROOT_CLOSURE",
+  "formed_at_utc": "2026-09-24T14:04:01Z",
+  "formed_pre_outcome": true,
+  "outcomes_read_to_form_anchor": false,
+  "parent_artifact_sha256": "6ddab16cbfbb846d0690dced9e2128244e2bc9ec6221243a02cb48fea4b5c98b",
+  "base_execution_contract_sha256": "823d7bbfbd411056358721dfb1e7f3764c7a445306f62aaa156945a6cd2ca46c",
+  "risk_amendment_sha256": "8e13286cd6c586c98f6ade79409a243efde266b55e7f4ee57492affd97c4c2c0",
+  "parent_execution_provenance_v2": {
+    "path": "orchestration/external_replication/ext_eth_tuesday_drift_001_stage1_execution_provenance_v2.json",
+    "artifact_sha256": "e452f5b55971854e7df40eee5c03b5a68c6c250fefd5ef9536733790a317a66d",
+    "status": "IMMUTABLE_PARENT_PROVENANCE_EXACT_DIGEST_REQUIRED"
+  },
+  "behavior_bindings": {
+    "base_stage1_runner": {
+      "path": "orchestration/external_replication/eth_tuesday_drift_runner.py",
+      "git_blob_sha1": "2073a40c8ebf16dad1f2dacdc8783877aac7a7b5"
+    },
+    "protected_safe_loader": {
+      "path": "orchestration/external_replication/eth_tuesday_protected_safe_loader.py",
+      "git_blob_sha1": "791358a1a48993e3ffbbee42c8a561313d8f60ae"
+    },
+    "risk_guarded_runner": {
+      "path": "orchestration/external_replication/eth_tuesday_drift_stage1_guarded_runner.py",
+      "git_blob_sha1": "f39e0b03064036fd7cb66174d744ec789ecd6e28"
+    },
+    "legacy_v2_final_runner": {
+      "path": "orchestration/external_replication/eth_tuesday_drift_stage1_frozen_runner.py",
+      "git_blob_sha1": "945c07146a8d553b8b37b763bf821f26d07a9450",
+      "direct_stage1_entry_allowed": false
+    }
+  },
+  "verification_order": [
+    "VERIFY_THIS_ANCHOR_AGAINST_COMPILED_EXPECTED_SHA256",
+    "VERIFY_PARENT_PROVENANCE_V2_EXACT_DIGEST_AS_INERT_BYTES",
+    "VERIFY_ALL_BEHAVIOR_BINDINGS_AS_INERT_BYTES",
+    "ONLY_THEN_LOAD_EXACT_VERIFIED_BASE_LOADER_AND_RISK_MODULES",
+    "ONLY_THEN_VALIDATE_FROZEN_CONTRACTS_AND_MATERIALIZE_DEVELOPMENT_ROWS"
+  ],
+  "entrypoint_policy": {
+    "legacy_v2_final_runner_direct_entry_allowed": false,
+    "authorized_runner_path": "orchestration/external_replication/eth_tuesday_drift_stage1_authorized_runner.py",
+    "authorized_runner_identity_is_exact_head_review_bound": true,
+    "anchor_must_be_hard_pinned_by_authorized_runner": true,
+    "parent_provenance_v2_must_be_hard_pinned_by_authorized_runner": true
+  },
+  "scientific_reason": {
+    "classification": "IMPORT_BEFORE_AUTH_AND_SELF_REHASHED_PROVENANCE_ROOT",
+    "finding": "The v2 wrapper imported behavior-bearing modules before validating their bytes and accepted a self-consistent rewritten v2 provenance document without an independent immutable digest root.",
+    "resolution": "Add an append-only authority anchor and a stdlib-only authorized entrypoint that hard-pins this anchor plus the exact v2 digest, validates v2 and all behavior-bearing module bytes before any project-module import, and then loads only those verified paths.",
+    "prior_artifacts_mutated": false,
+    "hypothesis_or_outcome_rules_changed": false,
+    "evidence_authority_increased": false
+  },
+  "authority_locks": {
+    "stage1_started": false,
+    "stage1_pnl_opened": false,
+    "baseline_pnl_opened": false,
+    "protected_oos_opened": false,
+    "genuine_forward_opened": false,
+    "profitability_claim_allowed": false,
+    "promotion_authority": false,
+    "broker_connected": false,
+    "trade_authority": false
+  },
+  "next_transition": "Only after exact-head CI plus legitimate independent scientific/review admission may the authorized runner open the frozen 68-week development screen.",
+  "artifact_sha256": "51dc12aa867d54c357c82df970b3d48aa8d04e90f6f661d75dab54ad5d8137a8"
+}
