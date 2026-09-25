@@ -308,6 +308,7 @@ def test_production_rejects_corrupt_or_unsupported_receipt_even_with_rebound_loc
     target.write_text(json.dumps(receipt,indent=2,sort_keys=True)+'\n')
     lock = json.loads(lock_path.read_text())
     lock['bound_source_git_blobs'][relative] = provenance.git_blob_sha1(target)
+    lock['bound_source_sha256'][relative] = hashlib.sha256(target.read_bytes()).hexdigest()
     lock['bound_admission_receipt_sha256'] = receipt['receipt_sha256']
     lock['contract_sha256'] = _recompute_contract_digest(lock)
     lock_path.write_text(json.dumps(lock))
@@ -347,6 +348,7 @@ def test_multiplicity_contract_digest_is_recomputed_even_with_rebound_source_and
 
     lock = json.loads(lock_path.read_text(encoding="utf-8"))
     lock["bound_source_git_blobs"][relative] = provenance.git_blob_sha1(target)
+    lock["bound_source_sha256"][relative] = hashlib.sha256(target.read_bytes()).hexdigest()
     lock["contract_sha256"] = _recompute_contract_digest(lock)
     lock_path.write_text(
         json.dumps(lock, indent=2, sort_keys=True) + "\n",
