@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
@@ -12,9 +13,12 @@ RECEIPT_PATH = Path(__file__).with_name("trusted_executor_manifest_receipts.json
 _RECEIPT_FIELDS = {
     "schema_version",
     "execution_rule",
+    "base_commit_sha",
+    "base_manifest_sha256",
     "previous_bundle_sha256",
     "bundle_sha256",
-    "behavior_change_paths",
+    "bundle_change_paths",
+    "behavior_change_files",
     "change_reason",
 }
 
@@ -27,6 +31,32 @@ def _sha256(value: Any, name: str) -> str:
     ):
         raise ValueError(f"{name} must be a lowercase SHA256 digest")
     return value
+
+
+def _commit_sha(value: Any) -> str:
+    if (
+        not isinstance(value, str)
+        or len(value) != 40
+        or any(character not in "0123456789abcdef" for character in value)
+    ):
+        raise ValueError("base commit must be a lowercase Git SHA")
+    return value
+
+
+def _behavior_files(value: Any) -> dict[str, str]:
+    if not isinstance(value, dict) or not value:
+        raise ValueError("trusted executor receipt requires behavior file digests")
+    validated: dict[str, str] = {}
+    for path, digest in value.items():
+        if (
+            not isinstance(path, str)
+            or not path.endswith(".py")
+            or Path(path).is_absolute()
+            or ".." in Path(path).parts
+        ):
+            raise ValueError("invalid trusted executor behavior path")
+        validated[path] = _sha256(digest, "behavior file")
+    return validated
 
 
 def _load_receipts() -> list[dict[str, Any]]:
@@ -46,7 +76,7 @@ def _load_receipts() -> list[dict[str, Any]]:
             raise ValueError("trusted executor manifest receipt is invalid JSON") from exc
         if not isinstance(receipt, dict) or set(receipt) != _RECEIPT_FIELDS:
             raise ValueError("invalid trusted executor manifest receipt schema")
-        if receipt["schema_version"] != 1:
+        if receipt["schema_version"] != 2:
             raise ValueError("unknown trusted executor manifest receipt schema")
         rule = receipt["execution_rule"]
         if not isinstance(rule, str) or not rule:
@@ -57,14 +87,19 @@ def _load_receipts() -> list[dict[str, Any]]:
             raise ValueError("trusted executor receipt must record a changed bundle")
         if rule in last_digest_by_rule and previous != last_digest_by_rule[rule]:
             raise ValueError("trusted executor receipt chain is broken")
-        paths = receipt["behavior_change_paths"]
+        _commit_sha(receipt["base_commit_sha"])
+        _sha256(receipt["base_manifest_sha256"], "base manifest")
+        paths = receipt["bundle_change_paths"]
         if (
             not isinstance(paths, list)
             or not paths
             or len(paths) != len(set(paths))
             or any(not isinstance(path, str) or not path for path in paths)
         ):
-            raise ValueError("trusted executor receipt requires distinct change paths")
+            raise ValueError("trusted executor receipt requires distinct bundle paths")
+        behavior_files = _behavior_files(receipt["behavior_change_files"])
+        if any(path not in behavior_files for path in paths):
+            raise ValueError("bundle change paths must be behavior-file bound")
         reason = receipt["change_reason"]
         if not isinstance(reason, str) or not reason.strip() or len(reason) > 1024:
             raise ValueError("trusted executor receipt requires a bounded change reason")
@@ -94,19 +129,27 @@ def audit_executor_manifest(execution_rule: str) -> dict[str, Any]:
         raise ValueError("trusted executor receipt does not match registered digest")
     if computed != registered["ast_sha256"]:
         raise ValueError("trusted executor registered digest is stale")
-    if any(path not in dependencies for path in latest["behavior_change_paths"]):
+    if any(path not in dependencies for path in latest["bundle_change_paths"]):
         raise ValueError("trusted executor receipt names an unbound behavior path")
+    for relative_path, expected_digest in latest["behavior_change_files"].items():
+        path = (root / relative_path).resolve()
+        if not path.is_relative_to(root) or not path.is_file():
+            raise ValueError("trusted executor behavior file is unavailable")
+        if sha256(path.read_bytes()).hexdigest() != expected_digest:
+            raise ValueError("trusted executor behavior file digest is stale")
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "execution_rule": execution_rule,
         "implementation_id": registered["implementation_id"],
         "previous_bundle_sha256": latest["previous_bundle_sha256"],
         "registered_bundle_sha256": registered["ast_sha256"],
         "computed_bundle_sha256": computed,
-        "behavior_change_paths": list(latest["behavior_change_paths"]),
+        "base_commit_sha": latest["base_commit_sha"],
+        "base_manifest_sha256": latest["base_manifest_sha256"],
+        "bundle_change_paths": list(latest["bundle_change_paths"]),
+        "behavior_change_files": dict(latest["behavior_change_files"]),
         "change_reason": latest["change_reason"],
         "dependency_paths": dependencies,
         "resource_paths": list(source["resources"]),
     }
-
