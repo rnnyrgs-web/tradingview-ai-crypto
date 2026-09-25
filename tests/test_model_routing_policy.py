@@ -39,3 +39,4 @@ def test_no_subscription_or_work_route_is_mislabeled_as_openai_api():
     data = json.loads(POLICY.read_text(encoding="utf-8"))
     assert data["routes"]["subscription_sol_high"]["executor"] == "chatgpt_subscription"
     assert data["routes"]["work"]["executor"] == "chatgpt_work"
+\n\ndef test_pro_is_escalation_not_default_execution_route():\n    data = json.loads(POLICY.read_text(encoding="utf-8"))\n    pro = data["routes"]["chatgpt_pro_astra"]\n    assert pro["cost_priority"] > data["routes"]["work"]["cost_priority"]\n    assert "highest-stakes" in " ".join(pro["use_for"]).lower()\n    assert all(rule.get("then") != "chatgpt_pro_astra" or "highest-stakes" in rule.get("if", "").lower() for rule in data["routing_rules"])\n
