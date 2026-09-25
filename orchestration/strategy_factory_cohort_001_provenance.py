@@ -21,6 +21,7 @@ REQUIRED_SOURCE_PATHS = {
     "orchestration/strategy_factory_cohort_001_provenance.py",
     "orchestration/strategy_predeclaration.py",
     "orchestration/scientific_design_identity.py",
+    "orchestration/strategy_behavior_revision.py",
     "orchestration/strategy_behavior_schema.py",
     "orchestration/strategy_behavior_value_contract.py",
     "strategy_dataset_preflight.py",

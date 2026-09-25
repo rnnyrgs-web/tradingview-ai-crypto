@@ -6,6 +6,13 @@ on:
     paths:
       - "orchestration/strategy_factory_cohort_001_admission.py"
       - "orchestration/strategy_factory_cohort_001_provenance.py"
+      - "orchestration/scientific_design_identity.py"
+      - "orchestration/strategy_predeclaration.py"
+      - "orchestration/strategy_behavior_revision.py"
+      - "orchestration/strategy_behavior_schema.py"
+      - "orchestration/strategy_behavior_value_contract.py"
+      - "strategy_dataset_preflight.py"
+      - "tests/test_strategy_behavior_contract_revision.py"
       - "orchestration/cohorts/strategy_factory_cohort_001_*.json"
       - "tests/test_strategy_factory_cohort_001_admission.py"
       - "tests/test_strategy_factory_cohort_001_receipt_lock.py"
@@ -46,6 +53,7 @@ jobs:
           tests/test_strategy_factory_cohort_001_receipt_lock.py
           tests/test_strategy_factory_cohort_001_multiplicity_authority.py
           tests/test_strategy_factory_cohort_001_provenance_lock.py
+          tests/test_strategy_behavior_contract_revision.py
       - name: Emit deterministic canonical admission receipt
         run: python -m orchestration.strategy_factory_cohort_001_admission > strategy_factory_cohort_001_canonical_admission.json
       - name: Assert research-only authority and exact execution holds
