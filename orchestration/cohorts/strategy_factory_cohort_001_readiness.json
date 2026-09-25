@@ -7,6 +7,14 @@
   "purpose": "Remove post-gate execution ambiguity without inspecting strategy outcomes. This artifact freezes the exact input/readiness and batch-execution plan to use after the repaired label-invariant #507 admission contract is independently integrated.",
   "blocking_gate": {
     "pr": 507,
+    "state": "INTEGRATED_CANONICAL_SEMANTIC_ADMISSION",
+    "merge_commit_sha": "fb95239413988b2d7c76ee1ba8fb3d0bca76313d",
+    "verified_ancestor_of_main_sha": "ae548bf12d85ea9bf84018f7f8f457c30c1c0791",
+    "screening_authority": false,
+    "reason": "Original formation prerequisite is resolved. Current admission recomputes canonical label-invariant rejection checks for every candidate. Execution remains closed pending separately reviewed Stage-1 machinery."
+  },
+  "blocking_gate_at_formation": {
+    "pr": 507,
     "state": "WAIT_LABEL_INVARIANT_REJECTED_DESIGN_MEMORY",
     "reason": "Exact-label rejection can still be bypassed by a renamed scientifically identical design. No Cohort 001 cheap screen may execute until canonical semantic admission is repaired, independently reviewed and integrated.",
     "screening_authority": false

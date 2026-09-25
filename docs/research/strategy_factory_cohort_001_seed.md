@@ -5,7 +5,7 @@ Main observed at formation: `09015514f97d0b21107d033748446e606468e06d`
 
 ## Why this exists
 
-PR #507 is still open and its exact head is blocked by independent review because rejected-memory admission is exact-label based rather than label-invariant/semantic. Therefore this artifact **does not screen any candidate** and **does not alter the canonical queue**. It prepares a diverse first cohort for issue #513 so execution can start immediately after the repaired #507 admission gate is integrated.
+At formation, PR #507 was open and blocked by independent review. That historical prerequisite is now resolved: #507 integrated at `fb95239413988b2d7c76ee1ba8fb3d0bca76313d`, an ancestor of canonical main `ae548bf12d85ea9bf84018f7f8f457c30c1c0791`. Current admission invokes the integrated semantic rejection gate for every seed. This artifact grants no execution authority; separately reviewed Stage-1 machinery must clear before any strategy outcome is read.
 
 No protected OOS or forward evidence was opened. No candidate was promoted. Broker/live trading remains off.
 

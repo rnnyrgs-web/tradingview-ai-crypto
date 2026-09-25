@@ -198,3 +198,53 @@ def test_cohort_001_zero_or_omitted_adverse_funding_fails_closed() -> None:
         pass
     else:
         raise AssertionError("zero adverse funding allowance must fail closed")
+
+
+@pytest.mark.parametrize('mutation', ('ninth_held', 'missing_candidate', 'duplicate_readiness', 'missing_readiness'))
+def test_public_admission_rejects_malformed_family_membership(monkeypatch, mutation):
+    seed = _seed()
+    readiness = json.loads(admission._READINESS_PATH.read_text())
+    if mutation == 'ninth_held':
+        extra = json.loads(json.dumps(seed['candidates'][0]))
+        extra['signal_rules']['warmup_hours'] += 1
+        frozen = freeze_predeclaration(resolve_candidate_predeclaration(seed, extra))
+        for key in ('scientific_design_sha256', 'strategy_behavior_sha256', 'contract_sha256'):
+            extra[key] = frozen[key]
+            assert extra[key] != seed['candidates'][0][key]
+        seed['candidates'].append(extra)
+    elif mutation == 'missing_candidate':
+        seed['candidates'].pop(0)
+    elif mutation == 'duplicate_readiness':
+        readiness['candidates'].append(dict(readiness['candidates'][0]))
+    else:
+        readiness['candidates'].pop(0)
+    original = admission._load_json
+    monkeypatch.setattr(admission, '_load_json', lambda path: seed if path == admission._SEED_PATH else readiness if path == admission._READINESS_PATH else original(path))
+    with pytest.raises(RuntimeError, match='membership'):
+        build_canonical_admission_receipt()
+
+
+@pytest.mark.parametrize('mutation', ('duplicate_member', 'missing_member', 'different_member', 'wrong_count', 'wrong_family', 'different_readiness_member'))
+def test_public_admission_reconciles_frozen_multiplicity_membership(monkeypatch, mutation):
+    multiplicity = json.loads(admission._MULTIPLICITY_PATH.read_text())
+    readiness = json.loads(admission._READINESS_PATH.read_text())
+    family = multiplicity['family']
+    if mutation == 'duplicate_member':
+        family['members'][1] = family['members'][0]
+    elif mutation == 'missing_member':
+        family['members'].pop()
+    elif mutation == 'different_member':
+        family['members'][0] = 'UNDECLARED-v1'
+    elif mutation == 'wrong_count':
+        family['planned_hypothesis_count'] = 9
+    elif mutation == 'wrong_family':
+        family['family_id'] = 'UNDECLARED-FAMILY'
+    else:
+        readiness['candidates'][0]['fingerprint_id'] = 'UNDECLARED-v1'
+    original = admission._load_json
+    monkeypatch.setattr(admission, '_load_json', lambda path: multiplicity if path == admission._MULTIPLICITY_PATH else readiness if path == admission._READINESS_PATH else original(path))
+    def forbidden_qualification(_):
+        pytest.fail('malformed membership reached dataset qualification')
+    monkeypatch.setattr(admission, '_qualify_common_selection_dataset', forbidden_qualification)
+    with pytest.raises(RuntimeError, match='membership'):
+        build_canonical_admission_receipt()

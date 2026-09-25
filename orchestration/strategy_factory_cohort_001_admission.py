@@ -12,6 +12,7 @@ from strategy_dataset_preflight import qualify_cohort001_dataset
 _ROOT = Path(__file__).resolve().parent
 _SEED_PATH = _ROOT / "cohorts" / "strategy_factory_cohort_001_seed.json"
 _READINESS_PATH = _ROOT / "cohorts" / "strategy_factory_cohort_001_readiness.json"
+_MULTIPLICITY_PATH = _ROOT / "cohorts" / "strategy_factory_cohort_001_multiplicity_authority.json"
 _OWNERSHIP_PATH = _ROOT / "cohorts" / "strategy_factory_cohort_001_ownership_correction.json"
 
 
@@ -167,6 +168,42 @@ def _qualify_common_selection_dataset(seed: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _validate_family_membership(
+    seed: dict[str, Any], readiness: dict[str, Any], multiplicity: dict[str, Any]
+) -> None:
+    """Require the original eight-member family before qualification or admission."""
+    family = multiplicity.get("family")
+    declared = seed.get("multiple_testing")
+    if not isinstance(family, dict) or not isinstance(declared, dict):
+        raise RuntimeError("Cohort-001 membership family missing")
+    if (
+        family.get("family_id") != "STRATEGY-FACTORY-COHORT-001-20260921"
+        or declared.get("family_id") != family["family_id"]
+        or type(family.get("planned_hypothesis_count")) is not int
+        or family["planned_hypothesis_count"] != 8
+        or type(declared.get("planned_hypothesis_count")) is not int
+        or declared["planned_hypothesis_count"] != 8
+    ):
+        raise RuntimeError("Cohort-001 membership family/count mismatch")
+
+    def unique_eight(values: Any) -> set[str]:
+        if (
+            not isinstance(values, list) or len(values) != 8
+            or any(not isinstance(value, str) or not value for value in values)
+            or len(set(values)) != 8
+        ):
+            raise RuntimeError("Cohort-001 membership requires eight unique fingerprint IDs")
+        return set(values)
+
+    members = unique_eight(family.get("members"))
+    for label, rows in (("seed", seed.get("candidates")), ("readiness", readiness.get("candidates"))):
+        if not isinstance(rows, list) or any(not isinstance(row, dict) for row in rows):
+            raise RuntimeError(f"Cohort-001 membership {label} rows invalid")
+        identities = unique_eight([row.get("fingerprint_id") for row in rows])
+        if identities != members:
+            raise RuntimeError(f"Cohort-001 membership {label} differs from frozen family")
+
+
 def build_canonical_admission_receipt() -> dict[str, Any]:
     """Canonically admit Cohort-001 and bind protected-safe data readiness.
 
@@ -177,6 +214,8 @@ def build_canonical_admission_receipt() -> dict[str, Any]:
     verify_admission_provenance_lock()
     seed = _load_json(_SEED_PATH)
     readiness = _load_json(_READINESS_PATH)
+    multiplicity = _load_json(_MULTIPLICITY_PATH)
+    _validate_family_membership(seed, readiness, multiplicity)
     ownership = _load_json(_OWNERSHIP_PATH)
     selection_dataset = _qualify_common_selection_dataset(seed)
 
