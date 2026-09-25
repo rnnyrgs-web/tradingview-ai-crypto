@@ -71,12 +71,7 @@ def enrich_legacy_lesson(lesson):
     return result
 
 
-def factory_feedback():
-    try:
-        state = learning_snapshot()
-    except (ValueError, OSError, sqlite3.Error):
-        return {"status": "WAIT_MEMORY_UNAVAILABLE", "missions": [], "allocation": {},
-                "progress_metric": "credible_economic_evidence_or_uncertainty_reduction", **SAFE}
+def _factory_feedback_from_state(state):
     memory = state["memory"]
     missions = learning_missions(memory) if memory is not None else []
     weights = {mode: sum(m["learning_priority"] for m in missions if m["mode"] == mode)
@@ -86,6 +81,15 @@ def factory_feedback():
             "allocation": {k: v / total if total else 0.0 for k, v in weights.items()},
             "allocation_semantics": "Advisory weights from current evidence, not worker quotas or trading authority",
             "progress_metric": "credible_economic_evidence_or_uncertainty_reduction", **SAFE}
+
+
+def factory_feedback():
+    try:
+        state = learning_snapshot()
+    except (ValueError, OSError, sqlite3.Error):
+        return {"status": "WAIT_MEMORY_UNAVAILABLE", "missions": [], "allocation": {},
+                "progress_metric": "credible_economic_evidence_or_uncertainty_reduction", **SAFE}
+    return _factory_feedback_from_state(state)
 
 
 def _candidate_feedback(candidate, memory):
@@ -203,13 +207,17 @@ def refresh_director(army):
     from research_director import build_mission
     global _director_state
     result = deepcopy(legacy_refresh(army))
-    feedback = factory_feedback()
+    try:
+        learning_state = learning_snapshot()
+    except (ValueError, OSError, sqlite3.Error):
+        learning_state = {"status": "WAIT_MEMORY_UNAVAILABLE", "memory": None}
+    feedback = _factory_feedback_from_state(learning_state)
     result["profitability_learning"] = feedback
     if feedback["status"] == "WAIT_MEMORY_UNAVAILABLE":
         result["next_missions"] = []
     # Missing/corrupt configured memory does not authorize stale learned missions.
     if feedback["status"] == "AVAILABLE":
-        memory = learning_snapshot()["memory"]
+        memory = learning_state["memory"]
         worker_identities = {}
         for worker in (army.get("workers") or {}).values():
             evidence = worker.get("latest_evidence", {}) if isinstance(worker, dict) else {}

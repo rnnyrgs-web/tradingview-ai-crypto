@@ -10,6 +10,7 @@ from profitability_learning.development import run_ablation
 from profitability_learning.memory import Memory
 from profitability_learning.runtime import (complete_experiment, learning_snapshot,
     enrich_legacy_lesson, factory_feedback, refresh_director)
+import profitability_learning.runtime as learning_runtime
 
 
 def configure(monkeypatch, tmp_path):
@@ -150,3 +151,25 @@ def test_configured_memory_outage_blocks_new_candidate_dispatch(monkeypatch, tmp
     assert result["learning_status"] == "WAIT_MEMORY_UNAVAILABLE"
     state = refresh_director({"workers": {"learning-diagnostics": {"state": "resting"}}})
     assert state["next_missions"] == []
+
+
+def test_director_uses_one_durable_memory_snapshot_per_refresh(monkeypatch, tmp_path):
+    configure(monkeypatch, tmp_path)
+    complete_experiment(experiment([-10, -10, -10]))
+    durable = learning_snapshot()
+    reads = 0
+
+    def fail_if_reread():
+        nonlocal reads
+        reads += 1
+        if reads > 1:
+            raise ValueError("durable memory changed during director refresh")
+        return durable
+
+    monkeypatch.setattr(learning_runtime, "learning_snapshot", fail_if_reread)
+
+    state = refresh_director({"workers": {}})
+
+    assert reads == 1
+    assert state["profitability_learning"]["status"] == "AVAILABLE"
+    assert any(row["lane"] == "profitability-learning" for row in state["missions"])
