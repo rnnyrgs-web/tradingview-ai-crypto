@@ -1,0 +1,19 @@
+{
+  "adjacent_week_appearance_occurrences": 112,
+  "adjacent_week_disappearance_occurrences": 106,
+  "canonical_cohort_snapshots": 0,
+  "common_source_symbols_all_52": 4,
+  "cutoffs_frozen": 52,
+  "distinct_source_blobs_declared": 5125,
+  "failed_weeks": 0,
+  "historical_2x_events": 0,
+  "matched_controls": 0,
+  "maximum_commit_age_hours": 105.58055555555555,
+  "maximum_weekly_source_files": 112,
+  "minimum_weekly_source_files": 4,
+  "observed_unique_source_symbols": 115,
+  "precursor_tests": 0,
+  "qualified_current_candidates": 0,
+  "source_symbol_week_rows": 5436,
+  "verified_tree_weeks": 52
+}

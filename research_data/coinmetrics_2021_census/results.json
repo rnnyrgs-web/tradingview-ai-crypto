@@ -1,0 +1,3354 @@
+{
+  "broker_connected": false,
+  "classification": "EMPIRICAL_SOURCE_COVERAGE_ONLY",
+  "cohort_admission": false,
+  "decision_at": "2021-01-04T00:00:00Z",
+  "issue": 812,
+  "limitations": [
+    "Unsigned upstream commit time is not authenticated public availability time.",
+    "Source symbols are not canonical asset identities or Binance historical members.",
+    "Daily rows are not independent events or point-in-time decision snapshots.",
+    "Only one historical vintage is measured; earlier daily rows may be revised.",
+    "Stablecoins, wrappers, obsolete symbols and potential duplicate exposures are retained.",
+    "No source-symbol disappearance is classified as delisting or non-winner.",
+    "Supply semantics, historical identity, sector, membership, liquidity and depth remain unqualified."
+  ],
+  "manifest_sha256": "5700cb6c86d6b457a1556d6096bd9d1b79172277c4735bdea46c1dd096debb6b",
+  "outcomes_opened": false,
+  "parser_sha256": "a58048db23439eed4674a27a7727d47e6ad62bf7509e6d48c463a69a4428c5ab",
+  "protected_oos_opened": false,
+  "records": [
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "35b4bdfa71901c15f9d15ed9634a2797228efdce",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "1370873237.566"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "16000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 85,
+      "positive_rows": {
+        "CapMrktCurUSD": 85,
+        "SplyCur": 85
+      },
+      "pre_cutoff_rows": 101,
+      "raw_bytes": 34775,
+      "sha256": "c3c725c088f1fafcde93449d742138a3421f9b789cb5bafc07549c1c8a954410",
+      "source_path": "csv/aave.csv",
+      "source_symbol": "aave",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/aave.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "b0335ee0acfe5dfaafad6145ac0f63c7d077ecb0",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "5657643603.402167358067872482556"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "31813742310.157663"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1129,
+      "positive_rows": {
+        "CapMrktCurUSD": 1129,
+        "SplyCur": 1198
+      },
+      "pre_cutoff_rows": 1198,
+      "raw_bytes": 744192,
+      "sha256": "523991b97af81442344f764e539eb2726a80ee1737f92b681396b1cfd62d77e4",
+      "source_path": "csv/ada.csv",
+      "source_symbol": "ada",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/ada.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "51b579d2fa89eb3b0d6f9be736f3d0755ceb82e1",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "122863434.273167451002601639628941"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "39609523.80952380954"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1223,
+      "positive_rows": {
+        "CapMrktCurUSD": 1223,
+        "SplyCur": 1329
+      },
+      "pre_cutoff_rows": 1329,
+      "raw_bytes": 566128,
+      "sha256": "a7f214b8ddc05687734f2811355f667617a696a3a9689b99529f77b1017b55c1",
+      "source_path": "csv/ant.csv",
+      "source_symbol": "ant",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/ant.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "4c5ab3270db02e49cdad109b5ae30ad81803a243",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "571431004.299405245"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "39350000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 192,
+      "positive_rows": {
+        "CapMrktCurUSD": 192,
+        "SplyCur": 192
+      },
+      "pre_cutoff_rows": 197,
+      "raw_bytes": 81481,
+      "sha256": "48572cdcb0c0cae9abf779ae431acdd1a8a35572f829abda5800d5327f23d9c1",
+      "source_path": "csv/bal.csv",
+      "source_symbol": "bal",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/bal.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "7c2a4207673c72f71fe5424719a29fde2db11dac",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "305474340.703563"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "1500000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1185,
+      "positive_rows": {
+        "CapMrktCurUSD": 1185,
+        "SplyCur": 1315
+      },
+      "pre_cutoff_rows": 1315,
+      "raw_bytes": 584938,
+      "sha256": "3214d6cd1a0dca886d59d38807ca88377b578c36a6979cd18e18f6c45f0279d3",
+      "source_path": "csv/bat.csv",
+      "source_symbol": "bat",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/bat.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "fbab5247bbe00a0038dd437b2a70ff4bbc00910f",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "6587078510.67737605598723971143"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "18615892.17450691"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1251,
+      "positive_rows": {
+        "CapMrktCurUSD": 1251,
+        "SplyCur": 1251
+      },
+      "pre_cutoff_rows": 1251,
+      "raw_bytes": 929046,
+      "sha256": "5bb6b280fad249eece7baa25e81ac90bdeb869d37ff5a78fe4c438917bd3675a",
+      "source_path": "csv/bch.csv",
+      "source_symbol": "bch",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/bch.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": false,
+      "git_blob_sha1": "1d2d2f7e884bdfa278335a34dc24000a301aed6b",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "4498109683.698229844425182170197468483011"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "188345602.242498551714388965"
+        }
+      },
+      "latest_pre_cutoff_row": "2019-04-22",
+      "latest_row_age_hours": 14952.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 647,
+      "positive_rows": {
+        "CapMrktCurUSD": 647,
+        "SplyCur": 657
+      },
+      "pre_cutoff_rows": 657,
+      "raw_bytes": 290636,
+      "sha256": "15dbc6a61901523b247314472eb85546c0667e11f1857446e91e0abe1b98a03a",
+      "source_path": "csv/bnb.csv",
+      "source_symbol": "bnb",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/bnb.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": false,
+      "git_blob_sha1": "2cdb575210f633365d4096ddad81bfc79f808254",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "MISSING_VALUE",
+          "value": null
+        },
+        "SplyCur": {
+          "status": "MISSING_VALUE",
+          "value": null
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 624,
+      "positive_rows": {
+        "CapMrktCurUSD": 624,
+        "SplyCur": 624
+      },
+      "pre_cutoff_rows": 626,
+      "raw_bytes": 326576,
+      "sha256": "70bc176dd9395ae0fe32e4ab01f2c143d9b17184af48a3dd7e6189077c2329e6",
+      "source_path": "csv/bnb_mainnet.csv",
+      "source_symbol": "bnb_mainnet",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/bnb_mainnet.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "bf7d283a538949792b1595ff7d278fe6bef486f6",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "3030973439.70926398160065682176"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "18614297.54470784"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 780,
+      "positive_rows": {
+        "CapMrktCurUSD": 780,
+        "SplyCur": 780
+      },
+      "pre_cutoff_rows": 780,
+      "raw_bytes": 574246,
+      "sha256": "ea515e55431e745262ae118132d83927c2859592c7cd0744b07afd20f5c53156",
+      "source_path": "csv/bsv.csv",
+      "source_symbol": "bsv",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/bsv.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "a8c0c48690d381f7dcf4fb4cb5d06f785990eafc",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "595259096891.809040983449185127"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "18588671.44247703"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 3822,
+      "positive_rows": {
+        "CapMrktCurUSD": 3822,
+        "SplyCur": 4377
+      },
+      "pre_cutoff_rows": 4383,
+      "raw_bytes": 2888564,
+      "sha256": "2c4b3c16f535e06ddc8193122ca3c352977fa5092b4b18c8c5e63255cb6a64ab",
+      "source_path": "csv/btc.csv",
+      "source_symbol": "btc",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/btc.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "b6fcdb121e845711a0bf18fde2e17ed743c62612",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "155183809.2777861253333898708625"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "18606838.65456675"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1166,
+      "positive_rows": {
+        "CapMrktCurUSD": 1166,
+        "SplyCur": 1167
+      },
+      "pre_cutoff_rows": 1167,
+      "raw_bytes": 876463,
+      "sha256": "21fc6c4dd91d6491f16fd6c3a4fb3f091c805b41be4e00d6825694e36f2ec0ac",
+      "source_path": "csv/btg.csv",
+      "source_symbol": "btg",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/btg.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "c49664a0721c45d0eddf7abeb4dfd70a16ceebbd",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "1142347131.9762050590994619"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "1141960213.41"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 471,
+      "positive_rows": {
+        "CapMrktCurUSD": 471,
+        "SplyCur": 481
+      },
+      "pre_cutoff_rows": 486,
+      "raw_bytes": 224788,
+      "sha256": "8204469f5a717e644ea0860833ee2e3f39002b5514575beffb0371c495df26fd",
+      "source_path": "csv/busd.csv",
+      "source_symbol": "busd",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/busd.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "bf3f5d0a9563670755f615b59747c713dc04fef6",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "1366338482.31054"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "10000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 199,
+      "positive_rows": {
+        "CapMrktCurUSD": 199,
+        "SplyCur": 305
+      },
+      "pre_cutoff_rows": 305,
+      "raw_bytes": 89989,
+      "sha256": "74d8ac30d2035bc17b2fe537eccb6f6b6cdfd6c8744bc117be5dcfee07780df2",
+      "source_path": "csv/comp.csv",
+      "source_symbol": "comp",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/comp.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "e7480270b4ba01c5907fbf9477092ab5cf1d450f",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "6213716353.81168"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "100000000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 655,
+      "positive_rows": {
+        "CapMrktCurUSD": 655,
+        "SplyCur": 781
+      },
+      "pre_cutoff_rows": 781,
+      "raw_bytes": 268078,
+      "sha256": "5b2f9ccad4813887715462f8018d92554ddef8b4d87b6f8b68939d745234e6f7",
+      "source_path": "csv/cro.csv",
+      "source_symbol": "cro",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/cro.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "a2f6cc8a5629dc804404fde14156b2b136c658c9",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "857126787.812268782840810674075055420205706"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "1401902082.948222049208985569"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 141,
+      "positive_rows": {
+        "CapMrktCurUSD": 141,
+        "SplyCur": 141
+      },
+      "pre_cutoff_rows": 144,
+      "raw_bytes": 73805,
+      "sha256": "57b613ba7a83071b3e713a8f82adb2db0840b8b500c7eaf5c363801106c357c8",
+      "source_path": "csv/crv.csv",
+      "source_symbol": "crv",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/crv.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "f390f31082f94d1c4e442395e3009966a78099bb",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "84661121.3632779"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "1000000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1210,
+      "positive_rows": {
+        "CapMrktCurUSD": 1210,
+        "SplyCur": 1272
+      },
+      "pre_cutoff_rows": 1272,
+      "raw_bytes": 496974,
+      "sha256": "f664e2fdd252220c841a124643a66a2c3273ed877ba13f88111d5eb19d12dc95",
+      "source_path": "csv/cvc.csv",
+      "source_symbol": "cvc",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/cvc.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "b81954ae8163ebff7c45b534007ff1d36eff3e00",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "1168077427.3587475268114004777311345061678"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "1167368770.586035608962516366"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 410,
+      "positive_rows": {
+        "CapMrktCurUSD": 410,
+        "SplyCur": 412
+      },
+      "pre_cutoff_rows": 417,
+      "raw_bytes": 214484,
+      "sha256": "a44b9860dd4849856d4a943db66c3dc374b8fb9d0046a76ca1dd601a04ea86ff",
+      "source_path": "csv/dai.csv",
+      "source_symbol": "dai",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/dai.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "fd70f0d0869c8be52723da4127f7cd5eec78b1ff",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "860958920.51410216383131880888"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "9901092.18948424"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 2521,
+      "positive_rows": {
+        "CapMrktCurUSD": 2521,
+        "SplyCur": 2541
+      },
+      "pre_cutoff_rows": 2541,
+      "raw_bytes": 1959936,
+      "sha256": "5f8cce96bce5b388f2437c3c9e53c98380651106b9c005b12ba511374f932747",
+      "source_path": "csv/dash.csv",
+      "source_symbol": "dash",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/dash.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "c8aac92f916b281b0354bdc60c44aa422213161a",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "569050878.698015363579895736434"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "12436229.73681958"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1692,
+      "positive_rows": {
+        "CapMrktCurUSD": 1692,
+        "SplyCur": 1791
+      },
+      "pre_cutoff_rows": 1791,
+      "raw_bytes": 1132776,
+      "sha256": "993e8a4d2968fae26b54ca0ab053754014c1d455e8b223cd14d59bc4044a013d",
+      "source_path": "csv/dcr.csv",
+      "source_symbol": "dcr",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/dcr.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "2cec858e47bce290612388169d6e9aa7bcba95f2",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "391440859.18960194151682086527696"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "13902595687.9816272"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 2154,
+      "positive_rows": {
+        "CapMrktCurUSD": 2154,
+        "SplyCur": 2550
+      },
+      "pre_cutoff_rows": 2550,
+      "raw_bytes": 1756570,
+      "sha256": "74ef623e7de3412bfd497bef28ade1d7c4064e22e8b3d5d2201a5bbe55e9f33d",
+      "source_path": "csv/dgb.csv",
+      "source_symbol": "dgb",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/dgb.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "1c2e0b65315e0b7e6fabf52d50b48c2ad14c28d4",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "3581380.0"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "80300.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 863,
+      "positive_rows": {
+        "CapMrktCurUSD": 863,
+        "SplyCur": 1017
+      },
+      "pre_cutoff_rows": 1018,
+      "raw_bytes": 329444,
+      "sha256": "19a6fd111b8a73725390d146c7f9bf200d13e3f3a623b36577c0cc78fce5fe78",
+      "source_path": "csv/dgx.csv",
+      "source_symbol": "dgx",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/dgx.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "1a452def6dd0f1b766ad50eb849ca0f3db3574aa",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "1344301701.206696653147002380673977"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "127662965503.67663249"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 2537,
+      "positive_rows": {
+        "CapMrktCurUSD": 2537,
+        "SplyCur": 2583
+      },
+      "pre_cutoff_rows": 2583,
+      "raw_bytes": 2095640,
+      "sha256": "a2568ce60039b05173f5cd192cf265c44a3a6a041c9f1341a8d9104b3d7cbd8a",
+      "source_path": "csv/doge.csv",
+      "source_symbol": "doge",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/doge.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "6fa29f577c9d9b8eca298090717f0bb52122d354",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "20693024.4324953925676045"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "433494437.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1096,
+      "positive_rows": {
+        "CapMrktCurUSD": 1096,
+        "SplyCur": 1130
+      },
+      "pre_cutoff_rows": 1130,
+      "raw_bytes": 481544,
+      "sha256": "cd70a6a7de6adfba49e32b5d6c19010ca7d6d733be2c28985beeefaeffc88749",
+      "source_path": "csv/drgn.csv",
+      "source_symbol": "drgn",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/drgn.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "49b1bde750b290aea1066cf7f7577a709c86900b",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "95206429.07196438770719009280293747600184"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "879999999.98646580876719028"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1108,
+      "positive_rows": {
+        "CapMrktCurUSD": 1108,
+        "SplyCur": 1112
+      },
+      "pre_cutoff_rows": 1112,
+      "raw_bytes": 502125,
+      "sha256": "355006b75bfd4730c3c7ee5860a3698bcac1eabb6adb478a3b20fe58b5da7573",
+      "source_path": "csv/elf.csv",
+      "source_symbol": "elf",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/elf.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "37eada528a723f88543320f7530ccad48029e821",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "82827980.2747302"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "150000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1179,
+      "positive_rows": {
+        "CapMrktCurUSD": 1179,
+        "SplyCur": 1179
+      },
+      "pre_cutoff_rows": 1179,
+      "raw_bytes": 464728,
+      "sha256": "37cde857a57e5eebb1cd72e42849b74138ecdb865d7d6150562f60318fd84c87",
+      "source_path": "csv/eng.csv",
+      "source_symbol": "eng",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/eng.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": false,
+      "git_blob_sha1": "8c836eafbabc900ac04cd960853b724d4c178d7f",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "MISSING_COLUMN",
+          "value": null
+        },
+        "SplyCur": {
+          "status": "MISSING_COLUMN",
+          "value": null
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": false,
+        "SplyCur": false
+      },
+      "positive_pair_rows": 0,
+      "positive_rows": {
+        "CapMrktCurUSD": 0,
+        "SplyCur": 0
+      },
+      "pre_cutoff_rows": 939,
+      "raw_bytes": 154547,
+      "sha256": "9c773e757134b8a344ad91ea9f7cf1086ec7410d8a965f3ff74709f3b63650f3",
+      "source_path": "csv/eos.csv",
+      "source_symbol": "eos",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/eos.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": false,
+      "git_blob_sha1": "39fde171228c5db731a48f49a32c8b734d83f43b",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "14816662106.0873"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "1000000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2018-06-02",
+      "latest_row_age_hours": 22728.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 339,
+      "positive_rows": {
+        "CapMrktCurUSD": 339,
+        "SplyCur": 348
+      },
+      "pre_cutoff_rows": 348,
+      "raw_bytes": 135058,
+      "sha256": "d636ca2b20e9bb25576e7c196f9f7d89f1260fce7adfcd31942956a8814dde0a",
+      "source_path": "csv/eos_eth.csv",
+      "source_symbol": "eos_eth",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/eos_eth.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "01d948dfeb9b761ed159747e096f9f33f856d099",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "720398721.6324908159404763629"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "124682422.00573"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1623,
+      "positive_rows": {
+        "CapMrktCurUSD": 1623,
+        "SplyCur": 1624
+      },
+      "pre_cutoff_rows": 1624,
+      "raw_bytes": 1266878,
+      "sha256": "2d5384a3d2a5f93d9b2f91bf2dd5f8067fe3e9bee0ca3dd70975c85f1d75892d",
+      "source_path": "csv/etc.csv",
+      "source_symbol": "etc",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/etc.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "1ca417a6cdd4ce35df4547a93d9bcb3b37018d88",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "88455317488.63011880128988168"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "114092226.03073"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1975,
+      "positive_rows": {
+        "CapMrktCurUSD": 1975,
+        "SplyCur": 1984
+      },
+      "pre_cutoff_rows": 1984,
+      "raw_bytes": 1563375,
+      "sha256": "9a7aa8bd8b8851a1fc97cfe5a5f3d4d5111d3cf5824013cca364ea1964557ce0",
+      "source_path": "csv/eth.csv",
+      "source_symbol": "eth",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/eth.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "9f45db6778ea310b9e02a0575644f3861f1c08db",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "33669041.98068085764851155867039"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "222295208.23845323"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1286,
+      "positive_rows": {
+        "CapMrktCurUSD": 1286,
+        "SplyCur": 1286
+      },
+      "pre_cutoff_rows": 1286,
+      "raw_bytes": 535696,
+      "sha256": "ed8eb5d9f8275741d25f2f161143186ddadc318654b18dea08f4562c68b040a7",
+      "source_path": "csv/ethos.csv",
+      "source_symbol": "ethos",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/ethos.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "49a17eb92358d4870a6b9217750011ec0cd4eb41",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "2110318913.0099597779656000511138002818256"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "341451150.068521749999999952"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 502,
+      "positive_rows": {
+        "CapMrktCurUSD": 502,
+        "SplyCur": 623
+      },
+      "pre_cutoff_rows": 623,
+      "raw_bytes": 241788,
+      "sha256": "cee466586581b2dd7f5b93a9285533d296bef08d48b7779931db22353e3d2510",
+      "source_path": "csv/ftt.csv",
+      "source_symbol": "ftt",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/ftt.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "6763234c8c4ec441a8e784b453c2b6612a57547a",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "61575163.246903343973396233273415"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "10999873621.3980255"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1219,
+      "positive_rows": {
+        "CapMrktCurUSD": 1219,
+        "SplyCur": 1276
+      },
+      "pre_cutoff_rows": 1276,
+      "raw_bytes": 539593,
+      "sha256": "bfff1d22d28c6317835a11bee2740ec08a2b1699456f590eb6a93d575523dcdd",
+      "source_path": "csv/fun.csv",
+      "source_symbol": "fun",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/fun.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "7f99d5066b755a298dea20e68ed394d69f9466d9",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "441979925.445353"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "100000000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 536,
+      "positive_rows": {
+        "CapMrktCurUSD": 536,
+        "SplyCur": 730
+      },
+      "pre_cutoff_rows": 730,
+      "raw_bytes": 259364,
+      "sha256": "2f1ad47e59368021a056479b3dc5f37fd26ea3f8293ea94aa8dff0a309173f80",
+      "source_path": "csv/fxc.csv",
+      "source_symbol": "fxc",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/fxc.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "eb884881067d83194a93944a4eb7a117dce7f456",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "33102942.1686092263347078407721"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "21868416.80674383"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1244,
+      "positive_rows": {
+        "CapMrktCurUSD": 1244,
+        "SplyCur": 1539
+      },
+      "pre_cutoff_rows": 1539,
+      "raw_bytes": 593475,
+      "sha256": "4f7536c2392f7d0d4f52513071cf52ba5eae403a1789bc524625400f756d6fc3",
+      "source_path": "csv/gas.csv",
+      "source_symbol": "gas",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/gas.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "8ad2e2dbf9d699e5496402ba883c775baf641e2b",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "758245682.90078"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "10000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1342,
+      "positive_rows": {
+        "CapMrktCurUSD": 1342,
+        "SplyCur": 1356
+      },
+      "pre_cutoff_rows": 1356,
+      "raw_bytes": 556316,
+      "sha256": "fec8f30453274723ea3da18134322cc833d8d81eded9f74d7bb70e5d42daaec8",
+      "source_path": "csv/gno.csv",
+      "source_symbol": "gno",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/gno.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "a944d7419d9bfc830bac4d7b6cc935265926c515",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "79821324.706910980620791659535723742735192"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "654509571.343133620716778632"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1414,
+      "positive_rows": {
+        "CapMrktCurUSD": 1414,
+        "SplyCur": 1514
+      },
+      "pre_cutoff_rows": 1515,
+      "raw_bytes": 624286,
+      "sha256": "f2b3014c3eec05e22d9db405624c71e8cba2f23146357b4f7fbd86af8dd71f37",
+      "source_path": "csv/gnt.csv",
+      "source_symbol": "gnt",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/gnt.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "5d9811e509415dd7dd87cf1026e40a825b2d149e",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "21690752.91283897859604"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "61783320.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 705,
+      "positive_rows": {
+        "CapMrktCurUSD": 705,
+        "SplyCur": 719
+      },
+      "pre_cutoff_rows": 719,
+      "raw_bytes": 286963,
+      "sha256": "17df62b02e46cc6ffb40edf54ddd7499583c9d7596b5234728531ca6337d3f8e",
+      "source_path": "csv/grin.csv",
+      "source_symbol": "grin",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/grin.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "ca0bec8664e74abe7ba973b12864c7b9dd3f3907",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "19611269.34339227159295775"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "19654710.71"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 840,
+      "positive_rows": {
+        "CapMrktCurUSD": 840,
+        "SplyCur": 847
+      },
+      "pre_cutoff_rows": 847,
+      "raw_bytes": 325360,
+      "sha256": "e5004d552041311d47157f4c7737b19b7c28287ce64b9cdd9b4de2f9ed21ccee",
+      "source_path": "csv/gusd.csv",
+      "source_symbol": "gusd",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/gusd.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "cac0b942be6ebb6f4672cade0216656188a98f93",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "455760459.326974"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "1000000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 428,
+      "positive_rows": {
+        "CapMrktCurUSD": 428,
+        "SplyCur": 635
+      },
+      "pre_cutoff_rows": 635,
+      "raw_bytes": 201866,
+      "sha256": "d644317593532897f1f93057915f3dbf4fc054af08c9dc64d0f09e9de836714e",
+      "source_path": "csv/hedg.csv",
+      "source_symbol": "hedg",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/hedg.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "19c692bb76934b82e7e46e4331d5859a8f2a6a23",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "2420431486.885365"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "500000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 669,
+      "positive_rows": {
+        "CapMrktCurUSD": 669,
+        "SplyCur": 1068
+      },
+      "pre_cutoff_rows": 1068,
+      "raw_bytes": 356977,
+      "sha256": "6e33ccc5b980d4fc67ff1849d5d391ab649db684d62cd759dc6e7341f7da8e30",
+      "source_path": "csv/ht.csv",
+      "source_symbol": "ht",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/ht.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "e733fe3c4982004c02977cd85b6e2e518c33d175",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "174343856.486904514009771722677"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "174251078.05089983"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 533,
+      "positive_rows": {
+        "CapMrktCurUSD": 533,
+        "SplyCur": 533
+      },
+      "pre_cutoff_rows": 535,
+      "raw_bytes": 249862,
+      "sha256": "d0872393d66ce981ef46fc05b5fb4685c8bae4862422c78940b1dae58290e2c0",
+      "source_path": "csv/husd.csv",
+      "source_symbol": "husd",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/husd.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": false,
+      "git_blob_sha1": "5b793280696ec99e6edc4bd9399fddde2f6ba2d7",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "MISSING_COLUMN",
+          "value": null
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "170118638.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": false,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 0,
+      "positive_rows": {
+        "CapMrktCurUSD": 0,
+        "SplyCur": 1230
+      },
+      "pre_cutoff_rows": 1230,
+      "raw_bytes": 130255,
+      "sha256": "c9280bb89187f8bcfe661f129f8d4fbe56751871a80a9ce8a439e54819a4ee39",
+      "source_path": "csv/kcs.csv",
+      "source_symbol": "kcs",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/kcs.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "bd654cf021bbaf4aad1ff6ab1708d84996f47af9",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "165141836.04442547991655683247548051378948"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "210325273.092556027653945634"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1194,
+      "positive_rows": {
+        "CapMrktCurUSD": 1194,
+        "SplyCur": 1209
+      },
+      "pre_cutoff_rows": 1209,
+      "raw_bytes": 560616,
+      "sha256": "d3e05cbc081be07adad7dc5fd4b2d620520e9a21c6709fb4dfd9fd65ffd921ee",
+      "source_path": "csv/knc.csv",
+      "source_symbol": "knc",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/knc.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "5e06c76f7e5651c74006c7308c29c582ada507d7",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "1113834455.5738957138500262020932251001925"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "1299999941.703168126810575"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1121,
+      "positive_rows": {
+        "CapMrktCurUSD": 1121,
+        "SplyCur": 1204
+      },
+      "pre_cutoff_rows": 1204,
+      "raw_bytes": 562906,
+      "sha256": "dd2578a4dfebf81586e8a4e7daf4c30c411fa47780ccbc023105bca229092896",
+      "source_path": "csv/lend.csv",
+      "source_symbol": "lend",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/lend.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "80af33f88599005448587d0d05475661b7480a07",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "460012726.899012967967456"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "330008002.9"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 593,
+      "positive_rows": {
+        "CapMrktCurUSD": 593,
+        "SplyCur": 593
+      },
+      "pre_cutoff_rows": 593,
+      "raw_bytes": 195190,
+      "sha256": "167109994f8cd68523dae0d1648193300b757afd819965f4dbceddd92a14ec80",
+      "source_path": "csv/leo_eos.csv",
+      "source_symbol": "leo_eos",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/leo_eos.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "69736e47d89a802f50d36e0ae78ec32c072e2905",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "920003142.6066624"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "660000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 593,
+      "positive_rows": {
+        "CapMrktCurUSD": 593,
+        "SplyCur": 593
+      },
+      "pre_cutoff_rows": 593,
+      "raw_bytes": 237109,
+      "sha256": "21c3b199008fcf44561b283978127a9fefc31a1f02fae6e8c21bef4d55a75cdb",
+      "source_path": "csv/leo_eth.csv",
+      "source_symbol": "leo_eth",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/leo_eth.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "c3721e53d065ca8fae88ec4300d561316ec262db",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "12138653062.2964"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "1000000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1192,
+      "positive_rows": {
+        "CapMrktCurUSD": 1192,
+        "SplyCur": 1205
+      },
+      "pre_cutoff_rows": 1205,
+      "raw_bytes": 551656,
+      "sha256": "2f72b5640dc23a57eeeec3f0a915721704a4bb0d9a2e090cd0ad59a6ca90e29f",
+      "source_path": "csv/link.csv",
+      "source_symbol": "link",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/link.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "160ed39b9b96c9a61fd36013f41455199541f29a",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "31639203.6663881"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "1000000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 976,
+      "positive_rows": {
+        "CapMrktCurUSD": 976,
+        "SplyCur": 1037
+      },
+      "pre_cutoff_rows": 1037,
+      "raw_bytes": 425347,
+      "sha256": "b79bb4d56967795914437d4440262dfe478221cc6160def176d34b02260b23ce",
+      "source_path": "csv/loom.csv",
+      "source_symbol": "loom",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/loom.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "f2eef0cfe612d0b58acfff60a534fc22ba4a4055",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "162168627.6579846718860957006983"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "142896589.99754263"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1684,
+      "positive_rows": {
+        "CapMrktCurUSD": 1684,
+        "SplyCur": 1685
+      },
+      "pre_cutoff_rows": 1685,
+      "raw_bytes": 1019246,
+      "sha256": "5d13bf1a5a75f824d0d309f40feed02e11b91dc08f025e6977d79e06ebf1e129",
+      "source_path": "csv/lsk.csv",
+      "source_symbol": "lsk",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/lsk.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "45b3fc319d9fbe44adcf77871e84f846a0344889",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "9156616892.71874208405767816106"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "66696994.63641234"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 2834,
+      "positive_rows": {
+        "CapMrktCurUSD": 2834,
+        "SplyCur": 3375
+      },
+      "pre_cutoff_rows": 3376,
+      "raw_bytes": 2289252,
+      "sha256": "2a41796bc1f1e04b6655f403247f071d92649244ed4866205ae939c58cc73b20",
+      "source_path": "csv/ltc.csv",
+      "source_symbol": "ltc",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/ltc.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "81b25eb70c6380428b7895755e69e64101ea0109",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "138276133.53018456267198"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "452552412.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 2369,
+      "positive_rows": {
+        "CapMrktCurUSD": 2369,
+        "SplyCur": 2448
+      },
+      "pre_cutoff_rows": 2448,
+      "raw_bytes": 882454,
+      "sha256": "00793ab6c6b64f0ded1a34cf8588966dd31168094fbca9f4a9b15fc891213514",
+      "source_path": "csv/maid.csv",
+      "source_symbol": "maid",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/maid.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "d2ca16b1862a39d983adfad5a6e3fdb781adaaf3",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "174140556.6013456323632112838939886938782976"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "2194952411.120146244857883456"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1227,
+      "positive_rows": {
+        "CapMrktCurUSD": 1227,
+        "SplyCur": 1235
+      },
+      "pre_cutoff_rows": 1237,
+      "raw_bytes": 583484,
+      "sha256": "e6115a74a711794a51e401acb60e714a8bf603bb393a843acb5b00fa1c679176",
+      "source_path": "csv/mana.csv",
+      "source_symbol": "mana",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/mana.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "a4a4358a6f1af8e16f28533a8b5e3dad678622c5",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "65259304.811271938436841542227"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "31587682.3632061"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1228,
+      "positive_rows": {
+        "CapMrktCurUSD": 1228,
+        "SplyCur": 1287
+      },
+      "pre_cutoff_rows": 1287,
+      "raw_bytes": 488401,
+      "sha256": "a3b2efa3d7d9095d0d4e03531038f530f8b90d6a2dffc436337b365eb681ce9b",
+      "source_path": "csv/mco.csv",
+      "source_symbol": "mco",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/mco.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "484353f5b6636e8f22526b70eb435dee5122a54e",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "607649417.216499986429741852976552585805"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "997009.954631575784469865"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1104,
+      "positive_rows": {
+        "CapMrktCurUSD": 1104,
+        "SplyCur": 1742
+      },
+      "pre_cutoff_rows": 1742,
+      "raw_bytes": 607175,
+      "sha256": "6fac8130f7f2677bee367048beb4766c79faf478d01186970e7a336b933228af",
+      "source_path": "csv/mkr.csv",
+      "source_symbol": "mkr",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/mkr.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "02e09712bf1e39ca260452e2ff11a0be439e1d07",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "1441293102.34064"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "100000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1268,
+      "positive_rows": {
+        "CapMrktCurUSD": 1268,
+        "SplyCur": 1633
+      },
+      "pre_cutoff_rows": 1633,
+      "raw_bytes": 654279,
+      "sha256": "621b288db5da20d5f5bd55a2ec3e118e80915fbb3a9efaf9787dc56cda3635ea",
+      "source_path": "csv/neo.csv",
+      "source_symbol": "neo",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/neo.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "ec3266d30c2a946ef38b6d5b3e02467c3a299751",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "154506298.8116201601876411359107232212074"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "6708995.898445737275929439"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 130,
+      "positive_rows": {
+        "CapMrktCurUSD": 130,
+        "SplyCur": 591
+      },
+      "pre_cutoff_rows": 591,
+      "raw_bytes": 136123,
+      "sha256": "90246a959570cf4849aee28e675f7540e9ef676bb2a1379543a0e8f755651f81",
+      "source_path": "csv/nxm.csv",
+      "source_symbol": "nxm",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/nxm.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "6e62d5e164137a38d1e440e4a405e4887d752ec1",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "355039028.33216386342116952704045149392424"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "140245398.245132780789239631"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1268,
+      "positive_rows": {
+        "CapMrktCurUSD": 1268,
+        "SplyCur": 1278
+      },
+      "pre_cutoff_rows": 1278,
+      "raw_bytes": 592096,
+      "sha256": "dfcdd37e1851de2f1405233a6a2fc265bb170996fc202f35f60848b8ca7de5fc",
+      "source_path": "csv/omg.csv",
+      "source_symbol": "omg",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/omg.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "47f6c8c35be5f15ed15892188d205a05761cf859",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "357169177.06006084699535892"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "357218437.23"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 765,
+      "positive_rows": {
+        "CapMrktCurUSD": 765,
+        "SplyCur": 846
+      },
+      "pre_cutoff_rows": 848,
+      "raw_bytes": 389237,
+      "sha256": "6978ecbd113b3b82c1484e80ab10a300b1f6b32d47e603189567b8deeadde951",
+      "source_path": "csv/pax.csv",
+      "source_symbol": "pax",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/pax.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "b82db6e1b06115ec9a73d1686a932686fa239eb8",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "77720031.83105295273326"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "39391.726"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 323,
+      "positive_rows": {
+        "CapMrktCurUSD": 323,
+        "SplyCur": 491
+      },
+      "pre_cutoff_rows": 496,
+      "raw_bytes": 164561,
+      "sha256": "2802ff246c5c0f96590f748e831f60ac7d9585fc0211c0a541670136d6f0215f",
+      "source_path": "csv/paxg.csv",
+      "source_symbol": "paxg",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/paxg.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "f3ffa04da947753204891b1a15acd2c481d73d29",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "10675440.8818962153021545935955233783446507"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "205218255.948577763364408207"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1188,
+      "positive_rows": {
+        "CapMrktCurUSD": 1188,
+        "SplyCur": 1289
+      },
+      "pre_cutoff_rows": 1297,
+      "raw_bytes": 568338,
+      "sha256": "73327b22a3a358d1ca62e006e18412fe3c4cce00b50b817277e8602001aa6c13",
+      "source_path": "csv/pay.csv",
+      "source_symbol": "pay",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/pay.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "fccfcad077e349884f08ac383b883574a365d25e",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "19288842.82910803914984277973672"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "64960248.05545028"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1075,
+      "positive_rows": {
+        "CapMrktCurUSD": 1075,
+        "SplyCur": 1800
+      },
+      "pre_cutoff_rows": 1800,
+      "raw_bytes": 830154,
+      "sha256": "fe0096990828a5e5dde29b91c316716416fac283708603d575c0afa657ed1915",
+      "source_path": "csv/pivx.csv",
+      "source_symbol": "pivx",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/pivx.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "b21f3378d4be41e2028fb71c31507afb7d511e04",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "90190056.4119707"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "1000000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 933,
+      "positive_rows": {
+        "CapMrktCurUSD": 933,
+        "SplyCur": 1070
+      },
+      "pre_cutoff_rows": 1070,
+      "raw_bytes": 416785,
+      "sha256": "9b2e685035082c87b3d58afaa782b686b82f3c99ad2e6ca527cbce685d56b026",
+      "source_path": "csv/poly.csv",
+      "source_symbol": "poly",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/poly.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "af2171bdd7bd5fbbf0f95189ac02153ac577c5d2",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "95700587.5106564"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "1000000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1158,
+      "positive_rows": {
+        "CapMrktCurUSD": 1158,
+        "SplyCur": 1310
+      },
+      "pre_cutoff_rows": 1310,
+      "raw_bytes": 472828,
+      "sha256": "d7c0f3a7b9608a3aab33aa79b4b0a7b32d41a6c7f6b25e5d8bf57114ee894b62",
+      "source_path": "csv/powr.csv",
+      "source_symbol": "powr",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/powr.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "8a56ca88f7525d99eb7450fe370aefa809c22637",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "27251362.10469571101589"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "53252246.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1201,
+      "positive_rows": {
+        "CapMrktCurUSD": 1201,
+        "SplyCur": 1274
+      },
+      "pre_cutoff_rows": 1274,
+      "raw_bytes": 489132,
+      "sha256": "545ae0610d7eb07ec9ec2bcadc1d88c97eeadcc9bbc4c76f4d31d2027a19fa0e",
+      "source_path": "csv/ppt.csv",
+      "source_symbol": "ppt",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/ppt.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "05ac6821aca7322af5ebe7c905ab7551ef47b16e",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "33360608.7983623"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "1000000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1154,
+      "positive_rows": {
+        "CapMrktCurUSD": 1154,
+        "SplyCur": 1181
+      },
+      "pre_cutoff_rows": 1181,
+      "raw_bytes": 450024,
+      "sha256": "6d11886951813245ef2ebcdba237412087d4d151a9207caa440fbae695529239",
+      "source_path": "csv/qash.csv",
+      "source_symbol": "qash",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/qash.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "ac41f55e89ad0c54ddd9b99fbcd7fa58f892ccc8",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "311058350.8201781066734028"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "999999632.80375"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 758,
+      "positive_rows": {
+        "CapMrktCurUSD": 758,
+        "SplyCur": 1099
+      },
+      "pre_cutoff_rows": 1099,
+      "raw_bytes": 401276,
+      "sha256": "2ab194603c9a68e3478206651fa540af7145ce018c3a6c5a5a4502607888e46e",
+      "source_path": "csv/ren.csv",
+      "source_symbol": "ren",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/ren.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "37e62ef26d78694c8e186a75e0623b845d071c61",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "424801920.336243890583596871"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "13265.65753719"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 235,
+      "positive_rows": {
+        "CapMrktCurUSD": 235,
+        "SplyCur": 235
+      },
+      "pre_cutoff_rows": 235,
+      "raw_bytes": 89189,
+      "sha256": "e2e628d989edc6c705bf84976f337499c6620828b2210f47aafda1ab415fa125",
+      "source_path": "csv/renbtc.csv",
+      "source_symbol": "renbtc",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/renbtc.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "be61e1a7a8bdbe588af0ff9e43aa29724fb96a34",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "183452686.2416094"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "11000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1552,
+      "positive_rows": {
+        "CapMrktCurUSD": 1552,
+        "SplyCur": 1552
+      },
+      "pre_cutoff_rows": 1552,
+      "raw_bytes": 649974,
+      "sha256": "77679a596550f452f8cc6ff264b39b029e5b41289fc505e44eee84287a162535",
+      "source_path": "csv/rep.csv",
+      "source_symbol": "rep",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/rep.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": false,
+      "git_blob_sha1": "c798cb91bb00cb7d9e88b7ac2b41ead218041607",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "84617723.18966540750946701536025854429884"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "84435847.584660900350226684"
+        }
+      },
+      "latest_pre_cutoff_row": "2019-11-30",
+      "latest_row_age_hours": 9624.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 708,
+      "positive_rows": {
+        "CapMrktCurUSD": 708,
+        "SplyCur": 713
+      },
+      "pre_cutoff_rows": 713,
+      "raw_bytes": 344981,
+      "sha256": "60915d22385d4da47d45c35d8b5ae47abc4ba0eeed7ac78cd3b88f837abd114a",
+      "source_path": "csv/sai.csv",
+      "source_symbol": "sai",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/sai.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "e43307d929200671755495e3742e7a5b72a9323a",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "207835008.4243518446101246395298951718050264"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "6804870174.878168246198837603"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1293,
+      "positive_rows": {
+        "CapMrktCurUSD": 1293,
+        "SplyCur": 1293
+      },
+      "pre_cutoff_rows": 1294,
+      "raw_bytes": 620380,
+      "sha256": "fc95fac93ca81b6ec8f213f0f000040010a643137cbfd42b1f6213c3b53009fe",
+      "source_path": "csv/snt.csv",
+      "source_symbol": "snt",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/snt.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "86928a9c8d634289103d3f6f2c82833f765891d5",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "1744480134.42085402403378168146161076055595"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "213859311.367470015871634535"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 269,
+      "positive_rows": {
+        "CapMrktCurUSD": 269,
+        "SplyCur": 1029
+      },
+      "pre_cutoff_rows": 1029,
+      "raw_bytes": 254239,
+      "sha256": "6b467c4e93479877b0f186a5b5fe572be6b435f2c971e62d78fb70f5c0ba5299",
+      "source_path": "csv/snx.csv",
+      "source_symbol": "snx",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/snx.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "94156de96f5d9ee88490eed6c65c17820742d0e6",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "169906841.25590870882352"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "161000001.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 145,
+      "positive_rows": {
+        "CapMrktCurUSD": 145,
+        "SplyCur": 145
+      },
+      "pre_cutoff_rows": 156,
+      "raw_bytes": 53602,
+      "sha256": "77e427f7fc3967e222625fcfa5a4ae72776341b3a6d8ba24163d1670f9499823",
+      "source_path": "csv/srm.csv",
+      "source_symbol": "srm",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/srm.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "39375479b642ee0ddbc7de4a3c2251714263cc4f",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "570482817.88823231355755914019049368002245"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "179284609.405821567354529377"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 124,
+      "positive_rows": {
+        "CapMrktCurUSD": 124,
+        "SplyCur": 124
+      },
+      "pre_cutoff_rows": 130,
+      "raw_bytes": 64624,
+      "sha256": "f937372bd5b8a9b3964da405777de3268472cfcb76256a12fd41bd9190f31d33",
+      "source_path": "csv/sushi.csv",
+      "source_symbol": "sushi",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/sushi.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "4257953ed6be5dbf9e0453de234adc33ba7f0f3f",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "4821540.10842614144691850815256452116073"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "11137542.51465158582725969"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 103,
+      "positive_rows": {
+        "CapMrktCurUSD": 103,
+        "SplyCur": 103
+      },
+      "pre_cutoff_rows": 121,
+      "raw_bytes": 53594,
+      "sha256": "85f19a93bc7aa9c51a4ab59328f85cbbf4bb53dcc5e6e9ba1989710dd1f0a521",
+      "source_path": "csv/swrv.csv",
+      "source_symbol": "swrv",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/swrv.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": false,
+      "git_blob_sha1": "42c5b677033cf4c73e3bf17d5744bd0bc5e46a1f",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "MISSING_COLUMN",
+          "value": null
+        },
+        "SplyCur": {
+          "status": "MISSING_COLUMN",
+          "value": null
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": false,
+        "SplyCur": false
+      },
+      "positive_pair_rows": 0,
+      "positive_rows": {
+        "CapMrktCurUSD": 0,
+        "SplyCur": 0
+      },
+      "pre_cutoff_rows": 923,
+      "raw_bytes": 381355,
+      "sha256": "c7e5235b47fa330c173bb316284f473dd238e0ac07a229aa9e1badddde7fafc5",
+      "source_path": "csv/trx.csv",
+      "source_symbol": "trx",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/trx.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": false,
+      "git_blob_sha1": "fe0e6bdbb3afe8cd3356a192e0345f3c711db8eb",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "4207049110.70361"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "100000000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2018-06-25",
+      "latest_row_age_hours": 22176.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 262,
+      "positive_rows": {
+        "CapMrktCurUSD": 262,
+        "SplyCur": 302
+      },
+      "pre_cutoff_rows": 302,
+      "raw_bytes": 104601,
+      "sha256": "a23e11a394f7f713e8cc3140688e4b2f695716450084396fc4d53deac4443777",
+      "source_path": "csv/trx_eth.csv",
+      "source_symbol": "trx_eth",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/trx_eth.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": false,
+      "git_blob_sha1": "e4fe5594d5663e945395d4045728233908cc87a3",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "MISSING_VALUE",
+          "value": null
+        },
+        "SplyCur": {
+          "status": "MISSING_VALUE",
+          "value": null
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 705,
+      "positive_rows": {
+        "CapMrktCurUSD": 705,
+        "SplyCur": 828
+      },
+      "pre_cutoff_rows": 1036,
+      "raw_bytes": 369767,
+      "sha256": "9fa9b6f15853694a8877d7087366e43c0ac35e290368adee7148b1c7588a3dbc",
+      "source_path": "csv/tusd.csv",
+      "source_symbol": "tusd",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/tusd.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "07ca3731339da77201b6cc99fa54f069395e48e1",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "834122765.61138077954365163405800854158496"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "101181498.469204112788968672"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 117,
+      "positive_rows": {
+        "CapMrktCurUSD": 117,
+        "SplyCur": 360
+      },
+      "pre_cutoff_rows": 360,
+      "raw_bytes": 88743,
+      "sha256": "002aec9d3f9f45a28f1f5aada0698c957ba9af3f2d8fe5dd0ab19979c82708aa",
+      "source_path": "csv/uma.csv",
+      "source_symbol": "uma",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/uma.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "e4ca8637667679cb2ecba92cf4c4e4650da18998",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "4849113729.97269"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "1000000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 107,
+      "positive_rows": {
+        "CapMrktCurUSD": 107,
+        "SplyCur": 107
+      },
+      "pre_cutoff_rows": 111,
+      "raw_bytes": 43532,
+      "sha256": "e863e1f74c8756fb7031f2631accefd1c6f76ee72820c7f3f629663998602991",
+      "source_path": "csv/uni.csv",
+      "source_symbol": "uni",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/uni.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "6e79960617be37bdb886defb522ea6e9ee5c5997",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "4119730823.507957084428843494618"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "4120162702.360362"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 828,
+      "positive_rows": {
+        "CapMrktCurUSD": 828,
+        "SplyCur": 846
+      },
+      "pre_cutoff_rows": 884,
+      "raw_bytes": 391521,
+      "sha256": "cfb00a9141926b83ba81fb9b30a2375836ca7bab0b559f86d8fa129c442d1059",
+      "source_path": "csv/usdc.csv",
+      "source_symbol": "usdc",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/usdc.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "35432b0c5c5c785e36b31273c8739546db387587",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "32517777.00836570509905"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "32478711.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 204,
+      "positive_rows": {
+        "CapMrktCurUSD": 204,
+        "SplyCur": 585
+      },
+      "pre_cutoff_rows": 598,
+      "raw_bytes": 99717,
+      "sha256": "d265b5ca4710ea22153f7c8abe54daf95bb26d0d1ed040010db71a8026341eb7",
+      "source_path": "csv/usdk.csv",
+      "source_symbol": "usdk",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/usdk.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "80ac98931ae08e04c8fee36e5cb0082a52de7569",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "1336060634.4827577"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "1335000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 2281,
+      "positive_rows": {
+        "CapMrktCurUSD": 2281,
+        "SplyCur": 2281
+      },
+      "pre_cutoff_rows": 2281,
+      "raw_bytes": 999519,
+      "sha256": "5f791688567af4f35206928d85a83f3b184d7755afc01bc66df110ed31816a78",
+      "source_path": "csv/usdt.csv",
+      "source_symbol": "usdt",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/usdt.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "6109e0ea581131cf8c4ca3a031bda626e73a33e4",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "13552772417.65682789172033007098"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "13542013521.397079"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1132,
+      "positive_rows": {
+        "CapMrktCurUSD": 1132,
+        "SplyCur": 1132
+      },
+      "pre_cutoff_rows": 1132,
+      "raw_bytes": 501538,
+      "sha256": "b52135490a90d3dcc68a3075343e94cec2c8478a433691965fab909eddd615aa",
+      "source_path": "csv/usdt_eth.csv",
+      "source_symbol": "usdt_eth",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/usdt_eth.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "a9f37fe1ee1ad99681838b1dc41e76e84c5c5c3c",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "7008959096.71629130248619302"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "7003395020.121"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 628,
+      "positive_rows": {
+        "CapMrktCurUSD": 628,
+        "SplyCur": 628
+      },
+      "pre_cutoff_rows": 628,
+      "raw_bytes": 275055,
+      "sha256": "42209e81afbcc9beaef886a8f24218070d0271b50281c1e95e55f4ac1fb284b5",
+      "source_path": "csv/usdt_trx.csv",
+      "source_symbol": "usdt_trx",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/usdt_trx.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "38d6448b873c3821eb17d94497da65037ade770a",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "9767990.2740476832262265314095"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "58106048.8166347"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 2531,
+      "positive_rows": {
+        "CapMrktCurUSD": 2531,
+        "SplyCur": 2550
+      },
+      "pre_cutoff_rows": 2550,
+      "raw_bytes": 1723772,
+      "sha256": "8226ec9ff64dd2e56c577ace48c85210cd53132d74677b344a65609463f0ec73",
+      "source_path": "csv/vtc.csv",
+      "source_symbol": "vtc",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/vtc.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "ee14fa1a8ca5f6c0eb58b20db7f282896d7fceb9",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "557584492.037352"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "100000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1504,
+      "positive_rows": {
+        "CapMrktCurUSD": 1504,
+        "SplyCur": 1504
+      },
+      "pre_cutoff_rows": 1504,
+      "raw_bytes": 839739,
+      "sha256": "3d7eb7955cc929aee7d7215dbe7d3b879b7fbfc98b247b94b4a29ae4c9e7199a",
+      "source_path": "csv/waves.csv",
+      "source_symbol": "waves",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/waves.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "21ca5f9ee467b7b865e2e72c35ddc0602765f95c",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "3456806495.802310908808141976"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "107948.69079064"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 768,
+      "positive_rows": {
+        "CapMrktCurUSD": 768,
+        "SplyCur": 768
+      },
+      "pre_cutoff_rows": 771,
+      "raw_bytes": 275689,
+      "sha256": "83d1d61167eef2b0e22eb8aa2bb0e9ae57f74302466499b125111165b7fb41b8",
+      "source_path": "csv/wbtc.csv",
+      "source_symbol": "wbtc",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/wbtc.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "5008f29056e0d5bdae522f0bc817b2931395bb02",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "4229990239.166847920511911098740364269696"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "5455963.713395063264003856"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1112,
+      "positive_rows": {
+        "CapMrktCurUSD": 1112,
+        "SplyCur": 1112
+      },
+      "pre_cutoff_rows": 1118,
+      "raw_bytes": 568727,
+      "sha256": "76b64e20fcf319ce6a6570ca5fb09f6d6d39c0d870db6fbbc3c7c50d0a62295f",
+      "source_path": "csv/weth.csv",
+      "source_symbol": "weth",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/weth.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "a535da2afe4b452179a4df163c3a2e039c9d6c77",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "40744826.1041902959943942394442513494928"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "1769228.007650253747301208"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 130,
+      "positive_rows": {
+        "CapMrktCurUSD": 130,
+        "SplyCur": 179
+      },
+      "pre_cutoff_rows": 179,
+      "raw_bytes": 67968,
+      "sha256": "928b83a44108354fb77514d642e679e535150b19fa1caa2882361c1b9b4aff0d",
+      "source_path": "csv/wnxm.csv",
+      "source_symbol": "wnxm",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/wnxm.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "8f7024951c8bb4f0126adf7d98fece8bab19e8ef",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "19586700.55972658"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "70000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1224,
+      "positive_rows": {
+        "CapMrktCurUSD": 1224,
+        "SplyCur": 1265
+      },
+      "pre_cutoff_rows": 1265,
+      "raw_bytes": 498916,
+      "sha256": "a004af5e241ae9a81861f640324ac393368699c4b67d010d856c92fca028eaf6",
+      "source_path": "csv/wtc.csv",
+      "source_symbol": "wtc",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/wtc.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "af8b4d3d708d30cfc144c4c1dcdee73f05916472",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "91226422.04253094786454"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "47653.946"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 314,
+      "positive_rows": {
+        "CapMrktCurUSD": 314,
+        "SplyCur": 346
+      },
+      "pre_cutoff_rows": 361,
+      "raw_bytes": 103331,
+      "sha256": "eb08b843721a3af5aecd67393714d6e95c13e14c2121b516d53842041afa15f2",
+      "source_path": "csv/xaut.csv",
+      "source_symbol": "xaut",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/xaut.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "067d5b9b54ef82deaca6c4666a40bde074754515",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "1820962844.48825079503438"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "8999999999.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 2104,
+      "positive_rows": {
+        "CapMrktCurUSD": 2104,
+        "SplyCur": 2105
+      },
+      "pre_cutoff_rows": 2105,
+      "raw_bytes": 1142553,
+      "sha256": "f07304c54e2c60a3f1d21c9b331c5ab694d0b2bd61632342a3253902721b83b1",
+      "source_path": "csv/xem.csv",
+      "source_symbol": "xem",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/xem.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "b296fe625ad565aebf9ea82cb27057ed39a61a41",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "13475663413.087465131100512615984"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "105442065543.209064"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1922,
+      "positive_rows": {
+        "CapMrktCurUSD": 1922,
+        "SplyCur": 1922
+      },
+      "pre_cutoff_rows": 1922,
+      "raw_bytes": 1174471,
+      "sha256": "619e4f1d37124d42044f5735ae8b237833405463f6112ca7b1f952d9947bb96e",
+      "source_path": "csv/xlm.csv",
+      "source_symbol": "xlm",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/xlm.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "e9c22a973f5efe9734c3f9b339d58ccd07a4e066",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "2559757315.21128032978233127545590104"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "17802772.73275719457106"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 2420,
+      "positive_rows": {
+        "CapMrktCurUSD": 2420,
+        "SplyCur": 2452
+      },
+      "pre_cutoff_rows": 2452,
+      "raw_bytes": 1387565,
+      "sha256": "26339cf4012d330947a97f91cee5bba52d91c54a7241a6a4b970fe64cf4faf29",
+      "source_path": "csv/xmr.csv",
+      "source_symbol": "xmr",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/xmr.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "d8be2c8ecd20093b6b94dd032fa13cbc32ca3f80",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "22084169276.32165408160670312573"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "99990725758.980354"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 2333,
+      "positive_rows": {
+        "CapMrktCurUSD": 2333,
+        "SplyCur": 2924
+      },
+      "pre_cutoff_rows": 2924,
+      "raw_bytes": 1515272,
+      "sha256": "f6be4d73fce5cd22cc7d5c2febe10923e2ed43fc40bafbf5ededcc9ffb91c873",
+      "source_path": "csv/xrp.csv",
+      "source_symbol": "xrp",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/xrp.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "aa8929d9f785476d9013766ffe07b4144a101af6",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "1646434193.60856878366208819561"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "824270452.799967"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 918,
+      "positive_rows": {
+        "CapMrktCurUSD": 918,
+        "SplyCur": 918
+      },
+      "pre_cutoff_rows": 918,
+      "raw_bytes": 579142,
+      "sha256": "63582403b25de0b4364ffe7cc54dc9f50a57dbd98ea06628baf5fb13852a10dc",
+      "source_path": "csv/xtz.csv",
+      "source_symbol": "xtz",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/xtz.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "06e7b7bc1bad60a8c54e184508e66fa1bf283b3b",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "123390730.968524069362852452617644"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "16413061343.36337905"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1191,
+      "positive_rows": {
+        "CapMrktCurUSD": 1191,
+        "SplyCur": 2278
+      },
+      "pre_cutoff_rows": 2278,
+      "raw_bytes": 1064321,
+      "sha256": "de4149ca80816b8b148aabe97660afd056d10d17354b7910f137aa4b360acb33",
+      "source_path": "csv/xvg.csv",
+      "source_symbol": "xvg",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/xvg.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "4fd268a7e5a3e33e866e8978f7abc3fd7d353b28",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "645219770.3724"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "30000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 162,
+      "positive_rows": {
+        "CapMrktCurUSD": 162,
+        "SplyCur": 162
+      },
+      "pre_cutoff_rows": 170,
+      "raw_bytes": 64966,
+      "sha256": "68c23bc47ee483fbdee18b1aba2c99995af59eb3583f8f036ebdc1eb6f610806",
+      "source_path": "csv/yfi.csv",
+      "source_symbol": "yfi",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/yfi.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "318791046dcf267ce7e9934083f8dba1b58f8b7e",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "612560877.3044339001334039083483"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "10662438.842488961"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1527,
+      "positive_rows": {
+        "CapMrktCurUSD": 1527,
+        "SplyCur": 1528
+      },
+      "pre_cutoff_rows": 1528,
+      "raw_bytes": 1111969,
+      "sha256": "59e34bc37e067398c5f1231e0d223700446984b92a626c62655e51067895bc22",
+      "source_path": "csv/zec.csv",
+      "source_symbol": "zec",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/zec.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    },
+    {
+      "at_or_after_cutoff_rows": 0,
+      "fresh_latest_pair": true,
+      "git_blob_sha1": "1e2657e21989a7615cea1b7bbabb5b406e5aba0d",
+      "latest_metrics": {
+        "CapMrktCurUSD": {
+          "status": "POSITIVE",
+          "value": "360538304.168742"
+        },
+        "SplyCur": {
+          "status": "POSITIVE",
+          "value": "1000000000.0"
+        }
+      },
+      "latest_pre_cutoff_row": "2021-01-02",
+      "latest_row_age_hours": 48.0,
+      "metric_columns": {
+        "CapMrktCurUSD": true,
+        "SplyCur": true
+      },
+      "positive_pair_rows": 1241,
+      "positive_rows": {
+        "CapMrktCurUSD": 1241,
+        "SplyCur": 1241
+      },
+      "pre_cutoff_rows": 1241,
+      "raw_bytes": 583712,
+      "sha256": "d2ad15b79ccb9555be1ae2385e8128354987cd16966b19b18687a83f3849216a",
+      "source_path": "csv/zrx.csv",
+      "source_symbol": "zrx",
+      "source_url": "https://raw.githubusercontent.com/coinmetrics/data/25e3b1d90ffddef11c1663f8fa43696f60bc8061/csv/zrx.csv",
+      "status": "VERIFIED_BLOB_COVERAGE_ONLY"
+    }
+  ],
+  "source_commit": "25e3b1d90ffddef11c1663f8fa43696f60bc8061",
+  "source_tree": "c0c58a48402cb33032c6c3f00402cb50e1923fd8",
+  "summary": {
+    "at_or_after_cutoff_rows_excluded": 0,
+    "canonical_cohort_eligible_snapshots": 0,
+    "failed_blobs": 0,
+    "files_with_both_columns": 97,
+    "fresh_latest_positive_pairs": 91,
+    "historical_2x_events": 0,
+    "latest_row_status_by_metric": {
+      "CapMrktCurUSD": {
+        "MISSING_COLUMN": 3,
+        "MISSING_VALUE": 2,
+        "POSITIVE": 95
+      },
+      "SplyCur": {
+        "MISSING_COLUMN": 2,
+        "MISSING_VALUE": 2,
+        "POSITIVE": 96
+      }
+    },
+    "matched_controls": 0,
+    "positive_pair_source_daily_rows": 102425,
+    "pre_cutoff_source_daily_rows": 116831,
+    "precursor_hypotheses_tested": 0,
+    "prospective_candidates": 0,
+    "raw_bytes": 58065298,
+    "source_files_frozen": 100,
+    "stale_latest_rows_gt_72h": 4,
+    "verified_blobs": 100
+  },
+  "trade_authority": false
+}
