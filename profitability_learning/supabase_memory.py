@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
-
 import db
 
 from .contracts import SAFE, canonical, fingerprint
@@ -14,6 +12,7 @@ from .memory import (
     _legacy_event,
     _prepare_completion,
     _snapshot,
+    _validated_archive_events,
     _validate_event,
 )
 
@@ -133,19 +132,20 @@ class SupabaseMemory:
         return {"schema_version": 1, "events": events, "sha256": fingerprint(events), **SAFE}
 
     def import_archive(self, archive):
-        events = archive.get("events")
-        if archive.get("schema_version") != 1 or archive.get("sha256") != fingerprint(events):
-            raise ValueError("archive integrity mismatch")
-        validated = []
-        for event in deepcopy(events):
-            if (not isinstance(event, dict) or event.get("digest") != fingerprint(event.get("payload"))
-                    or event.get("kind") not in {"experiment", "proposal", "legacy"}):
-                raise ValueError("archive event integrity mismatch")
-            _validate_event(event.get("id"), event["kind"], event["payload"])
-            validated.append(event)
+        validated = _validated_archive_events(archive, self._read())
         for event in validated:
             for _ in range(MAX_APPEND_ATTEMPTS):
-                _, version = self._read_versioned()
+                current, version = self._read_versioned()
+                existing = next(
+                    (row for row in current if row["id"] == event["id"]), None
+                )
+                if existing is not None:
+                    if (existing["kind"] != event["kind"]
+                            or existing["digest"] != event["digest"]):
+                        raise ValueError("immutable learning artifact conflict")
+                    break
+                if event["kind"] == "proposal":
+                    validate_proposal(event["payload"], _snapshot(current))
                 if self._insert(event["id"], event["kind"], event["payload"], version) != "STALE":
                     break
             else:

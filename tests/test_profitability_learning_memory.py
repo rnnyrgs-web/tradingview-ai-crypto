@@ -225,6 +225,57 @@ def test_export_import_preserves_component_and_trial_memory(tmp_path):
     assert n.snapshot() == m.snapshot()
 
 
+def test_import_rejects_self_hashed_proposal_identity_mutation_before_commit(tmp_path):
+    source = Memory(tmp_path / "source.sqlite")
+    parent = experiment([-10, -10, -10])
+    completed = source.complete(parent)
+    proposal = propose_successor(
+        source.snapshot(),
+        completed["experiment_id"],
+        successor_contract(parent),
+        economic_reason="Fresh exit mechanism with fixed predeclared evidence.",
+        falsifier="Reject when fresh after-cost replication is non-positive.",
+    )
+    source.save_proposal(proposal)
+    archive = source.export()
+    proposal_event = next(row for row in archive["events"] if row["kind"] == "proposal")
+    proposal_event["payload"]["ancestry"]["failure_lesson"] = "SUCCESS_LEARN"
+    proposal_event["digest"] = fingerprint(proposal_event["payload"])
+    archive["sha256"] = fingerprint(archive["events"])
+    target = Memory(tmp_path / "target.sqlite")
+
+    with pytest.raises(ValueError, match="proposal identity"):
+        target.import_archive(archive)
+
+    assert target.snapshot()["experiments"] == []
+    assert target.snapshot()["proposals"] == []
+
+
+def test_archive_replay_does_not_rejudge_existing_proposal_after_successor_evidence(tmp_path):
+    source = Memory(tmp_path / "source-with-successor.sqlite")
+    parent = experiment([-10, -10, -10])
+    completed = source.complete(parent)
+    successor = successor_contract(parent)
+    proposal = propose_successor(
+        source.snapshot(),
+        completed["experiment_id"],
+        successor,
+        economic_reason="Fresh exit mechanism with fixed predeclared evidence.",
+        falsifier="Reject when fresh after-cost replication is non-positive.",
+    )
+    source.save_proposal(proposal)
+    followup = later(experiment([-10, -10, -10]), 60)
+    followup["contract"] = successor
+    source.complete(followup)
+    archive = source.export()
+    target = Memory(tmp_path / "target-with-successor.sqlite")
+
+    target.import_archive(archive)
+    target.import_archive(archive)
+
+    assert target.snapshot() == source.snapshot()
+
+
 def test_canonical_rejected_fingerprints_remain_in_memory(tmp_path):
     s = Memory(tmp_path / "memory.sqlite").snapshot()
     assert "DISC-LIQUIDITY-MEANREV-001-v1" in s["rejected_fingerprints"]
