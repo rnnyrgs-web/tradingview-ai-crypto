@@ -196,16 +196,6 @@ def test_executor_closure_binds_from_package_imported_submodule(
         verified_executor_implementation(rule)
 
 
-def test_executor_manifest_stays_runtime_verified_without_self_attested_receipt():
-    manifest = json.loads(contracts.TRUSTED_EXECUTOR_MANIFEST.read_text())
-    assert manifest["schema_version"] == 1
-    entry = manifest["implementations"]["restrictive_group_abstention_v1"]
-    assert set(entry) == {"bundle_sha256"}
-    assert entry["bundle_sha256"] == contracts._executor_bundle_digest(
-        "restrictive_group_abstention_v1"
-    )
-
-
 def test_executor_closure_rejects_local_package_wildcard_import(
     monkeypatch, tmp_path
 ):

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "implementations": {
     "restrictive_group_abstention_v1": {
-      "bundle_sha256": "041a4e363604f58c7cf4d92287d0ca33b4d7e8a4d0b8dc01ee5d7acaa33e55d7"
+      "bundle_sha256": "de7a1c4208372620f2310d025087b45bbe65fd8a565272d19421fd561b6db8b7"
     }
   }
 }

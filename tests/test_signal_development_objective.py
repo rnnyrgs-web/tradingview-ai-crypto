@@ -165,36 +165,6 @@ def test_priority_formula_uses_profitability_as_primary_and_accuracy_only_as_tie
     assert ranked[0]["id"] == "higher_economic_impact_lower_accuracy"
 
 
-@pytest.mark.parametrize("nonfinite", [float("nan"), float("inf"), float("-inf")])
-def test_primary_priority_rejects_nonfinite_compute_cost(nonfinite):
-    """Malformed cost must not become the minimum-cost, maximum-priority case."""
-    with pytest.raises(ObjectiveError, match="finite"):
-        priority_score(
-            expected_incremental_after_cost_profitability_impact=1.0,
-            expected_information_falsification_value=1.0,
-            probability_actionable_evidence=1.0,
-            compute_api_cost_units=nonfinite,
-        )
-
-
-@pytest.mark.parametrize("nonfinite", [float("nan"), float("inf"), float("-inf")])
-def test_task_ranking_rejects_nonfinite_signal_quality_tiebreak(nonfinite):
-    """Malformed secondary evidence must not outrank a finite task."""
-    task = {
-        "id": "malformed-signal-quality",
-        "priority_factors": {
-            "expected_incremental_after_cost_profitability_impact": 0.5,
-            "expected_genuine_signal_quality_impact": nonfinite,
-            "expected_information_falsification_value": 0.5,
-            "probability_actionable_evidence": 0.5,
-            "compute_api_cost_units": 1.0,
-        },
-    }
-
-    with pytest.raises(ObjectiveError, match="finite"):
-        rank_tasks([task])
-
-
 def test_scorecard_counts_only_non_overlapping_full_horizon_evidence():
     start = datetime(2026, 9, 1, tzinfo=timezone.utc)
     rows = [

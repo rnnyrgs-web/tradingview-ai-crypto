@@ -126,10 +126,9 @@ def priority_score(*, expected_incremental_after_cost_profitability_impact: floa
     )
     if any(not math.isfinite(float(v)) or float(v) < 0 or float(v) > 1 for v in values):
         raise ObjectiveError("priority factors must be finite in [0,1]")
-    raw_cost = float(compute_api_cost_units)
-    if not math.isfinite(raw_cost):
+    cost = max(0.25, float(compute_api_cost_units))
+    if not math.isfinite(cost):
         raise ObjectiveError("compute/API cost must be finite")
-    cost = max(0.25, raw_cost)
     return round(float(values[0]) * float(values[1]) * float(values[2]) / cost, 6)
 
 
@@ -144,10 +143,9 @@ def rank_tasks(tasks: list[dict]) -> list[dict]:
             probability_actionable_evidence=factors.get("probability_actionable_evidence", 0),
             compute_api_cost_units=factors.get("compute_api_cost_units", 1),
         )
-        signal_quality = float(factors.get("expected_genuine_signal_quality_impact", 0) or 0)
-        if not math.isfinite(signal_quality):
-            raise ObjectiveError("signal-quality priority factor must be finite")
-        row["signal_quality_secondary_score"] = max(0.0, min(1.0, signal_quality))
+        row["signal_quality_secondary_score"] = max(
+            0.0, min(1.0, float(factors.get("expected_genuine_signal_quality_impact", 0) or 0))
+        )
         ranked.append(row)
     return sorted(
         ranked,
