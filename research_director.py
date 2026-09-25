@@ -4,6 +4,7 @@ from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta, timezone
 import hashlib
 import json
+import math
 from typing import Any, Iterable
 
 
@@ -66,7 +67,37 @@ def stable_mission_id(*parts: str) -> str:
 
 
 def _clamp01(value: float) -> float:
-    return max(0.0, min(1.0, float(value)))
+    try:
+        normalized = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("mission estimate must be a finite number") from exc
+    if not math.isfinite(normalized):
+        raise ValueError("mission estimate must be a finite number")
+    return max(0.0, min(1.0, normalized))
+
+
+_MISSION_NUMERIC_FIELDS = (
+    "priority",
+    "expected_information_gain",
+    "expected_signal_impact",
+    "expected_profitability_impact",
+    "sample_readiness",
+    "novelty",
+    "falsification_value",
+    "actionable_evidence_probability",
+    "compute_cost",
+    "redundancy_risk",
+)
+
+
+def _validate_mission_numeric_state(mission: ResearchMission) -> None:
+    for field in _MISSION_NUMERIC_FIELDS:
+        try:
+            value = float(getattr(mission, field))
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"mission {field} must be a finite number") from exc
+        if not math.isfinite(value):
+            raise ValueError(f"mission {field} must be a finite number")
 
 
 def mission_priority(
@@ -185,7 +216,16 @@ def build_mission(
 
 
 def rank_missions(missions: Iterable[ResearchMission], now: datetime | None = None) -> list[ResearchMission]:
+    """Return eligible missions in priority order after validating every input.
+
+    Validation occurs before eligibility checks or sorting.  A malformed imported
+    mission therefore fails closed before any caller can persist ranking output.
+    """
     current = _utcnow(now)
+
+    candidates = list(missions)
+    for mission in candidates:
+        _validate_mission_numeric_state(mission)
 
     def eligible(mission: ResearchMission) -> bool:
         if not mission.recheck_after:
@@ -196,7 +236,7 @@ def rank_missions(missions: Iterable[ResearchMission], now: datetime | None = No
             return False
 
     return sorted(
-        (m for m in missions if eligible(m)),
+        (m for m in candidates if eligible(m)),
         key=lambda m: (
             m.priority,
             m.expected_profitability_impact,
@@ -218,6 +258,8 @@ def claim_mission(
     now: datetime | None = None,
     lease_minutes: int = DEFAULT_LEASE_MINUTES,
 ) -> MissionClaim:
+    """Create a lease receipt only after validating the full mission payload."""
+    _validate_mission_numeric_state(mission)
     current = _utcnow(now)
     return MissionClaim(
         mission_id=mission.mission_id,

@@ -22,6 +22,24 @@ def _finite(value):
     return number if isfinite(number) else None
 
 
+def _invalid_ranking_fields(row):
+    fields = (
+        "economic_harm_usd",
+        "economic_harm_score_pct",
+        "priority_score",
+        "independent_samples",
+    )
+    return [
+        field
+        for field in fields
+        if field in row and row.get(field) is not None and _finite(row.get(field)) is None
+    ]
+
+
+def _finite_ranking_values(row):
+    return not _invalid_ranking_fields(row)
+
+
 def _closed(rows):
     return [row for row in (rows or []) if str(row.get("status") or "").upper() == "CLOSED" and _finite(row.get("pnl_usd")) is not None]
 
@@ -142,8 +160,35 @@ def build_paper_loss_attribution(rows, *, minimum_samples=MIN_PAPER_GROUP_SAMPLE
 
 def merge_paper_priorities(diagnostics, paper_report, *, limit=20):
     merged = dict(diagnostics or {})
-    priorities = [dict(row) for row in (merged.get("research_priorities") or []) if isinstance(row, dict)]
-    priorities.extend(dict(row) for row in (paper_report.get("research_priorities") or []) if isinstance(row, dict))
+    priorities = []
+    invalid_rows = []
+    for source, rows in (
+        ("diagnostics", merged.get("research_priorities") or []),
+        ("paper_report", paper_report.get("research_priorities") or []),
+    ):
+        for source_index, row in enumerate(rows):
+            if not isinstance(row, dict):
+                invalid_rows.append({
+                    "source": source,
+                    "source_index": source_index,
+                    "dimension": None,
+                    "group": None,
+                    "invalid_fields": [],
+                    "reason": "malformed_priority_row",
+                })
+                continue
+            invalid_fields = _invalid_ranking_fields(row)
+            if invalid_fields:
+                invalid_rows.append({
+                    "source": source,
+                    "source_index": source_index,
+                    "dimension": row.get("dimension"),
+                    "group": row.get("group"),
+                    "invalid_fields": invalid_fields,
+                    "reason": "nonfinite_ranking_value",
+                })
+                continue
+            priorities.append(dict(row))
     priorities.sort(
         key=lambda row: (
             -float(row.get("economic_harm_usd") or 0.0),
@@ -153,6 +198,7 @@ def merge_paper_priorities(diagnostics, paper_report, *, limit=20):
         )
     )
     merged["research_priorities"] = priorities[: max(0, int(limit))]
+    merged["invalid_priority_rows"] = invalid_rows
     merged["paper_trade_feedback"] = {
         "closed_paper_trades": paper_report.get("closed_paper_trades", 0),
         "paper_losses": paper_report.get("paper_losses", 0),

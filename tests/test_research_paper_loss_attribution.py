@@ -1,3 +1,7 @@
+import json
+
+import pytest
+
 from research_experiment_factory_runner import build_factory_report
 from research_heavy_experiment_scheduler import build_heavy_dispatch_plan
 from research_paper_loss_attribution import build_paper_loss_attribution, merge_paper_priorities
@@ -68,3 +72,69 @@ def test_factory_report_combines_closed_trade_losses_without_granting_authority(
     assert report["trade_authority"] is False
     assert report["promotion_authority"] is False
     assert report["automatic_execution_authority"] is False
+
+
+@pytest.mark.parametrize("invalid_priority", [float("nan"), float("inf"), -float("inf")])
+def test_merge_paper_priorities_rejects_nonfinite_imported_ranking_values(invalid_priority):
+    malformed = {
+        "dimension": "paper_direction",
+        "group": "MALFORMED",
+        "economic_harm_usd": invalid_priority,
+        "economic_harm_score_pct": 1.0,
+        "priority_score": 1.0,
+        "independent_samples": 100,
+    }
+    valid = {
+        "dimension": "paper_direction",
+        "group": "VALID",
+        "economic_harm_usd": 10.0,
+        "economic_harm_score_pct": 0.1,
+        "priority_score": 0.5,
+        "independent_samples": 5,
+    }
+
+    merged = merge_paper_priorities(
+        {"research_priorities": [malformed, valid]},
+        {"research_priorities": []},
+    )
+
+    assert [row["group"] for row in merged["research_priorities"]] == ["VALID"]
+    assert merged["invalid_priority_rows"] == [
+        {
+            "source": "diagnostics",
+            "source_index": 0,
+            "dimension": "paper_direction",
+            "group": "MALFORMED",
+            "invalid_fields": ["economic_harm_usd"],
+            "reason": "nonfinite_ranking_value",
+        }
+    ]
+
+
+def test_factory_report_surfaces_invalid_priority_audit_and_is_strict_json_safe(monkeypatch):
+    malformed = {
+        "dimension": "paper_direction",
+        "group": "MALFORMED",
+        "economic_harm_usd": float("nan"),
+        "economic_harm_score_pct": 1.0,
+        "priority_score": 1.0,
+        "independent_samples": 100,
+    }
+    monkeypatch.setattr(
+        "research_experiment_factory_runner.learning_diagnostics",
+        lambda _rows: {"research_priorities": [malformed]},
+    )
+
+    report = build_factory_report([])
+
+    assert report["invalid_priority_rows"] == [
+        {
+            "source": "diagnostics",
+            "source_index": 0,
+            "dimension": "paper_direction",
+            "group": "MALFORMED",
+            "invalid_fields": ["economic_harm_usd"],
+            "reason": "nonfinite_ranking_value",
+        }
+    ]
+    json.dumps(report, allow_nan=False)

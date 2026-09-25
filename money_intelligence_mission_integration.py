@@ -9,6 +9,7 @@ from copy import deepcopy
 from datetime import datetime, timezone
 import hashlib
 import json
+import math
 from typing import Any, Callable
 
 from money_intelligence_causal_memory import CausalMemoryError, CausalRepricingMemory
@@ -23,6 +24,19 @@ SAFE = {
     "broker_authority": False,
     "oos_opening_authority": False,
 }
+
+
+def _finite_priority(row: object) -> float | None:
+    if not isinstance(row, dict):
+        return None
+    raw = row.get("priority", 0.0)
+    if isinstance(raw, bool):
+        return None
+    try:
+        priority = float(raw)
+    except (TypeError, ValueError):
+        return None
+    return priority if math.isfinite(priority) else None
 
 
 def _now() -> str:
@@ -109,7 +123,9 @@ def build_supported_missions(memory: CausalRepricingMemory, *, as_of: str) -> li
                 },
                 **SAFE,
             })
-    missions.sort(key=lambda row: (-float(row["priority"]), str(row["mission_id"])))
+    missions.sort(
+        key=lambda row: (-float(_finite_priority(row)), str(row["mission_id"]))
+    )
     return missions
 
 
@@ -141,21 +157,62 @@ def apply_causal_feedback(state: dict[str, Any], *, loader: Callable[[], CausalR
     result = deepcopy(state)
     feedback = causal_feedback(loader=loader, as_of=as_of)
     result["money_intelligence_causal"] = feedback
+    imported_missions = (
+        result.get("missions") if isinstance(result.get("missions"), list) else []
+    )
+    missions = [row for row in imported_missions if _finite_priority(row) is not None]
+    result["missions"] = missions
+    imported_current = (
+        result.get("next_missions")
+        if isinstance(result.get("next_missions"), list)
+        else []
+    )
+    invalid_rows = [
+        row
+        for row in [*imported_missions, *imported_current]
+        if _finite_priority(row) is None
+    ]
+    if invalid_rows:
+        invalid_ids = sorted(
+            {
+                str(row.get("mission_id") or "<missing>")
+                if isinstance(row, dict)
+                else "<malformed>"
+                for row in invalid_rows
+            }
+        )
+        feedback = {
+            **feedback,
+            "status": "WAIT_INVALID_IMPORTED_MISSION_PRIORITY",
+            "upstream_status": feedback["status"],
+            "invalid_priority_mission_ids": invalid_ids,
+            "structured_evidence_consumed": False,
+        }
+        result["money_intelligence_causal"] = feedback
+        result["next_missions"] = []
+        report = result.get("daily_lead_report")
+        if isinstance(report, dict):
+            report["highest_priority_next_missions"] = []
+            report["money_intelligence_causal"] = deepcopy(feedback)
+        return result
     if feedback["status"] != "AVAILABLE":
         return result
-    missions = result.get("missions") if isinstance(result.get("missions"), list) else []
-    result["missions"] = missions
     known = {str(row.get("mission_id")) for row in missions if isinstance(row, dict)}
     causal_rows = [deepcopy(row) for row in feedback["missions"]]
     for row in causal_rows:
         if row["mission_id"] not in known:
             missions.append(row)
             known.add(row["mission_id"])
-    missions.sort(key=lambda row: (-float(row.get("priority", 0.0)), str(row.get("mission_id", ""))))
-    current = result.get("next_missions") if isinstance(result.get("next_missions"), list) else []
+    missions.sort(
+        key=lambda row: (-float(_finite_priority(row)), str(row.get("mission_id", "")))
+    )
+    current = [row for row in imported_current if _finite_priority(row) is not None]
     by_id = {str(row["mission_id"]): deepcopy(row) for row in [*current, *causal_rows]
              if isinstance(row, dict) and row.get("mission_id")}
-    ranked = sorted(by_id.values(), key=lambda row: (-float(row.get("priority", 0.0)), str(row.get("mission_id", ""))))[:5]
+    ranked = sorted(
+        by_id.values(),
+        key=lambda row: (-float(_finite_priority(row)), str(row.get("mission_id", ""))),
+    )[:5]
     result["next_missions"] = ranked
     report = result.get("daily_lead_report")
     if isinstance(report, dict):

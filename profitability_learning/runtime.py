@@ -1,6 +1,7 @@
 """Caller-side integration; existing validation and worker eligibility stay intact."""
 from copy import deepcopy
 from dataclasses import replace
+from math import isfinite
 import os
 import sqlite3
 from threading import Lock
@@ -188,9 +189,27 @@ def apply_queue_feedback(queue):
         return result
     for row in result.get("experiments", []):
         feedback = _candidate_feedback(row, state["memory"])
+        raw_priority = row.get(
+            "base_information_priority", row.get("information_priority", 0)
+        )
+        priority_valid = not isinstance(raw_priority, bool)
+        try:
+            base = float(raw_priority)
+        except (TypeError, ValueError):
+            base = 0.0
+            priority_valid = False
+        if not isfinite(base):
+            priority_valid = False
+        if not priority_valid:
+            base = 0.0
+            feedback = {
+                "factor": 0.0,
+                "reason": "invalid_information_priority",
+                "changes_eligibility": True,
+                **SAFE,
+            }
         row["learning_feedback"] = feedback
         # Re-entry must not compound the same evidence penalty a second time.
-        base = float(row.get("base_information_priority", row.get("information_priority", 0)))
         row["base_information_priority"] = base
         row["information_priority"] = base * feedback["factor"]
     result["experiments"].sort(key=lambda r: (-r["information_priority"], str(r.get("experiment_id", ""))))

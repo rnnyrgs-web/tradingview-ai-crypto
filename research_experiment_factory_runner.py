@@ -35,6 +35,7 @@ def build_factory_report(rows, paper_trades=None):
         "baseline_precision": diagnostics.get("baseline_precision"),
         "paper_trade_loss_attribution": paper_loss,
         "research_priorities": (diagnostics.get("research_priorities") or [])[:10],
+        "invalid_priority_rows": diagnostics.get("invalid_priority_rows") or [],
         "specialist_bridge": specialist_bridge,
         "quant_science_queue": queue,
         "experiment_queue": queue,
