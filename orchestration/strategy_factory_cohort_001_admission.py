@@ -16,9 +16,28 @@ _MULTIPLICITY_PATH = _ROOT / "cohorts" / "strategy_factory_cohort_001_multiplici
 _OWNERSHIP_PATH = _ROOT / "cohorts" / "strategy_factory_cohort_001_ownership_correction.json"
 
 
+def _strict_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in out:
+            raise RuntimeError(f"duplicate JSON key: {key}")
+        out[key] = value
+    return out
+
+
 def _load_json(path: Path) -> dict[str, Any]:
-    with path.open("r", encoding="utf-8") as handle:
-        payload = json.load(handle)
+    try:
+        payload = json.loads(
+            path.read_text(encoding="utf-8"),
+            object_pairs_hook=_strict_object,
+            parse_constant=lambda value: (_ for _ in ()).throw(
+                RuntimeError(f"non-standard JSON constant: {value}")
+            ),
+        )
+    except OSError as exc:
+        raise RuntimeError(f"unable to read {path}") from exc
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"malformed JSON in {path}") from exc
     if not isinstance(payload, dict):
         raise RuntimeError(f"{path} must contain a JSON object")
     return payload
