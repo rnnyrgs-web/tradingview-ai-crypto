@@ -135,6 +135,11 @@ def verify_admission_provenance_lock(
     multiplicity = _load_json(
         root / "orchestration/cohorts/strategy_factory_cohort_001_multiplicity_authority.json"
     )
+    if (
+        _canonical_sha256_without(multiplicity, "contract_sha256")
+        != multiplicity["contract_sha256"]
+    ):
+        raise RuntimeError("multiplicity authority contract digest mismatch")
     if multiplicity.get("contract_sha256") != payload.get("bound_multiplicity_contract_sha256"):
         raise RuntimeError("multiplicity authority identity drift")
 
