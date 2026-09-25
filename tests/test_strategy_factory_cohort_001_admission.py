@@ -1,0 +1,175 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from orchestration.strategy_factory_cohort_001_admission import (
+    build_canonical_admission_receipt,
+    resolve_candidate_predeclaration,
+)
+from orchestration.strategy_predeclaration import freeze_predeclaration
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SEED_PATH = ROOT / "orchestration" / "cohorts" / "strategy_factory_cohort_001_seed.json"
+
+
+def _seed() -> dict:
+    return json.loads(SEED_PATH.read_text(encoding="utf-8"))
+
+
+def test_cohort_001_all_eight_resolve_through_canonical_production_admission() -> None:
+    seed = _seed()
+    frozen = [
+        freeze_predeclaration(resolve_candidate_predeclaration(seed, candidate))
+        for candidate in seed["candidates"]
+    ]
+
+    assert len(frozen) == 8
+    assert len({row["fingerprint_id"] for row in frozen}) == 8
+    assert len({row["strategy_behavior_sha256"] for row in frozen}) == 8
+    assert len({row["scientific_design_sha256"] for row in frozen}) == 8
+    assert len({row["contract_sha256"] for row in frozen}) == 8
+
+
+def test_cohort_001_admission_receipt_binds_protected_safe_dataset_qualification() -> None:
+    receipt = build_canonical_admission_receipt()
+    dataset = receipt["selection_dataset_qualification"]
+
+    assert receipt["schema_version"] == 3
+    assert dataset["status"] == "QUALIFIED_DEVELOPMENT_ONLY"
+    assert dataset["source_dataset_sha256"] == (
+        "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f"
+    )
+    assert dataset["development_end_utc"] == "2026-08-31T23:00:00+00:00"
+    assert dataset["protected_start_utc"] == "2026-09-01T00:00:00+00:00"
+    assert dataset["protected_ohlcv_json_decoded"] is False
+    assert dataset["economic_outcomes_computed"] is False
+    assert dataset["strategy_signals_computed"] is False
+    assert len(dataset["receipt_sha256"]) == 64
+
+
+def test_cohort_001_admission_receipt_preserves_fail_closed_execution_holds() -> None:
+    receipt = build_canonical_admission_receipt()
+    by_status: dict[str, list[str]] = {}
+    for row in receipt["candidates"]:
+        by_status.setdefault(row["status"], []).append(row["fingerprint_id"])
+
+    assert set(by_status.get("ADMITTED_DATA_QUALIFIED", [])) == {
+        "DISC-RESIDUAL-REV-001-v1",
+        "DISC-SIGNED-VOLUME-DRIFT-001-v1",
+        "DISC-LOWVOL-DRIFT-REV-001-v1",
+        "DISC-MODERATEVOL-AUTOCORR-001-v1",
+        "DISC-RANGE-AUCTION-REV-001-v1",
+    }
+    assert by_status.get("ADMITTED_DATA_QUALIFIED_POWER_RISK") == [
+        "DISC-WEEKEND-NORMALIZE-001-v1"
+    ]
+    assert by_status.get("HOLD_ACTIVE_OWNERSHIP_COLLISION") == [
+        "DISC-BREADTH-PERSIST-001-v1"
+    ]
+    assert by_status.get("DATA_BLOCKED") == ["DISC-DELTA-CARRY-001-v1"]
+    assert "REJECTED_CANONICAL_ADMISSION" not in by_status
+
+    authorized = [row for row in receipt["candidates"] if row["screening_authority"]]
+    assert len(authorized) == 6
+    for row in authorized:
+        assert row["selection_dataset_receipt_sha256"] == receipt[
+            "selection_dataset_qualification"
+        ]["receipt_sha256"]
+
+    held = [row for row in receipt["candidates"] if not row["screening_authority"]]
+    assert len(held) == 2
+    assert all(row["selection_dataset_receipt_sha256"] is None for row in held)
+
+    assert receipt["planned_hypothesis_count"] == 8
+    assert receipt["outcomes_read"] is False
+    assert receipt["protected_oos_opened"] is False
+    assert receipt["genuine_forward_opened"] is False
+    assert receipt["deep_candidate_promoted"] is False
+    assert receipt["broker_connected"] is False
+    assert receipt["trade_authority"] is False
+
+
+def test_cohort_001_receipt_is_deterministic_and_old_inline_hashes_are_ignored() -> None:
+    first = build_canonical_admission_receipt()
+    second = build_canonical_admission_receipt()
+    assert first == second
+
+    seed = _seed()
+    first_candidate = seed["candidates"][0]
+    resolved = resolve_candidate_predeclaration(seed, first_candidate)
+    frozen = freeze_predeclaration(resolved)
+
+    # The legacy seed hashes were explicitly marked non-authoritative. The resolver
+    # must never copy them into the final frozen predeclaration.
+    assert frozen["scientific_design_sha256"] != first_candidate["scientific_design_sha256"]
+    assert frozen["contract_sha256"] != first_candidate["contract_sha256"]
+    assert len(frozen["strategy_behavior_sha256"]) == 64
+
+
+def test_cohort_001_common_selection_boundary_stays_development_only() -> None:
+    seed = _seed()
+    common = seed["common_ohlcv_contract"]
+    data = common["data_contract"]
+
+    assert data["normalized_rows_sha256"] == (
+        "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f"
+    )
+    assert data["selection_validation_end_utc"] == "2026-08-31T23:00:00+00:00"
+    assert data["protected_oos_start_utc"] == "2026-09-01T00:00:00+00:00"
+    assert data["point_in_time"] is True
+    assert data["screen_may_read_protected_oos"] is False
+
+    receipt = build_canonical_admission_receipt()
+    for row in receipt["candidates"]:
+        assert row.get("untouched_oos_opened", False) is False
+        assert row.get("genuine_forward_opened", False) is False
+        assert row.get("broker_connected", False) is False
+        assert row.get("trade_authority", False) is False
+
+
+def test_cohort_001_noncarry_perpetual_cost_contract_is_adverse_and_deterministic() -> None:
+    seed = _seed()
+    common_cost = seed["common_ohlcv_contract"]["cost_model"]
+    assert common_cost["adverse_funding_allowance_bps_per_trade"] == 4.0
+    assert "funding_bps_per_day" not in common_cost
+
+    receipt = build_canonical_admission_receipt()
+    cost = receipt["stage1_cost_contract"]
+    assert cost["semantics"] == "adverse_per_completed_trade_allowance"
+    assert cost["fees_bps"] == 12.0
+    assert cost["spread_bps"] == 2.0
+    assert cost["slippage_bps"] == 6.0
+    assert cost["adverse_funding_allowance_bps_per_trade"] == 4.0
+    assert cost["stress_totals_bps"] == {"1x": 24.0, "2x": 48.0, "3x": 72.0}
+    assert cost["authenticated_realized_funding_evidence"] is False
+    assert cost["deeper_validation_requires_pit_funding"] is True
+
+    delta = next(candidate for candidate in seed["candidates"] if candidate["fingerprint_id"] == "DISC-DELTA-CARRY-001-v1")
+    assert delta["cost_model"]["funding_bps_per_day"] == 0.0
+    assert "adverse_funding_allowance_bps_per_trade" not in delta["cost_model"]
+
+
+def test_cohort_001_zero_or_omitted_adverse_funding_fails_closed() -> None:
+    seed = _seed()
+    candidate = next(candidate for candidate in seed["candidates"] if candidate["fingerprint_id"] == "DISC-SIGNED-VOLUME-DRIFT-001-v1")
+    resolved = resolve_candidate_predeclaration(seed, candidate)
+
+    omitted = json.loads(json.dumps(resolved))
+    omitted["cost_model"].pop("adverse_funding_allowance_bps_per_trade")
+    try:
+        freeze_predeclaration(omitted)
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError("omitted adverse funding allowance must fail closed")
+
+    zero = json.loads(json.dumps(resolved))
+    zero["cost_model"]["adverse_funding_allowance_bps_per_trade"] = 0.0
+    try:
+        freeze_predeclaration(zero)
+    except RuntimeError:
+        pass
+    else:
+        raise AssertionError("zero adverse funding allowance must fail closed")

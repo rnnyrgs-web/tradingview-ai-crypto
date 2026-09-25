@@ -14,6 +14,9 @@ from orchestration.strategy_behavior_schema import (
     BEHAVIOR_SCHEMAS,
     resolve_behavior_schema_id,
 )
+from orchestration.strategy_behavior_revision import (
+    behavior_schema_executable_contract_revision,
+)
 from orchestration.strategy_behavior_value_contract import (
     BEHAVIOR_VALUE_CONTRACT_VERSION,
     validate_behavior_value_contract,
@@ -227,13 +230,25 @@ def _projection_for_fields(
             behavior_schema_id,
             candidate["data_contract"],
         )
+        executable_contract_revision = behavior_schema_executable_contract_revision(
+            behavior_schema_id
+        )
+        behavior_schema_binding = {
+            "registry_version": BEHAVIOR_SCHEMA_REGISTRY_VERSION,
+            "value_contract_version": BEHAVIOR_VALUE_CONTRACT_VERSION,
+            "data_projection_version": BEHAVIOR_DATA_PROJECTION_VERSION,
+            "schema_id": behavior_schema_id,
+        }
+        # Revision 1 is the historical/default domain. Omitting it preserves
+        # byte-for-byte behavior projections and hashes for canonical rejected
+        # designs while higher reviewed revisions explicitly re-domain only the
+        # changed executable contract.
+        if executable_contract_revision != 1:
+            behavior_schema_binding["executable_contract_revision"] = (
+                executable_contract_revision
+            )
         projection = {
-            "_behavior_schema": {
-                "registry_version": BEHAVIOR_SCHEMA_REGISTRY_VERSION,
-                "value_contract_version": BEHAVIOR_VALUE_CONTRACT_VERSION,
-                "data_projection_version": BEHAVIOR_DATA_PROJECTION_VERSION,
-                "schema_id": behavior_schema_id,
-            },
+            "_behavior_schema": behavior_schema_binding,
             **projection,
         }
     try:
@@ -261,8 +276,9 @@ def strategy_behavior_projection(candidate: dict[str, Any]) -> dict[str, Any]:
     """Return the label- and evidence-instance-invariant executable projection.
 
     The resolved production schema id, schema-registry version, executable
-    value-contract version, and data-projection version are domain-bound into
-    this identity. Dataset hashes/counts/coverage/selection windows cannot
+    value-contract version, data-projection version, and any non-default reviewed
+    per-schema executable-contract revision are domain-bound into this identity.
+    Dataset hashes/counts/coverage/selection windows cannot
     resurrect a rejected executable design; genuine market/data semantics,
     signal/execution rules, and cost behavior remain identity-driving.
     """
