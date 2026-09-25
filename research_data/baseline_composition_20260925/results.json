@@ -1,0 +1,669 @@
+{
+  "analysis_type": "POST_SELECTION_BASELINE_COMPOSITION_NO_NEW_TEST",
+  "causal_inference_authority": false,
+  "contract_sha256": "19252de4464fc997632b0500fded857bc58d5bdad49d6f72e3660eba75a28b57",
+  "fingerprint_id": "DISC-LIQUIDITY-MEANREV-001-v1",
+  "genuine_forward_opened": false,
+  "new_inferential_test": false,
+  "promotion_authority": false,
+  "protected_dataset_file_read": false,
+  "research_only": true,
+  "schema_version": 1,
+  "segments": {
+    "train": {
+      "authority": {
+        "descriptive_only": true,
+        "new_inferential_test": false,
+        "promotion": false,
+        "strategy_admission": false,
+        "trade": false
+      },
+      "baseline_gross_mean_bps": -27.642119026948716,
+      "baseline_labels": 443,
+      "baseline_only_gross_sum_bps": 486.8000906870428,
+      "baseline_only_labels": 25,
+      "common_labels": 418,
+      "costs": [
+        {
+          "additive_decomposition_bps": {
+            "common": 0.0,
+            "minus_baseline_only": 13.199909312957118,
+            "primary_only": 322.4341366502238
+          },
+          "additive_label_sum_difference_bps": 335.63404596317923,
+          "baseline_mean_net_bps": -47.64211902694871,
+          "common_payoff_difference_bps": 0.0,
+          "composition_mean_difference_bps": -1.2280566976985783,
+          "leave_one_differing_component_out": {
+            "comparisons": 18,
+            "deletions": [
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1747728000000,
+                "mean_difference_bps": -0.8284959520042392,
+                "primary_labels_removed": 0,
+                "start_ts": 1747706400000
+              },
+              {
+                "baseline_labels_removed": 3,
+                "end_ts": 1747792800000,
+                "mean_difference_bps": -0.7626991295638419,
+                "primary_labels_removed": 2,
+                "start_ts": 1747767600000
+              },
+              {
+                "baseline_labels_removed": 2,
+                "end_ts": 1748235600000,
+                "mean_difference_bps": -1.4673504606416827,
+                "primary_labels_removed": 1,
+                "start_ts": 1748214000000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1750302000000,
+                "mean_difference_bps": -0.8646366301692652,
+                "primary_labels_removed": 0,
+                "start_ts": 1750280400000
+              },
+              {
+                "baseline_labels_removed": 3,
+                "end_ts": 1750622400000,
+                "mean_difference_bps": -1.9346901938127274,
+                "primary_labels_removed": 3,
+                "start_ts": 1750586400000
+              },
+              {
+                "baseline_labels_removed": 2,
+                "end_ts": 1753034400000,
+                "mean_difference_bps": -1.1973863976842267,
+                "primary_labels_removed": 1,
+                "start_ts": 1753002000000
+              },
+              {
+                "baseline_labels_removed": 2,
+                "end_ts": 1753182000000,
+                "mean_difference_bps": -2.0552594804020217,
+                "primary_labels_removed": 2,
+                "start_ts": 1753149600000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1754290800000,
+                "mean_difference_bps": -0.8490153265483187,
+                "primary_labels_removed": 0,
+                "start_ts": 1754269200000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1756540800000,
+                "mean_difference_bps": -0.44380361417186975,
+                "primary_labels_removed": 0,
+                "start_ts": 1756519200000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1756735200000,
+                "mean_difference_bps": -0.8052136424579572,
+                "primary_labels_removed": 0,
+                "start_ts": 1756713600000
+              },
+              {
+                "baseline_labels_removed": 2,
+                "end_ts": 1762462800000,
+                "mean_difference_bps": -0.6322095761688189,
+                "primary_labels_removed": 1,
+                "start_ts": 1762437600000
+              },
+              {
+                "baseline_labels_removed": 5,
+                "end_ts": 1763164800000,
+                "mean_difference_bps": -0.9932847813060945,
+                "primary_labels_removed": 3,
+                "start_ts": 1763074800000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1763283600000,
+                "mean_difference_bps": -1.2785087049349002,
+                "primary_labels_removed": 0,
+                "start_ts": 1763262000000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1763791200000,
+                "mean_difference_bps": -0.7344925838715426,
+                "primary_labels_removed": 0,
+                "start_ts": 1763769600000
+              },
+              {
+                "baseline_labels_removed": 3,
+                "end_ts": 1770112800000,
+                "mean_difference_bps": -0.8085139430212749,
+                "primary_labels_removed": 1,
+                "start_ts": 1770087600000
+              },
+              {
+                "baseline_labels_removed": 7,
+                "end_ts": 1770379200000,
+                "mean_difference_bps": -2.598114040102409,
+                "primary_labels_removed": 6,
+                "start_ts": 1770289200000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1771092000000,
+                "mean_difference_bps": -1.367869289234271,
+                "primary_labels_removed": 0,
+                "start_ts": 1771070400000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1771549200000,
+                "mean_difference_bps": -1.4223313927429118,
+                "primary_labels_removed": 0,
+                "start_ts": 1771527600000
+              }
+            ],
+            "maximum_mean_difference_bps": -0.44380361417186975,
+            "minimum_mean_difference_bps": -2.598114040102409,
+            "nonpositive_comparisons": 18,
+            "undefined_comparisons": 0
+          },
+          "mean_decomposition_bps": {
+            "common_reweighting": -2.0165218895405963,
+            "minus_baseline_only": 0.02979663501796189,
+            "primary_only": 0.7586685568240561
+          },
+          "mean_difference_bps": -1.2280566976985838,
+          "primary_mean_net_bps": -48.8701757246473,
+          "round_trip_cost_bps": 20.0
+        },
+        {
+          "additive_decomposition_bps": {
+            "common": 0.0,
+            "minus_baseline_only": 513.1999093129572,
+            "primary_only": 182.43413665022382
+          },
+          "additive_label_sum_difference_bps": 695.6340459631792,
+          "baseline_mean_net_bps": -67.64211902694872,
+          "common_payoff_difference_bps": 0.0,
+          "composition_mean_difference_bps": -1.228056697698578,
+          "leave_one_differing_component_out": {
+            "comparisons": 18,
+            "deletions": [
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1747728000000,
+                "mean_difference_bps": -0.8284959520042463,
+                "primary_labels_removed": 0,
+                "start_ts": 1747706400000
+              },
+              {
+                "baseline_labels_removed": 3,
+                "end_ts": 1747792800000,
+                "mean_difference_bps": -0.7626991295638419,
+                "primary_labels_removed": 2,
+                "start_ts": 1747767600000
+              },
+              {
+                "baseline_labels_removed": 2,
+                "end_ts": 1748235600000,
+                "mean_difference_bps": -1.467350460641697,
+                "primary_labels_removed": 1,
+                "start_ts": 1748214000000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1750302000000,
+                "mean_difference_bps": -0.8646366301692581,
+                "primary_labels_removed": 0,
+                "start_ts": 1750280400000
+              },
+              {
+                "baseline_labels_removed": 3,
+                "end_ts": 1750622400000,
+                "mean_difference_bps": -1.9346901938127417,
+                "primary_labels_removed": 3,
+                "start_ts": 1750586400000
+              },
+              {
+                "baseline_labels_removed": 2,
+                "end_ts": 1753034400000,
+                "mean_difference_bps": -1.197386397684241,
+                "primary_labels_removed": 1,
+                "start_ts": 1753002000000
+              },
+              {
+                "baseline_labels_removed": 2,
+                "end_ts": 1753182000000,
+                "mean_difference_bps": -2.0552594804020288,
+                "primary_labels_removed": 2,
+                "start_ts": 1753149600000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1754290800000,
+                "mean_difference_bps": -0.8490153265483116,
+                "primary_labels_removed": 0,
+                "start_ts": 1754269200000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1756540800000,
+                "mean_difference_bps": -0.44380361417186975,
+                "primary_labels_removed": 0,
+                "start_ts": 1756519200000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1756735200000,
+                "mean_difference_bps": -0.8052136424579572,
+                "primary_labels_removed": 0,
+                "start_ts": 1756713600000
+              },
+              {
+                "baseline_labels_removed": 2,
+                "end_ts": 1762462800000,
+                "mean_difference_bps": -0.6322095761688189,
+                "primary_labels_removed": 1,
+                "start_ts": 1762437600000
+              },
+              {
+                "baseline_labels_removed": 5,
+                "end_ts": 1763164800000,
+                "mean_difference_bps": -0.9932847813060874,
+                "primary_labels_removed": 3,
+                "start_ts": 1763074800000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1763283600000,
+                "mean_difference_bps": -1.2785087049349073,
+                "primary_labels_removed": 0,
+                "start_ts": 1763262000000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1763791200000,
+                "mean_difference_bps": -0.7344925838715426,
+                "primary_labels_removed": 0,
+                "start_ts": 1763769600000
+              },
+              {
+                "baseline_labels_removed": 3,
+                "end_ts": 1770112800000,
+                "mean_difference_bps": -0.808513943021282,
+                "primary_labels_removed": 1,
+                "start_ts": 1770087600000
+              },
+              {
+                "baseline_labels_removed": 7,
+                "end_ts": 1770379200000,
+                "mean_difference_bps": -2.598114040102402,
+                "primary_labels_removed": 6,
+                "start_ts": 1770289200000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1771092000000,
+                "mean_difference_bps": -1.3678692892342639,
+                "primary_labels_removed": 0,
+                "start_ts": 1771070400000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1771549200000,
+                "mean_difference_bps": -1.4223313927429189,
+                "primary_labels_removed": 0,
+                "start_ts": 1771527600000
+              }
+            ],
+            "maximum_mean_difference_bps": -0.44380361417186975,
+            "minimum_mean_difference_bps": -2.598114040102402,
+            "nonpositive_comparisons": 18,
+            "undefined_comparisons": 0
+          },
+          "mean_decomposition_bps": {
+            "common_reweighting": -2.815778296392276,
+            "minus_baseline_only": 1.158464806575524,
+            "primary_only": 0.4292567921181737
+          },
+          "mean_difference_bps": -1.2280566976985767,
+          "primary_mean_net_bps": -68.8701757246473,
+          "round_trip_cost_bps": 40.0
+        },
+        {
+          "additive_decomposition_bps": {
+            "common": 0.0,
+            "minus_baseline_only": 1013.1999093129572,
+            "primary_only": 42.434136650223834
+          },
+          "additive_label_sum_difference_bps": 1055.6340459631829,
+          "baseline_mean_net_bps": -87.64211902694872,
+          "common_payoff_difference_bps": 0.0,
+          "composition_mean_difference_bps": -1.228056697698578,
+          "leave_one_differing_component_out": {
+            "comparisons": 18,
+            "deletions": [
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1747728000000,
+                "mean_difference_bps": -0.8284959520042463,
+                "primary_labels_removed": 0,
+                "start_ts": 1747706400000
+              },
+              {
+                "baseline_labels_removed": 3,
+                "end_ts": 1747792800000,
+                "mean_difference_bps": -0.7626991295638419,
+                "primary_labels_removed": 2,
+                "start_ts": 1747767600000
+              },
+              {
+                "baseline_labels_removed": 2,
+                "end_ts": 1748235600000,
+                "mean_difference_bps": -1.4673504606416827,
+                "primary_labels_removed": 1,
+                "start_ts": 1748214000000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1750302000000,
+                "mean_difference_bps": -0.8646366301692723,
+                "primary_labels_removed": 0,
+                "start_ts": 1750280400000
+              },
+              {
+                "baseline_labels_removed": 3,
+                "end_ts": 1750622400000,
+                "mean_difference_bps": -1.9346901938127417,
+                "primary_labels_removed": 3,
+                "start_ts": 1750586400000
+              },
+              {
+                "baseline_labels_removed": 2,
+                "end_ts": 1753034400000,
+                "mean_difference_bps": -1.1973863976842267,
+                "primary_labels_removed": 1,
+                "start_ts": 1753002000000
+              },
+              {
+                "baseline_labels_removed": 2,
+                "end_ts": 1753182000000,
+                "mean_difference_bps": -2.055259480402043,
+                "primary_labels_removed": 2,
+                "start_ts": 1753149600000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1754290800000,
+                "mean_difference_bps": -0.8490153265483116,
+                "primary_labels_removed": 0,
+                "start_ts": 1754269200000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1756540800000,
+                "mean_difference_bps": -0.44380361417186975,
+                "primary_labels_removed": 0,
+                "start_ts": 1756519200000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1756735200000,
+                "mean_difference_bps": -0.805213642457943,
+                "primary_labels_removed": 0,
+                "start_ts": 1756713600000
+              },
+              {
+                "baseline_labels_removed": 2,
+                "end_ts": 1762462800000,
+                "mean_difference_bps": -0.6322095761688189,
+                "primary_labels_removed": 1,
+                "start_ts": 1762437600000
+              },
+              {
+                "baseline_labels_removed": 5,
+                "end_ts": 1763164800000,
+                "mean_difference_bps": -0.9932847813060874,
+                "primary_labels_removed": 3,
+                "start_ts": 1763074800000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1763283600000,
+                "mean_difference_bps": -1.2785087049349073,
+                "primary_labels_removed": 0,
+                "start_ts": 1763262000000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1763791200000,
+                "mean_difference_bps": -0.7344925838715426,
+                "primary_labels_removed": 0,
+                "start_ts": 1763769600000
+              },
+              {
+                "baseline_labels_removed": 3,
+                "end_ts": 1770112800000,
+                "mean_difference_bps": -0.808513943021282,
+                "primary_labels_removed": 1,
+                "start_ts": 1770087600000
+              },
+              {
+                "baseline_labels_removed": 7,
+                "end_ts": 1770379200000,
+                "mean_difference_bps": -2.5981140401024163,
+                "primary_labels_removed": 6,
+                "start_ts": 1770289200000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1771092000000,
+                "mean_difference_bps": -1.367869289234278,
+                "primary_labels_removed": 0,
+                "start_ts": 1771070400000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1771549200000,
+                "mean_difference_bps": -1.4223313927429189,
+                "primary_labels_removed": 0,
+                "start_ts": 1771527600000
+              }
+            ],
+            "maximum_mean_difference_bps": -0.44380361417186975,
+            "minimum_mean_difference_bps": -2.5981140401024163,
+            "nonpositive_comparisons": 18,
+            "undefined_comparisons": 0
+          },
+          "mean_decomposition_bps": {
+            "common_reweighting": -3.6150347032439556,
+            "minus_baseline_only": 2.2871329781330862,
+            "primary_only": 0.09984502741229137
+          },
+          "mean_difference_bps": -1.2280566976985767,
+          "primary_mean_net_bps": -88.8701757246473,
+          "round_trip_cost_bps": 60.0
+        }
+      ],
+      "differing_temporal_components": 18,
+      "interpretation": {
+        "components": "Transitive closed holding intervals across all assets; not proven independent observations.",
+        "deletions": "Retrospective influence diagnostic only; never select exclusions, retune, or rescore a strategy from it.",
+        "mean_difference": "Composition contrast, not paired causal alpha; same uniform cost cancels from the two means.",
+        "missing_counterfactuals": "Only retained executed labels are compared; missing opportunities are not reconstructed.",
+        "unit": "TRADE_LABEL_BPS_NOT_PORTFOLIO_NAV"
+      },
+      "primary_gross_mean_bps": -28.870175724647297,
+      "primary_labels": 425,
+      "primary_only_gross_sum_bps": 462.4341366502238,
+      "primary_only_labels": 7,
+      "temporal_components": 234,
+      "union_labels": 450
+    },
+    "validation": {
+      "authority": {
+        "descriptive_only": true,
+        "new_inferential_test": false,
+        "promotion": false,
+        "strategy_admission": false,
+        "trade": false
+      },
+      "baseline_gross_mean_bps": 12.925439742596362,
+      "baseline_labels": 124,
+      "baseline_only_gross_sum_bps": -231.69169389130383,
+      "baseline_only_labels": 2,
+      "common_labels": 122,
+      "costs": [
+        {
+          "additive_decomposition_bps": {
+            "common": 0.0,
+            "minus_baseline_only": 271.6916938913038,
+            "primary_only": -67.94826048171163
+          },
+          "additive_label_sum_difference_bps": 203.74343340959217,
+          "baseline_mean_net_bps": -7.074560257403638,
+          "common_payoff_difference_bps": 0.0,
+          "composition_mean_difference_bps": 1.598933928066573,
+          "leave_one_differing_component_out": {
+            "comparisons": 2,
+            "deletions": [
+              {
+                "baseline_labels_removed": 3,
+                "end_ts": 1772636400000,
+                "mean_difference_bps": -0.3787950034432761,
+                "primary_labels_removed": 3,
+                "start_ts": 1772611200000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1772661600000,
+                "mean_difference_bps": 2.001650813307096,
+                "primary_labels_removed": 0,
+                "start_ts": 1772640000000
+              }
+            ],
+            "maximum_mean_difference_bps": 2.001650813307096,
+            "minimum_mean_difference_bps": -0.3787950034432761,
+            "nonpositive_comparisons": 1,
+            "undefined_comparisons": 0
+          },
+          "mean_decomposition_bps": {
+            "common_reweighting": -0.03970323747880654,
+            "minus_baseline_only": 2.1910620475105147,
+            "primary_only": -0.5524248819651352
+          },
+          "mean_difference_bps": 1.5989339280665735,
+          "primary_mean_net_bps": -5.475626329337064,
+          "round_trip_cost_bps": 20.0
+        },
+        {
+          "additive_decomposition_bps": {
+            "common": 0.0,
+            "minus_baseline_only": 311.6916938913038,
+            "primary_only": -87.94826048171163
+          },
+          "additive_label_sum_difference_bps": 223.74343340959194,
+          "baseline_mean_net_bps": -27.074560257403636,
+          "common_payoff_difference_bps": 0.0,
+          "composition_mean_difference_bps": 1.5989339280665704,
+          "leave_one_differing_component_out": {
+            "comparisons": 2,
+            "deletions": [
+              {
+                "baseline_labels_removed": 3,
+                "end_ts": 1772636400000,
+                "mean_difference_bps": -0.3787950034432761,
+                "primary_labels_removed": 3,
+                "start_ts": 1772611200000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1772661600000,
+                "mean_difference_bps": 2.001650813307098,
+                "primary_labels_removed": 0,
+                "start_ts": 1772640000000
+              }
+            ],
+            "maximum_mean_difference_bps": 2.001650813307098,
+            "minimum_mean_difference_bps": -0.3787950034432761,
+            "nonpositive_comparisons": 1,
+            "undefined_comparisons": 0
+          },
+          "mean_decomposition_bps": {
+            "common_reweighting": -0.19968225662383934,
+            "minus_baseline_only": 2.513642692671805,
+            "primary_only": -0.7150265079813953
+          },
+          "mean_difference_bps": 1.5989339280665718,
+          "primary_mean_net_bps": -25.475626329337064,
+          "round_trip_cost_bps": 40.0
+        },
+        {
+          "additive_decomposition_bps": {
+            "common": 0.0,
+            "minus_baseline_only": 351.6916938913038,
+            "primary_only": -107.94826048171163
+          },
+          "additive_label_sum_difference_bps": 243.7434334095924,
+          "baseline_mean_net_bps": -47.07456025740364,
+          "common_payoff_difference_bps": 0.0,
+          "composition_mean_difference_bps": 1.5989339280665675,
+          "leave_one_differing_component_out": {
+            "comparisons": 2,
+            "deletions": [
+              {
+                "baseline_labels_removed": 3,
+                "end_ts": 1772636400000,
+                "mean_difference_bps": -0.37879500344327255,
+                "primary_labels_removed": 3,
+                "start_ts": 1772611200000
+              },
+              {
+                "baseline_labels_removed": 1,
+                "end_ts": 1772661600000,
+                "mean_difference_bps": 2.0016508133070943,
+                "primary_labels_removed": 0,
+                "start_ts": 1772640000000
+              }
+            ],
+            "maximum_mean_difference_bps": 2.0016508133070943,
+            "minimum_mean_difference_bps": -0.37879500344327255,
+            "nonpositive_comparisons": 1,
+            "undefined_comparisons": 0
+          },
+          "mean_decomposition_bps": {
+            "common_reweighting": -0.3596612757688722,
+            "minus_baseline_only": 2.836223337833095,
+            "primary_only": -0.8776281339976555
+          },
+          "mean_difference_bps": 1.5989339280665718,
+          "primary_mean_net_bps": -45.47562632933707,
+          "round_trip_cost_bps": 60.0
+        }
+      ],
+      "differing_temporal_components": 2,
+      "interpretation": {
+        "components": "Transitive closed holding intervals across all assets; not proven independent observations.",
+        "deletions": "Retrospective influence diagnostic only; never select exclusions, retune, or rescore a strategy from it.",
+        "mean_difference": "Composition contrast, not paired causal alpha; same uniform cost cancels from the two means.",
+        "missing_counterfactuals": "Only retained executed labels are compared; missing opportunities are not reconstructed.",
+        "unit": "TRADE_LABEL_BPS_NOT_PORTFOLIO_NAV"
+      },
+      "primary_gross_mean_bps": 14.524373670662936,
+      "primary_labels": 123,
+      "primary_only_gross_sum_bps": -47.948260481711635,
+      "primary_only_labels": 1,
+      "temporal_components": 66,
+      "union_labels": 125
+    }
+  },
+  "source_archive_sha256": "92e174bfa0bfc66e55a8f7ec163792e29cb922734b357f0925b8d8d134fdb94d",
+  "source_consumption": "Already-consumed primary/baseline train and validation labels only",
+  "source_dataset_sha256_reference_only_not_read": "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f",
+  "source_payload_sha256": "8630b22e7c2a8e0ef0e44fad2ea0fcd30395c9e2b2ef99bc08c98afb6e968f4e",
+  "source_status_unchanged": "REJECTED_PRE_OOS",
+  "trade_authority": false,
+  "untouched_oos_opened": false
+}
