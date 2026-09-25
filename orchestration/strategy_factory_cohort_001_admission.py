@@ -27,8 +27,8 @@ def resolve_candidate_predeclaration(
 ) -> dict[str, Any]:
     """Resolve one Cohort-001 seed into the canonical #507 predeclaration shape.
 
-    The legacy seed intentionally contains stale inline digests. They are never
-    copied here. Canonical identities are recomputed only by freeze_predeclaration.
+    Inline digests are not inputs to identity computation. Admission recomputes
+    them with freeze_predeclaration and rejects missing or inconsistent values.
     This function performs no market-data read and no outcome calculation.
     """
     common = seed.get("common_ohlcv_contract")
@@ -210,6 +210,14 @@ def build_canonical_admission_receipt() -> dict[str, Any]:
                 }
             )
             continue
+
+        for identity in (
+            "scientific_design_sha256", "strategy_behavior_sha256", "contract_sha256"
+        ):
+            if candidate.get(identity) != frozen[identity]:
+                raise RuntimeError(
+                    f"Cohort-001 {fingerprint} missing or mismatched {identity}"
+                )
 
         behavior_digest = frozen["strategy_behavior_sha256"]
         prior_behavior = behavior_owner.get(behavior_digest)

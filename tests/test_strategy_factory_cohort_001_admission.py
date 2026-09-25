@@ -3,6 +3,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
+from orchestration import strategy_factory_cohort_001_admission as admission
 from orchestration.strategy_factory_cohort_001_admission import (
     build_canonical_admission_receipt,
     resolve_candidate_predeclaration,
@@ -91,21 +94,43 @@ def test_cohort_001_admission_receipt_preserves_fail_closed_execution_holds() ->
     assert receipt["trade_authority"] is False
 
 
-def test_cohort_001_receipt_is_deterministic_and_old_inline_hashes_are_ignored() -> None:
+def test_cohort_001_receipt_is_deterministic_and_inline_hashes_match() -> None:
     first = build_canonical_admission_receipt()
     second = build_canonical_admission_receipt()
     assert first == second
 
     seed = _seed()
-    first_candidate = seed["candidates"][0]
-    resolved = resolve_candidate_predeclaration(seed, first_candidate)
-    frozen = freeze_predeclaration(resolved)
+    for candidate in seed["candidates"]:
+        frozen = freeze_predeclaration(resolve_candidate_predeclaration(seed, candidate))
+        for field in ("scientific_design_sha256", "strategy_behavior_sha256", "contract_sha256"):
+            assert candidate[field] == frozen[field]
 
-    # The legacy seed hashes were explicitly marked non-authoritative. The resolver
-    # must never copy them into the final frozen predeclaration.
-    assert frozen["scientific_design_sha256"] != first_candidate["scientific_design_sha256"]
-    assert frozen["contract_sha256"] != first_candidate["contract_sha256"]
-    assert len(frozen["strategy_behavior_sha256"]) == 64
+
+@pytest.mark.parametrize("candidate_index", range(8))
+@pytest.mark.parametrize("field", ("scientific_design_sha256", "strategy_behavior_sha256", "contract_sha256"))
+@pytest.mark.parametrize("mutation", ("missing", "mismatched"))
+def test_cohort_001_missing_or_mismatched_inline_identity_fails_closed(
+    monkeypatch, candidate_index: int, field: str, mutation: str
+) -> None:
+    seed = _seed()
+    # Start from consistent identities so each case isolates the selected defect.
+    for candidate in seed["candidates"]:
+        frozen = freeze_predeclaration(resolve_candidate_predeclaration(seed, candidate))
+        for identity in ("scientific_design_sha256", "strategy_behavior_sha256", "contract_sha256"):
+            candidate[identity] = frozen[identity]
+    candidate = seed["candidates"][candidate_index]
+    if mutation == "missing":
+        candidate.pop(field)
+    else:
+        candidate[field] = "0" * 64
+    load_json = admission._load_json
+    monkeypatch.setattr(admission, "_load_json", lambda path: seed if path == admission._SEED_PATH else load_json(path))
+    receipt_path = SEED_PATH.with_name("strategy_factory_cohort_001_canonical_admission.json")
+    qualification = json.loads(receipt_path.read_text())["selection_dataset_qualification"]
+    monkeypatch.setattr(admission, "_qualify_common_selection_dataset", lambda _: qualification)
+
+    with pytest.raises(RuntimeError, match=f"{candidate['fingerprint_id']}.*{field}"):
+        build_canonical_admission_receipt()
 
 
 def test_cohort_001_common_selection_boundary_stays_development_only() -> None:

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "cohort_id": "STRATEGY-FACTORY-COHORT-001-SEED",
-  "status": "AUTHORITATIVE_IDENTITY_CORRECTION_FOR_DRAFT_ONLY",
-  "reason": "Self-audit found that the first draft's inline scientific_design_sha256 and contract_sha256 strings were not generated from the declared canonicalization. They must not be used for admission, screening, rejection memory, or promotion. This correction records independently recomputed identities from the resolved frozen fields. PR #515 must remain draft/blocked until the seed JSON is regenerated so it contains only these canonical values and the repaired #507 semantic gate independently accepts them.",
+  "status": "HISTORICAL_DRAFT_IDENTITIES_SUPERSEDED",
+  "reason": "Historical self-audit of the initial draft; the identities and definitions below are retained only as superseded history and grant no authority. Current identities are recomputed by freeze_predeclaration, asserted by the corrected seed, and recorded in strategy_factory_cohort_001_canonical_admission.json. Admission fails closed on missing or conflicting seed identities. PR #507 is integrated; canonical Cohort-001 admission and separately reviewed Stage-1 execution remain required before any outcome read.",
   "scientific_design_definition": "SHA256 of canonical UTF-8 JSON over resolved target_markets,target_timeframes,data_contract,signal_rules,execution_rules,cost_model,validation_plan with sorted keys and compact separators; labels and prose excluded.",
   "contract_definition": "SHA256 of canonical UTF-8 JSON over the full resolved candidate excluding scientific_design_sha256 and contract_sha256.",
   "identities": {

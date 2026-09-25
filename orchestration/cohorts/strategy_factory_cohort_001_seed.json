@@ -6,10 +6,11 @@
   "main_sha_at_formation": "09015514f97d0b21107d033748446e606468e06d",
   "status": "PREDECLARED_SEED_NOT_SCREENED",
   "depends_on": {"issue_504": 504, "pr_507": 507, "issue_510": 510, "issue_513": 513},
-  "blocking_gate": "PR #507 must first gain label-invariant semantic rejected-design admission and be independently integrated; no screening is authorized before that.",
+  "blocking_gate": "PR #507 is integrated at fb95239413988b2d7c76ee1ba8fb3d0bca76313d. Execution still requires independently integrated canonical Cohort-001 admission and separately reviewed frozen Stage-1 machinery; this seed alone grants no screening authority.",
   "identity_spec": {
-    "scientific_design_sha256": "SHA256(canonical JSON of resolved target_markets,target_timeframes,data_contract,signal_rules,execution_rules,cost_model,validation_plan); labels and prose excluded",
-    "contract_sha256": "SHA256(canonical JSON of the full resolved candidate excluding contract_sha256)",
+    "strategy_behavior_sha256": "Recomputed by freeze_predeclaration using the canonical executable-behavior identity implementation; admission rejects missing or conflicting inline values.",
+    "scientific_design_sha256": "Recomputed by orchestration.strategy_predeclaration.freeze_predeclaration using the canonical scientific-design identity implementation; admission rejects missing or conflicting inline values.",
+    "contract_sha256": "Recomputed by orchestration.strategy_predeclaration.freeze_predeclaration over its canonical frozen payload; inline values are assertions, never identity inputs.",
     "canonical_json": "UTF-8, sorted keys, separators ',' and ':', finite JSON values"
   },
   "multiple_testing": {
@@ -70,13 +71,13 @@
     },
     "protected_evidence": {"untouched_oos_opened": false, "genuine_forward_opened": false},
     "screen_status": "NOT_RUN",
-    "screen_permission": "WAIT_507_SEMANTIC_MEMORY_INTEGRATION"
+    "screen_permission": "WAIT_CANONICAL_ADMISSION_AND_REVIEWED_STAGE1_EXECUTION"
   },
   "rejected_design_guard": {
     "exact_registry": "orchestration/rejected_fingerprints.json",
     "known_rejected_or_terminal_designs_reviewed": ["DATA-BASIS-001", "DATA-FUNDING-001", "ACC-002", "DISC-VOL-BREAKOUT-001-v1", "DISC-LIQUIDITY-MEANREV-001-v1", "DISC-BTC-LEADLAG-001-v1"],
     "additional_nonterminal_or_blocked_lanes_reviewed": ["DISC-RESIDUAL-MOMENTUM-001-v1", "DISC-SQUEEZE-RETENTION-001-v1", "DISC-FRIZZ-PLAYBIT-EMA-001-v1"],
-    "semantic_admission_gate": "WAIT: PR #507 exact-head review found label-only rejected-memory insufficient; revalidate every seed against repaired label-invariant semantic memory before execution.",
+    "semantic_admission_gate": "PR #507 is integrated. Every seed must pass current canonical label-invariant rejected-memory admission before execution; no exact or semantic rejected identity is reopened.",
     "renamed_rescue_forbidden": true
   },
   "screening_authority": {
@@ -112,8 +113,9 @@
         "overlap": "ignore new signals while basket position is open",
         "stop": "none in cheap screen; fixed-hold falsification only"
       },
-      "scientific_design_sha256": "c6d351cceecc7b54fb1cebaa17a0cb07f5f3b2a6af0635603161a27e56a1bbea",
-      "contract_sha256": "e3ded4750b623c8bb495e67e2a658ea4d5665ef118f6ec69626594df8fb1c3da",
+      "strategy_behavior_sha256": "8a15f6d3e3a247ef73012fd4891b2055fc7e3875efa6441d9b0bea61802af983",
+      "scientific_design_sha256": "6711be8db7d7e37d527fd3fbaa424aa53299142cfb174adffd66b55e6766cc5e",
+      "contract_sha256": "be07c5dbe1e1c27f6d44875be4bfa0161f39dc4b45b1959b0eccea7826b2da47",
       "distinctness_note": "Synchronous breadth basket; not BTC-follower underreaction and not compression/range breakout."
     },
     {
@@ -141,8 +143,9 @@
         "overlap": "one open pair per follower; same-follower signals ignored until flat",
         "gross_notional": "1.0 follower leg plus abs(beta) BTC hedge leg"
       },
-      "scientific_design_sha256": "5bed1be0df5bcbb72aa877603d0cf15e705e4084cce1819097e9bb332d468128",
-      "contract_sha256": "6a7f89b906ee8da2a97653dc394b34be969ff365bc80ad874df8e7ef76d88f76",
+      "strategy_behavior_sha256": "5353080405cb0d8e68bc57d661b5b564af1d457b34667978c4371f71ed0900ff",
+      "scientific_design_sha256": "58cffd1ffd951a2b4e91510b6b19168f60bccfa1c701d13d08aa2cbfdf20940b",
+      "contract_sha256": "7ec0f2e59d8c018b31baf5abbf0c14e06316e0dfd8dfeac753901eac4e3f2deb",
       "distinctness_note": "Opposite economic sign from residual-momentum lane; beta-hedged reversion, not cross-sectional continuation."
     },
     {
@@ -169,8 +172,9 @@
         "exit": "fixed 3h hold",
         "overlap": "one position per asset; ignore overlapping same-asset signals"
       },
-      "scientific_design_sha256": "f1c12d518b7994d15139d4206a27641f81693b709339ef8ea1e8cdcfef4ce094",
-      "contract_sha256": "9fe1a7a6443086d64b27a6045cbea9d36a3cc61b3939795be85fa99603e16685",
+      "strategy_behavior_sha256": "876f9d0cb428808064d08ce983e615532c3adf55ad8a7e9a7fc32dfb1b8192ec",
+      "scientific_design_sha256": "e23c5bc8a11829279d3f450ae2d2fb2e0fe4b9210424f68fe3b409dcddb482a2",
+      "contract_sha256": "36d133e2f4f7e432415a1d3b170619d58f8b5d57aeab28afc32dedc4f575be7b",
       "distinctness_note": "Transparent OHLCV participation proxy; continuation and extreme-range exclusion, not high-volume shock reversion."
     },
     {
@@ -195,8 +199,9 @@
         "exit": "fixed 6h hold",
         "overlap": "one position per asset; ignore overlapping same-asset signals"
       },
-      "scientific_design_sha256": "0a0b90a53b274418780152d624f4035e527937b3f666c67c303277b0e793eca6",
-      "contract_sha256": "61fc73a5e6904328f3284e82d956900143542d73457eaad38848353937c19095",
+      "strategy_behavior_sha256": "4187cb1952482edc4f1aacb1a05fa87a69b6ab6af19b029d11a7cd6d50150201",
+      "scientific_design_sha256": "7585d5e739ed135c4f05662690bbcd2d16491758d548ad5bce5ebc20c4fd7ba8",
+      "contract_sha256": "1f170c562b9eb6b9ec1c01f397a7e266c2decbc250aebc863ac472fc8b0cd0c1",
       "distinctness_note": "Requires low participation across 8h and excludes shock-like range expansion; opposite of rejected high-volume/wide-range one-hour shock setup."
     },
     {
@@ -221,8 +226,9 @@
         "exit": "fixed 12h hold",
         "overlap": "maximum one position per asset per calendar week"
       },
-      "scientific_design_sha256": "9e615f6bff816f986ab331a0d351cc7893c2c49b3e0b7bafaec9bb67561bdd13",
-      "contract_sha256": "92a039e496585c819f32f9105cef36d72e0beb43d1fe9b63e4004638b3b6456a",
+      "strategy_behavior_sha256": "1293e8457be524ebc823a640883ac27f7ed0e49555a38fbbadf8b8fbd2b21e52",
+      "scientific_design_sha256": "a8786015cd70778e74f4451357c15927fee8d2e03c7688ba0167dc8cbe5266f3",
+      "contract_sha256": "fd8ae5976b28351b83eab0ffce4db0eb746bb88af581885ef25aa17095ba2897",
       "distinctness_note": "Fixed UTC calendar/liquidity-handoff mechanism, not generic shock reversion."
     },
     {
@@ -248,8 +254,9 @@
         "exit": "fixed 3h hold",
         "overlap": "one position per asset; ignore overlapping same-asset signals"
       },
-      "scientific_design_sha256": "85716f31fb5d1eec421c5b2c60cdda830d9aac0f61794819933ca2bda8ba9291",
-      "contract_sha256": "0cfc4ca0856b9428a20719b41b5ca68736395ac40dad4ba2fbd47eacd32f473a",
+      "strategy_behavior_sha256": "f878906f9643627e6554326d24a21493410235cd1868652e807d96a5816689f1",
+      "scientific_design_sha256": "c46ee97005372478eb886f61119903d8695da74253dc7605b0564e7ca626014e",
+      "contract_sha256": "815ed6db303e2571828fd4ac47b983a94ee59a4c0f4d7076e61b6e9748fada1f",
       "distinctness_note": "Time-series autocorrelation in moderate volatility; no compression, range breakout, follower lag, or cross-sectional rank."
     },
     {
@@ -278,8 +285,9 @@
         "max_hold_hours": 6,
         "overlap": "one position per asset; ignore overlapping same-asset signals"
       },
-      "scientific_design_sha256": "0c338f73d1e6040eee7bba6b5d3941d1870273f6dc37fbc0a13899c2c83333aa",
-      "contract_sha256": "9876702dcd1127f518ae3cc00790e031c168f4a8fda79e3abee2eda4f402fe27",
+      "strategy_behavior_sha256": "1b0261b0fc14366259f15663756cb400569a705e3709171d7be301577ef226b4",
+      "scientific_design_sha256": "3f52473af1f1fad2243f0d789e03b12554e0342a705818255904f02acae45420",
+      "contract_sha256": "719adfcf5f0e127baad8e852c917c343f3bcdb29b5e95a26e9ddc29d73fa50f9",
       "distinctness_note": "Low-efficiency auction/range mechanism; no large-return shock threshold or high-volume depletion condition."
     },
     {
@@ -324,8 +332,9 @@
         "stress_multipliers": [1.0, 1.5, 2.0]
       },
       "screen_permission": "WAIT_DATASET_FREEZE",
-      "scientific_design_sha256": "ed5240af1167ec2a23daf92f37a26c399822fb70fac37a4f27ffd1f4455b6eb6",
-      "contract_sha256": "b355f12c487fea3f4f537b559fd432319789af5730c6d0fabdadc90be8ec7a47",
+      "strategy_behavior_sha256": "3abac6c86acc6d5face1c5a86b50918da34ee91bf4c53fbe25a3efbaa41aa8d8",
+      "scientific_design_sha256": "34a070886aed405fcb96d7d7ddb28c0cfd9e0771269b90b06aeb7e5b5149a00c",
+      "contract_sha256": "578c408753d0d8f7739b98c2a5668629ecb2e37b75af9163631a68d667671fc2",
       "distinctness_note": "Delta-neutral carry capture, not directional return prediction from funding; negative-funding spot-short path is excluded because borrow data are not frozen."
     }
   ]
