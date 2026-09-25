@@ -16,36 +16,24 @@ SKIPPED_PATHS = {".github/workflows/security.yml"}
 
 PATTERNS: tuple[re.Pattern[str], ...] = (
     # Real API keys may be quoted, assigned, or appear after punctuation, but
-    # should not match the "sk-" inside ordinary words such as "risk-premium".
-    re.compile(r"(?<![A-Za-z0-9_])sk-[A-Za-z0-9_-]{20,}"),
+    # should not match the "sk-" inside ordinary words such as "risk-premium"
+    # or hyphenated organization names such as "sk-hynix". Legacy keys have
+    # one opaque segment; current project/service-account keys have a trusted
+    # type prefix before their opaque suffix.
+    re.compile(
+        r"(?<![A-Za-z0-9_])(?:"
+        r"sk-[A-Za-z0-9]{20,}"
+        r"|sk-(?:proj|svcacct)-[A-Za-z0-9_-]{20,}"
+        r")"
+    ),
     re.compile(r'''SUPABASE_SECRET_KEY\s*=\s*["'][^"']+["']'''),
     re.compile(r'''SCAN_SECRET\s*=\s*["'][^"']+["']'''),
     re.compile(r'''DASHBOARD_SECRET\s*=\s*["'][^"']+["']'''),
 )
-REUTERS_WORD_SLUG = re.compile(r"sk-(?:(?:[a-z]{1,18}|[0-9]{1,2})-){5,}20\d{2}-\d{2}-\d{2}")
-REUTERS_URL_PREFIX = re.compile(
-    r"https://(?:www\.)?reuters\.com/(?:[a-z0-9-]+/){2,}$"
-)
 
 
 def line_has_secret_pattern(line: str) -> bool:
-    if any(pattern.search(line) for pattern in PATTERNS[1:]):
-        return True
-    for match in PATTERNS[0].finditer(line):
-        # Reuters article slugs can start with the letters "sk" and contain
-        # many lowercase words. Keep key-shaped tokens, even in a URL, blocked.
-        suffix = line[match.end():]
-        article_path_ends = suffix.startswith("/") and (
-            len(suffix) == 1 or suffix[1].isspace() or suffix[1] in "\"',"
-        )
-        if (
-            REUTERS_WORD_SLUG.fullmatch(match.group())
-            and REUTERS_URL_PREFIX.search(line[: match.start()])
-            and article_path_ends
-        ):
-            continue
-        return True
-    return False
+    return any(pattern.search(line) for pattern in PATTERNS)
 
 
 def scan_paths(paths: Iterable[Path]) -> list[str]:
