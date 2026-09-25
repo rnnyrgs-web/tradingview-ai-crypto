@@ -278,6 +278,9 @@ def _openai_exact_head_verdict(prompt: str) -> dict[str, Any]:
             "temporarily unavailable: OpenAI reviewer provider transport exhausted bounded retries"
         ) from exc
 
+    # Provider termination is not a scientific verdict, regardless of polarity.
+    if response.get("status") != "completed":
+        raise RuntimeError("temporarily unavailable: OpenAI reviewer response incomplete; verdict withheld")
     try:
         text = response_text(response)
     except (json.JSONDecodeError, TypeError, KeyError, AttributeError) as exc:

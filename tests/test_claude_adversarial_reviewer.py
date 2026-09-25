@@ -63,7 +63,7 @@ def test_claude_adversarial_review_requires_all_eleven_falsification_findings(tm
         assert "FALSIFY" in system
         for name in REQUIRED_FALSIFICATION_FINDINGS:
             assert name in user
-        return {"content": [{"type": "text", "text": json.dumps(incomplete)}]}
+        return {"stop_reason": "end_turn", "content": [{"type": "text", "text": json.dumps(incomplete)}]}
 
     monkeypatch.setattr("agents.autonomous_orchestrator.post_anthropic_message", fake_post)
     with pytest.raises(RuntimeError, match="omitted required falsification findings"):
@@ -78,7 +78,7 @@ def test_claude_adversarial_review_approves_with_complete_findings(tmp_path, mon
     complete = {"approve": True, "reason": "all findings avoided", "risk": "low", "falsification_findings": FULL_FINDINGS}
 
     def fake_post(system, user, max_tokens=2000):
-        return {"content": [{"type": "text", "text": json.dumps(complete)}]}
+        return {"stop_reason": "end_turn", "content": [{"type": "text", "text": json.dumps(complete)}]}
 
     monkeypatch.setattr("agents.autonomous_orchestrator.post_anthropic_message", fake_post)
     review_diff("claude-adversarial", diff_path, output_path)
@@ -95,7 +95,7 @@ def test_claude_adversarial_review_rejects_invalid_risk_value(tmp_path, monkeypa
     bad_risk = {"approve": True, "reason": "x", "risk": "extreme", "falsification_findings": FULL_FINDINGS}
 
     def fake_post(system, user, max_tokens=2000):
-        return {"content": [{"type": "text", "text": json.dumps(bad_risk)}]}
+        return {"stop_reason": "end_turn", "content": [{"type": "text", "text": json.dumps(bad_risk)}]}
 
     monkeypatch.setattr("agents.autonomous_orchestrator.post_anthropic_message", fake_post)
     with pytest.raises(RuntimeError, match="invalid risk"):

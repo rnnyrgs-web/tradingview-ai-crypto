@@ -72,6 +72,57 @@ index 1111111..2222222 100644
 """
 
 
+@pytest.mark.parametrize("reviewer", ["security", "lead", "claude-adversarial"])
+@pytest.mark.parametrize("approve", [True, False])
+@pytest.mark.parametrize("completed", [True, False])
+def test_provider_completion_controls_exact_identity_receipt(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, reviewer: str, approve: bool, completed: bool,
+) -> None:
+    from agents import autonomous_orchestrator as agent
+
+    verdict = {
+        "approve": approve, "reason": "Concrete bounded finding", "risk": "low",
+        "falsification_findings": {
+            name: "Not applicable: reviewer transport change."
+            for name in agent.REQUIRED_FALSIFICATION_FINDINGS
+        },
+    }
+    monkeypatch.setattr(review, "model_name", lambda: "test-model")
+    monkeypatch.setattr(review, "post_response", lambda _payload: {
+        "status": "completed" if completed else "incomplete",
+        "output_text": json.dumps(verdict),
+    })
+    monkeypatch.setattr(agent, "post_anthropic_message", lambda *a, **k: {
+        "stop_reason": "end_turn" if completed else "max_tokens",
+        "content": [{"type": "text", "text": json.dumps(verdict)}],
+    })
+    diff_path = tmp_path / "candidate.diff"
+    diff_path.write_text(_diff(), encoding="utf-8")
+    output = tmp_path / "receipt.json"
+    if not completed:
+        with pytest.raises(RuntimeError, match="temporarily unavailable.*incomplete"):
+            review.review_exact_head(reviewer, diff_path, output, pr_number=826, head_sha=HEAD_SHA)
+        assert not output.exists()
+        assert not output.with_suffix(".json.raw").exists()
+        return
+
+    assert review.review_exact_head(reviewer, diff_path, output, pr_number=826, head_sha=HEAD_SHA) == 0
+    receipt = json.loads(output.read_text(encoding="utf-8"))
+    assert receipt["approve"] is approve
+    assert receipt["exact_head_sha"] == HEAD_SHA
+    assert receipt["integration_authority"] == "NONE"
+    review._verify_current_receipt(
+        receipt_path=output, diff_path=diff_path, pr_number=826, head_sha=HEAD_SHA,
+        require_approval=False,
+    )
+    if not approve:
+        with pytest.raises(RuntimeError):
+            review._verify_current_receipt(
+                receipt_path=output, diff_path=diff_path, pr_number=826, head_sha=HEAD_SHA,
+                require_approval=True,
+            )
+
+
 def test_protected_diff_is_reviewed_not_rejected(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     diff_path = tmp_path / "candidate.diff"
     output = tmp_path / "review.json"
@@ -83,7 +134,7 @@ def test_protected_diff_is_reviewed_not_rejected(tmp_path: Path, monkeypatch: py
 
     def fake_post(payload: dict[str, object]) -> dict[str, object]:
         captured.update(payload)
-        return {"output_text": '{"approve": true, "reason": "bounded", "risk": "low"}'}
+        return {"status": "completed", "output_text": '{"approve": true, "reason": "bounded", "risk": "low"}'}
 
     monkeypatch.setattr(review, "post_response", fake_post)
     monkeypatch.setattr(review, "response_text", lambda payload: str(payload["output_text"]))
@@ -210,7 +261,7 @@ def test_invalid_reviewer_verdict_fails_closed(tmp_path: Path, monkeypatch: pyte
     diff_path.write_text(_diff(), encoding="utf-8")
     monkeypatch.setattr(review, "_protected_context", lambda _diff_text: [])
     monkeypatch.setattr(review, "model_name", lambda: "test-model")
-    monkeypatch.setattr(review, "post_response", lambda _payload: {"output_text": '{"approve": "yes", "risk": "low"}'})
+    monkeypatch.setattr(review, "post_response", lambda _payload: {"status": "completed", "output_text": '{"approve": "yes", "risk": "low"}'})
     monkeypatch.setattr(review, "response_text", lambda payload: str(payload["output_text"]))
     with pytest.raises(RuntimeError, match="invalid approval"):
         review.review_exact_head(
