@@ -108,3 +108,54 @@ def test_ranking_rejects_nonfinite_scientific_state_on_imported_mission(field):
 
     with pytest.raises(ValueError, match="finite"):
         rank_missions([valid, forged])
+
+
+def test_finite_population_preserves_legacy_ranking_order_exactly():
+    """The fail-closed validation must not reorder any finite mission population."""
+    base = build_mission(
+        lane="strategy-discovery",
+        horizon="24h",
+        direction="RESEARCH_ONLY",
+        theme="finite-compatibility",
+        hypothesis="finite mission ordering remains unchanged",
+        expected_information_gain=0.6,
+        expected_signal_impact=0.5,
+        expected_profitability_impact=0.4,
+        sample_readiness=0.7,
+        novelty=0.3,
+    )
+    population = [
+        replace(
+            base,
+            mission_id="mission-low-priority",
+            priority=0.25,
+            expected_profitability_impact=0.95,
+        ),
+        replace(
+            base,
+            mission_id="mission-high-low-profitability",
+            priority=0.75,
+            expected_profitability_impact=0.2,
+        ),
+        replace(
+            base,
+            mission_id="mission-high-high-profitability-z",
+            priority=0.75,
+            expected_profitability_impact=0.8,
+            falsification_value=0.3,
+        ),
+        replace(
+            base,
+            mission_id="mission-high-high-profitability-a",
+            priority=0.75,
+            expected_profitability_impact=0.8,
+            falsification_value=0.9,
+        ),
+    ]
+
+    assert [mission.mission_id for mission in rank_missions(population)] == [
+        "mission-high-high-profitability-a",
+        "mission-high-high-profitability-z",
+        "mission-high-low-profitability",
+        "mission-low-priority",
+    ]
