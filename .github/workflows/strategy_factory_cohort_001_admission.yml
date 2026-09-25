@@ -64,10 +64,10 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install focused test dependency
-        run: python -m pip install --require-hashes -r requirements-cohort001-admission.txt
+        run: python -I -m pip install --require-hashes -r requirements-cohort001-admission.txt
       - name: Verify canonical admission, immutable receipt, multiplicity and provenance authority
         run: >-
-          python -m pytest -q
+          python -I -c 'import os, sys; os.environ["PYTEST_DISABLE_PLUGIN_AUTOLOAD"] = "1"; os.environ.pop("PYTEST_ADDOPTS", None); os.environ.pop("PYTEST_PLUGINS", None); sys.path.append(os.getcwd()); import pytest; raise SystemExit(pytest.main(["-q", "--noconftest", "-c", "/dev/null", "--import-mode=importlib", *sys.argv[1:]]))'
           tests/test_strategy_factory_cohort_001_admission.py
           tests/test_strategy_factory_cohort_001_receipt_lock.py
           tests/test_strategy_factory_cohort_001_multiplicity_authority.py
@@ -76,11 +76,12 @@ jobs:
           tests/test_strategy_dataset_preflight.py
           tests/test_rejected_fingerprints.py
       - name: Emit deterministic canonical admission receipt
-        run: python -m orchestration.strategy_factory_cohort_001_admission > strategy_factory_cohort_001_canonical_admission.json
+        run: python -I -c 'import os, sys; sys.path.append(os.getcwd()); from orchestration.strategy_factory_cohort_001_admission import main; main()'  > strategy_factory_cohort_001_canonical_admission.json
       - name: Assert research-only authority and exact execution holds
         run: |
-          python - <<'PY'
-          import json
+          python -I - <<'PY'
+          import json, os, sys
+          sys.path.append(os.getcwd())
           from orchestration.strategy_factory_cohort_001_provenance import verify_admission_provenance_lock
 
           payload = json.load(open("strategy_factory_cohort_001_canonical_admission.json", encoding="utf-8"))

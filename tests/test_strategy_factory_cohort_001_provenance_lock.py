@@ -70,7 +70,7 @@ def test_admission_workflow_pins_action_code_and_test_dependencies() -> None:
 
 def test_admission_workflow_runs_existing_protected_dataset_regressions() -> None:
     workflow = (ROOT / ".github/workflows/strategy_factory_cohort_001_admission.yml").read_text()
-    assert "tests/test_strategy_dataset_preflight.py" in workflow.split("python -m pytest -q", 1)[1]
+    assert "tests/test_strategy_dataset_preflight.py" in workflow.split("      - name: Verify canonical admission,", 1)[1].split("      - name:", 1)[0]
 
 
 def test_scientific_identity_sources_are_bound_and_trigger_focused_ci() -> None:
@@ -82,7 +82,7 @@ def test_scientific_identity_sources_are_bound_and_trigger_focused_ci() -> None:
         assert any(fnmatch.fnmatchcase(source, pattern) for pattern in patterns), source
     revision_test = "tests/test_strategy_behavior_contract_revision.py"
     assert any(fnmatch.fnmatchcase(revision_test, pattern) for pattern in patterns)
-    assert revision_test in workflow.split("python -m pytest -q", 1)[1]
+    assert revision_test in workflow.split("      - name: Verify canonical admission,", 1)[1].split("      - name:", 1)[0]
 
 
 def test_actual_outcome_blind_admission_inputs_are_all_bound() -> None:
@@ -92,6 +92,7 @@ def test_actual_outcome_blind_admission_inputs_are_all_bound() -> None:
 import json, sys
 from pathlib import Path
 root = Path.cwd()
+sys.path.append(str(root))
 opened = set()
 def audit(event, args):
     if event == 'open' and isinstance(args[0], str):
@@ -112,7 +113,7 @@ for module in list(sys.modules.values()):
 print(json.dumps(sorted(opened)))
 """
     result = subprocess.run(
-        [sys.executable, "-B", "-c", script], cwd=ROOT,
+        [sys.executable, "-I", "-B", "-c", script], cwd=ROOT,
         capture_output=True, text=True, check=True,
     )
     assert set(json.loads(result.stdout)) <= REQUIRED_SOURCE_PATHS | {LOCK_RELATIVE_PATH.as_posix()}
@@ -256,3 +257,34 @@ def test_public_admission_never_grants_execution_authority():
     receipt = build_canonical_admission_receipt()
     assert all(row['screening_authority'] is False for row in receipt['candidates'])
     assert sum(row['admission_eligible'] for row in receipt['candidates']) == 6
+
+
+def test_admission_workflow_ignores_ambient_python_and_pytest_inputs(tmp_path):
+    import os
+    import shlex
+    workflow = (ROOT / '.github/workflows/strategy_factory_cohort_001_admission.yml').read_text()
+    step = workflow.split('      - name: Verify canonical admission,', 1)[1].split('      - name:', 1)[0]
+    command = shlex.split(step.split('run: >-', 1)[1])
+    command = command[:next(i for i, value in enumerate(command) if value.startswith('tests/'))]
+    command[0] = sys.executable
+    command += ['test_positive_control.py']
+    marker = tmp_path / 'ambient-executed'
+    hook = 'from pathlib import Path\nPath(' + repr(str(marker)) + ').write_text("executed")\n'
+    (tmp_path / 'sitecustomize.py').write_text(hook)
+    (tmp_path / 'usercustomize.py').write_text(hook)
+    (tmp_path / 'conftest.py').write_text(hook + 'raise RuntimeError("ambient conftest")\n')
+    (tmp_path / 'ambient_plugin.py').write_text(hook + 'raise RuntimeError("ambient plugin")\n')
+    (tmp_path / 'pytest.ini').write_text('[pytest]\naddopts = --invalid-ambient-option\n')
+    (tmp_path / 'test_positive_control.py').write_text('def test_positive_control():\n    assert 2 + 2 == 4\n')
+    env = dict(os.environ, PYTHONPATH=str(tmp_path), PYTEST_ADDOPTS='--invalid-env-option', PYTEST_PLUGINS='ambient_plugin')
+    result = subprocess.run(command, cwd=tmp_path, env=env, text=True, capture_output=True)
+    assert not marker.exists(), 'ambient startup hook executed before verification'
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert '1 passed' in result.stdout
+
+
+def test_every_admission_workflow_python_process_is_isolated():
+    workflow = (ROOT / '.github/workflows/strategy_factory_cohort_001_admission.yml').read_text()
+    invocations = re.findall(r'\bpython\s+([^\n]+)', workflow)
+    assert invocations
+    assert all(command.startswith('-I ') for command in invocations)
