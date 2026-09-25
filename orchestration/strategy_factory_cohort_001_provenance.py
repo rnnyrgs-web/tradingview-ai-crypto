@@ -83,9 +83,13 @@ def _canonical_sha256_without(payload: dict[str, Any], digest_field: str) -> str
 def git_blob_sha1(path: Path) -> str:
     data = path.read_bytes()
     header = f"blob {len(data)}\0".encode("ascii")
-    # SHA-1 is required here only to reproduce Git's object identifier, not as a
-    # security primitive. The provenance contract additionally self-binds with SHA-256.
+    # SHA-1 is retained only to reproduce Git's object identifier. Every bound
+    # source is independently authenticated below with SHA-256 over raw bytes.
     return hashlib.sha1(header + data, usedforsecurity=False).hexdigest()
+
+
+def source_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def verify_admission_provenance_lock(
@@ -107,9 +111,15 @@ def verify_admission_provenance_lock(
     source_blobs = payload.get("bound_source_git_blobs")
     if not isinstance(source_blobs, dict) or set(source_blobs) != REQUIRED_SOURCE_PATHS:
         raise RuntimeError("admission provenance source set mismatch")
+    source_sha256s = payload.get("bound_source_sha256")
+    if not isinstance(source_sha256s, dict) or set(source_sha256s) != REQUIRED_SOURCE_PATHS:
+        raise RuntimeError("admission provenance SHA-256 source set mismatch")
     for relative_path, expected_blob in source_blobs.items():
         if not isinstance(expected_blob, str) or len(expected_blob) != 40:
             raise RuntimeError(f"invalid Git blob identity for {relative_path}")
+        expected_sha256 = source_sha256s.get(relative_path)
+        if not isinstance(expected_sha256, str) or len(expected_sha256) != 64:
+            raise RuntimeError(f"invalid source SHA-256 identity for {relative_path}")
         path = (root / relative_path).resolve()
         try:
             path.relative_to(root)
@@ -117,6 +127,10 @@ def verify_admission_provenance_lock(
             raise RuntimeError("admission provenance path escaped repository root") from exc
         if git_blob_sha1(path) != expected_blob:
             raise RuntimeError(f"admission provenance source drift: {relative_path}")
+        if source_sha256(path) != expected_sha256:
+            raise RuntimeError(
+                f"admission provenance source SHA-256 drift: {relative_path}"
+            )
 
     admission = _load_json(
         root / "orchestration/cohorts/strategy_factory_cohort_001_canonical_admission.json"
