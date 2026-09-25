@@ -88,14 +88,15 @@ jobs:
           provenance = verify_admission_provenance_lock()
           statuses = {row["fingerprint_id"]: row["status"] for row in payload["candidates"]}
           dataset = payload["selection_dataset_qualification"]
-          assert payload["schema_version"] == 3
+          assert payload["schema_version"] == 4
           assert dataset["status"] == "QUALIFIED_DEVELOPMENT_ONLY"
           assert dataset["protected_ohlcv_json_decoded"] is False
           assert dataset["economic_outcomes_computed"] is False
           assert dataset["strategy_signals_computed"] is False
           assert len(statuses) == 8
           assert all(row["status"] != "REJECTED_CANONICAL_ADMISSION" for row in payload["candidates"])
-          authorized = [row for row in payload["candidates"] if row["screening_authority"] is True]
+          assert all(row["screening_authority"] is False for row in payload["candidates"])
+          authorized = [row for row in payload["candidates"] if row["admission_eligible"] is True]
           assert len(authorized) == 6
           assert all(row["selection_dataset_receipt_sha256"] == dataset["receipt_sha256"] for row in authorized)
           assert statuses["DISC-BREADTH-PERSIST-001-v1"] == "HOLD_ACTIVE_OWNERSHIP_COLLISION"

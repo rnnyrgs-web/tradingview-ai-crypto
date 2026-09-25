@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from orchestration.strategy_predeclaration import freeze_predeclaration
+from orchestration.strategy_factory_cohort_001_provenance import verify_admission_provenance_lock
 from strategy_dataset_preflight import qualify_cohort001_dataset
 
 _ROOT = Path(__file__).resolve().parent
@@ -113,7 +114,7 @@ def stage1_total_cost_bps(cost_model: dict[str, Any], stress_multiplier: float) 
 
 
 def _qualify_common_selection_dataset(seed: dict[str, Any]) -> dict[str, Any]:
-    """Bind #528's protected-safe source qualification before screen authority.
+    """Bind #528's protected-safe source qualification before admission eligibility.
 
     The qualifier authenticates immutable compressed bytes, decodes market values
     only through 2026-08-31 23:00 UTC, and inspects protected rows by timestamp only.
@@ -169,9 +170,11 @@ def _qualify_common_selection_dataset(seed: dict[str, Any]) -> dict[str, Any]:
 def build_canonical_admission_receipt() -> dict[str, Any]:
     """Canonically admit Cohort-001 and bind protected-safe data readiness.
 
-    Result status is an execution/readiness decision only. Passing admission is
+    Result status is admission eligibility only. Execution authority stays closed.
+    Passing admission is
     not profitability evidence and grants no OOS, forward, broker or trade authority.
     """
+    verify_admission_provenance_lock()
     seed = _load_json(_SEED_PATH)
     readiness = _load_json(_READINESS_PATH)
     ownership = _load_json(_OWNERSHIP_PATH)
@@ -206,6 +209,7 @@ def build_canonical_admission_receipt() -> dict[str, Any]:
                     "fingerprint_id": fingerprint,
                     "status": "REJECTED_CANONICAL_ADMISSION",
                     "reason": str(exc),
+                    "admission_eligible": False,
                     "screening_authority": False,
                 }
             )
@@ -239,16 +243,16 @@ def build_canonical_admission_receipt() -> dict[str, Any]:
         readiness_state = readiness_by_id.get(fingerprint)
         if fingerprint == held_fingerprint:
             status = "HOLD_ACTIVE_OWNERSHIP_COLLISION"
-            screening_authority = False
+            admission_eligible = False
         elif readiness_state == "BLOCKED_DATA_PREFLIGHT":
             status = "DATA_BLOCKED"
-            screening_authority = False
+            admission_eligible = False
         elif readiness_state and "POWER_RISK" in readiness_state:
             status = "ADMITTED_DATA_QUALIFIED_POWER_RISK"
-            screening_authority = True
+            admission_eligible = True
         elif readiness_state == "READY_FOR_SCHEMA_PREFLIGHT_AFTER_507":
             status = "ADMITTED_DATA_QUALIFIED"
-            screening_authority = True
+            admission_eligible = True
         else:
             raise RuntimeError(
                 f"Cohort-001 candidate {fingerprint} has unknown readiness {readiness_state!r}"
@@ -261,9 +265,10 @@ def build_canonical_admission_receipt() -> dict[str, Any]:
                 "scientific_design_sha256": frozen["scientific_design_sha256"],
                 "strategy_behavior_sha256": frozen["strategy_behavior_sha256"],
                 "contract_sha256": frozen["contract_sha256"],
-                "screening_authority": screening_authority,
+                "admission_eligible": admission_eligible,
+                "screening_authority": False,
                 "selection_dataset_receipt_sha256": selection_dataset["receipt_sha256"]
-                if screening_authority
+                if admission_eligible
                 else None,
                 "untouched_oos_opened": False,
                 "genuine_forward_opened": False,
@@ -273,7 +278,7 @@ def build_canonical_admission_receipt() -> dict[str, Any]:
         )
 
     payload: dict[str, Any] = {
-        "schema_version": 3,
+        "schema_version": 4,
         "artifact_type": "strategy_factory_cohort_001_canonical_admission_receipt",
         "cohort_id": seed.get("cohort_id"),
         "multiple_testing_family_id": seed.get("multiple_testing", {}).get("family_id"),

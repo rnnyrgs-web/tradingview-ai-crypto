@@ -39,7 +39,7 @@ def test_cohort_001_admission_receipt_binds_protected_safe_dataset_qualification
     receipt = build_canonical_admission_receipt()
     dataset = receipt["selection_dataset_qualification"]
 
-    assert receipt["schema_version"] == 3
+    assert receipt["schema_version"] == 4
     assert dataset["status"] == "QUALIFIED_DEVELOPMENT_ONLY"
     assert dataset["source_dataset_sha256"] == (
         "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f"
@@ -74,14 +74,14 @@ def test_cohort_001_admission_receipt_preserves_fail_closed_execution_holds() ->
     assert by_status.get("DATA_BLOCKED") == ["DISC-DELTA-CARRY-001-v1"]
     assert "REJECTED_CANONICAL_ADMISSION" not in by_status
 
-    authorized = [row for row in receipt["candidates"] if row["screening_authority"]]
+    authorized = [row for row in receipt["candidates"] if row["admission_eligible"]]
     assert len(authorized) == 6
     for row in authorized:
         assert row["selection_dataset_receipt_sha256"] == receipt[
             "selection_dataset_qualification"
         ]["receipt_sha256"]
 
-    held = [row for row in receipt["candidates"] if not row["screening_authority"]]
+    held = [row for row in receipt["candidates"] if not row["admission_eligible"]]
     assert len(held) == 2
     assert all(row["selection_dataset_receipt_sha256"] is None for row in held)
 

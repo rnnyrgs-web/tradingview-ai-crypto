@@ -115,7 +115,7 @@ print(json.dumps(sorted(opened)))
         [sys.executable, "-B", "-c", script], cwd=ROOT,
         capture_output=True, text=True, check=True,
     )
-    assert set(json.loads(result.stdout)) <= REQUIRED_SOURCE_PATHS
+    assert set(json.loads(result.stdout)) <= REQUIRED_SOURCE_PATHS | {LOCK_RELATIVE_PATH.as_posix()}
 
 
 @pytest.mark.parametrize("relative", (
@@ -226,3 +226,33 @@ def test_authority_tamper_fails_even_with_valid_new_self_digest(tmp_path: Path) 
     lock.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     with pytest.raises(RuntimeError, match="cannot grant integration authority"):
         verify_admission_provenance_lock(repo_root=tmp_path)
+
+@pytest.mark.parametrize('defect', ('missing', 'malformed', 'tampered', 'multiplicity_drift'))
+def test_public_admission_fails_closed_before_qualification(monkeypatch, tmp_path, defect):
+    from orchestration import strategy_factory_cohort_001_admission as admission
+    from orchestration import strategy_factory_cohort_001_provenance as provenance
+    lock = _copy_lock_fixture(tmp_path)
+    if defect == 'missing':
+        lock.unlink()
+    elif defect == 'malformed':
+        lock.write_text('{}')
+    elif defect == 'tampered':
+        payload = json.loads(lock.read_text())
+        payload['authority']['outcomes_read'] = True
+        lock.write_text(json.dumps(payload))
+    else:
+        target = tmp_path / 'orchestration/cohorts/strategy_factory_cohort_001_multiplicity_authority.json'
+        target.write_text(target.read_text() + '\n')
+    monkeypatch.setattr(provenance, 'REPO_ROOT', tmp_path)
+    def forbidden_qualification(_):
+        pytest.fail('dataset qualification reached before provenance verification')
+    monkeypatch.setattr(admission, '_qualify_common_selection_dataset', forbidden_qualification)
+    with pytest.raises(RuntimeError):
+        admission.build_canonical_admission_receipt()
+
+
+def test_public_admission_never_grants_execution_authority():
+    from orchestration.strategy_factory_cohort_001_admission import build_canonical_admission_receipt
+    receipt = build_canonical_admission_receipt()
+    assert all(row['screening_authority'] is False for row in receipt['candidates'])
+    assert sum(row['admission_eligible'] for row in receipt['candidates']) == 6
