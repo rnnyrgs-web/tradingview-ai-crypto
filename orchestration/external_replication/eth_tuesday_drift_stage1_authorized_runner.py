@@ -28,7 +28,7 @@ AUTHORITY_ANCHOR_PATH = (
     ROOT
     / "orchestration"
     / "external_replication"
-    / "ext_eth_tuesday_drift_001_stage1_authority_anchor_v1.json"
+    / "ext_eth_tuesday_drift_001_stage1_authority_anchor_v2.json"
 )
 BASE_EXECUTION_CONTRACT_RELATIVE_PATH = (
     "orchestration/external_replication/ext_eth_tuesday_drift_001_stage1_execution.json"
@@ -38,15 +38,26 @@ RISK_AMENDMENT_RELATIVE_PATH = (
 )
 
 REPLICATION_ID = "EXT-ETH-TUESDAY-DRIFT-001-v1"
-EXPECTED_AUTHORITY_ANCHOR_SHA256 = "51dc12aa867d54c357c82df970b3d48aa8d04e90f6f661d75dab54ad5d8137a8"
+EXPECTED_AUTHORITY_ANCHOR_SHA256 = "8bada39aacc7f988d90b418a2a15337e97ed750b7674f2d68a7be96daa080d58"
+EXPECTED_PARENT_AUTHORITY_ANCHOR_V1_SHA256 = (
+    "51dc12aa867d54c357c82df970b3d48aa8d04e90f6f661d75dab54ad5d8137a8"
+)
 EXPECTED_PARENT_PROVENANCE_V2_SHA256 = "e452f5b55971854e7df40eee5c03b5a68c6c250fefd5ef9536733790a317a66d"
 EXPECTED_PARENT_ARTIFACT_SHA256 = "6ddab16cbfbb846d0690dced9e2128244e2bc9ec6221243a02cb48fea4b5c98b"
 EXPECTED_BASE_EXECUTION_CONTRACT_SHA256 = "823d7bbfbd411056358721dfb1e7f3764c7a445306f62aaa156945a6cd2ca46c"
 EXPECTED_RISK_AMENDMENT_SHA256 = "8e13286cd6c586c98f6ade79409a243efde266b55e7f4ee57492affd97c4c2c0"
-
 BASE_MODULE_NAME = "orchestration.external_replication.eth_tuesday_drift_runner"
 LOADER_MODULE_NAME = "orchestration.external_replication.eth_tuesday_protected_safe_loader"
 RISK_MODULE_NAME = "orchestration.external_replication.eth_tuesday_drift_stage1_guarded_runner"
+
+
+def verify_stage1_admission() -> None:
+    """Fail closed until independent review is durably integrated."""
+    # An exact-head review receipt is read-only evidence, not an execution
+    # token. A later independently reviewed integration change must replace
+    # this closed implementation with verification of a repository-pinned
+    # admission artifact before Stage 1 can run.
+    raise RuntimeError("Stage-1 independent review admission is not integrated")
 
 
 def _canonical_json(value: object) -> bytes:
@@ -122,7 +133,7 @@ def verify_execution_closure(
             root
             / "orchestration"
             / "external_replication"
-            / "ext_eth_tuesday_drift_001_stage1_authority_anchor_v1.json"
+            / "ext_eth_tuesday_drift_001_stage1_authority_anchor_v2.json"
         )
 
     anchor = _load_exact_artifact(
@@ -132,18 +143,40 @@ def verify_execution_closure(
     )
     if anchor.get("replication_id") != REPLICATION_ID:
         raise RuntimeError("authority-anchor replication mismatch")
-    if anchor.get("parent_artifact_sha256") != EXPECTED_PARENT_ARTIFACT_SHA256:
-        raise RuntimeError("authority-anchor parent mismatch")
-    if anchor.get("base_execution_contract_sha256") != EXPECTED_BASE_EXECUTION_CONTRACT_SHA256:
-        raise RuntimeError("authority-anchor base-contract mismatch")
-    if anchor.get("risk_amendment_sha256") != EXPECTED_RISK_AMENDMENT_SHA256:
-        raise RuntimeError("authority-anchor risk-amendment mismatch")
     if anchor.get("formed_pre_outcome") is not True:
         raise RuntimeError("authority anchor must be frozen pre-outcome")
     if anchor.get("outcomes_read_to_form_anchor") is not False:
         raise RuntimeError("authority-anchor outcome chronology drift")
 
-    parent = anchor.get("parent_execution_provenance_v2")
+    parent_anchor_ref = anchor.get("parent_authority_anchor_v1")
+    if not isinstance(parent_anchor_ref, Mapping):
+        raise RuntimeError("authority-anchor v1 parent missing")
+    if parent_anchor_ref.get("artifact_sha256") != EXPECTED_PARENT_AUTHORITY_ANCHOR_V1_SHA256:
+        raise RuntimeError("authority-anchor v1 parent digest drift")
+    parent_anchor_path_value = parent_anchor_ref.get("path")
+    if not isinstance(parent_anchor_path_value, str) or not parent_anchor_path_value:
+        raise RuntimeError("authority-anchor v1 parent path missing")
+    parent_anchor_path = _verified_repo_file(
+        root,
+        parent_anchor_path_value,
+        label="authority-anchor v1 parent",
+    )
+    parent_anchor = _load_exact_artifact(
+        parent_anchor_path,
+        expected_sha256=EXPECTED_PARENT_AUTHORITY_ANCHOR_V1_SHA256,
+        label="authority anchor v1 parent",
+    )
+
+    if parent_anchor.get("replication_id") != REPLICATION_ID:
+        raise RuntimeError("authority-anchor v1 replication mismatch")
+    if parent_anchor.get("parent_artifact_sha256") != EXPECTED_PARENT_ARTIFACT_SHA256:
+        raise RuntimeError("authority-anchor parent mismatch")
+    if parent_anchor.get("base_execution_contract_sha256") != EXPECTED_BASE_EXECUTION_CONTRACT_SHA256:
+        raise RuntimeError("authority-anchor base-contract mismatch")
+    if parent_anchor.get("risk_amendment_sha256") != EXPECTED_RISK_AMENDMENT_SHA256:
+        raise RuntimeError("authority-anchor risk-amendment mismatch")
+
+    parent = parent_anchor.get("parent_execution_provenance_v2")
     if not isinstance(parent, Mapping):
         raise RuntimeError("authority-anchor v2 parent missing")
     if parent.get("artifact_sha256") != EXPECTED_PARENT_PROVENANCE_V2_SHA256:
@@ -202,9 +235,21 @@ def verify_execution_closure(
     if risk_amendment.get("base_execution_contract_sha256") != EXPECTED_BASE_EXECUTION_CONTRACT_SHA256:
         raise RuntimeError("risk amendment execution-contract mismatch")
 
-    anchor_bindings = anchor.get("behavior_bindings")
-    if not isinstance(anchor_bindings, Mapping):
+    parent_anchor_bindings = parent_anchor.get("behavior_bindings")
+    if not isinstance(parent_anchor_bindings, Mapping):
         raise RuntimeError("authority-anchor behavior bindings missing")
+    legacy_replacement = anchor.get("legacy_v2_final_runner_replacement")
+    if not isinstance(legacy_replacement, Mapping):
+        raise RuntimeError("legacy final-runner replacement binding missing")
+    parent_legacy = parent_anchor_bindings.get("legacy_v2_final_runner")
+    if not isinstance(parent_legacy, Mapping):
+        raise RuntimeError("parent legacy final-runner binding missing")
+    if legacy_replacement.get("parent_git_blob_sha1") != parent_legacy.get("git_blob_sha1"):
+        raise RuntimeError("legacy final-runner replacement parent mismatch")
+    if legacy_replacement.get("direct_stage1_entry_allowed") is not False:
+        raise RuntimeError("legacy final runner must remain non-authoritative")
+    anchor_bindings = dict(parent_anchor_bindings)
+    anchor_bindings["legacy_v2_final_runner"] = legacy_replacement
 
     required = {
         "base_stage1_runner": "base Stage-1 evaluator",
@@ -226,7 +271,7 @@ def verify_execution_closure(
         "legacy_v2_final_runner": "final_stage1_runner",
     }
     for anchor_key, v2_key in v2_keys.items():
-        anchor_binding = anchor_bindings[anchor_key]
+        anchor_binding = parent_anchor_bindings[anchor_key]
         v2_binding = provenance_v2.get(v2_key)
         if not isinstance(v2_binding, Mapping):
             raise RuntimeError(f"execution provenance v2 {v2_key} binding missing")
@@ -236,25 +281,22 @@ def verify_execution_closure(
         ):
             raise RuntimeError(f"authority-anchor/{v2_key} identity disagreement")
 
-    if anchor_bindings["legacy_v2_final_runner"].get("direct_stage1_entry_allowed") is not False:
-        raise RuntimeError("legacy v2 final runner must remain non-authoritative")
-
-    locks = anchor.get("authority_locks", {})
-    if any(
-        locks.get(key) is not False
-        for key in (
-            "stage1_started",
-            "stage1_pnl_opened",
-            "baseline_pnl_opened",
-            "protected_oos_opened",
-            "genuine_forward_opened",
-            "profitability_claim_allowed",
-            "promotion_authority",
-            "broker_connected",
-            "trade_authority",
-        )
-    ):
-        raise RuntimeError("authority-anchor lock drift")
+    for locks in (parent_anchor.get("authority_locks", {}), anchor.get("authority_locks", {})):
+        if any(
+            locks.get(key) is not False
+            for key in (
+                "stage1_started",
+                "stage1_pnl_opened",
+                "baseline_pnl_opened",
+                "protected_oos_opened",
+                "genuine_forward_opened",
+                "profitability_claim_allowed",
+                "promotion_authority",
+                "broker_connected",
+                "trade_authority",
+            )
+        ):
+            raise RuntimeError("authority-anchor lock drift")
 
     return anchor, provenance_v2, paths
 
@@ -341,7 +383,8 @@ def _load_verified_behavior_modules(
 
 
 def run_canonical_stage1_frozen() -> dict:
-    """Run the frozen cheap screen only after an external admission gate permits it."""
+    """Run the frozen cheap screen only after durable admission is integrated."""
+    verify_stage1_admission()
     _, _, paths = verify_execution_closure()
     base, loader, risk_guard, previous = _load_verified_behavior_modules(paths)
     try:
