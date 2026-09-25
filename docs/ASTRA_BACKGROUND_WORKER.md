@@ -6,7 +6,7 @@ For substantive scheduled reasoning, **prefer subscription-backed GPT-5.6 Sol wi
 
 When a task becomes a substantial multi-step research/engineering milestone, repository implementation/debugging effort, browser/computer workflow, or other job that materially benefits from a persistent cloud workspace, **route or hand off to ChatGPT Work** and continue there when available and appropriate.
 
-Mechanical/reproducible work remains deterministic. If the runtime cannot actually select Sol High or invoke Work, use the strongest appropriate available path, checkpoint the limitation honestly in GitHub, and never claim a model/effort/Work execution that did not occur.
+Mechanical/reproducible work remains deterministic. Use **Codex** for code-dominant implementation/refactor/test-debug loops when it is materially better than Work. Escalate the rare highest-stakes one-off scientific adjudication or adversarial audit to **GPT-6 Pro (powered by GPT-6 Astra)** when available. If the runtime cannot actually select the requested model/mode, use the strongest appropriate available path, checkpoint the limitation honestly in GitHub, and never claim a model/effort/Work/Codex/Pro execution that did not occur.
 
 ## Mission
 
