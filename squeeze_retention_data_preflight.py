@@ -78,7 +78,13 @@ def audit_rows(rows, symbol, family):
         if not isinstance(row, dict) or not required <= row.keys():
             errors["missing_fields"] += 1
             continue
-        fingerprints.append(json.dumps(row, sort_keys=True, allow_nan=False))
+        try:
+            fingerprints.append(json.dumps(row, sort_keys=True, allow_nan=False))
+        except (TypeError, ValueError):
+            # A malformed row must not abort the whole audit.  Keep validating
+            # it so the durable report records every independently detectable
+            # reason the row cannot be trusted.
+            errors["non_json_value"] += 1
         if row["symbol"] != symbol:
             errors["wrong_symbol"] += 1
         try:
