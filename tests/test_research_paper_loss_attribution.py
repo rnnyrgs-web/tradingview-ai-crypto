@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from research_experiment_factory_runner import build_factory_report
@@ -107,3 +109,32 @@ def test_merge_paper_priorities_rejects_nonfinite_imported_ranking_values(invali
             "reason": "nonfinite_ranking_value",
         }
     ]
+
+
+def test_factory_report_surfaces_invalid_priority_audit_and_is_strict_json_safe(monkeypatch):
+    malformed = {
+        "dimension": "paper_direction",
+        "group": "MALFORMED",
+        "economic_harm_usd": float("nan"),
+        "economic_harm_score_pct": 1.0,
+        "priority_score": 1.0,
+        "independent_samples": 100,
+    }
+    monkeypatch.setattr(
+        "research_experiment_factory_runner.learning_diagnostics",
+        lambda _rows: {"research_priorities": [malformed]},
+    )
+
+    report = build_factory_report([])
+
+    assert report["invalid_priority_rows"] == [
+        {
+            "source": "diagnostics",
+            "source_index": 0,
+            "dimension": "paper_direction",
+            "group": "MALFORMED",
+            "invalid_fields": ["economic_harm_usd"],
+            "reason": "nonfinite_ranking_value",
+        }
+    ]
+    json.dumps(report, allow_nan=False)

@@ -110,6 +110,27 @@ def test_ranking_rejects_nonfinite_scientific_state_on_imported_mission(field):
         rank_missions([valid, forged])
 
 
+@pytest.mark.parametrize("field", ["priority", "compute_cost", "redundancy_risk"])
+def test_claim_rejects_nonfinite_directly_constructed_mission_before_receipt(field):
+    """Direct claim callers cannot bypass the ranking admission boundary."""
+    valid = build_mission(
+        lane="strategy-discovery",
+        horizon="24h",
+        direction="RESEARCH_ONLY",
+        theme="finite-claim",
+        hypothesis="only a validated mission may receive a claim receipt",
+        expected_information_gain=0.7,
+        expected_signal_impact=0.6,
+        expected_profitability_impact=0.5,
+        sample_readiness=0.8,
+        novelty=0.7,
+    )
+    forged = replace(valid, **{field: float("nan")})
+
+    with pytest.raises(ValueError, match=f"mission {field} must be a finite number"):
+        claim_mission(forged, worker_id="worker-1")
+
+
 def test_finite_population_preserves_legacy_ranking_order_exactly():
     """The fail-closed validation must not reorder any finite mission population."""
     base = build_mission(

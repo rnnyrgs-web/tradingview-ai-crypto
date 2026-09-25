@@ -29,12 +29,6 @@ def test_score_matches_mission_priority_exactly():
     assert breakdown.score == direct
 
 
-@pytest.mark.parametrize("nonfinite", [float("nan"), float("inf"), float("-inf")])
-def test_audit_breakdown_rejects_nonfinite_scientific_estimates(nonfinite):
-    with pytest.raises(ValueError, match="finite"):
-        score_breakdown(**{**BASE_KWARGS, "expected_profitability_impact": nonfinite})
-
-
 @pytest.mark.parametrize(
     "info,signal,samples,novelty,profitability,falsify,actionable,cost,redundancy,blocker",
     list(

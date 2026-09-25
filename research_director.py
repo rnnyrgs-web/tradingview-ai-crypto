@@ -216,6 +216,11 @@ def build_mission(
 
 
 def rank_missions(missions: Iterable[ResearchMission], now: datetime | None = None) -> list[ResearchMission]:
+    """Return eligible missions in priority order after validating every input.
+
+    Validation occurs before eligibility checks or sorting.  A malformed imported
+    mission therefore fails closed before any caller can persist ranking output.
+    """
     current = _utcnow(now)
 
     candidates = list(missions)
@@ -253,6 +258,8 @@ def claim_mission(
     now: datetime | None = None,
     lease_minutes: int = DEFAULT_LEASE_MINUTES,
 ) -> MissionClaim:
+    """Create a lease receipt only after validating the full mission payload."""
+    _validate_mission_numeric_state(mission)
     current = _utcnow(now)
     return MissionClaim(
         mission_id=mission.mission_id,
