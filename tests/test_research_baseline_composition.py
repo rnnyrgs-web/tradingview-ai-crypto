@@ -135,13 +135,34 @@ def test_pinned_loader_reads_only_consumed_trade_evidence(monkeypatch):
     assert result["analysis_type"] == "POST_SELECTION_BASELINE_COMPOSITION_NO_NEW_TEST"
 
 
-def test_forged_archive_with_recomputed_self_hash_is_not_admitted(tmp_path):
+def test_forged_archive_with_recomputed_self_hash_is_not_admitted(monkeypatch):
     from research_artifact import sha256_hex
     forged = json.loads(gzip.decompress(ARCHIVE.read_bytes()))
     forged["payload"]["selection"]["primary"]["BTC-USDT-SWAP"]["train"]["trades"][0]["gross_bps"] += 1
     forged["integrity"]["payload_sha256"] = sha256_hex(forged["payload"])
-    path = tmp_path / "forged.gz"
-    path.write_bytes(gzip.compress(json.dumps(forged).encode()))
+    raw = gzip.compress(json.dumps(forged).encode())
+    monkeypatch.setattr(Path, "read_bytes", lambda path: raw)
     assert hasattr(diagnostic, "audit_archive"), "consumed-only archive loader missing"
     with pytest.raises(ValueError, match="pinned"):
-        diagnostic.audit_archive(path)
+        diagnostic.audit_archive(ARCHIVE)
+
+
+@pytest.mark.parametrize("name", ["dataset.json.gz", "unreviewed_evidence.json.gz"])
+def test_disallowed_path_fails_before_reading_any_bytes(monkeypatch, name):
+    reads = []
+    def forbidden(path):
+        reads.append(str(path))
+        raise AssertionError("disallowed data was opened")
+    monkeypatch.setattr(Path, "read_bytes", forbidden)
+    with pytest.raises(ValueError, match="source path"):
+        diagnostic.audit_archive(ARCHIVE.with_name(name))
+    assert reads == []
+
+
+def test_changed_archive_fails_before_decompression(monkeypatch):
+    monkeypatch.setattr(Path, "read_bytes", lambda path: b"unreviewed compressed data")
+    def forbidden(raw):
+        raise AssertionError("unreviewed bytes were decoded")
+    monkeypatch.setattr(gzip, "decompress", forbidden)
+    with pytest.raises(ValueError, match="pinned"):
+        diagnostic.audit_archive(ARCHIVE)

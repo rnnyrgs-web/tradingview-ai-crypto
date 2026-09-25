@@ -20,6 +20,9 @@ PINNED_PAYLOAD = "8630b22e7c2a8e0ef0e44fad2ea0fcd30395c9e2b2ef99bc08c98afb6e968f
 PINNED_CONTRACT = "19252de4464fc997632b0500fded857bc58d5bdad49d6f72e3660eba75a28b57"
 PINNED_DATASET = "047c098bb2957557f8344ca30c32339ecac01b5067ae424b147d21c9e9caaf9f"
 PINNED_FINGERPRINT = "DISC-LIQUIDITY-MEANREV-001-v1"
+PINNED_ARCHIVE = "92e174bfa0bfc66e55a8f7ec163792e29cb922734b357f0925b8d8d134fdb94d"
+ARCHIVE_PATH = (Path(__file__).resolve().parent
+                / "orchestration/evidence/liquidity_meanrev_001_cache/evidence.json.gz")
 
 
 def _number(value, name):
@@ -165,7 +168,12 @@ def compare_trades(primary, baseline, *, costs=(20, 40, 60)):
 
 def audit_archive(path):
     """Read only the original consumed evidence, never the adjacent OHLCV cache."""
-    raw = Path(path).read_bytes()
+    source = Path(path).resolve()
+    if source != ARCHIVE_PATH:
+        raise ValueError("source path must be the canonical consumed evidence archive")
+    raw = source.read_bytes()
+    if hashlib.sha256(raw).hexdigest() != PINNED_ARCHIVE:
+        raise ValueError("archive bytes differ from pinned consumed evidence")
     evidence = json.loads(gzip.decompress(raw))
     if (not verify_research_envelope(evidence)
             or evidence["integrity"]["payload_sha256"] != PINNED_PAYLOAD):
