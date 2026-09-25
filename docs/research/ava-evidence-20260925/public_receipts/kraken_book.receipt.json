@@ -1,0 +1,41 @@
+{
+  "url": "https://api.kraken.com/0/public/Depth?pair=AVAUSD&count=500",
+  "method": "GET",
+  "request_body": null,
+  "collection_start": "2026-09-25T07:10:45.417390+00:00",
+  "provider_event_time": "See original payload; not inferred from HTTP Date",
+  "status": 200,
+  "headers": {
+    "Date": "Fri, 25 Sep 2026 07:10:47 GMT",
+    "Content-Type": "application/json",
+    "Transfer-Encoding": "chunked",
+    "Connection": "close",
+    "CF-Ray": "a40836083e476588-BUD",
+    "CF-Cache-Status": "EXPIRED",
+    "Cache-Control": "public, max-age=2",
+    "Set-Cookie": "[REDACTED: cookie or authorization value; original retained locally]",
+    "set-cookie": "[REDACTED: cookie or authorization value; original retained locally]",
+    "Last-Modified": "Fri, 25 Sep 2026 07:10:47 GMT",
+    "Server": "cloudflare",
+    "x-trace-id": "0ab2b9f101a0d7670157000982c6ba18",
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+    "Vary": "Accept-Encoding",
+    "X-Content-Type-Options": "nosniff",
+    "kmry5sak-pad": "8-c70$KdF793^L*5yq5nbtXBWVjNGaAMil",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "x-proxy": "gateway"
+  },
+  "final_url": "https://api.kraken.com/0/public/Depth?pair=AVAUSD&count=500",
+  "collection_end": "2026-09-25T07:10:46.535757+00:00",
+  "bytes": 2828,
+  "sha256": "f98deef4f9c5b71c322ec3c1f59a9d9a3dccfcf30aedd073eb6b1c178c5b440a",
+  "local_write_time": "2026-09-25T07:10:46.535757+00:00",
+  "publication_redaction": {
+    "original_receipt_sha256": "732dec48ceb5db94d798e6b42e9bcc137160604bb793e97cf4120807d5e49224",
+    "redacted_header_keys": [
+      "Set-Cookie",
+      "set-cookie"
+    ],
+    "acquisition_fields_unchanged": true
+  }
+}

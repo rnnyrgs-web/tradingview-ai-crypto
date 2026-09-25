@@ -1,0 +1,41 @@
+{
+  "url": "https://eth.blockscout.com/api/v2/tokens/0xa6c0c097741d55ecd9a3a7def3a8253fd022ceb9",
+  "method": "GET",
+  "request_body": null,
+  "collection_start": "2026-09-25T07:10:54.667300+00:00",
+  "provider_event_time": "See original payload; not inferred from HTTP Date",
+  "status": 200,
+  "headers": {
+    "Date": "Fri, 25 Sep 2026 07:10:55 GMT",
+    "Content-Type": "application/json; charset=utf-8",
+    "Content-Length": "455",
+    "Connection": "close",
+    "access-control-allow-credentials": "true",
+    "access-control-allow-origin": "*",
+    "access-control-expose-headers": "bypass-429-option,x-ratelimit-reset,x-ratelimit-limit,x-ratelimit-remaining,api-v2-temp-token",
+    "bypass-429-option": "temporary_token",
+    "Cache-Control": "max-age=0, private, must-revalidate",
+    "x-ratelimit-limit": "180",
+    "x-ratelimit-remaining": "177",
+    "x-ratelimit-reset": "4031",
+    "x-request-id": "255f92e63345de126897feb92ac9e7ec",
+    "strict-transport-security": "max-age=31536000; includeSubDomains",
+    "cf-cache-status": "DYNAMIC",
+    "Nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+    "Server-Timing": "cfEdge;dur=12,cfOrigin;dur=37",
+    "Report-To": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=W0zLYp4b29Hz3TUBhDvByWNEkBcbyQ%2BUyQejzjXzePCrdjIL1EOujvO%2FmwdzE%2FFiIwBcsk68edd5%2BL0RF0vkBqk%2Fd4GUWEE2GoKspDQFYawkpmi%2BnCydAzzWER3O0PMy14CyAQ%3D%3D\"}]}",
+    "Server": "cloudflare",
+    "CF-RAY": "a408363fad6375ad-BUD",
+    "alt-svc": "h3=\":443\"; ma=86400"
+  },
+  "final_url": "https://eth.blockscout.com/api/v2/tokens/0xa6c0c097741d55ecd9a3a7def3a8253fd022ceb9",
+  "collection_end": "2026-09-25T07:10:55.364371+00:00",
+  "bytes": 455,
+  "sha256": "4241ab347f63a5e5c5d9618ac580d42801ba11350de0e15b06e18765fb4ed140",
+  "local_write_time": "2026-09-25T07:10:55.369468+00:00",
+  "publication_redaction": {
+    "original_receipt_sha256": "e2f681d83a9f2e6afa8ab18f4969784b0f2c194ea5de1630ee94e7935c528323",
+    "redacted_header_keys": [],
+    "acquisition_fields_unchanged": true
+  }
+}

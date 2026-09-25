@@ -1,0 +1,58 @@
+{
+  "prepared_at": "2026-09-25T08:03:23.830759+00:00",
+  "originals_preserved_locally": true,
+  "response_bodies_changed": false,
+  "receipts": [
+    {
+      "name": "kraken_book",
+      "original_sha256": "732dec48ceb5db94d798e6b42e9bcc137160604bb793e97cf4120807d5e49224",
+      "public_sha256": "d9f679b6d4f1f634ad81a1fcf9091ceaa177d5a4e2e83ff82faade0ad35ea6f3",
+      "redacted_header_keys": [
+        "Set-Cookie",
+        "set-cookie"
+      ]
+    },
+    {
+      "name": "binance_book",
+      "original_sha256": "b9d7b0efbb18c558df3a18dbf8b9b121b0f1495f1f57310240ba85c9587b0f2c",
+      "public_sha256": "f8accba0dc2d61f22eec61b0fa38c35e6ed1035708a9342ce504a982479dce3b",
+      "redacted_header_keys": []
+    },
+    {
+      "name": "bithumb_book",
+      "original_sha256": "7a8647e11fc351d1358d478549764926568d28977e74eed547fa26ef68b49e0f",
+      "public_sha256": "3436f33360e0e6ce8c9c7d3fea898a84006f82b92d623ebce32a81733999a56f",
+      "redacted_header_keys": []
+    },
+    {
+      "name": "total_supply",
+      "original_sha256": "c1e2e8eecf5fdea4db52d1354e5ab78c5ea180e5bc76c26feaa6e945c9fecdab",
+      "public_sha256": "041bca2a8184959929dfdc5933f2b80205b20a9a23b683178b4e94c466d278d2",
+      "redacted_header_keys": []
+    },
+    {
+      "name": "circulating_supply",
+      "original_sha256": "84def0c7acb8205434352f2f5c623aeb441f25671ce781d6f82d551d3c1da3b8",
+      "public_sha256": "eda2aa3246140c95b169345c32508959dd1f85914feafa30aa4793dbc5cf500d",
+      "redacted_header_keys": []
+    },
+    {
+      "name": "reserve_transfers",
+      "original_sha256": "6d3018622c7ca954bbea3d38ece9664bc49bb70c2bddb03ff8d3b4670db5cf18",
+      "public_sha256": "7c8af8daf3c2ccbf5850508e2b05ab338dd4f8059cca994af32d600c63d3e7fa",
+      "redacted_header_keys": []
+    },
+    {
+      "name": "reserve_balances",
+      "original_sha256": "7ae19fb7783ceaa43e301fd808e114c6091feaf51c07ad3858e376bd6f7062b3",
+      "public_sha256": "6bc9d6565899dd9f17601b03179e3d83326c1fe84e979b93ec78dc53ea276cc6",
+      "redacted_header_keys": []
+    },
+    {
+      "name": "token_info",
+      "original_sha256": "e2f681d83a9f2e6afa8ab18f4969784b0f2c194ea5de1630ee94e7935c528323",
+      "public_sha256": "c8f52bf04267dc58d20959ab6fcad26be062c380f4d9e8f456a65ca25362cb6a",
+      "redacted_header_keys": []
+    }
+  ]
+}

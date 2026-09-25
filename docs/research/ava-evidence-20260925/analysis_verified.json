@@ -1,0 +1,634 @@
+{
+  "analysis_time": "2026-09-25T07:51:52.231160+00:00",
+  "mode": "OFFLINE",
+  "inventory": [
+    {
+      "file": "C:\\Users\\AronNyerges\\tradingview-ai-crypto\\.worktrees\\ava-evidence-20260925\\docs\\research\\ava-evidence-20260925\\raw\\kraken_book.body",
+      "bytes": 2828,
+      "readable": true,
+      "sha256": "f98deef4f9c5b71c322ec3c1f59a9d9a3dccfcf30aedd073eb6b1c178c5b440a",
+      "collection_start": "2026-09-25T07:10:45.417390+00:00",
+      "collection_end": "2026-09-25T07:10:46.535757+00:00",
+      "local_write_time": "2026-09-25T07:10:46.535757+00:00",
+      "http_date": "Fri, 25 Sep 2026 07:10:47 GMT",
+      "source_url": "https://api.kraken.com/0/public/Depth?pair=AVAUSD&count=500"
+    },
+    {
+      "file": "C:\\Users\\AronNyerges\\tradingview-ai-crypto\\.worktrees\\ava-evidence-20260925\\docs\\research\\ava-evidence-20260925\\raw\\binance_book.body",
+      "bytes": 39487,
+      "readable": true,
+      "sha256": "7f4847eeffc1266e1de52579e7e9003f688ea3da227361505f1febf8aa1ea668",
+      "collection_start": "2026-09-25T07:10:46.539388+00:00",
+      "collection_end": "2026-09-25T07:10:48.887558+00:00",
+      "local_write_time": "2026-09-25T07:10:48.898783+00:00",
+      "http_date": "Fri, 25 Sep 2026 07:10:49 GMT",
+      "source_url": "https://data-api.binance.vision/api/v3/depth?symbol=AVAUSDT&limit=1000"
+    },
+    {
+      "file": "C:\\Users\\AronNyerges\\tradingview-ai-crypto\\.worktrees\\ava-evidence-20260925\\docs\\research\\ava-evidence-20260925\\raw\\bithumb_book.body",
+      "bytes": 2459,
+      "readable": true,
+      "sha256": "05017e7bf6d591033ef5a7357c29d38326140a5ace03cc9db538d14931c4df7d",
+      "collection_start": "2026-09-25T07:10:48.907417+00:00",
+      "collection_end": "2026-09-25T07:10:50.457985+00:00",
+      "local_write_time": "2026-09-25T07:10:50.465724+00:00",
+      "http_date": "Fri, 25 Sep 2026 07:10:50 GMT",
+      "source_url": "https://api.bithumb.com/public/orderbook/AVA_KRW?count=30"
+    },
+    {
+      "file": "C:\\Users\\AronNyerges\\tradingview-ai-crypto\\.worktrees\\ava-evidence-20260925\\docs\\research\\ava-evidence-20260925\\raw\\total_supply.body",
+      "bytes": 8,
+      "readable": true,
+      "sha256": "cb53338d4310ef0befb380dd9dac5f12cb2f4db99accec6ae0e7b243e80ecebb",
+      "collection_start": "2026-09-25T07:10:50.468753+00:00",
+      "collection_end": "2026-09-25T07:10:52.054242+00:00",
+      "local_write_time": "2026-09-25T07:10:52.063927+00:00",
+      "http_date": "Fri, 25 Sep 2026 07:10:52 GMT",
+      "source_url": "https://api.avafoundation.org/ava/total-supply"
+    },
+    {
+      "file": "C:\\Users\\AronNyerges\\tradingview-ai-crypto\\.worktrees\\ava-evidence-20260925\\docs\\research\\ava-evidence-20260925\\raw\\circulating_supply.body",
+      "bytes": 8,
+      "readable": true,
+      "sha256": "cb53338d4310ef0befb380dd9dac5f12cb2f4db99accec6ae0e7b243e80ecebb",
+      "collection_start": "2026-09-25T07:10:52.068388+00:00",
+      "collection_end": "2026-09-25T07:10:52.910247+00:00",
+      "local_write_time": "2026-09-25T07:10:52.912245+00:00",
+      "http_date": "Fri, 25 Sep 2026 07:10:53 GMT",
+      "source_url": "https://api.avafoundation.org/ava/circulating-supply"
+    },
+    {
+      "file": "C:\\Users\\AronNyerges\\tradingview-ai-crypto\\.worktrees\\ava-evidence-20260925\\docs\\research\\ava-evidence-20260925\\raw\\reserve_transfers.body",
+      "bytes": 4725,
+      "readable": true,
+      "sha256": "c5bbb44fdd016e10d85a2687fd96a60fa03e933081c33f6bdb058f0e06ba5442",
+      "collection_start": "2026-09-25T07:10:52.916044+00:00",
+      "collection_end": "2026-09-25T07:10:53.913775+00:00",
+      "local_write_time": "2026-09-25T07:10:53.914792+00:00",
+      "http_date": "Fri, 25 Sep 2026 07:10:54 GMT",
+      "source_url": "https://eth.blockscout.com/api/v2/addresses/0x7bed1889c21d9eb3560463c14cd74fe29f2d03b6/token-transfers?token=0xa6c0c097741d55ecd9a3a7def3a8253fd022ceb9"
+    },
+    {
+      "file": "C:\\Users\\AronNyerges\\tradingview-ai-crypto\\.worktrees\\ava-evidence-20260925\\docs\\research\\ava-evidence-20260925\\raw\\reserve_balances.body",
+      "bytes": 540,
+      "readable": true,
+      "sha256": "ed87c9f185ccdcf390657011df0983a3dbe0780536d0d35ceacce4ac19a50ebd",
+      "collection_start": "2026-09-25T07:10:53.918789+00:00",
+      "collection_end": "2026-09-25T07:10:54.654413+00:00",
+      "local_write_time": "2026-09-25T07:10:54.665083+00:00",
+      "http_date": "Fri, 25 Sep 2026 07:10:55 GMT",
+      "source_url": "https://eth.blockscout.com/api/v2/addresses/0x7bed1889c21d9eb3560463c14cd74fe29f2d03b6/token-balances"
+    },
+    {
+      "file": "C:\\Users\\AronNyerges\\tradingview-ai-crypto\\.worktrees\\ava-evidence-20260925\\docs\\research\\ava-evidence-20260925\\raw\\token_info.body",
+      "bytes": 455,
+      "readable": true,
+      "sha256": "4241ab347f63a5e5c5d9618ac580d42801ba11350de0e15b06e18765fb4ed140",
+      "collection_start": "2026-09-25T07:10:54.667300+00:00",
+      "collection_end": "2026-09-25T07:10:55.364371+00:00",
+      "local_write_time": "2026-09-25T07:10:55.369468+00:00",
+      "http_date": "Fri, 25 Sep 2026 07:10:55 GMT",
+      "source_url": "https://eth.blockscout.com/api/v2/tokens/0xa6c0c097741d55ecd9a3a7def3a8253fd022ceb9"
+    }
+  ],
+  "transfers": [
+    {
+      "chain_id": 1,
+      "transaction_hash": "0x5f77bdb6e97efba766014cee7fd07c53cff6243053eaa75da0d2010ac63b8957",
+      "log_index": 37,
+      "block_number": 26026251,
+      "block_hash": "0x04d1f0a3ec6fbc6426241c0ec872009646e1733f4c26ce8a3e9434ed39b68c9b",
+      "event_time": "2026-09-21T13:42:11.000000Z",
+      "sender": "0x21a31ee1afc51d94c2efccaa2092ad1028285549",
+      "recipient": "0x7bed1889c21d9eb3560463c14cd74fe29f2d03b6",
+      "amount_ava": "100",
+      "sender_labels": [
+        "Binance: Hot Wallet",
+        "HOT WALLET",
+        "Exchange",
+        "Binance 15",
+        "Binance"
+      ],
+      "method": "0xa9059cbb",
+      "reserve_contract_metadata": [
+        {
+          "address_hash": "0xe5DcdC13B628c2df813DB1080367E929c1507Ca0",
+          "name": "WalletSimple"
+        }
+      ]
+    },
+    {
+      "chain_id": 1,
+      "transaction_hash": "0xbd2bc6f038e74e1b5b5f3d60c23ba367e95dbe5da689dd16151fb90efdf1a799",
+      "log_index": 382,
+      "block_number": 26026313,
+      "block_hash": "0xc91b5e5528b9f4ed35252a76ebba8378272cc9b062f137e45f1eaf70d08fdc6d",
+      "event_time": "2026-09-21T13:54:35.000000Z",
+      "sender": "0x28c6c06298d514db089934071355e5743bf21d60",
+      "recipient": "0x7bed1889c21d9eb3560463c14cd74fe29f2d03b6",
+      "amount_ava": "369781.04",
+      "sender_labels": [
+        "Binance: Hot Wallet",
+        "HOT WALLET",
+        "Exchange",
+        "Binance 14",
+        "Binance"
+      ],
+      "method": "0xa9059cbb",
+      "reserve_contract_metadata": [
+        {
+          "address_hash": "0xe5DcdC13B628c2df813DB1080367E929c1507Ca0",
+          "name": "WalletSimple"
+        }
+      ]
+    }
+  ],
+  "supply": {
+    "issuer_total": "74373863",
+    "issuer_circulating": "74373863",
+    "indexed_erc20_total": "74373863",
+    "reserve_balance": "369881.04",
+    "reserve_inflow": "369881.04",
+    "reserve_outflow_in_returned_history": "0",
+    "pagination_end_reported": true,
+    "reserve_pct_of_total": "0.4973266482070455315733700695363907613620",
+    "total_less_reserve_conditional": "74003981.96",
+    "supply_api_exclusion_gap": "369881.04",
+    "inferred_verified_market_purchase_quantity": null,
+    "quantity_of_new_buying_compatible_with_reserve_deposits_only": [
+      "0",
+      "369881.04"
+    ],
+    "conditional_reserve_float_reduction_range": [
+      "0",
+      "369881.04"
+    ],
+    "maximum_less_issued_if_100m_cap": "25626137",
+    "other_wallet_balances": null,
+    "circulating_float": null,
+    "actual_future_sales": null
+  },
+  "books": [
+    {
+      "venue": "Kraken",
+      "quote_unit": "USD",
+      "pair": "AVA/USD",
+      "collection_start": "2026-09-25T07:10:45.417390+00:00",
+      "collection_end": "2026-09-25T07:10:46.535757+00:00",
+      "http_date": "Fri, 25 Sep 2026 07:10:47 GMT",
+      "provider_snapshot_time": null,
+      "oldest_level_update": "2026-05-14T00:06:18+00:00",
+      "newest_level_update": "2026-09-25T07:10:44+00:00",
+      "newest_update_age_seconds": "2.535757",
+      "best_bid": "0.25790000",
+      "best_ask": "0.25860000",
+      "midpoint": "0.25825000",
+      "spread_bps": "27.10551790900290416263310745401742497580",
+      "bid_levels": 44,
+      "ask_levels": 32,
+      "visible_bid_quote": "19449.25584620000",
+      "visible_ask_quote": "1981411.97108320000",
+      "depth": [
+        {
+          "midpoint_band_bps": 50,
+          "bid_base": "19220.308",
+          "bid_quote": "4953.27449260000",
+          "ask_base": "7270.704",
+          "ask_quote": "1884.31774210000"
+        },
+        {
+          "midpoint_band_bps": 100,
+          "bid_base": "24293.924",
+          "bid_quote": "6254.72100860000",
+          "ask_base": "11877.003",
+          "ask_quote": "3083.95026150000"
+        },
+        {
+          "midpoint_band_bps": 200,
+          "bid_base": "46302.208",
+          "bid_quote": "11856.03080500000",
+          "ask_base": "17829.868",
+          "ask_quote": "4644.67388640000"
+        }
+      ],
+      "scenarios": [
+        {
+          "quote_budget": "1000",
+          "buy": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "3860.300058233706131893559583494022367914",
+            "quote": "1000.000000000000000000000000000000000000",
+            "vwap": "0.2590472204011916930997955846595317471575",
+            "levels_used": 3,
+            "worst_price": "0.25930000",
+            "midpoint_cost_bps": "30.87010265989131073748633725195535944000",
+            "depth_beyond_best_ask_bps": "17.31734370538985865616978352494664695063"
+          },
+          "sell": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "3872.216844143272023233301064859632139400",
+            "quote": "998.3101493357212003872216844143272023234",
+            "vwap": "0.2578135960659500000000000000000000000000",
+            "levels_used": 2,
+            "worst_price": "0.25770000",
+            "midpoint_cost_bps": "16.89850664278799612778315585672797676700",
+            "depth_beyond_best_bid_bps": "3.345747688286544046466602129719264278800"
+          },
+          "sell_target_base": "3872.216844143272023233301064859632139400",
+          "static_roundtrip_sell": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "3860.300058233706131893559583494022367914",
+            "quote": "995.2391936068260701889703046664095642114",
+            "vwap": "0.2578139467381717636283754367441103697063",
+            "levels_used": 2,
+            "worst_price": "0.25770000"
+          },
+          "static_roundtrip_friction_bps": "47.60806393173929811029695333590435788600"
+        },
+        {
+          "quote_budget": "5000",
+          "buy": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "19177.33145695866514979142965491088357983",
+            "quote": "5000.000000000000000000000000000000000000",
+            "vwap": "0.2607244918940849595922039975897744452412",
+            "levels_used": 11,
+            "worst_price": "0.26370000",
+            "midpoint_cost_bps": "95.81769192971769960131646039784879927000",
+            "depth_beyond_best_ask_bps": "82.26493297521624751999990667084008678412"
+          },
+          "sell": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "19361.08422071636011616650532429816069700",
+            "quote": "4989.439903702032913843175217812197483059",
+            "vwap": "0.2577045710262100000000000000000000000000",
+            "levels_used": 5,
+            "worst_price": "0.25690000",
+            "midpoint_cost_bps": "21.12019259593417231364956437560503388200",
+            "depth_beyond_best_bid_bps": "7.567433641432720232333010648596321393998"
+          },
+          "sell_target_base": "19361.08422071636011616650532429816069700",
+          "static_roundtrip_sell": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "19177.33145695866514979142965491088357983",
+            "quote": "4942.208032766856276071293136139552521806",
+            "vwap": "0.2577109356356007587042928173413401195048",
+            "levels_used": 4,
+            "worst_price": "0.25750000"
+          },
+          "static_roundtrip_friction_bps": "115.5839344662874478574137277208949563880"
+        },
+        {
+          "quote_budget": "10000",
+          "buy": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "38072.38405835843373493975903614457831325",
+            "quote": "10000.00000000000000000000000000000000000",
+            "vwap": "0.2626575731289040219697500625669400656612",
+            "levels_used": 13,
+            "worst_price": "0.26560000",
+            "midpoint_cost_bps": "170.6707891153541905033906124662174505800",
+            "depth_beyond_best_ask_bps": "157.1180301608527384220740587392087380910"
+          },
+          "sell": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "38722.16844143272023233301064859632139400",
+            "quote": "9933.282016979767666989351403678606001937",
+            "vwap": "0.2565270080885025000000000000000000000000",
+            "levels_used": 13,
+            "worst_price": "0.25390000",
+            "midpoint_cost_bps": "66.71798302023233301064859632139399806400",
+            "depth_beyond_best_bid_bps": "53.16522406573088092933204259438528557599"
+          },
+          "sell_target_base": "38722.16844143272023233301064859632139400",
+          "static_roundtrip_sell": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "38072.38405835843373493975903614457831325",
+            "quote": "9768.151124034713855421686746987951807228",
+            "vwap": "0.2565678868195333876110942655774378245312",
+            "levels_used": 12,
+            "worst_price": "0.25420000"
+          },
+          "static_roundtrip_friction_bps": "231.8488759652861445783132530120481927720"
+        }
+      ],
+      "fees": "UNKNOWN; excluded, not assumed zero",
+      "venue_contract_mapping_in_book": false
+    },
+    {
+      "venue": "Binance",
+      "quote_unit": "USDT",
+      "pair": "AVA/USDT",
+      "collection_start": "2026-09-25T07:10:46.539388+00:00",
+      "collection_end": "2026-09-25T07:10:48.887558+00:00",
+      "http_date": "Fri, 25 Sep 2026 07:10:49 GMT",
+      "provider_snapshot_time": null,
+      "last_update_id": 1334117217,
+      "best_bid": "0.25830000",
+      "best_ask": "0.25850000",
+      "midpoint": "0.25840000",
+      "spread_bps": "7.739938080495356037151702786377708978328",
+      "bid_levels": 333,
+      "ask_levels": 1000,
+      "visible_bid_quote": "140171.8400400000000000",
+      "visible_ask_quote": "701256.3676500000000000",
+      "depth": [
+        {
+          "midpoint_band_bps": 50,
+          "bid_base": "23509.50000000",
+          "bid_quote": "6053.7347400000000000",
+          "ask_base": "13615.00000000",
+          "ask_quote": "3529.1575000000000000"
+        },
+        {
+          "midpoint_band_bps": 100,
+          "bid_base": "82204.50000000",
+          "bid_quote": "21108.7115800000000000",
+          "ask_base": "45066.80000000",
+          "ask_quote": "11712.7194900000000000"
+        },
+        {
+          "midpoint_band_bps": 200,
+          "bid_base": "192756.90000000",
+          "bid_quote": "49272.8053100000000000",
+          "ask_base": "84023.70000000",
+          "ask_quote": "21926.8117000000000000"
+        }
+      ],
+      "scenarios": [
+        {
+          "quote_budget": "1000",
+          "buy": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "3866.311780610274237157203553495558130552",
+            "quote": "1000.000000000000000000000000000000000000",
+            "vwap": "0.2586444282675402781004034293633774594648",
+            "levels_used": 4,
+            "worst_price": "0.25890000",
+            "midpoint_cost_bps": "9.459298279422527105395873195722115510000",
+            "depth_beyond_best_ask_bps": "5.589329239174849086820021802533261021672"
+          },
+          "sell": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "3869.969040247678018575851393188854489164",
+            "quote": "998.0903485758513931888544891640866873065",
+            "vwap": "0.2579065460720000000000000000000000000000",
+            "levels_used": 6,
+            "worst_price": "0.25780000",
+            "midpoint_cost_bps": "19.09651424148606811145510835913312693500",
+            "depth_beyond_best_bid_bps": "15.22654520123839009287925696594427244582"
+          },
+          "sell_target_base": "3869.969040247678018575851393188854489164",
+          "static_roundtrip_sell": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "3866.311780610274237157203553495558130552",
+            "quote": "997.1475070413286983391270760911548860563",
+            "vwap": "0.2579066468571075548828691393460294014279",
+            "levels_used": 6,
+            "worst_price": "0.25780000"
+          },
+          "static_roundtrip_friction_bps": "28.52492958671301660872923908845113943700"
+        },
+        {
+          "quote_budget": "5000",
+          "buy": {
+            "full_visible_coverage": true,
+            "remaining": "1E-38",
+            "base": "19277.91439015005771450557906887264332436",
+            "quote": "5000.000000000000000000000000000000000000",
+            "vwap": "0.2593641562468356001185111571344717527036",
+            "levels_used": 14,
+            "worst_price": "0.25990000",
+            "midpoint_cost_bps": "37.31254825215170737272279932166225633000",
+            "depth_beyond_best_ask_bps": "33.44257921190402935414694792847340184211"
+          },
+          "sell": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "19349.84520123839009287925696594427244582",
+            "quote": "4983.871525758513931888544891640866873065",
+            "vwap": "0.2575664804512000000000000000000000000000",
+            "levels_used": 12,
+            "worst_price": "0.25720000",
+            "midpoint_cost_bps": "32.25694848297213622291021671826625387000",
+            "depth_beyond_best_bid_bps": "28.38697944272445820433436532507739938080"
+          },
+          "sell_target_base": "19349.84520123839009287925696594427244582",
+          "static_roundtrip_sell": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "19277.91439015005771450557906887264332436",
+            "quote": "4965.370921146594844170834936514043863025",
+            "vwap": "0.2575678478831518870329088805818067929837",
+            "levels_used": 12,
+            "worst_price": "0.25720000"
+          },
+          "static_roundtrip_friction_bps": "69.25815770681031165833012697191227395000"
+        },
+        {
+          "quote_budget": "10000",
+          "buy": {
+            "full_visible_coverage": true,
+            "remaining": "1E-37",
+            "base": "38499.35145817344589409056024558710667690",
+            "quote": "10000.00000000000000000000000000000000000",
+            "vwap": "0.2597446352015623701603871990751129446371",
+            "levels_used": 19,
+            "worst_price": "0.26060000",
+            "midpoint_cost_bps": "52.03696600473568732148603231861240856000",
+            "depth_beyond_best_ask_bps": "48.16699696448800930291018092542355406734"
+          },
+          "sell": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "38699.69040247678018575851393188854489164",
+            "quote": "9956.398966315789473684210526315789473684",
+            "vwap": "0.2572733492896000000000000000000000000000",
+            "levels_used": 17,
+            "worst_price": "0.25670000",
+            "midpoint_cost_bps": "43.60103368421052631578947368421052631600",
+            "depth_beyond_best_bid_bps": "39.73106464396284829721362229102167182663"
+          },
+          "sell_target_base": "38699.69040247678018575851393188854489164",
+          "static_roundtrip_sell": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "38499.35145817344589409056024558710667690",
+            "quote": "9904.971959313123561013046815042210283960",
+            "vwap": "0.2572763328253491754556561541743446199065",
+            "levels_used": 17,
+            "worst_price": "0.25670000"
+          },
+          "static_roundtrip_friction_bps": "95.02804068687643898695318495778971604000"
+        }
+      ],
+      "fees": "UNKNOWN; excluded, not assumed zero",
+      "venue_contract_mapping_in_book": false
+    },
+    {
+      "venue": "Bithumb",
+      "quote_unit": "KRW",
+      "pair": "AVA/KRW",
+      "collection_start": "2026-09-25T07:10:48.907417+00:00",
+      "collection_end": "2026-09-25T07:10:50.457985+00:00",
+      "http_date": "Fri, 25 Sep 2026 07:10:50 GMT",
+      "provider_timestamp": "2026-09-25T07:10:47.710000+00:00",
+      "provider_timestamp_age_seconds": "2.747985",
+      "best_bid": "347",
+      "best_ask": "349",
+      "midpoint": "348",
+      "spread_bps": "57.47126436781609195402298850574712643678",
+      "bid_levels": 30,
+      "ask_levels": 30,
+      "visible_bid_quote": "49306939.1551",
+      "visible_ask_quote": "172815695.4122",
+      "depth": [
+        {
+          "midpoint_band_bps": 50,
+          "bid_base": "28342.8504",
+          "bid_quote": "9834969.0888",
+          "ask_base": "38294.5943",
+          "ask_quote": "13364813.4107"
+        },
+        {
+          "midpoint_band_bps": 100,
+          "bid_base": "69273.8058",
+          "bid_quote": "23984720.3706",
+          "ask_base": "116712.7870",
+          "ask_quote": "40859401.9278"
+        },
+        {
+          "midpoint_band_bps": 200,
+          "bid_base": "69871.7545",
+          "bid_quote": "24189588.4078",
+          "ask_base": "176955.0943",
+          "ask_quote": "62096613.2359"
+        }
+      ],
+      "scenarios": [
+        {
+          "quote_budget": "1000000",
+          "buy": {
+            "full_visible_coverage": true,
+            "remaining": "1E-34",
+            "base": "2865.329512893982808022922636103151862464",
+            "quote": "999999.9999999999999999999999999999999999",
+            "vwap": "349.0000000000000000000000000000000000000",
+            "levels_used": 1,
+            "worst_price": "349",
+            "midpoint_cost_bps": "28.73563218390804597701149425287356322000",
+            "depth_beyond_best_ask_bps": "0E-37"
+          },
+          "sell": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "2873.563218390804597701149425287356321839",
+            "quote": "997126.4367816091954022988505747126436781",
+            "vwap": "347.0000000000000000000000000000000000000",
+            "levels_used": 1,
+            "worst_price": "347",
+            "midpoint_cost_bps": "28.73563218390804597701149425287356321800",
+            "depth_beyond_best_bid_bps": "0E-37"
+          },
+          "sell_target_base": "2873.563218390804597701149425287356321839",
+          "static_roundtrip_sell": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "2865.329512893982808022922636103151862464",
+            "quote": "994269.3409742120343839541547277936962750",
+            "vwap": "347.0000000000000000000000000000000000000",
+            "levels_used": 1,
+            "worst_price": "347"
+          },
+          "static_roundtrip_friction_bps": "57.30659025787965616045845272206303724900"
+        },
+        {
+          "quote_budget": "5000000",
+          "buy": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "14326.64756446991404011461318051575931232",
+            "quote": "5000000.000000000000000000000000000000000",
+            "vwap": "349.0000000000000000000000000000000000000",
+            "levels_used": 1,
+            "worst_price": "349",
+            "midpoint_cost_bps": "28.73563218390804597701149425287356322000",
+            "depth_beyond_best_ask_bps": "0E-37"
+          },
+          "sell": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "14367.81609195402298850574712643678160920",
+            "quote": "4985632.183908045977011494252873563218392",
+            "vwap": "347.0000000000000000000000000000000000000",
+            "levels_used": 1,
+            "worst_price": "347",
+            "midpoint_cost_bps": "28.73563218390804597701149425287356321800",
+            "depth_beyond_best_bid_bps": "0E-37"
+          },
+          "sell_target_base": "14367.81609195402298850574712643678160920",
+          "static_roundtrip_sell": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "14326.64756446991404011461318051575931232",
+            "quote": "4971346.704871060171919770773638968481375",
+            "vwap": "347.0000000000000000000000000000000000000",
+            "levels_used": 1,
+            "worst_price": "347"
+          },
+          "static_roundtrip_friction_bps": "57.30659025787965616045845272206303725000"
+        },
+        {
+          "quote_budget": "10000000",
+          "buy": {
+            "full_visible_coverage": true,
+            "remaining": "1E-33",
+            "base": "28653.29512893982808022922636103151862464",
+            "quote": "9999999.999999999999999999999999999999999",
+            "vwap": "349.0000000000000000000000000000000000000",
+            "levels_used": 1,
+            "worst_price": "349",
+            "midpoint_cost_bps": "28.73563218390804597701149425287356322000",
+            "depth_beyond_best_ask_bps": "0E-37"
+          },
+          "sell": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "28735.63218390804597701149425287356321839",
+            "quote": "9970871.586032183908045977011494252873563",
+            "vwap": "346.9863311939200000000000000000000000000",
+            "levels_used": 2,
+            "worst_price": "346",
+            "midpoint_cost_bps": "29.12841396781609195402298850574712643700",
+            "depth_beyond_best_bid_bps": "0.3927817839080459770114942528735632183908"
+          },
+          "sell_target_base": "28735.63218390804597701149425287356321839",
+          "static_roundtrip_sell": {
+            "full_visible_coverage": true,
+            "remaining": "0",
+            "base": "28653.29512893982808022922636103151862464",
+            "quote": "9942382.965013180515759312320916905444125",
+            "vwap": "346.9891654789600000000000000000000000000",
+            "levels_used": 2,
+            "worst_price": "346"
+          },
+          "static_roundtrip_friction_bps": "57.61703498681948424068767908309455587400"
+        }
+      ],
+      "fees": "UNKNOWN; excluded, not assumed zero",
+      "venue_contract_mapping_in_book": false
+    }
+  ]
+}

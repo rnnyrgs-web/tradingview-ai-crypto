@@ -1,0 +1,41 @@
+{
+  "url": "https://eth.blockscout.com/api/v2/addresses/0x7bed1889c21d9eb3560463c14cd74fe29f2d03b6/token-balances",
+  "method": "GET",
+  "request_body": null,
+  "collection_start": "2026-09-25T07:10:53.918789+00:00",
+  "provider_event_time": "See original payload; not inferred from HTTP Date",
+  "status": 200,
+  "headers": {
+    "Date": "Fri, 25 Sep 2026 07:10:55 GMT",
+    "Content-Type": "application/json; charset=utf-8",
+    "Content-Length": "540",
+    "Connection": "close",
+    "access-control-allow-credentials": "true",
+    "access-control-allow-origin": "*",
+    "access-control-expose-headers": "bypass-429-option,x-ratelimit-reset,x-ratelimit-limit,x-ratelimit-remaining,api-v2-temp-token",
+    "bypass-429-option": "temporary_token",
+    "Cache-Control": "max-age=0, private, must-revalidate",
+    "x-ratelimit-limit": "180",
+    "x-ratelimit-remaining": "178",
+    "x-ratelimit-reset": "4754",
+    "x-request-id": "2ac22244792062aee56f5efe99bb59a9",
+    "strict-transport-security": "max-age=31536000; includeSubDomains",
+    "cf-cache-status": "DYNAMIC",
+    "Nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+    "Server-Timing": "cfEdge;dur=14,cfOrigin;dur=49",
+    "Report-To": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=4%2Fgne0MdAkxHsQ9scJot%2Bn66l1xxAvQ9WCi0JK43%2FWGnRC72cxmldjV61d6BxtrG5sVOBWikDI2%2Fd7mkjhtfYBI5wY4LU2tudhkHVop%2BS9HOY1OJ%2FAsg9SPzzEZ4EKSNHPee3Q%3D%3D\"}]}",
+    "Server": "cloudflare",
+    "CF-RAY": "a408363b1a64733f-BUD",
+    "alt-svc": "h3=\":443\"; ma=86400"
+  },
+  "final_url": "https://eth.blockscout.com/api/v2/addresses/0x7bed1889c21d9eb3560463c14cd74fe29f2d03b6/token-balances",
+  "collection_end": "2026-09-25T07:10:54.654413+00:00",
+  "bytes": 540,
+  "sha256": "ed87c9f185ccdcf390657011df0983a3dbe0780536d0d35ceacce4ac19a50ebd",
+  "local_write_time": "2026-09-25T07:10:54.665083+00:00",
+  "publication_redaction": {
+    "original_receipt_sha256": "7ae19fb7783ceaa43e301fd808e114c6091feaf51c07ad3858e376bd6f7062b3",
+    "redacted_header_keys": [],
+    "acquisition_fields_unchanged": true
+  }
+}
