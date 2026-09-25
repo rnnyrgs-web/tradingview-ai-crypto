@@ -12,7 +12,8 @@
     "supabase_bulk_polling_forbidden": true,
     "adaptive_spending_policy_required": true,
     "subscription_first_for_substantive_model_work": true,
-    "never_claim_unavailable_model_or_work": true
+    "never_claim_unavailable_model_or_work": true,
+    "pro_escalation_for_highest_stakes_reasoning": true
   },
   "routes": {
     "deterministic": {
@@ -49,7 +50,7 @@
     "work": {
       "executor": "chatgpt_work",
       "model": "platform_available_strongest_appropriate",
-      "reasoning": "high_preferred_when_selectable",
+      "reasoning": "high_or_xhigh_when_selectable_and_justified",
       "use_for": [
         "substantial multi-file implementation",
         "repository exploration",
@@ -60,19 +61,21 @@
         "persistent cloud workspace tasks"
       ],
       "cost_priority": 2,
-      "setup": "Route or hand off to ChatGPT Work when a persistent multi-step workspace materially improves completion quality or throughput. Do not claim a specific Work model or effort if the runtime does not expose that selection."
+      "setup": "Route to ChatGPT Work when a persistent multi-step workspace materially improves completion quality or throughput. For the hardest scientifically important Work runs, prefer GPT-6 Astra with High/XHigh when actually selectable and justified; otherwise use the strongest appropriate available Work model. Never claim a specific Work model or effort if the runtime did not expose/select it.",
+      "preferred_model_for_hardest_jobs": "GPT-6 Astra"
     },
     "codex": {
       "executor": "codex",
       "model": "platform_available_strongest_appropriate",
-      "reasoning": "high_preferred_when_selectable",
+      "reasoning": "high_or_xhigh_when_selectable_and_justified",
       "use_for": [
         "pure heavy repository coding",
         "large refactors",
         "test and debug loops"
       ],
       "cost_priority": 3,
-      "setup": "Use when it is materially better for code execution and does not duplicate an active Work or branch owner; keep GitHub handoff canonical."
+      "setup": "Use Codex for code-dominant implementation/refactor/test-debug loops when materially better than Work and non-duplicative. For the hardest code/debug milestones, prefer GPT-6 Astra with High/XHigh when actually selectable and justified. Keep GitHub handoff canonical and never claim a model/effort that did not actually run.",
+      "preferred_model_for_hardest_jobs": "GPT-6 Astra"
     },
     "api_luna_fallback": {
       "executor": "openai_api",
@@ -119,6 +122,21 @@
       ],
       "cost_priority": 6,
       "constraint": "Use only when subscription-backed Sol High or Work cannot execute the task and the API path is justified within the approved budget."
+    },
+    "chatgpt_pro_astra": {
+      "executor": "chatgpt_chat",
+      "model": "GPT-6 Pro",
+      "underlying_model": "GPT-6 Astra",
+      "reasoning": "pro",
+      "use_for": [
+        "highest-stakes one-off scientific adjudication",
+        "final adversarial audit of a strategy before a major evidence-gate transition",
+        "resolving contradictory statistical evidence or ambiguous causal interpretation",
+        "independent red-team review of unusually strong backtest or 2x evidence",
+        "hard research-director decisions where a wrong conclusion would waste substantial validation effort"
+      ],
+      "cost_priority": 3,
+      "constraint": "Escalation route, not a default worker. Use only when deeper one-off reasoning is materially more valuable than another execution run. If the current runtime cannot actually invoke GPT-6 Pro, create an exact bounded Pro handoff and checkpoint that limitation; never claim Pro ran when it did not."
     }
   },
   "routing_rules": [
@@ -127,24 +145,28 @@
       "then": "deterministic"
     },
     {
-      "if": "task is a substantial multi-step research, engineering, repository, CI/debugging, browser/computer, or persistent-workspace milestone",
-      "then": "work"
-    },
-    {
-      "if": "task requires substantive model judgment and is not better served by Work",
-      "then": "subscription_sol_high"
-    },
-    {
       "if": "task is mostly pure heavy coding/refactor/testing and Codex is materially better than Work for that bounded milestone",
       "then": "codex"
     },
     {
-      "if": "subscription-backed Sol High, Work, or Codex is unavailable/capacity-limited, or the execution path explicitly requires API access",
-      "then": "use the least expensive sufficient API fallback, checkpoint the limitation honestly, and never imply that subscription Sol High or Work ran when it did not"
+      "if": "task is a substantial multi-step research, engineering, repository, CI/debugging, browser/computer, or persistent-workspace milestone",
+      "then": "work"
+    },
+    {
+      "if": "task is a highest-stakes one-off scientific adjudication, adversarial audit, contradictory-evidence resolution, or major evidence-gate decision and does not primarily require a persistent execution workspace",
+      "then": "chatgpt_pro_astra"
+    },
+    {
+      "if": "task requires substantive model judgment and is not better served by Work, Codex, or Pro escalation",
+      "then": "subscription_sol_high"
+    },
+    {
+      "if": "the preferred subscription-backed route is unavailable/capacity-limited, or the execution path explicitly requires API access",
+      "then": "use the least expensive sufficient API fallback, checkpoint the limitation honestly, and never imply that Work, Codex, GPT-6 Pro, Astra, or a specific reasoning effort ran when it did not"
     },
     {
       "if": "a preferred strong route is temporarily unavailable",
-      "then": "continue non-duplicative deterministic or justified fallback work rather than stalling; preserve exact durable handoff in GitHub"
+      "then": "continue non-duplicative deterministic or justified fallback work rather than stalling; preserve an exact durable handoff in GitHub"
     }
   ],
   "task_selection": {
@@ -160,7 +182,8 @@
       "critical incident",
       "user-only blocker",
       "justified paid-data recommendation",
-      "persistent inability to use the preferred subscription-backed execution path for substantive work"
+      "persistent inability to use the preferred subscription-backed execution path for substantive work",
+      "highest-stakes Pro escalation is warranted but the active runtime cannot invoke it"
     ]
   },
   "spending_policy": "orchestration/adaptive_research_spending_policy.json"
