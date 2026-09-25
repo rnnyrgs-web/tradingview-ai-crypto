@@ -196,40 +196,14 @@ def test_executor_closure_binds_from_package_imported_submodule(
         verified_executor_implementation(rule)
 
 
-def test_executor_manifest_v2_carries_reviewable_digest_change_receipt():
+def test_executor_manifest_stays_runtime_verified_without_self_attested_receipt():
     manifest = json.loads(contracts.TRUSTED_EXECUTOR_MANIFEST.read_text())
-    assert manifest["schema_version"] == 2
+    assert manifest["schema_version"] == 1
     entry = manifest["implementations"]["restrictive_group_abstention_v1"]
-    receipt = entry["change_receipt"]
-    assert receipt["change_id"] == "pr-811-nonfinite-priority-v1"
-    assert receipt["prior_bundle_sha256"] == (
-        "de7a1c4208372620f2310d025087b45bbe65fd8a565272d19421fd561b6db8b7"
+    assert set(entry) == {"bundle_sha256"}
+    assert entry["bundle_sha256"] == contracts._executor_bundle_digest(
+        "restrictive_group_abstention_v1"
     )
-    assert receipt["changed_behavior_paths"] == ["signal_development.py"]
-    assert receipt["review_required"] is True
-    assert receipt["oos_or_forward_access_changed"] is False
-    assert receipt["trading_authority_changed"] is False
-
-
-def test_executor_manifest_v2_rejects_incomplete_change_receipt(monkeypatch, tmp_path):
-    rule = "restrictive_group_abstention_v1"
-    manifest = tmp_path / "trusted_executor_manifest.json"
-    manifest.write_text(
-        json.dumps(
-            {
-                "schema_version": 2,
-                "implementations": {
-                    rule: {
-                        "bundle_sha256": "0" * 64,
-                        "change_receipt": {"change_id": "incomplete"},
-                    }
-                },
-            }
-        )
-    )
-    monkeypatch.setattr(contracts, "TRUSTED_EXECUTOR_MANIFEST", manifest)
-    with pytest.raises(ValueError, match="change receipt"):
-        contracts.trusted_executor_implementation(rule)
 
 
 def test_executor_closure_rejects_local_package_wildcard_import(
