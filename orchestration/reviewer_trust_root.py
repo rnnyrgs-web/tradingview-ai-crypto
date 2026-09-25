@@ -181,8 +181,9 @@ def _server_workflow_bytes(payload: dict[str, Any]) -> bytes:
     raw = payload.get("content")
     if not isinstance(raw, str) or not raw:
         raise RuntimeError("trusted server workflow source content missing")
+    normalized = raw.replace("\n", "").replace("\r", "")
     try:
-        return base64.b64decode(raw, validate=True)
+        return base64.b64decode(normalized, validate=True)
     except (ValueError, TypeError) as exc:
         raise RuntimeError("trusted server workflow source base64 invalid") from exc
 
