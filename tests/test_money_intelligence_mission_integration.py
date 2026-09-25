@@ -298,12 +298,13 @@ def test_imported_nonfinite_priority_cannot_enter_causal_mission_surfaces(nonfin
     assert "malformed-import" not in {
         row["mission_id"] for row in result["missions"]
     }
-    assert "malformed-import" not in {
-        row["mission_id"] for row in result["next_missions"]
-    }
-    assert "finite-import" in {
-        row["mission_id"] for row in result["next_missions"]
-    }
+    assert result["next_missions"] == []
+    assert result["money_intelligence_causal"]["status"] == (
+        "WAIT_INVALID_IMPORTED_MISSION_PRIORITY"
+    )
+    assert result["money_intelligence_causal"]["invalid_priority_mission_ids"] == [
+        "malformed-import"
+    ]
 
 
 def test_invalid_loader_type_fails_closed():

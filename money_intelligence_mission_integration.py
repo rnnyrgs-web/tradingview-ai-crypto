@@ -164,6 +164,38 @@ def apply_causal_feedback(state: dict[str, Any], *, loader: Callable[[], CausalR
     )
     missions = [row for row in imported_missions if _finite_priority(row) is not None]
     result["missions"] = missions
+    imported_current = (
+        result.get("next_missions")
+        if isinstance(result.get("next_missions"), list)
+        else []
+    )
+    invalid_rows = [
+        row
+        for row in [*imported_missions, *imported_current]
+        if _finite_priority(row) is None
+    ]
+    if invalid_rows:
+        invalid_ids = sorted(
+            {
+                str(row.get("mission_id") or "<missing>")
+                if isinstance(row, dict)
+                else "<malformed>"
+                for row in invalid_rows
+            }
+        )
+        feedback = {
+            **feedback,
+            "status": "WAIT_INVALID_IMPORTED_MISSION_PRIORITY",
+            "invalid_priority_mission_ids": invalid_ids,
+            "structured_evidence_consumed": False,
+        }
+        result["money_intelligence_causal"] = feedback
+        result["next_missions"] = []
+        report = result.get("daily_lead_report")
+        if isinstance(report, dict):
+            report["highest_priority_next_missions"] = []
+            report["money_intelligence_causal"] = deepcopy(feedback)
+        return result
     known = {str(row.get("mission_id")) for row in missions if isinstance(row, dict)}
     causal_rows = [deepcopy(row) for row in feedback["missions"]]
     for row in causal_rows:
@@ -172,11 +204,6 @@ def apply_causal_feedback(state: dict[str, Any], *, loader: Callable[[], CausalR
             known.add(row["mission_id"])
     missions.sort(
         key=lambda row: (-float(_finite_priority(row)), str(row.get("mission_id", "")))
-    )
-    imported_current = (
-        result.get("next_missions")
-        if isinstance(result.get("next_missions"), list)
-        else []
     )
     current = [row for row in imported_current if _finite_priority(row) is not None]
     by_id = {str(row["mission_id"]): deepcopy(row) for row in [*current, *causal_rows]
