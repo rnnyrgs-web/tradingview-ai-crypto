@@ -76,7 +76,8 @@ def load_queue(path: Path = DEFAULT_QUEUE) -> dict[str, Any]:
 def validate_queue(payload: dict[str, Any]) -> None:
     if payload.get("lifecycle_phase") != "SELECTION" and payload.get("active_deep_candidate") is None:
         raise RuntimeError("non-selection lifecycle requires an active_deep_candidate")
-    if int(payload.get("max_active_deep_candidates", 0)) != 1:
+    limit = payload.get("max_active_deep_candidates")
+    if type(limit) is not int or limit != 1:
         raise RuntimeError("strategy discovery must allow exactly one active deep candidate")
 
     policy = payload.get("policy")
@@ -91,6 +92,13 @@ def validate_queue(payload: dict[str, Any]) -> None:
         or policy.get("broker_connected") is not False
     ):
         raise RuntimeError("strategy discovery must remain research-only with broker disconnected")
+    for field in (
+        "untouched_oos_requires_frozen_selection_pass",
+        "rejected_fingerprints_are_terminal_without_new_hypothesis",
+        "no_paid_api_required_for_supervisor",
+    ):
+        if policy.get(field) is not True:
+            raise RuntimeError(f"strategy discovery policy requires {field}=true")
 
     rows = payload.get("candidates")
     if not isinstance(rows, list) or not rows:
@@ -158,6 +166,9 @@ def validate_queue(payload: dict[str, Any]) -> None:
 
 
 def ranked_screens(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    # Public callers can supply an in-memory queue without using load_queue(),
+    # or mutate it after loading. Recheck before emitting an executable task.
+    validate_queue(payload)
     rows = []
     for row in payload["candidates"]:
         if row["stage"] not in SCREENABLE_STAGES or row.get("blocker"):
@@ -180,6 +191,9 @@ def ranked_screens(payload: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def snapshot(payload: dict[str, Any]) -> dict[str, Any]:
+    # Validate before reporting hard-coded safe authority flags or routing work.
+    # A malformed queue must not masquerade as a safe research snapshot.
+    validate_queue(payload)
     deep = [
         row
         for row in payload["candidates"]
