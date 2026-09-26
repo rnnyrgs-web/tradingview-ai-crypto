@@ -167,29 +167,13 @@ def _validate_binance_proof(
 ) -> None:
     if proof.get("schema") != "binance_public_archive_proof.v1":
         raise ValueError(f"{field} requires binance_public_archive_proof.v1")
-    _https_locator(proof.get("upstream_locator"), field=field, required_host="data.binance.vision")
-    archive_raw = _verified_bytes(
-        root,
-        proof.get("archive_relpath"),
-        proof.get("archive_sha256"),
-        field=f"{field}.archive",
+    # Security containment for #705: the v1 proof is self-authenticating. Local hashes,
+    # a local checksum sidecar, and a plausible Binance URL do not establish provider
+    # origin or historical availability. Reject it until exact archive/checksum bytes
+    # are bound to an out-of-band verified trusted-acquisition attestation.
+    raise ValueError(
+        f"{field} Binance archive proof lacks externally verified trusted acquisition authority"
     )
-    checksum_raw = _verified_bytes(
-        root,
-        proof.get("checksum_relpath"),
-        proof.get("checksum_sha256"),
-        field=f"{field}.checksum",
-    )
-    archive_sha = hashlib.sha256(archive_raw).hexdigest()
-    try:
-        checksum_text = checksum_raw.decode("utf-8")
-    except UnicodeDecodeError as exc:
-        raise ValueError(f"{field} Binance checksum must be UTF-8 text") from exc
-    if archive_sha not in checksum_text:
-        raise ValueError(f"{field} Binance checksum sidecar does not authenticate archive digest")
-    event_time_max = _utc(proof.get("event_time_max"), field=f"{field}.event_time_max")
-    if event_time_max > decision_at:
-        raise ValueError(f"{field} Binance proof includes post-decision events")
 
 
 def _validate_coinmetrics_proof(
