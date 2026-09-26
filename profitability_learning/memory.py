@@ -12,6 +12,7 @@ from .contracts import (DEVELOPMENT, SAFE, UNVERIFIED_FAVORABLE_EVIDENCE,
                         timestamp, text, experiment_id, validate_contract,
                         number, integer, strategy_semantic_fingerprint)
 from .development import component_effects, mine_conditions
+from .risk_policy import SUCCESS_BLOCKING_RISK_FLAGS
 
 MAX_EVENT_BYTES = 16_000_000
 MAX_EVENTS = 10_000
@@ -134,7 +135,18 @@ def _snapshot(events):
         c = r["contract"]
         semantic = strategy_semantic_fingerprint(c["strategy"])
         semantic_by_fingerprint[c["strategy_fingerprint"]] = semantic
-        if r["source_status"] == "REJECTED":
+        enough_risk_evidence = bool(
+            r["metrics"]
+            and r["metrics"]["independent_event_count"] >= c["minimum_events"]
+        )
+        risk_rejected = (
+            "CATASTROPHIC_LOSS" in r["risk_flags"]
+            or (enough_risk_evidence
+                and SUCCESS_BLOCKING_RISK_FLAGS.intersection(r["risk_flags"]))
+        )
+        if (r["source_status"] == "REJECTED"
+                or r["outcome"] in {"LEARN_AND_PIVOT", "MECHANISM_DEAD"}
+                or risk_rejected):
             rejected.add(c["strategy_fingerprint"])
             rejected_semantic.add(semantic)
         family = families.setdefault(c["family"], {"records": []})
@@ -183,7 +195,7 @@ def _snapshot(events):
                 and r["source_status"] == "PASSED" and r["metrics"]["net_pnl"] > 0
                 and r["contract"]["strategy_fingerprint"] not in rejected
                 and strategy_semantic_fingerprint(r["contract"]["strategy"]) not in rejected_semantic
-                and not {"CATASTROPHIC_LOSS", "SINGLE_WINNER_DEPENDENCE"}.intersection(r["risk_flags"]) for r in development),
+                and not SUCCESS_BLOCKING_RISK_FLAGS.intersection(r["risk_flags"]) for r in development),
             "mechanism_dead": any(r["outcome"] == "MECHANISM_DEAD" for r in development),
             "infra_blocked": False,
         })
@@ -203,7 +215,7 @@ def _snapshot(events):
                 and r["source_status"] == "PASSED" and r["metrics"]["net_pnl"] > 0
                 and r["contract"]["strategy_fingerprint"] not in rejected
                 and semantic not in rejected_semantic
-                and not {"CATASTROPHIC_LOSS", "SINGLE_WINNER_DEPENDENCE"}.intersection(r["risk_flags"])
+                and not SUCCESS_BLOCKING_RISK_FLAGS.intersection(r["risk_flags"])
                 for r in development),
             "mechanism_dead": any(r["outcome"] == "MECHANISM_DEAD" for r in development),
             "infra_blocked": any(r["outcome"] == "INFRA_DATA_FAILURE" for r in eligible),
@@ -250,8 +262,13 @@ def _prepare_completion(events, experiment, *, ablation=None):
         enough = result["metrics"]["independent_event_count"] >= c["minimum_events"]
         if enough and experiment["status"] == "REJECTED":
             result["outcome"] = "LEARN_AND_PIVOT"
-        elif enough and experiment["status"] == "PASSED" and result["metrics"]["net_pnl"] > 0:
+        elif (enough and experiment["status"] == "PASSED"
+                and result["metrics"]["net_pnl"] > 0
+                and not SUCCESS_BLOCKING_RISK_FLAGS.intersection(result["risk_flags"])):
             result["outcome"] = "SUCCESS_LEARN"
+        elif (enough and experiment["status"] == "PASSED"
+                and result["metrics"]["net_pnl"] > 0):
+            result["outcome"] = "LEARN_AND_PIVOT"
         falsifier = c.get("mechanism_falsifier")
         if falsifier is not None:
             if (not isinstance(falsifier, dict) or falsifier.get("metric") != "after_cost_expectancy_money"

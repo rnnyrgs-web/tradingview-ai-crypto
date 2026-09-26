@@ -79,6 +79,35 @@ def test_one_lucky_trade_dominates_apparent_success():
     assert result["concentration"]["largest_winner_share"] == 1
 
 
+def test_best_trade_dependence_uses_without_best_economics_at_share_boundary():
+    result = analyze(experiment([50, 25, 25, -95]))
+
+    assert result["concentration"]["largest_winner_share"] == .5
+    assert result["concentration"]["net_pnl_without_best_trade"] == -45
+    assert "SINGLE_WINNER_DEPENDENCE" in result["risk_flags"]
+
+
+def test_winner_concentration_without_dependence_remains_diagnostic_only():
+    result = analyze(experiment([60, 40, -1]))
+
+    assert result["concentration"]["largest_winner_share"] == .6
+    assert result["concentration"]["net_pnl_without_best_trade"] == 39
+    assert "SINGLE_WINNER_CONCENTRATION" in result["risk_flags"]
+    assert "SINGLE_WINNER_DEPENDENCE" not in result["risk_flags"]
+
+
+def test_overlapping_losses_are_one_catastrophic_event():
+    e = experiment([-150, -150, 100, 100, 100, 100])
+    e["trades"][1]["event_id"] = e["trades"][0]["event_id"]
+
+    result = analyze(e)
+
+    assert result["metrics"]["worst_trade_money"] == -150
+    assert result["metrics"]["worst_event_money"] == -300
+    assert result["metrics"]["max_drawdown"] == pytest.approx(.3)
+    assert "CATASTROPHIC_LOSS" in result["risk_flags"]
+
+
 def test_nav_not_product_of_overlapping_trade_returns():
     e = experiment([100, 100])
     e["trades"][1]["entry_at"] = e["trades"][0]["entry_at"]

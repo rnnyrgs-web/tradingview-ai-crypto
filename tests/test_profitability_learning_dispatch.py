@@ -63,6 +63,120 @@ def test_rejected_fingerprint_is_ineligible_even_when_only_candidate(monkeypatch
     assert queue["experiments"][0]["learning_feedback"]["changes_eligibility"] is True
 
 
+def test_risk_blocked_positive_completion_rejects_exact_strategy_after_restart(
+    monkeypatch, tmp_path
+):
+    path = configure(monkeypatch, tmp_path)
+    source = _experiment("risk-blocked-positive", 100)
+    source["family"] = "factory-restrictive-filter"
+    passed = experiment([-5, -5, 30])
+    passed["contract"]["strategy"] = deepcopy(source["strategy"])
+    passed["contract"]["strategy_fingerprint"] = source["strategy_fingerprint"]
+    passed["contract"]["family"] = source["family"]
+    passed["status"] = "PASSED"
+    passed["failure_reasons"] = []
+    for trade in passed["trades"]:
+        trade["asset"] = source["strategy"]["assets"][0]
+        trade["timeframe"] = source["strategy"]["timeframe"]
+
+    completed = complete_experiment(passed)
+    restarted = Memory(path, create=False).snapshot()
+    semantic = verified_strategy_semantic_fingerprint(source)
+    candidate = deepcopy(source)
+    candidate["experiment_id"] = "same-risk-after-restart"
+    queue = apply_queue_feedback({"experiments": [candidate]})
+
+    assert completed["outcome"] == "LEARN_AND_PIVOT"
+    assert source["strategy_fingerprint"] in restarted["rejected_fingerprints"]
+    assert semantic in restarted["rejected_semantic_fingerprints"]
+    assert queue["experiments"][0]["learning_feedback"]["reason"] == (
+        "rejected_exact_fingerprint"
+    )
+    assert build_heavy_dispatch_plan(queue)["selected_count"] == 0
+
+
+def test_fragmented_single_event_profit_cannot_become_success_learning(
+    monkeypatch, tmp_path
+):
+    path = configure(monkeypatch, tmp_path)
+    passed = experiment([40, 40, 40, -30, -30], name="fragmented-single-event")
+    passed["status"] = "PASSED"
+    passed["failure_reasons"] = []
+    for trade in passed["trades"][:3]:
+        trade["event_id"] = "one-fragmented-winning-event"
+
+    completed = complete_experiment(passed)
+    restarted = Memory(path, create=False).snapshot()
+
+    assert completed["metrics"]["independent_event_count"] == 3
+    assert completed["concentration"]["net_pnl_without_best_trade"] == 20
+    assert completed["concentration"]["net_pnl_without_best_independent_event"] == -60
+    assert "SINGLE_WINNER_DEPENDENCE" in completed["risk_flags"]
+    assert completed["outcome"] == "LEARN_AND_PIVOT"
+    assert completed["contract"]["strategy_fingerprint"] in restarted["rejected_fingerprints"]
+
+
+def test_profit_spread_across_independent_events_remains_positive_control(
+    monkeypatch, tmp_path
+):
+    configure(monkeypatch, tmp_path)
+    passed = experiment([40, 35, 30, -10, -10], name="multi-event-positive-control")
+    passed["status"] = "PASSED"
+    passed["failure_reasons"] = []
+
+    completed = complete_experiment(passed)
+
+    assert completed["metrics"]["independent_event_count"] == 5
+    assert completed["concentration"]["net_pnl_without_best_independent_event"] == 45
+    assert "SINGLE_WINNER_DEPENDENCE" not in completed["risk_flags"]
+    assert completed["outcome"] == "SUCCESS_LEARN"
+
+
+def test_historical_risk_flagged_success_rejects_exact_strategy_after_restart(
+    monkeypatch, tmp_path
+):
+    path = configure(monkeypatch, tmp_path)
+    source = _experiment("historical-risk-blocked-positive", 100)
+    source["family"] = "factory-restrictive-filter"
+    passed = experiment([-5, -5, 30])
+    passed["contract"]["strategy"] = deepcopy(source["strategy"])
+    passed["contract"]["strategy_fingerprint"] = source["strategy_fingerprint"]
+    passed["contract"]["family"] = source["family"]
+    passed["status"] = "PASSED"
+    passed["failure_reasons"] = []
+    for trade in passed["trades"]:
+        trade["asset"] = source["strategy"]["assets"][0]
+        trade["timeframe"] = source["strategy"]["timeframe"]
+    complete_experiment(passed)
+    archive = Memory(path, create=False).export()
+    payload = archive["events"][0]["payload"]
+    payload["outcome"] = "SUCCESS_LEARN"
+    payload["next_research_question"] = (
+        "Replicate the frozen economic mechanism independently; investigate "
+        "return concentration."
+    )
+    archive["events"][0]["digest"] = fingerprint(payload)
+    archive["sha256"] = fingerprint(archive["events"])
+    historical_path = tmp_path / "historical.sqlite"
+    Memory(historical_path).import_archive(archive)
+    monkeypatch.setenv("PROFITABILITY_LEARNING_DB", str(historical_path))
+
+    restarted = Memory(historical_path, create=False).snapshot()
+    semantic = verified_strategy_semantic_fingerprint(source)
+    candidate = deepcopy(source)
+    candidate["experiment_id"] = "same-historical-risk-after-restart"
+    queue = apply_queue_feedback({"experiments": [candidate]})
+
+    assert payload["source_status"] == "PASSED"
+    assert "SINGLE_WINNER_DEPENDENCE" in payload["risk_flags"]
+    assert source["strategy_fingerprint"] in restarted["rejected_fingerprints"]
+    assert semantic in restarted["rejected_semantic_fingerprints"]
+    assert queue["experiments"][0]["learning_feedback"]["reason"] == (
+        "rejected_exact_fingerprint"
+    )
+    assert build_heavy_dispatch_plan(queue)["selected_count"] == 0
+
+
 @pytest.mark.parametrize("relabel", ["family", "mechanism", "economic_reason"])
 def test_rejected_executable_semantics_cannot_reenter_by_relabeling(
     monkeypatch, tmp_path, relabel

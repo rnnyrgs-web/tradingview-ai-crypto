@@ -47,6 +47,83 @@ def test_completion_is_immutable_idempotent_and_survives_restart(tmp_path):
         m.complete(e)
 
 
+@pytest.mark.parametrize(
+    ("pnls", "expected_flag"),
+    [
+        ([700, -500, -100], "CATASTROPHIC_LOSS"),
+        ([-5, -5, 30], "SINGLE_WINNER_DEPENDENCE"),
+    ],
+)
+def test_positive_tail_or_concentration_failure_is_not_success_learning(
+    tmp_path, pnls, expected_flag
+):
+    e = experiment(pnls)
+    e["status"] = "PASSED"
+    e["failure_reasons"] = []
+
+    completed = Memory(tmp_path / "memory.sqlite").complete(e)
+
+    assert expected_flag in completed["risk_flags"]
+    assert completed["metrics"]["net_pnl"] > 0
+    assert completed["outcome"] == "LEARN_AND_PIVOT"
+
+
+def test_positive_aggregated_event_tail_failure_is_not_success_learning(tmp_path):
+    e = experiment([-150, -150, 100, 100, 100, 100])
+    e["trades"][1]["event_id"] = e["trades"][0]["event_id"]
+    e["status"] = "PASSED"
+    e["failure_reasons"] = []
+
+    completed = Memory(tmp_path / "memory.sqlite").complete(e)
+
+    assert completed["metrics"]["worst_event_money"] == -300
+    assert "CATASTROPHIC_LOSS" in completed["risk_flags"]
+    assert completed["metrics"]["net_pnl"] > 0
+    assert completed["outcome"] == "LEARN_AND_PIVOT"
+
+
+def test_historical_risk_flagged_success_cannot_become_exploit_mission(tmp_path):
+    e = experiment([-5, -5, 30])
+    e["status"] = "PASSED"
+    e["failure_reasons"] = []
+    memory = Memory(tmp_path / "memory.sqlite")
+    memory.complete(e)
+    snapshot = memory.snapshot()
+    record = snapshot["experiments"][0]
+    # Exercise backward compatibility with an already-persisted favorable row.
+    record["outcome"] = "SUCCESS_LEARN"
+    record["favorable_evidence_provenance"] = "VERIFIED_EXECUTOR_BOUND_RESULT"
+
+    mission = next(
+        row
+        for row in learning_missions(snapshot)
+        if row["source_experiment_id"] == record["experiment_id"]
+    )
+
+    assert "SINGLE_WINNER_DEPENDENCE" in record["risk_flags"]
+    assert mission["mode"] == "LEARN"
+    assert mission["strategy_fingerprint"] is None
+
+
+def test_underpowered_single_winner_diagnostic_does_not_reject_strategy(tmp_path):
+    e = experiment([10])
+    e["status"] = "PASSED"
+    e["failure_reasons"] = []
+    memory = Memory(tmp_path / "memory.sqlite")
+
+    completed = memory.complete(e)
+    snapshot = Memory(memory.path, create=False).snapshot()
+
+    assert completed["outcome"] == "INCONCLUSIVE"
+    assert completed["metrics"]["independent_event_count"] == 1
+    assert "INSUFFICIENT_INDEPENDENT_EVENTS" in completed["risk_flags"]
+    assert "SINGLE_WINNER_DEPENDENCE" in completed["risk_flags"]
+    assert completed["contract"]["strategy_fingerprint"] not in (
+        snapshot["rejected_fingerprints"]
+    )
+    assert not snapshot["rejected_semantic_fingerprints"]
+
+
 def test_concurrent_replay_does_not_inflate_evidence(tmp_path):
     path = tmp_path / "memory.sqlite"
     Memory(path)
