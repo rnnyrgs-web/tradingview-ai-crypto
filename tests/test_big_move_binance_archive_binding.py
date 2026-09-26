@@ -41,7 +41,8 @@ def test_parser_supports_documented_millisecond_and_microsecond_spot_timestamps(
     rows = parse_spot_1d_kline_archive(ms, decision_at="2024-01-03T00:00:00Z")
     assert rows[0]["date"] == "2024-01-01"
     assert rows[0]["close"] == "110.0"
-    assert rows[0]["quote_volume_usd"] == "12345678.9"
+    assert rows[0]["quote_asset_volume"] == "12345678.9"
+    assert "quote_volume_usd" not in rows[0]
 
     micros = _zip(
         "BTCUSDT-1d-2025-01.csv",
@@ -52,11 +53,11 @@ def test_parser_supports_documented_millisecond_and_microsecond_spot_timestamps(
     assert rows[0]["close"] == "111.0"
 
 
-def test_normalized_close_and_quote_volume_must_match_retained_archive():
+def test_normalized_close_and_quote_asset_volume_must_match_retained_archive():
     raw = _zip("BTCUSDT-1d-2024-01.csv", [_row(1704067200000, 1704153599999)])
     bound = verify_normalized_daily_rows(
         raw,
-        [{"date": "2024-01-01", "close": "110.0", "quote_volume_usd": "12345678.9"}],
+        [{"date": "2024-01-01", "close": "110.0", "quote_asset_volume": "12345678.9"}],
         decision_at="2024-01-03T00:00:00Z",
     )
     assert bound[0]["trade_count"] == 42
@@ -64,7 +65,24 @@ def test_normalized_close_and_quote_volume_must_match_retained_archive():
     with pytest.raises(ValueError, match="close does not match"):
         verify_normalized_daily_rows(
             raw,
-            [{"date": "2024-01-01", "close": "999", "quote_volume_usd": "12345678.9"}],
+            [{"date": "2024-01-01", "close": "999", "quote_asset_volume": "12345678.9"}],
+            decision_at="2024-01-03T00:00:00Z",
+        )
+
+    with pytest.raises(ValueError, match="quote_asset_volume does not match"):
+        verify_normalized_daily_rows(
+            raw,
+            [{"date": "2024-01-01", "close": "110.0", "quote_asset_volume": "999"}],
+            decision_at="2024-01-03T00:00:00Z",
+        )
+
+
+def test_legacy_usd_labeled_quote_volume_is_not_accepted_as_source_native():
+    raw = _zip("BTCUSDT-1d-2024-01.csv", [_row(1704067200000, 1704153599999)])
+    with pytest.raises(ValueError, match="quote_asset_volume missing"):
+        verify_normalized_daily_rows(
+            raw,
+            [{"date": "2024-01-01", "close": "110.0", "quote_volume_usd": "12345678.9"}],
             decision_at="2024-01-03T00:00:00Z",
         )
 
@@ -74,7 +92,7 @@ def test_post_cutoff_kline_cannot_be_bound():
     with pytest.raises(ValueError, match="absent from retained Binance archive"):
         verify_normalized_daily_rows(
             raw,
-            [{"date": "2024-01-02", "close": "110.0", "quote_volume_usd": "12345678.9"}],
+            [{"date": "2024-01-02", "close": "110.0", "quote_asset_volume": "12345678.9"}],
             decision_at="2024-01-02T12:00:00Z",
         )
 
