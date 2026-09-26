@@ -591,29 +591,34 @@ class EvidenceEvent:
 def _synthetic_support_attestation(
     memory: "CausalRepricingMemory", hypothesis: FrozenHypothesis, event: EvidenceEvent
 ) -> str | None:
-    """Bind a synthetic support event to the private acceptance writer's observations."""
+    """Bind synthetic support and every frozen input to the private writer."""
     key = os.getenv("CAUSAL_ACCEPTANCE_ATTESTATION_KEY", "")
     if len(key) != 64 or any(char not in "0123456789abcdef" for char in key):
         return None
     if event.kind != "support" or not event.confirmatory:
         return None
     try:
-        provenance = [
+        evaluation_provenance = [
             memory.observations[ident].provenance_fingerprint
             for ident in event.outcome_observation_ids + event.control_observation_ids
+        ]
+        formation_provenance = [
+            memory.observations[ident].provenance_fingerprint
+            for ident in hypothesis.source_observation_ids
         ]
     except KeyError:
         return None
     payload = {
-        "protocol": "causal-acceptance-support-v1",
+        "protocol": "causal-acceptance-support-v2",
         "hypothesis_fingerprint": hypothesis.fingerprint,
         "event": {key: value for key, value in asdict(event).items() if key != "note"},
-        "observation_provenance": provenance,
+        "formation_observation_provenance": formation_provenance,
+        "evaluation_observation_provenance": evaluation_provenance,
     }
     signature = hmac.new(
         bytes.fromhex(key), _canonical_json(payload).encode("utf-8"), hashlib.sha256
     )
-    return "causal-acceptance-support-v1:" + signature.hexdigest()
+    return "causal-acceptance-support-v2:" + signature.hexdigest()
 
 
 def _trusted_support_attestation(
@@ -621,6 +626,67 @@ def _trusted_support_attestation(
 ) -> bool:
     expected = _synthetic_support_attestation(memory, hypothesis, event)
     return expected is not None and hmac.compare_digest(event.note, expected)
+
+
+def _causal_memory_document_attestation(payload: dict[str, object]) -> str | None:
+    """Authenticate every durable version carrying acceptance support."""
+    events = payload.get("events", [])
+    if not isinstance(events, list) or not any(
+        isinstance(event, dict)
+        and isinstance(event.get("note"), str)
+        and event["note"].startswith("causal-acceptance-support-v")
+        for event in events
+    ):
+        return None
+    key = os.getenv("CAUSAL_ACCEPTANCE_ATTESTATION_KEY", "")
+    if len(key) != 64 or any(char not in "0123456789abcdef" for char in key):
+        return None
+    signed = {
+        "protocol": "causal-memory-document-v1",
+        "payload": payload,
+    }
+    signature = hmac.new(
+        bytes.fromhex(key), _canonical_json(signed).encode("utf-8"), hashlib.sha256
+    )
+    return "causal-memory-document-v1:" + signature.hexdigest()
+
+
+def _trusted_causal_memory_document(document: object) -> bool:
+    """Verify the private-writer boundary for acceptance-bearing documents."""
+    if not isinstance(document, dict):
+        return False
+    payload = dict(document)
+    payload.pop("content_digest", None)
+    supplied = payload.pop("authority_attestation", None)
+    expected = _causal_memory_document_attestation(payload)
+    if expected is None:
+        events = payload.get("events", [])
+        requires_attestation = isinstance(events, list) and any(
+            isinstance(event, dict)
+            and isinstance(event.get("note"), str)
+            and event["note"].startswith("causal-acceptance-support-v")
+            for event in events
+        )
+        return not requires_attestation and supplied is None
+    return isinstance(supplied, str) and hmac.compare_digest(supplied, expected)
+
+
+def _legacy_unsigned_causal_memory_document(document: object) -> bool:
+    """Identify the pre-document-attestation acceptance format only."""
+    if not isinstance(document, dict) or "authority_attestation" in document:
+        return False
+    events = document.get("events", [])
+    acceptance_notes = [
+        event.get("note")
+        for event in events
+        if isinstance(event, dict)
+        and isinstance(event.get("note"), str)
+        and event["note"].startswith("causal-acceptance-support-v")
+    ] if isinstance(events, list) else []
+    return bool(acceptance_notes) and all(
+        note.startswith("causal-acceptance-support-v1:")
+        for note in acceptance_notes
+    )
 
 
 @dataclass(frozen=True)
@@ -1636,6 +1702,12 @@ class CausalRepricingMemory:
 
     def to_document(self) -> dict[str, object]:
         payload = self._payload_without_digest()
+        authority_attestation = _causal_memory_document_attestation(payload)
+        if authority_attestation is not None:
+            payload = {
+                **payload,
+                "authority_attestation": authority_attestation,
+            }
         return {**payload, "content_digest": _sha256(payload)}
 
     def save(self, path: str | Path) -> None:

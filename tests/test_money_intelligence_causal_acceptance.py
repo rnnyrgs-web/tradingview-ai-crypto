@@ -110,7 +110,7 @@ def test_synthetic_namespace_cannot_self_attest_support(monkeypatch):
     signed = CausalRepricingMemory()
     acceptance._seed_support(signed, ids, base)
     event = signed.events[ids["support"]]
-    assert event.note.startswith("causal-acceptance-support-v1:")
+    assert event.note.startswith("causal-acceptance-support-v2:")
 
     unsigned = CausalRepricingMemory()
     for item in signed.registration_log:
@@ -130,6 +130,44 @@ def test_synthetic_namespace_cannot_self_attest_support(monkeypatch):
     restored = CausalRepricingMemory.from_document(document)
     assert restored.events[ids["support"]].confirmatory is False
     assert restored.confidence(ids["hypothesis"], as_of=event.evaluated_at).confirmatory_support_count == 0
+
+
+def test_signed_support_loses_authority_when_formation_provenance_is_rewritten():
+    ids = acceptance._ids("d" * 40)
+    base = datetime(2026, 9, 20, tzinfo=timezone.utc)
+    signed = CausalRepricingMemory()
+    acceptance._seed_support(signed, ids, base)
+
+    document = signed.to_document()
+    formation = next(
+        row for row in document["observations"]
+        if row["observation_id"] == ids["formation"]
+    )
+    formation.update(
+        value=999999.0,
+        source_id="posthoc-market-source",
+        provenance_uri="market://untrusted-posthoc",
+        subject_id="BTC-USD",
+    )
+    document.pop("content_digest")
+    document["content_digest"] = causal_memory._sha256(document)
+
+    restored = CausalRepricingMemory.from_document(document)
+    assert restored.events[ids["support"]].confirmatory is False
+    assert restored.confidence(
+        ids["hypothesis"], as_of=signed.events[ids["support"]].evaluated_at
+    ).confirmatory_support_count == 0
+    assert restored.research_artifact(
+        ids["hypothesis"],
+        lane="big_move",
+        as_of=signed.events[ids["support"]].evaluated_at,
+    ) is None
+
+
+def test_mission_consumption_receipt_requires_private_attestation_key(monkeypatch):
+    monkeypatch.delenv("CAUSAL_ACCEPTANCE_ATTESTATION_KEY")
+    with pytest.raises(CausalMemoryError, match="receipt attestation key"):
+        acceptance._receipt_text("f" * 40, "causal-acceptance-support-v2:deadbeef")
 
 
 class FakeDurableCausalStore:
@@ -235,3 +273,29 @@ def test_phase2_runtime_acceptance_uses_default_mission_surface_and_is_replay_sa
         lane="big_move",
         as_of="2099-01-01T00:00:00Z",
     ) is None
+
+
+def test_completed_receipt_fails_closed_after_valid_attestation_key_rotation(monkeypatch):
+    FakeDurableCausalStore.reset()
+    monkeypatch.setattr(acceptance, "SupabaseCausalMemory", FakeDurableCausalStore)
+    monkeypatch.setenv("RENDER_GIT_COMMIT", "e" * 40)
+    clock = [datetime(2026, 9, 20, tzinfo=timezone.utc)]
+    monkeypatch.setattr(acceptance, "_utc_now", lambda: clock[0])
+
+    def fake_refresh(_army):
+        return apply_causal_feedback(
+            {"missions": [], "next_missions": [], "daily_lead_report": {}},
+            loader=FakeDurableCausalStore().load,
+            as_of=clock[0].isoformat(),
+        )
+
+    monkeypatch.setattr(acceptance, "refresh_director", fake_refresh)
+    assert acceptance.run_phase2_causal_runtime_acceptance()["status"] == (
+        "WAIT_PROSPECTIVE_SYNTHETIC_EVALUATION"
+    )
+    clock[0] += timedelta(hours=21)
+    assert acceptance.run_phase2_causal_runtime_acceptance()["ok"] is True
+
+    monkeypatch.setenv("CAUSAL_ACCEPTANCE_ATTESTATION_KEY", "cd" * 32)
+    with pytest.raises(CausalMemoryError, match="attestation-valid confirmatory support"):
+        acceptance.run_phase2_causal_runtime_acceptance()

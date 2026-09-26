@@ -1,9 +1,11 @@
 from copy import deepcopy
 from dataclasses import replace
+from datetime import datetime, timezone
 from pathlib import Path
 
 import db
 import pytest
+import money_intelligence_causal_acceptance as acceptance
 import money_intelligence_causal_memory as causal_memory
 
 from money_intelligence_causal_memory import (
@@ -21,6 +23,8 @@ from test_money_intelligence_causal_memory import (
     _observation,
     _support,
 )
+
+_PRODUCTION_SUPPORT_ATTESTATION = causal_memory._trusted_support_attestation
 
 
 @pytest.fixture(autouse=True)
@@ -62,7 +66,13 @@ class FakeSupabase:
         if not self.available:
             return Response(503, {"message": "unavailable"})
         params = _kwargs.get("params", {})
-        if params.get("order") == "sequence.asc":
+        if "payload->>authority_attestation" in params:
+            matches = [
+                row for row in reversed(self.rows)
+                if "authority_attestation" in row["payload"]
+            ]
+            return Response(payload=deepcopy(matches[:1]))
+        if params.get("order") == "sequence.asc" and "payload" in params:
             import json as json_module
 
             hypothesis_id = json_module.loads(params["payload"][3:])["hypotheses"][0]["hypothesis_id"]
@@ -74,6 +84,8 @@ class FakeSupabase:
                 )
             ]
             return Response(payload=matches[:1])
+        if params.get("order") == "sequence.asc":
+            return Response(payload=deepcopy(self.rows))
         return Response(payload=list(reversed(self.rows[-2:])))
 
     def post(self, _url, *, json, **_kwargs):
@@ -245,6 +257,224 @@ def test_rejected_fingerprints_cannot_be_removed_from_durable_history(supabase):
     with pytest.raises(CausalMemoryError, match="durable causal-memory history is immutable"):
         adapter.transact(lambda current: current.rejected_fingerprints.clear())
     assert adapter.load().rejected_fingerprints == original
+
+
+def test_raw_appended_version_cannot_roll_back_rejected_state(supabase):
+    prepared = _memory_with_hypothesis()
+    adapter = SupabaseCausalMemory()
+    adapter.initialize(_plan_only())
+    adapter.transact(
+        lambda current: (
+            _append_evaluation_observations(current, prepared),
+            current.record_evidence(_support()),
+        )
+    )
+    adapter.transact(lambda current: current.reject_hypothesis("H1"))
+
+    attacked = adapter.load().to_document()
+    attacked["rejected_fingerprints"] = []
+    attacked.pop("content_digest")
+    attacked["content_digest"] = causal_memory._sha256(attacked)
+    supabase.inject(attacked)
+
+    with pytest.raises(CausalMemoryError, match="durable causal-memory history is immutable"):
+        adapter.load()
+
+
+def test_second_raw_append_cannot_launder_acceptance_state_rollback(
+    supabase, monkeypatch
+):
+    monkeypatch.setenv("CAUSAL_ACCEPTANCE_ATTESTATION_KEY", "ab" * 32)
+    ids = acceptance._ids("f" * 40)
+    base = datetime(2026, 9, 20, tzinfo=timezone.utc)
+    plan = CausalRepricingMemory()
+    acceptance._freeze_support_contract(plan, ids, base)
+    adapter = SupabaseCausalMemory()
+    supabase.server_time = "2026-09-20T00:30:00Z"
+    adapter.initialize(plan)
+    adapter.transact(lambda current: acceptance._seed_support(current, ids, base))
+    adapter.transact(lambda current: current.reject_hypothesis(ids["hypothesis"]))
+
+    rollback = adapter.load().to_document()
+    rollback["rejected_fingerprints"] = []
+    rollback["half_life_days"] = 999.0
+    rollback.pop("content_digest")
+    rollback["content_digest"] = causal_memory._sha256(rollback)
+    supabase.inject(rollback)
+
+    cover = deepcopy(rollback)
+    cover["attacker_nonce"] = "second-raw-version"
+    cover.pop("content_digest")
+    cover["content_digest"] = causal_memory._sha256(cover)
+    supabase.inject(cover)
+
+    with pytest.raises(CausalMemoryError, match="authenticated durable causal-memory"):
+        adapter.load()
+
+
+def test_legacy_unsigned_acceptance_state_is_quarantined_then_resigned(
+    supabase, monkeypatch
+):
+    monkeypatch.setenv("CAUSAL_ACCEPTANCE_ATTESTATION_KEY", "ab" * 32)
+    monkeypatch.setattr(
+        causal_memory,
+        "_trusted_support_attestation",
+        _PRODUCTION_SUPPORT_ATTESTATION,
+    )
+    ids = acceptance._ids("1" * 40)
+    base = datetime(2026, 9, 20, tzinfo=timezone.utc)
+    legacy = CausalRepricingMemory()
+    acceptance._seed_support(legacy, ids, base)
+    document = legacy.to_document()
+    document.pop("authority_attestation")
+    support = next(
+        row for row in document["events"] if row["event_id"] == ids["support"]
+    )
+    support["note"] = "causal-acceptance-support-v1:" + "0" * 64
+    document.pop("content_digest")
+    document["content_digest"] = causal_memory._sha256(document)
+    supabase.inject(document)
+
+    adapter = SupabaseCausalMemory()
+    restored = adapter.load()
+    assert restored.events[ids["support"]].confirmatory is False
+    adapter.transact(
+        lambda current: current.register_observation(
+            replace(
+                acceptance._observation(
+                    "legacy-migration-marker",
+                    metric_name="migration_marker",
+                    value=1.0,
+                    observed_at=base,
+                    available_at=base,
+                    unit="count",
+                    window_hours=1,
+                ),
+                subject_id="LEGACY-MIGRATION",
+            )
+        )
+    )
+    assert supabase.rows[-1]["payload"]["authority_attestation"].startswith(
+        "causal-memory-document-v1:"
+    )
+    assert adapter.load().events[ids["support"]].confirmatory is False
+
+
+def test_marker_free_cover_cannot_launder_legacy_unsigned_rollback(
+    supabase, monkeypatch
+):
+    monkeypatch.setenv("CAUSAL_ACCEPTANCE_ATTESTATION_KEY", "ab" * 32)
+    ids = acceptance._ids("4" * 40)
+    base = datetime(2026, 9, 20, tzinfo=timezone.utc)
+    legacy = CausalRepricingMemory()
+    acceptance._seed_support(legacy, ids, base)
+    legacy.reject_hypothesis(ids["hypothesis"])
+    event = legacy.events[ids["support"]]
+    legacy.events[ids["support"]] = replace(
+        event,
+        note="causal-acceptance-support-v1:" + "0" * 64,
+        confirmatory=False,
+    )
+    unsigned_v1 = legacy.to_document()
+    unsigned_v1.pop("authority_attestation", None)
+    unsigned_v1.pop("content_digest")
+    unsigned_v1["content_digest"] = causal_memory._sha256(unsigned_v1)
+    supabase.inject(unsigned_v1)
+    monkeypatch.delenv("CAUSAL_ACCEPTANCE_ATTESTATION_KEY")
+
+    rollback = deepcopy(unsigned_v1)
+    rollback["events"] = []
+    rollback["event_order"] = []
+    rollback["registration_log"] = [
+        row for row in rollback["registration_log"] if row["kind"] != "event"
+    ]
+    rollback["rejected_fingerprints"] = []
+    rollback["half_life_days"] = 999.0
+    rollback.pop("content_digest")
+    rollback["content_digest"] = causal_memory._sha256(rollback)
+    supabase.inject(rollback)
+
+    cover = deepcopy(rollback)
+    cover["attacker_nonce"] = "marker-free-cover"
+    cover.pop("content_digest")
+    cover["content_digest"] = causal_memory._sha256(cover)
+    supabase.inject(cover)
+
+    adapter = SupabaseCausalMemory()
+    with pytest.raises(
+        CausalMemoryError, match="durable causal-memory history is immutable"
+    ):
+        adapter.load()
+    with pytest.raises(
+        CausalMemoryError, match="durable causal-memory history is immutable"
+    ):
+        adapter.transact(
+            lambda current: current.register_observation(
+                _observation("trusted-mutation-after-cover")
+            )
+        )
+
+
+def test_document_attestation_cannot_be_removed_after_legacy_migration(
+    supabase, monkeypatch
+):
+    monkeypatch.setenv("CAUSAL_ACCEPTANCE_ATTESTATION_KEY", "ab" * 32)
+    ids = acceptance._ids("2" * 40)
+    base = datetime(2026, 9, 20, tzinfo=timezone.utc)
+    memory = CausalRepricingMemory()
+    acceptance._seed_support(memory, ids, base)
+    event = memory.events[ids["support"]]
+    memory.events[ids["support"]] = replace(
+        event,
+        note="causal-acceptance-support-v1:" + "0" * 64,
+        confirmatory=False,
+    )
+    signed = memory.to_document()
+    supabase.inject(signed)
+
+    stripped = deepcopy(signed)
+    stripped.pop("authority_attestation")
+    stripped.pop("content_digest")
+    stripped["content_digest"] = causal_memory._sha256(stripped)
+    supabase.inject(stripped)
+
+    with pytest.raises(CausalMemoryError, match="attested boundary cannot be removed"):
+        SupabaseCausalMemory().load()
+
+
+def test_acceptance_markers_cannot_be_removed_after_attested_boundary(
+    supabase, monkeypatch
+):
+    monkeypatch.setenv("CAUSAL_ACCEPTANCE_ATTESTATION_KEY", "ab" * 32)
+    ids = acceptance._ids("3" * 40)
+    base = datetime(2026, 9, 20, tzinfo=timezone.utc)
+    memory = CausalRepricingMemory()
+    acceptance._seed_support(memory, ids, base)
+    memory.reject_hypothesis(ids["hypothesis"])
+    signed = memory.to_document()
+    supabase.inject(signed)
+
+    removed = deepcopy(signed)
+    removed.pop("authority_attestation")
+    removed["events"] = []
+    removed["event_order"] = []
+    removed["registration_log"] = [
+        row for row in removed["registration_log"] if row["kind"] != "event"
+    ]
+    removed["rejected_fingerprints"] = []
+    removed["half_life_days"] = 999.0
+    removed.pop("content_digest")
+    removed["content_digest"] = causal_memory._sha256(removed)
+    supabase.inject(removed)
+
+    cover = deepcopy(removed)
+    cover["attacker_nonce"] = "marker-removal-cover"
+    cover.pop("content_digest")
+    cover["content_digest"] = causal_memory._sha256(cover)
+    supabase.inject(cover)
+
+    with pytest.raises(CausalMemoryError, match="attested boundary cannot be removed"):
+        SupabaseCausalMemory().load()
 
 
 def test_durable_restart_preserves_scientific_state_and_behavior(supabase):
