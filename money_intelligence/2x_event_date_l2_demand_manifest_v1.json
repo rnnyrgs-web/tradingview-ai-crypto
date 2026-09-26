@@ -1,0 +1,16 @@
+{
+  "schema_version": "2X-EVENT-DATE-L2-DEMAND-MANIFEST-001-v1",
+  "contract_id": "2X-EVENT-DATE-L2-DEMAND-001-v1",
+  "status": "BLOCKED_INPUT_COHORT_NOT_POPULATED",
+  "blocker": "SURVIVOR_SAFE_EVENT_CONTROL_COHORT_NOT_YET_POPULATED",
+  "canonical_main_sha": "b986b0e10fd120fa009f5b58e7052b739e287238",
+  "source_case_count": 0,
+  "deduplicated_request_count": 0,
+  "requests": [],
+  "purchase_authority": "NONE",
+  "label_authority": "NONE",
+  "candidate_authority": "NONE",
+  "model_authority": "NONE",
+  "broker_trading_authority": "NONE",
+  "manifest_fingerprint": "6094419903ab40c5587cc1b6728a2b61a57eadc39aaf48343d61210cfba1255d"
+}
