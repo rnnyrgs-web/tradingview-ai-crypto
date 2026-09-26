@@ -15,6 +15,8 @@ _TEST_BEHAVIOR_SCHEMA_MODULES = {
     "test_scientific_design_identity.py",
     "test_strategy_behavior_field_semantics.py",
     "test_strategy_behavior_identity.py",
+    "test_strategy_failure_learning.py",
+    "test_strategy_failure_learning_sparse.py",
     "test_strategy_predeclaration.py",
     "test_strategy_predeclaration_scalar_representation_guard.py",
 }
