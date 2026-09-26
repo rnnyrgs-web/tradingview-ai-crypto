@@ -27,7 +27,7 @@ class SignalEvent:
     entry_timestamp: datetime
     exit_timestamp: datetime
     direction: int
-    baseline_direction: int
+    baseline_direction: int | None
     intraday_return: float
     reference_mean: float
     reference_std: float
@@ -64,7 +64,7 @@ class DataPitInconclusiveError(RuntimeError):
             for issue in self.issues
         )
         super().__init__(
-            "DATA/PIT_INCONCLUSIVE: frozen schedule is missing required execution bars: "
+            "DATA/PIT_INCONCLUSIVE: frozen schedule is missing required PIT bars: "
             + details
         )
 
@@ -227,16 +227,13 @@ def build_signal_schedule(
             if open_bar is None:
                 continue
             continuous_from_midnight = True
-            previous_bar: Bar | None = None
             for hour in range(24):
                 ts = day + hour * HOUR
                 bar = ts_index.get(ts)
                 if bar is None:
                     continuous_from_midnight = False
-                    previous_bar = None
                     continue
                 if not continuous_from_midnight:
-                    previous_bar = bar
                     continue
                 if hour > latest_signal_hour_utc:
                     break
@@ -249,7 +246,6 @@ def build_signal_schedule(
                     validation_end=validation_end_dt,
                 )
                 if period is None:
-                    previous_bar = bar
                     continue
 
                 intraday = bar.close / open_bar.open - 1.0
@@ -257,24 +253,30 @@ def build_signal_schedule(
                 lower = ref_mean - sigma_multiple * ref_std
                 direction = 1 if intraday > upper else -1 if intraday < lower else 0
                 if direction == 0:
-                    previous_bar = bar
                     continue
 
                 entry_ts = ts + HOUR
                 exit_ts = day + DAY
                 if entry_ts >= protected_dt or exit_ts >= protected_dt:
                     break
-                if period == "train" and exit_ts > train_end_dt + HOUR:
-                    # The train event may exit at the next 00:00 boundary only if that
-                    # timestamp is still before validation starts.
-                    if exit_ts >= validation_start_dt:
-                        break
-                if period == "validation" and exit_ts > validation_end_dt + HOUR:
+                # Keep every scored return entirely inside its declared chronological
+                # period. In particular, the final training day's midnight exit may
+                # not consume the first validation timestamp.
+                if period == "train" and exit_ts > train_end_dt:
+                    break
+                if period == "validation" and exit_ts > validation_end_dt:
                     break
 
-                baseline_direction = 0
-                if previous_bar is not None:
-                    one_hour = bar.close / previous_bar.close - 1.0
+                # The frozen #517 simple-trend baseline is defined on the exact
+                # candidate window using the immediately preceding completed hourly
+                # close. Resolve t-1h from the instrument index so 00:00 UTC signals
+                # correctly use the prior UTC day's 23:00 close. Missing t-1h is not
+                # the same thing as a true zero return and remains explicit for the
+                # baseline scorer to fail closed.
+                prior_bar = ts_index.get(ts - HOUR)
+                baseline_direction: int | None = None
+                if prior_bar is not None:
+                    one_hour = bar.close / prior_bar.close - 1.0
                     baseline_direction = 1 if one_hour > 0 else -1 if one_hour < 0 else 0
 
                 events.append(
@@ -362,8 +364,10 @@ def score_schedule(
 ) -> tuple[ScoredEvent, ...]:
     """Score a preformed schedule without altering event membership from outcomes.
 
-    Any frozen event missing a required entry/exit bar is a DATA/PIT_INCONCLUSIVE
+    Any frozen event missing a required PIT input is a DATA/PIT_INCONCLUSIVE
     screen, never an event that may be silently removed to improve evidence.
+    A genuine zero prior-hour baseline return is different: it preserves the exact
+    candidate window as a zero-position, zero-economic baseline observation.
     """
     if not isfinite(base_cost_bps) or base_cost_bps < 0:
         raise ValueError("base_cost_bps must be finite and non-negative")
@@ -376,7 +380,20 @@ def score_schedule(
 
     bars = normalize_development_rows(rows, protected_oos_start=protected_oos_start)
     by_ts, _ = _index_by_instrument(bars)
-    issues = _execution_issues_from_index(by_ts, schedule, entry_delay_bars=entry_delay_bars)
+    issues = list(_execution_issues_from_index(by_ts, schedule, entry_delay_bars=entry_delay_bars))
+    if direction_source == "baseline":
+        for signal in schedule:
+            if signal.baseline_direction is None:
+                issues.append(
+                    ScheduleExecutionIssue(
+                        instrument=signal.instrument,
+                        period=signal.period,
+                        signal_timestamp=signal.signal_timestamp,
+                        required_timestamp=signal.signal_timestamp - HOUR,
+                        reason="MISSING_REQUIRED_BASELINE_BAR",
+                        entry_delay_bars=entry_delay_bars,
+                    )
+                )
     if issues:
         raise DataPitInconclusiveError(issues)
 
@@ -392,15 +409,28 @@ def score_schedule(
             if direction_source == "baseline"
             else -signal.direction
         )
-        if direction == 0:
-            continue
         entry_ts = signal.entry_timestamp + entry_delay_bars * HOUR
         if entry_ts >= signal.exit_timestamp:
             continue
         instrument_index = by_ts.get(signal.instrument, {})
-        # Required bars were validated above for the complete frozen schedule.
+        # Required PIT bars were validated above for the complete frozen schedule.
         entry = instrument_index[entry_ts]
         exit_bar = instrument_index[signal.exit_timestamp]
+        if direction is None:
+            raise RuntimeError("baseline PIT input was not validated before scoring")
+        if direction == 0:
+            if direction_source == "baseline":
+                scored.append(
+                    ScoredEvent(
+                        signal=signal,
+                        entry_price=entry.open,
+                        exit_price=exit_bar.open,
+                        gross_return=0.0,
+                        net_return=0.0,
+                        stress_3x_net_return=0.0,
+                    )
+                )
+            continue
         raw_price_return = exit_bar.open / entry.open - 1.0
         gross = direction * raw_price_return
         scored.append(
