@@ -1,5 +1,7 @@
 import asyncio
 
+import pytest
+
 import continuous_worker_army as army
 
 
@@ -42,6 +44,107 @@ def test_worker_mix_excludes_retired_rejected_profitability_candidate():
     assert not army._is_lightweight_worker(adaptive)
     assert cross_24h.env["CROSS_ASSET_HORIZON"] == "24h"
     assert cross_7d.env["CROSS_ASSET_HORIZON"] == "7d"
+
+
+def test_no_candidate_safe_idles_all_candidate_specific_heavy_workers():
+    objective = army.load_objective()
+    discovery_queue = army.load_strategy_discovery_queue()
+    assert objective["single_strategy_focus"]["active_candidate"] is None
+    assert discovery_queue["active_deep_candidate"] is None
+    selected = army.focused_worker_specs(army.WORKERS, objective, discovery_queue)
+    assert {spec.name for spec in selected} == {"learning-diagnostics", "experiment-factory"}
+    assert all(spec.compute_class == "lightweight" for spec in selected)
+    assert "cross-asset-rank-24h" not in {spec.name for spec in selected}
+
+
+def test_stale_selection_screener_cannot_reauthorize_acc002_when_queue_is_empty():
+    objective = {
+        "single_strategy_focus": {
+            "enabled": True,
+            "max_active_deep_candidates": 1,
+            "active_candidate": None,
+            "selection_screen_workers": ["cross-asset-rank-24h"],
+        }
+    }
+    discovery_queue = {"max_active_deep_candidates": 1, "active_deep_candidate": None}
+    selected = army.focused_worker_specs(army.WORKERS, objective, discovery_queue)
+    assert {spec.name for spec in selected} == {"learning-diagnostics", "experiment-factory"}
+
+
+def test_objective_and_discovery_queue_candidate_disagreement_fails_closed():
+    objective = {
+        "single_strategy_focus": {
+            "enabled": True,
+            "max_active_deep_candidates": 1,
+            "active_candidate": None,
+        }
+    }
+    discovery_queue = {
+        "max_active_deep_candidates": 1,
+        "active_deep_candidate": {"fingerprint_id": "DISC-OTHER-001-v1"},
+    }
+    with pytest.raises(RuntimeError, match="disagree on active candidate"):
+        army.focused_worker_specs(army.WORKERS, objective, discovery_queue)
+
+
+def test_mismatched_active_candidate_identities_fail_closed():
+    objective = {
+        "single_strategy_focus": {
+            "enabled": True,
+            "max_active_deep_candidates": 1,
+            "active_candidate": {
+                "fingerprint_id": "DISC-A-001-v1",
+                "deep_worker_contracts": {
+                    "cross-asset-rank-24h": {"strategy_family": "residual_momentum"}
+                },
+            },
+        }
+    }
+    discovery_queue = {
+        "max_active_deep_candidates": 1,
+        "active_deep_candidate": {"fingerprint_id": "DISC-B-001-v1"},
+    }
+    with pytest.raises(RuntimeError, match="identities disagree"):
+        army.focused_worker_specs(army.WORKERS, objective, discovery_queue)
+
+
+def test_matching_active_candidate_preserves_deep_worker_contract_gate():
+    objective = {
+        "single_strategy_focus": {
+            "enabled": True,
+            "max_active_deep_candidates": 1,
+            "active_candidate": {
+                "fingerprint_id": "DISC-A-001-v1",
+                "deep_worker_contracts": {
+                    "cross-asset-rank-24h": {"strategy_family": "residual_momentum"}
+                },
+            },
+        }
+    }
+    discovery_queue = {"max_active_deep_candidates": 1, "active_deep_candidate": "DISC-A-001-v1"}
+    selected = army.focused_worker_specs(army.WORKERS, objective, discovery_queue)
+    names = {spec.name for spec in selected}
+    assert names == {"learning-diagnostics", "experiment-factory", "cross-asset-rank-24h"}
+    deep = next(spec for spec in selected if spec.name == "cross-asset-rank-24h")
+    assert deep.env["SINGLE_STRATEGY_DEEP_MODE"] == "1"
+    assert deep.env["ACTIVE_STRATEGY_FINGERPRINT"] == "DISC-A-001-v1"
+    assert deep.env["ACTIVE_STRATEGY_FAMILY"] == "residual_momentum"
+
+
+def test_invalid_active_deep_worker_still_fails_closed():
+    objective = {
+        "single_strategy_focus": {
+            "enabled": True,
+            "max_active_deep_candidates": 1,
+            "active_candidate": {
+                "fingerprint_id": "DISC-A-001-v1",
+                "deep_worker_contracts": {"unknown-worker": {"strategy_family": "residual_momentum"}},
+            },
+        }
+    }
+    discovery_queue = {"max_active_deep_candidates": 1, "active_deep_candidate": "DISC-A-001-v1"}
+    with pytest.raises(RuntimeError, match="unknown deep workers"):
+        army.focused_worker_specs(army.WORKERS, objective, discovery_queue)
 
 
 def test_summary_paths_are_routed_per_active_worker_script():

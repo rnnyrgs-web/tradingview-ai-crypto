@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from agents.autonomous_cloud_runner import PolicyError, load_config, validate_config
-from continuous_worker_army import WORKERS, focused_worker_specs
+from continuous_worker_army import WORKERS, focused_worker_specs, load_strategy_discovery_queue
 from signal_development import ObjectiveError, load_objective, validate_objective
 from orchestration.specialist_coordination import validate_state
 
@@ -74,18 +74,18 @@ def test_worker_fleet_routes_to_one_candidate_without_claiming_alpha():
     assert policy["operational_security_may_claim_alpha"] is False
 
 
-def test_selection_phase_runs_only_declared_screen_workers_and_lightweight_brains():
+def test_selection_phase_safe_idles_candidate_heavy_workers_without_active_queue_candidate():
     objective = load_objective()
-    screen_names = set(objective["single_strategy_focus"]["selection_screen_workers"])
-    selected = focused_worker_specs(WORKERS, objective)
+    discovery_queue = load_strategy_discovery_queue()
+    assert objective["single_strategy_focus"]["active_candidate"] is None
+    assert discovery_queue["active_deep_candidate"] is None
+
+    selected = focused_worker_specs(WORKERS, objective, discovery_queue)
     selected_names = {worker.name for worker in selected}
 
-    assert selected_names == screen_names | {"learning-diagnostics", "experiment-factory"}
-    heavy = [worker for worker in selected if worker.compute_class == "heavy"]
-    assert heavy
-    assert {worker.name for worker in heavy} == screen_names
-    assert all(worker.env.get("SINGLE_STRATEGY_SELECTION_MODE") == "1" for worker in heavy)
-    assert all("ACTIVE_STRATEGY_FINGERPRINT" not in worker.env for worker in heavy)
+    assert selected_names == {"learning-diagnostics", "experiment-factory"}
+    assert all(worker.compute_class == "lightweight" for worker in selected)
+    assert "cross-asset-rank-24h" not in selected_names
 
 
 def test_active_candidate_allows_only_its_declared_deep_workers():
@@ -97,7 +97,10 @@ def test_active_candidate_allows_only_its_declared_deep_workers():
             "major-btc": {"strategy_family": "trend"},
         },
     }
-    selected = focused_worker_specs(WORKERS, objective)
+    discovery_queue = load_strategy_discovery_queue()
+    discovery_queue["lifecycle_phase"] = "DEEP_VALIDATION"
+    discovery_queue["active_deep_candidate"] = "TEST-CANDIDATE-V1"
+    selected = focused_worker_specs(WORKERS, objective, discovery_queue)
     heavy = [worker for worker in selected if worker.compute_class == "heavy"]
     assert [worker.name for worker in heavy] == ["major-btc"]
     assert heavy[0].env["SINGLE_STRATEGY_DEEP_MODE"] == "1"
