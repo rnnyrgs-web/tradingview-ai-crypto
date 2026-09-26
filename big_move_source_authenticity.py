@@ -19,6 +19,10 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
+from big_move_primary_historical_availability import (
+    validate_primary_document_historical_availability,
+)
+
 SOURCE_POLICY_PATH = "money_intelligence/2x_source_provenance_preflight_v1.json"
 SOURCE_POLICY_GIT_BLOB_SHA = "f0c9048228dac566def31f5872406d3437d114c7"
 SOURCE_POLICY_ARTIFACT_ID = "2X-SOURCE-PREFLIGHT-001-v1"
@@ -61,6 +65,16 @@ def _utc(value: Any, *, field: str) -> datetime:
     if parsed.tzinfo is None or parsed.utcoffset() != timezone.utc.utcoffset(parsed):
         raise ValueError(f"{field} must be UTC")
     return parsed
+
+
+def _decision_at_text(value: datetime) -> str:
+    """Serialize only an explicitly UTC decision clock for trusted PIT validators."""
+
+    if not isinstance(value, datetime) or value.tzinfo is None:
+        raise ValueError("decision_at must be a timezone-aware UTC datetime")
+    if value.utcoffset() != timezone.utc.utcoffset(value):
+        raise ValueError("decision_at must be UTC")
+    return value.isoformat().replace("+00:00", "Z")
 
 
 def _same_value(left: Any, right: Any) -> bool:
@@ -110,14 +124,47 @@ def _verified_bytes(root: Path, relpath: Any, expected_sha256: Any, *, field: st
     return raw
 
 
+def _unique_json_object(pairs: list[tuple[str, Any]], *, field: str) -> dict[str, Any]:
+    value: dict[str, Any] = {}
+    for key, item in pairs:
+        if key in value:
+            raise ValueError(f"{field} contains duplicate JSON object key {key!r}")
+        value[key] = item
+    return value
+
+
+def _reject_nonstandard_json_constant(value: str, *, field: str) -> Any:
+    raise ValueError(f"{field} contains non-standard JSON numeric constant {value}")
+
+
+def _strict_json_loads(raw: bytes, *, field: str, json_error: str) -> Any:
+    """Parse authenticated JSON with one deterministic semantic interpretation."""
+
+    try:
+        text = raw.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise ValueError(json_error) from exc
+    try:
+        return json.loads(
+            text,
+            object_pairs_hook=lambda pairs: _unique_json_object(pairs, field=field),
+            parse_constant=lambda constant: _reject_nonstandard_json_constant(
+                constant, field=field
+            ),
+        )
+    except json.JSONDecodeError as exc:
+        raise ValueError(json_error) from exc
+
+
 def _verified_json(root: Path, ref: Any, *, field: str) -> dict[str, Any]:
     if not isinstance(ref, dict):
         raise ValueError(f"{field} source_proof missing")
     raw = _verified_bytes(root, ref.get("artifact_relpath"), ref.get("sha256"), field=field)
-    try:
-        value = json.loads(raw.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise ValueError(f"{field} source proof must be JSON") from exc
+    value = _strict_json_loads(
+        raw,
+        field=field,
+        json_error=f"{field} source proof must be JSON",
+    )
     if not isinstance(value, dict):
         raise ValueError(f"{field} source proof must be an object")
     return value
@@ -237,10 +284,11 @@ def _validate_coinmetrics_proof(
         proof.get("raw_response_sha256"),
         field=f"{field}.coinmetrics_raw_response",
     )
-    try:
-        response = json.loads(raw.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise ValueError(f"{field} Coin Metrics raw response must be JSON") from exc
+    response = _strict_json_loads(
+        raw,
+        field=f"{field}.coinmetrics_raw_response",
+        json_error=f"{field} Coin Metrics raw response must be JSON",
+    )
     rows = response.get("data") if isinstance(response, dict) else None
     if not isinstance(rows, list):
         raise ValueError(f"{field} Coin Metrics raw response data missing")
@@ -292,6 +340,22 @@ def _validate_primary_document_proof(
     if "claim_value" not in proof or proof.get("claim_value") != record.get("value"):
         raise ValueError(f"{field} primary-document claim does not match evidence value")
 
+    # Caller-authored publication/effective clocks are semantic constraints only. They
+    # do not establish that these exact retained bytes were knowable at decision_at.
+    # Reuse the trusted Common Crawl acquisition + WARC binding boundary so both direct
+    # and derived primary evidence require an independently authenticated pre-decision
+    # capture of the same locator and document bytes.
+    try:
+        validate_primary_document_historical_availability(
+            record,
+            decision_at=_decision_at_text(decision_at),
+            artifact_root=root,
+        )
+    except ValueError as exc:
+        raise ValueError(
+            f"{field} primary document lacks trusted historical capture: {exc}"
+        ) from exc
+
 
 def _validate_input_authenticity(
     artifact: dict[str, Any], root: Path, decision_at: datetime, *, field: str
@@ -336,23 +400,25 @@ def validate_record_authenticity(
         for index, ref in enumerate(inputs):
             if not isinstance(ref, dict):
                 raise ValueError(f"{field}.derivation.inputs[{index}] malformed")
+            input_field = f"{field}.derivation.inputs[{index}]"
             raw = _verified_bytes(
                 artifact_root,
                 ref.get("artifact_relpath"),
                 ref.get("sha256"),
-                field=f"{field}.derivation.inputs[{index}]",
+                field=input_field,
             )
-            try:
-                artifact = json.loads(raw.decode("utf-8"))
-            except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-                raise ValueError(f"{field}.derivation.inputs[{index}] must be JSON") from exc
+            artifact = _strict_json_loads(
+                raw,
+                field=input_field,
+                json_error=f"{input_field} must be JSON",
+            )
             if not isinstance(artifact, dict):
-                raise ValueError(f"{field}.derivation.inputs[{index}] must be an object")
+                raise ValueError(f"{input_field} must be an object")
             _validate_input_authenticity(
                 artifact,
                 artifact_root,
                 decision_at,
-                field=f"{field}.derivation.inputs[{index}]",
+                field=input_field,
             )
         return
 
