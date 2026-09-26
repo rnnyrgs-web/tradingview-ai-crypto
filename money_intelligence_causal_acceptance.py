@@ -11,7 +11,12 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
+import hashlib
+from importlib import metadata
 import os
+from pathlib import Path
+import platform
+import sys
 from threading import Barrier
 from typing import Any
 
@@ -64,8 +69,8 @@ def _parse(value: str) -> datetime:
     return parsed.astimezone(timezone.utc)
 
 
-def _ids(sha: str) -> dict[str, str]:
-    token = sha
+def _ids(namespace: str) -> dict[str, str]:
+    token = namespace
     identifiers = {
         key: f"{PREFIX}:{token}:{suffix}"
         for key, suffix in {
@@ -89,6 +94,106 @@ def _ids(sha: str) -> dict[str, str]:
             f"{PREFIX}:{token}:support-control-{index}"
         )
     return identifiers
+
+
+def _runtime_environment_identity() -> bytes:
+    """Bind the plan to resolved Python packages and the running base environment."""
+    digest = hashlib.sha256()
+    for value in (sys.version, platform.system(), platform.libc_ver()):
+        digest.update(repr(value).encode("utf-8"))
+        digest.update(b"\0")
+    if platform.system() == "Linux":
+        try:
+            digest.update(Path("/etc/os-release").read_bytes())
+        except OSError as exc:
+            raise CausalMemoryError("container OS release identity is unavailable") from exc
+    else:
+        digest.update(platform.version().encode("utf-8"))
+    distributions = []
+    for distribution in metadata.distributions():
+        name = distribution.metadata.get("Name")
+        if not isinstance(name, str) or not name.strip():
+            raise CausalMemoryError("installed Python distribution has no name")
+        record = distribution.read_text("RECORD")
+        if record is None:
+            raise CausalMemoryError(f"installed Python distribution has no RECORD: {name}")
+        files = distribution.files
+        if not files:
+            raise CausalMemoryError(f"installed Python distribution has no file manifest: {name}")
+        installed_digest = hashlib.sha256()
+        for relative in sorted(files, key=str):
+            relative_path = Path(str(relative))
+            if (
+                relative_path.suffix == ".pyc"
+                and "__pycache__" in relative_path.parts
+                and getattr(relative, "hash", None) is None
+            ):
+                # Pip generates these after wheel extraction. Their timestamp
+                # headers can differ across content-identical image rebuilds.
+                continue
+            path = Path(distribution.locate_file(relative))
+            if not path.is_file():
+                raise CausalMemoryError(
+                    f"installed Python distribution file is unavailable: {name}:{relative}"
+                )
+            installed_digest.update(str(relative).encode("utf-8"))
+            installed_digest.update(b"\0")
+            installed_digest.update(hashlib.sha256(path.read_bytes()).digest())
+        distributions.append((
+            name.casefold(),
+            distribution.version,
+            hashlib.sha256(record.encode("utf-8")).digest(),
+            installed_digest.digest(),
+        ))
+    if not distributions:
+        raise CausalMemoryError("installed Python distribution identity is unavailable")
+    for name, version, record_digest, installed_digest in sorted(distributions):
+        digest.update(name.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(version.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(record_digest)
+        digest.update(installed_digest)
+    return digest.digest()
+
+
+def _scientific_plan_fingerprint(project_root: Path | None = None) -> str:
+    """Bind synthetic units to packaged code, configuration, and resolved runtime."""
+    root = project_root or Path(__file__).resolve().parent
+    package_paths = (
+        path for path in (root / "profitability_learning").rglob("*")
+        if path.is_file()
+        and path.suffix in {".py", ".json"}
+        and "__pycache__" not in path.parts
+    )
+    paths = [*root.glob("*.py"), *package_paths]
+    required = (
+        "Dockerfile",
+        "requirements.txt",
+        "orchestration/rejected_fingerprints.py",
+        "orchestration/rejected_fingerprints.json",
+        "orchestration/signal_development_objective.json",
+        "orchestration/trusted_executor_manifest.json",
+        "orchestration/evidence/disc_btc_leadlag_001_20260919.json.gz",
+    )
+    for relative in required:
+        path = root / relative
+        if not path.is_file():
+            raise CausalMemoryError(f"scientific plan input is unavailable: {relative}")
+        paths.append(path)
+    files = sorted(
+        (path for path in paths if path.is_file()),
+        key=lambda path: path.relative_to(root).as_posix(),
+    )
+    if not files or not any(path.name == "money_intelligence_causal_memory.py" for path in files):
+        raise CausalMemoryError("scientific plan source tree is incomplete")
+    digest = hashlib.sha256()
+    digest.update(_runtime_environment_identity())
+    for path in files:
+        digest.update(path.relative_to(root).as_posix().encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(hashlib.sha256(path.read_bytes()).digest())
+    return digest.hexdigest()
 
 
 def _pair_count_for_slot(slot: int) -> int:
@@ -461,7 +566,7 @@ def run_phase2_causal_runtime_acceptance() -> dict[str, Any]:
     sha = _deployed_sha()
     if not _canonical_rejected_id_veto_probe():
         raise CausalMemoryError("canonical rejected strategy ID bypassed the causal mission boundary")
-    ids = _ids(sha)
+    ids = _ids(_scientific_plan_fingerprint())
     store = SupabaseCausalMemory()
 
     replay = _validate_receipt(store, ids, sha)
