@@ -14,6 +14,15 @@ CANARY_GRACE_SECONDS = max(60, min(int(os.getenv("DEPLOY_CANARY_GRACE_SECONDS", 
 MIN_WORKER_SAMPLES = max(2, min(int(os.getenv("DEPLOY_CANARY_MIN_WORKER_SAMPLES", "4")), 50))
 MAX_WORKER_FAILURE_RATE = max(0.05, min(float(os.getenv("DEPLOY_CANARY_MAX_WORKER_FAILURE_RATE", "0.50")), 1.0))
 
+_COORDINATION_STATE_REASON_MAP = {
+    "missing_timestamp": "canonical_state_missing_timestamp",
+    "malformed_timestamp": "canonical_state_malformed_timestamp",
+    "future_timestamp": "canonical_state_future_timestamp",
+    "stale_timestamp": "canonical_state_stale",
+    "missing_exact_next_step": "canonical_state_missing_exact_next_step",
+}
+_COORDINATION_ONLY_REASONS = frozenset(_COORDINATION_STATE_REASON_MAP.values())
+
 
 def evaluate_canary(
     coordinator: dict[str, Any] | None,
@@ -21,7 +30,13 @@ def evaluate_canary(
     *,
     uptime_seconds: float,
 ) -> dict[str, Any]:
-    """Return a restrictive deployment-health decision from bounded runtime evidence."""
+    """Return a restrictive deployment-health decision from bounded runtime evidence.
+
+    Canonical coordination-state defects fail health closed, but they are kept
+    distinct from evidence that the deployed binary should be rolled back. A
+    stale handoff requires refreshing/repairing AI_STATE, not guessing that a
+    previous deployment is safer.
+    """
     coordinator = coordinator if isinstance(coordinator, dict) else {}
     army = army if isinstance(army, dict) else {}
     supervisor = army.get("supervisor") if isinstance(army.get("supervisor"), dict) else {}
@@ -35,11 +50,20 @@ def evaluate_canary(
     failure_rate = float(workers.get("failure_rate") or 0.0)
 
     reasons: list[str] = []
+    coordination_state_degraded = False
     if coordinator.get("production_ok") is not True:
         reasons.append("production_health_check_failed")
     if coordinator.get("state_ok") is not True:
-        reasons.append("canonical_state_check_failed")
-    if int(coordinator.get("consecutive_failures") or 0) >= 3:
+        state_failure_reason = coordinator.get("state_failure_reason")
+        mapped_reason = _COORDINATION_STATE_REASON_MAP.get(state_failure_reason)
+        if mapped_reason is not None:
+            reasons.append(mapped_reason)
+            coordination_state_degraded = True
+        else:
+            reasons.append("canonical_state_check_failed")
+    if int(coordinator.get("consecutive_failures") or 0) >= 3 and not (
+        coordination_state_degraded and coordinator.get("production_ok") is True
+    ):
         reasons.append("coordinator_repeated_failures")
     if supervisor.get("healthy") is not True:
         reasons.append("worker_supervisor_unhealthy")
@@ -54,16 +78,24 @@ def evaluate_canary(
     if samples >= MIN_WORKER_SAMPLES and timeouts > 0:
         reasons.append("worker_timeout_detected")
 
+    rollback_reasons = [reason for reason in reasons if reason not in _COORDINATION_ONLY_REASONS]
     within_grace = float(uptime_seconds) < CANARY_GRACE_SECONDS
     if within_grace:
         status = "warming"
         rollback_recommended = False
-    elif reasons:
+        recommended_action = "observe"
+    elif rollback_reasons:
         status = "rollback_recommended"
         rollback_recommended = True
+        recommended_action = "rollback_or_freeze"
+    elif reasons:
+        status = "coordination_state_degraded"
+        rollback_recommended = False
+        recommended_action = "refresh_or_repair_ai_state"
     else:
         status = "healthy"
         rollback_recommended = False
+        recommended_action = "none"
 
     return {
         "status": status,
@@ -71,6 +103,8 @@ def evaluate_canary(
         "grace_seconds": CANARY_GRACE_SECONDS,
         "uptime_seconds": round(max(0.0, float(uptime_seconds)), 2),
         "reasons": reasons,
+        "rollback_reasons": rollback_reasons,
+        "recommended_action": recommended_action,
         "worker_samples": samples,
         "worker_failure_rate": round(failure_rate, 4) if samples else None,
         "rollback_recommended": rollback_recommended,
