@@ -1,0 +1,216 @@
+{
+  "version": 2,
+  "purpose": "Minimize time-to-valid-alpha while preventing waste. Spend only when a measured research bottleneck cannot be solved adequately with already-owned/free resources.",
+  "authority": {
+    "policy_can_recommend_spend": true,
+    "policy_can_purchase_or_subscribe": false,
+    "user_approval_required_for_new_recurring_charge": true,
+    "user_approval_required_for_single_purchase_over_usd": 50,
+    "chatgpt_total_monthly_ceiling_usd": 250,
+    "chatgpt_auto_reload_allowed": false,
+    "chatgpt_automatic_plan_upgrade_allowed": false
+  },
+  "existing_paid_stack": {
+    "chatgpt_pro": "existing_fixed_subscription",
+    "supabase_pro": "existing_fixed_subscription",
+    "claude": "existing_fixed_subscription",
+    "openai_api_monthly_budget_usd": 30,
+    "rule": "Treat existing subscriptions as sunk baseline for routing decisions. Do not add overlapping AI subscriptions unless a measured capacity bottleneck persists after routing optimization.",
+    "chatgpt_budget_rule": "Keep total ChatGPT subscription plus usage-credit spend <= USD 250 per month. Use included allowance first; no automatic credit reload or plan upgrade.",
+    "chatgpt_high_power_routing": "Prefer GPT-6 Astra High in Work/Codex for hard execution and GPT-6 Pro/Astra for high-value scientific adjudication, while using deterministic compute for mechanical work."
+  },
+  "optimization_target": [
+    "validated positive after-cost expectancy",
+    "untouched OOS robustness",
+    "execution realism",
+    "fast falsification of bad strategies",
+    "scientifically defensible 2x/90-day lift over base rate"
+  ],
+  "priority_order": [
+    {
+      "priority": 0,
+      "name": "owned_and_free_data_first",
+      "importance": "EXTREME",
+      "extra_monthly_cap_usd": 0,
+      "examples": [
+        "Kraken historical trades/OHLCVT and public market endpoints",
+        "existing repository artifacts",
+        "existing Supabase storage/compute within plan",
+        "free/open datasets with defensible provenance",
+        "local DuckDB/Parquet/Polars research data lake"
+      ],
+      "unlock_condition": "always",
+      "rule": "Do not buy a dataset when an owned/free source can answer the same predeclared hypothesis with adequate chronology, fidelity and coverage."
+    },
+    {
+      "priority": 1,
+      "name": "targeted_historical_data_gap",
+      "importance": "EXTREME",
+      "extra_monthly_cap_usd": 50,
+      "one_time_cap_usd": 125,
+      "examples": [
+        "pay-as-you-go historical data for an exact blocked contract",
+        "trusted point-in-time membership/history required by a predeclared test"
+      ],
+      "unlock_condition": "A named candidate or 2x study is BLOCKED_DATA_CONTRACT and the exact missing fields/venues/time span are frozen before purchase.",
+      "kill_condition": "Do not renew if the acquired data does not materially change information gain, candidate viability, or validation capability."
+    },
+    {
+      "priority": 2,
+      "name": "derivatives_and_positioning_data",
+      "importance": "VERY_HIGH",
+      "extra_monthly_cap_usd": 35,
+      "examples": [
+        "funding",
+        "open interest",
+        "liquidations",
+        "basis",
+        "exchange-level derivatives positioning"
+      ],
+      "unlock_condition": "At least one predeclared hypothesis explicitly requires derivatives features unavailable with adequate history/fidelity from free sources.",
+      "evaluation_window_days": 30,
+      "renew_only_if": [
+        "produces measurable out-of-sample feature lift or useful falsification",
+        "unblocks at least one frozen research contract",
+        "or materially improves 2x-event ranking calibration/lift"
+      ]
+    },
+    {
+      "priority": 3,
+      "name": "burst_compute",
+      "importance": "VERY_HIGH_WHEN_BLOCKED",
+      "extra_monthly_cap_usd": 50,
+      "examples": [
+        "parallel CPU backtests",
+        "walk-forward sweeps",
+        "bootstrap/Monte Carlo robustness",
+        "cross-engine reconciliation jobs"
+      ],
+      "unlock_condition": "A valid research queue is waiting primarily on compute rather than code, data, review or scientific design.",
+      "rules": [
+        "Prefer CPU/RAM for vectorized backtests unless profiling proves GPU benefit.",
+        "Use ephemeral/burst compute; no idle 24/7 premium instances.",
+        "Stop spend when queue clears."
+      ]
+    },
+    {
+      "priority": 4,
+      "name": "incremental_storage",
+      "importance": "MEDIUM",
+      "extra_monthly_cap_usd": 25,
+      "unlock_condition": "Certified historical datasets exceed current local/Supabase capacity or egress-safe workflow requires dedicated object storage.",
+      "rule": "Store normalized immutable Parquet partitions and deduplicate aggressively before buying more capacity."
+    },
+    {
+      "priority": 5,
+      "name": "premium_microstructure_data",
+      "importance": "EXTREME_BUT_LATE",
+      "extra_monthly_cap_usd": 400,
+      "examples": [
+        "historical L2/L3 order books",
+        "full-depth market replay",
+        "high-resolution cross-exchange microstructure"
+      ],
+      "unlock_condition": "A newly frozen candidate has already passed cheap train/validation after realistic costs AND its mechanism specifically depends on microstructure fields unavailable from lower-cost sources.",
+      "additional_requirements": [
+        "exact fields, exchanges, date ranges and expected decision impact documented before purchase",
+        "predeclared success/failure criteria",
+        "user approval before any recurring charge",
+        "cancel/downgrade after the bounded validation experiment unless measurable value is demonstrated"
+      ]
+    },
+    {
+      "priority": 6,
+      "name": "more_ai_subscriptions_or_agents",
+      "importance": "LOW_BY_DEFAULT",
+      "extra_monthly_cap_usd": 0,
+      "unlock_condition": "Only after evidence shows model capacity is the binding bottleneck after deterministic routing, existing ChatGPT/Claude capacity and the API budget are fully utilized efficiently.",
+      "rule": "Do not add AI subscriptions merely to increase worker count."
+    }
+  ],
+  "adaptive_budget_levels": {
+    "LEVEL_0": {
+      "extra_monthly_budget_usd": 0,
+      "state": "default",
+      "use_when": "No measured paid-resource bottleneck."
+    },
+    "LEVEL_1": {
+      "extra_monthly_budget_usd": 75,
+      "use_when": "One exact data or compute bottleneck is blocking high-information work."
+    },
+    "LEVEL_2": {
+      "extra_monthly_budget_usd": 150,
+      "use_when": "Multiple validated workloads are bottlenecked and lower-cost resources are demonstrably insufficient."
+    },
+    "LEVEL_3": {
+      "extra_monthly_budget_usd": 450,
+      "use_when": "A candidate has passed cheap validation and expensive data/compute is required for deep validation.",
+      "requires_explicit_user_approval": true
+    }
+  },
+  "decision_score": {
+    "formula": "priority = expected_information_gain * probability_resource_resolves_bottleneck * economic_relevance / expected_cost",
+    "minimum_requirements": [
+      "named research question",
+      "frozen data/compute requirement",
+      "cheaper alternatives considered",
+      "measurable success criterion",
+      "kill/cancel criterion"
+    ]
+  },
+  "monthly_review": {
+    "actions": [
+      "list every recurring and usage-based research cost",
+      "identify unused or overlapping subscriptions",
+      "compare actual utilization with caps",
+      "downgrade/cancel resources that failed renewal criteria",
+      "reallocate freed budget to the highest-priority proven bottleneck",
+      "verify total ChatGPT subscription + credit spend remains <= USD 250",
+      "verify Work Astra High, Codex Astra High and GPT-6 Pro/Astra are being used on distinct high-value tasks rather than duplicated low-value work"
+    ],
+    "rule": "Never preserve a subscription solely because it may become useful later. Hard constraint: do not exceed USD 250/month in total ChatGPT-related spend without a new explicit owner decision."
+  },
+  "reporting": {
+    "lead_must_report": [
+      "current adaptive budget level",
+      "current extra monthly committed spend",
+      "resource proposed",
+      "exact blocker it resolves",
+      "why cheaper/free alternatives are insufficient",
+      "expected benefit",
+      "renewal/kill criterion",
+      "proactively flag the user when a deeply reviewed spend opportunity crosses the VERY_HIGH/EXTREME benefit threshold"
+    ],
+    "language": "Use evidence-gated wording. Do not claim a purchase will make the system profitable."
+  },
+  "proactive_spend_flagging": {
+    "enabled": true,
+    "lead_duty": "Continuously look for high-ROI opportunities where additional spending would materially accelerate or strengthen the master objective. Do not wait for the user to ask.",
+    "trigger": "Flag the user when evidence indicates a purchase is VERY_HIGH or EXTREME expected benefit relative to cost, or when a paid resource is the binding bottleneck to a high-value experiment/validation step.",
+    "deep_review_required": true,
+    "review_scope": [
+      "historical and point-in-time market data",
+      "derivatives/funding/OI/liquidation/basis data",
+      "L2/L3/order-book and cross-exchange microstructure data",
+      "on-chain/tokenomics/fundamental/catalyst datasets for 2x research",
+      "CPU/RAM/GPU/cloud compute",
+      "storage/egress/database capacity",
+      "independent backtest/execution engines and realistic execution/simulation infrastructure",
+      "AI/API capacity only if proven binding"
+    ],
+    "recommendation_must_include": [
+      "exact product/resource and capability needed",
+      "one-time versus recurring cost and estimated monthly total",
+      "exact blocker/opportunity it addresses",
+      "why existing/free alternatives are insufficient",
+      "expected scientific/economic benefit",
+      "what experiment or validation becomes possible",
+      "cheaper viable alternative if one exists",
+      "confidence in recommendation",
+      "measurable success criterion",
+      "cancel/downgrade/kill criterion"
+    ],
+    "notification_threshold": "Do not bother the user for marginal convenience. Notify proactively for purchases judged likely to create a material improvement in research speed, evidence quality, validation realism, or probability of discovering genuine alpha/2x lift.",
+    "authority": "Recommendation only. Never purchase, subscribe, upgrade, or incur a new charge without explicit user approval."
+  }
+}
