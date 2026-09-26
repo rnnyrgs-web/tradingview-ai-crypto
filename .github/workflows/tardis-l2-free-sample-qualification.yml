@@ -1,0 +1,100 @@
+name: Tardis L2 Free Sample Qualification
+
+on:
+  pull_request:
+    paths:
+      - "tardis_l2_qualification.py"
+      - "tardis_l2_real_sample.py"
+      - "money_intelligence/2x_tardis_l2_qualification_v1.json"
+      - "tests/test_tardis_l2_qualification.py"
+      - "tests/test_tardis_l2_real_sample.py"
+      - ".github/workflows/tardis-l2-free-sample-qualification.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tardis-l2-free-sample-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  qualify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      SOURCE_URL: https://datasets.tardis.dev/v1/binance/incremental_book_L2/2019/12/01/BTCUSDT.csv.gz
+      SAMPLE_PATH: artifacts/tardis/BTCUSDT-2019-12-01.incremental_book_L2.csv.gz
+      RECEIPT_PATH: artifacts/tardis/tardis_l2_free_sample_receipt.json
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Download exact frozen no-key provider sample
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/tardis
+          curl \
+            --fail \
+            --location \
+            --silent \
+            --show-error \
+            --retry 3 \
+            --retry-all-errors \
+            --connect-timeout 20 \
+            --max-time 1800 \
+            --dump-header artifacts/tardis/response_headers.txt \
+            --output "$SAMPLE_PATH" \
+            "$SOURCE_URL"
+          test -s "$SAMPLE_PATH"
+          gzip -t "$SAMPLE_PATH"
+          sha256sum "$SAMPLE_PATH" | tee artifacts/tardis/sample.sha256
+          wc -c "$SAMPLE_PATH" | tee artifacts/tardis/sample.compressed_bytes
+
+      - name: Run full streaming provider qualification plus real-row adapter canary
+        shell: bash
+        run: |
+          set -euo pipefail
+          RETRIEVED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          python tardis_l2_real_sample.py \
+            --gzip-path "$SAMPLE_PATH" \
+            --source-url "$SOURCE_URL" \
+            --expected-exchange binance \
+            --expected-symbol BTCUSDT \
+            --retrieved-at "$RETRIEVED_AT" \
+            --commit-sha "$GITHUB_SHA" \
+            --output "$RECEIPT_PATH"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("artifacts/tardis/tardis_l2_free_sample_receipt.json")
+          receipt = json.loads(p.read_text(encoding="utf-8"))
+          assert receipt["status"] == "QUALIFICATION_PROVIDER_SAMPLE_PASS"
+          assert receipt["authority"] == "PROVIDER_ADAPTER_ONLY"
+          assert receipt["outcomes_opened"] is False
+          assert receipt["strict_tradability_established"] is False
+          assert receipt["candidate_authority"] is False
+          assert receipt["model_fitting_authority"] is False
+          assert receipt["broker_connected"] is False
+          assert receipt["live_trading"] is False
+          print(json.dumps(receipt, indent=2, sort_keys=True))
+          PY
+
+      - name: Upload compact qualification receipt
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tardis-l2-free-sample-qualification
+          path: |
+            artifacts/tardis/tardis_l2_free_sample_receipt.json
+            artifacts/tardis/sample.sha256
+            artifacts/tardis/sample.compressed_bytes
+            artifacts/tardis/response_headers.txt
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,98 @@
+{
+  "schema": "two_x_tardis_l2_qualification.v1",
+  "artifact_id": "2X-TARDIS-L2-QUALIFICATION-001-v1",
+  "issues": [505, 514, 519, 520],
+  "status": "FREE_SAMPLE_QUALIFICATION_PASS",
+  "authority": "PROVIDER_ADAPTER_ONLY",
+  "outcomes_opened": false,
+  "candidate_authority": false,
+  "model_fitting_authority": false,
+  "strict_tradability_established": false,
+  "broker_connected": false,
+  "live_trading": false,
+  "spend_authorized_usd": 0,
+  "consumer_contracts": [
+    "2X-TRADABILITY-001-v1",
+    "2X-TRUSTED-FINAL-RESOLUTION-TRADABILITY-001-v1",
+    "CROSSING_EXECUTION_INTERVAL_INTERSECTION_V1"
+  ],
+  "provider": {
+    "name": "Tardis",
+    "exchange": "binance",
+    "instrument": "BTCUSDT",
+    "data_type": "incremental_book_L2",
+    "documentation": "https://docs.tardis.dev/historical-data-details/binance",
+    "schema_documentation": "https://docs.tardis.dev/downloadable-csv-files/data-types",
+    "free_sample": "https://datasets.tardis.dev/v1/binance/incremental_book_L2/2019/12/01/BTCUSDT.csv.gz",
+    "sample_date": "2019-12-01",
+    "free_sample_rule": "first day of each month is available without an API key",
+    "documented_coverage": {
+      "high_cap_since": "2019-03-30",
+      "all_pairs_since": "2021-03-05"
+    }
+  },
+  "exact_csv_columns": [
+    "exchange",
+    "symbol",
+    "timestamp",
+    "local_timestamp",
+    "is_snapshot",
+    "side",
+    "price",
+    "amount"
+  ],
+  "frozen_reconstruction_rules": [
+    "preserve source row order and both provider event timestamp and local capture timestamp",
+    "group exchange message rows by identical local_timestamp",
+    "skip non-snapshot rows before the first initial snapshot",
+    "when a new snapshot begins discard all prior book levels before applying snapshot rows",
+    "amount is an absolute level amount; zero removes the level",
+    "reject mixed snapshot/incremental rows inside one local_timestamp message",
+    "reject crossed reconstructed books for execution qualification",
+    "do not carry a pre-reset state through a following snapshot/restart boundary",
+    "do not nearest-neighbor join a target crossing to non-overlapping depth"
+  ],
+  "cotemporal_rule": {
+    "name": "CROSSING_EXECUTION_INTERVAL_INTERSECTION_V1",
+    "exact_instant": "crossing event timestamp and local capture timestamp both equal the reconstructed-state message clocks",
+    "interval": "both crossing clocks must fall inside the same gap-free reconstructed-state support interval",
+    "restart_boundary": "a following snapshot prevents the preceding state from claiming an interval through the restart",
+    "missing_alignment": "QUALIFICATION_UNKNOWN_ALIGNMENT"
+  },
+  "execution_transform": {
+    "side": "bid",
+    "purpose": "qualification-only full-reference-quantity target-or-better executable VWAP",
+    "success": "QUALIFICATION_EXECUTABLE_AT_TARGET_OR_BETTER",
+    "insufficient_depth": "QUALIFICATION_INSUFFICIENT_TARGET_DEPTH",
+    "factory_labels_forbidden": [
+      "TRADABLE_2X_HIT_AT_BAND",
+      "PRICE_HIT_TRADABILITY_UNKNOWN",
+      "ILLIQUID_2X_RESEARCH_ONLY"
+    ]
+  },
+  "provider_pass_receipt": {
+    "path": "money_intelligence/2x_tardis_l2_free_sample_receipt_v1.json",
+    "workflow_run_id": 35790664485,
+    "workflow_artifact_id": 10722265232,
+    "candidate_head_sha": "a97c187e006b5de71ff59392d2d545581496e261",
+    "base_main_sha": "b986b0e10fd120fa009f5b58e7052b739e287238",
+    "compressed_sha256": "f7daa040dc33fc7328ff8468b198731fd5add90bc8cef434aab86726268e8a34",
+    "compressed_bytes": 43947405,
+    "row_count": 6486542,
+    "message_count": 815980,
+    "reconstructed_state_count": 815980,
+    "crossed_state_count": 0,
+    "canary_reconstructed_state_count": 4
+  },
+  "acceptance_before_provider_pass": [
+    "deterministic parser and book reconstruction pass synthetic RED-to-GREEN tests",
+    "snapshot reset and pre-snapshot buffering semantics are regression locked",
+    "co-temporal support rejects borrowing depth across reset boundaries",
+    "bid-side full-quantity target-or-better VWAP is deterministic",
+    "real free sample bytes are subsequently fetched from the frozen provider URL and hashed",
+    "the real sample parses/reconstructs under the exact frozen schema without manual edits",
+    "provider-sample PASS remains adapter feasibility only and cannot label historical events"
+  ],
+  "current_blocker": "EVENT_DATE_HISTORICAL_L2_BYTES_NOT_ACQUIRED_OR_AUTHORIZED",
+  "next_action_after_provider_pass": "Use the verified provider adapter to cost exact event-date historical L2 acquisition for the frozen #519 tradability consumer; request explicit approval before any paid data purchase. Historical cases without authenticated event-date L2 remain UNKNOWN_TRADABILITY."
+}
