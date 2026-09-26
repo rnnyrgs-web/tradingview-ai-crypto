@@ -1,0 +1,161 @@
+{
+  "version": 2,
+  "objective": "Maximize scientifically useful information produced per hour and per dollar while preserving all chronology, OOS, multiple-testing, execution-realism, rejected-memory and broker-off gates.",
+  "operating_rules": {
+    "profitability_first": true,
+    "max_primary_actions_per_cycle": 1,
+    "parallel_independent_support_work_allowed": true,
+    "duplicate_active_work_forbidden": true,
+    "architecture_or_dashboard_work_requires_direct_blocker_rationale": true,
+    "never_accelerate_by_weakening_validation": true,
+    "never_reopen_rejected_exact_fingerprint_without_materially_new_mechanism_or_evidence": true,
+    "results_first_mode": true,
+    "max_active_implementation_prs_per_major_lane": 5,
+    "wip_cap_redirects_to_closure": true,
+    "no_new_infrastructure_without_direct_evidence_blocker": true
+  },
+  "bottleneck_priority": [
+    "scientific_integrity_or_data_leakage",
+    "missing_or_untrusted_data_contract",
+    "broken_ci_or_runtime",
+    "stale_waiting_pr_or_review",
+    "compute_queue",
+    "implementation_capacity",
+    "research_design",
+    "observability",
+    "cosmetic_or_dashboard"
+  ],
+  "stale_work": {
+    "warning_hours": 2,
+    "critical_hours": 6,
+    "questions": [
+      "Why are we waiting?",
+      "Can the dependency be removed?",
+      "Can an independent lane proceed now?",
+      "Can the work be safely parallelized?",
+      "Would additional data, compute or tooling materially accelerate this without weakening scientific quality?"
+    ]
+  },
+  "experiment_factory": {
+    "sequence": [
+      "mechanism_hypothesis",
+      "freeze_contract",
+      "cheap_screen",
+      "train_validation",
+      "robustness_and_cost_stress",
+      "walk_forward",
+      "independent_engine_reproduction",
+      "untouched_oos",
+      "forward_shadow"
+    ],
+    "cheap_rejection_preferred": true,
+    "deep_validation_candidate_limit": 1,
+    "record_every_rejection_reason": true,
+    "reuse_validated_features_not_rejected_strategy_fingerprints": true
+  },
+  "review_repair_loop": {
+    "required_for_material_changes": true,
+    "sequence": [
+      "implementation_complete",
+      "independent_adversarial_review",
+      "convert_findings_to_bounded_repairs",
+      "run_regressions_and_exact_head_ci",
+      "repeat_review_if_scientific_behavior_changed",
+      "merge_only_after_clean_gate"
+    ]
+  },
+  "velocity_metrics": [
+    "experiments_completed_per_7d",
+    "median_hypothesis_to_result_hours",
+    "cheap_rejection_rate",
+    "major_evidence_gate_pass_rate",
+    "duplicate_work_count",
+    "blocked_hours",
+    "pr_wait_hours",
+    "compute_queue_hours",
+    "data_blocked_hours",
+    "cost_per_completed_experiment_usd",
+    "validated_feature_reuse_count",
+    "repeated_rejected_mechanism_count",
+    "2x_historical_events_with_pit_reconstruction_per_7d",
+    "2x_candidate_precision_and_lift",
+    "2x_false_positive_rate",
+    "2x_forward_candidates_resolved_per_30d",
+    "hours_since_last_economic_screen",
+    "useful_falsifications_per_7d",
+    "evidence_stage_advances_per_7d",
+    "active_implementation_prs_by_lane",
+    "prs_waiting_over_24h",
+    "review_blocked_hours",
+    "ci_blocked_hours"
+  ],
+  "lead_actions": {
+    "always_identify_single_top_bottleneck": true,
+    "always_name_next_best_independent_action": true,
+    "auto_redirect_idle_workers": true,
+    "auto_kill_low_information_busywork": true,
+    "auto_escalate_stale_work": true,
+    "consult_adaptive_spending_policy_when_paid_resource_may_be_binding": true,
+    "enforce_lane_wip_cap": true,
+    "run_closure_mode_when_wip_cap_reached": true,
+    "report_no_economic_result_with_exact_blocker_after_sla": true
+  },
+  "reporting": {
+    "user_notify_only_when": [
+      "major evidence gate passes",
+      "critical blocker requires user action",
+      "high_value_spend_recommendation",
+      "serious scientific_or_runtime_incident",
+      "validated_strategy_or_material_2x_lift"
+    ],
+    "quiet_for_routine_rejections_and_normal_worker_churn": true,
+    "no_economic_result_status": "Mandatory after the evidence SLA is breached and no legal screen is available; name exact blocker and next safe action."
+  },
+  "master_objectives": {
+    "co_primary": true,
+    "lanes": [
+      {
+        "id": "validated_strategy",
+        "objective": "Discover and rigorously validate at least one sustainable positive-after-cost algorithmic strategy.",
+        "priority": "SUPER_IMPORTANT"
+      },
+      {
+        "id": "potential_2x_assets",
+        "objective": "Study historical 2x+ moves and identify current liquid tradable assets with unusually strong, timestamp-defensible evidence for 2x+ upside within 90 days.",
+        "priority": "SUPER_IMPORTANT"
+      }
+    ],
+    "arbitration": "Treat both lanes as co-primary. Do not let strategy development starve the 2x lane or vice versa. When one lane is blocked or waiting on future evidence, immediately advance the highest-information independent task in the other lane.",
+    "scientific_rule": "Never promise a 2x move. Measure base rate, precision, lift, calibration, false positives, remaining upside at detection, liquidity/tradability and genuine forward outcomes."
+  },
+  "economic_evidence_sla": {
+    "hours": 24,
+    "rule": "If no genuine development-only after-cost economic screen can legally run for 24h, report NO ECONOMIC RESULT with the exact binding blocker and next safe unblocking action. Never manufacture a screen to satisfy the clock.",
+    "legal_screen_due_action": "Execute the highest-priority predeclared legal screen when the SLA is breached and all scientific/data/review gates permit it."
+  },
+  "wip_and_closure": {
+    "max_active_implementation_prs_per_major_lane": 5,
+    "when_cap_reached": [
+      "freeze_new_implementation_branches",
+      "redirect_to_independent_review",
+      "redirect_to_bounded_repair",
+      "redirect_to_exact_head_ci_debugging",
+      "redirect_to_integration_and_closure",
+      "redirect_to_trusted_data_acquisition_or_nonoverlapping_critical_blocker"
+    ],
+    "closure_loop": [
+      "independent_review",
+      "bounded_repair",
+      "exact_head_ci",
+      "re_review_if_behavior_changed",
+      "integrate_or_close",
+      "reconcile_canonical_state"
+    ]
+  },
+  "resource_allocation_target": {
+    "strategy_economic_evidence_and_blocker_removal": 0.65,
+    "authentic_2x_pit_cohort_and_tradability": 0.25,
+    "reliability_and_infrastructure_that_directly_accelerates_evidence": 0.1,
+    "note": "Targets are directional. Never duplicate work or weaken scientific gates to hit percentages."
+  }
+}
