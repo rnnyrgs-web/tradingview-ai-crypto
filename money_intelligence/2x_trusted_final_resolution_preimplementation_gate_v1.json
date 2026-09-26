@@ -1,0 +1,75 @@
+{
+  "schema": "trusted_forward_final_resolution_preimplementation_gate.v1",
+  "contract_id": "2X-TRUSTED-FINAL-RESOLUTION-PREIMPLEMENTATION-GATE-001-v1",
+  "status": "PREDECLARED_NOT_IMPLEMENTED",
+  "source_main_sha": "b986b0e10fd120fa009f5b58e7052b739e287238",
+  "parents": [505, 506, 514, 519, 520, 603],
+  "purpose": "Bind the frozen final-resolution, policy-chronology and tradability semantics to exact repository artifacts and an ex-ante trusted contract-registry receipt before any future implementation may acquire scientific authority.",
+  "review_scope": {
+    "artifact_type": "PREIMPLEMENTATION_SCIENTIFIC_CONTRACT_AND_CI_GUARD",
+    "implementation_claimed": false,
+    "deployment_claimed": false,
+    "runtime_enforcement_claimed": false,
+    "safe_review_rule": "Absence of runtime implementation is not itself evidence that this predeclaration grants unsafe authority: all authority remains false. Any later implementation, migration, deployment, receipt verification and metrics enablement require separate exact-head review and runtime proof.",
+    "forbidden_interpretation": "Do not treat this contract-only PR as proof that final resolution or tradable-2x classification is already implemented, deployed, calibrated, profitable or operational."
+  },
+  "authority": {"final_resolution_authority": false, "factory_metrics_authority": false, "candidate_ranking_authority": false, "model_fitting_authority": false, "broker_or_trading_authority": false},
+  "governed_contracts": [
+    {"path": "money_intelligence/2x_trusted_final_resolution_contract_v1.json", "contract_id": "2X-TRUSTED-FINAL-RESOLUTION-001-v1", "required_status": "PREDECLARED_NOT_IMPLEMENTED"},
+    {"path": "money_intelligence/2x_trusted_final_resolution_policy_chronology_v1.json", "contract_id": "2X-TRUSTED-FINAL-RESOLUTION-POLICY-CHRONOLOGY-001-v1", "required_status": "PREDECLARED_NOT_IMPLEMENTED"},
+    {"path": "money_intelligence/2x_trusted_final_resolution_tradability_binding_v1.json", "contract_id": "2X-TRUSTED-FINAL-RESOLUTION-TRADABILITY-001-v1", "required_status": "PREDECLARED_NOT_IMPLEMENTED"}
+  ],
+  "contract_bundle_identity": {
+    "member_digest_algorithm": "SHA256_EXACT_UTF8_FILE_BYTES",
+    "member_order": "LEXICOGRAPHIC_PATH_ASCENDING",
+    "bundle_domain": "2X_FINAL_RESOLUTION_CONTRACT_BUNDLE_V1",
+    "bundle_fingerprint_algorithm": "SHA256(domain + NUL + repeated(path + NUL + member_sha256_hex + LF))",
+    "requirements": [
+      "The exact UTF-8 bytes of every governed contract are hashed independently.",
+      "The bundle fingerprint is computed over the frozen domain plus lexicographically ordered path and member-digest pairs.",
+      "Changing any governed contract byte, path, contract identity or member set creates a different bundle identity and cannot silently inherit authority from an earlier bundle.",
+      "The exact bundle fingerprint used by a formation must be retained in the trusted policy/formation lineage and independently re-verifiable from the deployed contract files.",
+      "The tradability companion additionally requires the trusted registry to bind the exact SHA-256 of money_intelligence/2x_tradability_precommitment_v1.json plus its schema/artifact_id; path or artifact_id alone is not enough."
+    ]
+  },
+  "trusted_contract_registry": {
+    "required": true,
+    "receipt_authority": "DB_OWNED_OR_EQUIVALENT_TRUSTED_NON_BACKDATEABLE_RECEIPT",
+    "receipt_must_bind": ["contract_bundle_fingerprint", "all governed contract ids and schemas", "all governed contract member SHA-256 digests", "policy chronology contract id and version", "tradability companion contract id and version", "tradability precommitment artifact id/schema/exact deployed file SHA-256", "coverage/provider/finality/revision policy bundle fingerprint", "execution_policy_fingerprint", "crossing price/microstructure time-alignment policy id", "trusted_registry_created_at", "trusted_registry_sequence_or_append_only_identity"],
+    "confirmatory_chronology_rule": "For prospective confirmatory authority, the compatible trusted contract-registry, policy and execution-policy receipts must exist at or before trusted server formation time and before governed post-formation price or microstructure evidence is acquired or consumed by the resolution process.",
+    "runtime_fail_closed_rule": "A runtime implementation must refuse authoritative final resolution, tradable-success labeling, factory metrics, calibration and model fitting unless the deployed contract bundle re-hashes to the exact trusted registry receipt, the frozen tradability precommitment digest verifies, and the policy-chronology and tradability companions independently verify.",
+    "mutation_rule": "A changed contract bundle or changed tradability precommitment is a new lineage. It cannot rewrite formations already exposed to governed outcome evidence."
+  },
+  "formation_binding": {
+    "required_origin": "TRUSTED_NON_BACKDATEABLE_SERVER_FORMATION_RECEIPT",
+    "caller_authored_formation_time_authority": false,
+    "must_bind": ["formation_sequence", "formation_receipt_fingerprint", "trusted_server_formation_time", "canonical_stable_asset_identity", "exact_venue_and_instrument_identity", "point_in_time_universe_membership_identity", "frozen_reference_price_and_time", "frozen_horizon_and_target", "forecast_or_formation_contract_fingerprint", "contract_bundle_fingerprint", "policy_receipt_fingerprint", "execution_policy_fingerprint", "evaluated_notional_bands_usd", "primary_success_band_usd_or_explicit_none", "frozen_execution_venue_policy", "crossing_side_persistence_policy_id", "crossing_price_microstructure_time_alignment_policy_id"],
+    "universe_rule": "Membership and asset identity are frozen at formation from timestamp-safe evidence; later survival, relisting, renaming, taxonomy or present-day universe membership cannot add, remove or relabel the formation.",
+    "identity_transplant_rule": "Evidence or resolution lineage bound to one canonical asset/venue/instrument cannot be transplanted to another even if timestamps and raw hashes otherwise verify.",
+    "tradability_rule": "A trusted +100% price crossing alone cannot grant primary factory-success authority. The frozen band/venue execution policy, the crossing price/microstructure time-alignment policy and tradability companion must verify independently."
+  },
+  "lineage_and_revision": {
+    "git_history_role": "Repository history is supporting audit evidence, not runtime scientific authority by itself.",
+    "append_only_runtime_rule": "Scientific authority requires the trusted contract-registry receipt plus the parent/chronology/tradability closure and resolution receipts; editable repository prose alone never grants authority.",
+    "later_contract_version_rule": "A later contract version applies only to new compatible formations or an explicitly predeclared research-only migration cohort. It cannot retroactively create confirmatory prospective performance for an older exposed formation.",
+    "supersession_rule": "Outcome-evidence supersession may update price or microstructure evidence lineage only inside the same ex-ante contract/policy/execution-policy lineage unless a separately predeclared migration explicitly removes confirmatory authority."
+  },
+  "mandatory_ci_guards": [
+    "all governed contract files parse as JSON and retain their exact required contract ids and PREDECLARED_NOT_IMPLEMENTED status",
+    "the chronology and tradability companions require and name the exact parent contract",
+    "all authority booleans in the parent, chronology companion, tradability companion and this gate remain false in this preimplementation PR",
+    "the governed member set and bundle-fingerprint algorithm are deterministic",
+    "a one-byte mutation of any governed contract changes its member digest and bundle fingerprint",
+    "formation binding requires trusted server time, canonical asset, exact venue/instrument, PIT universe membership, frozen price/horizon/target, contract-bundle, policy-receipt, execution-policy and crossing time-alignment identities",
+    "the tradability companion anchors 2X-TRADABILITY-001-v1 and keeps raw PRICE_2X_CROSSING distinct from TRADABLE_2X_HIT_AT_BAND",
+    "missing crossing-side microstructure remains PRICE_HIT_TRADABILITY_UNKNOWN and ADV/volume alone cannot establish tradable success",
+    "the crossing-side persistence policy is frozen ex ante and cannot be selected after observing the target path",
+    "the target-crossing and executable-microstructure support intervals must overlap in authenticated market time; a general staleness ceiling is never a join tolerance",
+    "no test fixture may grant authoritative final resolution or tradable factory success merely because contract files exist"
+  ],
+  "implementation_gate": {
+    "required_before_any_authority": ["implement trusted contract-registry persistence and independent verification", "implement the policy-chronology and execution-policy receipts before governed evidence consumption", "implement authoritative provider price-path and crossing-side microstructure acquisition with DB-owned complete-path enumeration", "implement strict predecision entry tradability plus frozen-band bid-side target execution derivation without ADV substitution", "implement deterministic co-temporal price/microstructure interval intersection so stale-but-non-overlapping depth cannot prove target executability", "implement closure/finality receipts and deterministic supersession for both price-path and tradability evidence", "implement final-resolution derivation with interval/order ambiguity and tradability UNKNOWN/ILLIQUID states preserved", "add RED-to-GREEN adversarial tests for all parent, chronology, tradability and preimplementation-gate requirements", "pass exact-head Security & Reliability and independent adversarial review", "runtime-test migration and receipt verification on a safe non-prediction fixture"],
+    "authority_until_complete": "NONE"
+  },
+  "broker_live_trading": "OFF"
+}

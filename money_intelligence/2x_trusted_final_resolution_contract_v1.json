@@ -1,0 +1,271 @@
+{
+  "schema": "trusted_forward_final_resolution_contract.v1",
+  "contract_id": "2X-TRUSTED-FINAL-RESOLUTION-001-v1",
+  "status": "PREDECLARED_NOT_IMPLEMENTED",
+  "source_main_sha": "b986b0e10fd120fa009f5b58e7052b739e287238",
+  "parents": [505, 514, 519, 603],
+  "purpose": "Freeze the scientific and provenance semantics required before any prospective <=90-day 2x formation can receive an authoritative final outcome or enter factory metrics.",
+  "authority": {
+    "final_resolution_authority": false,
+    "factory_metrics_authority": false,
+    "candidate_ranking_authority": false,
+    "model_fitting_authority": false,
+    "broker_or_trading_authority": false,
+    "intermediate_sampled_hit_evidence_status": "TRUSTED_PROVIDER_EVIDENCE_NOT_FINAL_RESOLUTION"
+  },
+  "core_observation_limit": {
+    "fact": "The integrated trusted outcome substrate stores authenticated point-in-time spot samples. A point sample at or above target can prove that the sampled market was at or above target at that observation, but point samples cannot prove that no between-sample target crossing occurred and cannot by themselves identify the true first crossing time.",
+    "consequence": "Point-sample coverage alone may support non-final positive breach evidence, but it must never produce authoritative EXPIRED/no-hit, exact first-hit time, complete max/min path, or competing-risk timing claims.",
+    "forbidden_shortcut": "Do not convert dense snapshots into gapless path coverage merely by choosing a small sampling cadence."
+  },
+  "authoritative_path_evidence": {
+    "required_origin": "Append-only DB/provider-authenticated evidence bound to the exact trusted formation, canonical asset, exact venue/instrument, provider/source identity, raw/provider-native evidence digest, observed interval/event time, availability/capture time, and server-created durable membership.",
+    "allowed_path_evidence": [
+      "provider-native trade/event sequence with immutable event identity, event timestamp, and provider-native ordering identity where the provider contract defines ordering semantics",
+      "provider-native interval aggregates whose high/low semantics cover the complete stated interval and whose retained bytes/receipt are independently verifiable"
+    ],
+    "not_sufficient": [
+      "caller-authored OHLCV",
+      "locally recomputed hashes without durable DB membership",
+      "point snapshots used to infer absence of an intrainterval crossing",
+      "present-day reconstructed history without PIT/source-authentic provenance"
+    ],
+    "boundary_rule": "No aggregate interval may straddle formation or expiry and be treated as complete post-formation/pre-expiry evidence unless trusted constituent events or an authenticated provider representation proves the exact in-scope sub-interval. Otherwise the affected boundary is censored."
+  },
+  "ordered_evidence_set": {
+    "ordering": [
+      "provider_event_or_interval_start_utc",
+      "provider_event_or_interval_end_utc",
+      "captured_at_utc",
+      "durable_sequence"
+    ],
+    "ordering_scope": "This ordering exists only to canonicalize the complete evidence-set serialization and fingerprint. durable_sequence is persistence identity, not market chronology, and grants zero authority to decide which mutually exclusive economic event occurred first.",
+    "requirements": [
+      "Every authoritative path record for the resolution window is included exactly once.",
+      "The final resolution fingerprint commits formation receipt identity plus the complete ordered evidence-set digest.",
+      "The final resolution fingerprint also commits every derived event censoring bound, any ambiguity state used to determine final outcome authority, any provider-native ordering evidence/identifier relied on for exact precedence, and the DB-owned closure receipt fingerprint.",
+      "Removing, replacing, reordering, cross-asset transplanting, or cross-venue/instrument transplanting any member invalidates the final receipt.",
+      "Caller-selected subsets never receive authoritative final-resolution status.",
+      "A set that is merely complete relative to currently known evidence is not a closed authoritative evidence set."
+    ]
+  },
+  "evidence_set_finality": {
+    "principle": "Finality is an operational property of a frozen provider/coverage contract, not a claim that no future information can ever exist. An outcome may become authoritative only after a DB-owned closure receipt proves the predeclared evidence-set finality conditions for that formation and horizon.",
+    "authority": "DB_OWNED_CLOSURE_RECEIPT_REQUIRED",
+    "closure_receipt_required_before": [
+      "HIT",
+      "EXPIRED",
+      "INVALIDATED",
+      "ILLIQUID_OR_DELISTED",
+      "DRAWDOWN_30",
+      "FACTORY_METRICS_AUTHORITY",
+      "MODEL_FITTING_AUTHORITY"
+    ],
+    "closure_receipt_must_bind": [
+      "formation_sequence",
+      "formation_receipt_fingerprint",
+      "coverage_contract_id_and_version",
+      "expected_provider_or_slot_manifest",
+      "provider_finality_policy_id_and_version",
+      "provider_revision_policy_id_and_version",
+      "required_revision_or_finality_wait_elapsed_at",
+      "acquisition_cutoff_at",
+      "source_high_water_marks",
+      "durable_member_sequence_min",
+      "durable_member_sequence_max",
+      "ordered_member_count",
+      "ordered_member_identity_fingerprint",
+      "coverage_gap_state",
+      "closed_at"
+    ],
+    "currently_known_rule": "All currently known evidence being present is never sufficient by itself to close a horizon or produce EXPIRED.",
+    "expiry_rule": "EXPIRED requires a closure receipt proving the frozen required horizon coverage plus the frozen provider finality/revision conditions; populated slots alone are insufficient.",
+    "provider_revision_rule": "For a revision-capable source, the coverage contract must predeclare an official finality condition or a conservative ex-ante revision window. Until that condition is satisfied, the affected evidence remains provisional for final-resolution and current-metrics authority. If no defensible finality/revision policy can be established, fail closed to censoring rather than manufacture finality.",
+    "high_water_mark_rule": "The closure receipt must commit the provider/source high-water marks and durable member range used to establish closure. A qualifying member outside the closed range cannot silently mutate, disappear from, or be ignored by the authoritative resolution.",
+    "late_qualifying_evidence_policy": "Authenticated qualifying evidence that arrives after closure and falls within the frozen horizon must either be rejected as inadmissible under an explicitly frozen immutable-source finality rule or deterministically create a versioned superseding resolution under the frozen supersession policy. It must never leave a contradicted resolution current.",
+    "late_nonqualifying_evidence_rule": "Authenticated evidence outside the frozen horizon or otherwise nonqualifying under the frozen coverage contract does not rewrite a closed outcome merely because it arrived later.",
+    "provisional_resolution_rule": "Monitoring may expose explicitly provisional observations or states before closure, but they have zero final-resolution, factory-metrics, candidate-ranking, calibration, model-fitting, broker, or trading authority."
+  },
+  "supersession_and_revisions": {
+    "immutable_predecessor": true,
+    "superseding_resolution_required_when": [
+      "authenticated_late_evidence changes or can change the authoritative final outcome",
+      "authenticated_late evidence changes or can change competing-event order",
+      "an authoritative provider revision changes a covered interval or event used by the predecessor",
+      "the predecessor closure receipt is invalidated by an authoritative source revision or a frozen finality-policy breach"
+    ],
+    "superseding_resolution_must_bind": [
+      "predecessor_resolution_fingerprint",
+      "predecessor_closure_receipt_fingerprint",
+      "successor_closure_receipt_fingerprint",
+      "supersession_reason_code",
+      "added_removed_or_revised_member_identities",
+      "successor_resolution_version",
+      "created_at"
+    ],
+    "lineage_rule": "Supersession is append-only and fingerprint-bound. Never overwrite or silently relabel the predecessor receipt.",
+    "metrics_rule": "Only the latest non-superseded authoritative resolution in a verified lineage may enter current factory metrics, calibration, ranking evaluation, or model fitting.",
+    "history_rule": "Superseded resolutions remain auditable historical records but have zero current metrics/model-fitting authority.",
+    "idempotency_rule": "The same authoritative successor evidence set plus the same predecessor lineage and frozen policies must produce the same successor fingerprint and must not create duplicate current resolutions."
+  },
+  "threshold_events": {
+    "reference_price": "Exact trusted frozen formation reference price.",
+    "thresholds": {
+      "PLUS_25": "reference_price * 1.25",
+      "PLUS_50": "reference_price * 1.50",
+      "PLUS_100": "frozen formation target price; minimum 2.00x reference price",
+      "DRAWDOWN_30": "reference_price * 0.70"
+    },
+    "first_crossing_semantics": {
+      "trade_level": "An exact event timestamp may be recorded only when authenticated ordered provider events establish the first crossing after formation within the authoritative covered path.",
+      "interval_level": "If only interval high/low evidence exists, crossing time is interval-censored. Record crossing_lower_bound and crossing_upper_bound; never fabricate an exact timestamp.",
+      "no_crossing": "Absence of a crossing is authoritative only across complete trusted interval/event coverage under a valid DB-owned closure receipt."
+    }
+  },
+  "competing_event_ordering": {
+    "principle": "Final-state precedence is scientific data, not an implementation convenience. No arbitrary precedence is permitted when two or more mutually exclusive threshold/final/competing-risk events have overlapping event-time censoring intervals and exact order is not authenticated.",
+    "events_subject_to_rule": [
+      "PLUS_100_HIT",
+      "STRUCTURED_INVALIDATION",
+      "ILLIQUIDITY_OR_DELISTING",
+      "DRAWDOWN_30"
+    ],
+    "exact_order_rule": "When authenticated provider event/trade evidence proves exact event chronology, choose the genuinely earliest event using provider event time plus provider-native ordering semantics only when that ordering identity is itself retained, authenticated, and fingerprint-bound. If competing events have equal provider timestamps and no authenticated provider-native ordering proves precedence, emit CENSORED_COMPETING_EVENT_ORDER. Durable DB sequence, insertion order, array order, venue order, or implementation order must never break an economic tie.",
+    "interval_order_rule": "When candidate event intervals overlap such that either event could have occurred first, emit CENSORED_COMPETING_EVENT_ORDER. Do not choose HIT, INVALIDATED, ILLIQUID_OR_DELISTED, or a drawdown-first competing-risk state by policy preference, array order, durable insertion order, venue order, or post-outcome convenience.",
+    "same_interval_extremes": "If one authenticated aggregate interval contains both high >= PLUS_100 and low <= DRAWDOWN_30 and no authenticated constituent ordering resolves which crossing came first, final event order is CENSORED_COMPETING_EVENT_ORDER.",
+    "overlap_with_nonprice_event": "If a target-crossing censoring interval overlaps a structured invalidation, illiquidity, or delisting event interval and trusted ordering cannot establish which occurred first, final event order is CENSORED_COMPETING_EVENT_ORDER.",
+    "fingerprint_binding": "The final receipt must commit each candidate event type, exact timestamp or censoring lower/upper bounds, the ordering relation used, the ambiguity-state identifier, and the authenticated provider-native ordering evidence/identifier whenever exact precedence depends on it. Any later change invalidates the receipt.",
+    "metrics_rule": "CENSORED_COMPETING_EVENT_ORDER is excluded from ordinary HIT/EXPIRED classification and must enter time-to-event analysis only under a method that explicitly supports the retained interval/order ambiguity."
+  },
+  "final_states": {
+    "HIT": {
+      "required": [
+        "authoritative trusted path evidence contains a +100%/frozen-target crossing after formation and on/before expiry",
+        "crossing identity/time or censoring interval is derived deterministically from the complete ordered evidence set",
+        "no mutually exclusive earlier competing event is proven, and no unresolved overlapping competing-event censoring interval can precede the HIT",
+        "formation, complete evidence-set, and evidence-set closure fingerprints verify"
+      ],
+      "fail_closed_if_order_ambiguous": "CENSORED_COMPETING_EVENT_ORDER"
+    },
+    "EXPIRED": {
+      "required": [
+        "trusted path coverage is complete from strictly after formation through the trusted expiry boundary",
+        "a DB-owned closure receipt proves the frozen expected-provider/slot manifest, source high-water marks, durable member range, and provider finality/revision policy are satisfied",
+        "no covered provider event/interval high reaches the frozen target",
+        "no unresolved coverage gap, provider outage, identity ambiguity, boundary-straddling ambiguity, competing-event-order ambiguity, or unresolved provider-revision window exists"
+      ],
+      "forbidden_shortcut": "EXPIRED must never mean all currently known slots were populated.",
+      "fail_closed_state_if_missing": "CENSORED_GAP_NOT_EXPIRED"
+    },
+    "INVALIDATED": {
+      "required": [
+        "formation froze a structured machine-verifiable invalidation rule identifier and parameters before outcome observation",
+        "trusted evidence satisfying that exact rule contract exists",
+        "invalidation event ordering versus threshold and other competing events is deterministically resolved",
+        "the authoritative evidence set has a valid DB-owned closure receipt"
+      ],
+      "forbidden": "Free-text invalidation prose alone has zero authoritative invalidation power.",
+      "fail_closed_if_order_ambiguous": "CENSORED_COMPETING_EVENT_ORDER"
+    },
+    "ILLIQUID_OR_DELISTED": {
+      "required": "Explicit timestamp-safe provider/venue/listing or microstructure evidence proving the predeclared competing-risk event, plus a valid closure receipt for the authoritative evidence set used to order it. Missing prices/quotes alone are insufficient.",
+      "model_role": "Competing risk / censoring state; never silently recoded as an ordinary non-winner.",
+      "fail_closed_if_order_ambiguous": "CENSORED_COMPETING_EVENT_ORDER"
+    },
+    "CENSORED_COMPETING_EVENT_ORDER": {
+      "required": "Two or more mutually exclusive threshold/final/competing-risk event intervals overlap, or have equal authenticated timestamps without authenticated provider-native ordering evidence, so exact event precedence is not established.",
+      "model_role": "Interval/order-ambiguous competing-event observation. Excluded from ordinary HIT/EXPIRED/INVALIDATED labels and from point-timestamp competing-risk fitting unless the model explicitly represents the retained ambiguity.",
+      "authority_rule": "No implementation-level precedence, durable insertion order, provider list order, venue order, or post-outcome choice may collapse this state into a definitive ordered event."
+    },
+    "CENSORED_GAP_NOT_EXPIRED": {
+      "required": "Any material path-coverage gap, unverified boundary interval, unresolved provider finality/revision condition, invalid/missing closure receipt, provider disagreement that the frozen contract requires to resolve, or missing authoritative evidence.",
+      "model_role": "Censored/incomplete observation. Excluded from ordinary EXPIRED negatives."
+    }
+  },
+  "path_statistics": {
+    "observed_max": "Derived only from complete trusted path aggregates/events under a valid closure receipt; point-sample maximum is labeled sampled_max and is not promoted to authoritative path maximum.",
+    "observed_min": "Derived only from complete trusted path aggregates/events under a valid closure receipt; point-sample minimum is labeled sampled_min and is not promoted to authoritative path minimum.",
+    "drawdown": "When complete high/low/event coverage exists under a valid closure receipt, derive deterministically under a separately versioned rule. Otherwise drawdown is UNKNOWN/CENSORED rather than inferred from sparse snapshots.",
+    "drawdown_ordering": "A drawdown threshold that overlaps a mutually exclusive target/invalidation/delisting event interval without authenticated ordering must preserve CENSORED_COMPETING_EVENT_ORDER rather than being assigned a fabricated first-event time."
+  },
+  "artifact_fingerprint": {
+    "must_bind": [
+      "formation_receipt_fingerprint",
+      "complete_ordered_evidence_set_fingerprint",
+      "evidence_set_closure_receipt_fingerprint",
+      "coverage_contract_id_and_version",
+      "provider_finality_policy_id_and_version",
+      "provider_revision_policy_id_and_version",
+      "source_high_water_marks",
+      "every derived event exact timestamp or censoring bound",
+      "competing-event ambiguity state",
+      "every provider-native ordering identity relied on for exact precedence",
+      "supersession_lineage_when_applicable"
+    ],
+    "tamper_rule": "Changing any bound member, closure fact, finality/revision policy, high-water mark, evidence-set membership, outcome state, or supersession lineage invalidates independent receipt verification."
+  },
+  "competing_risk_model_handoff": {
+    "allowed_only_when": [
+      "historical/prospective sample-power gate is met",
+      "all included outcomes use authoritative final receipts under this or a later reviewed contract and are the current non-superseded lineage heads",
+      "interval-censored crossing times remain interval-censored in the model rather than collapsed to fabricated point times",
+      "event-order ambiguity remains explicit and is modeled with a method capable of representing it or is excluded under a predeclared rule rather than resolved after outcomes",
+      "right-censoring and illiquidity/delisting competing risks are retained explicitly",
+      "PIT/tradability/matched-control and multiple-testing gates remain satisfied"
+    ],
+    "primary_metrics": [
+      "precision@K",
+      "lift over matched/base rate",
+      "PR-AUC",
+      "prospective return path",
+      "tradability",
+      "calibrated competing-risk/time-to-event diagnostics only when adequately powered"
+    ],
+    "not_primary": "raw accuracy"
+  },
+  "mandatory_red_green_tests_for_implementation": [
+    "point samples below target throughout horizon cannot produce EXPIRED without complete interval/event coverage",
+    "a target crossing that occurs between sparse point samples is not falsely classified as no-hit",
+    "a bar/aggregate that straddles formation cannot backfill a pre-formation high as a post-formation HIT",
+    "a bar/aggregate that straddles expiry cannot extend the trusted horizon without exact sub-interval proof",
+    "trade-level first crossing can produce an exact event time only when event ordering is authenticated",
+    "bar-level first crossing produces an interval-censored time rather than an invented exact timestamp",
+    "one authenticated aggregate interval containing both PLUS_100 high and DRAWDOWN_30 low resolves to CENSORED_COMPETING_EVENT_ORDER when constituent event order is unavailable",
+    "a target-crossing interval overlapping a structured invalidation interval remains CENSORED_COMPETING_EVENT_ORDER without authenticated ordering",
+    "a target-crossing interval overlapping a delisting/illiquidity interval remains CENSORED_COMPETING_EVENT_ORDER without authenticated ordering",
+    "equal provider timestamps for mutually exclusive events with no authenticated provider-native ordering remain CENSORED_COMPETING_EVENT_ORDER and cannot be resolved by durable DB sequence",
+    "equal provider timestamps with authenticated provider-native ordering evidence resolve only according to that retained and fingerprint-bound provider ordering",
+    "authenticated trade/event ordering resolves an otherwise ambiguous competing-event interval to the genuinely earliest event",
+    "ambiguity state plus every candidate event lower/upper censoring bound and every relied-on provider-native ordering identifier is committed into and independently verified from the final-resolution fingerprint",
+    "one omitted/reordered/replaced durable evidence member invalidates the final resolution fingerprint",
+    "cross-asset and cross-venue/instrument evidence transplantation is rejected",
+    "free-text invalidation cannot produce authoritative INVALIDATED",
+    "missing/outage intervals produce CENSORED_GAP_NOT_EXPIRED",
+    "explicit delisting/illiquidity evidence is preserved as a competing risk rather than ordinary expiry",
+    "a currently-known apparently complete set without a valid DB-owned closure receipt cannot produce EXPIRED",
+    "authenticated late target evidence inside the frozen horizon after an apparent expiry cannot leave the contradicted expiry as the current authoritative resolution",
+    "authenticated late earlier competing-event evidence after an apparent HIT requires deterministic supersession or rejection under the frozen immutable-source finality rule",
+    "a provider revision inside the closed horizon is handled only under the frozen provider finality/revision policy and cannot silently mutate a predecessor receipt",
+    "a qualifying evidence member appended outside the predecessor closed durable range cannot be silently ignored",
+    "changing the expected provider/slot manifest, source high-water mark, durable member range, or revision policy changes the closure fingerprint",
+    "duplicate ingestion of the same authenticated late evidence and same predecessor lineage is idempotent and cannot create duplicate current resolutions",
+    "a superseded predecessor remains auditable but has zero current factory-metrics and model-fitting authority",
+    "late authenticated evidence outside the frozen horizon does not rewrite the closed outcome unless the frozen policy explicitly classifies it as qualifying",
+    "exact replay of the complete authoritative evidence set, closure receipt, and supersession lineage is idempotent"
+  ],
+  "implementation_sequence": [
+    "1. Add a trusted interval/event evidence acquisition contract; do not reuse point snapshots as no-hit proof.",
+    "2. Persist append-only authoritative path members with exact formation/asset/venue/provider binding and retain any provider-native ordering identity required to prove event precedence.",
+    "3. Add DB-owned complete-path enumeration and deterministic evidence-set fingerprinting, including derived event censoring bounds, ambiguity-state commitment, and any relied-on provider-native ordering evidence.",
+    "4. Add a DB-owned evidence-set closure receipt that binds the frozen coverage contract, expected provider/slot manifest, provider finality/revision policies, acquisition cutoff/high-water marks, durable member range/count/fingerprint, and closure time.",
+    "5. Add a final-resolution RPC/store that derives states and threshold timing from the closed authoritative path only and emits CENSORED_COMPETING_EVENT_ORDER whenever exact competing-event precedence is not identifiable.",
+    "6. Add append-only deterministic supersession for qualifying late evidence/provider revisions; current metrics may consume only the latest verified non-superseded lineage head.",
+    "7. Add Python independent receipt verification and adversarial tests.",
+    "8. Run exact-head Security & Reliability plus independent adversarial review; then runtime-test the migration against a safe non-prediction fixture before granting metrics authority."
+  ],
+  "prospective_policy": {
+    "candidate_counting": "No candidate or outcome count is implied by this contract.",
+    "existing_formations": "Existing trusted formations may accumulate non-final provider evidence, but no final performance result is admitted until this contract is implemented, reviewed, deployed and independently verified.",
+    "broker_live_trading": "OFF"
+  }
+}

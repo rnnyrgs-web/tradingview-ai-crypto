@@ -1,0 +1,93 @@
+{
+  "schema": "trusted_forward_final_resolution_policy_chronology.v1",
+  "contract_id": "2X-TRUSTED-FINAL-RESOLUTION-POLICY-CHRONOLOGY-001-v1",
+  "status": "PREDECLARED_NOT_IMPLEMENTED",
+  "parent_contract_id": "2X-TRUSTED-FINAL-RESOLUTION-001-v1",
+  "source_main_sha": "b986b0e10fd120fa009f5b58e7052b739e287238",
+  "parents": [505, 514, 519, 603],
+  "purpose": "Close post-outcome policy-selection degrees of freedom by requiring the coverage/provider/finality/revision policy lineage to be committed under a trusted non-backdateable receipt before governed outcome evidence can receive scientific resolution authority.",
+  "normative_relationship": {
+    "required_with_parent_contract": true,
+    "precedence": "This chronology contract is a mandatory authority gate for the parent final-resolution contract. Any parent language that permits existing formations to accumulate non-final evidence does not grant retrospective confirmatory authority and is constrained by this contract.",
+    "no_authority_if_missing": true
+  },
+  "authority": {
+    "final_resolution_authority": false,
+    "factory_metrics_authority": false,
+    "candidate_ranking_authority": false,
+    "model_fitting_authority": false,
+    "broker_or_trading_authority": false
+  },
+  "ex_ante_policy_bundle": {
+    "required_components": [
+      "coverage_contract_id_and_version_and_fingerprint",
+      "expected_provider_or_slot_manifest_id_and_version_and_fingerprint",
+      "provider_finality_policy_id_and_version_and_fingerprint",
+      "provider_revision_policy_id_and_version_and_fingerprint"
+    ],
+    "receipt_authority": "DB_OWNED_OR_EQUIVALENT_TRUSTED_NON_BACKDATEABLE_RECEIPT",
+    "trusted_receipt_must_bind": [
+      "formation_contract_id_and_version",
+      "all_required_policy_component_identities_and_fingerprints",
+      "trusted_policy_created_at",
+      "trusted_policy_effective_at",
+      "trusted_server_formation_time_or_preformation_scope",
+      "policy_receipt_fingerprint"
+    ],
+    "mutation_rule": "Changing any required policy component or fingerprint creates a new policy lineage; it must never silently mutate a lineage already exposed to governed outcome evidence."
+  },
+  "chronology_rules": {
+    "prospective_confirmatory": "A prospective formation is confirmatory-eligible only when the compatible trusted policy receipt exists at or before the trusted server formation time. A later receipt may support research-only monitoring but cannot retroactively create prospective performance, calibration, or confirmatory model-fitting authority.",
+    "minimum_resolution": "No governed post-formation outcome evidence may be opened, consumed, selected, or used for scientific resolution before the compatible trusted policy receipt exists. If governed evidence is already available to the resolution process or has been consumed before policy commitment, fail closed to RESEARCH_ONLY_NONCONFIRMATORY_POLICY_CHRONOLOGY.",
+    "first_governed_evidence": "The implementation must retain or deterministically derive a trusted first_governed_evidence_available_or_consumed_at and prove it is not earlier than trusted_policy_created_at for any scientific resolution authority.",
+    "existing_formations": "An existing formation with post-formation governed evidence available or consumed before a compatible policy receipt remains research-only/provisional. It is not silently grandfathered into confirmatory metrics. A separately predeclared legacy cohort is permitted only if its policy and chronology were frozen before the outcomes it evaluates and it carries no retroactive prospective-performance authority.",
+    "later_policy_version": "A later coverage/provider/finality/revision policy version cannot rewrite an older formation after governed evidence exists. It applies prospectively to new eligible formations or to an explicitly predeclared migration cohort with zero retrospective confirmatory metrics authority.",
+    "post_outcome_choice": "Selecting policy A versus policy B after inspecting any governed outcome evidence is forbidden. Fingerprinting a policy after the path is known proves only later immutability; it does not cure post-outcome selection.",
+    "supersession_limit": "Outcome-evidence supersession may operate only within the same ex-ante compatible policy lineage. Supersession is not a mechanism for swapping in a favorable post-outcome policy."
+  },
+  "required_bindings_in_parent_receipts": {
+    "closure_receipt_must_add": [
+      "trusted_server_formation_time",
+      "policy_receipt_fingerprint",
+      "trusted_policy_created_at",
+      "first_governed_evidence_available_or_consumed_at",
+      "policy_chronology_eligibility_state"
+    ],
+    "final_resolution_fingerprint_must_add": [
+      "trusted_server_formation_time",
+      "policy_receipt_fingerprint",
+      "trusted_policy_created_at",
+      "first_governed_evidence_available_or_consumed_at",
+      "policy_chronology_eligibility_state",
+      "expected_provider_or_slot_manifest_fingerprint"
+    ],
+    "tamper_rule": "Changing a policy identity, policy chronology fact, formation-time binding, first-governed-evidence chronology fact, or eligibility state invalidates independent receipt verification."
+  },
+  "eligibility_states": {
+    "CONFIRMATORY_POLICY_CHRONOLOGY_ELIGIBLE": "Compatible trusted policy receipt exists at or before trusted server formation time and all other chronology checks pass.",
+    "RESEARCH_ONLY_NONCONFIRMATORY_POLICY_CHRONOLOGY": "Policy commitment occurred after formation for prospective confirmatory use, after governed outcome evidence became available/was consumed, or cannot otherwise prove ex-ante commitment. This state has zero prospective-performance, calibration, confirmatory model-fitting, broker, or trading authority."
+  },
+  "implementation_order_override": [
+    "1. Persist the exact coverage contract, expected provider/slot manifest, provider finality policy, and provider revision policy under a trusted non-backdateable policy receipt before governed post-formation evidence acquisition/consumption; confirmatory formations bind the receipt at or before formation.",
+    "2. Only then acquire/persist trusted interval/event path evidence under the compatible policy lineage.",
+    "3. Bind policy chronology eligibility into DB-owned complete-path enumeration and evidence-set fingerprints.",
+    "4. Bind the policy receipt, trusted formation time, first-governed-evidence chronology, and eligibility state into the DB-owned closure receipt.",
+    "5. Final-resolution RPC/store may grant authoritative scientific outcome status only when both the parent contract and this chronology contract verify.",
+    "6. Existing formations that fail the chronology gate remain research-only/provisional; do not backfill them into confirmatory metrics.",
+    "7. Outcome-evidence supersession remains append-only inside the compatible ex-ante policy lineage and cannot launder a later policy.",
+    "8. Add independent receipt verification, RED->GREEN chronology attacks, exact-head CI, independent adversarial review, and safe runtime migration verification before any metrics authority."
+  ],
+  "mandatory_red_green_tests": [
+    "the same observed path with policy A versus policy B selected only after path observation cannot produce authoritative confirmatory resolution under either post-outcome selection",
+    "a trusted policy receipt timestamp after first governed evidence availability or consumption yields RESEARCH_ONLY_NONCONFIRMATORY_POLICY_CHRONOLOGY",
+    "a compatible trusted policy receipt at or before formation is chronology-eligible if all independent formation/path/closure gates also pass",
+    "an existing formation with already-consumed post-formation evidence cannot be silently grandfathered after a later policy receipt appears",
+    "a later coverage/provider/finality/revision policy version cannot rewrite an older formation after governed evidence exists except under an explicitly predeclared migration with zero retrospective confirmatory metrics authority",
+    "choosing a shorter finality or revision window after observing the path cannot convert a provisional formation into confirmatory HIT or EXPIRED",
+    "changing only policy receipt identity, trusted formation time, first-governed-evidence chronology, or policy eligibility state changes closure/final fingerprints and cannot be laundered by replay",
+    "outcome-evidence supersession under the original compatible policy lineage remains possible without permitting post-outcome policy substitution"
+  ],
+  "metrics_rule": "Factory metrics, calibration, ranking evaluation, and confirmatory model fitting may consume only authoritative non-superseded resolutions whose policy chronology state is CONFIRMATORY_POLICY_CHRONOLOGY_ELIGIBLE and whose parent final-resolution contract independently verifies.",
+  "legacy_rule": "Legacy/research-only formations remain auditable but have zero retrospective prospective-performance authority unless a separately reviewed pre-outcome legacy protocol independently proves ex-ante policy commitment.",
+  "broker_live_trading": "OFF"
+}

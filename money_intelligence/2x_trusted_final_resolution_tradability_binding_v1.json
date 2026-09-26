@@ -1,0 +1,169 @@
+{
+  "schema": "trusted_forward_final_resolution_tradability_binding.v1",
+  "contract_id": "2X-TRUSTED-FINAL-RESOLUTION-TRADABILITY-001-v1",
+  "status": "PREDECLARED_NOT_IMPLEMENTED",
+  "parent_contract_id": "2X-TRUSTED-FINAL-RESOLUTION-001-v1",
+  "source_main_sha": "b986b0e10fd120fa009f5b58e7052b739e287238",
+  "parents": [505, 514, 519, 520, 603],
+  "purpose": "Prevent a trusted chart/print-only +100% crossing from becoming the factory's primary success label unless the frozen position is realistically executable at a predeclared notional under timestamp-safe PIT microstructure evidence.",
+  "normative_relationship": {
+    "required_with_parent_contract": true,
+    "parent_hit_semantics": "The parent HIT state is a descriptive PRICE_2X_CROSSING path fact only. It has zero primary tradable-success, precision@K, lift, PR-AUC, calibration or model-fitting authority by itself.",
+    "primary_factory_success": "TRADABLE_2X_HIT_AT_BAND",
+    "no_authority_if_missing": true
+  },
+  "authority": {
+    "final_resolution_authority": false,
+    "factory_metrics_authority": false,
+    "candidate_ranking_authority": false,
+    "model_fitting_authority": false,
+    "broker_or_trading_authority": false
+  },
+  "frozen_tradability_anchor": {
+    "path": "money_intelligence/2x_tradability_precommitment_v1.json",
+    "schema": "two_x_tradability_precommitment.v1",
+    "artifact_id": "2X-TRADABILITY-001-v1",
+    "required_execution_bands_usd": [1000, 10000, 50000, 100000],
+    "required_maximum_median_spread_bps": 50,
+    "required_maximum_vwap_slippage_bps": 100,
+    "required_maximum_snapshot_age_minutes": 60,
+    "required_missing_microstructure_policy": "UNKNOWN_TRADABILITY",
+    "required_exact_file_digest_binding": "The trusted contract-registry receipt must bind the exact SHA-256 of the deployed precommitment bytes in addition to artifact_id/schema. Repository path or artifact_id alone is insufficient."
+  },
+  "ex_ante_execution_policy": {
+    "receipt_authority": "DB_OWNED_OR_EQUIVALENT_TRUSTED_NON_BACKDATEABLE_RECEIPT",
+    "chronology": "The execution policy must be frozen at or before trusted server formation time for prospective confirmatory use and before any governed post-formation outcome/microstructure evidence is consumed.",
+    "must_bind": [
+      "tradability_precommitment_artifact_id_and_exact_file_sha256",
+      "evaluated_notional_bands_usd",
+      "primary_success_band_usd_or_explicit_none",
+      "canonical_asset_identity",
+      "exact_execution_venue_and_instrument_identity_or_frozen_venue_set",
+      "cross_venue_aggregation_policy_id_or_explicit_none",
+      "entry_tradability_rule_identity",
+      "crossing_side_execution_rule_identity",
+      "crossing_side_persistence_policy_id",
+      "crossing_price_microstructure_time_alignment_policy_id",
+      "spread_and_vwap_slippage_thresholds",
+      "snapshot_staleness_and_gap_rules",
+      "execution_policy_fingerprint",
+      "trusted_policy_created_at"
+    ],
+    "band_rule": "Evaluated bands must be a frozen subset of [1000,10000,50000,100000]. A single primary tradable-success metric/ranker requires primary_success_band_usd to be frozen before outcomes. If primary_success_band_usd is NONE, only per-band research labels may be reported; the system may not select the best-looking band after outcome.",
+    "venue_rule": "The exact execution venue/instrument or deterministic multi-venue aggregation policy must be frozen before outcome. A later thin-venue target print cannot be paired with post-hoc liquidity from another venue, and a favorable venue may not be substituted after the move.",
+    "threshold_rule": "Do not tune spread, depth, VWAP slippage, staleness, persistence or venue thresholds after observing the path. Reuse the frozen 2X-TRADABILITY-001-v1 limits unless a separately versioned successor was itself trusted and frozen before the governed formation.",
+    "persistence_rule": "The crossing-side persistence policy is frozen as EVENT_TIME_FULL_NOTIONAL_EXECUTABILITY_V1: no post-outcome minimum-duration/window may be selected. A tradable hit is the earliest trusted microstructure event/interval that proves full-band target-or-better execution under the frozen venue policy. This labels an executable opportunity, not sustained liquidity. Any future sustained-duration definition requires a separately versioned contract frozen prospectively and cannot relabel exposed formations."
+  },
+  "entry_tradability": {
+    "required": true,
+    "rule": "Before a formation can ever become TRADABLE_2X_HIT_AT_BAND, its frozen band must satisfy the existing 2X-TRADABILITY-001-v1 predecision STRICT_TRADABLE entry rule using timestamp-safe spread plus executable ask-side depth/VWAP evidence. ADV/quote volume is descriptive only and cannot substitute for depth.",
+    "failure_state": "ENTRY_NOT_STRICT_TRADABLE_RESEARCH_ONLY",
+    "missing_state": "PRICE_HIT_TRADABILITY_UNKNOWN"
+  },
+  "crossing_side_execution": {
+    "event_definition": "TRADABLE_2X_HIT_AT_BAND occurs only when, after formation and on/before expiry, provider-authenticated bid-side executable depth for the frozen band proves a target-or-better liquidation opportunity on the frozen execution venue/policy. PRICE_2X_CROSSING may occur earlier and remains separately retained.",
+    "position_quantity_semantics": "For band B and trusted frozen reference price R, test the reference-quantity Q=B/R. The executable bid-side VWAP for selling Q under the frozen venue policy must be at or above the frozen target price. This defines a target-executable price move; it does not claim fee-adjusted net portfolio return.",
+    "required_evidence": [
+      "provider-authenticated best bid and best ask or equivalent spread proof",
+      "provider-authenticated bid depth ladder or deterministic provider-native executable quote sufficient to sell the full frozen reference-quantity",
+      "exact canonical asset plus frozen venue/instrument identity",
+      "provider event/snapshot timestamp and capture/availability chronology",
+      "raw/provider-native evidence digest plus trusted durable membership",
+      "gap/staleness state under the frozen policy",
+      "deterministic bid-side VWAP and slippage derivation",
+      "authenticated price-crossing support interval and executable-microstructure support interval with non-empty trusted time intersection under CROSSING_EXECUTION_INTERVAL_INTERSECTION_V1"
+    ],
+    "limits": {
+      "maximum_median_or_contemporaneous_spread_bps": 50,
+      "maximum_exit_vwap_slippage_bps": 100,
+      "maximum_snapshot_age_minutes": 60,
+      "adv_or_volume_only_is_sufficient": false
+    },
+    "timing": "The tradable-hit event time is the earliest authenticated microstructure observation/interval proving the full frozen-band target execution opportunity while its trusted support interval intersects the authenticated target-crossing support interval. Exact timestamps require authenticated price and executable microstructure evidence valid at the same event instant; aggregate evidence remains interval-censored to the trusted intersection bounds under the parent contract.",
+    "flash_wick_rule": "A one-lot/isolated target trade or interval high with no qualifying bid-side executable depth at an overlapping trusted event time/interval does not establish TRADABLE_2X_HIT_AT_BAND.",
+    "unknown_rule": "If required crossing-side spread/depth/slippage evidence is unavailable, stale, gapped, identity-mismatched, not source-authenticated, or does not overlap in event time with the trusted target-crossing support interval, preserve PRICE_2X_CROSSING and emit PRICE_HIT_TRADABILITY_UNKNOWN for tradable-success evaluation.",
+    "illiquid_rule": "If authenticated evidence affirmatively shows the frozen band cannot satisfy the frozen spread/depth/VWAP rule at the trusted target-crossing event/overlap interval, preserve PRICE_2X_CROSSING but classify the tradability result as ILLIQUID_2X_RESEARCH_ONLY rather than an ordinary positive.",
+    "persistence_policy_id": "EVENT_TIME_FULL_NOTIONAL_EXECUTABILITY_V1"
+  },
+  "price_microstructure_time_alignment": {
+    "policy_id": "CROSSING_EXECUTION_INTERVAL_INTERSECTION_V1",
+    "principle": "Tradable success is a co-temporal market fact. A target price observation and an executable-depth observation may be individually authentic yet still fail to prove a tradable hit if they do not describe an overlapping market-time interval.",
+    "exact_event_rule": "For an exact target-crossing event, bid-side execution evidence must be authenticated as valid at that same provider event instant or by a provider-native snapshot/quote whose trusted validity interval contains that instant. A depth snapshot before or after the crossing cannot be borrowed merely because it is fresh by a general staleness threshold.",
+    "interval_rule": "For interval-censored target or microstructure evidence, derive tradable-hit censoring bounds from the non-empty intersection of the authenticated target-crossing support interval and authenticated executable-microstructure support interval. Never use the union, nearest-neighbor timestamp, or a post-hoc tolerance window.",
+    "empty_intersection_rule": "If the trusted support intervals do not overlap, the evidence cannot establish TRADABLE_2X_HIT_AT_BAND. Preserve PRICE_2X_CROSSING and classify tradability as PRICE_HIT_TRADABILITY_UNKNOWN unless authenticated same-time evidence affirmatively proves execution failure, in which case ILLIQUID_2X_RESEARCH_ONLY may apply.",
+    "staleness_rule": "maximum_snapshot_age_minutes is only a freshness ceiling for an otherwise time-aligned microstructure record. It is not a join tolerance and grants zero authority to pair a target crossing with non-overlapping depth from up to 60 minutes earlier or later.",
+    "competing_event_rule": "The intersected tradable-hit bounds, not the raw price-crossing bounds and not a non-overlapping depth timestamp, enter the parent's competing-event ordering. Overlap with a mutually exclusive competing event remains CENSORED_COMPETING_EVENT_ORDER unless authenticated chronology resolves precedence.",
+    "revision_rule": "Any revision that changes either support interval, their intersection, or the derived executable state changes the governed evidence lineage and must trigger the frozen supersession semantics before current metrics/model authority can continue."
+  },
+  "cross_venue_fragmentation": {
+    "rule": "Price and execution evidence must obey the same ex-ante venue policy. A target reached only on an excluded thin/off-venue market cannot establish a tradable hit. Cross-venue liquidity may count only when a deterministic aggregation policy and exact venue set were frozen before outcome and every contributing record is identity/provenance bound.",
+    "unknown_rule": "Fragmented or conflicting venue evidence that the frozen policy cannot deterministically reconcile remains PRICE_HIT_TRADABILITY_UNKNOWN, never a post-hoc venue-selection opportunity."
+  },
+  "outcome_states": {
+    "PRICE_2X_CROSSING": {
+      "meaning": "Authenticated parent +100%/target crossing path fact.",
+      "factory_success_authority": false,
+      "model_role": "Descriptive/research event retained regardless of strict tradability."
+    },
+    "TRADABLE_2X_HIT_AT_BAND": {
+      "meaning": "PRICE_2X_CROSSING plus strict predecision entry tradability and an authenticated co-temporal target-or-better bid-side execution opportunity for the same frozen band/venue policy within horizon.",
+      "factory_success_authority": "FUTURE_ONLY_AFTER_PARENT_CHRONOLOGY_CLOSURE_REGISTRY_AND_RUNTIME_GATES",
+      "primary_metrics_role": "Eligible primary positive only after every parent/chronology/closure/contract-registry gate independently verifies."
+    },
+    "PRICE_HIT_TRADABILITY_UNKNOWN": {
+      "meaning": "Price target crossed but required strict microstructure evidence is missing, stale, gapped, identity-invalid, non-overlapping in market time, or otherwise not authoritative.",
+      "factory_success_authority": false,
+      "model_role": "Research-only/censored for tradable-success metrics; never imputed positive from ADV, quote volume or current liquidity."
+    },
+    "ILLIQUID_2X_RESEARCH_ONLY": {
+      "meaning": "Price target crossed while authenticated same-time evidence shows the frozen band fails the frozen execution rule.",
+      "factory_success_authority": false,
+      "model_role": "Preserved negative/competing liquidity outcome for tradable-success research, not deleted by survivor/liquidity filtering."
+    }
+  },
+  "competing_event_integration": {
+    "rule": "TRADABLE_2X_HIT_AT_BAND, not raw PRICE_2X_CROSSING, is the primary 2x success event for tradable factory metrics. Its event time is derived from the trusted intersection of price-crossing and executable-microstructure support and competes with structured invalidation, illiquidity/delisting and predeclared drawdown under the parent's ordering rules. If event-order intervals overlap and trusted chronology cannot identify precedence, retain CENSORED_COMPETING_EVENT_ORDER.",
+    "price_crossing_before_failure": "A raw target print before a later tradable execution opportunity does not lock in success. If a mutually exclusive competing event occurs first, the tradable hit did not occur first merely because PRICE_2X_CROSSING did."
+  },
+  "closure_revision_and_supersession": {
+    "rule": "Authoritative microstructure members used for tradability are part of the governed evidence lineage and must be included in closure/finality high-water marks and revision policy. A late authenticated depth/spread revision that changes tradability must deterministically supersede the prior current resolution or remain inadmissible only under an ex-ante immutable-source finality rule.",
+    "no_silent_filter": "A superseded tradable/unknown/illiquid state may not remain in current precision, lift, PR-AUC, calibration or model-fitting metrics."
+  },
+  "final_resolution_fingerprint_must_bind": [
+    "tradability_precommitment_artifact_id_and_exact_file_sha256",
+    "execution_policy_fingerprint",
+    "evaluated_notional_bands_usd",
+    "primary_success_band_usd_or_explicit_none",
+    "frozen_execution_venue_and_instrument_or_venue_set",
+    "cross_venue_aggregation_policy_id_or_explicit_none",
+    "crossing_side_persistence_policy_id",
+    "crossing_price_microstructure_time_alignment_policy_id_and_overlap_bounds",
+    "entry_tradability_evidence_set_identity_and_state",
+    "crossing_side_microstructure_evidence_identities",
+    "reference_quantity_per_band",
+    "derived_bid_side_vwap_and_slippage_per_band",
+    "tradable_hit_exact_time_or_censoring_bounds_per_band",
+    "tradability_state_per_band",
+    "fragmentation_or_unknown_state",
+    "tradability_evidence_revision_and_supersession_lineage"
+  ],
+  "mandatory_red_green_tests": [
+    "a one-lot or flash-wick target print with no executable frozen-band bid depth remains PRICE_2X_CROSSING but cannot become TRADABLE_2X_HIT_AT_BAND",
+    "an interval high at or above target with missing spread/depth evidence becomes PRICE_HIT_TRADABILITY_UNKNOWN for primary tradable-success metrics",
+    "a target reached only on an excluded thin off-venue market cannot use liquidity from a different venue to become a tradable hit",
+    "authenticated target-or-better bid-side depth that sells the full frozen reference-quantity within the frozen spread/slippage limits can establish TRADABLE_2X_HIT_AT_BAND only when its trusted event-time support overlaps the authenticated target-crossing support interval and every independent parent gate also verifies",
+    "a depth snapshot from before or after a flash target crossing cannot establish a tradable hit merely because it is within the 60-minute staleness ceiling",
+    "non-overlapping authenticated price-crossing and executable-depth intervals remain PRICE_HIT_TRADABILITY_UNKNOWN rather than being nearest-neighbor joined",
+    "interval-censored tradable-hit bounds equal the trusted intersection of price-crossing and executable-depth support, never their union or an arbitrary tolerance window",
+    "ADV or quote volume alone can never upgrade PRICE_HIT_TRADABILITY_UNKNOWN to a tradable hit",
+    "the same raw price path cannot change authoritative tradability because a notional band or venue is selected after outcome",
+    "the same executable target-side path cannot change classification because a minimum persistence duration/window is chosen after outcome; EVENT_TIME_FULL_NOTIONAL_EXECUTABILITY_V1 is frozen ex ante",
+    "changing the frozen notional, venue policy, execution-policy fingerprint, time-alignment policy or contributing microstructure member changes the final fingerprint",
+    "a late authoritative microstructure revision that changes tradability or the price-depth overlap interval cannot leave a contradicted prior result current",
+    "cross-asset, cross-venue and cross-instrument microstructure transplantation is rejected even when raw hashes otherwise verify",
+    "a raw price crossing before invalidation/delisting/drawdown cannot outrank the competing event when the first tradable execution opportunity occurs later",
+    "overlapping tradable-hit and competing-event censoring intervals retain CENSORED_COMPETING_EVENT_ORDER unless authenticated chronology resolves precedence"
+  ],
+  "metrics_rule": "precision@K, lift, PR-AUC, calibration and model fitting for the primary tradable-2x objective may count only verified TRADABLE_2X_HIT_AT_BAND labels at the ex-ante primary band or report separately frozen per-band metrics. PRICE_2X_CROSSING, PRICE_HIT_TRADABILITY_UNKNOWN and ILLIQUID_2X_RESEARCH_ONLY are never silently pooled as equivalent positives.",
+  "broker_live_trading": "OFF"
+}
